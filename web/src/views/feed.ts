@@ -10,6 +10,8 @@ import { type Key, t } from '../shared/i18n.ts';
 import { icon } from '../shared/icons.ts';
 import { loadViewState, saveViewState } from '../shared/view-state.ts';
 import { type BarState, mountFeedBar, typesQuery } from './feed-bar.ts';
+import { mountFeedKeys } from './feed-keys.ts';
+import { createKeeper, type Place } from './feed-place.ts';
 import { filterQuery } from './filter-bar.ts';
 import { bodySig, fitNote, patchNote, renderNote } from './note.ts';
 import { plainName } from './parts.ts';
@@ -25,7 +27,11 @@ type State = BarState & {
   id?: string;
   ref?: string;
   tag?: string;
+  /** Where the reader is, so the tab comes back to the same note after anything: a reload, another tile. */
+  pos?: Place;
 };
+/** Tabs opened from a note: Escape closes them once nothing is selected. */
+const CHILD = new Set(['thread', 'profile', 'hashtag', 'following', 'followers']);
 const FILTERED = new Set(['home', 'global', 'hashtag', 'bookmarks', 'search', 'profile']);
 const DATED = new Set(['home', 'global', 'hashtag', 'bookmarks', 'search', 'profile']);
 
@@ -45,6 +51,16 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
   let waiting = false;
   let sstate: SubState | undefined;
   let account = env.engine.me();
+  let jump = false; // the next rows are the head of the list: show them from the top
+  const keeper = createKeeper({
+    el,
+    list,
+    saved: state.pos,
+    active: () => el.isConnected && env.visible.get(),
+    node: (key) => nodes.get(key)?.el,
+    anchors: (key) => !key.startsWith('day:'),
+    save: (place) => ((state.pos = place), save()),
+  });
 
   const query = (): Query => ({
     source: kind as Source,
@@ -76,12 +92,7 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
   };
   /** Draws `rows`, reusing every node whose row did not change, and keeps what is on screen where it is. */
   const sync = (): void => {
-    const box = el.getBoundingClientRect();
-    const hold =
-      el.scrollTop < 8
-        ? undefined
-        : [...list.children].find((c) => c.getBoundingClientRect().bottom > box.top + 1);
-    const was = hold?.getBoundingClientRect().top ?? 0;
+    const settle = keeper.hold();
     const want: HTMLElement[] = [];
     const seen = new Set<string>();
     const today = dayOf(Date.now());
@@ -133,7 +144,8 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
     }
     for (const key of [...nodes.keys()]) if (!seen.has(key)) nodes.delete(key);
     for (const node of want) if (!node.dataset.fit) (node.dataset.fit = '1'), fitNote(node);
-    if (hold?.isConnected) el.scrollTop += hold.getBoundingClientRect().top - was;
+    settle();
+    keys.paint();
     showState();
   };
   const showState = (): void => {
@@ -163,7 +175,7 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
     const room = el.scrollHeight - top - el.clientHeight;
     const first = rows[0]?.key;
     const last = rows[rows.length - 1]?.key;
-    if (top < 8 && atTop) {
+    if (top < 8 && atTop && !keys.held()) {
       if (!live) (live = true), request('top', 0, Math.max(PAGE, Math.min(rows.length, KEEP)));
     } else if (live && first)
       (live = false), request({ key: first }, 0, Math.max(rows.length, PAGE));
@@ -172,6 +184,7 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
   };
   let frame = 0;
   const onScroll = (): void => {
+    keeper.read();
     if (!frame) frame = requestAnimationFrame(() => ((frame = 0), follow()));
   };
   el.addEventListener('scroll', onScroll, { passive: true });
@@ -190,11 +203,14 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
     if (next !== state.title) (state.title = next), save();
     env.setTitle(next);
   };
-  const open = (): void => {
+  /** `keep`: the tab is coming back (a reload, a reopened tab), so it asks for the rows around its place. */
+  const open = (keep = false): void => {
     sub?.close();
     rows = [];
-    atTop = live = true;
-    atBottom = waiting = false;
+    const place = keep ? keeper.get() : undefined;
+    if (!keep) keeper.forget(), keys.clear();
+    atTop = live = !place;
+    atBottom = waiting = jump = false;
     sstate = undefined;
     pill.hidden = true;
     sub = env.engine.open(query(), {
@@ -203,7 +219,10 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
         atTop = top;
         atBottom = bottom;
         waiting = false;
+        if (jump) (jump = false), keeper.forget();
         sync();
+        // The place is a row that no longer exists (deleted, muted, a filter): the list starts over from its head.
+        if (keeper.get() && !keeper.put()) keeper.forget();
         title();
         follow();
       },
@@ -221,10 +240,29 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
       },
     });
     sub.visible(env.visible.get());
-    request('top', 0, PAGE);
+    if (place) request({ key: place.key }, PAGE, PAGE);
+    else request('top', 0, PAGE);
     sync();
   };
-  pill.addEventListener('click', () => el.scrollTo({ top: 0 }));
+  /** To the newest notes, wherever the window is. Nothing is shown in between: the scroll waits for the rows. */
+  const toTop = (): void => {
+    keys.clear();
+    if (atTop) return (keeper.forget(), follow());
+    jump = live = true;
+    request('top', 0, PAGE);
+  };
+  pill.addEventListener('click', toTop);
+  const keys = mountFeedKeys({
+    el,
+    list,
+    env,
+    closes: CHILD.has(kind),
+    row: (key) => rows.find((r) => r.key === key),
+    node: (key) => nodes.get(key)?.el,
+    cover: () => barSlot.offsetHeight,
+    moved: () => (keeper.read(), follow()),
+    top: toTop,
+  });
 
   el.classList.add('feed');
   el.replaceChildren(h('div', { class: 'fslot' }, barSlot, pill), list, status);
@@ -239,10 +277,10 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
   });
 
   if (state.title) env.setTitle(state.title);
-  open();
+  open(true);
   const offVisible = env.visible.subscribe((on) => {
     sub?.visible(on);
-    if (on) follow();
+    if (on) keeper.put(), follow();
   });
   const offAccounts = env.engine.accounts.subscribe((a) => {
     if ((a.active ?? '') !== account) (account = a.active ?? ''), open();
@@ -254,6 +292,8 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
     offAccounts();
     offSettings();
     bar();
+    keys.dispose();
+    keeper.dispose();
     sub?.close();
   };
 }

@@ -1,6 +1,7 @@
 // WM controller for one workspace: layout state, persistence, rendering, view mounts (adapted from ytenrich's:
 // no native elements to project, so every tab is an own view).
 import { both, t } from '../shared/i18n.ts';
+import { keyCaps } from '../shared/keys.ts';
 import { kindOf, type OpenOpts, VIEWS, viewOf } from '../views/registry.ts';
 import type { Host } from './host.ts';
 import { type Choice, NEW_TAB } from './launcher.ts';
@@ -13,6 +14,7 @@ import { type Rendered, renderLayout } from './render.ts';
 import { startResize } from './resize.ts';
 import type { Space } from './spaces.ts';
 import { startTabDrag } from './tab-drag.ts';
+import { mountWmKeys } from './wm-keys.ts';
 
 export type Wm = {
   /** Opens a tab in the tile last touched (a link from outside any tab: the top bar, an address). */
@@ -20,6 +22,7 @@ export type Wm = {
   dispose(): void;
 };
 
+const CLOSED_MAX = 20;
 const REF = /^(npub1|nprofile1|note1|nevent1)[a-z0-9]+$/;
 
 export function createWmController(env: BaseEnv, host: Host, at: Space): Wm {
@@ -37,6 +40,38 @@ export function createWmController(env: BaseEnv, host: Host, at: Space): Wm {
   /** For a tab opened beside its reader: the tab that was in front there and what had the keyboard. */
   const back = new Map<string, { view: string; el?: HTMLElement }>(); // bound: one per such open tab
 
+  /** Closed tabs, newest last, each with the state it left and where it was. */
+  const closed: { kind: string; state: object; pane: string; index: number }[] = []; // bound: CLOSED_MAX
+  const retire = (view: string): void => {
+    const p = L.paneOfView(root, view);
+    const state = own.retire(view);
+    if (kindOf(view) === NEW_TAB) return;
+    closed.push({
+      kind: kindOf(view),
+      state,
+      pane: p?.id ?? '',
+      index: p?.tabs.indexOf(view) ?? 0,
+    });
+    if (closed.length > CLOSED_MAX) closed.shift();
+  };
+  const reopen = (): void => {
+    const c = closed.pop();
+    const p = L.panes(root).find((x) => x.id === c?.pane) ?? cur();
+    if (!c || !p) return;
+    const tab = own.fresh(c.kind, used(), c.state);
+    set(L.moveView(root, tab, p.id, 'center', Math.min(c.index, p.tabs.length)));
+    show(tab);
+  };
+  const cur = (): L.PaneNode | undefined =>
+    L.panes(root).find((x) => x.id === touched) ?? L.panes(root)[0];
+  /** Puts a tab in front with the keyboard in it. */
+  const show = (tab: string): void => {
+    const p = L.paneOfView(root, tab);
+    if (!p) return;
+    if (p.active !== tab) set(L.activate(root, tab));
+    mark(p.id);
+    own.focus(tab);
+  };
   const used = (): Set<string> => new Set(L.views(root));
   const set = (next: L.LayoutNode | null, save = true): void => {
     // The only tile left never disappears: it becomes a New tab page.
@@ -51,6 +86,7 @@ export function createWmController(env: BaseEnv, host: Host, at: Space): Wm {
     const beside = p && p.active === view ? (p.tabs[i + 1] ?? p.tabs[i - 1]) : undefined;
     const from = back.get(view);
     back.delete(view);
+    retire(view);
     // A tab opened from a note gives its place back to what was in front before it, and the keyboard to the reader.
     const prior = from && p?.tabs.includes(from.view) && p.active === view ? from.view : beside;
     const next = L.removeView(root, view);
@@ -143,7 +179,16 @@ export function createWmController(env: BaseEnv, host: Host, at: Space): Wm {
         ...own.menu(p.active),
         { label: t('pane.splitRight'), run: splitTo('right'), disabled: p.tabs.length < 2 },
         { label: t('pane.splitDown'), run: splitTo('bottom'), disabled: p.tabs.length < 2 },
-        { label: t('pane.close'), run: () => set(L.closePane(root, p.id)) },
+        {
+          label: t('pane.reopen'),
+          key: keyCaps('tabReopen')[0],
+          run: reopen,
+          disabled: !closed.length,
+        },
+        {
+          label: t('pane.close'),
+          run: () => (p.tabs.forEach(retire), set(L.closePane(root, p.id))),
+        },
         { label: t('pane.reset'), run: () => set(preset()) },
       ]);
     },
@@ -191,6 +236,51 @@ export function createWmController(env: BaseEnv, host: Host, at: Space): Wm {
     const next = load(value);
     if (next && !disposed && JSON.stringify(next) !== JSON.stringify(root)) set(next, false);
   });
+  const step = <T>(list: readonly T[], at: number, dir: number): T | undefined =>
+    list[(at + dir + list.length) % list.length];
+  const offKeys = mountWmKeys({
+    tab(dir) {
+      const p = cur();
+      const next = p && step(p.tabs, p.tabs.indexOf(p.active), dir);
+      if (next) show(next);
+    },
+    tile(dir) {
+      const all = L.panes(root);
+      const next = step(
+        all,
+        all.findIndex((x) => x.id === cur()?.id),
+        dir,
+      );
+      if (next) show(next.active);
+    },
+    send() {
+      const all = L.panes(root);
+      const p = cur();
+      const to = step(
+        all,
+        all.findIndex((x) => x.id === p?.id),
+        1,
+      );
+      if (!p || !to || to.id === p.id) return;
+      const tab = p.active;
+      set(L.moveView(root, tab, to.id, 'center', to.tabs.length));
+      show(tab);
+    },
+    newTab: () => void (cur() && ctx.onAdd(cur() as L.PaneNode)),
+    close: () => void (cur() && close((cur() as L.PaneNode).active)),
+    reopen,
+    go(kind) {
+      const p = cur();
+      const there = p?.tabs.find((x) => kindOf(x) === kind);
+      if (there) show(there);
+      else if (p) openFrom(p.active)(kind), show(cur()?.active ?? '');
+    },
+    open(kind) {
+      openFrom(cur()?.active ?? '')(kind);
+      const field = own.el(cur()?.active ?? '')?.querySelector<HTMLElement>('textarea, input');
+      field?.focus({ preventScroll: true });
+    },
+  });
   render();
 
   return {
@@ -198,6 +288,7 @@ export function createWmController(env: BaseEnv, host: Host, at: Space): Wm {
     dispose() {
       disposed = true;
       offStore();
+      offKeys();
       host.root.removeEventListener('pointerdown', onPress, true);
       host.root.removeEventListener('focusin', onPress);
       own.dispose();

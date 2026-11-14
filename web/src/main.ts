@@ -2,7 +2,7 @@
 // at once; the engine answers from its worker when it is ready.
 import { createEngine, workerTransport } from './engine/client.ts';
 import { resolveLang, setLang } from './shared/i18n.ts';
-import { pressedAt } from './shared/keys.ts';
+import { pressedAt, watchPairs } from './shared/keys.ts';
 import { spacesKey } from './shared/layout-store.ts';
 import { createSettings } from './shared/settings.ts';
 import { kv } from './shared/storage.ts';
@@ -14,6 +14,7 @@ import { parseActive } from './wm/spaces.ts';
 import { createSpacesBar } from './wm/spaces-bar.ts';
 import { createWmStore } from './wm/store.ts';
 
+watchPairs(window);
 const settings = createSettings();
 let language = resolveLang(settings.get().language);
 setLang(language);

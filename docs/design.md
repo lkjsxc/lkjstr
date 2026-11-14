@@ -44,7 +44,7 @@ without the tool costing them attention. These are promises; a change that break
    same thing. Two tabs of the same feed, thread or profile are normal (each with its own
    scroll position, filters and history), in one tile, across tiles or across workspaces.
    Only one-of-a-kind system dialogs are exempt.
-3. **Everything can be undone.** A closed tab or tile reopens (`Ctrl/Cmd+Shift+T`); a layout
+3. **Everything can be undone.** A closed tab or tile reopens (`Alt+Shift+T`); a layout
    change steps back (`Alt+Z`); follow, unfollow, mute and delete answer with a five-second
    Undo row; posting holds for five seconds ("Sending in 5 · Undo", adjustable to zero) because
    Nostr has no edit.
@@ -234,7 +234,7 @@ Tabs are handled all day, so their feel matters more than their look.
   `--ink-3`, a round `--hairline` backing on hover). A middle click anywhere on a tab closes it
   (a setting, on by default; the browser's middle-click autoscroll is suppressed on the strip).
   `Alt+W` closes the focused tab. Closing is instant, with no confirmation and no animation,
-  and is undone with `Ctrl/Cmd+Shift+T`. A tab holding an unsent draft keeps the draft and
+  and is undone with `Alt+Shift+T`. A tab holding an unsent draft keeps the draft and
   says so in the Undo row.
 - **What gets focus next.** Closing the active tab activates the tab that was active before it
   in that tile, falling back to the right neighbour, then the left. Closing an inactive tab

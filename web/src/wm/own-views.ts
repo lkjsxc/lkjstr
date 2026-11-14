@@ -24,6 +24,8 @@ export type OwnViews = {
   menu(tab: string): readonly MenuItem[];
   /** A tab id for another instance of `kind`, with no state left over from a closed one; `state` is what it starts with. */
   fresh(kind: string, used: ReadonlySet<string>, state?: object): string;
+  /** Unmounts a tab that is being closed and returns the state it leaves, so it can be opened again as it was. */
+  retire(tab: string): object;
   /** Before a render: remembers where every mounted view is scrolled. */
   stash(): void;
   /** After a render: unmounts closed tabs, restores scroll positions, tells views whether they are in front. */
@@ -102,6 +104,13 @@ export function createOwnViews(
       titles.delete(tab);
       return tab;
     },
+    retire(tab) {
+      mounts.get(tab)?.dispose(); // a view writes what it still held (its reading position) as it goes
+      mounts.delete(tab);
+      const state = loadViewState<object>(instance(tab));
+      dropViewState(instance(tab));
+      return state;
+    },
     stash() {
       for (const m of mounts.values()) if (m.el.isConnected) m.top = m.el.scrollTop;
     },
@@ -119,7 +128,11 @@ export function createOwnViews(
       }
       for (const tab of titles.keys()) if (!openTabs.has(tab)) titles.delete(tab);
     },
-    focus: (tab) => mounts.get(tab)?.launcher?.focus(),
+    focus(tab) {
+      const m = mounts.get(tab);
+      if (m?.launcher) m.launcher.focus();
+      else if (m && !m.el.contains(document.activeElement)) m.el.focus({ preventScroll: true });
+    },
     dispose() {
       for (const m of mounts.values()) m.dispose();
       mounts.clear();

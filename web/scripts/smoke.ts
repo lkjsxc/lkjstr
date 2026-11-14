@@ -292,6 +292,265 @@ async function run(browser: Browser): Promise<void> {
   await link.context().close();
   await reading(browser, still);
   await pages(browser, still);
+  await place(browser, still);
+  await keyboard(browser, still);
+}
+
+const FEED = '.view[data-kind="home"]';
+/** The first row on screen in the home feed and how far its top is from the top of the tile. */
+const anchor = (page: Page): Promise<{ key: string; off: number; top: number }> =>
+  page.evaluate((sel) => {
+    const view = document.querySelector(sel) as HTMLElement;
+    const top = view.getBoundingClientRect().top;
+    const row = [...view.querySelectorAll<HTMLElement>('.list > [data-key]:not(.day)')].find(
+      (r) => r.getBoundingClientRect().bottom > top + 1,
+    );
+    return {
+      key: row?.dataset.key ?? '',
+      off: Math.round((row?.getBoundingClientRect().top ?? 0) - top),
+      top: Math.round(view.scrollTop),
+    };
+  }, FEED);
+const same = (a: { key: string; off: number }, b: { key: string; off: number }): boolean =>
+  a.key === b.key && Math.abs(a.off - b.off) <= 1;
+
+/** The reading position: the same note at the same height after a reload, another tab, another tile, another width,
+ * a closed and reopened tab. */
+async function place(browser: Browser, still: Record<string, unknown>): Promise<void> {
+  const page = await open(browser, '/', still);
+  const c = await center(page, FEED);
+  await page.mouse.move(c.x, c.y);
+  for (let i = 0; i < 12; i++) await page.mouse.wheel(0, 613), await page.waitForTimeout(40);
+  await page.waitForTimeout(500);
+  const was = await anchor(page);
+  fact('scrolled well into the feed', was.top > 5000 && was.key !== '', was);
+
+  // The very first frame that has notes already shows them where they were: nothing is seen at the top first.
+  await page.addInitScript((sel) => {
+    const seen: number[] = [];
+    (window as unknown as { firstTops: number[] }).firstTops = seen;
+    const tick = (): void => {
+      const view = document.querySelector<HTMLElement>(sel);
+      if (view?.querySelector('.note')) seen.push(view.scrollTop);
+      if (seen.length < 3) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  }, FEED);
+  await page.reload();
+  await page.waitForSelector(`${FEED} .note`);
+  await page.waitForTimeout(600);
+  fact('reload: the same note at the same height', same(was, await anchor(page)), [
+    was,
+    await anchor(page),
+  ]);
+  const tops = await page.evaluate(() => (window as unknown as { firstTops: number[] }).firstTops);
+  fact(
+    'reload: no frame at the top before the place is back',
+    tops.length > 0 && tops.every((x) => x > 1000),
+    tops,
+  );
+  fact(
+    'reload: the address stays clean',
+    new URL(page.url()).pathname === '/' && !page.url().includes('?'),
+  );
+
+  // Another tab of the tile in front, and back.
+  const home = '.pane:has(.tab[data-view="home"])';
+  await page.keyboard.press('Alt+Shift+N');
+  await page.waitForSelector(`${home} .view.launcher`);
+  await page.keyboard.press('Escape');
+  await page.waitForSelector(`${FEED} .note`);
+  fact('another tab and back: the same place', same(was, await anchor(page)), await anchor(page));
+
+  // Another width (text wraps again, every row above changes height), then another tile.
+  await page.setViewportSize({ width: 1100, height: 760 });
+  await page.waitForTimeout(300);
+  fact('another width: the same place', same(was, await anchor(page)), await anchor(page));
+  await page.keyboard.press('Alt+Shift+Enter');
+  await page.waitForTimeout(300);
+  fact('another tile: the same place', same(was, await anchor(page)), await anchor(page));
+  fact('another tile: the tab really moved', (await count(page, `${home} .tab`)) > 1);
+
+  // Closed and opened again: it comes back where it was, at the note that was being read.
+  const tabs = await count(page, '.tab');
+  await page.keyboard.press('Alt+Shift+W');
+  fact(
+    'Alt+Shift+W closes the tab',
+    (await count(page, '.tab')) === tabs - 1 && (await count(page, FEED)) === 0,
+  );
+  await page.keyboard.press('Alt+Shift+T');
+  await page.waitForSelector(`${FEED} .note`);
+  await page.waitForTimeout(300);
+  fact('a reopened tab is where it was left', same(was, await anchor(page)), await anchor(page));
+
+  // A picture that arrives late above the place does not move it.
+  const before = await anchor(page);
+  await page.evaluate((sel) => {
+    const first = document.querySelector<HTMLElement>(`${sel} .list > .note`);
+    first
+      ?.querySelector('.nmain')
+      ?.append(Object.assign(document.createElement('div'), { style: 'height:333px' }));
+  }, FEED);
+  await page.waitForTimeout(200);
+  fact(
+    'rows that grow above do not push what is read',
+    same(before, await anchor(page)),
+    await anchor(page),
+  );
+  await page.context().close();
+}
+
+/** The keys of a list: a selection that is drawn calmly, acts once per press, and never while typing. */
+async function keyboard(browser: Browser, still: Record<string, unknown>): Promise<void> {
+  const page = await open(browser, '/', still);
+  const sel = `${FEED} .list > .sel`;
+  const key = (): Promise<string> =>
+    page.evaluate((s) => document.querySelector<HTMLElement>(s)?.dataset.key ?? '', sel);
+  await page.locator(`${FEED} .note time`).first().hover();
+  await page.mouse.down({ button: 'right' });
+  await page.mouse.up({ button: 'right' });
+  await page.keyboard.press('Escape');
+  fact('nothing is selected until a key asks', (await count(page, sel)) === 0);
+  const hearts = await count(page, `${FEED} .a-heart.on`);
+  await page.keyboard.press('l');
+  const first = await key();
+  fact(
+    'a note key with nothing selected only shows the selection',
+    first !== '' &&
+      (await count(page, `${FEED} .a-heart.on`)) === hearts &&
+      (await count(page, '.toast')) === 0,
+  );
+  await page.keyboard.press('j');
+  const second = await key();
+  await page.keyboard.press('ArrowDown');
+  await page.keyboard.press('k');
+  fact(
+    'j, k and the arrows walk the notes',
+    second !== first && (await key()) === second && (await count(page, sel)) === 1,
+  );
+  // Composing Japanese text is not a key press.
+  await page.evaluate(() =>
+    window.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'j', code: 'KeyJ', isComposing: true, bubbles: true }),
+    ),
+  );
+  fact('a key of the input method moves nothing', (await key()) === second);
+
+  // A held key acts once.
+  const liked = (): Promise<number> => count(page, `${sel} .a-heart.on`);
+  const start = await liked();
+  await page.keyboard.down('l');
+  await page.keyboard.down('l');
+  await page.keyboard.down('l');
+  await page.keyboard.up('l');
+  await page.locator('.toast.undo').waitFor();
+  fact('l likes once however long it is held', (await liked()) === 1 - start, await liked());
+  await page.locator('.toast.undo button').click();
+  await page.waitForFunction((s) => !document.querySelector(`${s} .a-heart.on`) === true, sel);
+  fact('a like can be taken back', (await liked()) === 0 && (await key()) === second);
+
+  await page.keyboard.press('t');
+  fact(
+    't opens repost and quote with the keyboard in the menu',
+    await page.evaluate(() => document.activeElement?.matches('.menu button') === true),
+  );
+  await page.keyboard.press('j');
+  fact('single keys rest while a menu is open', (await key()) === second);
+  await page.keyboard.press('Enter');
+  await page.locator('.toast.undo').waitFor();
+  fact('repost from the keyboard', (await count(page, `${sel} .a-repost.on`)) === 1);
+  await page.locator('.toast.undo button').last().click();
+  await page.waitForFunction((s) => !document.querySelector(`${s} .a-repost.on`), sel);
+  await page.keyboard.press('j');
+  await page.keyboard.press('k');
+  fact('after a menu, j and k go on from the same note', (await key()) === second);
+
+  // Enter: the thread in the neighbouring tile; Escape drops the selection there, then closes it and comes back.
+  const tabs = await count(page, '.tab');
+  await page.keyboard.press('Enter');
+  await page.waitForSelector('.pane.cur .view[data-kind="thread"] .note');
+  fact(
+    'Enter opens the thread in the neighbouring tile',
+    (await count(page, '.tab')) === tabs + 1 &&
+      (await count(page, `.pane.cur ${FEED}`)) === 0 &&
+      (await key()) === second,
+  );
+  await page.keyboard.press('j');
+  fact('the keys follow into the thread', (await count(page, '.pane.cur .list > .sel')) === 1);
+  await page.keyboard.press('Escape');
+  fact(
+    'Escape first drops the selection',
+    (await count(page, '.pane.cur .list > .sel')) === 0 && (await count(page, '.tab')) === tabs + 1,
+  );
+  await page.keyboard.press('Escape');
+  fact(
+    'Escape then closes the thread and the keys are back in the feed',
+    (await count(page, '.tab')) === tabs && (await count(page, `.pane.cur ${FEED}`)) === 1,
+  );
+  await page.keyboard.press('j');
+  fact('back in the feed the selection moves on', ![first, second, ''].includes(await key()));
+
+  // Going places, a new note, the list of keys; nothing fires while typing.
+  await page.keyboard.press('g');
+  await page.keyboard.press('b');
+  fact(
+    'g b shows Bookmarks in the same tile',
+    (await count(page, '.pane.cur .tab.active[data-view^="bookmarks"]')) === 1,
+  );
+  fact(
+    'g b did not bookmark the selected note',
+    (await count(page, '.toast')) + (await count(page, `${FEED} .sel .bmark:not([hidden])`)) === 0,
+  );
+  await page.keyboard.press('g');
+  await page.keyboard.press('h');
+  fact(
+    'g h returns to the Home that is there',
+    (await count(page, '.pane.cur .tab.active[data-view="home"]')) === 1 &&
+      (await count(page, '.tab[data-view^="home"]')) === 1,
+  );
+  await page.keyboard.press('n');
+  await page.waitForSelector('.pane.cur .view[data-kind="compose"] textarea');
+  const area = '.pane.cur .view[data-kind="compose"] textarea';
+  fact(
+    'n opens a new note with the caret in it and no stray letter',
+    await page
+      .locator(area)
+      .evaluate((a) => a === document.activeElement && (a as HTMLTextAreaElement).value === ''),
+  );
+  const before = await count(page, '.tab');
+  await page.keyboard.type('jng?');
+  fact(
+    'typing is only typing',
+    (await page.locator(area).inputValue()) === 'jng?' && (await count(page, '.tab')) === before,
+  );
+  await page.keyboard.press('Escape');
+  fact(
+    'Escape leaves the field',
+    await page.evaluate(() => document.activeElement?.matches('.view') === true),
+  );
+  await page.keyboard.press('Shift+?');
+  await page.waitForSelector('.pane.cur .view[data-kind="shortcuts"] kbd');
+  const caps = await page.locator('.view[data-kind="shortcuts"] kbd').allInnerTexts();
+  fact(
+    '? lists the keys, pairs and mouse gestures',
+    ['G H', 'J', 'Alt+Shift+T', 'Middle click', 'Shift+Click'].every((x) => caps.includes(x)),
+    caps.slice(0, 12),
+  );
+  await page.keyboard.press('Alt+Shift+ArrowLeft');
+  fact(
+    'Alt+Shift+← is the tab to the left',
+    (await count(page, '.pane.cur .tab.active[data-view^="compose"]')) === 1,
+  );
+  await page.keyboard.press('Alt+Shift+W');
+  await page.keyboard.press('Alt+Shift+T');
+  fact('the draft is still there', (await page.locator(area).inputValue()) === 'jng?');
+  if (shot) {
+    await page.keyboard.press('g');
+    await page.keyboard.press('h');
+    await page.keyboard.press('j');
+    await page.screenshot({ path: shot.replace(/\.png$/, '-keys.png') });
+  }
+  await page.context().close();
 }
 
 /** The filter bar that stays away, the media tab, the emoji picker, the notification toggles. */
@@ -702,23 +961,40 @@ async function pages(browser: Browser, still: Record<string, unknown>): Promise<
     tight.slice(0, 3),
   );
   fact(
-    'phone: an unset bookmark is folded away',
-    rows.every((r) => r.n <= 7) && rows.some((r) => r.n === 6),
+    'phone: the row is always the same six buttons',
+    rows.every((r) => r.n === 6),
   );
   await phone.locator('.note:not(:has(.a-bookmark.on)) .act.a-more').first().tap();
   fact(
     'phone: the bookmark is in the "…" menu',
     (await phone.locator('.menu button').first().innerText()) === 'Bookmark',
   );
-  const marked = await count(phone, '.note .act.a-bookmark.on');
+  const marked = await count(phone, '.note .bmark:visible');
   await phone.locator('.menu button').first().tap();
   await phone.waitForFunction(
-    (n) => document.querySelectorAll('.note .act.a-bookmark.on').length > n,
+    (n) => document.querySelectorAll('.note .bmark:not([hidden])').length > n,
     marked,
   );
+  const bm = await phone
+    .locator('.note:has(.bmark:not([hidden]))')
+    .first()
+    .evaluate((note) => {
+      const kids = [...(note.querySelector('.acts')?.children ?? [])].filter(
+        (k) => getComputedStyle(k).display !== 'none',
+      );
+      const mark = note.querySelector('.bmark')?.getBoundingClientRect();
+      const view = note.closest('.view') as HTMLElement;
+      return {
+        n: kids.length,
+        mark: mark?.width ?? 0,
+        right: Math.max(...kids.map((k) => k.getBoundingClientRect().right)),
+        wide: view.scrollWidth - view.clientWidth,
+      };
+    });
   fact(
-    'phone: a set bookmark shows in the row',
-    (await phone.locator('.note .act.a-bookmark.on').first().isVisible()) === true,
+    'phone: a set bookmark is a mark in the header, the row stays six and nothing overflows',
+    bm.n === 6 && bm.mark > 8 && bm.right <= 390 && bm.wide <= 0,
+    bm,
   );
   if (shot) await phone.screenshot({ path: shot.replace(/\.png$/, '-acts-390.png') });
   await ctx.close();

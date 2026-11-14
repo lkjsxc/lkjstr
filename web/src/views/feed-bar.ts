@@ -5,7 +5,7 @@ import type { NotificationType } from '../engine/protocol.ts';
 import { h } from '../shared/h.ts';
 import { type Key, t } from '../shared/i18n.ts';
 import { type IconName, icon } from '../shared/icons.ts';
-import { keyCaps, pressed } from '../shared/keys.ts';
+import { keyCaps, pressed, typing } from '../shared/keys.ts';
 import { type Filter, filterBar, filterNarrows, filterQuery } from './filter-bar.ts';
 import type { ViewEnv } from './registry.ts';
 
@@ -30,8 +30,6 @@ export const typesQuery = (only: readonly string[] = []): NotificationType[] | u
 };
 
 const BARRED = new Set(['home', 'global', 'hashtag', 'bookmarks', 'search']);
-const typing = (e: Event): boolean =>
-  Boolean((e.target as Element).closest?.('input, textarea, select, [contenteditable]'));
 
 export function mountFeedBar(o: {
   kind: string;

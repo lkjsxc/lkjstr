@@ -3,7 +3,15 @@ import { relayAddress, serverAddress } from '../src/shared/address.ts';
 import { findGlyphs, isEmoji } from '../src/shared/emoji-data.ts';
 import { clockOf, countText, dayOf, noteTime } from '../src/shared/format.ts';
 import { both, resolveLang } from '../src/shared/i18n.ts';
-import { KEYS, type KeyId, keyCaps, keyText, pressed, pressedAt } from '../src/shared/keys.ts';
+import {
+  KEYS,
+  type KeyId,
+  keyCaps,
+  keyText,
+  pressed,
+  pressedAt,
+  watchPairs,
+} from '../src/shared/keys.ts';
 import { keyLabel } from '../src/shared/platform.ts';
 import { DEFAULT_SETTINGS, parseSettings, SETTINGS_SCHEMA } from '../src/shared/settings.ts';
 import { en } from '../src/shared/strings-en.ts';
@@ -130,6 +138,39 @@ describe('words', () => {
     expect(
       pressedAt(key({ key: '#', code: 'Digit3', altKey: true, shiftKey: true }), 'workspace'),
     ).toBe(2);
+  });
+  it('keys: a held key acts once, a pair needs its first key, typing and composing are left alone', () => {
+    const key = (init: KeyboardEventInit): KeyboardEvent =>
+      new KeyboardEvent('keydown', { bubbles: true, ...init });
+    expect(pressed(key({ key: 'l', code: 'KeyL' }), 'like')).toBe(true);
+    expect(pressed(key({ key: 'l', code: 'KeyL', repeat: true }), 'like')).toBe(false);
+    expect(pressed(key({ key: 'j', code: 'KeyJ', repeat: true }), 'next')).toBe(true);
+    expect(pressed(key({ key: 'l', code: 'KeyL', ctrlKey: true }), 'like')).toBe(false);
+    expect(pressed(key({ key: 'Process', code: 'KeyJ', keyCode: 229 }), 'next')).toBe(false);
+    expect(pressed(key({ key: '?', code: 'Slash', shiftKey: true }), 'help')).toBe(true);
+    expect(keyCaps('goHome', false)).toEqual(['G H']);
+    expect(keyCaps('tabReopen', false)).toEqual(['Alt+Shift+T']);
+    expect(keyCaps('clickSplit', false)).toEqual(['Shift+Click']);
+
+    watchPairs(window);
+    const send = (init: KeyboardEventInit, on: EventTarget = window): KeyboardEvent => {
+      const e = key(init);
+      on.dispatchEvent(e);
+      return e;
+    };
+    const lone = send({ key: 'b', code: 'KeyB' });
+    expect([pressed(lone, 'bookmark'), pressed(lone, 'goBookmarks')]).toEqual([true, false]);
+    send({ key: 'g', code: 'KeyG' });
+    const second = send({ key: 'b', code: 'KeyB' });
+    expect([pressed(second, 'bookmark'), pressed(second, 'goBookmarks')]).toEqual([false, true]);
+    const third = send({ key: 'b', code: 'KeyB' });
+    expect(pressed(third, 'bookmark')).toBe(true);
+    // A "g" typed into a field starts nothing.
+    const input = document.body.appendChild(document.createElement('input'));
+    send({ key: 'g', code: 'KeyG' }, input);
+    const after = send({ key: 'h', code: 'KeyH' });
+    expect(pressed(after, 'goHome')).toBe(false);
+    input.remove();
   });
   it('addresses are tidied as typed, and nonsense is refused', () => {
     expect(relayAddress(' relay.example.jp/ ')).toBe('wss://relay.example.jp');

@@ -19,6 +19,8 @@ export type PopoverOpts = {
 };
 
 let current: (() => void) | undefined;
+/** A menu or panel is open: single keys belong to it, not to what is behind. */
+export const popoverOpen = (): boolean => current !== undefined;
 
 /** Shows `el` under `anchor` (above it when there is no room). Returns what closes it. */
 export function openPopover(
@@ -28,6 +30,8 @@ export function openPopover(
   opts: PopoverOpts = {},
 ): () => void {
   current?.();
+  // What had the keyboard when it opened (a list driven by keys, not the button a key pressed for it).
+  const before = document.activeElement as HTMLElement | null;
   const inside = (e: Event): boolean => e.composedPath().includes(el);
   const close = (): void => {
     if (current !== close) return;
@@ -40,7 +44,8 @@ export function openPopover(
     window.removeEventListener('wheel', away, true);
     window.removeEventListener('resize', resized);
     window.removeEventListener('blur', close);
-    if (held && anchor.isConnected) anchor.focus({ preventScroll: true });
+    const back = before?.isConnected && before !== document.body ? before : anchor;
+    if (held && back.isConnected) back.focus({ preventScroll: true });
     opts.closed?.();
   };
   const outside = (e: PointerEvent): void => void (inside(e) || close());
@@ -99,5 +104,17 @@ export function openMenu(
       ),
     ),
   );
+  // The keyboard is in the menu from the start: the arrows walk it, Enter chooses, Escape gives the keyboard back.
+  const enabled = (): HTMLElement[] => [...menu.querySelectorAll<HTMLElement>('button:enabled')];
+  menu.addEventListener('keydown', (e) => {
+    const dir = e.key === 'ArrowDown' ? 1 : e.key === 'ArrowUp' ? -1 : 0;
+    const all = enabled();
+    if (!dir || !all.length) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const at = all.indexOf(document.activeElement as HTMLElement);
+    all[(at + dir + all.length) % all.length]?.focus();
+  });
   const close = openPopover(layer, anchor, menu);
+  enabled()[0]?.focus({ preventScroll: true });
 }
