@@ -72,3 +72,12 @@ pub fn plural(count: usize, one: &str, many: &str) -> String {
         format!("{count} {many}")
     }
 }
+
+pub fn date_label(ui: super::Ui, at: u64) -> String {
+    let day = lkjstr_core::appearance::day_label(at, crate::host::now_secs());
+    if day.is_empty() {
+        stamp(at).split(',').next().unwrap_or("").to_owned()
+    } else {
+        ui.tr(day)
+    }
+}

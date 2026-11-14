@@ -11,11 +11,12 @@ export async function browserReview2({ isolated, workspace, data, root, check })
     });
     await page.reload();
     await page.click('.topbar .account');
+    await page.getByRole('menuitem', { name: 'Sign in or create a key', exact: true }).click();
     await page.getByRole('button', { name: 'Create a new key', exact: true }).click();
-    await page.locator('.accounts li.active').waitFor();
+    await page.locator('.pane.focused .body.shown .accounts li.active').waitFor();
     await page.waitForTimeout(600);
     await page.reload();
-    await page.locator('.accounts li.active').waitFor();
+    await page.locator('.pane.focused .body.shown .accounts li.active').waitFor();
     check('legacy version 18 database does not block new account persistence', true);
   });
 
@@ -105,8 +106,9 @@ export async function browserReview2({ isolated, workspace, data, root, check })
     window.nostr = { getPublicKey: async () => root.pubkey, signEvent: async () => signed };
   } }, async (page) => {
     await page.click('.topbar .account');
+    await page.getByRole('menuitem', { name: 'Sign in or create a key', exact: true }).click();
     await page.getByRole('button', { name: 'Use signer extension', exact: true }).click();
-    await page.locator('.accounts li.active').waitFor();
+    await page.locator('.pane.focused .body.shown .accounts li.active').waitFor();
     await page.locator('.pane textarea').fill('Extension must not replace this event');
     await page.locator('.pane textarea').press('Control+Enter');
     await page.getByRole('alert').filter({ hasText: 'signer changed the requested event' }).waitFor();

@@ -1,5 +1,6 @@
-use bech32::{Bech32, Hrp};
+use bech32::Hrp;
 
+use crate::nip19::Nip19Bech32;
 use crate::{AddressPointer, EventPointer, Nip19Error, NostrEntity, ProfilePointer, nip19_tlv};
 
 pub fn encode_nip19(entity: &NostrEntity) -> Result<String, Nip19Error> {
@@ -78,5 +79,5 @@ fn encode_records(prefix: &str, records: &nip19_tlv::TlvRecords) -> Result<Strin
 
 fn encode_bytes(prefix: &str, bytes: &[u8]) -> Result<String, Nip19Error> {
     let hrp = Hrp::parse(prefix).map_err(|_| Nip19Error::InvalidPrefix)?;
-    bech32::encode::<Bech32>(hrp, bytes).map_err(|_| Nip19Error::InvalidEntity)
+    bech32::encode::<Nip19Bech32>(hrp, bytes).map_err(|_| Nip19Error::InvalidEntity)
 }

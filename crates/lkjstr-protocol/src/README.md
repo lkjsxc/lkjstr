@@ -34,7 +34,7 @@ Protocol source files define event, filter, message, signing, and NIP behavior.
 - `nip65.rs`: NIP-65 relay-list metadata parser.
 - `nip96.rs`: NIP-96 upload discovery and response parsers.
 - `nip98.rs`: NIP-98 HTTP auth event and header helpers.
-- `nip19.rs`: public NIP-19 entity types and decoding.
+- `nip19.rs`: public NIP-19 entity types, original Bech32 parameters, and decoding.
 - `nip19_encode.rs`: NIP-19 entity encoding.
 - `nip19_tlv.rs`: NIP-19 TLV helpers.
 - `reactions.rs`: NIP-25 reaction parsing helpers.

@@ -8,6 +8,7 @@ import { extname, join, resolve } from 'node:path';
 import { chromium } from 'playwright-core';
 import { fakeRelay } from './browser-relay.mjs';
 import { browserFlows } from './browser-flows.mjs';
+import { browserNavigation } from './browser-navigation.mjs';
 import { browserReview } from './browser-review.mjs';
 
 const root = resolve(process.env.LKJSTR_DIST ?? 'dist');
@@ -63,9 +64,10 @@ try {
   await shot('01-welcome');
 
   await page.click('.topbar .account');
+  await page.getByRole('menuitem', { name: 'Sign in or create a key', exact: true }).click();
   await page.click('text=Create a new key');
-  await page.waitForSelector('.accounts li.active', { timeout: 5000 });
-  check('local key created and active', (await page.locator('.accounts li').count()) === 1);
+  await page.waitForSelector('.pane.focused .body.shown .accounts li.active', { timeout: 5000 });
+  check('local key created and active', (await page.locator('.pane.focused .body.shown .accounts li').count()) === 1);
 
   const compose = page.locator('.pane textarea').first();
   await compose.fill('Hello from the lkjstr smoke test #lkjstr');
@@ -81,13 +83,13 @@ try {
   await note.click();
   await page.waitForSelector('.tab:has-text("Thread")', { timeout: 5000 });
   check('note opens thread beside', (await page.locator('.note.focused').count()) >= 1);
-  await page.locator('.note.focused >> text=Reply').click();
+  await page.locator('.note.focused').getByRole('button', { name: 'Reply', exact: true }).click();
   const reply = page.locator('.pane.focused textarea');
   await reply.fill('A reply in the thread');
   await reply.press('Control+Enter');
   await page.waitForFunction(() => document.querySelectorAll('.thread .note').length >= 2, null, { timeout: 15000 });
   check('reply shows in thread', true);
-  await page.locator('.thread .note').first().locator('text=Like').click();
+  await page.locator('.thread .note').first().getByRole('button', { name: 'Like', exact: true }).click();
   await page.waitForSelector('.thread .note button.on', { timeout: 10000 });
   check('like toggles on', stored.some((e) => e.kind === 7));
   await shot('03-thread');
@@ -118,7 +120,7 @@ try {
   await page.reload();
   await page.waitForSelector('.pane', { timeout: 20000 });
   check('layout persists across reload', (await panes()) === layout, `${layout} vs ${await panes()}`);
-  check('account persists across reload', !(await page.locator('.topbar .account').innerText()).includes('Sign in'));
+  check('account persists across reload', await page.locator('.topbar .account .avatar').evaluate((el) => !el.querySelector('svg')));
   await page.click('.tab:has-text("Home")');
   await page.waitForSelector('.body.shown .note:has-text("Hello from the lkjstr smoke test")', { timeout: 10000 });
   check('cached note renders after reload without relay replay', true);
@@ -128,6 +130,7 @@ try {
   check('notifications ask relays and settle honestly', true);
   await browserFlows(page, fake, check, shot);
   await browserReview(browser, url, stored.find((e) => e.kind === 1), check);
+  await browserNavigation(browser, url, check);
 
   await page.setViewportSize({ width: 390, height: 800 });
   await page.waitForTimeout(300);

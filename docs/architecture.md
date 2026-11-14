@@ -8,12 +8,16 @@ How lkjstr is put together, for anyone changing it.
 
 | Crate | Role | Browser APIs |
 | --- | --- | --- |
+| `lkjstr-nips` | Pure Nostr codecs, cryptography and policy | none |
 | `lkjstr-protocol` | Nostr kernel: events, signing, NIP-19, filters, messages | none |
 | `lkjstr-core` | Layout, workspace, store, planner, scoring, timelines, content | none |
 | `lkjstr-web` (root package) | Leptos UI, runtime, host adapters | yes |
 | `lkjstr-xtask` | Repository checks and quiet gates | none |
 | `lkjstr-host` | Native static server (not yet adapted to Trunk output) | none |
 
+`lkjstr-core::appearance`, `words` and `reactions` hold deterministic display
+choices and shared English/Japanese words. `navigation` owns bounded tab
+history, previews and layout recovery; `route` validates public view links.
 `lkjstr-core` is where decisions live; it has native tests. `requests` owns
 plan reconciliation, queue eligibility, authentication retries and lookup
 states; `actions` guards publication inputs and verifies external signer responses; `pagination` tracks raw pages.
@@ -60,6 +64,10 @@ signals (`rev`, `net_rev`, `session_rev`). Rule: never call `App::with` inside
 
 `ui/shell.rs` boots, provides `Ui` (runtime, workspace signal, settings,
 narrow flag, help flag, page visibility) and handles global keys.
+`ui/frame.rs` owns desktop/phone navigation and account/search overlays.
+`ui/navigation.rs` connects the focused tab to the address bar and browser Back.
+`runtime/deadline.rs` cancels expired relay wants and preserves their terminal
+progress. Dropping a want clears its deadline; explicit retry plans it afresh.
 `ui/tiles.rs` renders the layout tree keyed by node id so tab bodies survive
 unrelated edits. `ui/pane.rs` draws strips and keeps inactive bodies mounted
 but hidden (scroll survives), passing `visible` so their wants are released.

@@ -15,6 +15,7 @@ async function workspace(page, views) {
       tx.oncomplete = ok; tx.onabort = fail;
     });
     db.close();
+    history.replaceState(null, "", "/");
   }, views);
   await page.reload();
   await page.waitForSelector('.pane');
@@ -43,7 +44,7 @@ export async function browserReview(browser, url, root, check) {
       await page.waitForSelector('.pane');
       try { await run(page); }
       catch (error) {
-        const frame = error.stack?.split('\n').find((line) => line.includes('browser-review-2.mjs:'));
+        const frame = error.stack?.split('\n').find((line) => line.includes('browser-review'));
         throw new Error(`${String(error).split('\n')[0]} ${frame?.trim() ?? ''}`);
       }
     } finally { await context.close(); }
@@ -69,9 +70,10 @@ export async function browserReview(browser, url, root, check) {
       };
     } }, async (page) => {
       await page.click('.topbar .account');
+      await page.getByRole('menuitem', { name: 'Sign in or create a key', exact: true }).click();
       await page.getByRole('button', { name: 'Create a new key', exact: true }).click();
       await page.getByRole('status').filter({ hasText: mode === 'open' ? 'Account storage unavailable' : 'Account storage write failed' }).waitFor();
-      check(`account creation rejects ${mode} failure`, await page.locator('.accounts li').count() === 0);
+      check(`account creation rejects ${mode} failure`, await page.locator('.pane.focused .body.shown .accounts li').count() === 0);
       if (mode !== 'open') {
         const clean = await page.evaluate(async () => {
           const db = await new Promise((ok) => { const r = indexedDB.open('lkjstr-wasm'); r.onsuccess = () => ok(r.result); });
@@ -133,8 +135,9 @@ export async function browserReview(browser, url, root, check) {
   } });
   await isolated(replyRelay, null, async (page) => {
     await page.click('.topbar .account');
+    await page.getByRole('menuitem', { name: 'Sign in or create a key', exact: true }).click();
     await page.getByRole('button', { name: 'Create a new key', exact: true }).click();
-    await page.locator('.accounts li.active').waitFor();
+    await page.locator('.pane.focused .body.shown .accounts li.active').waitFor();
     await workspace(page, [{ kind: 'compose', reply_to: data.remote.id }]);
     const text = page.getByRole('textbox', { name: 'Note text' });
     await text.fill('Preserve this reply draft');
@@ -153,8 +156,9 @@ export async function browserReview(browser, url, root, check) {
   const authenticated = fakeRelay({ requireAuth: true });
   await isolated(authenticated, null, async (page) => {
     await page.click('.topbar .account');
+    await page.getByRole('menuitem', { name: 'Sign in or create a key', exact: true }).click();
     await page.getByRole('button', { name: 'Create a new key', exact: true }).click();
-    await page.locator('.accounts li.active').waitFor();
+    await page.locator('.pane.focused .body.shown .accounts li.active').waitFor();
     await workspace(page, [{ kind: 'accounts' }]);
     for (let n = 0; n < 50 && (!authenticated.authRetries() || authenticated.connections()); n++) await page.waitForTimeout(100);
     check('accepted AUTH retries closed requests on the open socket', authenticated.authRetries() > 0);

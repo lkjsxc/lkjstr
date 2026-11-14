@@ -11,9 +11,9 @@ use web_sys::KeyboardEvent;
 use super::Ui;
 use super::note_parts::{Avatar, Content, name_of};
 use super::text::{ago, short_npub, stamp};
-use crate::host::{copy_text, now_secs};
+use crate::host::now_secs;
 
-fn nevent(ui: Ui, event: &Event) -> String {
+pub(super) fn nevent(ui: Ui, event: &Event) -> String {
     let relays = ui.app.with(|rt| {
         rt.store
             .seen_on(&event.id)
@@ -33,7 +33,7 @@ fn nevent(ui: Ui, event: &Event) -> String {
         .unwrap_or_default()
 }
 
-fn act(ui: Ui, kind: u64, content: String, tags: Vec<Vec<String>>) {
+pub(super) fn act(ui: Ui, kind: u64, content: String, tags: Vec<Vec<String>>) {
     leptos::task::spawn_local(async move {
         if let Err(error) = ui.app.publish(kind, content, tags).await {
             ui.app.update(|rt| rt.notice = Some(error));
@@ -43,7 +43,7 @@ fn act(ui: Ui, kind: u64, content: String, tags: Vec<Vec<String>>) {
 }
 
 /// Toggles the active account's like: publish `+`, or delete the old one.
-fn like(ui: Ui, event: &Event) {
+pub(super) fn like(ui: Ui, event: &Event) {
     let me = ui.app.with(|rt| rt.session.active.clone());
     let mine = ui.app.with(|rt| {
         rt.store
@@ -65,7 +65,7 @@ fn like(ui: Ui, event: &Event) {
     }
 }
 
-fn repost(ui: Ui, event: &Event) {
+pub(super) fn repost(ui: Ui, event: &Event) {
     let content = serde_json::to_string(&**event).unwrap_or_default();
     act(ui, 6, content, repost_tags(event));
 }
@@ -126,6 +126,17 @@ fn NoteBody(shown: Event, reposter: Option<String>, focused: bool, depth: usize)
         let id = this.with_value(|e| e.id.clone());
         ui.open_thread(&id, ui.app.with(|rt| rt.store.seen_on(&id).to_vec()));
     };
+    let preview = StoredValue::new(None);
+    let click_note = move |ev: web_sys::MouseEvent| {
+        let e = this.get_value();
+        preview.set_value(Some(ui.detail(
+            View::Thread {
+                id: e.id.clone(),
+                relays: ui.app.with(|rt| rt.store.seen_on(&e.id).to_vec()),
+            },
+            Some(&ev),
+        )));
+    };
     let profile = move || ui.open_profile(&this.with_value(|e| e.pubkey.clone()));
     let reply = move || {
         ui.open(
@@ -153,48 +164,30 @@ fn NoteBody(shown: Event, reposter: Option<String>, focused: bool, depth: usize)
     };
     let name_key = author.clone();
     let handle_key = author.clone();
-    let nip05 = ui
-        .app
-        .with(|rt| rt.store.profile(&author).map(|p| p.nip05.clone()))
-        .unwrap_or_default();
     view! {
-        <article class="note" class:focused=focused tabindex="0" data-id=id.clone() style=format!("--depth: {depth}") on:keydown=keydown on:click=move |_| open()>
+        <article class="note" class:focused=focused tabindex="0" data-id=id.clone() style=format!("--depth: {depth}") on:keydown=keydown on:click=click_note on:dblclick=move |_| { if let Some(tab) = preview.get_value() { ui.ws.update(|ws| ws.keep(tab)); } }>
             {reposter.map(|who| view! { <div class="reposted">"↻ " {move || name_of(ui, &who)} " reposted"</div> })}
-            <button class="avatar-button" aria-label="Open profile" on:click=move |ev| { ev.stop_propagation(); profile(); }>
+            <button class="avatar-button" aria-label="Open profile" title="Open profile (p)" on:click=move |ev| { ev.stop_propagation(); preview.set_value(Some(ui.detail(View::Profile { pubkey: this.with_value(|e| e.pubkey.clone()) }, Some(&ev)))); }>
                 <Avatar pubkey=author.clone()/>
             </button>
             <div class="note-main">
                 <header>
-                    <button class="name" on:click=move |ev| { ev.stop_propagation(); profile(); }>{move || name_of(ui, &name_key)}</button>
+                    <button class="name" on:click=move |ev| { ev.stop_propagation(); preview.set_value(Some(ui.detail(View::Profile { pubkey: this.with_value(|e| e.pubkey.clone()) }, Some(&ev)))); }>{move || name_of(ui, &name_key)}</button>
                     {move || {
                         let label = name_of(ui, &handle_key);
-                        let handle = if nip05.is_empty() { short_npub(&handle_key) } else { nip05.clone() };
+                        let handle = short_npub(&handle_key);
                         (label != handle).then(|| view! { <span class="handle">{handle}</span> })
                     }}
                     <time title=stamp(shown.created_at)>{ago(shown.created_at, now)}</time>
                 </header>
                 {parent.filter(|_| depth == 0 && !focused).map(|parent| view! { <ReplyContext id=parent/> })}
                 <Content event=shown.clone()/>
-                <footer class="actions" on:click=|ev| ev.stop_propagation()>
-                    <button title="Reply (r)" on:click=move |_| reply()>"Reply " {move || nonzero(counts.get().0.0)}</button>
-                    <button title="Repost" on:click=move |_| repost(ui, &this.get_value())>"Repost " {move || nonzero(counts.get().0.1)}</button>
-                    <button title="Like (l)" class:on=move || counts.get().1 on:click=move |_| like(ui, &this.get_value())>
-                        {move || if counts.get().1 { "Liked " } else { "Like " }} {move || nonzero(counts.get().0.2)}
-                    </button>
-                    <button title="Copy a nostr: link to this note" on:click=move |_| copy_text(&nevent(ui, &this.get_value()))>"Copy link"</button>
-                </footer>
+                <super::note_actions::Reactions event=shown.clone()/>
+                <super::note_actions::Actions event=shown counts=counts/>
             </div>
         </article>
     }
     .into_any()
-}
-
-fn nonzero(count: usize) -> String {
-    if count == 0 {
-        String::new()
-    } else {
-        count.to_string()
-    }
 }
 
 #[component]

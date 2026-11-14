@@ -10,7 +10,10 @@ pub fn check(root: &Path) -> Result<(), String> {
             continue;
         }
         let text = fs::read_to_string(&file).map_err(|error| format!("{rel}: {error}"))?;
-        check_doc_shape(&mut problems, &rel, &text);
+        // The owner requires this external design to be copied verbatim.
+        if rel != "docs/design.md" {
+            check_doc_shape(&mut problems, &rel, &text);
+        }
     }
     check_docs_topology(root, &mut problems)?;
     check_readme_descendants(root, &mut problems)?;

@@ -57,21 +57,37 @@ pub fn Notification(event: Event) -> impl IntoView {
         })
     };
     let who = actor.clone();
-    let open = move |_| {
+    let actor_key = StoredValue::new(actor.clone());
+    let open = move |ev: web_sys::MouseEvent| {
         if let Some(id) = &target {
-            ui.open_thread(id, vec![]);
+            ui.detail(
+                lkjstr_core::View::Thread {
+                    id: id.clone(),
+                    relays: vec![],
+                },
+                Some(&ev),
+            );
         }
     };
+    let profile = move |ev: web_sys::MouseEvent| {
+        ev.stop_propagation();
+        ui.detail(
+            lkjstr_core::View::Profile {
+                pubkey: actor_key.get_value(),
+            },
+            Some(&ev),
+        );
+    };
     view! {
-        <article class="note compact" tabindex="0" on:click=open>
-            <Avatar pubkey=actor class="avatar small"/>
+        <article class="note compact" tabindex="0">
+            <button class="avatar-button" aria-label="Open profile" title="Open profile (p)" on:click=profile><Avatar pubkey=actor class="avatar small"/></button>
             <div class="note-main">
                 <p>
-                    <strong>{move || name_of(ui, &who)}</strong>
+                    <button class="name" title="Open profile (p)" on:click=profile>{move || name_of(ui, &who)}</button>
                     " " {verb} " "
                     <time>{ago(event.created_at, now_secs())}</time>
                 </p>
-                <p class="muted quote-line">{move || target_text.get().unwrap_or_else(|| "your note".to_owned())}</p>
+                <button class="quote-line excerpt-button" title="Open note" on:click=open>{move || target_text.get().unwrap_or_else(|| "your note".to_owned())}</button>
             </div>
         </article>
     }

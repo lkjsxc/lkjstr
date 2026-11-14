@@ -40,7 +40,7 @@ pub fn Accounts() -> impl IntoView {
     };
     view! {
         <div class="page">
-            <h2>"Accounts"</h2>
+            <h2>{move || ui.tr("Accounts")}</h2>
             <ul class="accounts">
                 <For each=move || accounts.get().0 key=|a| (a.pubkey.clone(), a.signer) let:account>
                     {
@@ -61,14 +61,14 @@ pub fn Accounts() -> impl IntoView {
                                 </div>
                                 {
                                     let key = pubkey.clone();
-                                    move || (!active.get()).then(|| { let key = key.clone(); view! { <button on:click=move |_| { let key = key.clone(); leptos::task::spawn_local(async move { if let Err(e) = app.switch_account(&key).await { report(Err(e), ""); } }); }>"Use"</button> } })
+                                    move || (!active.get()).then(|| { let key = key.clone(); view! { <button on:click=move |_| { let key = key.clone(); leptos::task::spawn_local(async move { if let Err(e) = app.switch_account(&key).await { report(Err(e), ""); } }); }>{move || ui.tr("Use")}</button> } })
                                 }
                                 {(account.signer == Signer::Local).then(|| view! {
                                     <button title="Show the secret key so you can back it up" on:click=move |_| {
                                         revealed.set(app.reveal_nsec(&key_reveal).map(|nsec| (key_reveal.clone(), nsec)));
-                                    }>"Back up key"</button>
+                                    }>{move || ui.tr("Back up key")}</button>
                                 })}
-                                <button class="danger" on:click=move |_| { let key = key_remove.clone(); leptos::task::spawn_local(async move { if let Err(e) = app.remove_account(&key).await { report(Err(e), ""); } }); }>"Remove"</button>
+                                <button class="danger" on:click=move |_| { let key = key_remove.clone(); leptos::task::spawn_local(async move { if let Err(e) = app.remove_account(&key).await { report(Err(e), ""); } }); }>{move || ui.tr("Remove")}</button>
                             </li>
                         }
                     }
@@ -79,18 +79,18 @@ pub fn Accounts() -> impl IntoView {
                 <div class="secret" role="alert">
                     <p><strong>"Your secret key."</strong> " Anyone who sees it controls this account. Store it in a password manager, then hide it."</p>
                     <code>{nsec}</code>
-                    <button on:click=move |_| revealed.set(None)>"Hide"</button>
+                    <button on:click=move |_| revealed.set(None)>{move || ui.tr("Hide")}</button>
                 </div>
             })}
-            <h3>"Add an account"</h3>
+            <h3>{move || ui.tr("Add an account")}</h3>
             <div class="row-actions">
-                <button class="primary" on:click=move |_| { leptos::task::spawn_local(async move { report(app.generate_account().await, "Created a new key for"); }); }>"Create a new key"</button>
-                <button disabled=move || !nip07::available() on:click=extension title="Uses window.nostr (NIP-07)">"Use signer extension"</button>
+                <button on:click=move |_| { leptos::task::spawn_local(async move { report(app.generate_account().await, "Created a new key for"); }); }>{move || ui.tr("Create a new key")}</button>
+                <button disabled=move || !nip07::available() on:click=extension title="Uses window.nostr (NIP-07)">{move || ui.tr("Use signer extension")}</button>
             </div>
             <form class="search-bar" on:submit=move |ev| { ev.prevent_default(); import(()); }>
                 <input type="password" autocomplete="off" placeholder="nsec1… to sign, or npub1… to read only" aria-label="Key to import"
                     prop:value=move || input.get() on:input=move |ev| input.set(event_target_value(&ev))/>
-                <button type="submit">"Import"</button>
+                <button type="submit">{move || ui.tr("Import")}</button>
             </form>
             {move || message.get().map(|(ok, text)| view! { <p class:error=!ok role="status">{text}</p> })}
             <p class="small muted">"Keys created or imported here are stored unencrypted in this browser's storage for this site. A signer extension keeps the key out of the page."</p>

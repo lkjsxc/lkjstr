@@ -80,7 +80,32 @@ must be present.
 
 ## Record
 
-2026-11-14, revive branch:
+2026-11-14, Phase A foundation:
+
+- The expanded smoke passes 80 checks on a Trunk release, including previews,
+  independent tabs, neighbour placement, keeping a preview, per-tab and browser
+  history, layout undo, reopening, Unicode deep links and silent-relay timeout.
+  Report: `tmp/smoke-foundation/report.json`.
+- `scripts/browser-foundation.mjs` seeds signed Japanese/English notes, data URL
+  avatars, imeta-sized images, replies, reposts, quotes, custom reactions, long
+  text and content warnings. Both themes at 1440x900 and 390x844 are captured
+  under `tmp/screens/`. It asserts phone width and independent duplicate tabs.
+  The complete PNG list and check results are in `tmp/screens/report.json`.
+  `tmp/screens/INDEX.md` groups the captures by view, size and theme.
+- Native regressions cover independent launcher/detail tabs, preview history,
+  the split width floor, per-tab history bounds, layout undo, reopening after
+  later edits, route parsing, data-image safety, reaction groups and exact
+  theme tokens with AA contrast for readable text pairs.
+- The external `docs/design.md` is preserved verbatim. Its non-ASCII text,
+  missing Purpose section and 304 lines are a specific repository-check
+  exception required by the owner; other documentation keeps the usual rules.
+- Release WASM: 13572292 bytes (1238684 bytes gzip). The README build command
+  produced `tmp/lkjstr-dist.tar.gz`; all 80 smoke checks pass on its extracted
+  contents. All four quiet gates pass.
+- Docker verify remains excluded by the worktree-only write restriction.
+
+Previous revive verification:
+
 
 - Second-review smoke: all 61 checks passed on the current release build,
   with intercepted WebSockets, blocked external HTTP and a fresh local port.

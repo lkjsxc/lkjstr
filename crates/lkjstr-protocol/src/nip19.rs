@@ -1,10 +1,23 @@
 use std::fmt;
 
+use bech32::{Bech32, Checksum, primitives::decode::CheckedHrpstring};
 use serde::{Deserialize, Serialize};
 
 use crate::{bytes_to_hex, nip19_tlv};
 
 const BECH32_LIMIT: usize = 5000;
+
+// NIP-19 keeps the original checksum but permits longer relay-hinted entities
+// than the library's 1023-character code length. This does not extend the
+// short-code error-detection guarantees of the checksum.
+pub(crate) struct Nip19Bech32;
+impl Checksum for Nip19Bech32 {
+    type MidstateRepr = <Bech32 as Checksum>::MidstateRepr;
+    const CODE_LENGTH: usize = BECH32_LIMIT;
+    const CHECKSUM_LENGTH: usize = Bech32::CHECKSUM_LENGTH;
+    const GENERATOR_SH: [Self::MidstateRepr; 5] = Bech32::GENERATOR_SH;
+    const TARGET_RESIDUE: Self::MidstateRepr = Bech32::TARGET_RESIDUE;
+}
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 pub struct ProfilePointer {
@@ -75,7 +88,12 @@ pub fn decode_nip19(value: &str) -> Option<NostrEntity> {
     if value.len() > BECH32_LIMIT {
         return None;
     }
-    let (hrp, bytes) = bech32::decode(value).ok()?;
+    let checked = CheckedHrpstring::new::<Nip19Bech32>(value).ok()?;
+    let hrp = checked.hrp();
+    let bytes: Vec<_> = checked.byte_iter().collect();
+    if bech32::encode::<Nip19Bech32>(hrp, &bytes).ok()? != value.to_ascii_lowercase() {
+        return None;
+    }
     match hrp.as_str().to_ascii_lowercase().as_str() {
         "npub" if bytes.len() == 32 => Some(NostrEntity::Npub(bytes_to_hex(&bytes))),
         "nsec" if bytes.len() == 32 => Some(NostrEntity::Nsec(bytes_to_hex(&bytes))),
@@ -132,5 +150,15 @@ fn optional_kind(records: &nip19_tlv::TlvRecords, key: u8) -> Option<Option<u64>
         Some(Some(nip19_tlv::first_kind(records, key)?))
     } else {
         Some(None)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn checksum_parameters_are_consistent() {
+        Nip19Bech32::sanity_check();
     }
 }

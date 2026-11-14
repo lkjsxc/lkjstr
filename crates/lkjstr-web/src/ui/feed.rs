@@ -15,6 +15,7 @@ use super::feed_memory;
 use super::feed_state::{EmptyState, prefetch};
 use super::note::Note;
 use super::notify::Notification;
+use super::text::date_label;
 
 pub(super) const PAGE: usize = lkjstr_core::pagination::PAGE_SIZE;
 const SHOWN_CAP: usize = 600;
@@ -139,7 +140,7 @@ pub fn Feed(
         tick.update(|t| *t += 1);
     };
     let container = NodeRef::<leptos::html::Div>::new();
-    let saving = StoredValue::new(false);
+    let memory = feed_memory::Memory::new(ui, tab, container);
     feed_memory::restore(
         ui,
         tab,
@@ -174,7 +175,7 @@ pub fn Feed(
         }
     });
     let on_scroll = move |ev: web_sys::Event| {
-        feed_memory::remember(ui, tab, container, saving);
+        memory.remember();
         let Some(el) = ev
             .target()
             .and_then(|t| t.dyn_into::<web_sys::Element>().ok())
@@ -203,6 +204,9 @@ pub fn Feed(
                 }>{move || format!("{} new · show", rows.with(|r| r.1))}</button>
             </Show>
             <For each=move || rows.get().0 key=|event| event.id.clone() let:event>
+                {let row_id = event.id.clone(); let at = event.created_at; view! { <Show when=move || rows.with(|r| r.0.iter().position(|e| e.id == row_id).is_some_and(|i| i == 0 || r.0[i - 1].created_at / 86_400 != r.0[i].created_at / 86_400))>
+                    <div class="date-divider">{date_label(ui, at)}</div>
+                </Show> }}
                 {if is_notifications { view! { <Notification event=event/> }.into_any() } else { view! { <Note event=event/> }.into_any() }}
             </For>
             <EmptyState source=source.clone() live=live count=Signal::derive(move || rows.with(|r| r.0.len())) authors_known=Signal::derive(move || { app.rev.track(); me.get().is_some_and(|me| app.with(|rt| rt.store.follows(&me).is_some())) })/>

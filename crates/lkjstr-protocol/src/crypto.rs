@@ -1,6 +1,6 @@
 use std::fmt;
 
-use k256::schnorr::{Signature, SigningKey, VerifyingKey};
+use k256::schnorr::SigningKey;
 use rand_core::OsRng;
 
 use crate::{bytes_to_hex, hex_to_bytes};
@@ -40,10 +40,9 @@ pub fn parse_secret_key_hex(hex: &str) -> Option<SecretKeyBytes> {
 }
 
 pub fn public_key_from_secret(secret: &SecretKeyBytes) -> Result<String, CryptoError> {
-    let signing_key = signing_key(secret)?;
-    Ok(bytes_to_hex(
-        signing_key.verifying_key().to_bytes().as_slice(),
-    ))
+    lkjstr_nips::keys::SecretKey::from_bytes(*secret.as_bytes())
+        .map(|key| key.public_key())
+        .map_err(|_| CryptoError::InvalidSecretKey)
 }
 
 pub fn public_key_from_secret_hex(hex: &str) -> Result<String, CryptoError> {
@@ -56,10 +55,12 @@ pub fn sign_schnorr_hex(
     secret: &SecretKeyBytes,
 ) -> Result<String, CryptoError> {
     let message = fixed_bytes::<32>(message_hash_hex, 32)?;
-    let signature = signing_key(secret)?
-        .sign_prehash_with_aux_rand(&message, &[0u8; 32])
+    let key = lkjstr_nips::keys::SecretKey::from_bytes(*secret.as_bytes())
+        .map_err(|_| CryptoError::InvalidSecretKey)?;
+    let signature = key
+        .sign(&message, &[0; 32])
         .map_err(|_| CryptoError::InvalidSignature)?;
-    Ok(bytes_to_hex(signature.to_bytes().as_slice()))
+    Ok(bytes_to_hex(&signature))
 }
 
 pub fn sign_schnorr_hex_with_secret_hex(
@@ -71,27 +72,14 @@ pub fn sign_schnorr_hex_with_secret_hex(
 }
 
 pub fn verify_schnorr_hex(signature_hex: &str, message_hash_hex: &str, pubkey_hex: &str) -> bool {
-    let Ok(signature) = signature(signature_hex) else {
+    let (Ok(signature), Ok(message), Ok(pubkey)) = (
+        fixed_bytes::<64>(signature_hex, 64),
+        fixed_bytes::<32>(message_hash_hex, 32),
+        fixed_bytes::<32>(pubkey_hex, 32),
+    ) else {
         return false;
     };
-    let Ok(message) = fixed_bytes::<32>(message_hash_hex, 32) else {
-        return false;
-    };
-    let Ok(pubkey) = fixed_bytes::<32>(pubkey_hex, 32).and_then(|bytes| {
-        VerifyingKey::from_bytes(&bytes).map_err(|_| CryptoError::InvalidPublicKey)
-    }) else {
-        return false;
-    };
-    pubkey.verify_raw(&message, &signature).is_ok()
-}
-
-fn signing_key(secret: &SecretKeyBytes) -> Result<SigningKey, CryptoError> {
-    SigningKey::from_bytes(&secret.0).map_err(|_| CryptoError::InvalidSecretKey)
-}
-
-fn signature(hex: &str) -> Result<Signature, CryptoError> {
-    let bytes = fixed_bytes::<64>(hex, 64)?;
-    Signature::try_from(bytes.as_slice()).map_err(|_| CryptoError::InvalidSignature)
+    lkjstr_nips::keys::verify(&pubkey, &message, &signature).is_ok()
 }
 
 fn field_bytes(bytes: &[u8]) -> [u8; 32] {

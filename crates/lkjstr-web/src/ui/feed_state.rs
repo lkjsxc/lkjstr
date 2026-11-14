@@ -126,6 +126,9 @@ pub fn EmptyState(
             view! {
                 <div class=if rows { "feed-foot" } else { "empty" } role="status">
                     <p>{text}</p>
+                    {(action.is_none() && !rows && progress.get().is_some_and(|p| p.settled())).then(|| view! {
+                        <button on:click=move |_| { if let Some(id) = live.get_untracked() { app.retry(id); } }>{move || ui.tr("Try again")}</button>
+                    })}
                     {action.map(|(label, view)| view! {
                         <button on:click=move |_| { ui.open(view.clone(), Open::Here); }>{label}</button>
                     })}

@@ -37,12 +37,28 @@ impl Profile {
                 String::new()
             }
         };
+        let image = |names: &[&str]| {
+            let value = field(names);
+            if [
+                "data:image/png;base64,",
+                "data:image/jpeg;base64,",
+                "data:image/webp;base64,",
+                "data:image/svg+xml,",
+            ]
+            .iter()
+            .any(|prefix| value.starts_with(prefix))
+            {
+                value
+            } else {
+                url(names)
+            }
+        };
         Profile {
             name: field(&["name", "username"]),
             display_name: field(&["display_name", "displayName"]),
             about: field(&["about"]),
-            picture: url(&["picture", "image"]),
-            banner: url(&["banner"]),
+            picture: image(&["picture", "image"]),
+            banner: image(&["banner"]),
             nip05: field(&["nip05"]),
             lud16: field(&["lud16"]),
             website: url(&["website"]),

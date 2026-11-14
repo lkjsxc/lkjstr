@@ -2,6 +2,7 @@
 
 mod accounts;
 mod compose;
+mod linked;
 mod profile;
 mod relays;
 mod search;
@@ -37,7 +38,7 @@ pub fn TabBody(tab: TabId, visible: Signal<bool>) -> impl IntoView {
                 view! { <thread::Thread id=id relays=relays visible=visible/> }.into_any()
             }
             View::Profile { pubkey } => {
-                view! { <profile::Profile pubkey=pubkey visible=visible/> }.into_any()
+                view! { <profile::Profile tab=tab pubkey=pubkey visible=visible/> }.into_any()
             }
             View::Search { query } => {
                 view! { <search::Search tab=tab query=query visible=visible/> }.into_any()
@@ -48,6 +49,8 @@ pub fn TabBody(tab: TabId, visible: Signal<bool>) -> impl IntoView {
             View::Relays => view! { <relays::Relays/> }.into_any(),
             View::Accounts => view! { <accounts::Accounts/> }.into_any(),
             View::Settings => view! { <simple::SettingsView/> }.into_any(),
+            View::Link { url } => view! { <linked::Website url=url/> }.into_any(),
+            View::Image { url } => view! { <linked::Image url=url/> }.into_any(),
         }
     }
 }

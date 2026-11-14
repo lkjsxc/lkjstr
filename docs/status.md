@@ -36,6 +36,33 @@ Probed with Chromium (Playwright) against the shipped SvelteKit dev server:
 - Default relay `wss://relay.damus.io` failed (HTTP 521) and nothing routed
   around it.
 
+## Phase A foundation (2026-11-14)
+
+The authoritative [design](design.md) is copied verbatim. Exact theme tokens,
+readable contrast tests, system type, hairlines, plain tabs, SVG note actions,
+reaction chips, rounded-square avatars, date dividers, density and motion rules
+are implemented. The frame has an avatar menu and search/command entry. The
+phone frame fills 390px, with scrolling tabs, bottom navigation and More.
+
+Identical views open independently, including launchers and reply drafts.
+Details use neighbour previews or a split with a 360px minimum per half;
+kept tabs, per-tab history, public view URLs, layout undo and reopening are
+implemented. History retains 64 entries per tab; recovery retains 32 layouts.
+Image links open image tiles. Website tiles offer an external-browser action.
+Visible relay wants have cancellable 12-second deadlines and retry actions;
+storage promises have 15-second deadlines, signer promises 30 seconds.
+
+The NIP branch is integrated in source; signing and signature verification use
+`lkjstr-nips`. Original linked-worktree Git metadata is read-only outside this
+worktree. The resolved, uncommitted merge is in `tmp/phase-a-merge.git`; the
+orchestrator must record it in the original metadata. No commit was made.
+
+Not finished: nine workspaces, first-run Global/banner/language filter,
+complete Japanese strings, emoji picker, full note menus, phone gestures,
+advanced tab gestures/settings, container-size rules, and all modifier paths.
+Scroll restoration after reload still needs a dedicated browser regression.
+The source document's experience promises are not all complete.
+
 ## Implemented
 
 Which of these were exercised in a real browser, and how, is recorded in
@@ -61,8 +88,7 @@ Which of these were exercised in a real browser, and how, is recorded in
 
 ## Current verification (2026-11-14)
 
-The expanded fake-relay browser smoke passes all 61 checks on the current
-release build. The earlier 51-check suite passed debug and release builds.
+The foundation fake-relay browser smoke passes 80 checks on a release build. The earlier 51-check suite passed debug and release builds.
 It covers generated local accounts, invalid and read-only imports, account
 switching and removal, signing, compose, threads, profiles, empty and populated
 notifications, local and relay search, and direct NIP-19 navigation. It verifies
@@ -151,7 +177,7 @@ Planned (not built):
   mute lists, custom emoji picker, profile editing.
 - Virtualisation is `content-visibility` plus a 600-row cap, not windowing.
   Each feed scans at most 6000 raw rows, including hidden noise.
-- Release WASM is 9.6 MB (1.1 MB gzip) because wasm-opt is off
+- Release WASM is 13.6 MB (1.2 MB gzip) because wasm-opt is off
   (`data-wasm-opt="0"` avoids a download); enable it for size.
 - Notification read state is not tracked.
 
@@ -159,7 +185,8 @@ Planned (not built):
 
 1. Run Docker Compose `verify` where image storage writes are allowed, then
    add the fake-relay browser smoke to CI (needs Chromium in the image).
-2. Fix scroll restore after reload and verify IndexedDB pruning at its bound.
+2. Complete the remaining Phase A items above, then verify scroll restore and
+   IndexedDB pruning at its bound.
 3. Worker-side ingest (verification and indexing) with the same core crate.
 4. Initial follow list creation after a proven empty relay response, relay
    list editing (publish kind 10002), and mute lists (kind 10000).

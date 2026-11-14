@@ -129,6 +129,13 @@ impl Progress {
     pub fn settled(&self) -> bool {
         self.answered + self.failed >= self.total
     }
+    pub fn timed_out(self) -> Self {
+        Self {
+            total: self.total,
+            answered: self.answered,
+            failed: self.total.saturating_sub(self.answered),
+        }
+    }
     pub fn add(&mut self, other: Self) {
         self.total += other.total;
         self.answered += other.answered;

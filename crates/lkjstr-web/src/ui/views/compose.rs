@@ -43,10 +43,7 @@ fn publish_line(publish: &Publish) -> String {
 pub fn Compose(tab: TabId, reply_to: Option<String>, visible: Signal<bool>) -> impl IntoView {
     let ui = Ui::get();
     let app = ui.app;
-    let key = format!(
-        "draft:{}",
-        reply_to.clone().unwrap_or_else(|| format!("tab{tab}"))
-    );
+    let key = format!("draft:tab{tab}");
     let text = RwSignal::new(String::new());
     let warning = RwSignal::new(None::<String>);
     let error = RwSignal::new(None::<String>);
@@ -144,9 +141,7 @@ pub fn Compose(tab: TabId, reply_to: Option<String>, visible: Signal<bool>) -> i
             <div class="compose-bar">
                 <label class="check">
                     <input type="checkbox" prop:checked=move || warning.get().is_some()
-                        on:change=move |ev| warning.set(event_target_checked(&ev).then(String::new))/>
-                    "Content warning"
-                </label>
+                        on:change=move |ev| warning.set(event_target_checked(&ev).then(String::new))/>{move || ui.tr("Content warning")}</label>
                 <span class="muted">{move || format!("{} characters", text.get().chars().count())}</span>
                 <span class="strip-fill"></span>
                 <button class="primary" disabled=move || !can_sign.get() || busy.get() || text.get().trim().is_empty() || (parent_id.get_value().is_some() && parent.get().is_none())
@@ -172,7 +167,7 @@ pub fn Compose(tab: TabId, reply_to: Option<String>, visible: Signal<bool>) -> i
                             other => format!("Event of kind {other}"),
                         }}</span>
                         <span class="muted">{publish_line(&publish)}</span>
-                        <details><summary>"Relays"</summary>
+                        <details><summary>{move || ui.tr("Relays")}</summary>
                             {publish.relays.iter().map(|(url, state)| view! {
                                 <div class="small">{url.clone()} " · " {match state {
                                     PubState::Sending => "waiting".to_owned(),

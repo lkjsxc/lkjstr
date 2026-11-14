@@ -34,7 +34,7 @@ fn tab_title(ui: Ui, tab: TabId) -> String {
             )
         }
         View::Search { query } if !query.is_empty() => format!("Search · {query}"),
-        other => other.title().to_owned(),
+        other => ui.tr(other.title()),
     }
 }
 
@@ -73,9 +73,9 @@ pub fn PaneView(id: NodeId) -> impl IntoView {
                 <For each=move || tabs.get() key=|tab| *tab let:tab>
                     <TabChip tab=tab selected=Signal::derive(move || active.get() == Some(tab))/>
                 </For>
-                <button class="icon" title="New tab (Alt+T)" aria-label="New tab" on:click=add>"+"</button>
+                <button class="icon" title="New tab (Alt+T)" aria-label="New tab" on:click=add><super::icons::Icon name="plus"/></button>
                 <span class="strip-fill"></span>
-                <button class="icon" title="Tile menu" aria-label="Tile menu" aria-expanded=move || menu.get().to_string() on:click=move |_| menu.update(|m| *m = !*m)>"⋯"</button>
+                <button class="icon" title="Tile menu" aria-label="Tile menu" aria-expanded=move || menu.get().to_string() on:click=move |_| menu.update(|m| *m = !*m)><super::icons::Icon name="more"/></button>
                 <Show when=move || menu.get()>
                     <div class="menu" role="menu" on:pointerleave=move |_| menu.set(false)>
                         <button role="menuitem" on:click=move |_| run(|ws, _| ws.apply(Command::Split(Zone::Right)))>"Split right"<kbd>"Alt+\\"</kbd></button>
@@ -85,7 +85,7 @@ pub fn PaneView(id: NodeId) -> impl IntoView {
                         <button role="menuitem" on:click=move |_| run(|ws, pane| ws.close_pane(pane))>"Close tile"</button>
                         <button role="menuitem" on:click=move |_| run(|ws, _| {
                             let signed_in = ws.tabs.values().any(|v| *v == View::Home);
-                            *ws = Workspace::preset(signed_in);
+                            ws.reset_to_preset(signed_in);
                         })>"Reset layout"</button>
                     </div>
                 </Show>
@@ -98,7 +98,7 @@ pub fn PaneView(id: NodeId) -> impl IntoView {
                             shown.get() && (!ui.narrow.get() || focused.get()) && ui.page_visible.get()
                         });
                         view! {
-                            <div class="body" class:shown=move || shown.get() role="tabpanel">
+                            <div class="body" class:shown=move || shown.get() role="tabpanel" on:input=move |_| ui.ws.update(|ws| ws.keep(tab))>
                                 <views::TabBody tab=tab visible=visible/>
                             </div>
                         }
@@ -113,6 +113,7 @@ pub fn PaneView(id: NodeId) -> impl IntoView {
 fn TabChip(tab: TabId, selected: Signal<bool>) -> impl IntoView {
     let ui = Ui::get();
     let title = Memo::new(move |_| tab_title(ui, tab));
+    let entered = StoredValue::new(false);
     let down = move |ev: web_sys::PointerEvent| {
         drag::start_tab_drag(ev, ui, tab, title.get_untracked());
     };
@@ -124,6 +125,8 @@ fn TabChip(tab: TabId, selected: Signal<bool>) -> impl IntoView {
         <div
             class="tab"
             class:active=move || selected.get()
+            class:preview=move || ui.ws.with(|ws| ws.navigation.previews.contains(&tab))
+            on:dblclick=move |_| ui.ws.update(|ws| ws.keep(tab))
             role="tab"
             tabindex="0"
             aria-selected=move || selected.get().to_string()
@@ -131,7 +134,8 @@ fn TabChip(tab: TabId, selected: Signal<bool>) -> impl IntoView {
             on:pointerdown=down
             on:keydown=move |ev: web_sys::KeyboardEvent| {
                 if ev.key() == "Enter" || ev.key() == " " {
-                    ui.ws.update(|ws| ws.activate(tab));
+                    ui.ws.update(|ws| { if entered.get_value() && selected.get_untracked() { ws.keep(tab); } ws.activate(tab); });
+                    entered.set_value(true);
                 }
             }
         >
@@ -142,7 +146,7 @@ fn TabChip(tab: TabId, selected: Signal<bool>) -> impl IntoView {
                 title="Close tab (Alt+W)"
                 on:pointerdown=|ev: web_sys::PointerEvent| ev.stop_propagation()
                 on:click=close
-            >"×"</button>
+            ><super::icons::Icon name="close"/></button>
         </div>
     }
 }

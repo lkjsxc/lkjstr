@@ -11,7 +11,7 @@ use web_sys::{HtmlElement, KeyboardEvent};
 use super::Ui;
 use crate::host::{after, focus_selector};
 
-pub const SHORTCUTS: [(&str, &str); 16] = [
+pub const SHORTCUTS: [(&str, &str); 20] = [
     (
         "Alt + H J K L / arrows",
         "Focus the tile left, below, above, right",
@@ -34,6 +34,10 @@ pub const SHORTCUTS: [(&str, &str); 16] = [
     ("/", "Search"),
     ("?", "Show or hide this help"),
     ("Esc", "Close menus and help"),
+    ("Alt + Left / Right", "Back / forward in this tab"),
+    ("Ctrl/Cmd + Shift + T", "Reopen the closed tab or tile"),
+    ("Alt + Z", "Undo the layout change"),
+    ("Ctrl/Cmd + K", "Search or open a view"),
 ];
 
 pub(super) fn typing(ev: &KeyboardEvent) -> bool {
@@ -78,6 +82,30 @@ fn chord(code: &str, shift: bool) -> Option<Command> {
 }
 
 pub fn handle(ui: Ui, ev: &KeyboardEvent) {
+    if (ev.ctrl_key() || ev.meta_key()) && ev.shift_key() && ev.code() == "KeyT" {
+        ev.prevent_default();
+        ui.ws.update(|ws| ws.reopen());
+        return;
+    }
+    if ev.alt_key()
+        && !ev.shift_key()
+        && ["ArrowLeft", "ArrowRight", "KeyZ"].contains(&ev.code().as_str())
+    {
+        ev.prevent_default();
+        ui.ws.update(|ws| {
+            if ev.code() == "KeyZ" {
+                ws.undo_layout();
+            } else {
+                ws.travel(if ev.code() == "ArrowLeft" { -1 } else { 1 });
+            }
+        });
+        return;
+    }
+    if (ev.ctrl_key() || ev.meta_key()) && ev.code() == "KeyK" {
+        ev.prevent_default();
+        ui.palette.update(|p| *p = !*p);
+        return;
+    }
     if ev.alt_key() && !ev.ctrl_key() && !ev.meta_key() {
         if let Some(command) = chord(&ev.code(), ev.shift_key()) {
             ev.prevent_default();
@@ -88,6 +116,7 @@ pub fn handle(ui: Ui, ev: &KeyboardEvent) {
     }
     if ev.key() == "Escape" {
         ui.help.set(false);
+        ui.palette.set(false);
         return;
     }
     if typing(ev) || ev.ctrl_key() || ev.meta_key() || ev.alt_key() {
@@ -162,7 +191,7 @@ pub fn Help() -> impl IntoView {
     view! {
         <div class="overlay" on:click=move |_| ui.help.set(false)>
             <div class="sheet" role="dialog" aria-label="Keyboard shortcuts" on:click=|ev| ev.stop_propagation()>
-                <h2>"Keyboard shortcuts"</h2>
+                <h2>{move || ui.tr("Keyboard shortcuts")}</h2>
                 <table class="keys">
                     {SHORTCUTS
                         .iter()
@@ -170,7 +199,7 @@ pub fn Help() -> impl IntoView {
                         .collect_view()}
                 </table>
                 <p class="muted">"Drag a tab onto a tile's edge to split, onto its body to stack, or along a tab strip to reorder. Drag the gaps between tiles to resize."</p>
-                <button on:click=move |_| ui.help.set(false)>"Close"</button>
+                <button on:click=move |_| ui.help.set(false)>{move || ui.tr("Close")}</button>
             </div>
         </div>
     }

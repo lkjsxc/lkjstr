@@ -4,11 +4,9 @@ use leptos::ev;
 use leptos::prelude::*;
 use lkjstr_core::Workspace;
 
-use super::text::short_npub;
 use super::{Settings, Theme, Ui, keys, tiles};
 use crate::host::{after, set_root_attr};
 use crate::runtime::App;
-use crate::runtime::status::Summary;
 
 const NARROW_PX: f64 = 760.0;
 
@@ -28,6 +26,7 @@ pub fn Shell() -> impl IntoView {
         settings: RwSignal::new(Settings::default()),
         narrow: RwSignal::new(window_width() < NARROW_PX),
         help: RwSignal::new(false),
+        palette: RwSignal::new(false),
         page_visible: RwSignal::new(!crate::host::document_hidden()),
     };
     provide_context(ui);
@@ -43,9 +42,11 @@ pub fn Shell() -> impl IntoView {
         if let Some(settings) = boot.settings.and_then(|t| serde_json::from_str(&t).ok()) {
             ui.settings.set(settings);
         }
+        super::navigation::restore(ui);
         booted.set(true);
     });
     persist_workspace(ui, booted);
+    super::navigation::install(ui, booted);
     Effect::new(move |_| {
         let settings = ui.settings.get();
         let theme = match settings.theme {
@@ -54,6 +55,14 @@ pub fn Shell() -> impl IntoView {
             Theme::Dark => "dark",
         };
         set_root_attr("data-theme", theme);
+        set_root_attr(
+            "data-density",
+            if settings.compact {
+                "compact"
+            } else {
+                "comfortable"
+            },
+        );
         set_root_attr("style", &format!("--text: {}px", settings.text));
         if booted.get_untracked()
             && let Ok(text) = serde_json::to_string(&settings)
@@ -75,7 +84,7 @@ pub fn Shell() -> impl IntoView {
     });
     view! {
         <div class="app" class:narrow=move || ui.narrow.get()>
-            <TopBar/>
+            <super::frame::TopBar/>
             <main class="desk" aria-label="Workspace">
                 <Show
                     when=move || booted.get()
@@ -87,6 +96,7 @@ pub fn Shell() -> impl IntoView {
             <Show when=move || ui.help.get()>
                 <keys::Help/>
             </Show>
+            <super::frame::PhoneBar/>
             <Toast/>
         </div>
     }
@@ -110,68 +120,11 @@ fn persist_workspace(ui: Ui, booted: RwSignal<bool>) {
     });
 }
 
-#[component]
-fn TopBar() -> impl IntoView {
-    let ui = Ui::get();
-    let app = ui.app;
-    let summary = Memo::new(move |_| {
-        app.net_rev.track();
-        app.rev.track();
-        app.with(|rt| rt.summary())
-    });
-    let account = Memo::new(move |_| {
-        app.session_rev.track();
-        app.rev.track();
-        app.with(|rt| {
-            let pubkey = rt.session.active.clone()?;
-            let label = rt
-                .store
-                .profile(&pubkey)
-                .and_then(|p| p.label().map(str::to_owned));
-            Some(label.unwrap_or_else(|| short_npub(&pubkey)))
-        })
-    });
-    let open_relays = move |_| {
-        ui.open(lkjstr_core::View::Relays, lkjstr_core::Open::Here);
-    };
-    let open_accounts = move |_| {
-        ui.open(lkjstr_core::View::Accounts, lkjstr_core::Open::Here);
-    };
-    view! {
-        <header class="topbar">
-            <span class="brand">"lkjstr"</span>
-            <button class="status" on:click=open_relays title="Relays and sync (opens Relays)">
-                {move || status_text(summary.get())}
-            </button>
-            <span class="spacer"></span>
-            <button class="ghost" on:click=move |_| ui.help.update(|h| *h = !*h) title="Keyboard shortcuts (?)">
-                "Shortcuts"
-            </button>
-            <button class="account" on:click=open_accounts title="Accounts">
-                {move || account.get().unwrap_or_else(|| "Sign in".to_owned())}
-            </button>
-        </header>
-    }
-}
-
-fn status_text(summary: Summary) -> String {
-    let relays = match (summary.open, summary.connecting) {
-        (0, 0) if summary.failing > 0 => "offline".to_owned(),
-        (0, 0) => "idle".to_owned(),
-        (open, 0) => format!("{open} relays"),
-        (open, connecting) => format!("{open} relays, {connecting} connecting"),
-    };
-    if summary.waiting > 0 || summary.queued_events > 0 {
-        format!("● {relays} · syncing")
-    } else {
-        format!("● {relays}")
-    }
-}
-
 /// The last failed action, until dismissed.
 #[component]
 fn Toast() -> impl IntoView {
-    let app = Ui::get().app;
+    let ui = Ui::get();
+    let app = ui.app;
     let notice = Memo::new(move |_| {
         app.session_rev.track();
         app.with(|rt| rt.notice.clone())
@@ -185,7 +138,7 @@ fn Toast() -> impl IntoView {
             view! {
                 <div class="toast" role="alert">
                     <span>{text}</span>
-                    <button class="ghost" on:click=dismiss>"Dismiss"</button>
+                    <button class="ghost" on:click=dismiss>{move || ui.tr("Dismiss")}</button>
                 </div>
             }
         })

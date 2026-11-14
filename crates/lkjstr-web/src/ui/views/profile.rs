@@ -41,7 +41,11 @@ fn toggle_follow(ui: Ui, target: String) {
 }
 
 #[component]
-pub fn Profile(pubkey: String, visible: Signal<bool>) -> impl IntoView {
+pub fn Profile(
+    tab: lkjstr_core::layout::TabId,
+    pubkey: String,
+    visible: Signal<bool>,
+) -> impl IntoView {
     let ui = Ui::get();
     let app = ui.app;
     let key = StoredValue::new(pubkey.clone());
@@ -88,17 +92,16 @@ pub fn Profile(pubkey: String, visible: Signal<bool>) -> impl IntoView {
                     <div>
                         <h2>{move || name_of(ui, &key.get_value())}</h2>
                         <p class="muted">{move || {
-                            let nip05 = profile.get().map(|p| p.nip05.clone()).unwrap_or_default();
                             let named = profile.get().is_some_and(|p| p.label().is_some());
-                            if !nip05.is_empty() { nip05 } else if named { short_npub(&key.get_value()) } else { String::new() }
+                            if named { short_npub(&key.get_value()) } else { String::new() }
                         }}</p>
                     </div>
                     <span class="strip-fill"></span>
                     {move || match relation.get() {
-                        Some("you") => view! { <span class="pill">"This is you"</span> }.into_any(),
+                        Some("you") => view! { <span class="pill">{move || ui.tr("This is you")}</span> }.into_any(),
                         Some(state) => {
                             let label = if state == "following" { "Unfollow" } else { "Follow" };
-                            view! { <button class:primary=state != "following" on:click=move |_| toggle_follow(ui, key.get_value())>{label}</button> }.into_any()
+                            view! { <button on:click=move |_| toggle_follow(ui, key.get_value())>{label}</button> }.into_any()
                         }
                         None => ().into_any(),
                     }}
@@ -106,13 +109,13 @@ pub fn Profile(pubkey: String, visible: Signal<bool>) -> impl IntoView {
                 <p class="about">{move || profile.get().map(|p| p.about.clone()).unwrap_or_default()}</p>
                 <p class="muted small">
                     {move || following.get().map(|n| format!("Follows {} · ", plural(n, "account", "accounts")))}
-                    <button class="link" title=full.clone() on:click=move |_| copy_text(&copy)>"Copy npub"</button>
+                    <button class="link" title=full.clone() on:click=move |_| copy_text(&copy)>{move || ui.tr("Copy npub")}</button>
                     {move || profile.get().filter(|p| !p.website.is_empty()).map(|p| view! {
                         " · " <a href=p.website.clone() target="_blank" rel="noopener noreferrer nofollow">{p.website.clone()}</a>
                     })}
                 </p>
             </header>
-            <Feed source=Source::Profile(pubkey) visible=visible/>
+            <Feed source=Source::Profile(pubkey) visible=visible tab=tab/>
         </div>
     }
 }

@@ -47,6 +47,7 @@ impl Rt {
         let wants: Vec<_> = self
             .wants
             .iter()
+            .filter(|(id, _)| !self.expired.contains_key(id))
             .map(|(id, want)| (*id, want.clone()))
             .collect();
         let ctx = PlanContext {

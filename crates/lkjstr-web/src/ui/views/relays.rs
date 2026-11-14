@@ -39,7 +39,7 @@ pub fn Relays() -> impl IntoView {
     });
     view! {
         <div class="page">
-            <h2>"Relays"</h2>
+            <h2>{move || ui.tr("Relays")}</h2>
             <p class="muted">{move || {
                 let (s, wants, events) = summary.get();
                 format!(

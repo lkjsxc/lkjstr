@@ -116,3 +116,24 @@ fn missing_lookup_settles_for_eose_refusal_and_mixed_results() {
     p.failed = 0;
     assert_eq!(Lookup::from_progress(Some(p)), Lookup::Missing);
 }
+
+#[test]
+fn deadlines_fail_only_unanswered_requests_and_preserve_real_counts() {
+    use lkjstr_core::requests::Progress;
+    let expired = Progress {
+        total: 6,
+        answered: 2,
+        failed: 1,
+    }
+    .timed_out();
+    assert_eq!(
+        expired,
+        Progress {
+            total: 6,
+            answered: 2,
+            failed: 4
+        }
+    );
+    assert!(expired.settled());
+    assert_eq!(Progress::default().timed_out(), Progress::default());
+}

@@ -144,7 +144,12 @@ pub fn Thread(id: String, relays: Vec<String>, visible: Signal<bool>) -> impl In
                 }
             </For>
             <Show when=move || event.get().is_none()>
-                <div class="empty" role="status"><p>{move || progress.get().message()}</p></div>
+                <div class="empty" role="status"><p>{move || progress.get().message()}</p>
+                    <Show when=move || progress.get() != lkjstr_core::requests::Lookup::Loading>
+                        <p class="small">{move || missing.get().map(|id| format!("{} relays asked", app.with(|rt| rt.progress(id).total)))}</p>
+                        <button on:click=move |_| { for id in [missing.get_untracked(), conversation.get_untracked()].into_iter().flatten() { app.retry(id); } }>{move || ui.tr("Try again")}</button>
+                    </Show>
+                </div>
             </Show>
         </div>
     }

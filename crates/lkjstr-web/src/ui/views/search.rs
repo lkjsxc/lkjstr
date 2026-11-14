@@ -23,7 +23,7 @@ pub fn Search(tab: TabId, query: String, visible: Signal<bool>) -> impl IntoView
         let text = draft.get_untracked().trim().to_owned();
         active.set(text.clone());
         ui.ws.update(|ws| {
-            ws.tabs.insert(tab, View::Search { query: text });
+            ws.navigate(tab, View::Search { query: text });
         });
     };
     let direct = Memo::new(move |_| {
@@ -69,14 +69,14 @@ pub fn Search(tab: TabId, query: String, visible: Signal<bool>) -> impl IntoView
             <form class="search-bar" on:submit=move |ev| { ev.prevent_default(); submit(); }>
                 <input type="search" placeholder="Words, #tags, npub or note links" aria-label="Search"
                     prop:value=move || draft.get() on:input=move |ev| draft.set(event_target_value(&ev))/>
-                <button type="submit">"Search"</button>
+                <button type="submit">{move || ui.tr("Search")}</button>
             </form>
             <div class="feed">
                 {move || direct.get().map(|(label, view)| view! {
-                    <div class="empty"><button class="primary" on:click=move |_| { ui.ws.update(|ws| ws.replace_view(tab, view.clone())); }>{label}</button></div>
+                    <div class="empty"><button on:click=move |_| { ui.detail(view.clone(), None); }>{label}</button></div>
                 })}
                 <Show when=move || !people.with(Vec::is_empty)>
-                    <h3 class="section">"People"</h3>
+                    <h3 class="section">{move || ui.tr("People")}</h3>
                     <div class="people">
                         <For each=move || people.get() key=|pk| pk.clone() let:pubkey>
                             {
@@ -110,7 +110,11 @@ pub fn Search(tab: TabId, query: String, visible: Signal<bool>) -> impl IntoView
                             Some(_) => "No matches on this device or the relays we asked.",
                         }
                     };
-                    empty.then(|| view! { <div class="empty" role="status"><p>{hint}</p></div> })
+                    empty.then(|| view! { <div class="empty" role="status"><p>{hint}</p>
+                        <Show when=move || progress.get().is_some_and(|p| p.settled())>
+                            <button on:click=move |_| { if let Some(id) = live.get_untracked() { app.retry(id); } }>{move || ui.tr("Try again")}</button>
+                        </Show>
+                    </div> })
                 }}
             </div>
         </div>

@@ -15,6 +15,8 @@ pub struct Workspace {
     pub focus: NodeId,
     #[serde(default)]
     pub next_id: u32,
+    #[serde(default)]
+    pub navigation: crate::navigation::Navigation,
 }
 
 /// How `open` places a view.
@@ -22,6 +24,8 @@ pub struct Workspace {
 pub enum Open {
     /// In the focused pane's stack.
     Here,
+    /// Explicit new split to the right, even when there is a neighbour.
+    Split,
     /// In the pane right of the focused one, splitting if there is none.
     Beside,
 }
@@ -75,6 +79,7 @@ impl Workspace {
             tabs,
             focus: 10,
             next_id: 30,
+            navigation: crate::navigation::Navigation::default(),
         }
     }
 
@@ -95,6 +100,10 @@ impl Workspace {
             return Workspace::preset(signed_in);
         };
         self.tabs.retain(|tab, _| seen.contains(tab));
+        self.navigation
+            .histories
+            .retain(|tab, _| seen.contains(tab));
+        self.navigation.previews.retain(|tab| seen.contains(tab));
         self.root = root;
         if layout::find_pane(&self.root, self.focus).is_none() {
             self.focus = layout::panes(&self.root)[0].id;
@@ -118,23 +127,14 @@ impl Workspace {
         self.focused_pane().map(|pane| pane.active)
     }
 
-    pub fn find_view(&self, view: &View) -> Option<TabId> {
-        self.tabs
-            .iter()
-            .find(|(_, open)| *open == view)
-            .map(|(tab, _)| *tab)
-    }
-
-    /// Opens `view`, focusing an existing tab when the same view is open.
+    /// Always opens an independent tab, including identical views.
     pub fn open(&mut self, view: View, how: Open) -> TabId {
-        if let Some(tab) = self.find_view(&view) {
-            self.activate(tab);
-            return tab;
-        }
+        self.checkpoint();
         let tab = self.alloc();
         self.tabs.insert(tab, view);
         let (target, zone) = match how {
             Open::Here => (self.focus, Zone::Center),
+            Open::Split => (self.focus, Zone::Right),
             Open::Beside => match layout::neighbor(&self.root, self.focus, Zone::Right) {
                 Some(right) => (right, Zone::Center),
                 None => (self.focus, Zone::Right),
@@ -161,20 +161,20 @@ impl Workspace {
 
     /// The `+` page (or any tab) becomes another view in place.
     pub fn replace_view(&mut self, tab: TabId, view: View) {
-        if let Some(existing) = self.find_view(&view).filter(|existing| *existing != tab) {
-            self.close_tab(tab);
-            self.activate(existing);
-            return;
-        }
-        if let Some(slot) = self.tabs.get_mut(&tab) {
-            *slot = view;
-            self.activate(tab);
-        }
+        self.navigate(tab, view);
+        self.keep(tab);
     }
 
     pub fn close_tab(&mut self, tab: TabId) {
+        if !self.tabs.contains_key(&tab) {
+            return;
+        }
+        let before = serde_json::to_string(self).unwrap_or_default();
+        self.checkpoint();
         let holder = layout::pane_of_tab(&self.root, tab).map(|pane| pane.id);
         self.tabs.remove(&tab);
+        self.navigation.histories.remove(&tab);
+        self.navigation.previews.remove(&tab);
         match layout::remove_tab(self.root.clone(), tab) {
             Some(root) => self.root = root,
             None => self.reset_to_launcher(),
@@ -182,15 +182,20 @@ impl Workspace {
         if holder == Some(self.focus) && layout::find_pane(&self.root, self.focus).is_none() {
             self.focus = layout::panes(&self.root)[0].id;
         }
+        self.remember_closed(before, vec![tab]);
     }
 
     pub fn close_pane(&mut self, pane_id: NodeId) {
+        let before = serde_json::to_string(self).unwrap_or_default();
+        let closed = self.navigation.closed.len();
         let doomed: Vec<TabId> = layout::find_pane(&self.root, pane_id)
             .map(|pane| pane.tabs.clone())
             .unwrap_or_default();
-        for tab in doomed {
-            self.close_tab(tab);
+        for tab in &doomed {
+            self.close_tab(*tab);
         }
+        self.navigation.closed.truncate(closed);
+        self.remember_closed(before, doomed);
     }
 
     fn reset_to_launcher(&mut self) {
@@ -202,6 +207,7 @@ impl Workspace {
     }
 
     pub fn resize(&mut self, split: NodeId, sizes: &[f64]) {
+        self.checkpoint();
         self.root = layout::resize(self.root.clone(), split, sizes);
     }
 }

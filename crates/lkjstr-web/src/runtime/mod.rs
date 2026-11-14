@@ -3,6 +3,7 @@
 //! revision signals the UI re-reads.
 
 mod accounts;
+mod deadline;
 mod ingest;
 mod net;
 mod persist;
@@ -50,6 +51,9 @@ pub struct Rt {
     pub notice: Option<String>,
     wants: BTreeMap<WantId, Want>,
     next_want: WantId,
+    /// Both maps are bounded by current visible wants and released on drop.
+    deadlines: BTreeMap<WantId, TimeoutHandle>,
+    expired: BTreeMap<WantId, lkjstr_core::requests::Progress>,
     incoming: VecDeque<(String, NostrEvent)>,
     unsaved: lkjstr_core::persistence::PendingEvents,
     flags: Flags,
@@ -111,6 +115,8 @@ impl App {
             notice: None,
             wants: BTreeMap::new(),
             next_want: 1,
+            deadlines: BTreeMap::new(),
+            expired: BTreeMap::new(),
             incoming: VecDeque::new(),
             unsaved: Default::default(),
             flags: Flags::default(),
@@ -138,25 +144,35 @@ impl App {
 
     /// Registers a want and returns its id; replanning is debounced.
     pub fn want(&self, want: Want) -> WantId {
-        self.update(|rt| {
+        let id = self.update(|rt| {
             let id = rt.alloc_want();
             rt.wants.insert(id, want);
             rt.schedule_replan(30);
             id
-        })
+        });
+        self.watch_want(id);
+        id
     }
 
     pub fn set_want(&self, id: WantId, want: Want) {
-        self.update(|rt| {
-            if rt.wants.get(&id) != Some(&want) {
-                rt.wants.insert(id, want);
-                rt.schedule_replan(30);
+        let changed = self.update(|rt| {
+            if rt.wants.get(&id) == Some(&want) {
+                return false;
             }
+            rt.wants.insert(id, want);
+            rt.expired.remove(&id);
+            rt.schedule_replan(30);
+            true
         });
+        if changed {
+            self.watch_want(id);
+        }
     }
 
     pub fn drop_want(&self, id: WantId) {
+        self.cancel_deadline(id);
         self.update(|rt| {
+            rt.expired.remove(&id);
             if rt.wants.remove(&id).is_some() {
                 rt.schedule_replan(200);
             }

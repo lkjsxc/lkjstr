@@ -6,7 +6,6 @@ use std::rc::Rc;
 
 use js_sys::{Object, Promise, Reflect};
 use wasm_bindgen::{JsCast, JsValue, closure::Closure};
-use wasm_bindgen_futures::JsFuture;
 use web_sys::{IdbCursorDirection, IdbDatabase, IdbRequest};
 
 pub use super::idb_commit::kv_commit;
@@ -68,7 +67,14 @@ pub async fn open() -> Result<IdbDatabase, String> {
         }
     });
     request.set_onupgradeneeded(Some(upgrade.unchecked_ref()));
-    let value = JsFuture::from(settle(&request)).await.map_err(err)?;
+    let value = super::promise::bounded(
+        settle(&request),
+        15,
+        "Local storage did not answer. Reload to try again.",
+        || {},
+    )
+    .await
+    .map_err(err)?;
     Ok(value.unchecked_into())
 }
 
@@ -79,7 +85,14 @@ pub async fn kv_get(db: &IdbDatabase, key: &str) -> Result<Option<String>, Strin
         .map_err(err)?
         .get(&key.into())
         .map_err(err)?;
-    let value = JsFuture::from(settle(&request)).await.map_err(err)?;
+    let value = super::promise::bounded(
+        settle(&request),
+        15,
+        "Local storage did not answer. Reload to try again.",
+        || {},
+    )
+    .await
+    .map_err(err)?;
     Ok(value.as_string())
 }
 
@@ -145,7 +158,16 @@ pub async fn newest_events(db: &IdbDatabase, limit: usize) -> Result<Vec<String>
         request.set_onerror(Some(on_err.unchecked_ref()));
         *slot.borrow_mut() = Some(step);
     });
-    JsFuture::from(done).await.map_err(err)?;
+    let result = super::promise::bounded(
+        done,
+        15,
+        "Local cache did not answer. Reload to try again.",
+        || {},
+    )
+    .await;
+    request.set_onsuccess(None);
+    slot.borrow_mut().take();
+    result.map_err(err)?;
     let out = rows.borrow().clone();
     Ok(out)
 }
@@ -198,6 +220,13 @@ pub async fn count_events(db: &IdbDatabase) -> Result<u32, String> {
         .map_err(err)?
         .count()
         .map_err(err)?;
-    let value = JsFuture::from(settle(&request)).await.map_err(err)?;
+    let value = super::promise::bounded(
+        settle(&request),
+        15,
+        "Local storage did not answer. Reload to try again.",
+        || {},
+    )
+    .await
+    .map_err(err)?;
     Ok(value.as_f64().unwrap_or(0.0) as u32)
 }

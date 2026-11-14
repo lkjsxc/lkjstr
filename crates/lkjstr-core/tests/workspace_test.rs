@@ -19,7 +19,7 @@ fn preset_has_three_columns_and_valid_focus() {
 }
 
 #[test]
-fn open_beside_reuses_right_neighbor_and_singletons_refocus() {
+fn open_beside_reuses_right_neighbor_and_duplicates_are_independent() {
     let mut ws = Workspace::preset(true);
     let thread = View::Thread {
         id: "a".repeat(64),
@@ -29,14 +29,11 @@ fn open_beside_reuses_right_neighbor_and_singletons_refocus() {
     let holder = layout::pane_of_tab(&ws.root, tab).map(|p| p.id);
     assert_eq!(holder, Some(11), "detail opens in the next column");
     assert_eq!(ws.focus, 11);
-    assert_eq!(
-        ws.open(thread, Open::Beside),
-        tab,
-        "same view is focused, not duplicated"
-    );
+    let second = ws.open(thread, Open::Here);
+    assert_ne!(second, tab, "identical details open independently");
     let home = ws.open(View::Home, Open::Here);
-    assert_eq!(home, 1);
-    assert_eq!(ws.focus, 10);
+    assert_ne!(home, 1);
+    assert_eq!(ws.tabs.get(&1), Some(&View::Home));
 }
 
 #[test]
@@ -128,7 +125,7 @@ fn cycle_select_grow_and_new_tab() {
     ws.apply(Command::NewTab);
     ws.apply(Command::NewTab);
     let launchers = ws.tabs.values().filter(|v| **v == View::Launcher).count();
-    assert_eq!(launchers, 1, "a second + focuses the existing new-tab page");
+    assert_eq!(launchers, 2, "each + opens an independent new-tab page");
 }
 
 #[test]
@@ -142,7 +139,10 @@ fn stored_layout_round_trips_and_repairs() {
     );
     let json = serde_json::to_string(&ws).unwrap_or_default();
     let back: Workspace = serde_json::from_str(&json).unwrap_or_else(|_| Workspace::preset(true));
-    assert_eq!(back, ws);
+    assert_eq!(
+        serde_json::to_string(&back).ok(),
+        serde_json::to_string(&ws).ok()
+    );
     let mut broken = ws.clone();
     broken.tabs.remove(&1);
     broken.focus = 999;
@@ -152,7 +152,7 @@ fn stored_layout_round_trips_and_repairs() {
 }
 
 #[test]
-fn replace_view_converts_launcher_or_focuses_existing() {
+fn replace_view_converts_launcher_even_when_view_already_exists() {
     let mut ws = Workspace::preset(true);
     ws.apply(Command::NewTab);
     let launcher = ws.focused_tab().unwrap_or(0);
@@ -161,6 +161,7 @@ fn replace_view_converts_launcher_or_focuses_existing() {
     ws.apply(Command::NewTab);
     let second = ws.focused_tab().unwrap_or(0);
     ws.replace_view(second, View::Home);
-    assert!(!ws.tabs.contains_key(&second));
-    assert_eq!(ws.focused_tab(), Some(1));
+    assert_eq!(ws.tabs.get(&second), Some(&View::Home));
+    assert_eq!(ws.focused_tab(), Some(second));
+    assert_eq!(ws.tabs.get(&1), Some(&View::Home));
 }

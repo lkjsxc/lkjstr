@@ -68,7 +68,7 @@ fn SplitView(id: NodeId) -> impl IntoView {
                         <div class="cell" style=grow>
                             <Show when=move || { index.get() > 0 }>
                                 <div
-                                    class="handle"
+                                    class="resize-handle"
                                     role="separator"
                                     aria-label=label
                                     on:pointerdown=move |ev| drag::start_resize(ev, ui, id, dir.get_untracked())

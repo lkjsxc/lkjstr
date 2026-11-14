@@ -6,8 +6,12 @@ mod feed;
 mod feed_memory;
 mod feed_source;
 mod feed_state;
+mod frame;
+mod icons;
 mod keys;
+mod navigation;
 mod note;
+mod note_actions;
 mod note_parts;
 mod notify;
 mod pane;
@@ -39,6 +43,10 @@ pub struct Settings {
     pub theme: Theme,
     #[serde(default = "default_text")]
     pub text: u8,
+    #[serde(default)]
+    pub compact: bool,
+    #[serde(default)]
+    pub language: Option<lkjstr_core::appearance::Language>,
 }
 
 fn default_text() -> u8 {
@@ -50,6 +58,8 @@ impl Default for Settings {
         Settings {
             theme: Theme::System,
             text: default_text(),
+            compact: false,
+            language: None,
         }
     }
 }
@@ -62,6 +72,7 @@ pub struct Ui {
     pub settings: RwSignal<Settings>,
     pub narrow: RwSignal<bool>,
     pub help: RwSignal<bool>,
+    pub palette: RwSignal<bool>,
     /// False while the browser tab is hidden: background work pauses.
     pub page_visible: RwSignal<bool>,
 }
@@ -69,6 +80,22 @@ pub struct Ui {
 impl Ui {
     pub fn get() -> Ui {
         expect_context::<Ui>()
+    }
+
+    pub fn tr(&self, text: &str) -> String {
+        let language = self.settings.with(|s| s.language).unwrap_or_else(|| {
+            let languages = web_sys::window()
+                .map(|w| {
+                    w.navigator()
+                        .languages()
+                        .iter()
+                        .filter_map(|v| v.as_string())
+                        .collect::<Vec<_>>()
+                })
+                .unwrap_or_default();
+            lkjstr_core::appearance::language(&languages)
+        });
+        lkjstr_core::words::text(language, text).to_owned()
     }
 
     pub fn open(&self, view: View, how: Open) -> TabId {
@@ -79,23 +106,35 @@ impl Ui {
         tab
     }
 
-    /// Opens a note's conversation beside the current tile.
+    pub fn detail(&self, view: View, event: Option<&web_sys::MouseEvent>) -> TabId {
+        let width = web_sys::window()
+            .and_then(|w| w.inner_width().ok())
+            .and_then(|v| v.as_f64())
+            .unwrap_or(1280.0);
+        let kept = event.is_some_and(|e| e.ctrl_key() || e.meta_key());
+        let split = event.is_some_and(|e| e.shift_key());
+        let mut tab = 0;
+        self.ws
+            .update(|ws| tab = ws.open_detail(view, width, kept || split, split));
+        tab
+    }
+
     pub fn open_thread(&self, id: &str, relays: Vec<String>) {
-        self.open(
+        self.detail(
             View::Thread {
                 id: id.to_owned(),
                 relays,
             },
-            Open::Beside,
+            None,
         );
     }
 
     pub fn open_profile(&self, pubkey: &str) {
-        self.open(
+        self.detail(
             View::Profile {
                 pubkey: pubkey.to_owned(),
             },
-            Open::Beside,
+            None,
         );
     }
 }

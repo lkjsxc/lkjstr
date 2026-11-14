@@ -21,6 +21,12 @@ pub enum Command {
 
 impl Workspace {
     pub fn apply(&mut self, command: Command) {
+        if !matches!(
+            command,
+            Command::Focus(_) | Command::Cycle(_) | Command::Select(_)
+        ) {
+            self.checkpoint();
+        }
         match command {
             Command::Focus(zone) => {
                 if let Some(next) = layout::neighbor(&self.root, self.focus, zone) {
@@ -50,6 +56,7 @@ impl Workspace {
 
     /// Drag and drop: `zone` of pane `target`, or a strip position.
     pub fn drop_tab(&mut self, tab: TabId, target: NodeId, zone: Zone, index: Option<usize>) {
+        self.checkpoint();
         let mut next = self.next_id.max(layout::max_id(&self.root) + 1);
         let mut ids = || {
             next += 1;
@@ -109,24 +116,7 @@ impl Workspace {
     }
 
     fn new_tab(&mut self) {
-        let existing = self.focused_pane().and_then(|pane| {
-            pane.tabs
-                .iter()
-                .copied()
-                .find(|tab| self.tabs.get(tab) == Some(&View::Launcher))
-        });
-        match existing {
-            Some(tab) => self.activate(tab),
-            None => {
-                let tab = self.next_id.max(layout::max_id(&self.root) + 1);
-                self.next_id = tab + 1;
-                self.tabs.insert(tab, View::Launcher);
-                let mut ids = || 0;
-                let (root, _) =
-                    layout::add_tab(self.root.clone(), self.focus, tab, Zone::Center, &mut ids);
-                self.root = root;
-            }
-        }
+        self.open(View::Launcher, super::Open::Here);
     }
 
     fn grow(&mut self, steps: i32) {

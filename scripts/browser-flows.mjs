@@ -55,15 +55,16 @@ export async function browserFlows(page, fake, check, shot) {
   check('note and nevent search links open the focused thread', true);
 
   await page.click('.topbar .account');
+  await page.getByRole('menuitem', { name: 'Sign in or create a key', exact: true }).click();
   const key = page.getByRole('textbox', { name: 'Key to import' });
   await key.fill('invalid-input');
   await page.getByRole('button', { name: 'Import', exact: true }).click();
-  await page.locator('.accounts').locator('..').getByRole('status').filter({ hasText: 'Paste an nsec1' }).waitFor();
-  check('invalid account import reports a real failure', (await page.locator('.accounts li').count()) === 1);
+  await page.locator('.pane.focused .body.shown .accounts').locator('..').getByRole('status').filter({ hasText: 'Paste an nsec1' }).waitFor();
+  check('invalid account import reports a real failure', (await page.locator('.pane.focused .body.shown .accounts li').count()) === 1);
   await key.fill(data.npub);
   await page.getByRole('button', { name: 'Import', exact: true }).click();
-  await page.locator('.accounts li.active:has-text("read only")').waitFor();
-  check('npub import selects a read-only account', (await page.locator('.accounts li').count()) === 2);
+  await page.locator('.pane.focused .body.shown .accounts li.active:has-text("read only")').waitFor();
+  check('npub import selects a read-only account', (await page.locator('.pane.focused .body.shown .accounts li').count()) === 2);
   await page.click('.tab:has-text("Home")');
   await page.locator('.pane.focused .body.shown .note:has-text("Fixture reply notification")').waitFor();
   check('switching accounts removes the old Home rows', (await page.locator('.pane.focused .body.shown .feed > .note:has-text("Hello from the lkjstr smoke test")').count()) === 0);
@@ -80,11 +81,12 @@ export async function browserFlows(page, fake, check, shot) {
   await compose.getByRole('alert').filter({ hasText: 'This account cannot sign.' }).waitFor();
   check('read-only keyboard posting reports failure without publishing', fake.published.length === before);
   await page.click('.topbar .account');
-  await page.locator('.accounts li:has-text("key on this device") button:has-text("Use")').click();
-  await page.locator('.accounts li.active:has-text("key on this device")').waitFor();
-  await page.locator('.accounts li:has-text("read only") button:has-text("Remove")').click();
-  await page.locator('.accounts li:has-text("read only")').waitFor({ state: 'hidden' });
-  check('switch and remove keep the local signing account', (await page.locator('.accounts li').count()) === 1);
+  await page.getByRole('menuitem', { name: 'Sign in or create a key', exact: true }).click();
+  await page.locator('.pane.focused .body.shown .accounts li:has-text("key on this device") button:has-text("Use")').click();
+  await page.locator('.pane.focused .body.shown .accounts li.active:has-text("key on this device")').waitFor();
+  await page.locator('.pane.focused .body.shown .accounts li:has-text("read only") button:has-text("Remove")').click();
+  await page.locator('.pane.focused .body.shown .accounts li:has-text("read only")').waitFor({ state: 'hidden' });
+  check('switch and remove keep the local signing account', (await page.locator('.pane.focused .body.shown .accounts li').count()) === 1);
   await page.locator('.topbar .brand').click();
   await page.keyboard.press('n');
   await page.locator('.pane.focused .body.shown textarea').fill('Signing still works after reload and account switch');

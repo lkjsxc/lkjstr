@@ -6,6 +6,8 @@ Index of lkjstr's documentation. Start with [status.md](status.md).
 
 ## Table of Contents
 
+- [design-review.md](design-review.md): design conflicts and implementation choices.
+- [design.md](design.md): authoritative product design, imported verbatim.
 - [status.md](status.md): what works, what does not, next steps in order.
 - [architecture.md](architecture.md): crates, runtime, orchestration, storage.
 - [workspace.md](workspace.md): the tiled workspace, shortcuts, narrow mode.

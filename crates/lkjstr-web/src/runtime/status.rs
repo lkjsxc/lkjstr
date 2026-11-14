@@ -40,6 +40,9 @@ pub struct Summary {
 
 impl Rt {
     pub fn progress(&self, want: WantId) -> Progress {
+        if let Some(progress) = self.expired.get(&want) {
+            return *progress;
+        }
         let mut out = Progress::default();
         for sub in self
             .net

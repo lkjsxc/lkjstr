@@ -16,7 +16,7 @@ pub fn check(root: &Path) -> Result<(), String> {
             continue;
         }
         let text = fs::read_to_string(&file).map_err(|error| format!("{rel}: {error}"))?;
-        if strict_doc {
+        if strict_doc && rel != "docs/design.md" {
             check_limit(&mut problems, &rel, &text, STRICT_DOC_LINE_LIMIT, "docs");
         }
         if source {

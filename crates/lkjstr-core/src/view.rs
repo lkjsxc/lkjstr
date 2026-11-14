@@ -30,6 +30,12 @@ pub enum View {
     Relays,
     Accounts,
     Settings,
+    Link {
+        url: String,
+    },
+    Image {
+        url: String,
+    },
 }
 
 /// One entry of the launcher list.
@@ -56,28 +62,20 @@ impl View {
             View::Relays => "Relays",
             View::Accounts => "Accounts",
             View::Settings => "Settings",
+            View::Link { .. } => "Website",
+            View::Image { .. } => "Image",
         }
-    }
-
-    /// Singleton views are focused instead of opened twice.
-    pub fn is_singleton(&self) -> bool {
-        matches!(
-            self,
-            View::Welcome
-                | View::Home
-                | View::Global
-                | View::Notifications
-                | View::Relays
-                | View::Accounts
-                | View::Settings
-        )
     }
 
     /// Views that are opened "beside" the current one (details of a note or person).
     pub fn is_detail(&self) -> bool {
         matches!(
             self,
-            View::Thread { .. } | View::Profile { .. } | View::Compose { reply_to: Some(_) }
+            View::Thread { .. }
+                | View::Profile { .. }
+                | View::Link { .. }
+                | View::Image { .. }
+                | View::Compose { reply_to: Some(_) }
         )
     }
 }

@@ -53,6 +53,8 @@ web-sys = { version = "0.3.99", features = [
   "IdbTransactionMode",
   "KeyboardEvent",
   "Location",
+  "History",
+  "PopStateEvent",
   "MediaQueryList",
   "MessageEvent",
   "Navigator",
@@ -69,6 +71,7 @@ members = [
   ".",
   "crates/lkjstr-core",
   "crates/lkjstr-host",
+  "crates/lkjstr-nips",
   "crates/lkjstr-protocol",
   "crates/lkjstr-xtask",
 ]

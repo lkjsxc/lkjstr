@@ -1,7 +1,6 @@
 //! Resolve writes only when the transaction commits; release every handler.
 use js_sys::Promise;
 use wasm_bindgen::{JsCast, JsValue, closure::Closure};
-use wasm_bindgen_futures::JsFuture;
 use web_sys::{IdbDatabase, IdbTransaction, IdbTransactionMode};
 
 pub(super) async fn commit(
@@ -28,7 +27,16 @@ pub(super) async fn commit(
     if writes.is_err() {
         let _ = tx.abort();
     }
-    let committed = JsFuture::from(done).await;
+    let abort_tx = tx.clone();
+    let committed = super::promise::bounded(
+        done,
+        15,
+        "Storage transaction did not answer. Try again.",
+        move || {
+            let _ = abort_tx.abort();
+        },
+    )
+    .await;
     tx.set_oncomplete(None);
     tx.set_onabort(None);
     drop(handlers);

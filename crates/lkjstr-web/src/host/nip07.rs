@@ -3,7 +3,6 @@
 use js_sys::{Function, Object, Promise, Reflect};
 use lkjstr_protocol::{NostrEvent, UnsignedNostrEvent, parse_nostr_event_value};
 use wasm_bindgen::{JsCast, JsValue};
-use wasm_bindgen_futures::JsFuture;
 
 const UNAVAILABLE: &str = "No NIP-07 signer extension found in this browser.";
 
@@ -31,9 +30,18 @@ async fn call(name: &str, arg: Option<JsValue>) -> Result<JsValue, String> {
         None => function.call0(&nostr),
     }
     .map_err(|_| "The signer extension refused.".to_owned())?;
-    JsFuture::from(Promise::resolve(&result))
-        .await
-        .map_err(|_| "The signer extension refused.".to_owned())
+    super::promise::bounded(
+        Promise::resolve(&result),
+        30,
+        "The signer did not answer. Try again.",
+        || {},
+    )
+    .await
+    .map_err(|error| {
+        error
+            .as_string()
+            .unwrap_or_else(|| "The signer extension refused.".to_owned())
+    })
 }
 
 pub async fn public_key() -> Result<String, String> {

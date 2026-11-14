@@ -20,12 +20,6 @@ pub fn name_of(ui: Ui, pubkey: &str) -> String {
         .unwrap_or_else(|| short_npub(pubkey))
 }
 
-fn hue(pubkey: &str) -> u32 {
-    pubkey.bytes().take(6).fold(0u32, |acc, b| {
-        acc.wrapping_mul(31).wrapping_add(u32::from(b))
-    }) % 360
-}
-
 #[component]
 pub fn Avatar(pubkey: String, #[prop(default = "avatar")] class: &'static str) -> impl IntoView {
     let ui = Ui::get();
@@ -37,7 +31,7 @@ pub fn Avatar(pubkey: String, #[prop(default = "avatar")] class: &'static str) -
             .unwrap_or_default()
     });
     let failed = RwSignal::new(false);
-    let style = format!("--hue: {}", hue(&pubkey));
+    let style = format!("--hue: {}", lkjstr_core::appearance::avatar_hue(&pubkey));
     let initial = move || {
         name_of(ui, &pubkey)
             .chars()
@@ -109,13 +103,13 @@ pub fn Content(event: Event, #[prop(default = false)] compact: bool) -> impl Int
         .map(|segment| match segment {
             Segment::Text(text) => text.into_any(),
             Segment::Link(url) => view! {
-                <a href=url.clone() target="_blank" rel="noopener noreferrer nofollow" on:click=|ev| ev.stop_propagation()>{link_label(&url)}</a>
+                <a href=url.clone() rel="nofollow" on:click={let url = url.clone(); move |ev| { ev.prevent_default(); ev.stop_propagation(); ui.detail(View::Link { url: url.clone() }, Some(&ev)); }}>{link_label(&url)}</a>
             }
             .into_any(),
             Segment::Image(url) if !compact => {
                 let style = aspect(&event, &url).unwrap_or_default();
                 view! {
-                    <a class="media" href=url.clone() target="_blank" rel="noopener noreferrer" style=style on:click=|ev| ev.stop_propagation()>
+                    <a class="media" href=url.clone() style=style on:click={let url = url.clone(); move |ev| { ev.prevent_default(); ev.stop_propagation(); ui.detail(View::Image { url: url.clone() }, Some(&ev)); }}>
                         <img src=url.clone() alt="Image" loading="lazy" decoding="async" referrerpolicy="no-referrer"/>
                     </a>
                 }
@@ -132,7 +126,7 @@ pub fn Content(event: Event, #[prop(default = false)] compact: bool) -> impl Int
             Segment::Mention(pubkey) => {
                 let key = pubkey.clone();
                 view! {
-                    <button class="mention" on:click=move |ev| { ev.stop_propagation(); ui.open_profile(&key); }>
+                    <button class="mention" on:click=move |ev| { ev.stop_propagation(); ui.detail(View::Profile { pubkey: key.clone() }, Some(&ev)); }>
                         "@" {move || name_of(ui, &pubkey)}
                     </button>
                 }
