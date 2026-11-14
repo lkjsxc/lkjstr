@@ -32,7 +32,7 @@ pub fn filter(store: &Store, q: &Query) -> NostrFilter {
             f.tags.insert("e".into(), vec![target]);
         }
         Source::Notifications => {
-            f.kinds = Some(vec![1, 6, 7, 9735]);
+            f.kinds = Some(vec![1, 3, 6, 7, 9735]);
             f.tags
                 .insert("p".into(), q.account.clone().into_iter().collect());
         }
@@ -48,13 +48,22 @@ pub fn filter(store: &Store, q: &Query) -> NostrFilter {
             f.kinds = Some(vec![0, 3]);
             f.authors = Some(vec![target]);
         }
-        Source::Bookmarks | Source::Mutes | Source::List => {
+        Source::Bookmarks | Source::Mutes | Source::List | Source::MediaServers | Source::Emoji => {
             f.kinds = Some(vec![match q.source {
                 Source::Bookmarks => 10003,
                 Source::Mutes => 10000,
+                Source::MediaServers => 10063,
+                Source::Emoji => 10030,
                 _ => 30000,
             }]);
             f.authors = Some(q.account.clone().into_iter().collect());
+            if q.source == Source::List
+                && let Ok(address) = lkjstr_nips::address::Coordinate::parse(&target)
+            {
+                f.kinds = Some(vec![address.kind.into()]);
+                f.authors = Some(vec![address.pubkey]);
+                f.tags.insert("d".into(), vec![address.identifier]);
+            }
         }
         _ => {}
     }

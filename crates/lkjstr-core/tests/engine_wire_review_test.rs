@@ -4,7 +4,7 @@ use engine_review_support::*;
 use lkjstr_core::engine::{Engine, wire::Session};
 use serde_json::{Value, json};
 #[test]
-fn relay_capabilities_reach_the_unsigned_event_and_disabled_entries_fail() {
+fn relay_capabilities_reach_the_unsigned_event_and_disabled_entries_drop() {
     for (read, write, marker) in [
         (true, true, None),
         (true, false, Some("read")),
@@ -21,7 +21,9 @@ fn relay_capabilities_reach_the_unsigned_event_and_disabled_entries_fail() {
         );
         let out = output(&mut s, &mut e);
         if !read && !write {
-            assert_eq!(out[0]["error"]["code"], "unsupported");
+            let event: Value =
+                serde_json::from_str(out[0]["event"].as_str().expect("event")).expect("unsigned");
+            assert_eq!(event["tags"], json!([]));
             continue;
         }
         let event: Value =

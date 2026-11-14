@@ -8,6 +8,13 @@ pub(super) fn settle(row: &mut Value, e: &Engine) {
             if quote["state"] == "loading"
                 && quote["id"]
                     .as_str()
+                    .is_some_and(|id| e.network.lookup_failed(id))
+            {
+                quote["state"] = Value::String("error".into());
+            }
+            if quote["state"] == "loading"
+                && quote["id"]
+                    .as_str()
                     .is_some_and(|id| e.network.lookup_complete(id))
             {
                 quote["state"] = Value::String("missing".into());

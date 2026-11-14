@@ -70,6 +70,8 @@ pub enum Source {
     Mutes,
     Relays,
     Diagnostics,
+    MediaServers,
+    Emoji,
 }
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[serde(rename_all = "camelCase")]
@@ -120,6 +122,9 @@ pub enum Action {
     #[serde(rename = "relays.save")]
     RelaysSave {
         relays: Vec<RelayEntry>,
+    },
+    ServersSave {
+        servers: Vec<String>,
     },
     Upload {
         url: String,

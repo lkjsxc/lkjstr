@@ -17,7 +17,9 @@ impl Query {
             "following" => p::Source::Following,
             "mutes" => p::Source::Mutes,
             "relays" => p::Source::Relays,
-            "diagnostics" | "media-servers" | "emoji" => p::Source::Diagnostics,
+            "diagnostics" => p::Source::Diagnostics,
+            "media-servers" => p::Source::MediaServers,
+            "emoji" => p::Source::Emoji,
             _ => return None,
         };
         let mut target = self
@@ -37,6 +39,9 @@ impl Query {
                     lkjstr_protocol::NostrEntity::Nprofile(p) => p.pubkey,
                     lkjstr_protocol::NostrEntity::Note(id) => id,
                     lkjstr_protocol::NostrEntity::Nevent(p) => p.id,
+                    lkjstr_protocol::NostrEntity::Naddr(p) => {
+                        format!("{}:{}:{}", p.kind, p.pubkey, p.identifier)
+                    }
                     _ => return None,
                 },
             );

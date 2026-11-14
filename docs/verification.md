@@ -187,14 +187,14 @@ Docker Compose verification cannot run under the explicit instruction to write
 only inside this worktree: it writes image and container data to daemon storage.
 No service was stopped/restarted, no commit made, and no deployment performed.
 
-Prior layout/navigation review: 129 browser checks passed (2026-11-14).
-
 ## Worker engine (2026-11-14)
 
-All 33 native engine tests pass, including 13 review regressions. All 18
-headless Worker checks pass against a fresh loopback WebSocket, including
-content-derived signing tags and SharedWorker answered-relay progress.
-Report: tmp/engine-harness/report.json. Final verify:quiet passes (fmt,
-native/WASM clippy, workspace tests, release build and output checks), with
-jobs/threads capped at four and caches inside the worktree. Docker remains
-excluded by the worktree-only write restriction.
+All 39 native engine tests and three protocol/storage/upload tests pass.
+53 headless checks pass; the optional physical-row benchmark adds one check.
+The freshly fetched TypeScript contract validates every reply. Scenarios cover
+all mock message/action names and sources, uploads, accounts and leader loss.
+Reports: tmp/engine-harness/{report,cold-start}.json. The 100000-row cold start
+measured ready 40.2 ms, first rows 61.0 ms, and 2000 verified rows 2001.5 ms.
+verify:quiet passes fmt, native/WASM clippy, workspace tests and release build.
+Jobs/threads are capped; caches stay in the worktree. Docker is excluded because
+its storage is outside the worktree. Packaging and limits: engine-package.md.

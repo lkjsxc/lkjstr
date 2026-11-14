@@ -1,4 +1,5 @@
 //! Pure engine. Explicit time and effect outputs make long-idle failures testable.
+pub mod accounts;
 pub mod bench;
 pub mod clients;
 mod commands;
@@ -13,6 +14,7 @@ mod query_predicates;
 mod row_media;
 mod row_model;
 pub mod rows;
+pub mod settings;
 mod wants;
 mod windows;
 pub mod wire;
@@ -40,6 +42,9 @@ struct Signing {
     deadline: u64,
 }
 pub struct Engine {
+    pub servers: BTreeMap<String, (String, bool)>,
+    pub private_lists: BTreeMap<String, Vec<Vec<String>>>,
+    pub seen: BTreeMap<String, u64>,
     pub metrics: metrics::Metrics,
     pub store: Store,
     pub pending: crate::persistence::PendingEvents,
@@ -62,6 +67,9 @@ impl Default for Engine {
 impl Engine {
     pub fn new() -> Self {
         Self {
+            servers: BTreeMap::new(),
+            private_lists: BTreeMap::new(),
+            seen: BTreeMap::new(),
             metrics: Default::default(),
             store: Store::with_caps(16000, 4000),
             pending: Default::default(),

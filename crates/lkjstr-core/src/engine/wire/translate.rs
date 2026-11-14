@@ -8,6 +8,9 @@ impl Session {
         engine: &Engine,
     ) -> Result<Vec<p::Input>, (Option<String>, &'static str)> {
         Ok(match input {
+            Input::Relays { .. } | Input::Heartbeat | Input::Detach | Input::PublicKey { .. } => {
+                vec![]
+            }
             Input::Configure { config } => {
                 self.config = config;
                 vec![]
@@ -118,6 +121,9 @@ impl Session {
                                 .collect(),
                         },
                     ),
+                    A::ServersSave { account, servers } => {
+                        (account, p::Action::ServersSave { servers })
+                    }
                     _ => return Err((Some(req), "unsupported")),
                 };
                 vec![p::Input::Action {

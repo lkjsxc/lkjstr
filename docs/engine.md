@@ -8,8 +8,9 @@ The retained Leptos app imports only browser adapters during cutover.
 
 ## Build and entry
 
-Source the local cache environment (tmp/env.sh here), then run
-`sh scripts/engine-build.sh`. Generated web-target wasm-bindgen output is in
+Run `sh scripts/engine-package.sh` for the frontend-loadable package, described
+in [engine-package.md](engine-package.md). For raw bindings, run
+`sh scripts/engine-build.sh` after setting the local cache environment. Generated web-target wasm-bindgen output is in
 `tmp/engine-pkg`. Initialize that module inside a Worker and retain `start()`.
 Call `stop()` before disposing the handle. The `worker` Cargo feature enables
 entry exports; the old app disables it to avoid a duplicate start symbol.
@@ -46,8 +47,8 @@ Loaded-list edits preserve opaque private content and unknown public tags.
 Relay-list saves preserve read/write markers and reject disabled entries.
 Finished note content derives hashtag and NIP-19 mention tags before signing.
 An absent cached list never authorizes overwriting a remote list.
-Unsupported actions return explicit failures, including uploads and account
-creation/import; local and remote signer lifecycle remains outside this run.
+Local account lifecycle, NIP-46 preauthorized bunkers and Blossom/NIP-96 upload
+transport are implemented. Unsupported variants are listed in status.md.
 
 ## Ownership across tabs
 
@@ -56,15 +57,14 @@ session; results and signer requests return only to the originating port.
 Visibility is the union of visible wants across clients. Hiding one tab does
 not close another tab's requests. Explicit close/hints release work.
 
-There is no unagreed heartbeat timeout: a quiet healthy client must not expire
-merely because the interface sends no messages. Abandoned-port cleanup needs
-an agreed detach/heartbeat message; until then, abrupt loss of one client can
-retain its bounded wants while another client keeps the SharedWorker alive.
+Clients send heartbeat every 20 seconds. After 180 seconds without contact the
+host releases that client's wants and sends reconnect. Explicit detach releases
+immediately. The Transport adapter reconnects and reopens retained queries,
+windows and hints. Pending actions fail offline rather than being replayed.
 
-Where SharedWorker is unavailable, an exclusive Web Locks leader should own a
-dedicated engine and forward messages through BroadcastChannel. Followers must
-not open sockets before obtaining that lock. This fallback election is designed
-but not implemented; separate dedicated Workers still duplicate work.
+The dedicated fallback acquires an exclusive Web Lock before creating its
+port-host Worker. BroadcastChannel forwards namespaced client messages. Browser
+lock release elects the next leader after loss; no wall-clock lease is used.
 
 ## Network and bounds
 
@@ -84,14 +84,14 @@ caps. EOSE latency, useful events, failures and last arrival are measured.
 Socket and per-subscription watchdogs reconnect/resubscribe with timestamp
 overlap and exponential backoff. Timeouts settle without killing live feeds.
 
-Production bootstrap uses nos.lol and relay.damus.io from the retained app's
-existing defaults. Harness builds have no public bootstrap relays.
-The contract lacks explicit bootstrap-relay configuration; see proposals.
+Relay usage is supplied by the frontend through the separate relays message.
+There are no implicit product bootstrap destinations.
 
 ## Persistence
 
-Worker-safe IndexedDB uses `lkjstr-wasm`, schema 1: events are
-`{id, created_at, raw}` with a created_at index; kv holds opaque values.
+Worker-safe IndexedDB uses `lkjstr-wasm`, schema 1: events have
+`{id, created_at, raw}` with a created_at index. Raw holds a compact
+tuple; previous JSON objects still read. kv holds private account state and values.
 Writes resolve on transaction commit and retry from a bounded 20000-event
 buffer in batches of 500, no more frequently than every 1.5 s.
 Startup reads only the newest 2000 events and verifies them incrementally.
@@ -99,9 +99,9 @@ NIP-05 requires exact-key HTTP evidence, redirect rejection and a 64 KiB body
 limit; metadata replacement invalidates verification. No secret keys appear
 in rows, diagnostics or fixture output.
 
-Compact persistence, disk pruning, persisted accounts and cold-start testing
-with 100000 physical rows remain unfinished. A 100000-event in-memory benchmark
-is measured separately and is not presented as a disk-startup result.
+Successful live writes prune the oldest physical rows beyond 20000. Account
+mutations commit before installing state. The cold-start browser benchmark
+seeds 100000 signed physical rows; engine-performance.md reports its timings.
 
 ## Harness
 

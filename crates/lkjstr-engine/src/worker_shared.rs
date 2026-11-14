@@ -73,6 +73,18 @@ pub fn start_shared() -> Result<SharedWorkerHandle, JsValue> {
     let scope = js_sys::global().dyn_into::<web_sys::SharedWorkerGlobalScope>()?;
     let host = Rc::new(RefCell::new(Host {
         engine: initial_engine(),
+        account_revision: 0,
+        upload_tasks: vec![],
+        upload_inflight: 0,
+        auth_next: 0,
+        upload_auth: BTreeMap::new(),
+        accounts: Default::default(),
+        account_tasks: vec![],
+        account_busy: false,
+        discovery: BTreeMap::new(),
+        loaded: false,
+        startup: vec![],
+        status: None,
         sessions: BTreeMap::new(),
         scope: Sink::Shared {
             clients: Clients::default(),
@@ -140,17 +152,13 @@ fn attach(host: &Rc<RefCell<Host>>, port: web_sys::MessagePort) {
                 pump(&host);
                 return;
             }
-            if let Ok(input) =
-                serde_wasm_bindgen::from_value::<lkjstr_core::engine::wire::Input>(event.data())
-            {
-                host.borrow_mut().receive(id, input);
-            }
+            host.borrow_mut().receive_value(id, event.data());
             pump(&host);
         }
     });
     port.set_onmessage(Some(handler.as_ref().unchecked_ref()));
     port.start();
-    ready(port.as_ref(), true);
+
     host.borrow_mut().sessions.insert(id, RefCell::default());
     if let Sink::Shared { peers, .. } = &mut host.borrow_mut().scope {
         peers.insert(
@@ -160,6 +168,9 @@ fn attach(host: &Rc<RefCell<Host>>, port: web_sys::MessagePort) {
                 _handler: handler,
             },
         );
+    }
+    if host.borrow().loaded {
+        accounts::ready(&host.borrow(), id, true);
     }
 }
 #[wasm_bindgen]
@@ -190,13 +201,39 @@ fn send(target: &JsValue, out: &lkjstr_core::engine::wire::Output) {
         let _ = post.call1(target, &value);
     }
 }
-pub(super) fn ready(target: &JsValue, shared: bool) {
-    send(target, &lkjstr_core::engine::wire::Session::ready(shared));
-    send(
-        target,
-        &lkjstr_core::engine::wire::Output::Accounts {
-            accounts: vec![],
-            active: None,
-        },
-    );
+
+pub(super) fn expire(host: &Rc<RefCell<Host>>) {
+    let mut h = host.borrow_mut();
+    let now = h.time();
+    let expired = if let Sink::Shared { clients, .. } = &mut h.scope {
+        clients.expire(now)
+    } else {
+        vec![]
+    };
+    for id in expired {
+        detach(&mut h, id);
+    }
 }
+pub(super) fn detach(h: &mut Host, id: u64) {
+    let now = h.time();
+    if let Sink::Shared { clients, peers } = &mut h.scope {
+        let inputs = clients.disconnect(id);
+        if let Some(peer) = peers.remove(&id) {
+            send(
+                peer.port.as_ref(),
+                &lkjstr_core::engine::wire::Output::Reconnect,
+            );
+            peer.port.set_onmessage(None);
+            peer.port.close();
+        }
+        for input in inputs {
+            h.engine.input(input, now);
+        }
+    }
+    h.sessions.remove(&id);
+    h.discovery.retain(|(client, _), _| *client != id);
+}
+
+#[path = "worker_broker.rs"]
+mod broker;
+pub use broker::start_port_host;

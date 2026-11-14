@@ -1,6 +1,7 @@
 //! Mirrors web/next-20261114:web/src/engine/protocol.ts (authoritative).
 pub mod actions;
 mod note;
+mod notifications;
 mod output;
 pub mod queries;
 mod query_translate;
@@ -15,6 +16,16 @@ use serde::{Deserialize, Serialize};
 pub enum Input {
     Configure {
         config: Config,
+    },
+    Relays {
+        relays: Vec<RelayConfig>,
+    },
+    Heartbeat,
+    Detach,
+    PublicKey {
+        req: String,
+        pubkey: Option<String>,
+        error: Option<String>,
     },
     Hint {
         hint: Hint,
@@ -45,6 +56,16 @@ pub enum Input {
 #[derive(Debug, Serialize)]
 #[serde(tag = "t", rename_all = "camelCase")]
 pub enum Output {
+    Heartbeat,
+    GetPublicKey {
+        req: String,
+    },
+    Reconnect,
+    Progress {
+        req: String,
+        sent: usize,
+        total: usize,
+    },
     Ready {
         version: u32,
         engine: String,
@@ -92,6 +113,8 @@ pub enum Output {
         delivery: Option<Vec<serde_json::Value>>,
         #[serde(skip_serializing_if = "Option::is_none")]
         id: Option<String>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        uploaded: Option<serde_json::Value>,
     },
     Status {
         connected: usize,
@@ -125,4 +148,12 @@ impl Session {
             .into(),
         }
     }
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct RelayConfig {
+    pub url: String,
+    pub read: bool,
+    pub write: bool,
+    pub search: bool,
 }

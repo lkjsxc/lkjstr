@@ -10,12 +10,33 @@ pub async fn get(
     accept: &str,
     max: usize,
 ) -> Result<lkjstr_nips::identity::HttpResponse, JsValue> {
+    request(url, accept, max, "GET", None, None, None).await
+}
+pub async fn request(
+    url: &str,
+    accept: &str,
+    max: usize,
+    method: &str,
+    body: Option<&JsValue>,
+    mime: Option<&str>,
+    auth: Option<&str>,
+) -> Result<lkjstr_nips::identity::HttpResponse, JsValue> {
     let abort = AbortController::new()?;
     let options = RequestInit::new();
+    options.set_method(method);
+    if let Some(body) = body {
+        options.set_body(body);
+    }
     options.set_signal(Some(&abort.signal()));
     options.set_redirect(RequestRedirect::Error);
     let request = Request::new_with_str_and_init(url, &options)?;
     request.headers().set("Accept", accept)?;
+    if let Some(mime) = mime {
+        request.headers().set("Content-Type", mime)?;
+    }
+    if let Some(auth) = auth {
+        request.headers().set("Authorization", auth)?;
+    }
     let cancel = abort.clone();
     let _timer = Timer::after(10000, move || cancel.abort())?;
     let global = js_sys::global();

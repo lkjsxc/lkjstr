@@ -107,6 +107,11 @@ impl Clients {
             .map(|c| c.subs.into_iter().map(|sub| Input::Close { sub }).collect())
             .unwrap_or_default()
     }
+    pub fn heartbeat(&mut self, id: u64, now: u64) {
+        if let Some(c) = self.clients.get_mut(&id) {
+            c.last_seen = now;
+        }
+    }
     pub fn expire(&mut self, now: u64) -> Vec<u64> {
         // Hosts require a hint heartbeat at least once per minute. Three minutes
         // tolerate background throttling; suspended clients reopen after expiry.

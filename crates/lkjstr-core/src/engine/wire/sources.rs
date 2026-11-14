@@ -12,28 +12,21 @@ impl Session {
             "following"=>store.follows(target).unwrap_or_default().iter().map(|p|person(e,p,q.account.as_deref())).collect(),
             "followers"=>store.feed(&crate::store::Query{kinds:vec![3],mention:Some(target.into()),limit:6000,..Default::default()})
                 .iter().map(|v|person(e,&v.pubkey,q.account.as_deref())).collect(),
-            "mutes"=>q.account.as_deref().and_then(|a|store.replaceable(a,10000)).map(|event|event.tags.iter().filter_map(|tag|{
+            "mutes"=>q.account.as_deref().and_then(|a|store.replaceable(a,10000)).map(|event|e.list_tags(&event).iter().filter_map(|tag|{
                 let value=tag.get(1)?;let target=match tag.first()?.as_str(){"p"=>json!({"k":"person","pubkey":value}),"word"=>json!({"k":"word","word":value}),"t"=>json!({"k":"hashtag","tag":value}),"e"=>json!({"k":"thread","id":value}),_=>return None};
                 let mut v=json!({"kind":"mute","key":format!("mute:{}:{value}",tag[0]),"target":target});if tag[0]=="p"{v["author"]=super::note::author(&rows::author(store,value));}Some(v)
             }).collect()).unwrap_or_default(),
-            "relays"=>e.network.stats().as_array().map(|stats|stats.iter().map(|r|json!({"kind":"relay","key":r["url"],"url":r["url"],"state":if r["online"]==true{"connected"}else{"idle"},"inUse":r["activeReqs"].as_u64().unwrap_or(0)>0,"why":"yours","read":true,"write":true,"subs":r["activeReqs"],"events":r["received"],"latencyMs":r["latencyMs"]})).collect()).unwrap_or_default(),
+            "relays"=>e.relay_rows(),
             "diagnostics"=>{
                 let facts=json!({"events":store.len(),"eventPayloadBytes":store.payload_bytes(),"verified":e.verified,"rejected":e.rejected,"dropped":e.dropped,"persistenceQueue":e.pending.len(),"timings":e.metrics,"relayStatistics":e.network.stats(),"protocol":1});
                 facts.as_object().map(|m|m.iter().map(|(k,v)|json!({"kind":"info","key":k,"label":k,"value":v.to_string()})).collect()).unwrap_or_default()
             }
-            "media-servers"|"emoji"=>vec![],
-            "notifications"=>q.convert().map(|converted|query::events(store,&converted).into_iter().map(|event|{
-                let kind=match event.kind{6=>"repost",7=>"reaction",9735=>"zap",3=>"follow",_=>if lkjstr_protocol::reply_parent(&event).is_some(){"reply"}else{"mention"}};
-                let mut n=json!({"kind":"notification","key":event.id,"type":kind,"actors":[super::note::author(&rows::author(store,&event.pubkey))],"others":0,"at":event.created_at.saturating_mul(1000),"unread":true});
-                if event.kind==1 {n["note"]=super::note::note(&rows::row(store,&event,q.account.as_deref(),0),store,q.account.as_deref());}
-                if event.kind==7 {let mut reaction=json!({"emoji":event.content});if let Some(emoji)=lkjstr_protocol::custom_emojis(&event).first(){reaction["url"]=json!(emoji.url);}n["emoji"]=reaction;}
-                if let Some(id)=lkjstr_protocol::tags::tag_values(&event,"e").last() && let Some(target)=store.get(id) {n["target"]=json!({"id":id,"excerpt":target.content.chars().take(160).collect::<String>(),"media":lkjstr_protocol::embedded_media_attachments(&target).len()});}
-                n
-            }).collect()).unwrap_or_default(),
+            "media-servers"=>q.account.as_deref().and_then(|a|store.replaceable(a,10063)).map(|event| lkjstr_protocol::tags::tag_values(&event,"server").into_iter().map(|url|json!({"kind":"server","key":url,"url":url,"protocol":e.servers.get(&url).map(|v|v.0.as_str()).unwrap_or("unknown"),"ok":e.servers.get(&url).is_some_and(|v|v.1)})).collect()).unwrap_or_default(),
+            "emoji"=>q.account.as_deref().and_then(|a|store.replaceable(a,10030)).map(|event|lkjstr_protocol::custom_emojis(&event).into_iter().map(|e|json!({"kind":"emoji","key":format!("emoji:{}",e.shortcode),"set":"","code":e.shortcode,"url":e.url})).collect()).unwrap_or_default(),
+            "notifications"=>super::notifications::notifications(q,e),
+            "bookmarks"=>q.account.as_deref().and_then(|a|store.replaceable(a,10003)).map(|list|e.list_tags(&list).iter().filter(|t|t.first().is_some_and(|k|k=="e")).filter_map(|t|store.get(t.get(1)?)).map(|event|super::note::note(&rows::row(store,&event,q.account.as_deref(),0),store,q.account.as_deref())).collect()).unwrap_or_default(),
             "list"=>{
-                let events=store.feed(&crate::store::Query{authors:q.account.clone().map(|a|[a].into_iter().collect()),kinds:vec![30000],limit:100,..Default::default()});
-                events.iter().find(|event|q.tag.as_ref().is_none_or(|tag|lkjstr_protocol::tags::tag_values(event,"d").contains(tag)))
-                    .map(|event|lkjstr_protocol::tags::tag_values(event,"p").iter().map(|p|person(e,p,q.account.as_deref())).collect()).unwrap_or_default()
+                q.convert().map(|converted|query::events(store,&converted).into_iter().next().map(|event|e.list_tags(&event).iter().filter(|t|t.first().is_some_and(|k|k=="p")).filter_map(|t|t.get(1)).map(|p|person(e,p,q.account.as_deref())).collect()).unwrap_or_default()).unwrap_or_default()
             }
             _=>q.convert().map(|converted|query::events(store,&converted).into_iter().take(6000).filter(|event|!rows::row(store,event,q.account.as_deref(),0).own.muted)
                 .map(|event|{let mut v=super::note::note(&rows::row(store,&event,q.account.as_deref(),0),store,q.account.as_deref());if q.source=="thread" {v["thread"]=json!({"role":if q.id.as_ref()==Some(&event.id){"focus"}else{"reply"},"depth":if q.id.as_ref()==Some(&event.id){0}else{1}});}v}).collect()).unwrap_or_default(),

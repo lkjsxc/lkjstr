@@ -2,7 +2,7 @@ use super::{
     Engine, Signing,
     protocol::{Action, Delivery, Output},
 };
-use lkjstr_protocol::{NostrEvent, UnsignedNostrEvent, is_pubkey, normalize_relay_url};
+use lkjstr_protocol::{NostrEvent, UnsignedNostrEvent, is_pubkey};
 impl Engine {
     pub(super) fn action(&mut self, req: String, account: String, action: Action, now: u64) {
         if !is_pubkey(&account) {
@@ -130,20 +130,35 @@ impl Engine {
             Action::RelaysSave { relays } => {
                 e.kind = 10002;
                 for r in relays {
-                    let mut tag = vec![
-                        "r".into(),
-                        normalize_relay_url(&r.url).ok_or("invalid-relay")?,
-                    ];
+                    let url = super::settings::strict_relay(&r.url).ok_or("invalid-relay")?;
+                    if !r.read && !r.write {
+                        continue;
+                    }
+                    let mut tag = vec!["r".into(), url];
                     match (r.read, r.write) {
                         (true, true) => {}
                         (true, false) => tag.push("read".into()),
                         (false, true) => tag.push("write".into()),
-                        (false, false) => return Err("unsupported"),
+                        (false, false) => unreachable!(),
                     }
                     e.tags.push(tag);
                 }
             }
+            Action::ServersSave { servers } => {
+                e.kind = 10063;
+                for server in servers {
+                    if !crate::engine::settings::valid_server(&server) {
+                        return Err("invalid-server");
+                    }
+                    e.tags.push(vec!["server".into(), server]);
+                }
+            }
             Action::Upload { .. } => return Err("upload-not-implemented"),
+        }
+        if matches!(e.kind, 0 | 3 | 10000..=19999)
+            && let Some(previous) = self.store.replaceable(account, e.kind)
+        {
+            e.created_at = e.created_at.max(previous.created_at.saturating_add(1));
         }
         if e.kind == 1 {
             e.tags = lkjstr_protocol::content_derived_tags(&e.content, &[], &e.tags);
@@ -153,60 +168,6 @@ impl Engine {
         }
         Ok(e)
     }
-    fn edit_list(
-        &self,
-        e: &mut UnsignedNostrEvent,
-        key: &str,
-        target: String,
-        value: bool,
-    ) -> Result<(), &'static str> {
-        // Absence in a bounded cache is never proof of an empty remote list.
-        let previous = self
-            .store
-            .replaceable(&e.pubkey, e.kind)
-            .ok_or("list-not-loaded")?;
-        e.tags = previous.tags.clone();
-        e.content = previous.content.clone();
-        e.created_at = e.created_at.max(previous.created_at.saturating_add(1));
-        e.tags
-            .retain(|t| !(t.first().is_some_and(|s| s == key) && t.get(1) == Some(&target)));
-        if value {
-            e.tags.push(vec![key.into(), target]);
-        }
-        Ok(())
-    }
-    pub(super) fn signed(&mut self, req: String, event: Option<NostrEvent>, now: u64) {
-        let Some(pending) = self.signing.remove(&req) else {
-            self.error(Some(req), "unknown-sign-request");
-            return;
-        };
-        let Some(event) = event else {
-            self.error(Some(req), "signer-rejected");
-            return;
-        };
-        if crate::actions::validate_signed_event(&pending.event, &event).is_err() {
-            self.error(Some(req), "invalid-signer-response");
-            return;
-        }
-        if now >= pending.deadline {
-            self.error(Some(req), "signer-timeout");
-            return;
-        }
-        self.store.insert(event.clone(), None);
-        self.pending.push(event.clone(), true);
-        for v in self.views.values_mut() {
-            v.dirty = true;
-        }
-        self.replan(now);
-        if self.network.relays.is_empty() {
-            self.outgoing.push(Output::Result {
-                req,
-                id: Some(event.id),
-                deliveries: Vec::<Delivery>::new(),
-                error: Some("no-relays".into()),
-            });
-            return;
-        }
-        self.network.publish(req, event, now);
-    }
 }
+#[path = "commands_finish.rs"]
+mod finish;

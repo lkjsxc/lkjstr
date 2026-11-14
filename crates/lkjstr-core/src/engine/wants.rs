@@ -30,7 +30,7 @@ fn requests(store: &crate::store::Store, v: &super::View) -> Vec<NostrFilter> {
     }
     let mut people = Vec::new();
     if let Some(account) = &q.account {
-        let kinds: Vec<_> = [0, 3, 10000, 10003, 10002]
+        let kinds: Vec<_> = [0, 3, 10000, 10003, 10002, 10030, 10063]
             .into_iter()
             .filter(|k| store.replaceable(account, *k).is_none())
             .collect();
@@ -38,7 +38,7 @@ fn requests(store: &crate::store::Store, v: &super::View) -> Vec<NostrFilter> {
             result.push(NostrFilter {
                 authors: Some(vec![account.clone()]),
                 kinds: Some(kinds),
-                limit: Some(5),
+                limit: Some(7),
                 ..Default::default()
             });
         }

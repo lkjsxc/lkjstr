@@ -21,14 +21,33 @@ use shared::Sink;
 #[path = "worker_relay_info.rs"]
 mod relay_information;
 use relay_information::relay_info;
-pub use shared::start_shared;
+pub use shared::{start_port_host, start_shared};
 #[path = "worker_persist.rs"]
 mod persistence;
 use persistence::{load, persist};
 #[path = "worker_defaults.rs"]
 mod defaults;
 use defaults::initial_engine;
+#[path = "worker_accounts.rs"]
+mod accounts;
+#[path = "worker_sign.rs"]
+mod signing;
+#[path = "worker_upload.rs"]
+mod uploads;
 struct Host {
+    account_revision: u64,
+    upload_tasks: Vec<(u64, String, String, String, String, Vec<u8>)>,
+    upload_inflight: usize,
+    auth_next: u64,
+    upload_auth: BTreeMap<(u64, String), (lkjstr_protocol::UnsignedNostrEvent, js_sys::Function)>,
+
+    accounts: lkjstr_core::engine::accounts::Accounts,
+    account_tasks: Vec<(u64, String, lkjstr_core::engine::wire::actions::Action)>,
+    account_busy: bool,
+    discovery: BTreeMap<(u64, String), u64>,
+    loaded: bool,
+    startup: Vec<(u64, lkjstr_core::engine::wire::Input)>,
+    status: Option<(usize, usize)>,
     engine: Engine,
     sessions: BTreeMap<u64, RefCell<lkjstr_core::engine::wire::Session>>,
     scope: Sink,
@@ -56,6 +75,18 @@ pub fn start() -> Result<WorkerHandle, JsValue> {
     let scope = js_sys::global().dyn_into::<web_sys::DedicatedWorkerGlobalScope>()?;
     let host = Rc::new(RefCell::new(Host {
         engine: initial_engine(),
+        account_revision: 0,
+        upload_tasks: vec![],
+        upload_inflight: 0,
+        auth_next: 0,
+        upload_auth: BTreeMap::new(),
+        accounts: Default::default(),
+        account_tasks: vec![],
+        account_busy: false,
+        discovery: BTreeMap::new(),
+        loaded: false,
+        startup: vec![],
+        status: None,
         sessions: [(0, RefCell::default())].into_iter().collect(),
         scope: Sink::Dedicated(scope.clone()),
         sockets: BTreeMap::new(),
@@ -71,18 +102,14 @@ pub fn start() -> Result<WorkerHandle, JsValue> {
     let weak = Rc::downgrade(&host);
     let message = Closure::new(move |event: web_sys::MessageEvent| {
         if let Some(host) = weak.upgrade() {
-            if let Ok(input) =
-                serde_wasm_bindgen::from_value::<lkjstr_core::engine::wire::Input>(event.data())
-            {
-                host.borrow_mut().receive(0, input);
-            }
+            host.borrow_mut().receive_value(0, event.data());
             pump(&host);
         }
     });
     scope.set_onmessage(Some(message.as_ref().unchecked_ref()));
     schedule(&host);
     load(&host);
-    shared::ready(scope.as_ref(), false);
+
     Ok(WorkerHandle { host, message })
 }
 fn post(host: &Host, out: &Output) {
@@ -113,7 +140,9 @@ fn pump(host: &Rc<RefCell<Host>>) {
         (h.engine.network.drain_effects(), h.engine.drain())
     };
     for o in outputs {
-        post(&host.borrow(), &o);
+        if !signing::process(host, &o) {
+            post(&host.borrow(), &o);
+        }
     }
     for effect in effects {
         match effect {
@@ -171,45 +200,13 @@ fn pump(host: &Rc<RefCell<Host>>) {
     }
     persist(host);
     identity::identities(host);
+    accounts::pump_accounts(host);
+    accounts::status(host);
+    uploads::pump_uploads(host);
+    shared::expire(host);
 }
-#[wasm_bindgen]
-impl WorkerHandle {
-    pub fn stop(&mut self) {
-        let mut h = self.host.borrow_mut();
-        h.stopped = true;
-        h.scope.close();
-        h.timer.take();
-        h.sockets.clear();
-        if let Some(db) = h.db.take() {
-            db.close();
-        }
-    }
-}
-impl Drop for WorkerHandle {
-    fn drop(&mut self) {
-        self.stop();
-        let _ = &self.message;
-    }
-}
-
-impl Host {
-    fn time(&self) -> u64 {
-        now().saturating_add(self.clock_offset)
-    }
-}
-#[cfg(feature = "harness")]
-#[wasm_bindgen]
-impl WorkerHandle {
-    pub fn advance_time(&mut self, ms: u32) {
-        {
-            let mut h = self.host.borrow_mut();
-            h.clock_offset = h.clock_offset.saturating_add(ms as u64);
-            let at = h.time();
-            h.engine.tick(at);
-        }
-        pump(&self.host);
-    }
-}
+#[path = "worker_handle.rs"]
+mod handle;
 
 #[path = "worker_wire.rs"]
 mod wire_boundary;

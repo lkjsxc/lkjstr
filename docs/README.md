@@ -21,3 +21,4 @@ Index of lkjstr's documentation. Start with [status.md](status.md).
 - [Engine](engine.md)
 - [Engine proposals](engine-proposals.md)
 - [Engine performance](engine-performance.md)
+- [Engine package](engine-package.md)

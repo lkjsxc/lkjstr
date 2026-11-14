@@ -27,6 +27,19 @@ impl Network {
     }
 }
 impl Network {
+    pub fn lookup_failed(&self, id: &str) -> bool {
+        let rs: Vec<_> = self
+            .requests
+            .values()
+            .filter(|r| {
+                r.filter
+                    .ids
+                    .as_ref()
+                    .is_some_and(|ids| ids.iter().any(|v| v == id))
+            })
+            .collect();
+        !rs.is_empty() && rs.iter().all(|r| r.complete || r.eose) && !rs.iter().any(|r| r.eose)
+    }
     pub fn lookup_complete(&self, id: &str) -> bool {
         let matches: Vec<_> = self
             .requests
@@ -38,7 +51,7 @@ impl Network {
                     .is_some_and(|ids| ids.iter().any(|key| key == id))
             })
             .collect();
-        !matches.is_empty() && matches.iter().all(|r| r.asked && (r.eose || r.complete))
+        !matches.is_empty() && matches.iter().all(|r| r.asked && r.eose)
     }
 }
 impl Network {

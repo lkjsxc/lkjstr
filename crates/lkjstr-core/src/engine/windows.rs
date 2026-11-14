@@ -65,6 +65,8 @@ impl Engine {
                         | Source::Mutes
                         | Source::List
                         | Source::Notifications
+                        | Source::MediaServers
+                        | Source::Emoji
                 )
             {
                 self.outgoing.push(Output::Patch {

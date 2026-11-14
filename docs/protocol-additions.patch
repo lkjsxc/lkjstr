@@ -1,0 +1,36 @@
+--- a/web/src/engine/protocol.ts
++++ b/web/src/engine/protocol.ts
+@@ -142,7 +142,7 @@
+       readonly cw?: string;
+     }
+   /** Not found (yet), deleted, or by a muted person: one quiet line, never the raw reference. */
+-  | { readonly state: 'missing' | 'loading' | 'muted' | 'deleted'; readonly id: string };
++  | { readonly state: 'missing' | 'loading' | 'muted' | 'deleted' | 'error'; readonly id: string };
+ 
+ export type Reaction = {
+   /** A Unicode emoji, or `:code:` with `url`. */
+@@ -506,6 +506,13 @@
+ 
+ export type ToEngine =
+   | { readonly t: 'configure'; readonly config: EngineConfig }
++  /** Replaces bootstrap relay usage; at most eight. Independent of EngineConfig. */
++  | { readonly t: 'relays'; readonly relays: readonly (RelayEntry & { readonly search: boolean })[] }
++  /** Send every 20s; after 180s without contact the engine releases this client. */
++  | { readonly t: 'heartbeat' }
++  | { readonly t: 'detach' }
++  /** Answer to getPublicKey; exactly one of pubkey or error. */
++  | { readonly t: 'publicKey'; readonly req: ReqId; readonly pubkey?: Pubkey; readonly error?: 'signer-missing' | 'signer-refused' }
+   | { readonly t: 'hint'; readonly hint: Hint }
+   | { readonly t: 'open'; readonly sub: SubId; readonly query: Query }
+   | { readonly t: 'close'; readonly sub: SubId }
+@@ -523,6 +530,10 @@
+   | { readonly t: 'signed'; readonly req: ReqId; readonly event?: string; readonly error?: string };
+ 
+ export type FromEngine =
++  | { readonly t: 'heartbeat' } // acknowledgement; transport detects worker loss
++  | { readonly t: 'getPublicKey'; readonly req: ReqId }
++  /** Transport reconnects and reopens visible queries/windows; actions are not replayed. */
++  | { readonly t: 'reconnect' }
+   | {
+       readonly t: 'ready';
+       readonly version: number;

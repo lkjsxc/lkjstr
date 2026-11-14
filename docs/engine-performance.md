@@ -69,10 +69,21 @@ time, transaction duration, and per-relay received/sent/useful counts, request
 count, failures, last arrival and EOSE latency. These are actual host timings
 and scheduler counters. No note bodies or local secret keys are included.
 
-## Limits of these numbers
+## Physical IndexedDB cold start
 
-The 100000-event benchmark measures indexing and query costs in memory. It does
-not prove cold IndexedDB startup at 100000 physical rows. The Worker loads only
-2000 recent rows by its created_at index and verifies them incrementally. A
-large-database browser startup benchmark remains required. The memory cache is
-bounded independently to 16000 regular and 4000 replaceable events.
+`LKJSTR_COLD_START=1 sh scripts/engine-check.sh` creates 100000 unique signed
+compact rows using a native in-process fixture key. A fresh Chromium context
+seeds those physical rows, closes the database, then launches the actual Worker.
+It reads the newest 2000 through the index and verifies them in bounded slices.
+No relay replay is used. Timings are reported without pass/fail thresholds.
+
+Measured on 2026-11-14: seed 1501.3 ms; Worker ready after indexed read 40.2 ms;
+first visible rows 61.0 ms; all 2000 cached events verified 2001.5 ms. Physical
+row count was 100000 before worker launch. Raw report:
+`tmp/engine-harness/cold-start.json`. These are one-run measurements, not device
+budgets or distributions. The independent in-memory benchmark excludes crypto
+and disk, and remains a separate workload.
+
+Memory retains 16000 regular and 4000 replaceable events. Live committed writes
+prune disk to 20000 rows; the benchmark deliberately seeds an oversized existing
+database and measures indexed boot without waiting for a subsequent live write.

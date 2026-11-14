@@ -113,6 +113,7 @@ impl Network {
         let deliveries = self
             .relays
             .keys()
+            .filter(|u| self.known.get(*u).is_none_or(|r| r.write))
             .take(3)
             .map(|r| (r.clone(), "pending".into()))
             .collect();

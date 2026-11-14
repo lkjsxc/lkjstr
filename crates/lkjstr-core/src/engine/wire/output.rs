@@ -44,7 +44,7 @@ impl Session {
                 if self.queries.get(&sub).is_some_and(|q| {
                     matches!(
                         q.source.as_str(),
-                        "profile" | "followers" | "following" | "mutes" | "list" | "notifications"
+                        "profile" | "followers" | "following" | "mutes" | "list" | "notifications" | "bookmarks" | "relays" | "media-servers" | "emoji"
                     )
                 }) {
                     let next = self.source_rows(&sub, engine);
@@ -98,6 +98,7 @@ impl Session {
                     },
                     delivery: Some(delivery),
                     id,
+                    uploaded: None,
                 }]
             }
             p::Output::Status {
@@ -136,7 +137,12 @@ impl Session {
             "event-too-large" => "too-large",
             "invalid-account" => "signed-out",
             "no-relays" => "no-relays",
-            "unsupported" | "upload-not-implemented" => "unsupported",
+            "invalid-relay" | "invalid-server" => "rejected",
+            "signed-out" | "read-only" | "signer-refused" | "signer-missing" | "rejected"
+            | "too-large" | "offline" | "not-found" => code,
+            "unsupported" | "upload-not-implemented" | "private-list-edit-unsupported" => {
+                "unsupported"
+            }
             _ => "internal",
         };
         Output::Result {
@@ -148,6 +154,7 @@ impl Session {
             }),
             delivery: None,
             id: None,
+            uploaded: None,
         }
     }
     fn rows(&self, sub: &str, items: &[crate::engine::rows::Row], engine: &Engine) -> Vec<Value> {
@@ -155,7 +162,16 @@ impl Session {
         if q.is_some_and(|q| {
             matches!(
                 q.source.as_str(),
-                "profile" | "followers" | "following" | "mutes" | "list" | "notifications"
+                "profile"
+                    | "followers"
+                    | "following"
+                    | "mutes"
+                    | "list"
+                    | "notifications"
+                    | "bookmarks"
+                    | "relays"
+                    | "media-servers"
+                    | "emoji"
             )
         }) {
             return self.source_rows(sub, engine);

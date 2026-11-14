@@ -62,6 +62,8 @@ pub(super) struct Publication {
 #[derive(Default)]
 pub struct Network {
     pub relays: BTreeMap<String, Relay>,
+    pub relay_order: Vec<String>,
+    pub known: BTreeMap<String, super::wire::RelayConfig>,
     pub(super) requests: BTreeMap<String, Request>,
     pub(super) effects: Vec<Effect>,
     pub(super) output: Vec<Output>,
@@ -72,6 +74,11 @@ pub struct Network {
 }
 impl Network {
     pub fn configure(&mut self, urls: Vec<String>, now: u64) {
+        self.relay_order = urls
+            .iter()
+            .filter_map(|u| normalize_relay_url(u))
+            .take(8)
+            .collect();
         let urls: BTreeSet<_> = urls
             .iter()
             .filter_map(|u| normalize_relay_url(u))
@@ -88,6 +95,14 @@ impl Network {
             self.relays.remove(&r);
         }
         for url in urls {
+            self.known
+                .entry(url.clone())
+                .or_insert(super::wire::RelayConfig {
+                    url: url.clone(),
+                    read: true,
+                    write: true,
+                    search: true,
+                });
             if !self.relays.contains_key(&url) {
                 self.effects.push(Effect::Inspect(url.clone()));
             }
@@ -102,7 +117,11 @@ impl Network {
     pub fn plan(&mut self, wants: Vec<(String, NostrFilter, Query)>, now: u64) {
         self.reported
             .retain(|sub, _| wants.iter().any(|(id, _, _)| id == sub));
-        let mut ranked: Vec<_> = self.relays.iter().collect();
+        let mut ranked: Vec<_> = self
+            .relays
+            .iter()
+            .filter(|(u, _)| self.known.get(*u).is_none_or(|r| r.read))
+            .collect();
         ranked.sort_by_key(|(url, r)| {
             (
                 std::cmp::Reverse(r.useful.saturating_sub(r.failures as u64)),
@@ -126,13 +145,19 @@ impl Network {
         let mut desired: BTreeMap<(String, String), (NostrFilter, BTreeSet<String>)> =
             BTreeMap::new();
         for (sub, f, q) in wants {
-            let routes = if q.source == Source::Relay {
+            let routes: Vec<String> = if q.source == Source::Relay {
                 q.target
                     .into_iter()
                     .filter(|r| self.relays.contains_key(r))
                     .collect()
             } else {
-                preferred.clone()
+                preferred
+                    .iter()
+                    .filter(|u| {
+                        q.source != Source::Search || self.known.get(*u).is_none_or(|r| r.search)
+                    })
+                    .cloned()
+                    .collect()
             };
             for r in routes {
                 let key = (r, filter_to_value(&f).to_string());

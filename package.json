@@ -13,7 +13,9 @@
     "rust-wasm:quiet": "PATH=\"$HOME/.cargo/bin:$PATH\" cargo run -q -p lkjstr-xtask -- quiet rust-wasm",
     "verify:quiet": "PATH=\"$HOME/.cargo/bin:$PATH\" cargo run -q -p lkjstr-xtask -- quiet verify",
     "ci:quiet": "PATH=\"$HOME/.cargo/bin:$PATH\" cargo run -q -p lkjstr-xtask -- quiet ci",
-    "smoke:browser": "PATH=\"$HOME/.cargo/bin:$PATH\" node scripts/browser-smoke.mjs"
+    "smoke:browser": "PATH=\"$HOME/.cargo/bin:$PATH\" node scripts/browser-smoke.mjs",
+    "engine:check": "sh scripts/engine-check.sh",
+    "engine:package": "sh scripts/engine-package.sh"
   },
   "devDependencies": {
     "playwright-core": "1.65.0"
