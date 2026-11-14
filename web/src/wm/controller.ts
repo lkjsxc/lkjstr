@@ -1,0 +1,176 @@
+// WM controller for one workspace: layout state, persistence, rendering, view mounts (adapted from ytenrich's:
+// no native elements to project, so every tab is an own view).
+import { both, t } from '../shared/i18n.ts';
+import { kindOf, type OpenOpts, VIEWS, viewOf } from '../views/registry.ts';
+import type { Host } from './host.ts';
+import { type Choice, NEW_TAB } from './launcher.ts';
+import * as L from './layout.ts';
+import { parseLayout } from './layout-parse.ts';
+import { openMenu } from './menus.ts';
+import { type BaseEnv, createOwnViews } from './own-views.ts';
+import { FAMILY, presetOf } from './presets.ts';
+import { type Rendered, renderLayout } from './render.ts';
+import { startResize } from './resize.ts';
+import type { Space } from './spaces.ts';
+import { startTabDrag } from './tab-drag.ts';
+
+export type Wm = {
+  /** Opens a tab in the tile last touched (a link from outside any tab: the top bar, an address). */
+  open(kind: string, state?: object): void;
+  dispose(): void;
+};
+
+const REF = /^(npub1|nprofile1|note1|nevent1)[a-z0-9]+$/;
+
+export function createWmController(env: BaseEnv, host: Host, at: Space): Wm {
+  const preset = (): L.LayoutNode => presetOf(at.index);
+  const known = { has: (tab: string): boolean => kindOf(tab) === NEW_TAB || Boolean(viewOf(tab)) };
+  /** A stored layout as it can be drawn (`undefined`: nothing stored, so the preset). */
+  const load = (value: unknown): L.LayoutNode | null => {
+    const saved = value === undefined ? preset() : parseLayout(value);
+    return saved && L.retainViews(saved, known);
+  };
+  let root: L.LayoutNode = load(at.stored) ?? preset();
+  let rendered: Rendered | undefined;
+  let disposed = false;
+  let touched = ''; // the pane last pressed or opened into
+
+  const used = (): Set<string> => new Set(L.views(root));
+  const set = (next: L.LayoutNode | null, save = true): void => {
+    // The only tile left never disappears: it becomes a New tab page.
+    root = next ?? L.pane([own.fresh(NEW_TAB, new Set())]);
+    render();
+    if (save) at.save(root);
+  };
+  /** Closing the tab in front shows its right neighbour (the left one at the end), never a jump to the first. */
+  const close = (view: string): void => {
+    const p = L.paneOfView(root, view);
+    const i = p?.tabs.indexOf(view) ?? -1;
+    const beside = p && p.active === view ? (p.tabs[i + 1] ?? p.tabs[i - 1]) : undefined;
+    const next = L.removeView(root, view);
+    set(next && beside ? L.activate(next, beside) : next);
+  };
+  /** A new tab right after `from` in its tile, in front (`split`: in a new tile beside; `background`: behind). */
+  const openFrom =
+    (from: string) =>
+    (kind: string, state?: object, opts: OpenOpts = {}): void => {
+      const p =
+        L.paneOfView(root, from) ?? L.panes(root).find((x) => x.id === touched) ?? L.panes(root)[0];
+      if (!p || !viewOf(kind)) return;
+      const tab = own.fresh(kind, used(), state);
+      touched = p.id;
+      if (opts.split) return set(L.addView(root, p.id, tab, 'right'));
+      const at = p.tabs.includes(from) ? p.tabs.indexOf(from) + 1 : p.tabs.length;
+      const next = L.moveView(root, tab, p.id, 'center', at);
+      set(opts.background ? L.activate(next, p.active) : next);
+    };
+
+  const choice = (kind: string, state?: object, title?: string): Choice => {
+    const v = viewOf(kind);
+    return {
+      kind,
+      state,
+      title: title ?? (v ? t(v.title) : kind),
+      hint: v ? t(v.hint) : '',
+      search: v
+        ? `${both(v.title)} ${both(v.hint)} ${kind} ${v.aliases ?? ''}`.toLowerCase()
+        : kind,
+    };
+  };
+  /** The New tab page `tab` becomes the chosen view. */
+  const launcher = (tab: string) => ({
+    choices: () => VIEWS.filter((v) => v.launch).map((v) => choice(v.id)),
+    typed(text: string): Choice[] {
+      if (REF.test(text)) {
+        const kind = text.startsWith('np') ? 'profile' : 'thread';
+        return [choice(kind, { ref: text }, t('launcher.open', { what: `${text.slice(0, 14)}…` }))];
+      }
+      const tag = text.replace(/^#/, '');
+      const one = !/\s/.test(tag);
+      return [
+        ...(text.startsWith('#') && one ? [choice('hashtag', { tag }, `#${tag}`)] : []),
+        choice('search', { text }, t('launcher.search', { text })),
+        ...(!text.startsWith('#') && one ? [choice('hashtag', { tag }, `#${tag}`)] : []),
+      ];
+    },
+    pick: (c: Choice) => set(L.replaceView(root, tab, own.fresh(c.kind, used(), c.state))),
+    close: () => close(tab),
+  });
+  const own = createOwnViews(
+    env,
+    `${FAMILY}${at.index}`,
+    launcher,
+    (tab, title) => {
+      const span = rendered?.el.querySelector(`.tab[data-view="${tab}"] > span`);
+      if (span) span.textContent = title;
+      span?.parentElement?.setAttribute('title', title);
+    },
+    openFrom,
+    close,
+  );
+
+  const ctx = {
+    title: own.title,
+    onTabDown(view: string, e: PointerEvent, tab: HTMLElement) {
+      startTabDrag(e, tab, ctx.title(view), {
+        panes: rendered?.panes ?? new Map(),
+        layer: host.layer,
+        onClick: () => set(L.activate(root, view)),
+        onDrop: (paneId, zone, index) => set(L.moveView(root, view, paneId, zone, index)),
+      });
+    },
+    onClose: close,
+    closeClicks: () => env.settings.get().closeClicks,
+    onPaneMenu(p: L.PaneNode, button: HTMLElement) {
+      const splitTo = (zone: L.Zone) => () => set(L.moveView(root, p.active, p.id, zone));
+      openMenu(host.layer, button, [
+        { label: t('pane.splitRight'), run: splitTo('right'), disabled: p.tabs.length < 2 },
+        { label: t('pane.splitDown'), run: splitTo('bottom'), disabled: p.tabs.length < 2 },
+        { label: t('pane.close'), run: () => set(L.closePane(root, p.id)) },
+        { label: t('pane.reset'), run: () => set(preset()) },
+      ]);
+    },
+    onAdd(p: L.PaneNode) {
+      const tab = p.tabs.find((x) => kindOf(x) === NEW_TAB) ?? own.fresh(NEW_TAB, used());
+      set(p.tabs.includes(tab) ? L.activate(root, tab) : L.addView(root, p.id, tab, 'center'));
+      own.focus(tab);
+    },
+    onHandleDown(s: L.SplitNode, index: number, e: PointerEvent, cells: HTMLElement[]) {
+      startResize(e, s.dir, index, cells, (sizes) => set(L.resize(root, s.id, sizes)));
+    },
+  };
+
+  function render(): void {
+    if (disposed) return;
+    own.stash();
+    rendered = renderLayout(root, ctx);
+    host.root.replaceChildren(rendered.el);
+    for (const [view, body] of rendered.bodies) {
+      const el = own.el(view);
+      if (el) body.append(el);
+    }
+    own.sync(used());
+  }
+  const onPress = (e: Event): void => {
+    touched = (e.target as Element).closest?.('.pane')?.getAttribute('data-pane') ?? touched;
+  };
+  host.root.addEventListener('pointerdown', onPress, true);
+
+  // Follow layout changes made elsewhere (a reset from Settings, an edit in another browser tab).
+  const offStore = at.watch((value) => {
+    const next = load(value);
+    if (next && !disposed && JSON.stringify(next) !== JSON.stringify(root)) set(next, false);
+  });
+  render();
+
+  return {
+    open: (kind, state) => openFrom('')(kind, state),
+    dispose() {
+      disposed = true;
+      offStore();
+      host.root.removeEventListener('pointerdown', onPress, true);
+      own.dispose();
+      host.root.replaceChildren();
+    },
+  };
+}

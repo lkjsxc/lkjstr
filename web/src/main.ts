@@ -1,0 +1,94 @@
+// lkjstr: the page. It starts from what is saved on this device (settings, layouts, the last account) and draws
+// at once; the engine answers from its worker when it is ready.
+import { createEngine, workerTransport } from './engine/client.ts';
+import { resolveLang, setLang } from './shared/i18n.ts';
+import { spacesKey } from './shared/layout-store.ts';
+import { matches } from './shared/platform.ts';
+import { createSettings } from './shared/settings.ts';
+import { kv } from './shared/storage.ts';
+import { createTopBar } from './ui/topbar.ts';
+import { createWmController, type Wm } from './wm/controller.ts';
+import { createHost } from './wm/host.ts';
+import { FAMILY } from './wm/presets.ts';
+import { parseActive, SPACES } from './wm/spaces.ts';
+import { createSpacesBar } from './wm/spaces-bar.ts';
+import { createWmStore } from './wm/store.ts';
+
+const settings = createSettings();
+let language = resolveLang(settings.get().language);
+setLang(language);
+document.documentElement.lang = language;
+
+const engine = createEngine(workerTransport(__ENGINE_URL__));
+const configure = (): void =>
+  engine.configure({
+    language,
+    heuristics: true,
+    prefetch: true,
+    mock: kv.get('mock') as { live: boolean } | undefined,
+  });
+configure();
+// The last account is remembered so the first lists are asked for as that person, before the engine has spoken.
+const cached = kv.get('account');
+if (typeof cached === 'string') engine.accounts.set({ accounts: [], active: cached });
+engine.accounts.subscribe((a) => (a.active ? kv.set('account', a.active) : kv.remove('account')));
+
+const host = createHost();
+host.look(settings.get());
+const store = createWmStore();
+let ctl: Wm | undefined;
+let shown = 0; // the workspace `ctl` shows
+let picked: number | undefined; // this browser tab's workspace, once it chose one
+const active = (): number => picked ?? parseActive(store.get(spacesKey(FAMILY)));
+const env = { engine, settings, layer: host.layer, resetLayouts: () => store.reset() };
+
+function update(): void {
+  const n = active();
+  if (ctl && shown !== n) ctl.dispose(), (ctl = undefined);
+  if (!ctl) ctl = createWmController(env, host, store.space(FAMILY, (shown = n)));
+  bar.show(n);
+}
+const pick = (n: number): void => {
+  if (n === active()) return;
+  picked = n;
+  store.save(spacesKey(FAMILY), { active: n });
+  update();
+};
+const bar = createSpacesBar(pick);
+const top = createTopBar(host.bar, {
+  engine,
+  settings,
+  spaces: bar.el,
+  layer: host.layer,
+  open: (kind, state) => ctl?.open(kind, state),
+});
+update();
+
+settings.subscribe((s) => {
+  host.look(s);
+  const next = resolveLang(s.language);
+  if (next === language) return;
+  // Another language: every label is drawn again.
+  language = next;
+  setLang(next);
+  document.documentElement.lang = next;
+  configure();
+  ctl?.dispose();
+  ctl = undefined;
+  update();
+  top.render();
+});
+
+window.addEventListener(
+  'keydown',
+  (e) => {
+    for (let n = 1; n <= SPACES; n++) if (matches(e, `Alt+Shift+${n}`)) e.preventDefault(), pick(n);
+  },
+  true,
+);
+
+// Incoming links (/n/<note>, /p/<npub>) open as a tab; the address bar then returns to "/" and stays there.
+const link = /^\/(n|p)\/([a-z0-9]+)\/?$/.exec(location.pathname);
+if (link) ctl?.open(link[1] === 'p' ? 'profile' : 'thread', { ref: link[2] });
+if (location.pathname !== '/' || location.search || location.hash)
+  history.replaceState(null, '', '/');
