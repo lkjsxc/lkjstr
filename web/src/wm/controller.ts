@@ -1,8 +1,10 @@
 // WM controller for one workspace: layout state, persistence, rendering, view mounts (adapted from ytenrich's:
 // no native elements to project, so every tab is an own view).
-import { both, t } from '../shared/i18n.ts';
+import { t } from '../shared/i18n.ts';
 import { keyCaps } from '../shared/keys.ts';
-import { kindOf, type OpenOpts, VIEWS, viewOf } from '../views/registry.ts';
+import { kindOf, type OpenOpts, viewOf } from '../views/registry.ts';
+import { CHOICES } from './choices.ts';
+import { createClosed } from './closed.ts';
 import type { Host } from './host.ts';
 import { type Choice, NEW_TAB } from './launcher.ts';
 import * as L from './layout.ts';
@@ -22,9 +24,6 @@ export type Wm = {
   dispose(): void;
 };
 
-const CLOSED_MAX = 20;
-const REF = /^(npub1|nprofile1|note1|nevent1)[a-z0-9]+$/;
-
 export function createWmController(env: BaseEnv, host: Host, at: Space): Wm {
   const preset = (): L.LayoutNode => presetOf(at.index);
   const known = { has: (tab: string): boolean => kindOf(tab) === NEW_TAB || Boolean(viewOf(tab)) };
@@ -40,8 +39,7 @@ export function createWmController(env: BaseEnv, host: Host, at: Space): Wm {
   /** For a tab opened beside its reader: the tab that was in front there and what had the keyboard. */
   const back = new Map<string, { view: string; el?: HTMLElement }>(); // bound: one per such open tab
 
-  /** Closed tabs, newest last, each with the state it left and where it was. */
-  const closed: { kind: string; state: object; pane: string; index: number }[] = []; // bound: CLOSED_MAX
+  const closed = createClosed(`${FAMILY}${at.index}`);
   const retire = (view: string): void => {
     const p = L.paneOfView(root, view);
     const state = own.retire(view);
@@ -52,7 +50,6 @@ export function createWmController(env: BaseEnv, host: Host, at: Space): Wm {
       pane: p?.id ?? '',
       index: p?.tabs.indexOf(view) ?? 0,
     });
-    if (closed.length > CLOSED_MAX) closed.shift();
   };
   const reopen = (): void => {
     const c = closed.pop();
@@ -117,34 +114,9 @@ export function createWmController(env: BaseEnv, host: Host, at: Space): Wm {
       set(opts.background ? L.activate(next, p.active) : next);
     };
 
-  const choice = (kind: string, state?: object, title?: string): Choice => {
-    const v = viewOf(kind);
-    return {
-      kind,
-      state,
-      title: title ?? (v ? t(v.title) : kind),
-      hint: v ? t(v.hint) : '',
-      search: v
-        ? `${both(v.title)} ${both(v.hint)} ${kind} ${v.aliases ?? ''}`.toLowerCase()
-        : kind,
-    };
-  };
   /** The New tab page `tab` becomes the chosen view. */
   const launcher = (tab: string) => ({
-    choices: () => VIEWS.filter((v) => v.launch).map((v) => choice(v.id)),
-    typed(text: string): Choice[] {
-      if (REF.test(text)) {
-        const kind = text.startsWith('np') ? 'profile' : 'thread';
-        return [choice(kind, { ref: text }, t('launcher.open', { what: `${text.slice(0, 14)}…` }))];
-      }
-      const tag = text.replace(/^#/, '');
-      const one = !/\s/.test(tag);
-      return [
-        ...(text.startsWith('#') && one ? [choice('hashtag', { tag }, `#${tag}`)] : []),
-        choice('search', { text }, t('launcher.search', { text })),
-        ...(!text.startsWith('#') && one ? [choice('hashtag', { tag }, `#${tag}`)] : []),
-      ];
-    },
+    ...CHOICES,
     pick: (c: Choice) => set(L.replaceView(root, tab, own.fresh(c.kind, used(), c.state))),
     close: () => close(tab),
   });
@@ -183,7 +155,7 @@ export function createWmController(env: BaseEnv, host: Host, at: Space): Wm {
           label: t('pane.reopen'),
           key: keyCaps('tabReopen')[0],
           run: reopen,
-          disabled: !closed.length,
+          disabled: !closed.size(),
         },
         {
           label: t('pane.close'),

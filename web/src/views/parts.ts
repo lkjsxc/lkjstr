@@ -2,6 +2,7 @@
 import type { Author, Emoji, Segment } from '../engine/protocol.ts';
 import { type Child, h } from '../shared/h.ts';
 import { t } from '../shared/i18n.ts';
+import { UNDO_MS } from './held.ts';
 import type { ViewEnv } from './registry.ts';
 
 /** Shift-click opens in a new tile beside; a middle click opens behind. */
@@ -107,7 +108,7 @@ export function toast(layer: HTMLElement, text: string, undo?: () => void): void
     if (waiting.length >= 3) waiting[0]?.remove();
   } else box.querySelector('.toast:not(.undo)')?.remove();
   box.append(el);
-  setTimeout(() => el.remove(), undo ? 8000 : 2200);
+  setTimeout(() => el.remove(), undo ? UNDO_MS : 2200);
 }
 export async function copy(env: ViewEnv, text: string): Promise<void> {
   try {

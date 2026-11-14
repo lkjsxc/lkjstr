@@ -6,6 +6,8 @@ export type Place = { readonly key: string; readonly off: number };
 export type Keeper = {
   /** Undefined: at the very top, where the list follows its head. */
   get(): Place | undefined;
+  /** Names the place and goes there (a thread opening on its focused note). */
+  set(place: Place): void;
   /** Reads the place from the screen (after the reader scrolled). */
   read(): void;
   /** Puts the saved place back on screen. False when its row is not drawn. */
@@ -103,6 +105,7 @@ export function createKeeper(o: {
 
   return {
     get: () => place,
+    set: (next) => (set(next), void put()),
     read,
     put,
     hold() {

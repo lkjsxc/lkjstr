@@ -4,19 +4,19 @@
 import type { Subscription } from '../engine/client.ts';
 import { applyOps } from '../engine/ops.ts';
 import type { Anchor, Query, Row, Source, SubState } from '../engine/protocol.ts';
-import { dayOf, fullTime } from '../shared/format.ts';
+import { fullTime } from '../shared/format.ts';
 import { h } from '../shared/h.ts';
 import { type Key, t } from '../shared/i18n.ts';
 import { icon } from '../shared/icons.ts';
 import { loadViewState, saveViewState } from '../shared/view-state.ts';
 import { type BarState, mountFeedBar, typesQuery } from './feed-bar.ts';
+import { createRowList } from './feed-draw.ts';
 import { mountFeedKeys } from './feed-keys.ts';
 import { createKeeper, type Place } from './feed-place.ts';
 import { filterQuery } from './filter-bar.ts';
-import { bodySig, fitNote, patchNote, renderNote } from './note.ts';
+import { onHeld } from './held.ts';
 import { plainName } from './parts.ts';
 import type { ViewEnv } from './registry.ts';
-import { renderNotification, renderPerson, renderProfile } from './rows.ts';
 
 const PAGE = 60; // rows asked for beyond what is on screen
 const KEEP = 120; // rows kept on the far side when the window slides
@@ -42,7 +42,8 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
   const status = h('div', { class: 'fstate muted' });
   const pill = h('button', { class: 'fresh', hidden: true });
   const barSlot = h('div');
-  const nodes = new Map<string, { el: HTMLElement; sig: string; body?: string }>(); // bound: rows of the window plus day dividers
+  const tail = h('div', { class: 'ftail' });
+  const drawn = createRowList(list, env, DATED.has(kind));
   let rows: Row[] = [];
   let sub: Subscription | undefined;
   let atTop = true;
@@ -57,7 +58,7 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
     list,
     saved: state.pos,
     active: () => el.isConnected && env.visible.get(),
-    node: (key) => nodes.get(key)?.el,
+    node: (key) => drawn.node(key),
     anchors: (key) => !key.startsWith('day:'),
     save: (place) => ((state.pos = place), save()),
   });
@@ -83,70 +84,28 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
     sub?.window(anchor, before, after);
   };
 
-  const render = (row: Row): HTMLElement | null => {
-    if (row.kind === 'note') return renderNote(row, env);
-    if (row.kind === 'profile') return renderProfile(row, env);
-    if (row.kind === 'person') return renderPerson(row, env);
-    if (row.kind === 'notification') return renderNotification(row, env);
-    return null;
-  };
-  /** Draws `rows`, reusing every node whose row did not change, and keeps what is on screen where it is. */
+  /** Draws the rows and keeps what is on screen where it is. */
   const sync = (): void => {
     const settle = keeper.hold();
-    const want: HTMLElement[] = [];
-    const seen = new Set<string>();
-    const today = dayOf(Date.now());
-    let day = DATED.has(kind) ? today : '';
-    const put = (key: string, sig: string, make: () => HTMLElement | null): void => {
-      let n = nodes.get(key);
-      if (!n || n.sig !== sig) {
-        const made = make();
-        if (!made) return;
-        n = { el: made, sig };
-        nodes.set(key, n);
-        made.dataset.key = key;
-      }
-      seen.add(key);
-      want.push(n.el);
-    };
-    for (const row of rows) {
-      const at = row.kind === 'note' ? (row.repostedBy?.at ?? row.at) : 0;
-      if (at && day && dayOf(at) !== day) {
-        day = dayOf(at);
-        put(`day:${day}`, day, () => h('div', { class: 'day' }, day));
-      }
-      const sig = JSON.stringify(row);
-      const had = nodes.get(row.key);
-      // Only counts or reactions changed: the drawn note stays, its chips and action row are redrawn.
-      if (
-        row.kind === 'note' &&
-        !row.hidden &&
-        had &&
-        had.sig !== sig &&
-        had.body === bodySig(row)
-      ) {
-        patchNote(had.el, row, env);
-        had.sig = sig;
-      }
-      put(row.key, sig, () => render(row));
-      const now = nodes.get(row.key);
-      if (now && row.kind === 'note') now.body = bodySig(row);
-    }
-    let cursor = list.firstChild;
-    for (const node of want) {
-      if (node === cursor) cursor = cursor.nextSibling;
-      else list.insertBefore(node, cursor);
-    }
-    while (cursor) {
-      const next = cursor.nextSibling;
-      cursor.remove();
-      cursor = next;
-    }
-    for (const key of [...nodes.keys()]) if (!seen.has(key)) nodes.delete(key);
-    for (const node of want) if (!node.dataset.fit) (node.dataset.fit = '1'), fitNote(node);
+    drawn.draw(rows);
+    showState();
+    seat();
     settle();
     keys.paint();
-    showState();
+  };
+  /** A thread opens on its focused note, the notes it answers above it: room is kept below so that the note can
+   * stand at the top of the tile however few replies follow. */
+  let seated = kind !== 'thread' || Boolean(state.pos);
+  const seat = (): void => {
+    if (kind !== 'thread' || !env.visible.get()) return;
+    const focus = rows.find((r) => r.kind === 'note' && r.thread?.role === 'focus');
+    const node = focus && drawn.node(focus.key);
+    if (!node) return;
+    const below = tail.getBoundingClientRect().top - node.getBoundingClientRect().top;
+    tail.style.height = `${Math.max(0, Math.ceil(el.clientHeight - below))}px`;
+    if (seated) return;
+    seated = true;
+    if (rows[0] !== focus) keeper.set({ key: focus.key, off: 0 });
   };
   const showState = (): void => {
     const empty = rows.length === 0;
@@ -257,15 +216,15 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
     list,
     env,
     closes: CHILD.has(kind),
-    row: (key) => rows.find((r) => r.key === key),
-    node: (key) => nodes.get(key)?.el,
+    row: (key) => drawn.row(key),
+    node: (key) => drawn.node(key),
     cover: () => barSlot.offsetHeight,
     moved: () => (keeper.read(), follow()),
     top: toTop,
   });
 
   el.classList.add('feed');
-  el.replaceChildren(h('div', { class: 'fslot' }, barSlot, pill), list, status);
+  el.replaceChildren(h('div', { class: 'fslot' }, barSlot, pill), list, status, tail);
   const bar = mountFeedBar({
     kind,
     el,
@@ -280,17 +239,19 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
   open(true);
   const offVisible = env.visible.subscribe((on) => {
     sub?.visible(on);
-    if (on) keeper.put(), follow();
+    if (on) seat(), keeper.put(), follow();
   });
   const offAccounts = env.engine.accounts.subscribe((a) => {
     if ((a.active ?? '') !== account) (account = a.active ?? ''), open();
   });
-  const offSettings = env.settings.subscribe(() => (nodes.clear(), sync()));
+  const offHeld = onHeld(() => void (rows.length && sync()));
+  const offSettings = env.settings.subscribe(() => (drawn.clear(), sync()));
   return () => {
     cancelAnimationFrame(frame);
     offVisible();
     offAccounts();
     offSettings();
+    offHeld();
     bar();
     keys.dispose();
     keeper.dispose();

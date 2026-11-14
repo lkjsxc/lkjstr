@@ -103,6 +103,40 @@ async function run(browser: Browser): Promise<void> {
       (await count(page, '.tab.active[data-view="home"]')) === 1,
   );
 
+  // A reply's thread opens on the reply itself, at the top of the tile, with what it answers above it.
+  const seatOf = (): Promise<{ top: number; above: number; scrolled: number } | null> =>
+    page.evaluate(() => {
+      const view = document.querySelector('.view[data-kind="thread"]');
+      const focus = view?.querySelector('.th-focus');
+      if (!view || !focus) return null;
+      return {
+        top: Math.round(focus.getBoundingClientRect().top - view.getBoundingClientRect().top),
+        above: view.querySelectorAll('.th-ancestor').length,
+        scrolled: Math.round(view.scrollTop),
+      };
+    });
+  await page.locator(`${home} .note:has(.ctx .clip) .text`).first().click();
+  await page.locator('.th-focus').waitFor();
+  const seat = await seatOf();
+  fact(
+    'a thread opens on its focused note, the ancestors above',
+    seat !== null && Math.abs(seat.top) <= 1 && seat.above > 0 && seat.scrolled > 0,
+    seat,
+  );
+  await page.waitForTimeout(400);
+  fact('and stays there', JSON.stringify(await seatOf()) === JSON.stringify(seat), await seatOf());
+  // Closed tabs outlive a reload: the thread comes back, on the same note.
+  await page.locator('.tab[data-view^="thread"]').click({ button: 'middle' });
+  await page.waitForTimeout(600);
+  await page.reload();
+  await page.waitForSelector('.note');
+  fact('after a reload the closed tab is still closed', (await count(page, '.th-focus')) === 0);
+  await page.keyboard.press('Alt+Shift+T');
+  await page.locator('.th-focus').waitFor();
+  await page.waitForTimeout(300);
+  fact('a tab closed before a reload opens again as it was', (await seatOf())?.top === seat?.top);
+  await page.locator('.tab[data-view^="thread"]').click({ button: 'middle' });
+
   // Menus close on Escape, an outside press, a wheel, and after choosing.
   const more = `${home} .note .a-more`;
   const openMenu = async (): Promise<void> => {

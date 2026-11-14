@@ -1,5 +1,6 @@
 // What can be done with a note: the icon row (reply, repost or quote, any emoji, like, zap, bookmark, more) and
 // under it the reaction chips, so the row never moves when the first reaction arrives. Every action shows at once (the engine patches the row) and reports a failure in words.
+import type { ActResult } from '../engine/client.ts';
 import type { Action, NoteRow } from '../engine/protocol.ts';
 import { countText } from '../shared/format.ts';
 import { h } from '../shared/h.ts';
@@ -7,44 +8,59 @@ import { getLang, type Key, t } from '../shared/i18n.ts';
 import { type IconName, icon } from '../shared/icons.ts';
 import { openMenu } from '../wm/menus.ts';
 import { openEmojiPicker } from './emoji-picker.ts';
+import { type HeldWhat, hold, unhold } from './held.ts';
 import { copy, emojiImg, plainName, toast } from './parts.ts';
 import type { ViewEnv } from './registry.ts';
 
 const DEFAULT_REACTION = '❤️';
 
+const failed = (env: ViewEnv, r: ActResult): void => {
+  if (r.ok) return;
+  const key = `error.${r.error?.code ?? 'internal'}`;
+  toast(env.layer, `${t(key as Key)}${r.error?.message ? `: ${r.error.message}` : ''}`);
+};
 /** Sends an action as the active account; says so when it could not be done. */
 export async function act(env: ViewEnv, make: (as: string) => Action): Promise<boolean> {
   const as = env.engine.me();
   if (!as) return (toast(env.layer, t('error.signed-out')), false);
   const r = await env.engine.act(make(as));
-  if (!r.ok) {
-    const key = `error.${r.error?.code ?? 'internal'}`;
-    toast(env.layer, `${t(key as Key)}${r.error?.message ? `: ${r.error.message}` : ''}`);
-  }
+  failed(env, r);
   return r.ok;
 }
-/** A reaction is public the moment it is sent, so a wrong press can be taken back at once. */
-async function react(
+/** A like or a repost: shown at once, sent when its Undo is gone (`held.ts`), so Undo means it was never sent. */
+function later(env: ViewEnv, row: NoteRow, what: HeldWhat, said: string): void {
+  const as = env.engine.me();
+  if (!as) return toast(env.layer, t('error.signed-out'));
+  hold(
+    row.id,
+    as,
+    what,
+    (a) => env.engine.act(a),
+    (r) => failed(env, r),
+  );
+  toast(env.layer, said, () => void unhold(row.id, what));
+}
+function react(
   env: ViewEnv,
   row: NoteRow,
   emoji: string,
   url: string | undefined,
   on: boolean,
-  quiet = false,
-): Promise<void> {
-  const ok = await act(env, (as) => ({
+): void {
+  const what: HeldWhat = { k: 'reaction', emoji, url };
+  if (on)
+    return later(
+      env,
+      row,
+      what,
+      t('undo.reacted', { emoji: url ? `:${emoji.replace(/:/g, '')}:` : emoji }),
+    );
+  if (unhold(row.id, what)) return;
+  void act(env, (as) => ({
     a: 'publish',
     as,
-    what: on
-      ? { k: 'reaction', id: row.id, emoji, url }
-      : { k: 'delete', id: row.id, of: 'reaction', emoji },
+    what: { k: 'delete', id: row.id, of: 'reaction', emoji },
   }));
-  if (ok && on && !quiet)
-    toast(
-      env.layer,
-      t('undo.reacted', { emoji: url ? `:${emoji.replace(/:/g, '')}:` : emoji }),
-      () => void react(env, row, emoji, url, false),
-    );
 }
 
 export function reactionChips(row: NoteRow, env: ViewEnv): HTMLElement | null {
@@ -60,7 +76,7 @@ export function reactionChips(row: NoteRow, env: ViewEnv): HTMLElement | null {
           title: r.emoji,
           'data-emoji': r.emoji,
           'aria-pressed': r.mine,
-          onclick: (e) => (e.stopPropagation(), void react(env, row, r.emoji, r.url, !r.mine)),
+          onclick: (e) => (e.stopPropagation(), react(env, row, r.emoji, r.url, !r.mine)),
         },
         r.url ? emojiImg(r.emoji, r.url) : r.emoji,
         h('span', null, countText(r.count, false, getLang())),
@@ -109,10 +125,8 @@ export function actionRow(row: NoteRow, env: ViewEnv): HTMLElement {
     if ((await marked(!was)) && was)
       toast(env.layer, t('undo.unbookmarked'), () => void marked(true));
   };
-  const repost = async (): Promise<void> => {
-    if (await act(env, (as) => ({ a: 'publish', as, what: { k: 'repost', id: row.id } })))
-      toast(env.layer, t('undo.reposted'), publish({ k: 'delete', id: row.id, of: 'repost' }));
-  };
+  const unrepost = (): void =>
+    void (unhold(row.id, { k: 'repost' }) || publish({ k: 'delete', id: row.id, of: 'repost' })());
   const zap = button(
     'zap',
     'act.zap',
@@ -133,20 +147,19 @@ export function actionRow(row: NoteRow, env: ViewEnv): HTMLElement {
     button('repost', 'act.repost', n(row.counts.reposts), row.mine.reposted, (el) =>
       openMenu(env.layer, el, [
         row.mine.reposted
-          ? { label: t('act.unrepost'), run: publish({ k: 'delete', id: row.id, of: 'repost' }) }
-          : { label: t('act.repost'), run: () => void repost() },
+          ? { label: t('act.unrepost'), run: unrepost }
+          : {
+              label: t('act.repost'),
+              run: () => later(env, row, { k: 'repost' }, t('undo.reposted')),
+            },
         { label: t('act.quote'), run: () => env.open('compose', quote) },
       ]),
     ),
     button('smile', 'emoji.pick', '', false, (el) =>
-      openEmojiPicker(env, el, (p) => void react(env, row, p.emoji, p.url, true)),
+      openEmojiPicker(env, el, (p) => react(env, row, p.emoji, p.url, true)),
     ),
-    button(
-      'heart',
-      'act.react',
-      n(row.counts.reactions),
-      Boolean(mine),
-      () => void react(env, row, mine?.emoji ?? DEFAULT_REACTION, mine?.url, !mine),
+    button('heart', 'act.react', n(row.counts.reactions), Boolean(mine), () =>
+      react(env, row, mine?.emoji ?? DEFAULT_REACTION, mine?.url, !mine),
     ),
     zap,
     mark,
