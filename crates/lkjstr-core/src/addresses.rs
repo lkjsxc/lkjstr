@@ -95,3 +95,24 @@ pub fn public_view(view: View) -> View {
         view
     }
 }
+
+impl crate::Workspace {
+    /// Reload addresses identify a saved view without replacing its private state.
+    pub fn restore_address(&mut self, view: View, resumed: bool) {
+        if resumed
+            && self
+                .focused_tab()
+                .and_then(|tab| self.tabs.get(&tab))
+                .is_some_and(|saved| parse_path(saved).as_ref() == Some(&view))
+        {
+            return;
+        }
+        self.open(view, crate::Open::Here);
+    }
+}
+
+fn parse_path(view: &View) -> Option<View> {
+    let address = path(view);
+    let (path, query) = address.split_once('?').unwrap_or((&address, ""));
+    parse(path, query)
+}

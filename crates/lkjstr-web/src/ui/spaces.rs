@@ -86,21 +86,18 @@ pub fn install_sync(ui: Ui) {
         if event.key().as_deref() != Some("lkjstr-layout-sync") {
             return;
         }
-        let Some((index, workspace)) = event
+        let Some(desks) = event
             .new_value()
-            .and_then(|s| serde_json::from_str::<(usize, lkjstr_core::Workspace)>(&s).ok())
+            .and_then(|s| serde_json::from_str::<Vec<lkjstr_core::Workspace>>(&s).ok())
         else {
             return;
         };
-        if index >= 9 {
-            return;
-        }
         let signed_in = ui.app.with(|rt| rt.session.active.is_some());
-        let workspace = workspace.repaired(signed_in);
+        let desks = desks.into_iter().map(|ws| ws.repaired(signed_in)).collect();
         let mut spaces = ui.spaces.get_untracked();
         let active = spaces.active;
         spaces.desks[active] = ui.ws.get_untracked();
-        if spaces.install(index, workspace) {
+        if spaces.install_desks(desks) {
             ui.ws.set(spaces.desks[active].clone());
             ui.spaces.set(spaces);
         }
@@ -109,9 +106,10 @@ pub fn install_sync(ui: Ui) {
 }
 
 pub fn broadcast(ui: Ui) {
-    let index = ui.spaces.with_untracked(|s| s.active);
+    let mut spaces = ui.spaces.get_untracked();
+    spaces.desks[spaces.active] = ui.ws.get_untracked();
     if let Some(storage) = web_sys::window().and_then(|w| w.local_storage().ok().flatten())
-        && let Ok(text) = serde_json::to_string(&(index, ui.ws.get_untracked()))
+        && let Ok(text) = serde_json::to_string(&spaces.desks)
     {
         // Setting an identical value emits no storage event, terminating echoes.
         let _ = storage.set_item("lkjstr-layout-sync", &text);

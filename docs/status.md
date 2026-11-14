@@ -39,7 +39,9 @@ no new account, messaging, payment or sync features were started.
 
 Clean public addresses and focused document titles replace JSON hashes.
 Focus changes replace history; in-tab navigation pushes it. Explicit addresses
-add a tab to the saved desk; reload resumes that tab's saved history. Malformed
+add a tab to the saved desk; reload matches public identity and retains relay
+hints, reply context and saved history. Browser jumps apply the full distance,
+clamped to retained history. Layout sync transfers all desks atomically. Malformed
 or unsupported routes have an honest Nothing here view. Old hashes are ignored.
 Welcome is removed from the model, presets and launcher; the feed banner stays.
 
@@ -116,8 +118,8 @@ Which of these were exercised in a real browser, and how, is recorded in
 
 ## Current verification
 
-All four quiet gates pass, along with 117 smoke and 629 design/browser checks.
-The final release tarball is `tmp/lkjstr-dist.tar.gz`; 166 PNGs are indexed below.
+All four quiet gates and 129 smoke checks pass; the prior design run passed 629.
+The prior release tarball is `tmp/lkjstr-dist.tar.gz`; 166 PNGs are indexed below.
 See [verification.md](verification.md) for the final quiet gates, fake-relay
 results and limitations. Screenshots are indexed in `tmp/screens/INDEX.md`.
 Packaging follows [README.md](../README.md#build). Docker image verification is

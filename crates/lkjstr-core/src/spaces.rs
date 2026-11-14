@@ -122,6 +122,22 @@ impl Spaces {
         self.reserve_ids(0);
         true
     }
+    /// Install all layouts together so moves never collide with their old copy.
+    /// The receiver retains its chosen desk and local workspace metadata.
+    pub fn install_desks(&mut self, desks: Vec<Workspace>) -> bool {
+        let mut ids = std::collections::BTreeSet::new();
+        if desks.len() != COUNT
+            || desks
+                .iter()
+                .any(|ws| ws.tabs.keys().any(|id| !ids.insert(*id)))
+        {
+            return false;
+        }
+        let floor = self.reserve_ids(0);
+        self.desks = desks;
+        self.reserve_ids(floor);
+        true
+    }
     pub fn switch(&mut self, current: &Workspace, to: usize) -> Option<Workspace> {
         if to >= COUNT || to == self.active {
             return None;

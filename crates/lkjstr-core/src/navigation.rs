@@ -137,25 +137,29 @@ impl Workspace {
         self.navigation.previews.remove(&tab);
     }
 
-    pub fn travel(&mut self, direction: i32) -> bool {
+    /// Apply the full distance, clamping at the bounded history's endpoint.
+    pub fn travel(&mut self, distance: i32) -> bool {
         let Some(tab) = self.focused_tab() else {
             return false;
         };
-        let Some(current) = self.tabs.get(&tab).cloned() else {
+        let Some(mut current) = self.tabs.get(&tab).cloned() else {
             return false;
         };
         let history = self.navigation.histories.entry(tab).or_default();
-        let (from, to) = if direction < 0 {
+        let (from, to) = if distance < 0 {
             (&mut history.back, &mut history.forward)
         } else {
             (&mut history.forward, &mut history.back)
         };
-        let Some(view) = from.pop() else {
-            return false;
-        };
-        to.push(current);
-        self.tabs.insert(tab, view);
-        true
+        let count = (distance.unsigned_abs() as usize).min(from.len());
+        for _ in 0..count {
+            if let Some(view) = from.pop() {
+                to.push(current);
+                current = view;
+            }
+        }
+        self.tabs.insert(tab, current);
+        count > 0
     }
 
     pub fn navigate(&mut self, tab: TabId, view: View) {

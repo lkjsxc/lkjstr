@@ -190,3 +190,11 @@ language table boundary, independent previews and physical resize constraints.
 Docker Compose verification cannot run under the explicit instruction to write
 only inside this worktree: it writes image and container data to daemon storage.
 No service was stopped/restarted, no commit made, and no deployment performed.
+
+## Layout/navigation review (2026-11-14)
+
+Native `navigation_review_test` covers public-identity reloads, full-distance
+history with exhaustion, and atomic bank imports in both move directions.
+All 129 browser smoke checks pass, including relay/reply reload state, two-page
+moves and `history.go(-2)`/`history.go(2)`. All four quiet gates pass.
+Docker remains excluded by the worktree-only write rule.

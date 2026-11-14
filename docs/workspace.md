@@ -25,7 +25,10 @@ disabled. Pin moves a tab first and protects it from bulk closure. Duplicate
 copies its view and navigation history, with an independent draft key.
 
 Each tab retains up to 64 history entries. Alt+Left/Right, mouse side buttons
-and browser Back navigate the focused tab. Clean public paths describe the focused tab; searches alone use a query string.
+and browser Back navigate the focused tab. Multi-entry browser jumps apply their
+full distance, stopping at the retained history boundary. Reload matches the public
+address while retaining saved relay hints, reply context and history. Clean public
+paths describe the focused tab; searches alone use a query string.
 Unaddressed image and website tiles retain their state only in the saved desk. Closed tabs/tiles
 reopen with Ctrl/Cmd+Shift+T. Alt+Z restores a layout snapshot. Recovery is
 bounded to 32 snapshots and lasts for this page lifetime.
@@ -90,8 +93,9 @@ Boot reads the atomic `spaces` snapshot before drawing. It includes all nine
 layouts, their names, activity timestamps and the last selected workspace.
 Debounced saves also write `workspace:<index>` mirrors and the current
 `workspace` key. Pagehide initiates a final save. A storage-event channel syncs
-layout edits between same-origin browser tabs without changing the receiver's
-active workspace; identical writes terminate echoes. Bad saved banks are
+the complete layout bank atomically between same-origin browser tabs, including
+both ends of a tab move, without changing the receiver's active workspace;
+identical writes terminate echoes. Bad saved banks are
 rejected, and individual layouts are repaired with native-tested bounds.
 
 Allocation carries a bank-wide high-water mark across switches and moves,

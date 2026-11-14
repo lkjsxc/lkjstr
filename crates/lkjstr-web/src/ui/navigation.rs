@@ -1,7 +1,7 @@
 //! Browser address bar and Back integrate with the focused tab's own history.
 use super::Ui;
 use leptos::{ev, prelude::*};
-use lkjstr_core::{Open, View, addresses};
+use lkjstr_core::{View, addresses};
 
 fn address(ui: Ui, _tab: Option<u32>, view: &View) -> String {
     if ui.spaces.with_untracked(|s| s.active == 0)
@@ -22,17 +22,8 @@ pub fn restore(ui: Ui) {
         let resumed = web_sys::window()
             .and_then(|w| w.history().ok())
             .and_then(|h| h.state().ok())
-            .is_some_and(|s| s.as_f64().is_some());
-        if resumed
-            && ui
-                .ws
-                .with_untracked(|ws| ws.focused_tab().and_then(|t| ws.tabs.get(&t)) == Some(&view))
-        {
-            return;
-        }
-        ui.ws.update(|ws| {
-            ws.open(view, Open::Here);
-        });
+            .is_some_and(|s| s.as_f64().is_some_and(|n| n.is_finite()));
+        ui.ws.update(|ws| ws.restore_address(view, resumed));
     }
 }
 
@@ -88,17 +79,17 @@ pub fn install(ui: Ui, booted: RwSignal<bool>) {
         }
     });
     let back = window_event_listener(ev::popstate, move |event| {
-        let Some(next) = event.state().as_f64() else {
+        let Some(next) = event.state().as_f64().filter(|n| n.is_finite()) else {
             position.update_value(|n| *n += 1.0);
             from_browser.set_value(true);
             restore(ui);
             return;
         };
-        let direction = if next < position.get_value() { -1 } else { 1 };
+        let distance = (next - position.get_value()) as i32;
         position.set_value(next);
         from_browser.set_value(true);
         let mut changed = false;
-        ui.ws.update(|ws| changed = ws.travel(direction));
+        ui.ws.update(|ws| changed = ws.travel(distance));
         if !changed {
             from_browser.set_value(false);
             if let Some((tab, view)) = focused.get_untracked()

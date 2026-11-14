@@ -42,6 +42,11 @@ export async function browserNavigationReview(browser, url, data, check) {
     await page.reload();
     await focused().locator('input[type=search]').waitFor();
     check('reload preserves the current browser history position', await page.evaluate(() => history.state) === position);
+    for (const [distance, query] of [[-2, 'history-one'], [2, 'history-three']]) {
+      await page.evaluate(distance => history.go(distance), distance);
+      await page.waitForFunction(q => document.querySelector('.pane.focused .body.shown input[type=search]')?.value === q, query, { timeout: 3000 });
+      check(`browser history.go(${distance}) restores full distance and URL`, new URL(page.url()).searchParams.get('q') === query);
+    }
     for (const [direction, query] of [['back', 'history-two'], ['back', 'history-one'], ['forward', 'history-two'], ['forward', 'history-three']]) {
       await (direction === 'back' ? page.goBack() : page.goForward());
       await page.waitForFunction((q) => document.querySelector('.pane.focused .body.shown input[type=search]')?.value === q, query, { timeout: 3000 });

@@ -2,6 +2,7 @@
 // in-process fake relay, so nothing reaches public relays and results are
 // repeatable. Usage: node scripts/browser-smoke.mjs [out-dir]
 // Prints one JSON object of checks; exits 1 if any check fails.
+import { browserLayoutSyncReview } from './browser-layout-sync-review.mjs';
 import { browserAddressReview } from './browser-address-review.mjs';
 import { createServer } from 'node:http';
 import { readFile, mkdir, readdir, writeFile } from 'node:fs/promises';
@@ -137,6 +138,7 @@ try {
   await browserNavigation(browser, url, check);
   await browserFoundationReview(browser, url, check);
   await browserWorkspaceReview(browser, url, check);
+  await browserLayoutSyncReview(browser, url, check);
 
   await page.setViewportSize({ width: 390, height: 800 });
   await page.waitForTimeout(300);
