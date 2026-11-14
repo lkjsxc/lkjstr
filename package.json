@@ -5,15 +5,15 @@
   "packageManager": "pnpm@11.1.2",
   "description": "Command aliases only. The app is Rust/WASM; see AGENTS.md.",
   "scripts": {
-    "dev": "PATH=\"$HOME/.cargo/bin:$PATH\" trunk serve --port 8417",
-    "build": "PATH=\"$HOME/.cargo/bin:$PATH\" trunk build --release && pnpm check:dist",
+    "dev": "PATH=\"$HOME/.cargo/bin:$PATH\" env -u NO_COLOR trunk serve --port 8417",
+    "build": "PATH=\"$HOME/.cargo/bin:$PATH\" env -u NO_COLOR trunk build --release && pnpm check:dist",
     "check:dist": "PATH=\"$HOME/.cargo/bin:$PATH\" cargo run -q -p lkjstr-xtask -- check-dist",
     "check:repo": "PATH=\"$HOME/.cargo/bin:$PATH\" cargo run -q -p lkjstr-xtask -- quiet repo",
     "test:quiet": "PATH=\"$HOME/.cargo/bin:$PATH\" cargo run -q -p lkjstr-xtask -- quiet test",
     "rust-wasm:quiet": "PATH=\"$HOME/.cargo/bin:$PATH\" cargo run -q -p lkjstr-xtask -- quiet rust-wasm",
     "verify:quiet": "PATH=\"$HOME/.cargo/bin:$PATH\" cargo run -q -p lkjstr-xtask -- quiet verify",
     "ci:quiet": "PATH=\"$HOME/.cargo/bin:$PATH\" cargo run -q -p lkjstr-xtask -- quiet ci",
-    "smoke:browser": "node scripts/browser-smoke.mjs"
+    "smoke:browser": "PATH=\"$HOME/.cargo/bin:$PATH\" node scripts/browser-smoke.mjs"
   },
   "devDependencies": {
     "playwright-core": "1.65.0"

@@ -28,8 +28,23 @@ command aliases.
 
 ```sh
 pnpm dev          # trunk serve on http://127.0.0.1:8417
-pnpm build        # release build into dist/, then check-dist
 ```
+
+## BUILD
+
+From the repository root, with the requirements above installed:
+
+```sh
+CARGO_BUILD_JOBS=4 pnpm build
+mkdir -p tmp
+tar -C dist -czf tmp/lkjstr-dist.tar.gz .
+```
+
+`pnpm build` runs `trunk build --release` and validates the output. The tarball
+contains the complete static site with `index.html` at its root. Extract it
+into the static host's document root and serve over HTTPS, with `.wasm` files
+served as `application/wasm`. This build uses `/` as its public URL. No backend
+or runtime Node process is needed.
 
 ## Verify
 

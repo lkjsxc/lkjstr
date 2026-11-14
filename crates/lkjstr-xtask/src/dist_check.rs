@@ -41,6 +41,5 @@ pub fn check(root: &Path) -> Result<(), String> {
             return Err(format!("dist/{asset}: empty"));
         }
     }
-    println!("ok check-dist");
     Ok(())
 }

@@ -43,12 +43,17 @@ pub fn Search(tab: TabId, query: String, visible: Signal<bool>) -> impl IntoView
             _ => return None,
         })
     });
-    hold_want(ui, visible, move || {
+    let live = hold_want(ui, visible, move || {
         let text = active.get();
         (text.chars().count() >= 2 && direct.get().is_none()).then_some(Want::Search {
             query: text,
             limit: 50,
         })
+    });
+    let progress = Memo::new(move |_| {
+        app.net_rev.track();
+        app.rev.track();
+        live.get().map(|id| app.with(|rt| rt.progress(id)))
     });
     let people = Memo::new(move |_| {
         app.rev.track();
@@ -94,8 +99,16 @@ pub fn Search(tab: TabId, query: String, visible: Signal<bool>) -> impl IntoView
                     let empty = notes.with(Vec::is_empty) && people.with(Vec::is_empty) && direct.get().is_none();
                     let hint = if text.is_empty() {
                         "Search notes cached on this device and on search relays."
+                    } else if text.chars().count() < 2 {
+                        "Enter at least two characters to ask search relays."
                     } else {
-                        "No matches yet. Search relays are still being asked."
+                        match progress.get() {
+                            None => "Waiting to ask search relays…",
+                            Some(p) if p.total == 0 => "No search relay to ask. Cached notes were searched.",
+                            Some(p) if !p.settled() => "No matches yet. Search relays are still being asked.",
+                            Some(p) if p.failed == p.total => "Search relays failed or refused this request. Cached notes were searched.",
+                            Some(_) => "No matches on this device or the relays we asked.",
+                        }
                     };
                     empty.then(|| view! { <div class="empty" role="status"><p>{hint}</p></div> })
                 }}

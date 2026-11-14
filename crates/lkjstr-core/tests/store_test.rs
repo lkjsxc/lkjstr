@@ -158,3 +158,34 @@ fn timeline_holds_new_items_behind_marker() {
     timeline.retain(|id| id != item(50).1);
     assert_eq!(timeline.shown()[0], item(40));
 }
+
+#[test]
+fn changing_feed_scope_clears_shown_pending_and_deduplication() {
+    let mut timeline = Timeline::new(2);
+    timeline.merge(&[(10, "old-account".into())], true);
+    timeline.merge(&[(20, "pending-old-account".into())], false);
+    assert_eq!(timeline.pending_count(), 1);
+    timeline.clear();
+    timeline.reveal();
+    assert!(timeline.shown().is_empty());
+    assert_eq!(timeline.pending_count(), 0);
+    timeline.merge(
+        &[
+            (10, "old-account".into()),
+            (30, "new-account".into()),
+            (5, "older".into()),
+        ],
+        false,
+    );
+    assert_eq!(timeline.shown().len(), 2, "the row cap survives a reset");
+    assert_eq!(
+        timeline.shown()[1].1,
+        "old-account",
+        "shared rows can re-enter"
+    );
+    assert_eq!(
+        timeline.pending_count(),
+        0,
+        "the new scope starts at its own top"
+    );
+}

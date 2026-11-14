@@ -3,11 +3,13 @@
 // repeatable. Usage: node scripts/browser-smoke.mjs [out-dir]
 // Prints one JSON object of checks; exits 1 if any check fails.
 import { createServer } from 'node:http';
-import { readFile, mkdir, readdir } from 'node:fs/promises';
+import { readFile, mkdir, readdir, writeFile } from 'node:fs/promises';
 import { extname, join, resolve } from 'node:path';
 import { chromium } from 'playwright-core';
+import { fakeRelay } from './browser-relay.mjs';
+import { browserFlows } from './browser-flows.mjs';
 
-const root = resolve('dist');
+const root = resolve(process.env.LKJSTR_DIST ?? 'dist');
 const out = resolve(process.argv[2] ?? 'tmp/smoke');
 const types = { '.html': 'text/html', '.js': 'text/javascript', '.wasm': 'application/wasm', '.css': 'text/css', '.svg': 'image/svg+xml' };
 
@@ -32,39 +34,22 @@ async function chrome() {
   return `${base}/${dir}/chrome-linux64/chrome`;
 }
 
-// Fake relay: stores published events (bounded) and answers REQs from them.
-const stored = [];
-const matches = (e, f) =>
-  (!f.ids || f.ids.includes(e.id)) &&
-  (!f.authors || f.authors.includes(e.pubkey)) &&
-  (!f.kinds || f.kinds.includes(e.kind)) &&
-  (!f.since || e.created_at >= f.since) &&
-  (!f.until || e.created_at <= f.until) &&
-  Object.entries(f)
-    .filter(([k]) => k.startsWith('#'))
-    .every(([k, v]) => e.tags.some((t) => t[0] === k.slice(1) && v.includes(t[1])));
-function relay(ws) {
-  ws.onMessage((raw) => {
-    const msg = JSON.parse(String(raw));
-    if (msg[0] === 'EVENT') {
-      if (stored.length < 1000 && !stored.some((e) => e.id === msg[1].id)) stored.push(msg[1]);
-      ws.send(JSON.stringify(['OK', msg[1].id, true, '']));
-    } else if (msg[0] === 'REQ') {
-      const [, sub, ...filters] = msg;
-      for (const e of stored) if (filters.some((f) => matches(e, f))) ws.send(JSON.stringify(['EVENT', sub, e]));
-      ws.send(JSON.stringify(['EOSE', sub]));
-    }
-  });
-}
+const fake = fakeRelay();
+const stored = fake.published;
 
 const checks = {};
 const check = (name, ok, detail = '') => (checks[name] = ok ? 'ok' : `FAIL ${detail}`);
 await mkdir(out, { recursive: true });
 const browser = await chromium.launch({ executablePath: await chrome(), args: ['--no-sandbox'] });
 const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, colorScheme: 'dark' });
-await context.routeWebSocket(/.*/, relay);
+await context.routeWebSocket(/.*/, fake.route);
+// Block all external HTTP as well as intercepting every WebSocket.
+await context.route('**/*', (route) => route.request().url().startsWith(url) ? route.continue() : route.abort());
 const page = await context.newPage();
 const errors = [];
+const assetErrors = [];
+page.on('response', (r) => { if (r.url().startsWith(url) && r.status() >= 400) assetErrors.push(r.status()); });
+page.on('requestfailed', (r) => { if (r.url().startsWith(url)) assetErrors.push(r.failure()?.errorText); });
 page.on('pageerror', (e) => errors.push(String(e)));
 const shot = (name) => page.screenshot({ path: join(out, `${name}.png`) });
 const panes = () => page.locator('.pane').count();
@@ -114,16 +99,25 @@ try {
   const layout = await panes();
   await page.waitForTimeout(800);
 
+  await page.waitForFunction(async () => {
+    const db = await new Promise((ok) => { const r = indexedDB.open('lkjstr'); r.onsuccess = () => ok(r.result); });
+    const count = await new Promise((ok) => { const r = db.transaction('events').objectStore('events').count(); r.onsuccess = () => ok(r.result); });
+    db.close();
+    return count >= 3;
+  });
+  fake.setReading(false);
   await page.reload();
   await page.waitForSelector('.pane', { timeout: 20000 });
   check('layout persists across reload', (await panes()) === layout, `${layout} vs ${await panes()}`);
   check('account persists across reload', !(await page.locator('.topbar .account').innerText()).includes('Sign in'));
   await page.click('.tab:has-text("Home")');
   await page.waitForSelector('.body.shown .note:has-text("Hello from the lkjstr smoke test")', { timeout: 10000 });
-  check('cached note renders after reload', true);
+  check('cached note renders after reload without relay replay', true);
+  fake.setReading(true);
   await page.click('.tab:has-text("Notifications")');
   await page.waitForSelector('.body.shown >> text=No replies, mentions or reactions yet.', { timeout: 10000 });
   check('notifications ask relays and settle honestly', true);
+  await browserFlows(page, fake, check, shot);
 
   await page.setViewportSize({ width: 390, height: 800 });
   await page.waitForTimeout(300);
@@ -138,8 +132,11 @@ try {
   check('run completed', false, `${String(error).split('\n')[0]} | focused: ${focused.slice(0, 300)}`);
   await shot('99-failure').catch(() => {});
 }
+check('built assets load without HTTP errors', assetErrors.length === 0, assetErrors.join(' | '));
 check('no page errors', errors.length === 0, errors.slice(0, 3).join(' | '));
-console.log(JSON.stringify({ url, out, published: stored.length, checks }, null, 1));
+const report = JSON.stringify({ url, out, published: stored.length, checks }, null, 1);
+await writeFile(join(out, 'report.json'), report + '\n');
+console.log(report);
 await browser.close();
-server.close();
+await new Promise((done) => server.close(done));
 process.exit(Object.values(checks).every((v) => v === 'ok') ? 0 : 1);

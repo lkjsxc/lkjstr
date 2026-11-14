@@ -48,7 +48,6 @@ fn check_limit(problems: &mut Vec<String>, rel: &str, text: &str, limit: usize, 
 
 fn finish(problems: Vec<String>) -> Result<(), String> {
     if problems.is_empty() {
-        println!("ok check-lines");
         Ok(())
     } else {
         Err(problems.join("\n"))

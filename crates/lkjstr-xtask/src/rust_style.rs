@@ -13,7 +13,6 @@ pub fn check(root: &Path) -> Result<(), String> {
         check_file(&mut problems, &rel, &text);
     }
     if problems.is_empty() {
-        println!("ok check-rust-style");
         Ok(())
     } else {
         Err(problems.join("\n"))

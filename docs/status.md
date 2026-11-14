@@ -44,7 +44,8 @@ Which of these were exercised in a real browser, and how, is recorded in
   New tab launcher, keyboard focus and movement, layout saved per device.
 - Single-column mode under 760px: only the focused tile shows.
 - Global, Home (follows of the active account plus your own notes; without
-  a follow list it shows your notes and says so), Notifications (mentions,
+  a follow list it shows your notes; an empty feed explains the missing list),
+  Notifications (mentions,
   replies, reactions, reposts, zaps), Profile (header plus notes), Thread
   (root, replies, indentation, focused note), Search (local cache plus NIP-50
   relays; npub, nprofile, note and nevent open directly).
@@ -56,6 +57,30 @@ Which of these were exercised in a real browser, and how, is recorded in
   is listed, silence after 10 s counts as no answer.
 - Relays view: per-relay state, requests, latency, events and score.
 - Light, dark and system themes; three text sizes.
+
+## Current verification (2026-11-14)
+
+The expanded fake-relay browser smoke passes all 33 checks on both the debug
+build and the extracted release tarball.
+It covers generated local accounts, invalid and read-only imports, account
+switching and removal, signing, compose, threads, profiles, empty and populated
+notifications, local and relay search, and direct NIP-19 navigation. It verifies
+all submitted ids and signatures through `lkjstr-protocol`. Reload checks
+prove cached events render with relay replay disabled. All sockets terminate
+at the fake relay and external HTTP is blocked; no public relays are used.
+
+This continuation fixed stale Home and Notifications rows after an account
+switch, and search that said it was still loading after all relays answered
+or refused. Quiet gates now print one success line. Build aliases also handle
+`NO_COLOR=1`, which Trunk's boolean option otherwise rejects.
+
+`pnpm check:repo`, `pnpm test:quiet`, `pnpm rust-wasm:quiet` and
+`pnpm verify:quiet` pass.
+`pnpm build` produces a checked Trunk release; the extracted static tarball
+loads without asset or page errors. Docker verification is pending because
+this run forbids writes outside the worktree; image builds write to daemon
+storage. See [verification.md](verification.md) for evidence and limits.
+The static hosting tarball procedure is in [README.md](../README.md#build).
 
 ## Orchestration: implemented versus planned
 
@@ -96,26 +121,30 @@ Planned (not built):
 - Parsing and verification in a Web Worker running the same WASM core.
 - Hover or focus warming of threads and profiles; idle-time budgets.
 - `since` on re-subscription to avoid re-fetching after a replan.
-- Scroll position restore across reloads; per-tab feed state persistence.
+- Per-account feed state persistence beyond the current tab anchor.
 
 ## Does not work yet
 
 - `lkjstr-host` (self-hosting server) still validates the old bridge layout;
   it compiles and its tests pass but it rejects Trunk's `dist/`.
+- A new account cannot create its first follow list from Profile; follow and
+  unfollow require an existing loaded kind 3 event.
 - No DMs (NIP-04, NIP-17), zap sending, media upload, relay list editing,
   mute lists, custom emoji picker, profile editing.
 - Virtualisation is `content-visibility` plus a 600-row cap, not windowing.
 - Release WASM is 9.4 MB (1.0 MB gzip) because wasm-opt is off
   (`data-wasm-opt="0"` avoids a download); enable it for size.
-- Docker `verify` was not run on this branch.
 - Notification read state is not tracked.
 
 ## Next steps, in order
 
-1. Run `scripts/browser-smoke.mjs` in CI (needs Chromium in the image).
-2. Worker-side ingest (verification and indexing) with the same core crate.
-3. Relay list editing (publish kind 10002) and mute lists (kind 10000).
-4. DMs via NIP-17 once `lkjstr-nips` lands; plug its scoring and outbox
+1. Run Docker Compose `verify` where image storage writes are allowed, then
+   add the fake-relay browser smoke to CI (needs Chromium in the image).
+2. Fix scroll restore after reload; investigate the previously observed cache
+   row-count discrepancy on Global and verify IndexedDB pruning at its bound.
+3. Worker-side ingest (verification and indexing) with the same core crate.
+4. Initial follow list creation after a proven empty relay response, relay
+   list editing (publish kind 10002), and mute lists (kind 10000).
+5. Adapt `lkjstr-host` to Trunk's `dist/` and restore the self-hosted image.
+6. DMs via NIP-17 once `lkjstr-nips` lands; plug its scoring and outbox
    selection behind `plan::Directory` and `relays::Scores`.
-5. Fix scroll restore after reload; verify pruning.
-6. Adapt `lkjstr-host` to Trunk's `dist/` and restore the self-hosted image.

@@ -2,13 +2,14 @@
 
 ## Purpose
 
-This crate owns Rust Nostr protocol behavior as it moves out of the current
-browser runtime.
+This crate owns Rust Nostr protocol behavior shared by the WASM client and
+native tests.
 
 ## Table of Contents
 
 - [src/](src/): protocol source.
 - [tests/](tests/): protocol tests.
+- [examples/](examples/): local browser smoke fixtures and verification.
 
 ## Ownership Index
 
@@ -19,5 +20,5 @@ browser runtime.
 - Effect boundary: pure Rust only; browser signing, fetch, storage, and sockets
   enter through higher crates.
 - Main tests: `cargo test -p lkjstr-protocol`.
-- Next cutover task: expose remaining TypeScript protocol callers through real
-  Rust or WASM bridge functions before deletion proof.
+- Browser smoke support: `browser-fixtures` signs synthetic relay events and
+  verifies browser publications; it emits public data only.

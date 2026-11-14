@@ -147,11 +147,17 @@ pub fn Feed(
         src.with_value(|s| s.want(&authors.get(), &me.get(), Some(until)))
     });
     let timeline = StoredValue::new(Timeline::new(SHOWN_CAP));
+    let scope = StoredValue::new((None::<Vec<String>>, None::<String>));
     let at_top = RwSignal::new(true);
     let tick = RwSignal::new(0u32);
     let rows = Memo::new(move |_| {
         app.rev.track();
         tick.track();
+        let next_scope = (authors.get(), me.get());
+        if scope.get_value() != next_scope {
+            timeline.update_value(Timeline::clear);
+            scope.set_value(next_scope);
+        }
         let Some(query) = src.with_value(|s| s.query(&authors.get(), &me.get(), limit.get()))
         else {
             return (Vec::<Event>::new(), 0);

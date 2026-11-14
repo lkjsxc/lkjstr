@@ -15,7 +15,6 @@ pub fn check(root: &Path) -> Result<(), String> {
     check_docs_topology(root, &mut problems)?;
     check_readme_descendants(root, &mut problems)?;
     if problems.is_empty() {
-        println!("ok check-docs");
         Ok(())
     } else {
         Err(problems.join("\n"))

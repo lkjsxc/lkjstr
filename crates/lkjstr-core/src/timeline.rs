@@ -24,6 +24,13 @@ impl Timeline {
         }
     }
 
+    /// Drops all rows and pending arrivals when the feed's account or authors change.
+    pub fn clear(&mut self) {
+        self.shown.clear();
+        self.pending.clear();
+        self.ids.clear();
+    }
+
     pub fn shown(&self) -> &[Item] {
         &self.shown
     }
