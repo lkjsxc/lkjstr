@@ -35,6 +35,15 @@ pub fn Shell() -> impl IntoView {
         page_visible: RwSignal::new(!crate::host::document_hidden()),
     };
     provide_context(ui);
+    Effect::new(move |_| {
+        if let Some(pane) = ui.zoom.get()
+            && ui
+                .ws
+                .with(|ws| lkjstr_core::layout::find_pane(&ws.root, pane).is_none())
+        {
+            ui.zoom.set(None);
+        }
+    });
     let booted = RwSignal::new(false);
     app.boot(move |boot| {
         let signed_in = app.with(|rt| rt.session.active.is_some());
@@ -54,6 +63,10 @@ pub fn Shell() -> impl IntoView {
             ui.ws.set(spaces.desks[spaces.active].clone());
             ui.spaces.set(spaces);
         }
+        let mut spaces = ui.spaces.get_untracked();
+        spaces.install(spaces.active, ui.ws.get_untracked());
+        ui.ws.set(spaces.desks[spaces.active].clone());
+        ui.spaces.set(spaces);
         super::navigation::restore(ui);
         booted.set(true);
     });

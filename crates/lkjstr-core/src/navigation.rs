@@ -35,7 +35,7 @@ impl Workspace {
     pub fn reset_to_preset(&mut self, signed_in: bool) {
         self.checkpoint();
         let mut preset = Self::preset(signed_in);
-        preset.next_id = preset.next_id.max(self.next_id);
+        preset.fresh_ids(self.next_id.max(layout::max_id(&self.root) + 1));
         preset.navigation.undo = std::mem::take(&mut self.navigation.undo);
         preset.navigation.closed = std::mem::take(&mut self.navigation.closed);
         *self = preset;

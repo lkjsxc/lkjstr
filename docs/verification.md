@@ -82,6 +82,12 @@ Checks cover:
   `review_foundation_test` covers unchanged preview activation, target ownership
   and pane recovery at the 32-entry cap, including grouped layout undo.
 
+- Workspace-review regressions in `scripts/browser-workspace-review.mjs` cover
+  switching workspaces while zoomed, closing the zoomed tile, and unanswered
+  manual quote/repost loads releasing on tab hiding, other-tile zoom and narrow
+  mode. Showing a tab resumes its requests. Native `spaces_test` checks unique
+  IDs after moves, resets, recovery, reloads, imports and last-tab replacement.
+
 `browser-relay.mjs` bounds fake relay events, publications, searches and
 subscriptions. `lkjstr-protocol/examples/browser-fixtures.rs` generates a
 fresh in-memory fixture key and emits public signed events only. Browser
@@ -91,6 +97,16 @@ non-zero. Browser checks are separate from the quiet gates because Chromium
 must be present.
 
 ## Record
+
+2026-11-14, workspace identity and visibility review:
+
+- All 107 browser smoke checks pass, including nine workspace/visibility checks.
+  Report: `tmp/smoke-workspace-review/report.json`.
+- Native `spaces_test` adds five regressions for allocation after moves/reloads,
+  fresh reset identities/recovery, colliding saved banks, import reservation and
+  last-tab moves. Imported layouts and focus history were audited too.
+- All four quiet gates pass with jobs/test threads capped at four and caches
+  inside the worktree. Docker remains excluded by the worktree-only write rule.
 
 2026-11-14, Phase B partial delivery:
 
@@ -169,29 +185,10 @@ must be present.
 
 Previous revive verification:
 
-
-- Second-review smoke: all 61 checks passed on the current release build,
-  with intercepted WebSockets, blocked external HTTP and a fresh local port.
-  Report: `tmp/smoke-review-2/report.json` (ignored local artifact).
-- Earlier review smoke: all 51 checks passed on both debug and release builds with
-  external HTTP blocked and every WebSocket intercepted. Reports:
-  `tmp/smoke-review-debug/report.json` and
-  `tmp/smoke-review-release/report.json` (ignored local artifacts).
-- Fixed smoke timing: poll awaited IndexedDB counts before reloading, and wait
-  for deferred REQs before delivering their fake-relay responses. The faster
-  release exposed both test races; no product cache loss was involved.
-- The earlier 33-check smoke passed on the extracted release tarball.
-- Found and fixed search remaining in loading after EOSE or relay refusal,
-  and Home and Notifications retaining rows across account switches.
-- Native regression covers clearing shown rows, pending arrivals and dedup
-  state while preserving the timeline cap.
-- Current `pnpm check:repo`, `pnpm test:quiet`, `pnpm rust-wasm:quiet` and
-  `pnpm verify:quiet` passed. These include fmt, native/wasm clippy, workspace
-  tests, a Trunk release build and distribution checks.
-- Current release WASM: 9622155 bytes (1052401 bytes gzip). The earlier
-  `tmp/lkjstr-dist.tar.gz` predates the review fixes.
-- Docker verify: not run under the worktree-only write restriction.
-- Previous read-only public-relay checks exercised Global, Thread and Profile.
-  No public relays were contacted in this verification run.
-- Not exercised: a real NIP-07 extension, nsec import, explicit key backup, large
-  IndexedDB pruning, and scroll restore (previous check failed).
+- The earlier 33/51/61-check smoke runs passed with fake sockets and blocked
+  external HTTP. The cache discrepancy was a test race: explicit polling now
+  waits for committed IndexedDB events before reload. Native regressions cover
+  account feed reset, signer fields, persistence bounds and protocol edges.
+- Gates passed; Docker was excluded by the worktree-only write rule. Prior
+  public-relay checks predate these isolated suites. Real signer extensions,
+  key backup, large IndexedDB pruning and scroll restore remain unverified.

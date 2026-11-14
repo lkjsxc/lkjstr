@@ -6,11 +6,12 @@ use leptos::prelude::*;
 #[component]
 pub fn Missing(id: Option<String>) -> impl IntoView {
     let ui = Ui::get();
+    let visible = expect_context::<super::views::ViewVisibility>().0;
     let id = StoredValue::new(id);
     let pressed = RwSignal::new(false);
     super::feed::hold_want(
         ui,
-        Signal::derive(move || pressed.get() && ui.page_visible.get()),
+        Signal::derive(move || pressed.get() && visible.get()),
         move || {
             id.get_value().map(|id| lkjstr_core::plan::Want::Events {
                 ids: vec![id],

@@ -94,6 +94,12 @@ layout edits between same-origin browser tabs without changing the receiver's
 active workspace; identical writes terminate echoes. Bad saved banks are
 rejected, and individual layouts are repaired with native-tested bounds.
 
+Allocation carries a bank-wide high-water mark across switches and moves,
+including closed identities. Reset layouts receive fresh tab and node IDs;
+boot and same-origin imports reserve IDs and reject cross-desk tab collisions.
+Zoom clears on workspace switches and when its tile disappears. Nested manual
+reference loads inherit their owning view visibility and release wants when hidden.
+
 Recovery refuses snapshots that would duplicate a tab identity now owned by
 another workspace. Coordinated cross-workspace move Undo remains unfinished.
 

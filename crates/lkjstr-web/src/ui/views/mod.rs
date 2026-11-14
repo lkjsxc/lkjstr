@@ -16,9 +16,14 @@ use lkjstr_core::layout::TabId;
 use super::Ui;
 use super::feed::{Feed, Source};
 
+/// Inherited by nested notes, quotes and missing reply parents.
+#[derive(Clone, Copy)]
+pub(super) struct ViewVisibility(pub Signal<bool>);
+
 #[component]
 pub fn TabBody(tab: TabId, visible: Signal<bool>) -> impl IntoView {
     let ui = Ui::get();
+    provide_context(ViewVisibility(visible));
     let view = Memo::new(move |_| ui.ws.with(|ws| ws.tabs.get(&tab).cloned()));
     move || {
         let Some(view) = view.get() else {

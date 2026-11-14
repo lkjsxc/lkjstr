@@ -11,6 +11,7 @@ pub fn select(ui: Ui, index: usize) {
         spaces.seen[spaces.active] = crate::host::now_secs();
     });
     if let Some(next) = next {
+        ui.zoom.set(None);
         ui.ws.set(next);
         crate::host::after(0, || {
             crate::host::focus_selector(".pane.focused .tab.active")
@@ -96,13 +97,12 @@ pub fn install_sync(ui: Ui) {
         }
         let signed_in = ui.app.with(|rt| rt.session.active.is_some());
         let workspace = workspace.repaired(signed_in);
-        let active = ui.spaces.with_untracked(|s| s.active);
-        if active == index {
-            if ui.ws.get_untracked() != workspace {
-                ui.ws.set(workspace);
-            }
-        } else {
-            ui.spaces.update(|s| s.desks[index] = workspace);
+        let mut spaces = ui.spaces.get_untracked();
+        let active = spaces.active;
+        spaces.desks[active] = ui.ws.get_untracked();
+        if spaces.install(index, workspace) {
+            ui.ws.set(spaces.desks[active].clone());
+            ui.spaces.set(spaces);
         }
     });
     on_cleanup(move || listener.remove());

@@ -56,6 +56,9 @@ cache-based unseen dots, shared runtime, persistence and same-origin layout
 sync. Switching remounts view bodies; network grace and robust cross-desk Undo
 remain open. First run opens Global with a dismissible banner and removable
 script filter; the script filter is a heuristic and resets on remount.
+Tab allocation shares a bank-wide high-water mark across moves, switches and
+imports; layout resets remap identities. Stale zoom clears on switching or tile
+removal. Manual reference wants release with their owning view visibility.
 
 Tabs add recent-activation focus, middle-close setting, filtered All tabs,
 fixed or fit widths, stable closing widths, menu duplication/pinning/movement,
@@ -103,11 +106,11 @@ Which of these were exercised in a real browser, and how, is recorded in
 
 ## Current verification
 
-The final Phase B release passes all four quiet gates, 98 fake-relay smoke
-checks against the extracted archive, and 439 design/size browser checks.
-The 92 screenshots are indexed in `tmp/screens/INDEX.md`; the release archive
-is `tmp/lkjstr-dist.tar.gz`. This verifies the partial scope above, not the
-unfinished Phase B promises.
+The workspace-review build passes all four quiet gates and 107 fake-relay
+browser smoke checks (`tmp/smoke-workspace-review/report.json`). The earlier
+Phase B archive passed 98 smoke and 439 design/size checks. Its 92 screenshots
+are indexed in `tmp/screens/INDEX.md`; that archive is `tmp/lkjstr-dist.tar.gz`.
+These checks verify the partial scope above, not unfinished Phase B promises.
 
 See [verification.md](verification.md) for the release fake-relay checks,
 quiet gates, screenshot evidence and remaining limits. No public relay is
