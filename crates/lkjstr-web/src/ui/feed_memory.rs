@@ -112,7 +112,7 @@ pub fn restore(ui: Ui, tab: Option<TabId>, feed: NodeRef<Div>, rows: Signal<Vec<
             .kv_get(&storage_key)
             .await
             .filter(|id| !id.is_empty());
-        anchor.set(saved);
+        let _ = anchor.try_set(saved);
     });
     Effect::new(move |_| {
         let Some(id) = anchor.get() else { return };
@@ -123,11 +123,43 @@ pub fn restore(ui: Ui, tab: Option<TabId>, feed: NodeRef<Div>, rows: Signal<Vec<
         after(0, move || {
             let selector = format!(".note[data-id=\"{id}\"]");
             let found = feed
-                .get_untracked()
+                .try_get_untracked()
+                .flatten()
                 .and_then(|c| c.query_selector(&selector).ok().flatten());
             if let Some(note) = found {
                 note.scroll_into_view_with_bool(true);
             }
         });
     });
+}
+
+/// Anchors are gesture-local and released when resizing ends.
+pub fn resize_anchors() -> Vec<(HtmlElement, HtmlElement, f64)> {
+    let Some(document) = web_sys::window().and_then(|w| w.document()) else {
+        return vec![];
+    };
+    let Ok(feeds) = document.query_selector_all(".body.shown .feed") else {
+        return vec![];
+    };
+    (0..feeds.length())
+        .filter_map(|i| {
+            let feed = feeds.item(i)?.dyn_into::<HtmlElement>().ok()?;
+            let id = top_note(&feed)?;
+            let note = feed
+                .query_selector(&format!(".note[data-id=\"{id}\"]"))
+                .ok()??
+                .dyn_into::<HtmlElement>()
+                .ok()?;
+            let offset =
+                note.get_bounding_client_rect().top() - feed.get_bounding_client_rect().top();
+            Some((feed, note, offset))
+        })
+        .collect()
+}
+pub fn keep_anchors(anchors: &[(HtmlElement, HtmlElement, f64)]) {
+    for (feed, note, offset) in anchors {
+        let delta =
+            note.get_bounding_client_rect().top() - feed.get_bounding_client_rect().top() - offset;
+        feed.set_scroll_top(feed.scroll_top() + delta.round() as i32);
+    }
 }

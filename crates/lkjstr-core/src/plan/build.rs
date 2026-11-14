@@ -28,6 +28,7 @@ pub(super) enum Group {
     Thread,
     Events,
     Deletions,
+    Activity,
     Profiles(bool),
     Search(String),
 }
@@ -125,6 +126,13 @@ pub fn plan(wants: &[(WantId, Want)], ctx: &PlanContext<'_>) -> Vec<Planned> {
                     )
                     .ids
                     .extend(ids.iter().cloned());
+                }
+            }
+            Want::Activity { ids } => {
+                for relay in &fallback {
+                    add(&mut acc, relay, Group::Activity, *id)
+                        .ids
+                        .extend(ids.iter().take(60).cloned());
                 }
             }
             Want::Profiles { pubkeys, contacts } => {

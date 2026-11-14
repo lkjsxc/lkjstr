@@ -14,7 +14,7 @@ fn preset_has_three_columns_and_valid_focus() {
     let fresh = Workspace::preset(false);
     assert_eq!(
         fresh.tabs.get(&fresh.focused_tab().unwrap_or(0)),
-        Some(&View::Welcome)
+        Some(&View::Global)
     );
 }
 

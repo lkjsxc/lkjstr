@@ -4,7 +4,6 @@ use leptos::prelude::*;
 
 use crate::runtime::status::Link;
 use crate::ui::Ui;
-use crate::ui::text::plural;
 
 fn link_text(link: &Option<Link>) -> (String, &'static str) {
     match link {
@@ -40,14 +39,11 @@ pub fn Relays() -> impl IntoView {
     view! {
         <div class="page">
             <h2>{move || ui.tr("Relays")}</h2>
-            <p class="muted">{move || {
-                let (s, wants, events) = summary.get();
-                format!(
-                    "{} open, {} connecting, {} failing · {} live, {} loading · {} views asking · {} events in memory",
-                    s.open, s.connecting, s.failing, plural(s.live, "subscription", "subscriptions"), s.waiting, wants, events
-                )
-            }}</p>
-            <p class="small muted">"lkjstr picks relays per author from their published relay lists (outbox), prefers relays that answer fast and return new notes, asks a second relay when one is slow, and backs off from failing relays."</p>
+            <dl class="relay-summary">{move || {
+                let (s, _, events) = summary.get();
+                [("Connected",s.open),("In use",s.live),("Requests waiting",s.waiting),("Notes cached",events)].into_iter().map(|(label,n)| view! { <div><dt>{label}</dt><dd>{n}</dd></div> }).collect_view()
+            }}</dl>
+            <details><summary>"How relays are chosen"</summary><p class="small muted">"lkjstr uses authors' relay lists, prefers useful answers, asks another relay when one is slow, and backs off after failures. Scores are measured on this device."</p></details>
             <div class="table-wrap"><table class="relays">
                 <thead><tr><th>"Relay"</th><th>"State"</th><th>"Requests"</th><th>"Latency"</th><th>"Events"</th><th>"Score"</th></tr></thead>
                 <tbody>
@@ -60,11 +56,11 @@ pub fn Relays() -> impl IntoView {
                                         {row.auth_required.then(|| view! { <span class="pill">"needs sign-in"</span> })}
                                         {row.notice.clone().map(|n| view! { <div class="small muted">{n}</div> })}
                                     </td>
-                                    <td><span class=format!("dot {tone}")></span>{state}</td>
-                                    <td>{row.requests}</td>
-                                    <td>{row.latency_ms.map(|ms| format!("{} ms", ms as u64)).unwrap_or_else(|| "–".to_owned())}</td>
-                                    <td>{row.events}</td>
-                                    <td>{format!("{:.2}", row.score)}</td>
+                                    <td data-label="State"><span class=format!("dot {tone}")></span>{state}</td>
+                                    <td data-label="Requests">{row.requests}</td>
+                                    <td data-label="Latency">{row.latency_ms.map(|ms| format!("{} ms", ms as u64)).unwrap_or_else(|| "–".to_owned())}</td>
+                                    <td data-label="Events">{row.events}</td>
+                                    <td data-label="Score">{format!("{:.2}", row.score)}</td>
                                 </tr>
                             }
                         }

@@ -17,7 +17,12 @@ here. The next preview replaces the previous preview, retaining back/forward
 history. Reopening the same preview activates it without adding history.
 Ctrl/Cmd-click keeps a detail; double-clicking a tab or pressing Enter
 twice keeps a preview. Editing also keeps it. Identical views always open
-independently. Closing the last tab leaves a New tab page.
+independently. Closing the last tab removes its tile; the final remaining tile
+becomes a New tab page. Closing an active tab selects the most recently active
+surviving tab in that tile, then its right or left neighbour. Inactive closure
+does not select another view. Middle-close is enabled by default and can be
+disabled. Pin moves a tab first and protects it from bulk closure. Duplicate
+copies its view and navigation history, with an independent draft key.
 
 Each tab retains up to 64 history entries. Alt+Left/Right, mouse side buttons
 and browser Back navigate the focused tab. The URL hash contains only public
@@ -30,7 +35,9 @@ Closing a tile records one recovery and undo action before applying that cap.
 
 - Drag a tab onto a tile edge to split, onto its body to stack, along a strip
   to reorder; a preview shows the drop.
-- Drag the gap between tiles to resize; sizes commit on release.
+- Drag the gap between tiles to resize live; sizes commit on release. Visible
+  feed anchors are retained during the gesture. Double-click equalises the
+  adjacent pair; Alt+Enter zooms the focused tile and restores it.
 - `+` opens the launcher; the tile menu splits, widens, narrows, closes and
   resets the layout.
 
@@ -63,3 +70,39 @@ Compose, Notifications and a More sheet containing accounts and settings.
 
 The workspace is saved to IndexedDB (`kv/workspace`) 400 ms after each change
 and repaired on load (unknown tabs dropped, focus fixed). No migrations.
+
+## Nine workspaces
+
+Numbered chips sit after status and before search in the desktop top bar; on
+phones they live in More. Alt+Shift+1..9 selects a workspace. The tab menu,
+Ctrl+Alt+Shift+1..9, and dropping onto a chip move a tab while retaining its
+identity, history, draft key and scroll key. Names can be edited in Settings
+and searched in the palette. Dots reflect newer relevant notes already in the
+shared cache; hidden workspaces do not poll merely to produce a dot.
+
+The runtime and cache are shared. Layouts are independent and hidden views
+release wants. View bodies currently remount on a workspace switch, so instant
+DOM retention and a subscription grace period remain unfinished. Discovery
+starts with Global and Search; Writing starts with Compose and Notifications.
+The extra hashtag launcher and own-profile preset are still missing.
+
+Boot reads the atomic `spaces` snapshot before drawing. It includes all nine
+layouts, their names, activity timestamps and the last selected workspace.
+Debounced saves also write `workspace:<index>` mirrors and the current
+`workspace` key. Pagehide initiates a final save. A storage-event channel syncs
+layout edits between same-origin browser tabs without changing the receiver's
+active workspace; identical writes terminate echoes. Bad saved banks are
+rejected, and individual layouts are repaired with native-tested bounds.
+
+Recovery refuses snapshots that would duplicate a tab identity now owned by
+another workspace. Coordinated cross-workspace move Undo remains unfinished.
+
+## Size limits
+
+Every pane is a size-query container. The four width classes simplify note
+avatars, actions, media, settings and relay rows independently of window size.
+Short tiles hide secondary rows. The tab list scrolls independently of its
+New tab, All tabs and menu controls. Settings stores tab width, scale and
+middle-click preference per device. Resizing clamps to 160px wide or 96px high;
+new explicit splits are refused when both halves cannot retain those minima.
+Exact 40px keyboard resize steps and complete touch conventions remain open.

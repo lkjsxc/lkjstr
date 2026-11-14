@@ -12,8 +12,7 @@ use web_sys::{DomRect, Element, HtmlElement, PointerEvent};
 
 use super::Ui;
 
-const MIN_PX: f64 = 140.0;
-const DRAG_PX: f64 = 6.0;
+const DRAG_PX: f64 = 4.0;
 const STRIP_PX: f64 = 36.0;
 
 type Listener = Closure<dyn FnMut(PointerEvent)>;
@@ -104,17 +103,17 @@ pub fn start_resize(ev: PointerEvent, ui: Ui, split: NodeId, dir: Dir) {
     let pair_px = start_a + axis(b.get_bounding_client_rect());
     let pair_grow = grow(&a) + grow(&b);
     let start = pos(&ev);
+    let anchors = super::feed_memory::resize_anchors();
     let (move_a, move_b) = (a.clone(), b.clone());
     let on_move = move |ev: &PointerEvent| {
-        let px = (start_a + pos(ev) - start).clamp(
-            MIN_PX.min(pair_px / 2.0),
-            (pair_px - MIN_PX).max(pair_px / 2.0),
-        );
+        let px =
+            lkjstr_core::sizes::resized_pair(start_a, pair_px, pos(ev) - start, dir == Dir::Row);
         let share = pair_grow * px / pair_px;
         let _ = move_a.style().set_property("flex-grow", &share.to_string());
         let _ = move_b
             .style()
             .set_property("flex-grow", &(pair_grow - share).to_string());
+        super::feed_memory::keep_anchors(&anchors);
     };
     let handle_end = handle.clone();
     let on_end = move || {
@@ -127,6 +126,35 @@ pub fn start_resize(ev: PointerEvent, ui: Ui, split: NodeId, dir: Dir) {
         ui.ws.update(|ws| ws.resize(split, &sizes));
     };
     listen(&handle, on_move, on_end);
+}
+
+/// Equalise just the adjacent pair, preserving other siblings.
+pub fn equalise(ev: web_sys::MouseEvent, ui: Ui, split: NodeId) {
+    let Some(b) = ev
+        .current_target()
+        .and_then(|t| t.dyn_into::<Element>().ok())
+        .and_then(|e| e.parent_element())
+    else {
+        return;
+    };
+    let Some(parent) = b.parent_element() else {
+        return;
+    };
+    let cells = parent.children();
+    let mut sizes: Vec<_> = (0..cells.length())
+        .filter_map(|i| cells.item(i)?.dyn_into::<HtmlElement>().ok())
+        .map(|c| grow(&c))
+        .collect();
+    let at = (0..cells.length())
+        .position(|i| cells.item(i).is_some_and(|c| c == b))
+        .unwrap_or(0);
+    if at == 0 {
+        return;
+    }
+    let mean = (sizes[at - 1] + sizes[at]) / 2.0;
+    sizes[at - 1] = mean;
+    sizes[at] = mean;
+    ui.ws.update(|ws| ws.resize(split, &sizes));
 }
 
 fn zone_at(rect: &DomRect, x: f64, y: f64) -> Zone {

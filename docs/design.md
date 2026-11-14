@@ -162,6 +162,36 @@ shortcut shown as a small key hint in menus.
   Search, Compose, Notifications, More) replaces the top bar's right side; tabs scroll
   sideways; workspaces and accounts are in More.
 
+## Addresses
+
+The address bar is part of the interface. It must read like something a person could type.
+
+- Clean paths, no JSON, no encoded state, no `#view=...`, no query strings except a search's
+  own words: `/` (the workspace as the reader left it), `/home`, `/global`, `/notifications`,
+  `/messages`, `/search?q=words`, `/t/hashtag`, `/n/note1...` (a note and its thread),
+  `/p/npub1...` (a profile), `/a/naddr1...` (an article), `/r/relay.example` is not allowed
+  because paths never contain a dot (the host serves dotted paths as files): relays use
+  `/relay/wss/relay-example-com` style slugs or stay unaddressed, and a NIP-05 name typed into
+  the palette resolves to its `/p/npub...` address.
+- The address describes the focused tab only. Layout, workspace number, scroll position, theme
+  and filters never appear in it; they live in local storage. When the focused tab is the
+  default view of workspace 1 the address is just `/`.
+- The address updates with `replaceState` on focus changes and `pushState` on navigation inside
+  a tab, so Back and Forward follow the focused tab's history and never fill with noise.
+- Opening an address opens that view as a tab in the reader's saved workspace (it does not
+  replace their layout). Unknown or malformed addresses show a plain "nothing here" tab with a
+  way home. Old `#view=` links are ignored.
+- The document title follows the focused tab ("高橋 葵 · lkjstr", "Global · lkjstr").
+
+## Language
+
+Every visible string comes from the string table; a test fails the build if a view contains a
+literal user-facing string. Japanese is a first language of this product, not a translation:
+written fresh, plain and short (です・ます体, no katakana where a common word exists, no
+English left over in buttons, tabs, menus, tooltips, placeholders, empty states, errors, times
+or counts). The language follows `navigator.languages` and can be changed in Settings; tab
+titles, the document title and the static shell follow it too.
+
 ## Sizes
 
 A tile can be any size, so every view is designed for its own box, not for the window. Views
@@ -172,8 +202,13 @@ respond to the width and height of their tile (container queries), never to the 
 | under 280px | sliver | Avatars 20px inline with the name, body 14px, media as 64px thumbnails, action row reduced to react and more (the rest in the menu), no counts, one-line header with time only |
 | 280–439px | narrow | 28px avatars, media full width up to 240px tall, counts shown, handles hidden |
 | 440–759px | regular | The numbers in "Space and shape" and "A note" |
-| 760px and up | wide | Text measure capped at 42em and centred on feeds; a thread shows the focused note with its replies beside the ancestors; a profile puts the header beside the notes; settings and relays use two columns |
+| 760px and up | wide | Content fills the tile; nothing is capped or centred. A thread may show the focused note with its replies beside the ancestors; a profile puts the header beside the notes; settings and relays use two columns |
 
+- **The reader sets the width, not the app.** No view has a maximum width, a fixed width, or a
+  centred column: text, media, tables and composers use the full width of their tile at every
+  size (only long-form articles keep a comfortable line length, and that is a setting). No
+  tile, tab strip or top bar has a minimum width other than the 160px tile minimum, and the
+  window itself works at any width from 320px up.
 - Height matters too: under 240px a tile hides its secondary rows (filter chips, banners,
   composer toolbar until focused) so at least three lines of content remain; the composer in a
   short tile is one line that grows as it is typed in.

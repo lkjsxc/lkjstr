@@ -5,6 +5,10 @@ import { readFile, readdir, mkdir, writeFile } from 'node:fs/promises';
 import { resolve, join, extname } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fakeRelay } from './browser-relay.mjs';
+import { browserTabs } from './browser-tabs.mjs';
+import { browserSizes } from './browser-sizes.mjs';
+import { browserSpaces } from './browser-spaces.mjs';
+import { browserReading } from './browser-reading.mjs';
 
 const out = resolve('tmp/screens');
 await mkdir(out, { recursive: true });
@@ -24,7 +28,7 @@ const base = `${process.env.HOME}/.cache/ms-playwright`;
 const dir = (await readdir(base)).filter((d) => d.startsWith('chromium-')).sort().pop();
 const browser = await chromium.launch({ executablePath: process.env.LKJSTR_CHROME ?? `${base}/${dir}/chrome-linux64/chrome`, args: ['--no-sandbox'] });
 const checks = {}, screenshots = [], errors = [];
-const check = (name, ok) => { checks[name] = ok ? 'ok' : 'FAIL'; };
+const check = (name, ok, detail='') => { checks[name] = ok ? 'ok' : `FAIL ${detail}`; };
 const harbor = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675"><rect width="1200" height="675" fill="#c3d2da"/><path d="M0 320 170 250 370 330 600 210 900 290 1200 170V675H0" fill="#738b94"/><path d="M0 390Q400 340 1200 420V675H0" fill="#527b91"/><path d="M0 470Q400 420 1200 490M0 540Q600 500 1200 550" stroke="#d3e1e5" stroke-width="5" fill="none"/><path d="M760 450h160l-25 25H790Z" fill="#f4f3ee"/><path d="M838 280v170M840 285l64 130h-64" stroke="#f4f3ee" stroke-width="5" fill="#e2e0d8"/></svg>`;
 const coffee = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"><text x="1" y="27" font-size="28">☕</text></svg>`;
 try {
@@ -37,12 +41,13 @@ try {
       await context.route('**/*', (route) => {
         const target = route.request().url();
         if (target.startsWith(url)) return route.continue();
-        if (target === 'https://media.fixture.invalid/harbor.svg') return route.fulfill({ contentType: 'image/svg+xml', body: harbor });
+        if (['https://media.fixture.invalid/harbor.svg','https://media.fixture.invalid/detail.svg'].includes(target)) return route.fulfill({ contentType: 'image/svg+xml', body: harbor });
         if (target === 'https://media.fixture.invalid/coffee.svg') return route.fulfill({ contentType: 'image/svg+xml', body: coffee });
         return route.abort();
       });
       const page = await context.newPage();
       page.on('pageerror', (e) => errors.push(String(e)));
+      page.on('console', m=>{if(m.type()==='error' && /panicked|disposed|already borrowed/.test(m.text())) errors.push(m.text());});
       await page.goto(url);
       await page.waitForSelector('.pane');
       await page.evaluate(async (events) => {
@@ -114,8 +119,8 @@ try {
         await shot(label.toLowerCase());
       }
       await page.locator('.pane.focused .body.shown').getByRole('combobox', { name: 'Language', exact: true }).selectOption('ja');
-      await page.locator('.pane.focused h2').filter({ hasText: '設定' }).waitFor();
-      check(`${size} ${theme} Japanese settings labels render`, await page.locator('.pane.focused').getByText('表示密度', { exact: true }).isVisible());
+      await page.locator('.pane.focused .body.shown h2').filter({ hasText: '設定' }).waitFor();
+      check(`${size} ${theme} Japanese settings labels render`, await page.locator('.pane.focused .body.shown').getByText('表示密度', { exact: true }).isVisible());
       await shot('settings-japanese');
       await page.locator('.pane.focused .body.shown').getByRole('combobox', { name: 'Language', exact: true }).selectOption('en');
       await page.locator('.pane.focused .body.shown').getByLabel('Compact', { exact: true }).check();
@@ -138,6 +143,11 @@ try {
       if (size === 'phone') await page.getByRole('button', { name: 'More', exact: true }).click();
       else await page.locator('.topbar .account').click();
       await shot(size === 'phone' ? 'more-sheet' : 'account-menu');
+      await page.keyboard.press('Escape');
+      await browserReading(page,check,`${size} ${theme}`,data);
+      await browserTabs(page,check,`${size} ${theme}`);
+      await browserSpaces(page,check,`${size} ${theme}`);
+      if (size === 'desktop') { await page.keyboard.press('Escape'); await page.locator('.brand').click(); await browserSizes(page,(name,ok,detail)=>check(`${size} ${theme} ${name}`,ok,detail),shot,data,url); }
       await context.close();
     }
   }

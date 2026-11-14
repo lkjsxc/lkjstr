@@ -1,7 +1,7 @@
 //! The tiled workspace: a layout tree plus the view of every tab and the
 //! focused pane. Every command is a total function on plain data.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use serde::{Deserialize, Serialize};
 
@@ -57,7 +57,7 @@ impl Workspace {
         let first = if signed_in {
             vec![1, 2, 3]
         } else {
-            vec![3, 2, 1]
+            vec![2, 3, 1]
         };
         let root = Node::Split(Split {
             id: 20,
@@ -104,6 +104,11 @@ impl Workspace {
             .histories
             .retain(|tab, _| seen.contains(tab));
         self.navigation.previews.retain(|tab| seen.contains(tab));
+        self.navigation.pinned.retain(|tab| seen.contains(tab));
+        let mut recent = BTreeSet::new();
+        self.navigation
+            .recent
+            .retain(|tab| seen.contains(tab) && recent.insert(*tab));
         self.root = root;
         if layout::find_pane(&self.root, self.focus).is_none() {
             self.focus = layout::panes(&self.root)[0].id;
@@ -149,11 +154,14 @@ impl Workspace {
         self.next_id = next;
         self.root = root;
         self.focus = holder;
+        self.activate(tab);
         tab
     }
 
     pub fn activate(&mut self, tab: TabId) {
         if let Some(holder) = layout::pane_of_tab(&self.root, tab).map(|pane| pane.id) {
+            self.navigation.recent.retain(|id| *id != tab);
+            self.navigation.recent.insert(0, tab);
             self.root = layout::activate(self.root.clone(), tab);
             self.focus = holder;
         }
@@ -176,14 +184,20 @@ impl Workspace {
     }
 
     /// Mutate without recording: a pane closure is one recovery/undo action.
-    fn remove_tab(&mut self, tab: TabId) {
+    pub(crate) fn remove_tab(&mut self, tab: TabId) {
         let holder = layout::pane_of_tab(&self.root, tab).map(|pane| pane.id);
+        let next = self.next_after_close(tab);
         self.tabs.remove(&tab);
+        self.navigation.recent.retain(|id| *id != tab);
+        self.navigation.pinned.remove(&tab);
         self.navigation.histories.remove(&tab);
         self.navigation.previews.remove(&tab);
         match layout::remove_tab(self.root.clone(), tab) {
             Some(root) => self.root = root,
             None => self.reset_to_launcher(),
+        }
+        if let Some(next) = next {
+            self.root = layout::activate(self.root.clone(), next);
         }
         if holder == Some(self.focus) && layout::find_pane(&self.root, self.focus).is_none() {
             self.focus = layout::panes(&self.root)[0].id;

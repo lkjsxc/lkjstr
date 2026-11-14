@@ -20,15 +20,19 @@ pub fn Accounts() -> impl IntoView {
     let message = RwSignal::new(None::<(bool, String)>);
     let revealed = RwSignal::new(None::<(String, String)>);
     let report = move |result: Result<String, String>, done: &str| match result {
-        Ok(pubkey) => message.set(Some((true, format!("{done} {}", short_npub(&pubkey))))),
-        Err(error) => message.set(Some((false, error))),
+        Ok(pubkey) => {
+            let _ = message.try_set(Some((true, format!("{done} {}", short_npub(&pubkey)))));
+        }
+        Err(error) => {
+            let _ = message.try_set(Some((false, error)));
+        }
     };
     let import = move |_| {
         let text = input.get_untracked();
         leptos::task::spawn_local(async move {
             let result = app.import_account(&text).await;
             if result.is_ok() {
-                input.set(String::new());
+                let _ = input.try_set(String::new());
             }
             report(result, "Signed in as");
         });

@@ -50,6 +50,10 @@ pub enum Want {
         ids: Vec<String>,
         relays: Vec<String>,
     },
+    /// Batched visible-note replies, reposts, reactions and zap receipts.
+    Activity {
+        ids: Vec<String>,
+    },
     /// Deletions targeting displayed cached events. Stays live.
     Deletions {
         ids: Vec<String>,

@@ -8,18 +8,8 @@ use lkjstr_protocol::zap_receipt_amount_msats;
 
 use super::Ui;
 use super::note::Note;
-use super::note_parts::{Avatar, name_of};
+use super::note_parts::Avatar;
 use super::text::ago;
-use crate::host::now_secs;
-
-fn snippet(text: &str) -> String {
-    let flat: String = text.split_whitespace().collect::<Vec<_>>().join(" ");
-    if flat.chars().count() > 90 {
-        format!("{}…", flat.chars().take(88).collect::<String>())
-    } else {
-        flat
-    }
-}
 
 #[component]
 pub fn Notification(event: Event) -> impl IntoView {
@@ -36,16 +26,24 @@ pub fn Notification(event: Event) -> impl IntoView {
     let verb = match event.kind {
         6 => "reposted".to_owned(),
         7 => match event.content.as_str() {
-            "+" | "" => "liked".to_owned(),
-            "-" => "disliked".to_owned(),
-            other => format!("reacted {}", other.chars().take(12).collect::<String>()),
-        },
+            "+" | "" => "liked",
+            "-" => "disliked",
+            _ => "reacted",
+        }
+        .to_owned(),
         9735 => match zap_receipt_amount_msats(&event) {
             Some(msats) => format!("zapped {} sats", msats / 1000),
             None => "zapped".to_owned(),
         },
         _ => "mentioned you".to_owned(),
     };
+    let reaction = (event.kind == 7).then(|| {
+        let mut r = lkjstr_protocol::parse_reaction(&event);
+        if r.kind == lkjstr_protocol::ReactionKind::Like {
+            r.display = "❤️".into();
+        }
+        r
+    });
     let target_text = {
         let target = target.clone();
         Memo::new(move |_| {
@@ -53,11 +51,13 @@ pub fn Notification(event: Event) -> impl IntoView {
             target
                 .as_ref()
                 .and_then(|id| ui.app.with(|rt| rt.store.get(id)))
-                .map(|e| snippet(&e.content))
+                .map(|e| e.content.clone())
         })
     };
     let who = actor.clone();
+    let who_data = actor.clone();
     let actor_key = StoredValue::new(actor.clone());
+    let target_for_excerpt = target.clone();
     let open = move |ev: web_sys::MouseEvent| {
         if let Some(id) = &target {
             ui.detail(
@@ -80,14 +80,14 @@ pub fn Notification(event: Event) -> impl IntoView {
     };
     view! {
         <article class="note compact" tabindex="0">
-            <button class="avatar-button" aria-label="Open profile" title="Open profile (p)" on:click=profile><Avatar pubkey=actor class="avatar small"/></button>
+            <button class="avatar-button" data-profile=actor.clone() aria-label="Open profile" title="Open profile (p)" on:click=profile><Avatar pubkey=actor.clone() class="avatar small"/></button>
             <div class="note-main">
-                <p>
-                    <button class="name" title="Open profile (p)" on:click=profile>{move || name_of(ui, &who)}</button>
-                    " " {verb} " "
-                    <time>{ago(event.created_at, now_secs())}</time>
-                </p>
-                <button class="quote-line excerpt-button" title="Open note" on:click=open>{move || target_text.get().unwrap_or_else(|| "your note".to_owned())}</button>
+                <header>
+                    <button class="name" data-profile=who_data title="Open profile (p)" on:click=profile><super::names::Name pubkey=who/></button>
+                    <span class="notification-verb">{verb}</span>{reaction.map(|r| r.emoji.map(|e| view! { <img class="emoji" src=e.url alt=r.display.clone()/> }.into_any()).unwrap_or_else(|| r.display.into_any()))}
+                    <time>{move || ago(event.created_at, ui.now.get())}</time>
+                </header>
+                <button class="quote-line excerpt-button" data-thread=target_for_excerpt title="Open note" on:click=open>{move || target_text.get().unwrap_or_else(|| "your note".to_owned())}</button>
             </div>
         </article>
     }

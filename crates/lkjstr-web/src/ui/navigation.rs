@@ -107,3 +107,49 @@ pub fn install(ui: Ui, booted: RwSignal<bool>) {
         mouse.remove();
     });
 }
+
+/// Middle click opens a kept neighbour tab while preserving both pane actives.
+pub fn middle(ui: Ui, ev: web_sys::MouseEvent) {
+    use wasm_bindgen::JsCast;
+    if ev.button() != 1 || ev.default_prevented() {
+        return;
+    }
+    let Some(el) = ev
+        .target()
+        .and_then(|t| t.dyn_into::<web_sys::Element>().ok())
+    else {
+        return;
+    };
+    if el.closest(".strip").ok().flatten().is_some() {
+        return;
+    }
+    let closest = |selector| el.closest(selector).ok().flatten();
+    let view = if let Some(actor) = closest("[data-profile]") {
+        actor
+            .get_attribute("data-profile")
+            .map(|pubkey| View::Profile { pubkey })
+    } else if let Some(card) = closest("[data-thread]") {
+        card.get_attribute("data-thread")
+            .map(|id| View::Thread { id, relays: vec![] })
+    } else if let Some(link) = closest("a[href]") {
+        link.get_attribute("href")
+            .filter(|url| url.starts_with("https://") || url.starts_with("http://"))
+            .map(|url| {
+                if link.class_list().contains("media") {
+                    View::Image { url }
+                } else {
+                    View::Link { url }
+                }
+            })
+    } else if closest("button,input,textarea").is_some() {
+        None
+    } else {
+        closest(".note[data-id]")
+            .and_then(|note| note.get_attribute("data-id"))
+            .map(|id| View::Thread { id, relays: vec![] })
+    };
+    if let Some(view) = view {
+        ev.prevent_default();
+        ui.detail(view, Some(&ev));
+    }
+}

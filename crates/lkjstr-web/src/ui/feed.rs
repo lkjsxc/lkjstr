@@ -63,6 +63,12 @@ pub fn Feed(
         app.session_rev.track();
         app.with(|rt| rt.session.active.clone())
     });
+    let language_filter = RwSignal::new(source == Source::Global);
+    let japanese = web_sys::window().is_some_and(|w| {
+        w.navigator()
+            .language()
+            .is_some_and(|l| l.starts_with("ja"))
+    });
     let src = StoredValue::new(source.clone());
     let authors = Memo::new(move |_| {
         app.rev.track();
@@ -110,7 +116,22 @@ pub fn Feed(
                 .count(),
         };
         if src.with_value(|s| *s == Source::Global) {
-            found.retain(|e| !lkjstr_core::content::looks_like_noise(&e.content));
+            found.retain(|e| e.kind != 1 || !lkjstr_core::content::looks_like_noise(&e.content));
+            if language_filter.get() {
+                found.retain(|e| {
+                    let original = if e.kind == 6 {
+                        lkjstr_protocol::event_references(e)
+                            .into_iter()
+                            .next()
+                            .and_then(|r| app.with(|rt| rt.store.get(&r.id)))
+                    } else {
+                        Some(e.clone())
+                    };
+                    original.is_none_or(|e| {
+                        lkjstr_core::reading::language_matches(&e.content, japanese)
+                    })
+                });
+            }
         }
         let items: Vec<_> = found.iter().map(|e| (e.created_at, e.id.clone())).collect();
         app.with(|rt| {
@@ -195,8 +216,12 @@ pub fn Feed(
     let is_notifications = source == Source::Notifications;
     view! {
         <div class="feed" node_ref=container on:scroll=on_scroll>
+            <Show when=move || src.with_value(|s| *s == Source::Global) && me.get().is_none() && !ui.settings.get().welcome_dismissed>
+                <div class="welcome-banner"><span>{move || ui.tr("Read without an account. Your cache stays on this device.")}</span><button class="link" on:click=move |_| { ui.open(lkjstr_core::View::Accounts,lkjstr_core::Open::Here); }>{move || ui.tr("Add a key")}</button><button class="link" on:click=move |_| ui.settings.update(|s| s.welcome_dismissed=true)>{move || ui.tr("Browse")}</button><button class="link" on:click=move |_| { ui.open(lkjstr_core::View::Relays,lkjstr_core::Open::Here); }>{move || ui.tr("See relays")}</button></div>
+            </Show>
+            <Show when=move || language_filter.get()><div class="filter-row"><button title="Local script heuristic; show all languages" on:click=move |_| language_filter.set(false)>{move || ui.tr(if japanese { "Japanese notes · show all" } else { "English notes · show all" })}</button></div></Show>
             <Show when=move || rows.with(|r| r.1 > 0)>
-                <button class="new-marker" on:click=move |ev| {
+                <button class="new-marker" aria-live="polite" on:click=move |ev| {
                     reveal();
                     if let Some(el) = ev.target().and_then(|t| t.dyn_into::<web_sys::Element>().ok()).and_then(|e| e.parent_element()) {
                         el.set_scroll_top(0);
@@ -204,7 +229,7 @@ pub fn Feed(
                 }>{move || format!("{} new · show", rows.with(|r| r.1))}</button>
             </Show>
             <For each=move || rows.get().0 key=|event| event.id.clone() let:event>
-                {let row_id = event.id.clone(); let at = event.created_at; view! { <Show when=move || rows.with(|r| r.0.iter().position(|e| e.id == row_id).is_some_and(|i| i == 0 || r.0[i - 1].created_at / 86_400 != r.0[i].created_at / 86_400))>
+                {let row_id = event.id.clone(); let at = event.created_at; view! { <Show when=move || rows.with(|r| r.0.iter().position(|e| e.id == row_id).is_some_and(|i| (i == 0 && at / 86_400 != crate::host::now_secs() / 86_400) || (i > 0 && r.0[i - 1].created_at / 86_400 != r.0[i].created_at / 86_400)))>
                     <div class="date-divider">{date_label(ui, at)}</div>
                 </Show> }}
                 {if is_notifications { view! { <Notification event=event/> }.into_any() } else { view! { <Note event=event/> }.into_any() }}

@@ -92,6 +92,37 @@ must be present.
 
 ## Record
 
+2026-11-14, Phase B partial delivery:
+
+- All four quiet gates pass after the final product changes: repo, test,
+  rust-wasm and verify. Jobs and native test threads were capped at four;
+  Cargo, Trunk, browser and temporary caches stayed in ignored worktree paths.
+- All 98 release smoke checks pass against `tmp/phase-b-unpacked`, extracted
+  from the final `tmp/lkjstr-dist.tar.gz`. Report:
+  `tmp/smoke-phase-b/report.json`. The storage-failure check explicitly opens
+  Welcome because a fresh visitor now starts on Global.
+- The design suite passes 439 checks with 92 PNG captures. It covers tab close
+  visibility, middle close, focus order, rapid closing, menu duplication/pins,
+  drag cancellation, workspace switching/movement/reload, gallery dimensions,
+  whole-line folds, media loading, notification/repost actor targets, background
+  middle click, settled counts, offline status and data saver.
+- Every existing view is checked at widths 160, 200, 320, 520 and 900px with a
+  160px tile height in both themes. Deliberately truncated metadata and the
+  horizontally scrolling tab list are excluded from body-overflow assertions.
+- Captures at 1440x900 and 390x844 in both themes, plus four tile width classes
+  in each desktop theme, are listed in `tmp/screens/INDEX.md`. Results are in
+  `tmp/screens/report.json`. Signed mixed-language fixtures include data URL
+  avatars, sized/gallery images, replies, reposts, quotes, custom reactions,
+  long text, content warnings, audio and video. External HTTP/WS are intercepted.
+- The daily-use review records 60 observed frictions in `details.md` (44 fixed,
+  16 open). The final static archive follows the README BUILD commands.
+- Rapid disposal exposed a queued fold callback; its release guard and safe
+  completion handling for scroll, draft and account UI loads pass the final suite.
+- The final design copy includes the upstream 12:55 Addresses/Language update;
+  the late full-width rule is applied. Clean paths and the string guard are open.
+- Docker verification remains excluded by the worktree-only write rule.
+  No deployment, commit, production access or existing service restart occurred.
+
 2026-11-14, history/retry/invoice review:
 
 - All 98 release browser smoke checks pass, including eight new history/retry

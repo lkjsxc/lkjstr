@@ -6,9 +6,12 @@ mod feed;
 mod feed_memory;
 mod feed_source;
 mod feed_state;
+mod fold;
 mod frame;
 mod icons;
 mod keys;
+mod media;
+mod names;
 mod navigation;
 mod note;
 mod note_actions;
@@ -17,6 +20,9 @@ mod notify;
 mod pane;
 mod reference;
 mod shell;
+mod spaces;
+mod tab_effects;
+mod tab_menu;
 mod text;
 mod tiles;
 mod views;
@@ -45,8 +51,25 @@ pub struct Settings {
     pub text: u8,
     #[serde(default)]
     pub compact: bool,
+    #[serde(default = "enabled")]
+    pub middle_close: bool,
+    #[serde(default)]
+    pub tab_width: u16,
+    #[serde(default = "default_scale")]
+    pub scale: u16,
+    #[serde(default)]
+    pub data_saver: bool,
+    #[serde(default)]
+    pub welcome_dismissed: bool,
     #[serde(default)]
     pub language: Option<lkjstr_core::appearance::Language>,
+}
+
+fn enabled() -> bool {
+    true
+}
+fn default_scale() -> u16 {
+    100
 }
 
 fn default_text() -> u8 {
@@ -59,6 +82,11 @@ impl Default for Settings {
             theme: Theme::System,
             text: default_text(),
             compact: false,
+            middle_close: true,
+            tab_width: 0,
+            scale: 100,
+            data_saver: false,
+            welcome_dismissed: false,
             language: None,
         }
     }
@@ -68,10 +96,15 @@ impl Default for Settings {
 #[derive(Clone, Copy)]
 pub struct Ui {
     pub app: App,
+    pub now: RwSignal<u64>,
+    pub online: RwSignal<bool>,
     pub ws: RwSignal<Workspace>,
+    pub spaces: RwSignal<lkjstr_core::spaces::Spaces>,
     pub settings: RwSignal<Settings>,
     pub narrow: RwSignal<bool>,
     pub help: RwSignal<bool>,
+    pub zoom: RwSignal<Option<u32>>,
+    pub closed: RwSignal<Option<(u32, bool)>>,
     pub palette: RwSignal<bool>,
     /// False while the browser tab is hidden: background work pauses.
     pub page_visible: RwSignal<bool>,
@@ -100,7 +133,23 @@ impl Ui {
 
     pub fn open(&self, view: View, how: Open) -> TabId {
         let narrow = self.narrow.get_untracked();
-        let how = if narrow { Open::Here } else { how };
+        let how = if narrow
+            || (how != Open::Here
+                && !self.can_split(lkjstr_core::layout::Zone::Right)
+                && (how == Open::Split
+                    || self.ws.with_untracked(|ws| {
+                        lkjstr_core::layout::neighbor(
+                            &ws.root,
+                            ws.focus,
+                            lkjstr_core::layout::Zone::Right,
+                        )
+                        .is_none()
+                    })))
+        {
+            Open::Here
+        } else {
+            how
+        };
         let mut tab = 0;
         self.ws.update(|ws| tab = ws.open(view, how));
         tab
@@ -111,11 +160,24 @@ impl Ui {
             .and_then(|w| w.inner_width().ok())
             .and_then(|v| v.as_f64())
             .unwrap_or(1280.0);
-        let kept = event.is_some_and(|e| e.ctrl_key() || e.meta_key());
+        let background = event.is_some_and(|e| e.button() == 1);
+        let kept = background || event.is_some_and(|e| e.ctrl_key() || e.meta_key());
         let split = event.is_some_and(|e| e.shift_key());
         let mut tab = 0;
-        self.ws
-            .update(|ws| tab = ws.open_detail(view, width, kept || split, split));
+        self.ws.update(|ws| {
+            let focus = ws.focus;
+            let active: Vec<_> = lkjstr_core::layout::panes(&ws.root)
+                .iter()
+                .map(|p| p.active)
+                .collect();
+            tab = ws.open_detail(view, width, kept || split, split);
+            if background {
+                for tab in active {
+                    ws.root = lkjstr_core::layout::activate(ws.root.clone(), tab);
+                }
+                ws.focus = focus;
+            }
+        });
         tab
     }
 

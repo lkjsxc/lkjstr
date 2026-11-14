@@ -67,6 +67,22 @@ impl View {
         }
     }
 
+    pub fn icon(&self) -> &'static str {
+        match self {
+            Self::Home => "home",
+            Self::Global => "globe",
+            Self::Search { .. } => "search",
+            Self::Compose { .. } => "compose",
+            Self::Notifications => "notifications",
+            Self::Profile { .. } | Self::Accounts => "user",
+            Self::Thread { .. } => "reply",
+            Self::Settings => "settings",
+            Self::Image { .. } => "image",
+            Self::Launcher => "plus",
+            _ => "list",
+        }
+    }
+
     /// Views that are opened "beside" the current one (details of a note or person).
     pub fn is_detail(&self) -> bool {
         matches!(

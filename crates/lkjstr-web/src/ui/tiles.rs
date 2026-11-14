@@ -71,6 +71,7 @@ fn SplitView(id: NodeId) -> impl IntoView {
                                     class="resize-handle"
                                     role="separator"
                                     aria-label=label
+                                    on:dblclick=move |ev| drag::equalise(ev, ui, id)
                                     on:pointerdown=move |ev| drag::start_resize(ev, ui, id, dir.get_untracked())
                                 ></div>
                             </Show>

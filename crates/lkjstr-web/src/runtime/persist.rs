@@ -18,6 +18,7 @@ const SCORES_MS: u64 = 30_000;
 pub struct Boot {
     pub workspace: Option<String>,
     pub settings: Option<String>,
+    pub spaces: Option<String>,
 }
 
 impl App {
@@ -27,6 +28,7 @@ impl App {
             let mut boot = Boot {
                 workspace: None,
                 settings: None,
+                spaces: None,
             };
             match idb::open().await {
                 Ok(db) => {
@@ -36,6 +38,7 @@ impl App {
                     let session = idb::kv_get(&db, "session").await.ok().flatten();
                     let scores = idb::kv_get(&db, "scores").await.ok().flatten();
                     boot.workspace = idb::kv_get(&db, "workspace").await.ok().flatten();
+                    boot.spaces = idb::kv_get(&db, "spaces").await.ok().flatten();
                     boot.settings = idb::kv_get(&db, "settings").await.ok().flatten();
                     let secrets = match &session {
                         Some(text) => super::session::load_secrets(&db, text).await,

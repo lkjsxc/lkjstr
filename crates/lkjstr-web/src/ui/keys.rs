@@ -84,7 +84,7 @@ fn chord(code: &str, shift: bool) -> Option<Command> {
 pub fn handle(ui: Ui, ev: &KeyboardEvent) {
     if (ev.ctrl_key() || ev.meta_key()) && ev.shift_key() && ev.code() == "KeyT" {
         ev.prevent_default();
-        ui.ws.update(|ws| ws.reopen());
+        ui.recover(true);
         return;
     }
     if ev.alt_key()
@@ -92,13 +92,13 @@ pub fn handle(ui: Ui, ev: &KeyboardEvent) {
         && ["ArrowLeft", "ArrowRight", "KeyZ"].contains(&ev.code().as_str())
     {
         ev.prevent_default();
-        ui.ws.update(|ws| {
-            if ev.code() == "KeyZ" {
-                ws.undo_layout();
-            } else {
+        if ev.code() == "KeyZ" {
+            ui.recover(false);
+        } else {
+            ui.ws.update(|ws| {
                 ws.travel(if ev.code() == "ArrowLeft" { -1 } else { 1 });
-            }
-        });
+            });
+        }
         return;
     }
     if (ev.ctrl_key() || ev.meta_key()) && ev.code() == "KeyK" {
@@ -106,10 +106,32 @@ pub fn handle(ui: Ui, ev: &KeyboardEvent) {
         ui.palette.update(|p| *p = !*p);
         return;
     }
+    if ev.alt_key() && ev.code() == "Enter" {
+        ev.prevent_default();
+        let pane = ui.ws.with_untracked(|ws| ws.focus);
+        ui.zoom
+            .update(|z| *z = if *z == Some(pane) { None } else { Some(pane) });
+        return;
+    }
+    if ev.alt_key() && ev.shift_key() && ev.code().starts_with("Digit") {
+        if let Ok(index) = ev.code()[5..].parse::<usize>()
+            && (1..=9).contains(&index)
+        {
+            ev.prevent_default();
+            if ev.ctrl_key() || ev.meta_key() {
+                if let Some(tab) = ui.ws.with_untracked(|ws| ws.focused_tab()) {
+                    super::spaces::move_tab(ui, tab, index - 1);
+                }
+            } else {
+                super::spaces::select(ui, index - 1);
+            }
+        }
+        return;
+    }
     if ev.alt_key() && !ev.ctrl_key() && !ev.meta_key() {
         if let Some(command) = chord(&ev.code(), ev.shift_key()) {
             ev.prevent_default();
-            ui.ws.update(|ws| ws.apply(command));
+            ui.command(command);
             after(0, || focus_selector(".pane.focused .tab.active"));
         }
         return;

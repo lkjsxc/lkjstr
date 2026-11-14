@@ -51,11 +51,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     .enumerate()
     {
         let svg = format!(
-            "<svg xmlns='http://www.w3.org/2000/svg' width='72' height='72'><rect width='72' height='72' fill='%23{color}'/><text x='36' y='49' text-anchor='middle' fill='white' font-size='34'>{initial}</text></svg>"
+            "<svg xmlns='http://www.w3.org/2000/svg' width='72' height='72'><rect width='72' height='72' fill='%23{color}'/><text x='36' y='49' text-anchor='middle' fill='white' font-size='34' font-family='system-ui,sans-serif' font-weight='600'>{initial}</text></svg>"
         );
         events.push(sign(i, 0, now - 3600, json!({"name": name, "display_name": name, "about": about, "picture": format!("data:image/svg+xml,{svg}")}).to_string(), vec![])?);
     }
-    let root = sign(0, 1, now - 180, "朝の港は静かでした。画面から少し離れると、考えがまとまる。\nA quiet morning by the water. What are you making today?\nhttps://media.fixture.invalid/harbor.svg\n#日常 #photography".into(), vec![vec!["imeta".into(), "url https://media.fixture.invalid/harbor.svg".into(), "dim 1200x675".into()]])?;
+    let root = sign(0, 1, now - 180, "朝の港は静かでした。画面から少し離れると、考えがまとまる。\nA quiet morning by the water. What are you making today?\nhttps://media.fixture.invalid/harbor.svg\nhttps://media.fixture.invalid/detail.svg\n#日常 #photography".into(), vec![vec!["imeta".into(), "url https://media.fixture.invalid/harbor.svg".into(), "dim 1200x675".into()]])?;
     events.push(root.clone());
     events.push(sign(1, 1, now - 240, "The best tools leave room for thought. Today I removed three buttons and finally understood what the page wanted to say.\n小さく作って、毎日使う。 #design #Rust".into(), vec![])?);
     events.push(sign(
@@ -68,6 +68,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         ),
         vec![],
     )?);
+    events.push(sign(1,1,now-260,"A short field recording / 港の音\nhttps://media.fixture.invalid/harbor.mp3\nhttps://media.fixture.invalid/harbor.mp4".into(),vec![])?);
     let reply = sign(
         1,
         1,

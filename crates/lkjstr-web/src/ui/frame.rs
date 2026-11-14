@@ -14,7 +14,7 @@ pub fn TopBar() -> impl IntoView {
     let status = move || {
         ui.app.net_rev.track();
         let s = ui.app.with(|rt| rt.summary());
-        if s.open == 0 && s.failing > 0 {
+        if !ui.online.get() || (s.open == 0 && s.failing > 0) {
             ui.tr("offline, showing cache")
         } else if s.connecting > 0 {
             format!("{} {} · {}", s.open, ui.tr("relays"), ui.tr("connecting"))
@@ -26,6 +26,7 @@ pub fn TopBar() -> impl IntoView {
         <header class="topbar">
             <span class="brand">"lkjstr"</span>
             <button class="status" title="Relays" on:click=move |_| { ui.open(View::Relays, Open::Here); }>{status}</button>
+            <super::spaces::Switcher/>
             <span class="spacer"></span>
             <button class="palette-trigger desktop-actions" on:click=move |_| ui.palette.set(true) aria-label=move || ui.tr("Search or open a view") title="Search or open a view (Ctrl/Cmd+K)">
                 <Icon name="search"/><span class="grow">{move || ui.tr("Search")}</span><kbd>"⌘K"</kbd>
@@ -51,6 +52,7 @@ fn AccountMenu(shown: RwSignal<bool>, #[prop(default = false)] phone: bool) -> i
     };
     view! {
         <div class="menu" class:more-sheet=phone role="menu" aria-label=move || ui.tr("Accounts")>
+            <Show when=move || phone><super::spaces::Switcher/></Show>
             <button role="menuitem" on:click=move |_| go(View::Accounts)>{move || ui.tr("Sign in or create a key")}</button>
             <button role="menuitem" on:click=move |_| go(View::Settings)>{move || ui.tr("Settings")}</button>
             <button role="menuitem" on:click=move |_| go(View::Relays)>{move || ui.tr("Relays")}</button>
@@ -111,6 +113,7 @@ fn Palette() -> impl IntoView {
             <div class="sheet palette" role="dialog" aria-label=move || ui.tr("Search or open a view") on:click=|ev| ev.stop_propagation()>
                 <input node_ref=input class="wide" type="search" aria-label=move || ui.tr("Search or open a view") placeholder=move || ui.tr("Search or open a view") on:input=move |ev| query.set(event_target_value(&ev)) on:keydown=move |ev: web_sys::KeyboardEvent| { if ev.key() == "Enter" { open_search(); } }/>
                 <div class="palette-choices">
+                    {move || ui.spaces.get().names.into_iter().enumerate().filter(|(i,name)| { let q=query.get().to_lowercase(); !q.is_empty() && (name.to_lowercase().contains(&q) || (i+1).to_string()==q) }).map(|(index,name)| view! { <button on:click=move |_| { super::spaces::select(ui,index); ui.palette.set(false); }>{format!("{} · {}",index+1,name)}</button> }).collect_view()}
                     {move || launcher_choices().into_iter().filter(|c| ui.tr(c.title).to_lowercase().contains(&query.get().to_lowercase())).map(|c| view! {
                         <button on:click=move |_| { ui.open(c.view.clone(), Open::Here); ui.palette.set(false); }>{ui.tr(c.title)}</button>
                     }).collect_view()}

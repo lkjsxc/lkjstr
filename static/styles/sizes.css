@@ -1,0 +1,93 @@
+/* Each tile is its own size container, independently of window geometry. */
+.pane { container: tile / size; }
+.bodies, .body, .page, .feed, .profile-page, .search { min-width: 0; max-width: 100%; }
+.page { padding: 12px 14px; }
+.page > *, .note-main > *, fieldset { min-width: 0; max-width: 100%; }
+.choices { grid-template-columns: repeat(auto-fit, minmax(min(100%, 208px), 1fr)); }
+.row-actions > *, .accounts li > * { min-width: 0; max-width: 100%; }
+.accounts li, .compose-bar, .profile-id, .search-bar { flex-wrap: wrap; }
+.search-bar input { flex: 1 1 100px; }
+button, summary { overflow-wrap: anywhere; }
+fieldset { margin-inline: 0; padding: 8px; }
+textarea, select { max-width: 100%; }
+.menu { min-width: min(208px, 100cqw); max-width: min(calc(100vw - 16px), 100cqw); max-height: min(70dvh, 500px); overflow-y: auto; }
+.menu kbd { white-space: nowrap; }
+.menu details summary { padding: 4px 8px; cursor: pointer; }
+.tab-menu { z-index: 25; }
+.relay-summary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-block: 8px; }
+.relay-summary div { display: flex; flex-direction: column; }
+.relay-summary dt { font-size: 12.5px; color: var(--ink-2); }
+.relay-summary dd { margin: 0; font-variant-numeric: tabular-nums; }
+@container tile (width < 440px) {
+  .note { grid-template-columns: 28px minmax(0,1fr); padding: 12px 10px; }
+  .note .avatar { width: 28px; height: 28px; }
+  .note .handle { display: none; }
+  .media { max-height: 240px; }
+  .page { padding: 10px; }
+  .profile-id { gap: 8px; }
+  .table-wrap { overflow: visible; }
+  table.relays, table.relays tbody, table.relays tr, table.relays td { display: block; width: 100%; min-width: 0; white-space: normal; }
+  table.relays thead { display: none; }
+  table.relays tr { padding-block: 8px; border-bottom: 1px solid var(--hairline); }
+  table.relays td { border: 0; padding: 2px 0; }
+  table.relays td:not(.url)::before { content: attr(data-label) ": "; color: var(--ink-2); }
+  .keys td { display: block; white-space: normal; }
+  .compose-bar { gap: 8px; }
+  .tab { padding-inline: 4px; }
+
+  .tab .x { margin-left: auto; }
+}
+@container tile (width < 280px) {
+  .note, [data-density="compact"] .note:not(.compact) { display: block; padding: 8px; font-size: 14px; }
+  .note > .avatar-button { float: left; margin-right: 6px; }
+  .note .avatar { width: 20px; height: 20px; }
+  .note header { gap: 4px; }
+  .note .actions > button:not(:nth-child(3)):not(:last-child) { display: none; }
+  .note .actions button span, .note .reactions button span { display: none; }
+  .media { width: 64px; height: 64px; }
+  .quote { padding: 8px; }
+  .page { padding: 8px; }
+  .accounts li { flex-wrap: wrap; }
+  .note .reposted { margin-bottom: 8px; }
+  .tab { gap: 0; }
+  .strip { padding-left: 4px; }
+}
+@container tile (width >= 760px) {
+  .feed > .note, .feed > .date-divider { width: 100%; margin-inline: 0; }
+  .relay-summary { grid-template-columns: repeat(4,minmax(0,1fr)); }
+  .prose:has(fieldset) { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; max-width: none; }
+  .prose:has(fieldset) > h2 { grid-column: 1 / -1; }
+  .profile-page { flex-direction: row; }
+  .profile-head { width: 36%; max-height: 100%; border-right: 1px solid var(--hairline); }
+}
+@container tile (height < 240px) {
+  .feed > .date-divider, .search > .people, .profile-head .banner, .profile-head .about { display: none; }
+  .compose textarea { height: 28px; min-height: 28px; }
+  .compose textarea:focus { height: 76px; }
+  .compose:not(:focus-within) .compose-bar { margin: 0; }
+  .compose:not(:focus-within) .compose-bar > label, .compose:not(:focus-within) .publishes { display: none; }
+  .page h2 { margin-bottom: 8px; }
+}
+.desk { position: relative; }
+.desk.zooming .pane:not(.zoomed) { visibility: hidden; }
+.pane.zoomed { position: absolute; inset: 0; z-index: 10; }
+/* Long labels wrap; only deliberate metadata truncation stays clipped. */
+legend { max-width: 100%; white-space: normal; }
+@container tile (width < 760px) {
+  table.relays, table.relays tbody, table.relays tr, table.relays td, table.relays td.url { display: block; width: 100%; min-width: 0; white-space: normal; }
+  table.relays thead { display: none; }
+  table.relays tr { padding-block: 8px; border-bottom: 1px solid var(--hairline); }
+  table.relays td { border: 0; padding: 2px 0; }
+  table.relays td:not(.url)::before { content: attr(data-label) ": "; color: var(--ink-2); }
+}
+@container tile (width < 280px) {
+  .radio, .check { display: flex; margin-right: 0; align-items: flex-start; }
+  .radio input, .check input { flex: none; }
+  .compose-bar > * { max-width: 100%; }
+}
+input { max-width: 100%; }
+input[type="range"] { width: 100%; margin-inline: 0; }
+fieldset > label:not(.radio):not(.check) { display: block; }
+
+/* The reader sets the measure through tile geometry. */
+.prose { max-width: none; }

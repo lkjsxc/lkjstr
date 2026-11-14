@@ -39,6 +39,22 @@ pub struct Summary {
 }
 
 impl Rt {
+    pub fn counts_lower_bound(&self, event_id: &str) -> bool {
+        let requests:Vec<_>=self.wants.iter().filter_map(|(id,want)| matches!(want,lkjstr_core::plan::Want::Activity { ids } if ids.iter().any(|id| id==event_id)).then_some(*id)).collect();
+        requests.is_empty()
+            || requests.iter().any(|id| {
+                let p = self.progress(*id);
+                p.total == 0
+                    || !p.settled()
+                    || p.failed > 0
+                    || self
+                        .net
+                        .subs
+                        .values()
+                        .any(|s| s.planned.wants.contains(id) && s.events >= 3000)
+            })
+    }
+
     pub fn progress(&self, want: WantId) -> Progress {
         if let Some(progress) = self.expired.get(&want) {
             return progress.progress;

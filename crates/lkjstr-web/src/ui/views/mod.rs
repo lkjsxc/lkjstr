@@ -48,7 +48,7 @@ pub fn TabBody(tab: TabId, visible: Signal<bool>) -> impl IntoView {
             }
             View::Relays => view! { <relays::Relays/> }.into_any(),
             View::Accounts => view! { <accounts::Accounts/> }.into_any(),
-            View::Settings => view! { <simple::SettingsView/> }.into_any(),
+            View::Settings => view! { <simple::SettingsView tab=tab/> }.into_any(),
             View::Link { url } => view! { <linked::Website url=url/> }.into_any(),
             View::Image { url } => view! { <linked::Image url=url/> }.into_any(),
         }

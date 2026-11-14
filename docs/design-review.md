@@ -25,12 +25,39 @@ The design itself is preserved verbatim; this file does not amend it.
 - The 360px split minimum is honoured for new automatic detail splits.
   Explicit splitting of an already narrow pane is not fully specified.
 
+## Phase B review
+
+- The sliver rule asks for an icon-plus-close tab of 56px, while touch requires
+  a 44px close target. A 16px icon plus that target already needs 60px before
+  padding. Touch slivers need a deliberate exception to the width rule.
+- At the 96px height minimum, a 34px header leaves 62px. Three lines at the
+  specified 24px line height cannot fit, before padding or controls. The
+  short-height promise needs a minimum-height exception or a smaller measure.
+- "Counts complete" means the selected relays answered, not that all of Nostr
+  was counted. Current count lookups cap each relay at 3000 matching events;
+  failures, outstanding answers and hits at the cap retain the plus sign.
+- Duplicate copies the view and navigation history. The design does not say
+  whether its unsent draft should be copied; it starts an independent draft.
+- Cross-workspace layout Undo needs a transaction across both desks. Individual
+  layout recovery can otherwise recreate a moved tab's identity. This needs a
+  coordinated recovery policy before move undo is advertised. Recovery now
+  refuses that collision and explains it; it never duplicates a draft key.
+- The script-language filter is explicitly a heuristic, removable in its feed.
+  Script detection cannot reliably distinguish English from all Latin-script
+  languages, or Japanese from all Han-script text. Language labels need this
+  limitation; a protocol language tag would provide better evidence.
+
+## Design source update during this run
+
+The upstream document changed at 12:55 UTC, adding Addresses and Language and
+removing the wide-tile measure cap. The final copy includes those changes and
+wide content now fills its tile. Clean paths, document titles and the build
+rule rejecting literal interface strings remain unimplemented. Existing JSON
+hash routing remains visible and is explicitly not compliant with Addresses.
+
 ## Remaining work
 
-Nine workspaces and the first-run feed/banner/language heuristic are not
-implemented in this run. Existing view text is only partly translated;
-frame/common labels share a Japanese/English table. The emoji picker, full
-note menus, every modifier path, and phone gestures remain incomplete. The newly added Sizes rules and advanced
-tab gestures/settings are also pending.
-Scroll through history still requires browser coverage. Silent feed, search,
-thread and signer requests, blocked storage boot, and failed images are checked.
+The numbered Phase B features remain incomplete. See [status.md](status.md)
+and the observed open rows in [details.md](details.md). This run adds workspace,
+tab and size foundations and selected reading fixes; it does not claim the
+complete three-phase product or all ten experience promises.

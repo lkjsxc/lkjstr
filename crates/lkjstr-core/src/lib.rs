@@ -23,3 +23,8 @@ pub mod navigation;
 pub mod reactions;
 pub mod route;
 pub mod words;
+
+pub mod reading;
+pub mod sizes;
+pub mod spaces;
+pub mod tab_policy;

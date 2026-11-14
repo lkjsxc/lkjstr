@@ -64,6 +64,10 @@ web-sys = { version = "0.3.99", features = [
   "VisibilityState",
   "WebSocket",
   "Window",
+  "WheelEvent",
+  "Storage",
+  "StorageEvent",
+  "ResizeObserver",
 ] }
 
 [workspace]

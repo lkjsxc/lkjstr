@@ -9,6 +9,7 @@ pub enum Segment {
     Link(String),
     Image(String),
     Video(String),
+    Audio(String),
     Mention(String),
     Quote { id: String, relays: Vec<String> },
     Hashtag(String),
@@ -24,6 +25,11 @@ fn media_kind(url: &str) -> Segment {
         Segment::Image(url.to_owned())
     } else if VIDEO_EXT.iter().any(|ext| path.ends_with(ext)) {
         Segment::Video(url.to_owned())
+    } else if [".mp3", ".ogg", ".wav", ".m4a", ".flac", ".opus"]
+        .iter()
+        .any(|ext| path.ends_with(ext))
+    {
+        Segment::Audio(url.to_owned())
     } else {
         Segment::Link(url.to_owned())
     }

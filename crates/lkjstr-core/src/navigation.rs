@@ -19,6 +19,11 @@ pub struct History {
 pub struct Navigation {
     pub histories: BTreeMap<TabId, History>,
     pub previews: BTreeSet<TabId>,
+    #[serde(default)]
+    pub pinned: BTreeSet<TabId>,
+    /// Most recently activated first, bounded by the number of live tabs.
+    #[serde(default)]
+    pub recent: Vec<TabId>,
     /// At most 32 serialized layouts. Recovery is local to this page lifetime.
     #[serde(skip)]
     pub undo: Vec<String>,

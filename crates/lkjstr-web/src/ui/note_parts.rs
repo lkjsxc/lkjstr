@@ -83,11 +83,9 @@ fn link_label(url: &str) -> String {
 }
 
 fn emoji_of(event: &Event) -> Vec<(String, String)> {
-    event
-        .tags
-        .iter()
-        .filter(|t| t.first().is_some_and(|n| n == "emoji") && t.len() >= 3)
-        .map(|t| (t[1].clone(), t[2].clone()))
+    lkjstr_protocol::custom_emojis(event)
+        .into_iter()
+        .map(|emoji| (emoji.shortcode, emoji.url))
         .collect()
 }
 
@@ -97,36 +95,59 @@ pub fn Content(event: Event, #[prop(default = false)] compact: bool) -> impl Int
     let warning =
         has_content_warning(&event).then(|| content_warning_reason(&event).unwrap_or_default());
     let revealed = RwSignal::new(warning.is_none());
-    let parts = segments(&event.content, &emoji_of(&event));
+    let parts = lkjstr_core::reading::group(segments(&event.content, &emoji_of(&event)));
     let body = parts
         .into_iter()
-        .map(|segment| match segment {
+        .map(|part| match part {
+            lkjstr_core::reading::Part::Text(parts) => {
+                let rendered = parts
+                    .into_iter()
+                    .map(|part| render_segment(ui, part, &event, compact))
+                    .collect_view();
+                view! { <super::fold::Folded>{rendered}</super::fold::Folded> }.into_any()
+            }
+            lkjstr_core::reading::Part::Images(urls) => {
+                let multiple = urls.len() > 1;
+                let rendered = urls
+                    .into_iter()
+                    .map(|url| render_segment(ui, Segment::Image(url), &event, compact))
+                    .collect_view();
+                view! { <div class="media-grid" class:multiple=multiple>{rendered}</div> }
+                    .into_any()
+            }
+            lkjstr_core::reading::Part::Block(part) => render_segment(ui, part, &event, compact),
+        })
+        .collect_view();
+    view! {
+        <div class="content" class:compact=compact class:veiled=move || !revealed.get()>
+            {warning.map(|reason| view! {
+                <Show when=move || !revealed.get()>
+                    <button class="veil" on:click=move |ev| { ev.stop_propagation(); revealed.set(true); }>
+                        {if reason.is_empty() { "Sensitive content · show".to_owned() } else { format!("{reason} · show") }}
+                    </button>
+                </Show>
+            })}
+            <div class="text">{body}</div>
+        </div>
+    }
+}
+
+fn render_segment(ui: Ui, segment: Segment, event: &Event, compact: bool) -> AnyView {
+    match segment {
             Segment::Text(text) => text.into_any(),
             Segment::Link(url) => view! {
                 <a href=url.clone() rel="nofollow" on:click={let url = url.clone(); move |ev| { ev.prevent_default(); ev.stop_propagation(); ui.detail(View::Link { url: url.clone() }, Some(&ev)); }}>{link_label(&url)}</a>
             }
             .into_any(),
-            Segment::Image(url) if !compact => {
-                let style = aspect(&event, &url).unwrap_or_default();
-                view! {
-                    <a class="media" href=url.clone() style=style on:click={let url = url.clone(); move |ev| { ev.prevent_default(); ev.stop_propagation(); ui.detail(View::Image { url: url.clone() }, Some(&ev)); }}>
-                        <img src=url.clone() alt="Image" loading="lazy" decoding="async" referrerpolicy="no-referrer"/>
-                    </a>
-                }
-                .into_any()
-            }
-            Segment::Video(url) if !compact => view! {
-                <video class="media" src=url controls preload="none" on:click=|ev| ev.stop_propagation()></video>
-            }
-            .into_any(),
-            Segment::Image(url) | Segment::Video(url) => view! {
-                <a href=url.clone() target="_blank" rel="noopener noreferrer" on:click=|ev| ev.stop_propagation()>"[media]"</a>
-            }
-            .into_any(),
+            Segment::Image(url) if !compact => { let style=aspect(event,&url).unwrap_or_default(); view! { <super::media::Picture url=url style=style/> }.into_any() },
+            Segment::Video(url) if !compact => view! { <super::media::Playable url=url audio=false/> }.into_any(),
+            Segment::Audio(url) if !compact => view! { <super::media::Playable url=url audio=true/> }.into_any(),
+            Segment::Image(url) | Segment::Video(url) | Segment::Audio(url) => view! { <a href=url rel="nofollow" on:click=|ev| ev.stop_propagation()>"[media]"</a> }.into_any(),
             Segment::Mention(pubkey) => {
                 let key = pubkey.clone();
+                let profile_data=pubkey.clone();
                 view! {
-                    <button class="mention" on:click=move |ev| { ev.stop_propagation(); ui.detail(View::Profile { pubkey: key.clone() }, Some(&ev)); }>
+                    <button class="mention" data-profile=profile_data on:click=move |ev| { ev.stop_propagation(); ui.detail(View::Profile { pubkey: key.clone() }, Some(&ev)); }>
                         "@" {move || name_of(ui, &pubkey)}
                     </button>
                 }
@@ -150,18 +171,5 @@ pub fn Content(event: Event, #[prop(default = false)] compact: bool) -> impl Int
                 <img class="emoji" src=url alt=format!(":{code}:") title=format!(":{code}:") loading="lazy"/>
             }
             .into_any(),
-        })
-        .collect_view();
-    view! {
-        <div class="content" class:compact=compact class:veiled=move || !revealed.get()>
-            {warning.map(|reason| view! {
-                <Show when=move || !revealed.get()>
-                    <button class="veil" on:click=move |ev| { ev.stop_propagation(); revealed.set(true); }>
-                        {if reason.is_empty() { "Sensitive content · show".to_owned() } else { format!("{reason} · show") }}
-                    </button>
-                </Show>
-            })}
-            <div class="text">{body}</div>
-        </div>
-    }
+        }
 }

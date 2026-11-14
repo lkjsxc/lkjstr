@@ -51,9 +51,9 @@ pub fn Compose(tab: TabId, reply_to: Option<String>, visible: Signal<bool>) -> i
     let draft_key = key.clone();
     leptos::task::spawn_local(async move {
         if let Some(saved) = app.kv_get(&draft_key).await
-            && text.get_untracked().is_empty()
+            && text.try_get_untracked().is_some_and(|text| text.is_empty())
         {
-            text.set(saved);
+            let _ = text.try_set(saved);
         }
     });
     let parent_id = StoredValue::new(reply_to.clone());
@@ -107,13 +107,15 @@ pub fn Compose(tab: TabId, reply_to: Option<String>, visible: Signal<bool>) -> i
         leptos::task::spawn_local(async move {
             match app.publish(1, content, tags).await {
                 Ok(_) => {
-                    text.set(String::new());
-                    error.set(None);
+                    let _ = text.try_set(String::new());
+                    let _ = error.try_set(None);
                     app.kv_put(&save_key, "");
                 }
-                Err(message) => error.set(Some(message)),
+                Err(message) => {
+                    let _ = error.try_set(Some(message));
+                }
             }
-            busy.set(false);
+            let _ = busy.try_set(false);
         });
     };
     let input_key = key.clone();
@@ -142,7 +144,7 @@ pub fn Compose(tab: TabId, reply_to: Option<String>, visible: Signal<bool>) -> i
                 <label class="check">
                     <input type="checkbox" prop:checked=move || warning.get().is_some()
                         on:change=move |ev| warning.set(event_target_checked(&ev).then(String::new))/>{move || ui.tr("Content warning")}</label>
-                <span class="muted">{move || format!("{} characters", text.get().chars().count())}</span>
+                <span class="muted">{move || if text.get().is_empty() { String::new() } else { format!("{} characters", text.get().chars().count()) }}</span>
                 <span class="strip-fill"></span>
                 <button class="primary" disabled=move || !can_sign.get() || busy.get() || text.get().trim().is_empty() || (parent_id.get_value().is_some() && parent.get().is_none())
                     title="Post (Ctrl+Enter)" on:click=move |_| post()>
@@ -153,7 +155,7 @@ pub fn Compose(tab: TabId, reply_to: Option<String>, visible: Signal<bool>) -> i
                 <input class="wide" placeholder="Reason (optional)" prop:value=move || warning.get().unwrap_or_default()
                     on:input=move |ev| warning.set(Some(event_target_value(&ev)))/>
             </Show>
-            {move || (!can_sign.get()).then(|| view! { <p class="muted">"To post, add a key or connect a signer extension in Accounts."</p> })}
+            {move || (!can_sign.get()).then(|| view! { <p class="muted">"To post, " <button class="link" on:click=move |_| { ui.open(lkjstr_core::View::Accounts,lkjstr_core::Open::Here); }>"Add a key"</button></p> })}
             {move || error.get().map(|e| view! { <p class="error" role="alert">{e}</p> })}
             <ul class="publishes">
                 <For each=move || mine.get() key=|p| (p.event.id.clone(), p.accepted(), p.pending()) let:publish>

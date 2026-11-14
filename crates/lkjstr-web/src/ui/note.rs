@@ -11,7 +11,6 @@ use web_sys::KeyboardEvent;
 use super::Ui;
 use super::note_parts::{Avatar, Content, name_of};
 use super::text::{ago, short_npub, stamp};
-use crate::host::now_secs;
 
 pub(super) fn nevent(ui: Ui, event: &Event) -> String {
     let relays = ui.app.with(|rt| {
@@ -125,7 +124,7 @@ fn NoteBody(shown: Event, reposter: Option<String>, focused: bool, depth: usize)
             })
         })
     };
-    let now = now_secs();
+    let at = shown.created_at;
     let this = StoredValue::new(shown.clone());
     let open = move || {
         let id = this.with_value(|e| e.id.clone());
@@ -168,22 +167,23 @@ fn NoteBody(shown: Event, reposter: Option<String>, focused: bool, depth: usize)
         ev.stop_propagation();
     };
     let name_key = author.clone();
+    let name_data = author.clone();
     let handle_key = author.clone();
     view! {
         <article class="note" class:focused=focused tabindex="0" data-id=id.clone() style=format!("--depth: {depth}") on:keydown=keydown on:click=click_note on:dblclick=move |_| { if let Some(tab) = preview.get_value() { ui.ws.update(|ws| ws.keep(tab)); } }>
-            {reposter.map(|who| view! { <div class="reposted">"↻ " {move || name_of(ui, &who)} " reposted"</div> })}
-            <button class="avatar-button" aria-label="Open profile" title="Open profile (p)" on:click=move |ev| { ev.stop_propagation(); preview.set_value(Some(ui.detail(View::Profile { pubkey: this.with_value(|e| e.pubkey.clone()) }, Some(&ev)))); }>
+            {reposter.map(|who| { let key = who.clone(); let data = who.clone(); view! { <div class="reposted"><super::icons::Icon name="repost"/>" Reposted by "<button data-profile=data on:click=move |ev| { ev.stop_propagation(); ui.detail(View::Profile { pubkey: key.clone() },Some(&ev)); }>{move || name_of(ui,&who)}</button></div> } })}
+            <button class="avatar-button" data-profile=author.clone() aria-label="Open profile" title="Open profile (p)" on:click=move |ev| { ev.stop_propagation(); preview.set_value(Some(ui.detail(View::Profile { pubkey: this.with_value(|e| e.pubkey.clone()) }, Some(&ev)))); }>
                 <Avatar pubkey=author.clone()/>
             </button>
             <div class="note-main">
                 <header>
-                    <button class="name" on:click=move |ev| { ev.stop_propagation(); preview.set_value(Some(ui.detail(View::Profile { pubkey: this.with_value(|e| e.pubkey.clone()) }, Some(&ev)))); }>{move || name_of(ui, &name_key)}</button>
+                    <button class="name" data-profile=name_data on:click=move |ev| { ev.stop_propagation(); preview.set_value(Some(ui.detail(View::Profile { pubkey: this.with_value(|e| e.pubkey.clone()) }, Some(&ev)))); }><super::names::Name pubkey=name_key/></button>
                     {move || {
                         let label = name_of(ui, &handle_key);
                         let handle = short_npub(&handle_key);
                         (label != handle).then(|| view! { <span class="handle">{handle}</span> })
                     }}
-                    <time title=stamp(shown.created_at)>{ago(shown.created_at, now)}</time>
+                    <time title=stamp(at)>{move || ago(at, ui.now.get())}</time>
                 </header>
                 {parent.filter(|_| depth == 0 && !focused).map(|parent| view! { <ReplyContext id=parent/> })}
                 <Content event=shown.clone()/>

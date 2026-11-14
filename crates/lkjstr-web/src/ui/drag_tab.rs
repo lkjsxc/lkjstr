@@ -59,6 +59,8 @@ pub fn start_tab_drag(ev: PointerEvent, ui: Ui, tab: TabId, label: String) {
     let (sx, sy) = (f64::from(ev.client_x()), f64::from(ev.client_y()));
     let panes = pane_rects();
     let dragging = Rc::new(Cell::new(false));
+    let workspace_target = Rc::new(Cell::new(None::<usize>));
+    let move_workspace = workspace_target.clone();
     let target: Rc<Cell<Option<Target>>> = Rc::default();
     let drop_box = layer_element("drop-preview", "");
     let ghost = layer_element("drag-ghost", &label);
@@ -79,6 +81,31 @@ pub fn start_tab_drag(ev: PointerEvent, ui: Ui, tab: TabId, label: String) {
                 "transform",
                 &format!("translate({}px, {}px)", x + 12.0, y + 8.0),
             );
+        }
+        let workspace = web_sys::window()
+            .and_then(|w| w.document())
+            .and_then(|d| d.element_from_point(x as f32, y as f32))
+            .and_then(|e| e.closest("[data-workspace]").ok().flatten())
+            .and_then(|e| {
+                e.get_attribute("data-workspace")
+                    .and_then(|n| n.parse::<usize>().ok())
+                    .map(|index| (index, e))
+            });
+        move_workspace.set(workspace.as_ref().map(|(index, _)| *index));
+        if let Some((_, chip)) = workspace
+            && let Some(drop_box) = &box_move
+        {
+            let r = chip.get_bounding_client_rect();
+            drop_box.set_hidden(false);
+            drop_box.style().set_css_text(&format!(
+                "left:{}px;top:{}px;width:{}px;height:{}px",
+                r.left(),
+                r.top(),
+                r.width(),
+                r.height()
+            ));
+            target_set.set(None);
+            return;
         }
         let hit = panes
             .iter()
@@ -105,6 +132,17 @@ pub fn start_tab_drag(ev: PointerEvent, ui: Ui, tab: TabId, label: String) {
             return;
         }
         let zone = zone_at(rect, x, y);
+        if zone != Zone::Center
+            && !lkjstr_core::sizes::can_split(
+                rect.width(),
+                rect.height(),
+                matches!(zone, Zone::Left | Zone::Right),
+            )
+        {
+            drop_box.set_hidden(true);
+            target_set.set(None);
+            return;
+        }
         target_set.set(Some((*id, zone, None)));
         let (px, py, pw, ph) = preview(rect, zone);
         drop_box.set_class_name("drop-preview");
@@ -112,9 +150,28 @@ pub fn start_tab_drag(ev: PointerEvent, ui: Ui, tab: TabId, label: String) {
             "left:{px}px;top:{py}px;width:{pw}px;height:{ph}px"
         ));
     };
+    let cancelled = Rc::new(Cell::new(false));
+    let cancel_key = cancelled.clone();
+    let cancel_target = element.clone();
+    let pointer = ev.pointer_id();
+    let escape = window_event_listener(leptos::ev::keydown, move |key| {
+        if key.key() == "Escape" {
+            key.prevent_default();
+            cancel_key.set(true);
+            let _ = cancel_target.release_pointer_capture(pointer);
+        }
+    });
     let on_end = move || {
+        escape.remove();
         for el in [&drop_box, &ghost].into_iter().flatten() {
             el.remove();
+        }
+        if cancelled.get() {
+            return;
+        }
+        if let Some(index) = workspace_target.get() {
+            crate::ui::spaces::move_tab(ui, tab, index);
+            return;
         }
         if !dragging.get() {
             ui.ws.update(|ws| ws.activate(tab));

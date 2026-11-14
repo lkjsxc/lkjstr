@@ -142,6 +142,7 @@ export async function browserNavigation(browser, url, check) {
         await page.locator('.boot').waitFor();
         await page.clock.fastForward(16_000);
         await page.locator('.pane').first().waitFor();
+        await page.locator('.tab').filter({ hasText: 'Welcome' }).click();
         await page.locator('.storage-state').filter({ hasText: 'Local storage unavailable' }).waitFor();
         check('blocked storage boot settles into failure and retry', await page.locator('.storage-state button').count() === 1);
       } else {

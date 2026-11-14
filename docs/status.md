@@ -23,19 +23,6 @@ asked for a WASM-first client with no backward compatibility. What remains:
 Stored data from the old app (SQLite OPFS, old IndexedDB layout) is ignored.
 The incompatible WASM schema uses `lkjstr-wasm`, leaving previous `lkjstr` alone.
 
-## Why the old app was replaced (evidence, 2026-11-14)
-
-Probed with Chromium (Playwright) against the shipped SvelteKit dev server:
-
-- Home on a clean start showed "Account storage unavailable",
-  "account-storage-blocked" and "Configuration unavailable"; no timeline.
-- Global rendered raw events of every kind: encrypted base64 blobs, JSON
-  payloads, truncated hex ids and Unix timestamps, no names or avatars.
-- The WASM bridge's start function mounted a second, hidden Rust shell into the
-  Svelte page; that shell said feeds, relays and storage were not converted.
-- Default relay `wss://relay.damus.io` failed (HTTP 521) and nothing routed
-  around it.
-
 ## Phase A foundation (2026-11-14)
 
 The authoritative [design](design.md) is copied verbatim. Exact theme tokens,
@@ -61,10 +48,35 @@ The NIP branch is integrated in source; signing and signature verification use
 worktree. The resolved, uncommitted merge is in `tmp/phase-a-merge.git`; the
 orchestrator must record it in the original metadata. No commit was made.
 
-Not finished: nine workspaces, first-run Global/banner/language filter,
-complete Japanese strings, emoji picker, full note menus, phone gestures,
-advanced tab gestures/settings, container-size rules, and all modifier paths.
-Scroll restoration after reload still needs a dedicated browser regression.
+## Phase B progress (2026-11-14)
+
+This phase is partial. Nine independent workspaces have a top-bar switcher,
+phone More chips, names, palette selection, keyboard selection/movement,
+cache-based unseen dots, shared runtime, persistence and same-origin layout
+sync. Switching remounts view bodies; network grace and robust cross-desk Undo
+remain open. First run opens Global with a dismissible banner and removable
+script filter; the script filter is a heuristic and resets on remount.
+
+Tabs add recent-activation focus, middle-close setting, filtered All tabs,
+fixed or fit widths, stable closing widths, menu duplication/pinning/movement,
+Escape drag cancellation, workspace-chip drops, draft-kept Undo and background
+middle-click details. Container rules cover all current views down to 160px,
+stack relay rows, simplify short tiles, equalise handles and zoom with Alt+Enter.
+Exact 40px resize steps, complete touch gestures and all menu shortcuts remain.
+
+Reading adds two-column reserved image galleries, whole-line text folds,
+click-to-load audio/video, validated custom emoji names/notification reactions,
+actor targets inside reposts and quotes, updating relative time, batched bounded
+activity counts, offline status and data saver. The detail review is in
+[details.md](details.md); source comparison is in [repost.md](repost.md).
+
+Not implemented: clean-path addresses (links still use JSON hashes), the
+literal-string build guard, NIP-23 article tiles, collapsed thread runs, feed windowing,
+reliable reload/read markers, the emoji picker/set browser, complete reaction
+optimism, redesigned composer, send hold/Undo, quote creation, uploads, own-note
+deletion UI, worker verification, focus prefetch, noise expansion, translation,
+phone swipes/pull and complete Japanese strings. Existing posts and reactions
+still use the account selected globally, not an independent voice per tile.
 
 ## Implemented
 
@@ -89,42 +101,18 @@ Which of these were exercised in a real browser, and how, is recorded in
 - Relays view: per-relay state, requests, latency, events and score.
 - Light, dark and system themes; three text sizes.
 
-## Current verification (2026-11-14)
+## Current verification
 
-The foundation fake-relay browser smoke passes 98 checks on a release build. The earlier 51-check suite passed debug and release builds.
-It covers generated local accounts, invalid and read-only imports, account
-switching and removal, signing, compose, threads, profiles, empty and populated
-notifications, local and relay search, and direct NIP-19 navigation. It verifies
-all submitted ids and signatures through `lkjstr-protocol`. Reload checks
-prove cached events render with relay replay disabled. All sockets terminate
-at the fake relay and external HTTP is blocked; no public relays are used.
+The final Phase B release passes all four quiet gates, 98 fake-relay smoke
+checks against the extracted archive, and 439 design/size browser checks.
+The 92 screenshots are indexed in `tmp/screens/INDEX.md`; the release archive
+is `tmp/lkjstr-dist.tar.gz`. This verifies the partial scope above, not the
+unfinished Phase B promises.
 
-Review regressions cover storage open/write/transaction-abort failures,
-modified note keys, missing reply parents, late repost targets, terminal
-thread lookups, filtered pagination (including timestamp ties), AUTH retries
-and idle socket release. Native tests cover deletion ownership, replaceable
-ties and retention/index cleanup, publication guards and relay scheduling.
-Account changes install only after secret/session records commit atomically.
-Quotes and reply parents share the terminal lookup states used by reposts.
-Second-review fixes bind extension signatures to every requested field and verify
-IDs/signatures, await storage commits, retry failed event batches, and bound
-pending persistence to 20000 events plus a 500-event transaction snapshot.
-Storage-open failure buffers nothing. Synchronous socket construction failures
-use the same backoff/replan path as connection loss. Displayed notes have live
-deletion watches; quote and mention references do not count as replies.
-Content-only note/nevent quotes prefetch their targets and relay hints.
-Plain text, invalid markup and trailing punctuation are scanned linearly.
-Browser history positions survive reloads. Invoice verification accepts high-S
-signatures with explicit or recovered payees. Quiet gates print one success
-line; build aliases handle `NO_COLOR=1`.
-
-`pnpm check:repo`, `pnpm test:quiet`, `pnpm rust-wasm:quiet` and
-`pnpm verify:quiet` pass.
-The gates produce a checked Trunk release; the static output loads without
-asset or page errors. Docker verification is pending because
-this run forbids writes outside the worktree; image builds write to daemon
-storage. See [verification.md](verification.md) for evidence and limits.
-The static hosting tarball procedure is in [README.md](../README.md#build).
+See [verification.md](verification.md) for the release fake-relay checks,
+quiet gates, screenshot evidence and remaining limits. No public relay is
+used by the browser suites. Docker image verification remains excluded by
+the worktree-only write rule. Packaging follows [README.md](../README.md#build).
 
 ## Orchestration: implemented versus planned
 
@@ -190,7 +178,7 @@ Planned (not built):
 
 1. Run Docker Compose `verify` where image storage writes are allowed, then
    add the fake-relay browser smoke to CI (needs Chromium in the image).
-2. Complete the remaining Phase A items above, then verify scroll restore and
+2. Complete the remaining Phase B items above, then verify scroll restore and
    IndexedDB pruning at its bound.
 3. Worker-side ingest (verification and indexing) with the same core crate.
 4. Initial follow list creation after a proven empty relay response, relay

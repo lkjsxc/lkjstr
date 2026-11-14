@@ -53,6 +53,12 @@ pub(super) fn finish(relay: String, group: Group, acc: Acc) -> Planned {
                 ..NostrFilter::default()
             },
         ],
+        Group::Activity => vec![NostrFilter {
+            kinds: Some(vec![1, 6, 7, 9735]),
+            tags: BTreeMap::from([("e".to_owned(), ids)]),
+            limit: Some(3000),
+            ..Default::default()
+        }],
         Group::Deletions => vec![NostrFilter {
             kinds: Some(vec![5]),
             tags: BTreeMap::from([("e".to_owned(), ids)]),

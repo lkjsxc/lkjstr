@@ -11,11 +11,31 @@ use super::text::plural;
 
 /// Asks for missing profiles and referenced notes of rendered rows.
 pub fn prefetch(ui: Ui, visible: Signal<bool>, rows: Signal<Vec<Event>>) {
+    let visible = Signal::derive(move || visible.get() && !ui.data_saver());
     let missing = Memo::new(move |_| {
         ui.app.rev.track();
         let rows = rows.get();
         ui.app
             .with(|rt| lkjstr_core::prefetch::collect(&rows, &rt.store))
+    });
+    hold_want(ui, visible, move || {
+        let ids = rows.with(|rows| {
+            rows.iter()
+                .take(60)
+                .map(|e| {
+                    if e.kind == 6 {
+                        lkjstr_protocol::event_references(e)
+                            .into_iter()
+                            .next()
+                            .map(|r| r.id)
+                            .unwrap_or_else(|| e.id.clone())
+                    } else {
+                        e.id.clone()
+                    }
+                })
+                .collect::<Vec<_>>()
+        });
+        (!ids.is_empty()).then_some(Want::Activity { ids })
     });
     hold_want(ui, visible, move || {
         let people = missing.with(|m| m.people.clone());
