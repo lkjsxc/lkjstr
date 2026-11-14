@@ -33,6 +33,9 @@ export function setAttrs(el: Element, attrs: Attrs): void {
     if (typeof value === 'function') el.addEventListener(key.slice(2), value);
     else if (key === 'value' && el instanceof HTMLInputElement) el.value = String(value ?? '');
     else if (key === 'checked' && el instanceof HTMLInputElement) el.checked = value === true;
+    // ARIA states are words: `aria-pressed="false"` says "a switch that is off", a missing one says "not a switch".
+    else if (typeof value === 'boolean' && key.startsWith('aria-'))
+      el.setAttribute(key, String(value));
     else if (value === false || value === null || value === undefined) el.removeAttribute(key);
     else el.setAttribute(key, value === true ? '' : String(value));
   }

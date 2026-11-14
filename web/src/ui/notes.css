@@ -55,10 +55,13 @@
 .rchip .emo { height: 16px; vertical-align: 0; }
 /* The action row: icons with quiet counts, each in a slot of fixed width so a count never moves its neighbours. */
 .acts { display: flex; max-width: 420px; margin: 1px 0 0 -7px; color: var(--faint); }
-.act { display: flex; align-items: center; gap: 4px; flex: 1 1 0; min-width: 30px; height: 28px; padding: 0 7px; border-radius: 6px; font-size: 12.5px; font-variant-numeric: tabular-nums; }
-.act.a-more, .act.a-bookmark, .act.a-smile { flex: 0 0 30px; }
+.act { display: flex; align-items: center; gap: 4px; flex: 1 0 30px; min-width: auto; height: 28px; padding: 0 7px; border-radius: 6px; font-size: 12.5px; font-variant-numeric: tabular-nums; }
+.act.a-more, .act.a-bookmark, .act.a-smile { flex: 0 0 30px; min-width: 30px; }
 .act.a-smile { justify-content: flex-end; }
 .act > span { white-space: nowrap; }
+/* By the tile's width, not the window's: a narrow tile keeps the bookmark only where it is set, then drops the zap. Both stay in the "…" menu. */
+@container (max-width: 440px) { .act.a-bookmark:not(.on) { display: none; } }
+@container (max-width: 330px) { .act.a-zap { display: none; } }
 .act:hover { background: var(--hover); color: var(--fg); }
 .act.on { color: var(--accent); }
 .act.on .i-heart, .act.on .i-bookmark { fill: currentColor; }

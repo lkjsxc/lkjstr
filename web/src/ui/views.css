@@ -68,7 +68,7 @@
 .enone { padding: 12px 6px; font-size: 12.5px; }
 /* A finger needs 40px: the controls of notes, bars, menus and the picker grow; a mouse keeps the dense ones. */
 @media (pointer: coarse) {
-  .act { gap: 3px; min-width: 40px; height: 40px; padding: 0 5px; }
+  .act { gap: 3px; flex-basis: 40px; height: 40px; padding: 0 5px; }
   .act.a-more, .act.a-bookmark, .act.a-smile { flex-basis: 40px; justify-content: center; }
   .acts { margin-left: -5px; }
   .rchip { height: 34px; padding: 0 11px; border-radius: 17px; }

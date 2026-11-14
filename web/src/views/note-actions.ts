@@ -88,6 +88,21 @@ export function actionRow(row: NoteRow, env: ViewEnv): HTMLElement {
   const quote = { quote: row.id, quoteOf: { name: plainName(row.author), text: excerpt(row) } };
   const publish = (what: Extract<Action, { a: 'publish' }>['what']) => () =>
     void act(env, (as) => ({ a: 'publish', as, what }));
+  // A narrow tile folds the bookmark (unless it is set) and then the zap into the "…" menu: the row hides them by
+  // the tile's width, and the menu offers whatever the row is not showing.
+  const folded = (el: HTMLElement): boolean => getComputedStyle(el).display === 'none';
+  const zapRun = (): void => toast(env.layer, t('act.zapSoon'));
+  const markLabel: Key = row.mine.bookmarked ? 'act.unbookmark' : 'act.bookmark';
+  const markRun = (): void =>
+    void act(env, (as) => ({ a: 'bookmark', as, id: row.id, on: !row.mine.bookmarked }));
+  const zap = button(
+    'zap',
+    'act.zap',
+    row.counts.zaps ? countText(row.counts.zaps, row.counts.partial, lang) : '',
+    false,
+    zapRun,
+  );
+  const mark = button('bookmark', markLabel, '', row.mine.bookmarked, markRun);
   return h(
     'div',
     { class: 'acts' },
@@ -111,22 +126,12 @@ export function actionRow(row: NoteRow, env: ViewEnv): HTMLElement {
     button('heart', 'act.react', n(row.counts.reactions), Boolean(mine), () =>
       react(env, row, mine?.emoji ?? DEFAULT_REACTION, mine?.url, !mine),
     ),
-    button(
-      'zap',
-      'act.zap',
-      row.counts.zaps ? countText(row.counts.zaps, row.counts.partial, lang) : '',
-      false,
-      () => toast(env.layer, t('act.zapSoon')),
-    ),
-    button(
-      'bookmark',
-      row.mine.bookmarked ? 'act.unbookmark' : 'act.bookmark',
-      '',
-      row.mine.bookmarked,
-      () => void act(env, (as) => ({ a: 'bookmark', as, id: row.id, on: !row.mine.bookmarked })),
-    ),
+    zap,
+    mark,
     button('more', 'act.more', '', false, (el) =>
       openMenu(env.layer, el, [
+        ...(folded(mark) ? [{ label: t(markLabel), run: markRun }] : []),
+        ...(folded(zap) ? [{ label: t('act.zap'), run: zapRun }] : []),
         { label: t('menu.copyText'), run: () => void copy(env, fullText(row)) },
         {
           label: t('menu.copyLink'),
