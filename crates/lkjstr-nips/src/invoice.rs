@@ -2,9 +2,10 @@
 //! Does not interpret routing, payment features, balances, or payment status.
 use crate::{
     Error, Result,
+    bech32_checksum::ProtocolBech32,
     invoice_wire::{amount, bytes, integer},
 };
-use bech32::{Bech32, Fe32, primitives::decode::CheckedHrpstring};
+use bech32::{Fe32, primitives::decode::CheckedHrpstring};
 use k256::ecdsa::{RecoveryId, Signature, VerifyingKey, signature::hazmat::PrehashVerifier};
 use sha2::{Digest, Sha256};
 
@@ -26,7 +27,8 @@ impl Invoice {
         if encoded.len() > 16384 {
             return Err(Error::Size);
         }
-        let checked = CheckedHrpstring::new::<Bech32>(encoded).map_err(|_| Error::Invalid)?;
+        let checked =
+            CheckedHrpstring::new::<ProtocolBech32<16384>>(encoded).map_err(|_| Error::Invalid)?;
         let hrp = checked.hrp().as_str().to_ascii_lowercase();
         let amount_msat = amount(&hrp)?;
         let words: Vec<u8> = checked

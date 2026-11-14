@@ -8,8 +8,8 @@
 //! assert_eq!(Entity::from_uri(&uri)?.encode()?, note.encode()?);
 //! # Ok(()) }
 //! ```
-use crate::{Error, Result, keys::SecretKey, tlv};
-use bech32::{Bech32, Hrp, primitives::decode::CheckedHrpstring};
+use crate::{Error, Result, bech32_checksum::ProtocolBech32, keys::SecretKey, tlv};
+use bech32::{Hrp, primitives::decode::CheckedHrpstring};
 
 /// NIP-19 entities. Nsec Debug output is always redacted.
 #[derive(Clone)]
@@ -111,24 +111,21 @@ impl Entity {
             }
             _ => {}
         }
-        let encoded =
-            bech32::encode::<Bech32>(Hrp::parse(hrp).map_err(|_| Error::Invalid)?, &bytes)
-                .map_err(|_| Error::Invalid)?;
-        if encoded.len() > 5000 {
-            return Err(Error::Size);
-        }
-        Ok(encoded)
+        let hrp = Hrp::parse(hrp).map_err(|_| Error::Invalid)?;
+        bech32::encoded_length::<ProtocolBech32<5000>>(hrp, &bytes).map_err(|_| Error::Size)?;
+        bech32::encode::<ProtocolBech32<5000>>(hrp, &bytes).map_err(|_| Error::Invalid)
     }
     /// Strict checksum, padding, size, and required-TLV validation.
     pub fn decode(encoded: &str) -> Result<Self> {
         if encoded.len() > 5000 {
             return Err(Error::Size);
         }
-        let checked = CheckedHrpstring::new::<Bech32>(encoded).map_err(|_| Error::Invalid)?;
+        let checked =
+            CheckedHrpstring::new::<ProtocolBech32<5000>>(encoded).map_err(|_| Error::Invalid)?;
         // The byte iterator discards padding; re-encoding detects noncanonical padding.
         let bytes: Vec<u8> = checked.byte_iter().collect();
         let hrp = checked.hrp();
-        if bech32::encode::<Bech32>(hrp, &bytes).map_err(|_| Error::Invalid)?
+        if bech32::encode::<ProtocolBech32<5000>>(hrp, &bytes).map_err(|_| Error::Invalid)?
             != encoded.to_ascii_lowercase()
         {
             return Err(Error::Invalid);

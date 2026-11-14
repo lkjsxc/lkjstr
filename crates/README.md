@@ -9,6 +9,7 @@ Rust crates own the Rust/WASM application target.
 - [lkjstr-domain/](lkjstr-domain/): pure domain reducers and models.
 - [lkjstr-app/](lkjstr-app/): pure application composition reducers.
 - [lkjstr-protocol/](lkjstr-protocol/): Nostr protocol kernel.
+- [lkjstr-nips/](lkjstr-nips/): independent Nostr codecs, cryptography, and policy.
 - [lkjstr-relays/](lkjstr-relays/): relay runtime state machines.
 - [lkjstr-storage/](lkjstr-storage/): storage manifest, ledger, and outcomes.
 - [lkjstr-ui/](lkjstr-ui/): Leptos workspace shell components.

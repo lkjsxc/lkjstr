@@ -58,6 +58,9 @@ split by ownership under [current-state/README.md](current-state/README.md).
   builds must prove the bridge artifacts, manifest-tracked bridge imports,
   manifest cache headers, local Worker root response, and hosted bridge bytes
   before deployment is considered safe.
+- Rust NIP-19 codecs honor the full 5,000-character entity limit while rejecting
+  Bech32m, mixed case, and noncanonical padding; see
+  [protocol support](current-state/protocol-support.md).
 
 ## Detail Map
 

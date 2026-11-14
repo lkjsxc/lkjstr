@@ -25,6 +25,14 @@ fn field(out: &mut Vec<u8>, kind: u8, bytes: &[u8]) {
     out.extend(w);
 }
 pub fn invoice(description: &str, amount: &str, explicit_payee: bool) -> String {
+    invoice_with_routes(description, amount, explicit_payee, 0)
+}
+pub fn invoice_with_routes(
+    description: &str,
+    amount: &str,
+    explicit_payee: bool,
+    routes: usize,
+) -> String {
     let signer = SigningKey::from_bytes(key(5).as_bytes().into()).unwrap();
     let hrp = Hrp::parse(amount).unwrap();
     let mut data = vec![0, 0, 0, 0, 0, 0, 1];
@@ -37,6 +45,16 @@ pub fn invoice(description: &str, amount: &str, explicit_payee: bool) -> String 
             19,
             signer.verifying_key().to_encoded_point(true).as_bytes(),
         );
+    }
+    // Ten valid 51-byte hop records per route-hint field (BOLT11 tag 'r').
+    let mut hop = signer
+        .verifying_key()
+        .to_encoded_point(true)
+        .as_bytes()
+        .to_vec();
+    hop.extend([0; 18]);
+    for _ in 0..routes {
+        field(&mut data, 3, &hop.repeat(10));
     }
     let mut binary = String::new();
     for w in &data {

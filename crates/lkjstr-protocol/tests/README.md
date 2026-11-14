@@ -22,6 +22,7 @@ Protocol tests port current TypeScript protocol behavior to Rust.
 - `kinds_test.rs`: event kind range classifiers.
 - `messages_test.rs`: client and relay message codecs.
 - `nip19_test.rs`: NIP-19 scalar and TLV entity round trips.
+- `nip19_limits_test.rs`: long Bech32 entities, exact limits, and malformed inputs.
 - `nip30_test.rs`: NIP-30 custom emoji validation.
 - `nip51_test.rs`: NIP-51 emoji list and set helpers.
 - `nip36_test.rs`: NIP-36 content-warning tags.

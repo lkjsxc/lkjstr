@@ -11,19 +11,18 @@ Readiness requires passing focused checks and a run or explicit omission of Dock
 
 ## Recent Evidence
 
+2026-11-14: [NIP codec review corrections](../../../../crates/lkjstr-nips/HANDOFF.md) passed focused and quiet gates.
+Rust-style checking fails on test-only `unwrap`; Docker configuration passed, with image/container gates omitted under the worktree-only write constraint.
+
 2026-09-29: [Home history continuation proof](../../../operations/verification/home-history-frontier.md) records checks, artifacts, and limits.
 
 2026-07-01 notifications/publish proof: empty Notifications windows keep older-read evidence. Tweet exits storage/signer/archive failures. Docker passed.
-2026-07-01 post-display startup policy proof: surface policy,
-Notifications/Profile degraded-read tests, focused post-display gate, wasm
-compile, touched-crate clippy, repo/docs/line/fmt checks, matching Vitest
-suites, and Docker config/build/verify/cloudflare/app-smoke passed.
+2026-07-01 post-display startup policy proof: surface policy, Notifications/Profile degraded-read tests, focused post-display gate, wasm compile,
+touched-crate clippy, repo/docs/line/fmt checks, matching Vitest suites, and Docker config/build/verify/cloudflare/app-smoke passed.
 
-2026-06-30 post-display repair proof: startup diagnostics, relay socket
-hardening, shared footer visibility, Home follow discovery, Profile about links,
-and Notifications heart reactions passed focused gates, quiet gates, Cloudflare,
-and Docker final gate (`config`, `build`, `run verify`, `run cloudflare`,
-`run app-smoke`).
+2026-06-30 post-display repair proof: startup diagnostics, relay socket hardening, shared footer visibility, Home follow discovery, Profile about
+links, and Notifications heart reactions passed focused gates, quiet gates, Cloudflare, and Docker final gate (`config`, `build`, `run verify`, `run
+cloudflare`, `run app-smoke`).
 
 2026-06-30 storage broker/startup proof: shared broker callers preserve exact
 failure labels, Stats/Log show startup probes, and page active-account pubkeys

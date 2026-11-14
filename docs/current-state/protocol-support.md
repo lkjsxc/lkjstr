@@ -39,3 +39,6 @@ Read next: [protocol/README.md](../protocol/README.md),
   relay-list parsing, Blossom descriptors, upload metadata parsing, NIP-98
   helpers, NIP-89 client-tag validation, NIP-29 group tag parsing, and NIP-02
   follow-list extraction.
+- Rust NIP-19 encoding and decoding accept relay-hinted entities through 5,000
+  characters with the original Bech32 checksum, strict case and padding checks,
+  and explicit rejection above the limit.

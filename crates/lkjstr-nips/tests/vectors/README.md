@@ -1,7 +1,11 @@
 # Vector provenance
 
+## Purpose
+
 Fetched from primary protocol sources on 2026-11-14. These fixtures contain
 public test keys only. Never substitute real signing keys into fixtures.
+
+## Table of Contents
 
 - `nip44.json`: the entire official [NIP-44 vector file](https://github.com/paulmillr/nip44/blob/main/nip44.vectors.json).
   SHA-256: `269ed0f69e4c192512cc779e78c555090cebc7c785b609e338a62afc3ce25040`.

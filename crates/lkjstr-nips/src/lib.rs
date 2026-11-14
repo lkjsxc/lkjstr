@@ -18,6 +18,7 @@
 pub mod actions;
 pub mod address;
 pub mod auth;
+mod bech32_checksum;
 pub mod dm;
 pub mod entity;
 pub mod event;

@@ -25,6 +25,11 @@ checks.
 - Normalize event records for IndexedDB.
 - Return structured errors with stable codes.
 
+NIP-19 entities use the original Bech32 checksum through the explicit
+5,000-character limit in both TypeScript and Rust. Longer relay-hinted entities
+must not inherit a checksum library's shorter default ceiling. Rust rejects
+Bech32m, mixed case, noncanonical padding, and encodings above that limit.
+
 ## Non-Responsibilities
 
 - Choosing which relays the user trusts.

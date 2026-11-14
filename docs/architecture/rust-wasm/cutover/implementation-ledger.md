@@ -32,6 +32,11 @@ and retained TypeScript/Svelte deletion have not been completed.
 
 ## Recent Implementation Evidence
 
+- 2026-11-14: Rust NIP-19 encoding and decoding now honor the complete 5,000
+  character limit with the original Bech32 checksum and strict case/padding
+  checks. The independent NIP crate also honors its entity, LNURL, and signed
+  invoice limits. Protocol ownership, surface parity, and deletion status do
+  not change.
 - 2026-07-01: Surface startup policy now consumes protected account state,
   effective read plans, cache state, relay state, and content evidence so
   Notifications and Profile keep storage diagnostics subordinate to real rows.

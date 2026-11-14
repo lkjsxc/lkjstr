@@ -5,6 +5,19 @@ use lkjstr_nips::{
 };
 pub mod invoices;
 
+// The low-level iterator preserves the standard checksum without imposing the
+// high-level encoder's 1023-character cap. Independent of production parameters.
+pub fn bech32(hrp: &str, bytes: &[u8]) -> String {
+    use bech32::{Bech32, ByteIterExt, Fe32IterExt, Hrp};
+    bytes
+        .iter()
+        .copied()
+        .bytes_to_fes()
+        .with_checksum::<Bech32>(&Hrp::parse(hrp).unwrap())
+        .chars()
+        .collect()
+}
+
 pub fn key(byte: u8) -> SecretKey {
     SecretKey::from_bytes([byte; 32]).unwrap()
 }

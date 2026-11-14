@@ -2,6 +2,7 @@
 use crate::{
     Error, Result,
     address::Coordinate,
+    bech32_checksum::ProtocolBech32,
     event::{Event, unique},
     invoice::Invoice,
     metadata::decimal,
@@ -93,16 +94,18 @@ impl ZapRequest {
 }
 
 fn validate_lnurl(encoded: &str) -> Result<()> {
-    use bech32::{Bech32, primitives::decode::CheckedHrpstring};
+    use bech32::primitives::decode::CheckedHrpstring;
     if encoded.len() > 5000 {
         return Err(Error::Size);
     }
-    let checked = CheckedHrpstring::new::<Bech32>(encoded).map_err(|_| Error::Invalid)?;
+    let checked =
+        CheckedHrpstring::new::<ProtocolBech32<5000>>(encoded).map_err(|_| Error::Invalid)?;
     if !checked.hrp().as_str().eq_ignore_ascii_case("lnurl") {
         return Err(Error::Invalid);
     }
     let bytes: Vec<_> = checked.byte_iter().collect();
-    let canonical = bech32::encode::<Bech32>(checked.hrp(), &bytes).map_err(|_| Error::Invalid)?;
+    let canonical = bech32::encode::<ProtocolBech32<5000>>(checked.hrp(), &bytes)
+        .map_err(|_| Error::Invalid)?;
     if canonical != encoded.to_ascii_lowercase() {
         return Err(Error::Invalid);
     }

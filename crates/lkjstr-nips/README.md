@@ -1,5 +1,7 @@
 # lkjstr-nips
 
+## Purpose
+
 Pure Rust Nostr codecs, cryptography, and client policy. This crate has no
 dependency on the application crates, networking, threads, OS randomness, or
 system time. It does not change shipped product behavior.
@@ -11,18 +13,24 @@ seal/wrap timestamps. Public examples use deterministic test inputs only.
 Secret key and conversation key wrappers redact Debug and zeroize on drop.
 Explicit nsec encoding is a secret export operation for host-controlled UI.
 
+## Table of Contents
+
+- [src/](src/): pure protocol implementation.
+- [tests/](tests/): offline vectors and generated regressions.
+- [HANDOFF.md](HANDOFF.md): scope and verification evidence.
+
 ## API map
 
-| Module | Contracts |
-| --- | --- |
-| `event`, `filter` | NIP-01 serialization, hashing, BIP-340 signatures, exact filters |
-| `entity`, `thread` | NIP-19/21 entities, NIP-10 threads, NIP-27 byte-offset mentions |
-| `relay`, `scoring` | NIP-65 metadata, bounded greedy outbox cover, relay policy |
-| `lists`, `metadata` | NIP-02/51, NIP-11, NIP-36, NIP-40 |
-| `list_crypto` | NIP-44 self-encryption for private NIP-51 entries |
-| `identity`, `auth` | NIP-05 injected HTTP and NIP-42 |
-| `nip44`, `gift`, `dm` | NIP-44 v2, NIP-59, NIP-17 kind-14 messages |
-| `actions`, `zap`, `invoice` | NIP-25/18, NIP-57 and signed BOLT11 invoices |
+| Module                      | Contracts                                                        |
+| --------------------------- | ---------------------------------------------------------------- |
+| `event`, `filter`           | NIP-01 serialization, hashing, BIP-340 signatures, exact filters |
+| `entity`, `thread`          | NIP-19/21 entities, NIP-10 threads, NIP-27 byte-offset mentions  |
+| `relay`, `scoring`          | NIP-65 metadata, bounded greedy outbox cover, relay policy       |
+| `lists`, `metadata`         | NIP-02/51, NIP-11, NIP-36, NIP-40                                |
+| `list_crypto`               | NIP-44 self-encryption for private NIP-51 entries                |
+| `identity`, `auth`          | NIP-05 injected HTTP and NIP-42                                  |
+| `nip44`, `gift`, `dm`       | NIP-44 v2, NIP-59, NIP-17 kind-14 messages                       |
+| `actions`, `zap`, `invoice` | NIP-25/18, NIP-57 and signed BOLT11 invoices                     |
 
 Parsing metadata does not authenticate an event: call `Event::verify` at
 ingress. APIs which depend on authenticity (unwrap, zap validation, repost
@@ -41,6 +49,11 @@ Zap validation checks provider identity, signed request and receipt, target
 consistency, signed invoice amount/description hash, and optional preimage.
 A receipt attests what its LNURL provider says; it cannot prove payment.
 
+NIP-19 entities and LNURLs accept original Bech32 through 5,000 characters;
+signed BOLT11 inspection accepts up to 16 KiB. These explicit limits also
+apply beyond the checksum library's default 1,023-character ceiling. Checksum,
+case, canonical byte padding, TLV, and signature validation still apply.
+
 ## Sources and vectors
 
 Protocol source: <https://github.com/nostr-protocol/nips>. Vector provenance,
@@ -52,10 +65,8 @@ are available. Source and test files stay below the repository's 200-line cap.
 
 Run `sh crates/lkjstr-nips/verify.sh` with Cargo/Rust in PATH. It runs format,
 Clippy, tests/doc examples, and the WASM build when the target is installed,
-with at most four build jobs and four test threads. The script copies only the
-package manifest and links the real source/tests into a git-ignored standalone
-workspace under this crate's `target/`. Caches and artifacts stay there.
-This avoids changing the root lockfile, as required by this task's isolation
-contract. Normal workspace integration will require resolving the root
-`Cargo.lock` for the added member. Repository-wide gates and browser/network
-integration are outside this crate's verification claim.
+with at most four build jobs and four test threads. It first checks locked
+workspace metadata, then uses the root `Cargo.lock` for crate checks so a stale
+workspace lockfile cannot hide behind isolated package verification. Caches and
+artifacts stay in git-ignored `target/nips-review/` at the workspace root. Repository-wide gates
+and browser/network integration are outside this crate's verification claim.
