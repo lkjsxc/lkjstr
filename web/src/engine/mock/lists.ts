@@ -1,7 +1,8 @@
 // The finite lists of the mock world: notifications, relays, mutes, media servers, custom emoji, diagnostics.
-import type { NotificationRow, Query, RelayRow, Row } from '../protocol.ts';
+import type { NotificationRow, Query, Row } from '../protocol.ts';
 import { PROTOCOL_VERSION } from '../protocol.ts';
 import { byHandle, byPubkey, EMOJI } from './people.ts';
+import { relays } from './relays.ts';
 import { ME, noteRow } from './rows.ts';
 import type { World } from './world.ts';
 
@@ -99,114 +100,6 @@ export function notifications(w: World, q: Query): NotificationRow[] {
     .filter((r) => !q.types?.length || q.types.includes(r.type))
     .filter((r) => !r.actors.every((x) => muted(x.pubkey)))
     .map((r, i) => ({ ...r, kind: 'notification', key: `n:${r.type}:${r.at}:${i}` }));
-}
-
-type RelaySpec = Omit<RelayRow, 'kind' | 'key'>;
-export function relays(w: World): RelayRow[] {
-  const specs: RelaySpec[] = [
-    {
-      url: 'wss://relay.example.jp',
-      state: 'connected',
-      inUse: true,
-      why: 'yours',
-      read: true,
-      write: true,
-      subs: 4,
-      events: 1840,
-      latencyMs: 42,
-      name: 'example.jp relay',
-      software: 'strfry 1.2.0',
-    },
-    {
-      url: 'wss://nos.example.net',
-      state: 'connected',
-      inUse: true,
-      why: 'yours',
-      read: true,
-      write: true,
-      subs: 3,
-      events: 2210,
-      latencyMs: 96,
-      software: 'nostr-rs-relay 0.9',
-    },
-    {
-      url: 'wss://relay.fischer.example',
-      state: 'connected',
-      inUse: true,
-      why: 'outbox',
-      read: false,
-      write: false,
-      subs: 1,
-      events: 311,
-      latencyMs: 180,
-    },
-    {
-      url: 'wss://slow.example.org',
-      state: 'connected',
-      inUse: true,
-      why: 'yours',
-      read: true,
-      write: false,
-      subs: 2,
-      events: 95,
-      latencyMs: 2400,
-      name: 'A slow relay',
-    },
-    {
-      url: 'wss://search.example.com',
-      state: 'connecting',
-      inUse: true,
-      why: 'search',
-      read: false,
-      write: false,
-      subs: 1,
-      events: 0,
-    },
-    {
-      url: 'wss://down.example.net',
-      state: 'failed',
-      inUse: false,
-      why: 'failing',
-      read: true,
-      write: true,
-      subs: 0,
-      events: 0,
-      error: 'connection refused',
-      retryAt: w.base + 4 * MIN,
-    },
-    {
-      url: 'wss://paid.example.com',
-      state: 'failed',
-      inUse: false,
-      why: 'blocked',
-      read: false,
-      write: false,
-      subs: 0,
-      events: 0,
-      error: 'auth-required: this relay is for members',
-    },
-    {
-      url: 'wss://relay.lovell.example',
-      state: 'idle',
-      inUse: false,
-      why: 'unused',
-      read: false,
-      write: false,
-      subs: 0,
-      events: 120,
-    },
-    {
-      url: 'wss://old.example.org',
-      state: 'idle',
-      inUse: false,
-      why: 'unused',
-      read: false,
-      write: false,
-      subs: 0,
-      events: 12,
-    },
-  ];
-  return specs.map((s) => ({ ...s, kind: 'relay', key: s.url }));
 }
 
 export function finite(w: World, q: Query): Row[] | undefined {

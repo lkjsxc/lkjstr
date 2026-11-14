@@ -13,6 +13,7 @@ import {
 import { createActions } from './actions.ts';
 import { SECOND, SELF } from './people.ts';
 import { type Entry, entry, matches, select } from './query.ts';
+import { relays } from './relays.ts';
 import { createWorld, type MNote } from './world.ts';
 
 const PATCH_MS = 80;
@@ -74,6 +75,12 @@ function createCore(post: (msg: FromEngine) => void, now: () => number) {
     accounts,
     setActive: (pk: string | undefined) => void (active = pk),
     setUnread: (n: number) => void (unread = n),
+    /** The connection summary, from the relay rows as they are now. */
+    status(): void {
+      const used = relays(world).filter((r) => r.inUse || r.read || r.write);
+      const connected = used.filter((r) => r.state === 'connected').length;
+      post({ t: 'status', connected, wanted: used.length, offline: false });
+    },
     /** A note changed: every window that shows it gets the row again. */
     changed(id: string): void {
       for (const s of subs.values())
@@ -134,7 +141,11 @@ function createCore(post: (msg: FromEngine) => void, now: () => number) {
           const after = i + 1 < s.end ? next[i + 1] : undefined;
           push(s, { op: 'insert', before: after?.key ?? null, rows: [e.row()] });
         }
-        if (refresh) for (const e of kept) push(s, { op: 'update', row: e.row() });
+        if (!refresh) continue;
+        for (const old of kept) {
+          const e = next[index.get(old.key) ?? -1]; // the new entry: a finite list's rows are made afresh
+          if (e) push(s, { op: 'update', row: e.row() });
+        }
       }
     },
     dispose(): void {
@@ -159,7 +170,7 @@ export function createMockEngine(post: (msg: FromEngine) => void, now = Date.now
   later(0, () => {
     post({ t: 'ready', version: PROTOCOL_VERSION, engine: 'mock' });
     core.accounts();
-    post({ t: 'status', connected: 5, wanted: 6, offline: false });
+    core.status();
     live();
   });
 

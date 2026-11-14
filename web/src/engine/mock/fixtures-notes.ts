@@ -10,6 +10,8 @@ export type NoteSpec = {
   readonly re?: string;
   readonly quote?: string;
   readonly media?: readonly MediaSpec[];
+  /** A video or a sound after the pictures (`fixtures-media.ts`), with its description. */
+  readonly clip?: readonly [type: 'video' | 'audio', alt?: string];
   readonly cw?: string;
   /** Handles of the people who reposted it (latest first). */
   readonly reposts?: readonly string[];
@@ -205,6 +207,22 @@ export const NOTES: readonly NoteSpec[] = [
     ago: 71,
     quote: 'river',
     text: 'This light. I keep thinking I should get up earlier.',
+  },
+  {
+    by: 'mio',
+    ago: 74,
+    text: '朝の稜線。雲が流れていくのを六秒だけ。',
+    media: [[1600, 900, 215, '朝の稜線の写真']],
+    clip: ['video', '稜線の上を雲が流れていく動画'],
+    reactions: [['❤️', 9]],
+    zaps: 1200,
+  },
+  {
+    by: 'sam',
+    ago: 77,
+    text: 'Five notes I keep humming while the tests run.',
+    clip: ['audio', 'A short phrase of five notes'],
+    reactions: [['🎵', 3]],
   },
   {
     by: 'kenji',

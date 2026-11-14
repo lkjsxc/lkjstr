@@ -153,6 +153,69 @@ describe('mock engine', () => {
     expect(before).toBe(3);
   });
 
+  it('a video and a sound are among the notes, with what the interface needs to draw them', () => {
+    engine.handle({ t: 'open', sub: 'a', query: { source: 'global', media: 'only' } });
+    engine.handle({ t: 'window', sub: 'a', anchor: 'top', before: 0, after: 60 });
+    const media = (last('rows')?.rows ?? []).flatMap((r) => (r.kind === 'note' ? r.media : []));
+    const video = media.find((m) => m.type === 'video');
+    const audio = media.find((m) => m.type === 'audio');
+    expect(
+      video?.url.startsWith('data:video/mp4;base64,') && video.w === 320 && video.h === 180,
+    ).toBe(true);
+    expect(video?.alt && audio?.alt).toBeTruthy();
+    expect(audio?.url.startsWith('data:audio/wav;base64,UklGR')).toBe(true);
+  });
+
+  it("the relay list is the reader's to change: saved, patched, counted; nonsense refused", () => {
+    const as = SELF.author.pubkey;
+    engine.handle({ t: 'open', sub: 'r', query: { source: 'relays' } });
+    engine.handle({ t: 'window', sub: 'r', anchor: 'top', before: 0, after: 100 });
+    let rows: Row[] = [...(last('rows')?.rows ?? [])];
+    const mine = () => rows.flatMap((r) => (r.kind === 'relay' && (r.read || r.write) ? [r] : []));
+    const sync = (): void => {
+      for (const p of of('patch').filter((x) => x.sub === 'r')) rows = applyOps(rows, p.ops);
+      out = out.filter((m) => m.t !== 'patch');
+    };
+    expect(mine().map((r) => r.state)).toEqual(['connected', 'connected', 'connected', 'failed']);
+    expect(last('status')).toMatchObject({ connected: 4, wanted: 6 });
+    const list = mine()
+      .filter((r) => r.url !== 'wss://nos.example.net')
+      .map(({ url, read, write }) => ({ url, read, write: url.includes('slow') ? true : write }));
+    const added = { url: 'wss://relay.new.example', read: true, write: true };
+    engine.handle({
+      t: 'act',
+      req: 'r1',
+      action: { a: 'relays.save', as, relays: [...list, added] },
+    });
+    vi.advanceTimersByTime(200);
+    sync();
+    expect(mine().map((r) => r.url)).not.toContain('wss://nos.example.net');
+    expect(rows.find((r) => r.key === 'wss://nos.example.net')).toMatchObject({
+      why: 'unused',
+      inUse: false,
+      state: 'idle',
+    });
+    expect(rows.find((r) => r.key === 'wss://slow.example.org')).toMatchObject({ write: true });
+    expect(rows.find((r) => r.key === added.url)).toMatchObject({
+      state: 'connecting',
+      why: 'yours',
+    });
+    vi.advanceTimersByTime(3000);
+    sync();
+    expect(rows.find((r) => r.key === added.url)).toMatchObject({ state: 'connected' });
+    expect(of('result').find((m) => m.req === 'r1')?.ok).toBe(true);
+    expect(last('status')).toMatchObject({ connected: 4, wanted: 6 });
+    engine.handle({
+      t: 'act',
+      req: 'r2',
+      action: { a: 'relays.save', as, relays: [{ url: 'nonsense', read: true, write: true }] },
+    });
+    vi.advanceTimersByTime(50);
+    expect(of('result').find((m) => m.req === 'r2')?.error?.code).toBe('rejected');
+    sync();
+    expect(mine()).toHaveLength(4);
+  });
+
   it('an upload reports progress and returns what a draft needs', async () => {
     const bytes = new Uint8Array(4000).buffer;
     engine.handle({

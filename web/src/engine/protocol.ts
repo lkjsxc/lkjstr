@@ -120,7 +120,7 @@ export type Segment =
 export type Media = {
   readonly type: 'image' | 'video' | 'audio';
   readonly url: string;
-  /** Smaller rendition for feeds, when a media server offers one. */
+  /** Smaller rendition for feeds, when a media server offers one. For a video: its poster frame. */
   readonly thumb?: string;
   /** Pixel size when known (imeta, dim): the interface reserves the space before the file loads. */
   readonly w?: number;
@@ -263,6 +263,9 @@ export type NotificationRow = {
   readonly unread: boolean;
 };
 
+/** One relay the engine knows. The `relays` source lists the reader's own list first (in the list's order), then
+ * the other relays in use, then the rest. A relay taken off the reader's list stays a row (`why: 'unused'`, neither
+ * `read` nor `write`) for as long as the engine knows it, so the interface can offer it again. */
 export type RelayRow = {
   readonly kind: 'relay';
   readonly key: RowKey;
@@ -416,6 +419,7 @@ export type RelayEntry = { readonly url: string; readonly read: boolean; readonl
 export type Action =
   | { readonly a: 'publish'; readonly as: Pubkey; readonly what: Publish }
   | { readonly a: 'follow'; readonly as: Pubkey; readonly pubkey: Pubkey; readonly on: boolean }
+  /** `on: false` takes a mute back. Either way the `mutes` rows and every open list are patched at once. */
   | { readonly a: 'mute'; readonly as: Pubkey; readonly target: MuteTarget; readonly on: boolean }
   | { readonly a: 'bookmark'; readonly as: Pubkey; readonly id: string; readonly on: boolean }
   /** `bytes` is transferred, not copied. Answered by `progress` messages and a `result` with `uploaded`. */
@@ -427,7 +431,12 @@ export type Action =
       readonly bytes: ArrayBuffer;
     }
   | { readonly a: 'profile.save'; readonly as: Pubkey; readonly profile: ProfileEdit }
+  /** Replaces the reader's relay list (NIP-65) with `relays`, in this order. An entry with neither `read` nor
+   * `write` is dropped; an address that is not `ws(s)://host[/path]` fails the whole action with `rejected`. The
+   * `relays` rows are patched at once (before any relay has confirmed the new list) and `status` is sent again. */
   | { readonly a: 'relays.save'; readonly as: Pubkey; readonly relays: readonly RelayEntry[] }
+  /** Replaces the media server list with `servers` (`https://host[/path]`), the preferred one first; anything
+   * else fails with `rejected`. The `media-servers` rows are patched at once. */
   | { readonly a: 'servers.save'; readonly as: Pubkey; readonly servers: readonly string[] }
   /** Marks notifications read up to now. */
   | { readonly a: 'seen'; readonly as: Pubkey }
@@ -554,7 +563,8 @@ export type FromEngine =
   /** The account signs with a browser extension (NIP-07 exists only on the main thread): sign this unsigned
    * event (JSON text) and answer with `signed`. */
   | { readonly t: 'sign'; readonly req: ReqId; readonly pubkey: Pubkey; readonly event: string }
-  /** Connection summary for the optional count in the top bar. */
+  /** Connection summary for the optional count in the top bar: of the relays in use or on the reader's list
+   * (`wanted`), how many are connected. Sent after `ready` and whenever either number changes. */
   | {
       readonly t: 'status';
       readonly connected: number;

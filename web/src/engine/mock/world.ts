@@ -1,8 +1,10 @@
 // The state of the mock world: notes, who reposted and reacted, the reader's follows, bookmarks and mutes.
 import type { Media, MuteTarget, Segment } from '../protocol.ts';
 import { hueColor, photo } from './art.ts';
+import { toneUrl, VIDEO, VIDEO_URL } from './fixtures-media.ts';
 import { FILLER, type MediaSpec, NOTES, type NoteSpec } from './fixtures-notes.ts';
 import { byHandle, EMOJI, FOLLOWING, PEOPLE, type Person } from './people.ts';
+import { initialRelays } from './relays.ts';
 
 export type React = { count: number; mine: boolean };
 export type MNote = {
@@ -72,6 +74,19 @@ const media = ([w, h, hue, alt]: MediaSpec, sensitive: boolean): Media => ({
   sensitive: sensitive || undefined,
 });
 
+const clip = ([type, alt]: NonNullable<NoteSpec['clip']>, sensitive: boolean): Media =>
+  type === 'video'
+    ? {
+        type,
+        url: VIDEO_URL,
+        w: VIDEO.w,
+        h: VIDEO.h,
+        alt,
+        color: '#9fb8cf',
+        sensitive: sensitive || undefined,
+      }
+    : { type, url: toneUrl(), alt, sensitive: sensitive || undefined };
+
 /** Notes that involve the reader, so notifications and the reader's own profile have something to show. */
 const OWN: readonly NoteSpec[] = [
   {
@@ -131,7 +146,10 @@ export function createWorld(now: number) {
     at,
     text: s.text,
     segments: segment(s.text),
-    media: (s.media ?? []).map((m) => media(m, s.cw !== undefined)),
+    media: [
+      ...(s.media ?? []).map((m) => media(m, s.cw !== undefined)),
+      ...(s.clip ? [clip(s.clip, s.cw !== undefined)] : []),
+    ],
     re: s.re ? tags.get(s.re) : undefined,
     quote: s.quote ? tags.get(s.quote) : undefined,
     cw: s.cw,
@@ -173,6 +191,9 @@ export function createWorld(now: number) {
       { k: 'person', pubkey: byHandle('marco').author.pubkey },
     ] as MuteTarget[],
     servers: ['https://media.example.jp', 'https://blossom.example.net'],
+    relays: initialRelays(),
+    /** How relays the reader added answered. Bound: the relays added in one session. */
+    met: new Map<string, 'connected' | 'failed'>(),
   };
 
   return {

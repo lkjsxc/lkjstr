@@ -1,8 +1,11 @@
 // What the mock does with the reader's actions, and what happens in its world on its own.
+
+import { serverAddress } from '../../shared/address.ts';
 import type { Action, Delivery, Failure, FromEngine, Uploaded } from '../protocol.ts';
 import type { Core } from './engine.ts';
 import { FILLER } from './fixtures-notes.ts';
 import { byHandle, byPubkey, SELF } from './people.ts';
+import { answers, isKnown, relayUrl } from './relays.ts';
 
 /** How the mock's write relays answer a publish: two at once, one slowly, one with a refusal. */
 const RELAYS: readonly (readonly [
@@ -142,12 +145,36 @@ export function createActions(core: Core) {
         return deliver(req);
       case 'upload':
         return void upload(req, a);
-      case 'servers.save':
-        world.state.servers = [...a.servers];
+      case 'relays.save': {
+        const next = a.relays.map((r) => ({ ...r, url: relayUrl(r.url) ?? '' }));
+        const bad = a.relays.find((r) => !relayUrl(r.url));
+        if (bad) return fail(req, 'rejected', `not a relay address: ${bad.url}`);
+        const seen = new Set<string>(); // bound: one save
+        world.state.relays = next.filter(
+          (r) => (r.read || r.write) && !seen.has(r.url) && Boolean(seen.add(r.url)),
+        );
+        const sync = (): void => {
+          core.resync((q) => q.source === 'relays', true);
+          core.status();
+        };
+        for (const r of world.state.relays) {
+          if (world.state.met.has(r.url) || isKnown(r.url)) continue;
+          later(900, () => {
+            world.state.met.set(r.url, answers(r.url) ? 'connected' : 'failed');
+            sync();
+          });
+        }
+        sync();
+        return deliver(req);
+      }
+      case 'servers.save': {
+        const bad = a.servers.find((u) => serverAddress(u) !== u);
+        if (bad) return fail(req, 'rejected', `not a server address: ${bad}`);
+        world.state.servers = [...new Set(a.servers)];
         core.resync((q) => q.source === 'media-servers');
         return done(req);
+      }
       case 'profile.save':
-      case 'relays.save':
         return deliver(req);
       case 'seen':
         core.setUnread(0);
