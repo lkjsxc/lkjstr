@@ -4,7 +4,7 @@ import type { Delivery, Emoji, Uploaded } from '../engine/protocol.ts';
 import { h, replaceChildren } from '../shared/h.ts';
 import { type Key, t } from '../shared/i18n.ts';
 import { icon } from '../shared/icons.ts';
-import { keyLabel } from '../shared/platform.ts';
+import { keyCaps, pressed } from '../shared/keys.ts';
 import { loadViewState, saveViewState } from '../shared/view-state.ts';
 import { openEmojiPicker } from './emoji-picker.ts';
 import { avatar, displayName } from './parts.ts';
@@ -78,7 +78,7 @@ export function mountCompose(el: HTMLElement, env: ViewEnv): () => void {
   );
   const post = h(
     'button',
-    { class: 'btn primary', title: keyLabel('Mod+Enter') },
+    { class: 'btn primary', title: keyCaps('send')[0] },
     t(state.replyTo ? 'compose.reply' : 'compose.post'),
   );
   const context = (label: Key, ref: Ref | undefined, clear: () => void): HTMLElement | null =>
@@ -261,8 +261,7 @@ export function mountCompose(el: HTMLElement, env: ViewEnv): () => void {
     timer = setTimeout(() => ((state.text = area.value), save()), 300);
   });
   area.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey) && !e.isComposing)
-      e.preventDefault(), void send();
+    if (pressed(e, 'send')) e.preventDefault(), void send();
   });
   area.addEventListener('paste', (e) => {
     if (e.clipboardData?.files.length) e.preventDefault(), add(e.clipboardData.files);

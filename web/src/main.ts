@@ -2,15 +2,15 @@
 // at once; the engine answers from its worker when it is ready.
 import { createEngine, workerTransport } from './engine/client.ts';
 import { resolveLang, setLang } from './shared/i18n.ts';
+import { pressedAt } from './shared/keys.ts';
 import { spacesKey } from './shared/layout-store.ts';
-import { matches } from './shared/platform.ts';
 import { createSettings } from './shared/settings.ts';
 import { kv } from './shared/storage.ts';
 import { createTopBar } from './ui/topbar.ts';
 import { createWmController, type Wm } from './wm/controller.ts';
 import { createHost } from './wm/host.ts';
 import { FAMILY } from './wm/presets.ts';
-import { parseActive, SPACES } from './wm/spaces.ts';
+import { parseActive } from './wm/spaces.ts';
 import { createSpacesBar } from './wm/spaces-bar.ts';
 import { createWmStore } from './wm/store.ts';
 
@@ -82,7 +82,8 @@ settings.subscribe((s) => {
 window.addEventListener(
   'keydown',
   (e) => {
-    for (let n = 1; n <= SPACES; n++) if (matches(e, `Alt+Shift+${n}`)) e.preventDefault(), pick(n);
+    const at = pressedAt(e, 'workspace');
+    if (at >= 0) e.preventDefault(), pick(at + 1);
   },
   true,
 );

@@ -3,6 +3,7 @@
 // note, or is simply words to search for, is offered as a first card of its own.
 import { h, replaceChildren } from '../shared/h.ts';
 import { t } from '../shared/i18n.ts';
+import { pressed } from '../shared/keys.ts';
 
 export const NEW_TAB = 'new';
 export type Choice = {
@@ -66,10 +67,9 @@ export function mountLauncher(el: HTMLElement, api: LauncherApi): Launcher {
     oninput: update,
     onkeydown: (e) => {
       const ev = e as KeyboardEvent;
-      if (ev.isComposing) return; // Enter that confirms Japanese input is not a choice
-      const first = shown()[0];
-      if (ev.key === 'Enter' && first) api.pick(first);
-      if (ev.key === 'Escape') api.close();
+      const first = shown()[0]; // Enter that confirms Japanese input is not a choice: `pressed` skips it
+      if (pressed(ev, 'launcherPick') && first) api.pick(first);
+      if (pressed(ev, 'launcherClose')) api.close();
     },
   });
   el.classList.add('launcher');

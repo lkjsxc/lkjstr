@@ -5,6 +5,7 @@ import { type ChildProcess, spawn } from 'node:child_process';
 import { existsSync, mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { type Browser, chromium, type Page } from 'playwright-core';
+import { KEYS } from '../src/shared/keys.ts';
 
 const here = new URL('..', import.meta.url).pathname;
 const port = 18400 + Math.floor(Math.random() * 400);
@@ -290,6 +291,7 @@ async function run(browser: Browser): Promise<void> {
   );
   await link.context().close();
   await reading(browser, still);
+  await pages(browser, still);
 }
 
 /** The filter bar that stays away, the media tab, the emoji picker, the notification toggles. */
@@ -405,8 +407,9 @@ async function reading(browser: Browser, still: Record<string, unknown>): Promis
     .locator('.note .act, .strip > .icon')
     .evaluateAll(
       (els) =>
-        els.map((e) => e.getBoundingClientRect()).filter((r) => r.width < 40 || r.height < 32)
-          .length,
+        els
+          .map((e) => e.getBoundingClientRect())
+          .filter((r) => r.width > 0 && (r.width < 40 || r.height < 32)).length,
     );
   fact('touch targets are finger sized', small === 0, small);
   await phone.locator('.mbox').first().tap();
@@ -427,6 +430,300 @@ async function reading(browser: Browser, still: Record<string, unknown>): Promis
   await ctx.close();
 }
 
+/** The video and the sound, the Relays, Shortcuts and About tabs, the lists of Settings, the phone's action row. */
+async function pages(browser: Browser, still: Record<string, unknown>): Promise<void> {
+  const page = await open(browser, '/', still);
+  const feed = '.view[data-kind="home"]';
+  const video = (): Promise<{ paused: boolean; at: number; muted: boolean } | null> =>
+    page.evaluate(() => {
+      const v = document.querySelector<HTMLVideoElement>('.mstage video');
+      return v ? { paused: v.paused, at: v.currentTime, muted: v.muted } : null;
+    });
+  fact(
+    'a sound plays in the feed with its own controls',
+    (await count(page, `${feed} .mbox.audio audio[controls]`)) > 0,
+  );
+  const clip = page.locator(`${feed} .mbox:has(video)`).first();
+  await clip.scrollIntoViewIfNeeded();
+  await clip.click();
+  await page.locator('.mstage video').waitFor();
+  await page.waitForFunction(() => {
+    const v = document.querySelector<HTMLVideoElement>('.mstage video');
+    return v !== null && !v.paused && v.currentTime > 0.2;
+  });
+  fact(
+    'the pressed video plays, with controls',
+    (await count(page, '.mstage video[controls]')) === 1,
+  );
+  await page.keyboard.press('Space');
+  const stopped = await video();
+  fact('Space pauses, once', stopped?.paused === true, stopped);
+  await page.locator('.mstage video').click({ position: { x: 20, y: 20 } });
+  await page.waitForTimeout(150);
+  const afterClick = (await video())?.paused;
+  await page.keyboard.press('Space');
+  await page.waitForTimeout(150);
+  fact(
+    'Space still toggles once after a press on the player',
+    (await video())?.paused === !afterClick,
+  );
+  if (!(await video())?.paused) await page.keyboard.press('Space');
+  await page.evaluate(() => {
+    const v = document.querySelector<HTMLVideoElement>('.mstage video');
+    if (v) v.currentTime = 1;
+  });
+  await page.keyboard.press('ArrowRight');
+  await page.keyboard.press('m');
+  await page.waitForTimeout(500);
+  const moved = await video();
+  fact(
+    'arrows seek and M mutes',
+    Math.abs((moved?.at ?? 0) - 5.9) < 1.2 && moved?.muted === true,
+    moved,
+  );
+  await page.keyboard.press('ArrowLeft');
+  await page.waitForTimeout(300);
+  const kept = (await video())?.at ?? 0;
+  await page.setViewportSize({ width: 1300, height: 860 });
+  await page.waitForTimeout(300);
+  const redrawn = await video();
+  fact(
+    'a redraw keeps the position and starts nothing',
+    redrawn?.paused === true && Math.abs(redrawn.at - kept) < 0.1,
+    redrawn,
+  );
+  await page.reload();
+  await page.locator('.mstage video').waitFor();
+  await page.waitForFunction(
+    () => (document.querySelector<HTMLVideoElement>('.mstage video')?.readyState ?? 0) >= 1,
+  );
+  await page.waitForTimeout(300);
+  const restored = await video();
+  fact(
+    'a reload continues from there, silent until asked, the volume choice kept',
+    restored?.paused === true && Math.abs(restored.at - kept) < 0.6 && restored.muted,
+    { restored, kept },
+  );
+  await page.keyboard.press('PageUp');
+  fact('PageUp goes to the picture before the video', (await count(page, '.mstage img')) === 1);
+  await page.keyboard.press('Escape');
+
+  // Relays: honest states, switches that keep the keyboard, a removal that can be taken back.
+  const menu = async (label: string): Promise<void> => {
+    await page.locator('.acct').click();
+    await page.locator('.menu button', { hasText: label }).click();
+  };
+  await menu('Relays');
+  const rv = '.view[data-kind="relays"]';
+  await page.locator(`${rv} .rrow`).first().waitFor();
+  const mine = (): Promise<number> => count(page, `${rv} .rrow:has(.rtog)`);
+  fact(
+    'relays: the list, the others in use, the rest folded',
+    (await mine()) === 4 && (await count(page, `${rv} .rfold:not([open])`)) === 1,
+    await mine(),
+  );
+  const texts = await page.locator(`${rv} .rrow:has(.rtog) .rsub`).allInnerTexts();
+  fact(
+    'relays: each says its state, an error in its own words',
+    texts.some((x) => /^Connected · 42 ms/.test(x)) &&
+      texts.some((x) => x.includes('connection refused')),
+    texts,
+  );
+  const slow = page.locator(`${rv} .rrow`, { hasText: 'slow.example.org' });
+  await slow.locator('[data-f="write"]').click();
+  await page.waitForFunction(
+    () =>
+      document
+        .querySelector('.rrow[data-key="wss://slow.example.org"] [data-f="write"]')
+        ?.getAttribute('aria-pressed') === 'true',
+  );
+  fact(
+    'relays: a switch keeps the keyboard',
+    await page.evaluate(
+      () =>
+        (document.activeElement as HTMLElement | null)?.dataset.f === 'write' &&
+        document.activeElement?.closest('.rrow')?.getAttribute('data-key') ===
+          'wss://slow.example.org',
+    ),
+  );
+  await page
+    .locator(`${rv} .rrow`, { hasText: 'nos.example.net' })
+    .locator('[data-f="remove"]')
+    .click();
+  await page.locator('.toast.undo').waitFor();
+  await page.waitForFunction(
+    () => document.querySelectorAll('.view[data-kind="relays"] .rrow:has(.rtog)').length === 3,
+  );
+  fact(
+    'relays: after a removal the keyboard is on the next row',
+    await page.evaluate(() => document.activeElement?.closest('.rrow') !== null),
+  );
+  fact(
+    'relays: the removed relay waits in the folded list',
+    (await page.locator(`${rv} .rfold summary`).innerText()).includes('4'),
+  );
+  await page.locator('.toast.undo button').click();
+  await page.waitForFunction(
+    () => document.querySelectorAll('.view[data-kind="relays"] .rrow:has(.rtog)').length === 4,
+  );
+  fact(
+    'relays: undo puts it back where it was',
+    (await page.locator(`${rv} .rrow .rhost`).nth(1).innerText()) === 'nos.example.net',
+  );
+  await page.locator(`${rv} .addrow input`).fill('not a relay');
+  await page.keyboard.press('Enter');
+  fact(
+    'relays: a wrong address is refused and kept for fixing',
+    (await count(page, `${rv} .addrow input[aria-invalid]`)) === 1,
+  );
+  await page.locator(`${rv} .addrow input`).fill('relay.new.example');
+  await page.keyboard.press('Enter');
+  const added = page.locator(`${rv} .rrow`, { hasText: 'relay.new.example' });
+  await added.locator('.rsub', { hasText: 'Connecting' }).waitFor();
+  await added.locator('.rsub', { hasText: 'Connected' }).waitFor();
+  fact(
+    'relays: an added relay connects in view, the field ready for the next',
+    await page.evaluate(
+      () =>
+        document.activeElement?.matches('.addrow input') === true &&
+        (document.activeElement as HTMLInputElement).value === '',
+    ),
+  );
+
+  await menu('Shortcuts');
+  const sv = '.view[data-kind="shortcuts"]';
+  const caps = await page.locator(`${sv} kbd`).allInnerTexts();
+  fact(
+    'shortcuts: the key table, as this device names the keys',
+    (await count(page, `${sv} dt`)) === Object.keys(KEYS).length &&
+      caps.includes('/') &&
+      caps.includes('Alt+Shift+1 … 9') &&
+      caps.includes('Ctrl+Enter') &&
+      caps.includes('Space'),
+    caps,
+  );
+  await menu('About');
+  const about = await page.locator('.view[data-kind="about"]').innerText();
+  fact(
+    'about: version, engine, source, licence',
+    /lkjstr \d+\.\d+\.\d+/.test(about) &&
+      about.includes('mock, protocol 1') &&
+      (await count(page, '.view[data-kind="about"] a[href="https://github.com/lkjsxc/lkjstr"]')) ===
+        1 &&
+      about.includes('Apache License 2.0'),
+    about,
+  );
+  fact(
+    'no heading repeats a tab title',
+    (await count(page, `${sv} h1, ${rv} h1, .view[data-kind="about"] h1`)) === 0,
+  );
+
+  // Settings: the lists, each removal undoable.
+  await menu('Settings');
+  const set = '.view[data-kind="settings"]';
+  await page.locator(`${set} .srow`).first().waitFor();
+  const srows = (): Promise<number> => count(page, `${set} .srow`);
+  fact(
+    'settings: muted people, words, hashtags and the media servers',
+    (await srows()) === 5,
+    await srows(),
+  );
+  await page.locator(`${set} .ssearch input`).fill('ミュート');
+  fact(
+    'settings: the lists are found in either language',
+    (await count(page, `${set} .sitem:visible`)) === 4,
+  );
+  await page.locator(`${set} .srow`, { hasText: 'airdrop' }).locator('.x').click();
+  await page.waitForFunction(
+    () => document.querySelectorAll('.view[data-kind="settings"] .srow').length === 4,
+  );
+  fact(
+    'settings: an emptied list says so',
+    (await page.locator(`${set} .snone`).nth(1).innerText()) === 'No muted words.',
+  );
+  await page.locator('.toast.undo button').click();
+  await page.waitForFunction(
+    () => document.querySelectorAll('.view[data-kind="settings"] .srow').length === 5,
+  );
+  await page.locator(`${set} .ssearch input`).fill('servers');
+  await page.locator(`${set} .srow`, { hasText: 'media.example.jp' }).locator('.x').click();
+  await page.waitForFunction(
+    () => document.querySelectorAll('.view[data-kind="settings"] .srow').length === 4,
+  );
+  await page.locator('.toast.undo button').click();
+  await page.waitForFunction(
+    () => document.querySelectorAll('.view[data-kind="settings"] .srow').length === 5,
+  );
+  fact(
+    'settings: a media server comes back first, as it was',
+    (await page.locator(`${set} .sitem:visible .srow .clip`).first().innerText()) ===
+      'media.example.jp',
+  );
+  await page.context().close();
+
+  // A phone: the action row has room, by the tile's width; the bookmark is in the "…" menu.
+  const ctx = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+    hasTouch: true,
+    isMobile: true,
+  });
+  await ctx.addInitScript(() => localStorage.setItem('lkjstr:mock', '{"live":false}'));
+  const phone = await ctx.newPage();
+  phone.on('pageerror', (e) => failures.push(`pageerror: ${e.message}`));
+  await phone.goto(base);
+  await phone.locator('.note .acts').first().waitFor();
+  const rows = await phone.locator('.note .acts').evaluateAll((els) =>
+    els.map((row) => {
+      const kids = [...row.children].filter(
+        (k) => getComputedStyle(k).display !== 'none',
+      ) as HTMLElement[];
+      const boxes = kids.map((k) => k.getBoundingClientRect());
+      const text = kids.map((k) => k.querySelector('span')?.getBoundingClientRect());
+      return {
+        n: kids.length,
+        small: boxes.some((b) => b.width < 40 || b.height < 40),
+        // how far a count stays from the next button's icon (a button never overlaps the next)
+        gap: Math.min(
+          ...boxes.slice(0, -1).map((b, i) => {
+            const icon = kids[i + 1]?.querySelector('svg')?.getBoundingClientRect();
+            return (icon?.left ?? 0) - Math.max(b.right - 5, text[i]?.right ?? 0);
+          }),
+        ),
+        // the last button is whole, short of the tile's edge
+        inside: (boxes[boxes.length - 1]?.right ?? 0) <= innerWidth - 8,
+        zap: kids.find((k) => k.classList.contains('a-zap'))?.innerText ?? '',
+      };
+    }),
+  );
+  const tight = rows.filter((r) => r.small || r.gap < 8 || !r.inside);
+  fact(
+    'phone: every action is 40px and none touches the next',
+    tight.length === 0 && rows.some((r) => r.zap.length >= 4),
+    tight.slice(0, 3),
+  );
+  fact(
+    'phone: an unset bookmark is folded away',
+    rows.every((r) => r.n <= 7) && rows.some((r) => r.n === 6),
+  );
+  await phone.locator('.note:not(:has(.a-bookmark.on)) .act.a-more').first().tap();
+  fact(
+    'phone: the bookmark is in the "…" menu',
+    (await phone.locator('.menu button').first().innerText()) === 'Bookmark',
+  );
+  const marked = await count(phone, '.note .act.a-bookmark.on');
+  await phone.locator('.menu button').first().tap();
+  await phone.waitForFunction(
+    (n) => document.querySelectorAll('.note .act.a-bookmark.on').length > n,
+    marked,
+  );
+  fact(
+    'phone: a set bookmark shows in the row',
+    (await phone.locator('.note .act.a-bookmark.on').first().isVisible()) === true,
+  );
+  if (shot) await phone.screenshot({ path: shot.replace(/\.png$/, '-acts-390.png') });
+  await ctx.close();
+}
+
 if (!existsSync(`${here}../dist/index.html`)) throw new Error('build first: pnpm build');
 const server: ChildProcess = spawn(
   process.execPath,
@@ -438,7 +735,8 @@ const browser = await chromium.launch({ executablePath: chrome, args: ['--no-san
 try {
   await run(browser);
 } catch (e) {
-  failures.push(`threw: ${(e as Error).message.split('\n')[0]}`);
+  const at = /smoke\.ts:(\d+)/.exec((e as Error).stack ?? '')?.[1] ?? '?';
+  failures.push(`threw at line ${at}: ${(e as Error).message.split('\n')[0]}`);
 } finally {
   await browser.close();
   server.kill();

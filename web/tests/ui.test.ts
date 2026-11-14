@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
+import { relayAddress, serverAddress } from '../src/shared/address.ts';
 import { findGlyphs, isEmoji } from '../src/shared/emoji-data.ts';
 import { clockOf, countText, dayOf, noteTime } from '../src/shared/format.ts';
 import { both, resolveLang } from '../src/shared/i18n.ts';
+import { KEYS, type KeyId, keyCaps, keyText, pressed, pressedAt } from '../src/shared/keys.ts';
 import { keyLabel } from '../src/shared/platform.ts';
 import { DEFAULT_SETTINGS, parseSettings, SETTINGS_SCHEMA } from '../src/shared/settings.ts';
 import { en } from '../src/shared/strings-en.ts';
@@ -9,6 +11,7 @@ import { ja } from '../src/shared/strings-ja.ts';
 import { withRecent } from '../src/views/emoji-picker.ts';
 import { typesQuery } from '../src/views/feed-bar.ts';
 import { filterActive, filterNarrows, filterQuery } from '../src/views/filter-bar.ts';
+import { reconcile } from '../src/views/lists.ts';
 import { freshTab, kindOf, VIEWS } from '../src/views/registry.ts';
 import { matchesWords } from '../src/wm/launcher.ts';
 import * as L from '../src/wm/layout.ts';
@@ -103,6 +106,88 @@ describe('words', () => {
     expect(keyLabel('Alt+Shift+1', false)).toBe('Alt+Shift+1');
     expect(keyLabel('Mod+Enter', false)).toBe('Ctrl+Enter');
     expect(keyLabel('Mod+Enter', true)).toBe('⌘↩');
+  });
+  it('the key table: words for every binding, caps as the device prints them, events that match', () => {
+    for (const id of Object.keys(KEYS) as KeyId[]) {
+      expect(en[keyText(id)] && ja[keyText(id)], id).toBeTruthy();
+      expect(
+        keyCaps(id, false).every((cap) => cap.length > 0),
+        id,
+      ).toBe(true);
+    }
+    expect(keyCaps('workspace', false)).toEqual(['Alt+Shift+1 … 9']);
+    expect(keyCaps('send', true)).toEqual(['⌘↩']);
+    expect(keyCaps('play', false)).toEqual(['Space', 'K']);
+    expect(keyCaps('zoomIn', false)).toEqual(['+', '=']);
+    const key = (init: KeyboardEventInit): KeyboardEvent => new KeyboardEvent('keydown', init);
+    expect(pressed(key({ key: '/', code: 'Slash' }), 'filter')).toBe(true);
+    expect(pressed(key({ key: '?', code: 'Slash', shiftKey: true }), 'filter')).toBe(false);
+    expect(pressed(key({ key: '/', code: 'Slash', ctrlKey: true }), 'filter')).toBe(false);
+    expect(pressed(key({ key: '+', code: 'Semicolon', shiftKey: true }), 'zoomIn')).toBe(true);
+    expect(pressed(key({ key: ' ', code: 'Space' }), 'play')).toBe(true);
+    expect(pressed(key({ key: 'k', code: 'KeyK' }), 'play')).toBe(true);
+    expect(pressed(key({ key: 'Enter', isComposing: true }), 'launcherPick')).toBe(false);
+    expect(
+      pressedAt(key({ key: '#', code: 'Digit3', altKey: true, shiftKey: true }), 'workspace'),
+    ).toBe(2);
+  });
+  it('addresses are tidied as typed, and nonsense is refused', () => {
+    expect(relayAddress(' relay.example.jp/ ')).toBe('wss://relay.example.jp');
+    expect(relayAddress('WSS://Relay.Example.JP/inbox')).toBe('wss://relay.example.jp/inbox');
+    expect(relayAddress('https://relay.example.jp')).toBeUndefined();
+    expect(relayAddress('not a relay')).toBeUndefined();
+    expect(serverAddress('media.example.jp')).toBe('https://media.example.jp');
+    expect(serverAddress('http://media.example.jp')).toBeUndefined();
+  });
+  it('a redrawn list keeps unchanged nodes and the keyboard on the same control', () => {
+    const parent = document.createElement('div');
+    document.body.append(parent);
+    const cache = new Map();
+    const render = (r: { key: string; on: boolean }): HTMLElement => {
+      const el = document.createElement('div');
+      const b = document.createElement('button');
+      b.dataset.f = 'flip';
+      b.textContent = String(r.on);
+      el.append(b);
+      return el;
+    };
+    reconcile(
+      parent,
+      cache,
+      [
+        { key: 'a', on: false },
+        { key: 'b', on: false },
+        { key: 'c', on: false },
+      ],
+      render,
+    );
+    const [a, b] = [...parent.children] as HTMLElement[];
+    b?.querySelector('button')?.focus();
+    reconcile(
+      parent,
+      cache,
+      [
+        { key: 'a', on: false },
+        { key: 'b', on: true },
+        { key: 'c', on: false },
+      ],
+      render,
+    );
+    expect(parent.children[0]).toBe(a);
+    expect(parent.children[1]).not.toBe(b);
+    expect(document.activeElement?.textContent).toBe('true');
+    reconcile(
+      parent,
+      cache,
+      [
+        { key: 'a', on: false },
+        { key: 'c', on: false },
+      ],
+      render,
+    );
+    expect(parent.children).toHaveLength(2);
+    expect(document.activeElement?.closest<HTMLElement>('[data-key]')?.dataset.key).toBe('c');
+    parent.remove();
   });
 });
 

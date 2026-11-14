@@ -20,7 +20,7 @@ const here = new URL('..', import.meta.url).pathname;
 const out = join(here, '..', 'dist');
 const watch = process.argv.includes('--watch');
 const engineDir = process.argv.find((a) => a.startsWith('--engine='))?.slice(9);
-const CSS = ['ui.css', 'notes.css', 'views.css', 'people.css'];
+const CSS = ['ui.css', 'notes.css', 'views.css', 'people.css', 'pages.css'];
 const STATIC = ['icon.svg', 'icon-192.png', 'icon-512.png', 'favicon.ico', 'manifest.webmanifest'];
 
 const hashed = (name: string, ext: string, body: string | Uint8Array): string =>

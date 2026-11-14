@@ -6,6 +6,7 @@ import { both, t } from '../shared/i18n.ts';
 import { SETTINGS_SCHEMA, type Settings } from '../shared/settings.ts';
 import type { ViewEnv } from './registry.ts';
 import { type Entry, fieldEntry, frame, searchText } from './settings-entry.ts';
+import { listEntries } from './settings-lists.ts';
 
 const MODIFIED = '@modified';
 
@@ -23,8 +24,10 @@ function actionEntry(name: 'set.resetLayouts', run: () => void): Entry {
 }
 
 export function mountSettings(el: HTMLElement, env: ViewEnv): () => void {
+  const lists = listEntries(env);
   const entries = [
     ...SETTINGS_SCHEMA.map((f) => fieldEntry(f, env.settings)),
+    ...lists.entries,
     actionEntry('set.resetLayouts', env.resetLayouts),
   ];
   const groups = [...new Set(entries.map((e) => e.group))].map((name) => ({
@@ -77,5 +80,9 @@ export function mountSettings(el: HTMLElement, env: ViewEnv): () => void {
     ...groups.flatMap((g) => [g.head, ...g.entries.map((e) => e.node)]),
   );
   sync(env.settings.get());
-  return env.settings.subscribe(sync);
+  const off = env.settings.subscribe(sync);
+  return () => {
+    off();
+    lists.dispose();
+  };
 }

@@ -95,12 +95,19 @@ export function segments(list: readonly Segment[], env: ViewEnv): Child[] {
   });
 }
 
-/** A quiet message that goes away by itself (after a copy, for an error). */
-export function toast(layer: HTMLElement, text: string): void {
-  layer.querySelector('.toast')?.remove();
-  const el = h('div', { class: 'toast', role: 'status' }, text);
-  layer.append(el);
-  setTimeout(() => el.remove(), 2200);
+/** A quiet message that goes away by itself (after a copy, for an error). With `undo` it stays longer and carries
+ * a button that takes the action back; up to three of those wait together, so quick removals stay undoable. */
+export function toast(layer: HTMLElement, text: string, undo?: () => void): void {
+  let box = layer.querySelector<HTMLElement>('.toasts');
+  if (!box) layer.append((box = h('div', { class: 'toasts' })));
+  const el: HTMLElement = h('div', { class: undo ? 'toast undo' : 'toast', role: 'status' }, text);
+  if (undo) {
+    el.append(h('button', { class: 'lnk', onclick: () => (el.remove(), undo()) }, t('undo')));
+    const waiting = box.querySelectorAll('.toast.undo');
+    if (waiting.length >= 3) waiting[0]?.remove();
+  } else box.querySelector('.toast:not(.undo)')?.remove();
+  box.append(el);
+  setTimeout(() => el.remove(), undo ? 8000 : 2200);
 }
 export async function copy(env: ViewEnv, text: string): Promise<void> {
   try {

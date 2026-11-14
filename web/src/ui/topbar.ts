@@ -19,7 +19,7 @@ export function createTopBar(
     open(kind: string, state?: object): void;
   },
 ): TopBar {
-  const relays = h('span', { class: 'relays muted' });
+  const relays = h('button', { class: 'relays muted', onclick: () => o.open('relays') });
   const account: HTMLElement = h('button', { class: 'acct' });
   const menu = (): void => {
     const a = o.engine.accounts.get();
@@ -28,7 +28,10 @@ export function createTopBar(
         label: `${x.author.pubkey === a.active ? '✓ ' : ''}${plainName(x.author)}`,
         run: () => void o.engine.act({ a: 'account.use', pubkey: x.author.pubkey }),
       })),
-      { label: t('view.settings'), run: () => o.open('settings') },
+      ...(['settings', 'relays', 'shortcuts', 'about'] as const).map((kind) => ({
+        label: t(`view.${kind}`),
+        run: () => o.open(kind),
+      })),
     ]);
   };
   account.addEventListener('click', menu);
@@ -38,6 +41,7 @@ export function createTopBar(
     const s = o.engine.status.get();
     relays.hidden = !o.settings.get().showRelayCount;
     relays.textContent = t('bar.relays', { n: s.connected, all: s.wanted });
+    relays.title = t('view.relays');
     account.title = me ? plainName(me.author) : t('bar.account');
     account.setAttribute('aria-label', t('bar.account'));
     replaceChildren(account, me ? avatar(me.author, 'av sm') : t('bar.signedOut'));

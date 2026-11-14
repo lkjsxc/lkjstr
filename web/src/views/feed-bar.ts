@@ -5,6 +5,7 @@ import type { NotificationType } from '../engine/protocol.ts';
 import { h } from '../shared/h.ts';
 import { type Key, t } from '../shared/i18n.ts';
 import { type IconName, icon } from '../shared/icons.ts';
+import { keyCaps, pressed } from '../shared/keys.ts';
 import { type Filter, filterBar, filterNarrows, filterQuery } from './filter-bar.ts';
 import type { ViewEnv } from './registry.ts';
 
@@ -131,10 +132,10 @@ export function mountFeedBar(o: {
       if (filterNarrows(f)) return [{ label: t('filter.clear'), run: clear }];
       return f.shown
         ? [{ label: t('filter.hideBar'), run: () => show(false) }]
-        : [{ label: t('filter.title'), key: '/', run: () => show(true) }];
+        : [{ label: t('filter.title'), key: keyCaps('filter')[0], run: () => show(true) }];
     });
   const key = (e: KeyboardEvent): void => {
-    if (e.key !== '/' || e.ctrlKey || e.metaKey || e.altKey || e.isComposing || typing(e)) return;
+    if (!pressed(e, 'filter') || typing(e)) return;
     if (!env.visible.get() || !el.closest('.pane.cur')) return;
     e.preventDefault();
     if (input()) input()?.focus({ preventScroll: true });

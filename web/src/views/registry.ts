@@ -7,6 +7,8 @@ import type { MenuItem } from '../wm/menus.ts';
 import { mountCompose } from './compose.ts';
 import { mountFeed } from './feed.ts';
 import { mountMedia } from './media.ts';
+import { mountAbout, mountShortcuts } from './pages.ts';
+import { mountRelays } from './relays.ts';
 import { mountSettings } from './settings.ts';
 
 export type OpenOpts = {
@@ -91,6 +93,30 @@ export const VIEWS: readonly ViewDef[] = [
     launch: true,
     aliases: 'options preferences config 環境設定',
     mount: mountSettings,
+  },
+  {
+    id: 'relays',
+    title: 'view.relays',
+    hint: 'view.relays.hint',
+    launch: true,
+    aliases: 'servers connections network nip65 接続 サーバー',
+    mount: mountRelays,
+  },
+  {
+    id: 'shortcuts',
+    title: 'view.shortcuts',
+    hint: 'view.shortcuts.hint',
+    launch: true,
+    aliases: 'keys keyboard hotkeys help キー キーボード ヘルプ',
+    mount: mountShortcuts,
+  },
+  {
+    id: 'about',
+    title: 'view.about',
+    hint: 'view.about.hint',
+    launch: true,
+    aliases: 'version license licence source github privacy バージョン ライセンス',
+    mount: mountAbout,
   },
 ];
 

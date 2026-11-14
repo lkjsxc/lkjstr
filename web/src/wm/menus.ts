@@ -2,6 +2,7 @@
 // outside press, Escape, a scroll or wheel outside it, a window blur, or a choice, and gives the keyboard back to
 // what opened it. Menus have no close button.
 import { h } from '../shared/h.ts';
+import { pressed } from '../shared/keys.ts';
 
 export type MenuItem = {
   readonly label: string;
@@ -45,7 +46,7 @@ export function openPopover(
   const outside = (e: PointerEvent): void => void (inside(e) || close());
   const away = (e: Event): void => void (inside(e) || close());
   const key = (e: KeyboardEvent): void => {
-    if (e.key === 'Escape') e.stopPropagation(), e.preventDefault(), close();
+    if (pressed(e, 'menuClose')) e.stopPropagation(), e.preventDefault(), close();
   };
   const place = (): void => {
     const origin = layer.getBoundingClientRect();

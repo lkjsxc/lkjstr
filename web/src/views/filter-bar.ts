@@ -4,6 +4,7 @@
 import type { Query } from '../engine/protocol.ts';
 import { h } from '../shared/h.ts';
 import { type Key, t } from '../shared/i18n.ts';
+import { pressed } from '../shared/keys.ts';
 
 export type Filter = {
   text?: string;
@@ -129,7 +130,7 @@ export function filterBar(
     timer = setTimeout(() => change({ ...f, text: input.value }, true), 250);
   });
   input.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && !input.value) e.preventDefault(), leave();
+    if (pressed(e, 'filterLeave') && !input.value) e.preventDefault(), leave();
   });
   return h('div', { class: 'fbar' }, h('div', { class: 'rbar' }, toggle, input), panel);
 }

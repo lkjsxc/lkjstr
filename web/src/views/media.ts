@@ -1,11 +1,14 @@
 // The pictures and video of one note, as a tab beside what was being read. A picture can be zoomed and panned;
-// arrows go to the next and the previous; Escape closes the tab and gives the keyboard back to the note.
+// arrows go to the next and the previous; Escape closes the tab and gives the keyboard back to the note. A video
+// or a sound has the browser's controls and the player's keys (`player.ts`).
 import type { Media } from '../engine/protocol.ts';
 import { h, replaceChildren } from '../shared/h.ts';
 import { t } from '../shared/i18n.ts';
 import { type IconName, icon } from '../shared/icons.ts';
+import { pressed } from '../shared/keys.ts';
 import { loadViewState, saveViewState } from '../shared/view-state.ts';
 import { copy } from './parts.ts';
+import { createPlayer, type Player } from './player.ts';
 import type { ViewEnv } from './registry.ts';
 import { type Zoom, zoomable } from './zoom.ts';
 
@@ -13,8 +16,10 @@ export type MediaState = {
   media?: readonly Media[];
   index?: number;
   title?: string;
-  /** The video has been started once: a restored tab does not start playing by itself. */
+  /** The file that was pressed has been started once: a restored or redrawn tab never starts playing by itself. */
   played?: boolean;
+  /** Seconds into the video or sound at `index`. */
+  at?: number;
 };
 
 export function mountMedia(el: HTMLElement, env: ViewEnv): () => void {
@@ -22,6 +27,7 @@ export function mountMedia(el: HTMLElement, env: ViewEnv): () => void {
   const list = state.media ?? [];
   let index = Math.min(Math.max(0, state.index ?? 0), Math.max(0, list.length - 1));
   let zoom: Zoom | undefined;
+  let player: Player | undefined;
 
   const stage = h('div', { class: 'mstage' });
   const count = h('span', { class: 'mcount' });
@@ -52,11 +58,33 @@ export function mountMedia(el: HTMLElement, env: ViewEnv): () => void {
     if (m) void copy(env, m.url);
   });
 
+  const missing = (text: string, m?: Media): void =>
+    replaceChildren(
+      stage,
+      h(
+        'div',
+        { class: 'fstate muted' },
+        text,
+        m
+          ? h(
+              'div',
+              null,
+              h(
+                'a',
+                { href: m.url, target: '_blank', rel: 'noopener noreferrer' },
+                t('media.original'),
+              ),
+            )
+          : null,
+      ),
+    );
   function show(): void {
     zoom?.dispose();
     zoom = undefined;
+    player?.dispose();
+    player = undefined;
     const m = list[index];
-    if (!m) return replaceChildren(stage, h('div', { class: 'fstate muted' }, t('media.gone')));
+    if (!m) return missing(t('media.gone'));
     stage.className = `mstage k-${m.type}`;
     stage.style.background = '';
     if (m.type === 'image') {
@@ -67,11 +95,17 @@ export function mountMedia(el: HTMLElement, env: ViewEnv): () => void {
         flick: (dir) => go(index + dir),
       });
     } else {
-      const player = h(m.type, { src: m.url, controls: true, preload: 'metadata' });
-      if (m.type === 'video') player.setAttribute('playsinline', '');
-      replaceChildren(stage, player);
-      if (!state.played) void player.play().catch(() => undefined);
-      state.played = true;
+      player = createPlayer(m, {
+        at: state.at,
+        start: !state.played,
+        position: (seconds) => {
+          if (list[index] !== m || state.at === seconds) return;
+          state.at = seconds;
+          saveViewState(env.instance, state);
+        },
+        failed: () => list[index] === m && missing(t('media.failed'), m),
+      });
+      replaceChildren(stage, player.el);
     }
     const many = list.length > 1;
     prev.hidden = next.hidden = count.hidden = !many;
@@ -82,28 +116,33 @@ export function mountMedia(el: HTMLElement, env: ViewEnv): () => void {
     scale.hidden = m.type !== 'image';
     original.href = m.url;
     state.index = index;
+    state.played = true;
     saveViewState(env.instance, state);
   }
   function go(to: number): void {
     if (to < 0 || to >= list.length || to === index) return;
     index = to;
-    state.played = false;
+    state.at = 0;
     show();
   }
 
   const key = (e: KeyboardEvent): void => {
-    if (e.ctrlKey || e.metaKey || e.altKey) return;
-    const playing = (e.target as Element).closest?.('video, audio'); // the player has its own arrow keys
-    if (e.key === 'Escape') env.close();
-    else if (e.key === 'ArrowLeft' && !playing) go(index - 1);
-    else if (e.key === 'ArrowRight' && !playing) go(index + 1);
-    else if (e.key === '+' || e.key === '=') zoom?.by(1.25);
-    else if (e.key === '-') zoom?.by(0.8);
-    else if (e.key === '0') zoom?.toggle();
+    // A focused button of the bar keeps its own Space and Enter.
+    if ((e.key === ' ' || e.key === 'Enter') && (e.target as Element).closest?.('.mbar')) return;
+    if (pressed(e, 'viewerClose')) env.close();
+    else if (pressed(e, 'viewerPrev')) go(index - 1);
+    else if (pressed(e, 'viewerNext')) go(index + 1);
+    else if (player?.key(e)) void 0;
+    else if (pressed(e, 'viewerLeft')) go(index - 1);
+    else if (pressed(e, 'viewerRight')) go(index + 1);
+    else if (pressed(e, 'zoomIn')) zoom?.by(1.25);
+    else if (pressed(e, 'zoomOut')) zoom?.by(0.8);
+    else if (pressed(e, 'zoomFit')) zoom?.toggle();
     else return;
     e.preventDefault();
+    e.stopPropagation(); // the browser's player would act on the same key a second time
   };
-  el.addEventListener('keydown', key);
+  el.addEventListener('keydown', key, true);
   el.classList.add('mview');
   el.tabIndex = -1;
   el.replaceChildren(
@@ -115,12 +154,13 @@ export function mountMedia(el: HTMLElement, env: ViewEnv): () => void {
   // In front: the keyboard is here, so the arrows and Escape work at once.
   const front = (on: boolean): void => {
     if (on) el.focus({ preventScroll: true });
-    else for (const p of el.querySelectorAll('video, audio')) (p as HTMLMediaElement).pause();
+    else player?.pause();
   };
   const off = env.visible.subscribe(front);
   return () => {
     off();
     zoom?.dispose();
-    el.removeEventListener('keydown', key);
+    player?.dispose();
+    el.removeEventListener('keydown', key, true);
   };
 }
