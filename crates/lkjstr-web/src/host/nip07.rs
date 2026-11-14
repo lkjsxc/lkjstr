@@ -55,5 +55,7 @@ pub async fn sign(event: &UnsignedNostrEvent) -> Result<NostrEvent, String> {
         .and_then(|text| text.as_string())
         .ok_or("The signer returned no event.")?;
     let value: serde_json::Value = serde_json::from_str(&text).map_err(|e| e.to_string())?;
-    parse_nostr_event_value(&value, None).map_err(|error| error.message)
+    let signed = parse_nostr_event_value(&value, None).map_err(|error| error.message)?;
+    lkjstr_core::actions::validate_signed_event(event, &signed)?;
+    Ok(signed)
 }

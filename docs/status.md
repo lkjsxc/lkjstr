@@ -21,6 +21,7 @@ asked for a WASM-first client with no backward compatibility. What remains:
   IndexedDB, NIP-07). Built by Trunk from the root `index.html`.
 
 Stored data from the old app (SQLite OPFS, old IndexedDB layout) is ignored.
+The incompatible WASM schema uses `lkjstr-wasm`, leaving previous `lkjstr` alone.
 
 ## Why the old app was replaced (evidence, 2026-11-14)
 
@@ -60,8 +61,8 @@ Which of these were exercised in a real browser, and how, is recorded in
 
 ## Current verification (2026-11-14)
 
-The expanded fake-relay browser smoke passes all 51 checks on both the debug
-build and the release build.
+The expanded fake-relay browser smoke passes all 61 checks on the current
+release build. The earlier 51-check suite passed debug and release builds.
 It covers generated local accounts, invalid and read-only imports, account
 switching and removal, signing, compose, threads, profiles, empty and populated
 notifications, local and relay search, and direct NIP-19 navigation. It verifies
@@ -76,6 +77,14 @@ and idle socket release. Native tests cover deletion ownership, replaceable
 ties and retention/index cleanup, publication guards and relay scheduling.
 Account changes install only after secret/session records commit atomically.
 Quotes and reply parents share the terminal lookup states used by reposts.
+Second-review fixes bind extension signatures to every requested field and verify
+IDs/signatures, await storage commits, retry failed event batches, and bound
+pending persistence to 20000 events plus a 500-event transaction snapshot.
+Storage-open failure buffers nothing. Synchronous socket construction failures
+use the same backoff/replan path as connection loss. Displayed notes have live
+deletion watches; quote and mention references do not count as replies.
+Content-only note/nevent quotes prefetch their targets and relay hints.
+Plain text, invalid markup and trailing punctuation are scanned linearly.
 Quiet gates print one success line; build aliases handle `NO_COLOR=1`.
 
 `pnpm check:repo`, `pnpm test:quiet`, `pnpm rust-wasm:quiet` and
@@ -110,8 +119,9 @@ Implemented:
 - Local-first: the newest 8000 stored events load before the first plan;
   timelines render from the store and new notes wait behind a "new" marker
   unless the reader is at the top.
-- Prefetch: profiles, reply parents, quotes and repost targets of the first 60
-  rendered rows of each visible tile.
+- Prefetch: profiles, reply parents, quotes (tags and content pointers) and
+  repost targets of the first 60 rows; live deletion watches cover up to 600
+  rendered rows plus 120 cached references. Hints are capped at 12 per want.
 
 Built but not working or not verified:
 
@@ -141,7 +151,7 @@ Planned (not built):
   mute lists, custom emoji picker, profile editing.
 - Virtualisation is `content-visibility` plus a 600-row cap, not windowing.
   Each feed scans at most 6000 raw rows, including hidden noise.
-- Release WASM is 9.6 MB (1.0 MB gzip) because wasm-opt is off
+- Release WASM is 9.6 MB (1.1 MB gzip) because wasm-opt is off
   (`data-wasm-opt="0"` avoids a download); enable it for size.
 - Notification read state is not tracked.
 

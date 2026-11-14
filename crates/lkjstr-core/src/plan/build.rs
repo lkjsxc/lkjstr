@@ -27,6 +27,7 @@ pub(super) enum Group {
     Mentions(String, Option<u64>),
     Thread,
     Events,
+    Deletions,
     Profiles(bool),
     Search(String),
 }
@@ -108,13 +109,22 @@ pub fn plan(wants: &[(WantId, Want)], ctx: &PlanContext<'_>) -> Vec<Planned> {
                         .insert(root.clone());
                 }
             }
-            Want::Events { ids, relays } => {
+            Want::Events { ids, relays } | Want::Deletions { ids, relays } => {
                 let mut targets = hinted(relays, ctx);
                 targets.extend(fallback.iter().cloned());
                 for relay in dedupe(targets) {
-                    add(&mut acc, &relay, Group::Events, *id)
-                        .ids
-                        .extend(ids.iter().cloned());
+                    add(
+                        &mut acc,
+                        &relay,
+                        if matches!(want, Want::Deletions { .. }) {
+                            Group::Deletions
+                        } else {
+                            Group::Events
+                        },
+                        *id,
+                    )
+                    .ids
+                    .extend(ids.iter().cloned());
                 }
             }
             Want::Profiles { pubkeys, contacts } => {

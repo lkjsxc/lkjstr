@@ -42,14 +42,16 @@ pub fn index_tags(event: &NostrEvent) -> IndexedTags {
 }
 
 pub fn reply_root(event: &NostrEvent) -> Option<String> {
-    marker(&event.tags, "root").or_else(|| tag_values(event, "e").first().cloned())
+    marker(&event.tags, "root")
+        .or_else(|| marker(&event.tags, "reply"))
+        .or_else(|| unmarked_events(event).first().cloned())
 }
 
 pub fn reply_parent(event: &NostrEvent) -> Option<String> {
     if let Some(reply) = marker(&event.tags, "reply") {
         return Some(reply);
     }
-    let events = tag_values(event, "e");
+    let events = unmarked_events(event);
     if events.len() > 1 {
         events.last().cloned()
     } else {
@@ -65,4 +67,13 @@ fn marker(tags: &[Vec<String>], marker_name: &str) -> Option<String> {
         })
         .and_then(|tag| tag.get(1))
         .cloned()
+}
+
+fn unmarked_events(event: &NostrEvent) -> Vec<String> {
+    event
+        .tags
+        .iter()
+        .filter(|t| t.first().is_some_and(|v| v == "e") && t.get(3).is_none_or(String::is_empty))
+        .filter_map(|t| t.get(1).filter(|id| !id.is_empty()).cloned())
+        .collect()
 }

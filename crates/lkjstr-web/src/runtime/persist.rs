@@ -76,11 +76,20 @@ impl App {
     }
 
     pub fn kv_put(&self, key: &str, value: &str) {
-        self.with(|rt| {
-            if let Some(db) = &rt.db {
-                let _ = idb::kv_put(db, key, value);
+        let Some(db) = self.with(|rt| rt.db.clone()) else {
+            return;
+        };
+        let (key, value, app) = (key.to_owned(), value.to_owned(), *self);
+        leptos::task::spawn_local(async move {
+            if let Err(error) = idb::kv_put(&db, &key, &value).await {
+                app.storage_failed(error);
             }
         });
+    }
+
+    fn storage_failed(self, error: String) {
+        self.update(|rt| rt.storage = Storage::WriteFailed(error));
+        self.rev.update(|rev| *rev += 1);
     }
 
     /// Bounds the on-disk cache after startup work has settled.
@@ -92,8 +101,9 @@ impl App {
             leptos::task::spawn_local(async move {
                 if let Ok(count) = idb::count_events(&db).await
                     && count > PRUNE_AT
+                    && let Err(error) = idb::delete_oldest(&db, count - KEEP_STORED).await
                 {
-                    let _ = idb::delete_oldest(&db, count - KEEP_STORED).await;
+                    self.storage_failed(error);
                 }
             });
         });
@@ -101,11 +111,9 @@ impl App {
 
     fn save_scores_later(self) {
         after(SCORES_MS, move || {
-            self.with(|rt| {
-                if let (Some(db), Ok(text)) = (&rt.db, serde_json::to_string(&rt.scores)) {
-                    let _ = idb::kv_put(db, "scores", &text);
-                }
-            });
+            if let Ok(text) = self.with(|rt| serde_json::to_string(&rt.scores)) {
+                self.kv_put("scores", &text);
+            }
             self.save_scores_later();
         });
     }
@@ -113,28 +121,48 @@ impl App {
 
 impl Rt {
     pub(super) fn schedule_persist(&mut self) {
-        if self.flags.persist || self.db.is_none() {
+        if self.flags.persist || self.db.is_none() || self.unsaved.is_empty() {
             return;
         }
         self.flags.persist = true;
         if let Some(app) = self.app() {
-            after(FLUSH_MS, move || app.update(Rt::flush));
+            after(FLUSH_MS, move || app.flush());
         }
     }
+}
 
-    fn flush(&mut self) {
-        self.flags.persist = false;
-        let batch = std::mem::take(&mut self.unsaved);
-        let Some(db) = &self.db else { return };
-        let rows: Vec<(String, u64, String)> = batch
-            .iter()
-            .filter_map(|event| {
-                let raw = serde_json::to_string(event).ok()?;
-                Some((event.id.clone(), event.created_at, raw))
-            })
-            .collect();
-        if let Err(error) = idb::put_events(db, &rows) {
-            self.storage = Storage::Unavailable(error);
-        }
+impl App {
+    fn flush(self) {
+        let Some((db, batch)) = self.with(|rt| Some((rt.db.clone()?, rt.unsaved.batch()))) else {
+            self.update(|rt| rt.flags.persist = false);
+            return;
+        };
+        leptos::task::spawn_local(async move {
+            let rows = batch
+                .iter()
+                .map(|event| {
+                    serde_json::to_string(event)
+                        .map(|raw| (event.id.clone(), event.created_at, raw))
+                })
+                .collect::<Result<Vec<_>, _>>();
+            let result = match rows {
+                Ok(rows) => idb::put_events(&db, &rows).await,
+                Err(error) => Err(error.to_string()),
+            };
+            self.update(|rt| {
+                rt.flags.persist = false;
+                match result {
+                    Ok(()) => {
+                        rt.unsaved.committed(&batch);
+                        rt.storage = Storage::Ready {
+                            loaded: rt.store.len(),
+                        };
+                    }
+                    Err(error) => rt.storage = Storage::WriteFailed(error),
+                }
+                rt.schedule_persist();
+            });
+            self.rev.update(|rev| *rev += 1);
+        });
     }
 }

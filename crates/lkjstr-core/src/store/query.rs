@@ -2,8 +2,8 @@
 
 use std::collections::{HashSet, VecDeque};
 
-use lkjstr_protocol::follow_entries_from_event;
 use lkjstr_protocol::parse_relay_list_suggestions;
+use lkjstr_protocol::{follow_entries_from_event, reply_parent, reply_root};
 
 use super::{Event, Store};
 
@@ -77,7 +77,12 @@ impl Store {
                 out.push(event);
             }
             for child in self.by_tag_e.get(&id).into_iter().flatten() {
-                queue.push_back(child.clone());
+                if self
+                    .get(child)
+                    .is_some_and(|event| event.kind == 1 && is_reply_to(&event, &id))
+                {
+                    queue.push_back(child.clone());
+                }
             }
         }
         out.sort_by(|a, b| (a.created_at, &a.id).cmp(&(b.created_at, &b.id)));
@@ -157,13 +162,23 @@ impl Store {
     pub fn counts(&self, id: &str) -> (usize, usize, usize) {
         let mut out = (0, 0, 0);
         for event in self.by_tag_e.get(id).into_iter().flatten() {
-            match self.events.get(event).map(|e| e.kind) {
-                Some(1) => out.0 += 1,
-                Some(6) => out.1 += 1,
-                Some(7) => out.2 += 1,
+            match self.events.get(event) {
+                Some(e) if e.kind == 1 && is_reply_to(e, id) => out.0 += 1,
+                Some(e) if e.kind == 6 && is_action_target(e, id) => out.1 += 1,
+                Some(e) if e.kind == 7 && is_action_target(e, id) => out.2 += 1,
                 _ => {}
             }
         }
         out
     }
+}
+
+fn is_reply_to(event: &lkjstr_protocol::NostrEvent, id: &str) -> bool {
+    reply_parent(event).as_deref() == Some(id) || reply_root(event).as_deref() == Some(id)
+}
+
+fn is_action_target(event: &lkjstr_protocol::NostrEvent, id: &str) -> bool {
+    lkjstr_protocol::event_references(event)
+        .iter()
+        .any(|reference| reference.id == id)
 }

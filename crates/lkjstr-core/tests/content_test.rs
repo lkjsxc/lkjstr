@@ -51,3 +51,24 @@ fn noise_detection_targets_encoded_blobs_only() {
         "https://example.com/short"
     ));
 }
+
+#[test]
+fn large_plain_and_failed_markup_spans_render_in_linear_time() {
+    let start = std::time::Instant::now();
+    for text in [
+        "a".repeat(262_144),
+        "nostr:".repeat(43_690),
+        format!("https://x{}", ")".repeat(262_144)),
+        "界".repeat(87_380),
+    ] {
+        let result = segments(&text, &[]);
+        assert!(!result.is_empty());
+        if !text.starts_with("https://") {
+            assert_eq!(result, vec![Segment::Text(text)]);
+        }
+    }
+    assert!(
+        start.elapsed() < std::time::Duration::from_secs(5),
+        "large spans must not rescan suffixes"
+    );
+}

@@ -66,7 +66,7 @@ impl Rt {
 
     /// Inserts a verified event; local-first publishing uses this too.
     pub(super) fn accept(&mut self, event: NostrEvent, relay: &str) -> bool {
-        let keep = PERSIST_KINDS.contains(&event.kind);
+        let keep = self.db.is_some() && PERSIST_KINDS.contains(&event.kind);
         let copy = keep.then(|| event.clone());
         let relay = (!relay.is_empty()).then_some(relay);
         let own_list = event.kind == 10002 && self.session.active.as_ref() == Some(&event.pubkey);
@@ -79,7 +79,7 @@ impl Rt {
                     self.apply_session_relays();
                 }
                 if let Some(copy) = copy {
-                    self.unsaved.push(copy);
+                    self.unsaved.push(copy, self.db.is_some());
                     self.schedule_persist();
                 }
                 true

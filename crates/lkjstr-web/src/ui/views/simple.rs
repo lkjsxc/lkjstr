@@ -46,6 +46,9 @@ pub fn Welcome() -> impl IntoView {
             Storage::Ready { loaded } => {
                 format!("Local storage ready · {loaded} notes and profiles cached on this device.")
             }
+            Storage::WriteFailed(reason) => {
+                format!("Local storage write failed ({reason}). Event writes retry while this page is open.")
+            }
             Storage::Unavailable(reason) => {
                 format!("Local storage unavailable ({reason}). Nothing will persist after reload.")
             }

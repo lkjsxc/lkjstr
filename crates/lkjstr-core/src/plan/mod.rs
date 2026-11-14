@@ -50,6 +50,11 @@ pub enum Want {
         ids: Vec<String>,
         relays: Vec<String>,
     },
+    /// Deletions targeting displayed cached events. Stays live.
+    Deletions {
+        ids: Vec<String>,
+        relays: Vec<String>,
+    },
     /// Metadata and relay lists; `contacts` adds kind 3. One-shot.
     Profiles {
         pubkeys: Vec<String>,
@@ -68,7 +73,7 @@ impl Want {
             Want::Notes { until, .. }
             | Want::Global { until, .. }
             | Want::Mentions { until, .. } => until.is_none(),
-            Want::Thread { .. } => true,
+            Want::Thread { .. } | Want::Deletions { .. } => true,
             _ => false,
         }
     }

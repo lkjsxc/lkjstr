@@ -7,11 +7,12 @@ use std::rc::Rc;
 use js_sys::{Object, Promise, Reflect};
 use wasm_bindgen::{JsCast, JsValue, closure::Closure};
 use wasm_bindgen_futures::JsFuture;
-use web_sys::{IdbCursorDirection, IdbDatabase, IdbRequest, IdbTransactionMode};
+use web_sys::{IdbCursorDirection, IdbDatabase, IdbRequest};
 
 pub use super::idb_commit::kv_commit;
 
-const DB_NAME: &str = "lkjstr";
+// Intentionally incompatible with the legacy `lkjstr` database (version 18).
+const DB_NAME: &str = "lkjstr-wasm";
 
 type Step = Closure<dyn FnMut(web_sys::Event)>;
 const DB_VERSION: u32 = 1;
@@ -82,53 +83,24 @@ pub async fn kv_get(db: &IdbDatabase, key: &str) -> Result<Option<String>, Strin
     Ok(value.as_string())
 }
 
-pub fn kv_put(db: &IdbDatabase, key: &str, value: &str) -> Result<(), String> {
-    let tx = db
-        .transaction_with_str_and_mode("kv", IdbTransactionMode::Readwrite)
-        .map_err(err)?;
-    let store = tx.object_store("kv").map_err(err)?;
-    store
-        .put_with_key(&value.into(), &key.into())
-        .map_err(err)?;
-    Ok(())
+pub async fn kv_put(db: &IdbDatabase, key: &str, value: &str) -> Result<(), String> {
+    kv_commit(db, &[(key.to_owned(), Some(value.to_owned()))]).await
 }
 
-pub fn kv_delete(db: &IdbDatabase, key: &str) -> Result<(), String> {
-    let tx = db
-        .transaction_with_str_and_mode("kv", IdbTransactionMode::Readwrite)
-        .map_err(err)?;
-    tx.object_store("kv")
-        .map_err(err)?
-        .delete(&key.into())
-        .map_err(err)?;
-    Ok(())
-}
-
-/// Writes events as `{id, created_at, raw}` rows in one transaction.
-pub fn put_events(db: &IdbDatabase, rows: &[(String, u64, String)]) -> Result<(), String> {
-    let tx = db
-        .transaction_with_str_and_mode("events", IdbTransactionMode::Readwrite)
-        .map_err(err)?;
-    let store = tx.object_store("events").map_err(err)?;
-    for (id, created_at, raw) in rows {
-        let row = Object::new();
-        let _ = Reflect::set(&row, &"id".into(), &id.into());
-        let _ = Reflect::set(&row, &"created_at".into(), &(*created_at as f64).into());
-        let _ = Reflect::set(&row, &"raw".into(), &raw.into());
-        store.put(&row).map_err(err)?;
-    }
-    Ok(())
-}
-
-pub fn delete_events(db: &IdbDatabase, ids: &[String]) -> Result<(), String> {
-    let tx = db
-        .transaction_with_str_and_mode("events", IdbTransactionMode::Readwrite)
-        .map_err(err)?;
-    let store = tx.object_store("events").map_err(err)?;
-    for id in ids {
-        store.delete(&id.into()).map_err(err)?;
-    }
-    Ok(())
+/// Writes events as `{id, created_at, raw}` rows in one committed transaction.
+pub async fn put_events(db: &IdbDatabase, rows: &[(String, u64, String)]) -> Result<(), String> {
+    super::idb_commit::commit(db, "events", |tx| {
+        let store = tx.object_store("events")?;
+        for (id, created_at, raw) in rows {
+            let row = Object::new();
+            Reflect::set(&row, &"id".into(), &id.into())?;
+            Reflect::set(&row, &"created_at".into(), &(*created_at as f64).into())?;
+            Reflect::set(&row, &"raw".into(), &raw.into())?;
+            store.put(&row)?;
+        }
+        Ok(())
+    })
+    .await
 }
 
 /// Raw JSON of the newest `limit` events, newest first.
@@ -180,38 +152,42 @@ pub async fn newest_events(db: &IdbDatabase, limit: usize) -> Result<Vec<String>
 
 /// Deletes the `count` oldest event rows (by `created_at`).
 pub async fn delete_oldest(db: &IdbDatabase, count: u32) -> Result<(), String> {
-    let tx = db
-        .transaction_with_str_and_mode("events", IdbTransactionMode::Readwrite)
-        .map_err(err)?;
-    let index = tx
-        .object_store("events")
-        .map_err(err)?
-        .index("created_at")
-        .map_err(err)?;
-    let request = index.open_cursor().map_err(err)?;
-    let left = Rc::new(RefCell::new(count));
-    let slot: Rc<RefCell<Option<Step>>> = Rc::default();
-    let done = Promise::new(&mut |resolve, _reject| {
-        let cursor_request = request.clone();
-        let release = slot.clone();
-        let left = left.clone();
+    let mut handler = None;
+    let mut cursor_request = None;
+    let result = super::idb_commit::commit(db, "events", |tx| {
+        let request = tx
+            .object_store("events")?
+            .index("created_at")?
+            .open_cursor()?;
+        let cursor = request.clone();
+        let tx = tx.clone();
+        let mut left = count;
         let step = Step::new(move |_| {
-            let cursor = cursor_request.result().unwrap_or(JsValue::NULL);
-            if cursor.is_null() || *left.borrow() == 0 {
-                let _ = resolve.call0(&JsValue::NULL);
-                release.borrow_mut().take();
-                return;
+            let advance = || -> Result<(), JsValue> {
+                let value = cursor.result()?;
+                if value.is_null() || left == 0 {
+                    return Ok(());
+                }
+                let value: web_sys::IdbCursorWithValue = value.unchecked_into();
+                value.delete()?;
+                value.continue_()
+            };
+            if advance().is_err() {
+                let _ = tx.abort();
             }
-            let cursor: web_sys::IdbCursorWithValue = cursor.unchecked_into();
-            let _ = cursor.delete();
-            *left.borrow_mut() -= 1;
-            let _ = cursor.continue_();
+            left = left.saturating_sub(1);
         });
         request.set_onsuccess(Some(step.as_ref().unchecked_ref()));
-        *slot.borrow_mut() = Some(step);
-    });
-    JsFuture::from(done).await.map_err(err)?;
-    Ok(())
+        cursor_request = Some(request);
+        handler = Some(step);
+        Ok(())
+    })
+    .await;
+    if let Some(request) = cursor_request {
+        request.set_onsuccess(None);
+    }
+    drop(handler);
+    result
 }
 
 /// Total rows in the events store.

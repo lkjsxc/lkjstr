@@ -129,10 +129,9 @@ impl Rt {
         let Some(app) = self.app() else { return false };
         let url = relay.to_owned();
         let socket = Socket::connect(relay, move |event| app.on_socket(&url, event));
-        let conn = self.net.conns.entry(relay.to_owned()).or_default();
         match socket {
-            Ok(socket) => conn.socket = Some(socket),
-            Err(error) => conn.error = Some(error),
+            Ok(socket) => self.net.conns.entry(relay.to_owned()).or_default().socket = Some(socket),
+            Err(error) => self.on_socket(relay, crate::host::socket::SocketEvent::Closed(error)),
         }
         false
     }

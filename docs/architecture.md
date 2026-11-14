@@ -16,7 +16,7 @@ How lkjstr is put together, for anyone changing it.
 
 `lkjstr-core` is where decisions live; it has native tests. `requests` owns
 plan reconciliation, queue eligibility, authentication retries and lookup
-states; `actions` guards publication inputs; `pagination` tracks raw pages.
+states; `actions` guards publication inputs and verifies external signer responses; `pagination` tracks raw pages.
 `lkjstr-web` holds effects only: sockets, IndexedDB, timers, NIP-07 and rendering. JavaScript is
 limited to what Trunk and wasm-bindgen generate to load the module.
 
@@ -33,11 +33,13 @@ limited to what Trunk and wasm-bindgen generate to load the module.
    `runtime/ingest.rs` drains in 8 ms slices: dedupe, verify, insert.
 6. The store bumps its revision; the UI's `rev` signal fires at most every
    120 ms and views re-query the store.
-7. New and replaced events are written to IndexedDB every 1.5 s.
+7. New and replaced events are written in committed 500-event batches every
+   1.5 s. Failed batches retry; the pending queue evicts oldest entries beyond
+   20000 and is disabled when storage cannot open.
 
 ## Storage
 
-One IndexedDB database `lkjstr` with two stores:
+One IndexedDB database `lkjstr-wasm` (schema 1, isolated from previous `lkjstr`) with two stores:
 
 - `events`: `{id, created_at, raw}` rows, index on `created_at`. The newest
   8000 load at startup; independent in-memory caps retain 16000 regular and

@@ -34,6 +34,7 @@ pub enum Storage {
     Opening,
     Ready { loaded: usize },
     Unavailable(String),
+    WriteFailed(String),
 }
 
 pub struct Rt {
@@ -50,7 +51,7 @@ pub struct Rt {
     wants: BTreeMap<WantId, Want>,
     next_want: WantId,
     incoming: VecDeque<(String, NostrEvent)>,
-    unsaved: Vec<NostrEvent>,
+    unsaved: lkjstr_core::persistence::PendingEvents,
     flags: Flags,
     db: Option<IdbDatabase>,
     app: Option<App>,
@@ -111,7 +112,7 @@ impl App {
             wants: BTreeMap::new(),
             next_want: 1,
             incoming: VecDeque::new(),
-            unsaved: Vec::new(),
+            unsaved: Default::default(),
             flags: Flags::default(),
             db: None,
             app: None,

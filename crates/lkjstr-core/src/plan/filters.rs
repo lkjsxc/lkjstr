@@ -11,7 +11,7 @@ use super::{MENTION_KINDS, NOTE_KINDS, Planned};
 const AUTHOR_CHUNK: usize = 400;
 
 pub(super) fn finish(relay: String, group: Group, acc: Acc) -> Planned {
-    let live = matches!(group, Group::LiveNotes | Group::Thread)
+    let live = matches!(group, Group::LiveNotes | Group::Thread | Group::Deletions)
         || matches!(group, Group::Global(None) | Group::Mentions(_, None));
     let base = NostrFilter {
         until: acc.until,
@@ -47,12 +47,17 @@ pub(super) fn finish(relay: String, group: Group, acc: Acc) -> Planned {
                 ..NostrFilter::default()
             },
             NostrFilter {
-                kinds: Some(vec![1, 6, 7]),
+                kinds: Some(vec![1, 5, 6, 7]),
                 tags: BTreeMap::from([("e".to_owned(), ids)]),
                 limit: Some(500),
                 ..NostrFilter::default()
             },
         ],
+        Group::Deletions => vec![NostrFilter {
+            kinds: Some(vec![5]),
+            tags: BTreeMap::from([("e".to_owned(), ids)]),
+            ..NostrFilter::default()
+        }],
         Group::Events => vec![NostrFilter {
             ids: Some(ids),
             ..NostrFilter::default()

@@ -4,61 +4,38 @@ use leptos::prelude::*;
 use lkjstr_core::plan::{Want, WantId};
 use lkjstr_core::store::Event;
 use lkjstr_core::{Open, View};
-use lkjstr_protocol::tags::{reply_parent, tag_values};
 
 use super::Ui;
 use super::feed::{Source, hold_want};
 use super::text::plural;
-
-/// Rows near the top whose authors and referenced notes are prefetched.
-const PREFETCH_ROWS: usize = 60;
-/// Most ids or pubkeys in one prefetch want.
-const PREFETCH_MAX: usize = 120;
 
 /// Asks for missing profiles and referenced notes of rendered rows.
 pub fn prefetch(ui: Ui, visible: Signal<bool>, rows: Signal<Vec<Event>>) {
     let missing = Memo::new(move |_| {
         ui.app.rev.track();
         let rows = rows.get();
-        ui.app.with(|rt| {
-            let mut people: Vec<String> = Vec::new();
-            let mut notes: Vec<String> = Vec::new();
-            for event in rows.iter().take(PREFETCH_ROWS) {
-                let mut keys = vec![event.pubkey.clone()];
-                keys.extend(tag_values(event, "p").into_iter().take(3));
-                for key in keys {
-                    if rt.store.profile(&key).is_none() && !people.contains(&key) {
-                        people.push(key);
-                    }
-                }
-                let mut refs: Vec<String> = reply_parent(event).into_iter().collect();
-                refs.extend(tag_values(event, "q"));
-                if event.kind == 6 || event.kind == 7 {
-                    refs.extend(tag_values(event, "e").into_iter().take(1));
-                }
-                for id in refs {
-                    if rt.store.get(&id).is_none() && !notes.contains(&id) {
-                        notes.push(id);
-                    }
-                }
-            }
-            people.truncate(PREFETCH_MAX);
-            notes.truncate(PREFETCH_MAX);
-            (people, notes)
-        })
+        ui.app
+            .with(|rt| lkjstr_core::prefetch::collect(&rows, &rt.store))
     });
     hold_want(ui, visible, move || {
-        let people = missing.with(|m| m.0.clone());
+        let people = missing.with(|m| m.people.clone());
         (!people.is_empty()).then_some(Want::Profiles {
             pubkeys: people,
             contacts: false,
         })
     });
     hold_want(ui, visible, move || {
-        let notes = missing.with(|m| m.1.clone());
-        (!notes.is_empty()).then_some(Want::Events {
-            ids: notes,
-            relays: vec![],
+        let refs = missing.get();
+        (!refs.notes.is_empty()).then_some(Want::Events {
+            ids: refs.notes,
+            relays: refs.relays,
+        })
+    });
+    hold_want(ui, visible, move || {
+        let refs = missing.get();
+        (!refs.deletions.is_empty()).then_some(Want::Deletions {
+            ids: refs.deletions,
+            relays: refs.deletion_relays,
         })
     });
 }

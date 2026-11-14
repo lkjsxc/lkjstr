@@ -63,6 +63,12 @@ Checks cover:
   replies blocked until the parent arrives; reactive repost targets; missing
   thread completion/refusal; noise-only pages and tied timestamps; accepted
   AUTH reissuing requests; completed session wants releasing sockets.
+- Second-review regressions in `scripts/browser-review-2.mjs`: previous schema
+  18 storage isolation, synchronous event write failure and transaction abort
+  with retry, socket construction failure with backoff/retry, content-only
+  quotes with relay hints, live remote deletions in feeds/threads, and extension
+  event substitution. Native tests also cover bounded persistence, every signer
+  field, invalid IDs/signatures, quote/mention edges and large text spans.
 
 `browser-relay.mjs` bounds fake relay events, publications, searches and
 subscriptions. `lkjstr-protocol/examples/browser-fixtures.rs` generates a
@@ -76,7 +82,10 @@ must be present.
 
 2026-11-14, revive branch:
 
-- Review smoke: all 51 checks passed on both debug and release builds with
+- Second-review smoke: all 61 checks passed on the current release build,
+  with intercepted WebSockets, blocked external HTTP and a fresh local port.
+  Report: `tmp/smoke-review-2/report.json` (ignored local artifact).
+- Earlier review smoke: all 51 checks passed on both debug and release builds with
   external HTTP blocked and every WebSocket intercepted. Reports:
   `tmp/smoke-review-debug/report.json` and
   `tmp/smoke-review-release/report.json` (ignored local artifacts).
@@ -91,10 +100,10 @@ must be present.
 - Current `pnpm check:repo`, `pnpm test:quiet`, `pnpm rust-wasm:quiet` and
   `pnpm verify:quiet` passed. These include fmt, native/wasm clippy, workspace
   tests, a Trunk release build and distribution checks.
-- Current release WASM: 9558588 bytes (1018701 bytes gzip). The earlier
+- Current release WASM: 9622155 bytes (1052401 bytes gzip). The earlier
   `tmp/lkjstr-dist.tar.gz` predates the review fixes.
 - Docker verify: not run under the worktree-only write restriction.
 - Previous read-only public-relay checks exercised Global, Thread and Profile.
   No public relays were contacted in this verification run.
-- Not exercised: NIP-07 extension, nsec import, explicit key backup, large
+- Not exercised: a real NIP-07 extension, nsec import, explicit key backup, large
   IndexedDB pruning, and scroll restore (previous check failed).

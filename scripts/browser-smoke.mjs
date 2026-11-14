@@ -106,7 +106,7 @@ try {
   let cacheCommitted = false;
   for (let n = 0; n < 100 && !cacheCommitted; n++) {
     cacheCommitted = await page.evaluate(async () => {
-      const db = await new Promise((ok) => { const r = indexedDB.open('lkjstr'); r.onsuccess = () => ok(r.result); });
+      const db = await new Promise((ok) => { const r = indexedDB.open('lkjstr-wasm'); r.onsuccess = () => ok(r.result); });
       const count = await new Promise((ok) => { const r = db.transaction('events').objectStore('events').count(); r.onsuccess = () => ok(r.result); });
       db.close();
       return count >= 3;
@@ -141,7 +141,7 @@ try {
   const focused = await page.locator('.pane.focused').innerText().catch(() => '');
   check('run completed', false, `${String(error).split('\n')[0]} | focused: ${focused.slice(0, 300)}`);
   diagnostics = await page.evaluate(async () => {
-    const db = await new Promise((ok) => { const r = indexedDB.open('lkjstr'); r.onsuccess = () => ok(r.result); });
+    const db = await new Promise((ok) => { const r = indexedDB.open('lkjstr-wasm'); r.onsuccess = () => ok(r.result); });
     const rows = await new Promise((ok) => { const r = db.transaction('events').objectStore('events').getAll(); r.onsuccess = () => ok(r.result); });
     const session = await new Promise((ok) => { const r = db.transaction('kv').objectStore('kv').get('session'); r.onsuccess = () => ok(r.result); });
     db.close();

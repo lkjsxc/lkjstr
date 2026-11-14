@@ -50,6 +50,29 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let reaction = sign(7, "+".into(), reaction_tags(&input.root, None))?;
     let remote = sign(1, "remote-only-needle from the search relay".into(), vec![])?;
     let repost = sign(6, String::new(), vec![vec!["e".into(), remote.id.clone()]])?;
+    let quote_note = sign(
+        1,
+        format!(
+            "content-only quote nostr:{}",
+            encode_note(&remote.id).map_err(|_| "quote pointer")?
+        ),
+        vec![],
+    )?;
+    let quote_nevent = sign(
+        1,
+        format!(
+            "hinted quote nostr:{}",
+            encode_nevent(&EventPointer {
+                id: remote.id.clone(),
+                relays: Some(vec!["wss://quote.example/".into()]),
+                author: None,
+                kind: None,
+            })
+            .map_err(|_| "hinted pointer")?
+        ),
+        vec![],
+    )?;
+    let deletion = sign(5, String::new(), vec![vec!["e".into(), remote.id.clone()]])?;
     let mut pages = Vec::new();
     for n in 0..85 {
         pages.push(
@@ -91,7 +114,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         "{}",
         json!({
             "verified": verified, "events": [metadata, reply, reaction], "remote": remote,
-            "repost": repost, "pages": pages, "npub": npub, "nprofile": nprofile, "note": note, "nevent": nevent,
+            "repost": repost, "quote_note": quote_note, "quote_nevent": quote_nevent, "deletion": deletion, "pages": pages, "npub": npub, "nprofile": nprofile, "note": note, "nevent": nevent,
         })
     );
     Ok(())

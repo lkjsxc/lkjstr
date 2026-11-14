@@ -170,3 +170,40 @@ fn scores_prefer_fast_reliable_relays_and_backoff_grows() {
     assert!(backoff_ms(4, 0.0) > backoff_ms(1, 1.0));
     assert!(backoff_ms(40, 1.0) <= 300_000, "capped");
 }
+
+#[test]
+fn displayed_targets_and_threads_receive_live_deletions() {
+    let defaults = defaults();
+    let scores = Scores::default();
+    let book = Book(HashMap::new());
+    let ctx = PlanContext {
+        defaults: &defaults,
+        directory: &book,
+        scores: &scores,
+        now_ms: 0,
+    };
+    for want in [
+        Want::Deletions {
+            ids: vec!["target".into()],
+            relays: vec![],
+        },
+        Want::Thread {
+            root: "target".into(),
+            author: None,
+            relays: vec![],
+        },
+    ] {
+        assert!(want.is_live());
+        let planned = plan(&[(1, want)], &ctx);
+        assert!(!planned.is_empty());
+        for request in planned {
+            assert!(request.live);
+            assert!(request.filters.iter().any(|f| {
+                f.kinds.as_ref().is_some_and(|k| k.contains(&5))
+                    && f.tags
+                        .get("e")
+                        .is_some_and(|ids| ids.contains(&"target".into()))
+            }));
+        }
+    }
+}

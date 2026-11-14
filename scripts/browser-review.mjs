@@ -1,10 +1,11 @@
 // Regression checks for the cutover review, using fresh contexts and fake relays.
 import { fakeRelay, fixtures } from './browser-relay.mjs';
+import { browserReview2 } from './browser-review-2.mjs';
 
 async function workspace(page, views) {
   await page.evaluate(async (views) => {
     const db = await new Promise((ok, fail) => {
-      const r = indexedDB.open('lkjstr'); r.onsuccess = () => ok(r.result); r.onerror = fail;
+      const r = indexedDB.open('lkjstr-wasm'); r.onsuccess = () => ok(r.result); r.onerror = fail;
     });
     const tabs = Object.fromEntries(views.map((v, i) => [i + 10, v]));
     const ws = { root: { type: 'pane', id: 1, tabs: views.map((_, i) => i + 10), active: 10 }, tabs, focus: 1, next_id: 40 };
@@ -40,7 +41,11 @@ export async function browserReview(browser, url, root, check) {
       page.on('pageerror', (e) => errors.push(String(e)));
       await page.goto(url);
       await page.waitForSelector('.pane');
-      await run(page);
+      try { await run(page); }
+      catch (error) {
+        const frame = error.stack?.split('\n').find((line) => line.includes('browser-review-2.mjs:'));
+        throw new Error(`${String(error).split('\n')[0]} ${frame?.trim() ?? ''}`);
+      }
     } finally { await context.close(); }
   }
 
@@ -69,7 +74,7 @@ export async function browserReview(browser, url, root, check) {
       check(`account creation rejects ${mode} failure`, await page.locator('.accounts li').count() === 0);
       if (mode !== 'open') {
         const clean = await page.evaluate(async () => {
-          const db = await new Promise((ok) => { const r = indexedDB.open('lkjstr'); r.onsuccess = () => ok(r.result); });
+          const db = await new Promise((ok) => { const r = indexedDB.open('lkjstr-wasm'); r.onsuccess = () => ok(r.result); });
           const keys = await new Promise((ok) => { const r = db.transaction('kv').objectStore('kv').getAllKeys(); r.onsuccess = () => ok(r.result); });
           db.close();
           return !keys.some((k) => k === 'session' || String(k).startsWith('secret:'));
@@ -174,5 +179,6 @@ export async function browserReview(browser, url, root, check) {
     await page.locator('.note:has-text("Older readable page note 84")').waitFor();
     check('pagination advances across tied timestamp boundaries', true);
   });
+  await browserReview2({ isolated, workspace, data, root, check });
   check('review regressions have no browser errors', errors.length === 0, errors.slice(0, 2).join(' | '));
 }

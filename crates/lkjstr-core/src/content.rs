@@ -36,10 +36,11 @@ fn token_end(text: &str) -> usize {
 
 /// Trailing punctuation usually belongs to the sentence, not the token.
 fn trim_tail(token: &str) -> &str {
+    let has_open_paren = token.contains('(');
     let mut end = token.len();
     while end > 0 {
         let last = token[..end].chars().next_back().unwrap_or(' ');
-        let unbalanced_paren = last == ')' && !token[..end].contains('(');
+        let unbalanced_paren = last == ')' && !has_open_paren;
         if matches!(last, '.' | ',' | ';' | ':' | '!' | '?') || unbalanced_paren {
             end -= last.len_utf8();
         } else {
@@ -74,7 +75,17 @@ pub fn segments(content: &str, emoji: &[(String, String)]) -> Vec<Segment> {
     };
     let mut at_word_start = true;
     while let Some(ch) = rest.chars().next() {
-        let token = &rest[..token_end(rest)];
+        let candidate = rest.starts_with("http://")
+            || rest.starts_with("https://")
+            || rest.starts_with("nostr:")
+            || (at_word_start && ch == '#');
+        // Plain characters never scan the token suffix. Failed candidates
+        // consume the whole token, so repeated invalid prefixes stay linear.
+        let token = if candidate {
+            &rest[..token_end(rest)]
+        } else {
+            ""
+        };
         let trimmed = trim_tail(token);
         let found = if rest.starts_with("https://") || rest.starts_with("http://") {
             (trimmed.len() > 8).then(|| media_kind(trimmed))
@@ -99,6 +110,11 @@ pub fn segments(content: &str, emoji: &[(String, String)]) -> Vec<Segment> {
                 push_text(&mut out, &mut text);
                 out.push(segment);
                 rest = &rest[used..];
+                at_word_start = false;
+            }
+            None if candidate => {
+                text.push_str(token);
+                rest = &rest[token.len()..];
                 at_word_start = false;
             }
             None => {
