@@ -1,7 +1,11 @@
 //! In-memory event store: deduplicated, indexed, bounded. The browser layer
 //! persists it to IndexedDB and reloads the newest slice at startup.
 
+mod author_feed;
+mod bytes;
+pub use bytes::event_payload_bytes;
 mod directory;
+mod identity;
 mod profile;
 mod query;
 mod retention;
@@ -40,10 +44,13 @@ pub struct Store {
     by_tag_e: HashMap<String, Vec<String>>,
     replaceable: HashMap<(String, u64), String>,
     profiles: HashMap<String, Arc<Profile>>,
+    verified_nip05: HashMap<String, String>,
     deleted: HashSet<(String, String)>,
     cap: usize,
     replaceable_cap: usize,
     revision: u64,
+    payload_bytes: usize,
+    byte_cap: usize,
 }
 
 impl Store {
@@ -63,10 +70,13 @@ impl Store {
             by_tag_e: HashMap::new(),
             replaceable: HashMap::new(),
             profiles: HashMap::new(),
+            verified_nip05: HashMap::new(),
             deleted: HashSet::new(),
             cap,
             replaceable_cap,
             revision: 0,
+            payload_bytes: 0,
+            byte_cap: 64 * 1024 * 1024,
         }
     }
 
@@ -153,6 +163,7 @@ impl Store {
     }
 
     fn index(&mut self, event: Event) {
+        self.payload_bytes += event_payload_bytes(&event);
         let key = (event.created_at, event.id.clone());
         self.by_time.insert(key.clone());
         self.by_author
@@ -178,10 +189,14 @@ impl Store {
         let Some(event) = self.events.remove(id) else {
             return;
         };
+        self.payload_bytes = self
+            .payload_bytes
+            .saturating_sub(event_payload_bytes(&event));
         if is_replaceable_kind(event.kind) {
             self.replaceable.remove(&(event.pubkey.clone(), event.kind));
             if event.kind == 0 {
                 self.profiles.remove(&event.pubkey);
+                self.verified_nip05.remove(&event.pubkey);
             }
         }
         let key = (event.created_at, event.id.clone());

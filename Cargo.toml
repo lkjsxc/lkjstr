@@ -17,6 +17,7 @@ path = "crates/lkjstr-web/src/lib.rs"
 js-sys = "0.3.99"
 leptos = { version = "0.8.19", features = ["csr"] }
 lkjstr-core = { path = "crates/lkjstr-core" }
+lkjstr-engine = { path = "crates/lkjstr-engine", default-features = false }
 lkjstr-protocol = { path = "crates/lkjstr-protocol" }
 send_wrapper = "0.6.0"
 serde = { version = "1.0.228", features = ["derive"] }
@@ -74,6 +75,7 @@ web-sys = { version = "0.3.99", features = [
 members = [
   ".",
   "crates/lkjstr-core",
+  "crates/lkjstr-engine",
   "crates/lkjstr-host",
   "crates/lkjstr-nips",
   "crates/lkjstr-protocol",

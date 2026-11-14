@@ -17,3 +17,7 @@ Index of lkjstr's documentation. Start with [status.md](status.md).
 - [workspace.md](workspace.md): the tiled workspace, shortcuts, narrow mode.
 - [verification.md](verification.md): gates, browser checks and their results.
 - [decisions.md](decisions.md): durable decisions and why.
+
+- [Engine](engine.md)
+- [Engine proposals](engine-proposals.md)
+- [Engine performance](engine-performance.md)

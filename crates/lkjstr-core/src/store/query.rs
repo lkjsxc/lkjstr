@@ -30,13 +30,7 @@ impl Store {
                 None => return Vec::new(),
             },
             None => match &query.authors {
-                Some(authors) if authors.len() == 1 => {
-                    let author = authors.iter().next().map(String::as_str).unwrap_or("");
-                    match self.by_author.get(author) {
-                        Some(set) => Box::new(set.iter().rev()),
-                        None => return Vec::new(),
-                    }
-                }
+                Some(authors) => Box::new(self.author_feed(authors)),
                 _ => Box::new(self.by_time.iter().rev()),
             },
         };

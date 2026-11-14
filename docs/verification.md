@@ -175,12 +175,8 @@ width and 160px height, horizontal overflow, available text measure and inactive
 close visibility. The tab suite exercises closing, focus order, duplicate views,
 pinning, rapid closing, Escape drag cancellation, arrow keys and 40px resizing.
 
-Keyboard review covers named controls on each view, palette navigation, tab
-focus and closing, detail navigation, workspace shortcuts and Alt+Enter zoom.
-Settings is also captured at 200 percent with reduced motion. Full modal focus
-trapping, palette arrow selection, long-press menus, complete touch targets and
-screen-reader testing with a real assistive-technology session remain open.
-The 56px tab/44px touch-target conflict is in [design-review.md](design-review.md).
+Keyboard and narrow-screen results are historical; assistive-technology and
+complete touch testing remain open. See design-review.md for conflicts.
 
 The address suite checks root/default behavior, ignored old hashes, focused
 public paths, titles, replace/push history, layout-preserving deep links,
@@ -191,10 +187,13 @@ Docker Compose verification cannot run under the explicit instruction to write
 only inside this worktree: it writes image and container data to daemon storage.
 No service was stopped/restarted, no commit made, and no deployment performed.
 
-## Layout/navigation review (2026-11-14)
+Prior layout/navigation review: 129 browser checks passed (2026-11-14).
 
-Native `navigation_review_test` covers public-identity reloads, full-distance
-history with exhaustion, and atomic bank imports in both move directions.
-All 129 browser smoke checks pass, including relay/reply reload state, two-page
-moves and `history.go(-2)`/`history.go(2)`. All four quiet gates pass.
-Docker remains excluded by the worktree-only write rule.
+## Worker engine (2026-11-14)
+
+Twenty new native engine tests pass, plus 16 headless protocol checks against
+an actual loopback WebSocket: WASM verification, IndexedDB/cache boot, NIP-07,
+visibility, SharedWorker isolation and a new note after three simulated idle
+hours. Reports: tmp/engine-harness/report.json and docs/engine-performance.md.
+Final verify:quiet passes, including fmt, native/WASM clippy, workspace tests,
+Trunk release build and output checks. Docker remains excluded as above.

@@ -60,6 +60,10 @@ docker compose --progress quiet -f docker-compose.yml run --rm verify
 
 Details: [docs/verification.md](docs/verification.md).
 
+The new Rust/WASM Worker engine is in `crates/lkjstr-engine`; its protocol,
+SharedWorker entry, test harness and current limits are in
+[docs/engine.md](docs/engine.md). The Leptos app remains during frontend cutover.
+
 ## Repository map
 
 - `index.html`: Trunk entry; `Cargo.toml`: the browser app package and workspace.
