@@ -60,8 +60,8 @@ Which of these were exercised in a real browser, and how, is recorded in
 
 ## Current verification (2026-11-14)
 
-The expanded fake-relay browser smoke passes all 33 checks on both the debug
-build and the extracted release tarball.
+The expanded fake-relay browser smoke passes all 51 checks on both the debug
+build and the release build.
 It covers generated local accounts, invalid and read-only imports, account
 switching and removal, signing, compose, threads, profiles, empty and populated
 notifications, local and relay search, and direct NIP-19 navigation. It verifies
@@ -69,15 +69,19 @@ all submitted ids and signatures through `lkjstr-protocol`. Reload checks
 prove cached events render with relay replay disabled. All sockets terminate
 at the fake relay and external HTTP is blocked; no public relays are used.
 
-This continuation fixed stale Home and Notifications rows after an account
-switch, and search that said it was still loading after all relays answered
-or refused. Quiet gates now print one success line. Build aliases also handle
-`NO_COLOR=1`, which Trunk's boolean option otherwise rejects.
+Review regressions cover storage open/write/transaction-abort failures,
+modified note keys, missing reply parents, late repost targets, terminal
+thread lookups, filtered pagination (including timestamp ties), AUTH retries
+and idle socket release. Native tests cover deletion ownership, replaceable
+ties and retention/index cleanup, publication guards and relay scheduling.
+Account changes install only after secret/session records commit atomically.
+Quotes and reply parents share the terminal lookup states used by reposts.
+Quiet gates print one success line; build aliases handle `NO_COLOR=1`.
 
 `pnpm check:repo`, `pnpm test:quiet`, `pnpm rust-wasm:quiet` and
 `pnpm verify:quiet` pass.
-`pnpm build` produces a checked Trunk release; the extracted static tarball
-loads without asset or page errors. Docker verification is pending because
+The gates produce a checked Trunk release; the static output loads without
+asset or page errors. Docker verification is pending because
 this run forbids writes outside the worktree; image builds write to daemon
 storage. See [verification.md](verification.md) for evidence and limits.
 The static hosting tarball procedure is in [README.md](../README.md#build).
@@ -100,7 +104,9 @@ Implemented:
   persist in IndexedDB. NIP-42 AUTH is answered with a local key only.
 - Ingest verifies ids and signatures in 8 ms slices off the socket callback,
   deduplicates before verifying, unpacks kind 6 reposts, applies kind 5
-  deletions by the same author, keeps at most 20000 events in memory.
+  deletions by the same author (including targets arriving later). Independent
+  caps retain 16000 regular and 4000 replaceable events, cleaning all indexes
+  on eviction; rejected events do not retain relay hints.
 - Local-first: the newest 8000 stored events load before the first plan;
   timelines render from the store and new notes wait behind a "new" marker
   unless the reader is at the top.
@@ -111,8 +117,10 @@ Built but not working or not verified:
 
 - Scroll memory per feed tab: the top visible note is saved (checked in
   IndexedDB), but restoring it after a reload did not work in a browser check
-  on Global; a probe also saw fewer cached rows than expected right after
-  reload. Investigate `ui/feed_memory.rs` and the first Global render first.
+  on Global. Investigate `ui/feed_memory.rs` and the first Global render first.
+  The review smoke's cache discrepancy was a test wait bug: an async predicate
+  returned a truthy Promise before the cache flush. Explicit polling now waits
+  for committed event rows before reloading.
 - IndexedDB pruning (oldest rows beyond 60000, down to 50000, 20 s after
   boot) is implemented but not exercised in a browser.
 
@@ -132,7 +140,8 @@ Planned (not built):
 - No DMs (NIP-04, NIP-17), zap sending, media upload, relay list editing,
   mute lists, custom emoji picker, profile editing.
 - Virtualisation is `content-visibility` plus a 600-row cap, not windowing.
-- Release WASM is 9.4 MB (1.0 MB gzip) because wasm-opt is off
+  Each feed scans at most 6000 raw rows, including hidden noise.
+- Release WASM is 9.6 MB (1.0 MB gzip) because wasm-opt is off
   (`data-wasm-opt="0"` avoids a download); enable it for size.
 - Notification read state is not tracked.
 
@@ -140,8 +149,7 @@ Planned (not built):
 
 1. Run Docker Compose `verify` where image storage writes are allowed, then
    add the fake-relay browser smoke to CI (needs Chromium in the image).
-2. Fix scroll restore after reload; investigate the previously observed cache
-   row-count discrepancy on Global and verify IndexedDB pruning at its bound.
+2. Fix scroll restore after reload and verify IndexedDB pruning at its bound.
 3. Worker-side ingest (verification and indexing) with the same core crate.
 4. Initial follow list creation after a proven empty relay response, relay
    list editing (publish kind 10002), and mute lists (kind 10000).

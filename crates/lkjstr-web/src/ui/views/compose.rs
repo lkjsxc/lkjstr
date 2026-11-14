@@ -4,7 +4,7 @@
 use leptos::prelude::*;
 use lkjstr_core::layout::TabId;
 use lkjstr_core::plan::Want;
-use lkjstr_protocol::{content_derived_tags, content_warning_tag, reply_tags};
+use lkjstr_protocol::{content_derived_tags, content_warning_tag};
 
 use crate::runtime::{PubState, Publish};
 use crate::ui::Ui;
@@ -61,6 +61,7 @@ pub fn Compose(tab: TabId, reply_to: Option<String>, visible: Signal<bool>) -> i
     });
     let parent_id = StoredValue::new(reply_to.clone());
     hold_want(ui, visible, move || {
+        app.rev.track();
         let id = parent_id.get_value()?;
         app.with(|rt| rt.store.get(&id))
             .is_none()
@@ -89,10 +90,16 @@ pub fn Compose(tab: TabId, reply_to: Option<String>, visible: Signal<bool>) -> i
         if content.trim().is_empty() || busy.get_untracked() {
             return;
         }
-        let mut tags = parent
-            .get_untracked()
-            .map(|p| reply_tags(&p))
-            .unwrap_or_default();
+        let parent = parent.get_untracked();
+        let reply_to = parent_id.get_value();
+        let mut tags =
+            match lkjstr_core::actions::compose_tags(reply_to.as_deref(), parent.as_deref()) {
+                Ok(tags) => tags,
+                Err(message) => {
+                    error.set(Some(message.into()));
+                    return;
+                }
+            };
         tags.extend(hashtags(&content));
         if let Some(reason) = warning.get_untracked() {
             tags.push(content_warning_tag(&reason));
@@ -116,7 +123,7 @@ pub fn Compose(tab: TabId, reply_to: Option<String>, visible: Signal<bool>) -> i
     view! {
         <div class="page compose">
             {move || parent.get().map(|event| view! { <div class="reply-to"><Note event=event depth=1/></div> })}
-            {move || (reply_to.is_some() && parent.get().is_none()).then(|| view! { <p class="muted">"Loading the note you are replying to…"</p> })}
+            {move || (reply_to.is_some() && parent.get().is_none()).then(|| view! { <p class="muted"><crate::ui::reference::Missing id=parent_id.get_value()/></p> })}
             <textarea
                 rows="6"
                 placeholder=if parent_id.get_value().is_some() { "Write your reply" } else { "What's happening?" }
@@ -142,7 +149,7 @@ pub fn Compose(tab: TabId, reply_to: Option<String>, visible: Signal<bool>) -> i
                 </label>
                 <span class="muted">{move || format!("{} characters", text.get().chars().count())}</span>
                 <span class="strip-fill"></span>
-                <button class="primary" disabled=move || !can_sign.get() || busy.get() || text.get().trim().is_empty()
+                <button class="primary" disabled=move || !can_sign.get() || busy.get() || text.get().trim().is_empty() || (parent_id.get_value().is_some() && parent.get().is_none())
                     title="Post (Ctrl+Enter)" on:click=move |_| post()>
                     {move || if busy.get() { "Signing…" } else if parent_id.get_value().is_some() { "Reply" } else { "Post" }}
                 </button>

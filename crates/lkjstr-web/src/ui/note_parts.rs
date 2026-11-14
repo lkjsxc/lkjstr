@@ -138,7 +138,7 @@ pub fn Content(event: Event, #[prop(default = false)] compact: bool) -> impl Int
                 }
                 .into_any()
             }
-            Segment::Quote { id, relays } if !compact => view! { <super::note::Quote id=id relays=relays/> }.into_any(),
+            Segment::Quote { id, relays } if !compact => view! { <super::reference::Quote id=id relays=relays/> }.into_any(),
             Segment::Quote { id, relays } => view! {
                 <button class="mention" on:click=move |ev| { ev.stop_propagation(); ui.open_thread(&id, relays.clone()); }>"[quoted note]"</button>
             }

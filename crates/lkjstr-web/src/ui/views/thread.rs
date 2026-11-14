@@ -82,7 +82,7 @@ pub fn Thread(id: String, relays: Vec<String>, visible: Signal<bool>) -> impl In
             .unwrap_or_else(|| focus.get_value())
     });
     let hints = StoredValue::new(relays);
-    hold_want(ui, visible, move || {
+    let conversation = hold_want(ui, visible, move || {
         let author = event.get().map(|e| e.pubkey.clone());
         Some(Want::Thread {
             root: root.get(),
@@ -90,7 +90,8 @@ pub fn Thread(id: String, relays: Vec<String>, visible: Signal<bool>) -> impl In
             relays: hints.get_value(),
         })
     });
-    hold_want(ui, visible, move || {
+    let missing = hold_want(ui, visible, move || {
+        app.rev.track();
         let missing = event.get().is_none() || app.with(|rt| rt.store.get(&root.get()).is_none());
         missing.then(|| Want::Events {
             ids: vec![focus.get_value(), root.get()],
@@ -124,7 +125,15 @@ pub fn Thread(id: String, relays: Vec<String>, visible: Signal<bool>) -> impl In
     let progress = Memo::new(move |_| {
         app.net_rev.track();
         app.rev.track();
-        rows.with(|r| r.len())
+        let mut progress = lkjstr_core::requests::Progress::default();
+        let ids: Vec<_> = [conversation.get(), missing.get()]
+            .into_iter()
+            .flatten()
+            .collect();
+        for id in &ids {
+            progress.add(app.with(|rt| rt.progress(*id)));
+        }
+        lkjstr_core::requests::Lookup::from_progress((!ids.is_empty()).then_some(progress))
     });
     view! {
         <div class="feed thread">
@@ -134,8 +143,8 @@ pub fn Thread(id: String, relays: Vec<String>, visible: Signal<bool>) -> impl In
                     view! { <Note event=row.0 focused=focused depth=row.1/> }
                 }
             </For>
-            <Show when=move || progress.get() == 0>
-                <div class="empty" role="status"><p>"Looking for this note on relays…"</p></div>
+            <Show when=move || event.get().is_none()>
+                <div class="empty" role="status"><p>{move || progress.get().message()}</p></div>
             </Show>
         </div>
     }

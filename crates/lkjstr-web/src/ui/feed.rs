@@ -2,11 +2,11 @@
 //! New notes wait behind a marker unless the reader is at the top; rows
 //! skip rendering off screen (`content-visibility`), the list is capped.
 
-use std::collections::HashSet;
-
+pub use super::feed_source::Source;
 use leptos::prelude::*;
-use lkjstr_core::plan::{MENTION_KINDS, NOTE_KINDS, Want, WantId};
-use lkjstr_core::store::{Event, Query};
+use lkjstr_core::pagination::Page;
+use lkjstr_core::plan::{Want, WantId};
+use lkjstr_core::store::Event;
 use lkjstr_core::timeline::Timeline;
 use wasm_bindgen::JsCast;
 
@@ -16,80 +16,10 @@ use super::feed_state::{EmptyState, prefetch};
 use super::note::Note;
 use super::notify::Notification;
 
-const PAGE: usize = 40;
+pub(super) const PAGE: usize = lkjstr_core::pagination::PAGE_SIZE;
 const SHOWN_CAP: usize = 600;
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum Source {
-    Home,
-    Global,
-    Notifications,
-    Profile(String),
-}
-
-impl Source {
-    fn authors(&self, ui: Ui, me: &Option<String>) -> Option<Vec<String>> {
-        match self {
-            Source::Home => {
-                let me = me.clone()?;
-                // Without a follow list yet, Home still shows your own notes.
-                let mut follows = ui.app.with(|rt| rt.store.follows(&me)).unwrap_or_default();
-                follows.push(me);
-                Some(follows)
-            }
-            Source::Profile(pubkey) => Some(vec![pubkey.clone()]),
-            _ => None,
-        }
-    }
-
-    pub(super) fn want(
-        &self,
-        authors: &Option<Vec<String>>,
-        me: &Option<String>,
-        until: Option<u64>,
-    ) -> Option<Want> {
-        let limit = PAGE as u64;
-        Some(match self {
-            Source::Home | Source::Profile(_) => Want::Notes {
-                authors: authors.clone()?,
-                until,
-                limit,
-            },
-            Source::Global => Want::Global { until, limit },
-            Source::Notifications => Want::Mentions {
-                pubkey: me.clone()?,
-                until,
-                limit: limit * 2,
-            },
-        })
-    }
-
-    fn query(
-        &self,
-        authors: &Option<Vec<String>>,
-        me: &Option<String>,
-        limit: usize,
-    ) -> Option<Query> {
-        let base = Query {
-            limit,
-            kinds: NOTE_KINDS.to_vec(),
-            ..Query::default()
-        };
-        Some(match self {
-            Source::Home | Source::Profile(_) => Query {
-                authors: Some(authors.clone()?.into_iter().collect::<HashSet<_>>()),
-                ..base
-            },
-            Source::Global => base,
-            Source::Notifications => Query {
-                mention: Some(me.clone()?),
-                exclude_author: me.clone(),
-                kinds: MENTION_KINDS.to_vec(),
-                ..base
-            },
-        })
-    }
-}
+/// Upper bound on raw rows scanned per feed, including hidden noise.
+const QUERY_CAP: usize = 6_000;
 
 /// Keeps one want registered while `visible`, updating it as inputs change.
 pub fn hold_want(
@@ -138,13 +68,13 @@ pub fn Feed(
         src.with_value(|s| s.authors(ui, &me.get()))
     });
     let limit = RwSignal::new(PAGE);
-    let older = RwSignal::new(None::<u64>);
+    let older = RwSignal::new(None::<(u64, usize)>);
     let live = hold_want(ui, visible, move || {
-        src.with_value(|s| s.want(&authors.get(), &me.get(), None))
+        src.with_value(|s| s.want(&authors.get(), &me.get(), None, PAGE))
     });
-    let _paged = hold_want(ui, visible, move || {
-        let until = older.get()?;
-        src.with_value(|s| s.want(&authors.get(), &me.get(), Some(until)))
+    let paged = hold_want(ui, visible, move || {
+        let (until, limit) = older.get()?;
+        src.with_value(|s| s.want(&authors.get(), &me.get(), Some(until), limit))
     });
     let timeline = StoredValue::new(Timeline::new(SHOWN_CAP));
     let scope = StoredValue::new((None::<Vec<String>>, None::<String>));
@@ -155,14 +85,29 @@ pub fn Feed(
         tick.track();
         let next_scope = (authors.get(), me.get());
         if scope.get_value() != next_scope {
+            limit.set(PAGE);
+            older.set(None);
             timeline.update_value(Timeline::clear);
             scope.set_value(next_scope);
         }
         let Some(query) = src.with_value(|s| s.query(&authors.get(), &me.get(), limit.get()))
         else {
-            return (Vec::<Event>::new(), 0);
+            return (Vec::<Event>::new(), 0, Page::default());
         };
         let mut found = app.with(|rt| rt.store.feed(&query));
+        let page = Page {
+            count: found.len(),
+            oldest: found.last().map(|e| e.created_at),
+            at_oldest: found
+                .iter()
+                .rev()
+                .take_while(|e| {
+                    found
+                        .last()
+                        .is_some_and(|last| e.created_at == last.created_at)
+                })
+                .count(),
+        };
         if src.with_value(|s| *s == Source::Global) {
             found.retain(|e| !lkjstr_core::content::looks_like_noise(&e.content));
         }
@@ -180,7 +125,7 @@ pub fn Feed(
                     .iter()
                     .filter_map(|(_, id)| rt.store.get(id))
                     .collect();
-                (shown, t.pending_count())
+                (shown, t.pending_count(), page)
             })
         })
     });
@@ -201,6 +146,33 @@ pub fn Feed(
         container,
         Signal::derive(move || rows.with(|r| r.0.clone())),
     );
+    let load_more = move |near_end: bool| {
+        let settled = [live.get(), paged.get()].into_iter().flatten().all(|id| {
+            app.with(|rt| {
+                let p = rt.progress(id);
+                p.total > 0 && p.settled()
+            })
+        });
+        let next = rows.with(|r| {
+            r.2.next(
+                limit.get(),
+                older.get().map(|p| p.0),
+                settled,
+                near_end || r.0.len() < PAGE,
+                QUERY_CAP,
+            )
+        });
+        if let Some(until) = next {
+            limit.update(|l| *l = (*l + PAGE).min(QUERY_CAP));
+            older.set(Some(until));
+        }
+    };
+    Effect::new(move |_| {
+        app.net_rev.track();
+        if visible.get() {
+            load_more(false);
+        }
+    });
     let on_scroll = move |ev: web_sys::Event| {
         feed_memory::remember(ui, tab, container, saving);
         let Some(el) = ev
@@ -217,10 +189,7 @@ pub fn Feed(
             reveal();
         }
         let near_end = el.scroll_height() - el.scroll_top() - el.client_height() < 900;
-        if near_end && rows.with_untracked(|r| r.0.len() + 5 >= limit.get_untracked()) {
-            limit.update(|l| *l += PAGE);
-            older.set(timeline.with_value(|t| t.oldest()));
-        }
+        load_more(near_end);
     };
     let is_notifications = source == Source::Notifications;
     view! {

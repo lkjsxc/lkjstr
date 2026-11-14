@@ -8,6 +8,7 @@ import { extname, join, resolve } from 'node:path';
 import { chromium } from 'playwright-core';
 import { fakeRelay } from './browser-relay.mjs';
 import { browserFlows } from './browser-flows.mjs';
+import { browserReview } from './browser-review.mjs';
 
 const root = resolve(process.env.LKJSTR_DIST ?? 'dist');
 const out = resolve(process.argv[2] ?? 'tmp/smoke');
@@ -38,6 +39,7 @@ const fake = fakeRelay();
 const stored = fake.published;
 
 const checks = {};
+let diagnostics;
 const check = (name, ok, detail = '') => (checks[name] = ok ? 'ok' : `FAIL ${detail}`);
 await mkdir(out, { recursive: true });
 const browser = await chromium.launch({ executablePath: await chrome(), args: ['--no-sandbox'] });
@@ -99,12 +101,19 @@ try {
   const layout = await panes();
   await page.waitForTimeout(800);
 
-  await page.waitForFunction(async () => {
-    const db = await new Promise((ok) => { const r = indexedDB.open('lkjstr'); r.onsuccess = () => ok(r.result); });
-    const count = await new Promise((ok) => { const r = db.transaction('events').objectStore('events').count(); r.onsuccess = () => ok(r.result); });
-    db.close();
-    return count >= 3;
-  });
+  // waitForFunction treats a returned Promise as truthy, even when it resolves
+  // false. Poll the awaited database result before navigating away from writes.
+  let cacheCommitted = false;
+  for (let n = 0; n < 100 && !cacheCommitted; n++) {
+    cacheCommitted = await page.evaluate(async () => {
+      const db = await new Promise((ok) => { const r = indexedDB.open('lkjstr'); r.onsuccess = () => ok(r.result); });
+      const count = await new Promise((ok) => { const r = db.transaction('events').objectStore('events').count(); r.onsuccess = () => ok(r.result); });
+      db.close();
+      return count >= 3;
+    });
+    if (!cacheCommitted) await page.waitForTimeout(100);
+  }
+  if (!cacheCommitted) throw new Error('Event cache did not commit before reload');
   fake.setReading(false);
   await page.reload();
   await page.waitForSelector('.pane', { timeout: 20000 });
@@ -118,6 +127,7 @@ try {
   await page.waitForSelector('.body.shown >> text=No replies, mentions or reactions yet.', { timeout: 10000 });
   check('notifications ask relays and settle honestly', true);
   await browserFlows(page, fake, check, shot);
+  await browserReview(browser, url, stored.find((e) => e.kind === 1), check);
 
   await page.setViewportSize({ width: 390, height: 800 });
   await page.waitForTimeout(300);
@@ -130,11 +140,18 @@ try {
 } catch (error) {
   const focused = await page.locator('.pane.focused').innerText().catch(() => '');
   check('run completed', false, `${String(error).split('\n')[0]} | focused: ${focused.slice(0, 300)}`);
+  diagnostics = await page.evaluate(async () => {
+    const db = await new Promise((ok) => { const r = indexedDB.open('lkjstr'); r.onsuccess = () => ok(r.result); });
+    const rows = await new Promise((ok) => { const r = db.transaction('events').objectStore('events').getAll(); r.onsuccess = () => ok(r.result); });
+    const session = await new Promise((ok) => { const r = db.transaction('kv').objectStore('kv').get('session'); r.onsuccess = () => ok(r.result); });
+    db.close();
+    return { active: JSON.parse(session ?? '{}').active, events: rows.map((r) => { const e = JSON.parse(r.raw); return { id: e.id, pubkey: e.pubkey, kind: e.kind }; }) };
+  }).catch(() => undefined);
   await shot('99-failure').catch(() => {});
 }
 check('built assets load without HTTP errors', assetErrors.length === 0, assetErrors.join(' | '));
 check('no page errors', errors.length === 0, errors.slice(0, 3).join(' | '));
-const report = JSON.stringify({ url, out, published: stored.length, checks }, null, 1);
+const report = JSON.stringify({ url, out, published: stored.length, checks, diagnostics }, null, 1);
 await writeFile(join(out, 'report.json'), report + '\n');
 console.log(report);
 await browser.close();

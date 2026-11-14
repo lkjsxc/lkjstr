@@ -36,7 +36,7 @@ pub const SHORTCUTS: [(&str, &str); 16] = [
     ("Esc", "Close menus and help"),
 ];
 
-fn typing(ev: &KeyboardEvent) -> bool {
+pub(super) fn typing(ev: &KeyboardEvent) -> bool {
     ev.target()
         .and_then(|t| t.dyn_into::<HtmlElement>().ok())
         .is_some_and(|el| {

@@ -42,6 +42,7 @@ pub struct Rt {
     pub defaults: RelayDefaults,
     pub net: Net,
     pub session: Session,
+    session_busy: bool,
     pub publishes: VecDeque<Publish>,
     pub storage: Storage,
     /// One user-facing message (an action that failed), shown as a toast.
@@ -98,11 +99,12 @@ pub fn default_relays() -> RelayDefaults {
 impl App {
     pub fn new() -> App {
         let rt = Rt {
-            store: Store::new(STORE_CAP),
+            store: Store::with_caps(STORE_CAP - 4_000, 4_000),
             scores: Scores::default(),
             defaults: default_relays(),
             net: Net::default(),
             session: Session::default(),
+            session_busy: false,
             publishes: VecDeque::new(),
             storage: Storage::Opening,
             notice: None,

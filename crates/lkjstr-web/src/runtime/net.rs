@@ -3,7 +3,9 @@
 
 use std::collections::HashMap;
 
-use lkjstr_core::plan::{PlanContext, Planned, plan};
+use lkjstr_core::plan::{PlanContext, plan};
+use lkjstr_core::requests::{self, Auth};
+pub use lkjstr_core::requests::{Sub, SubState};
 use lkjstr_protocol::{ClientMessage, encode_client_message};
 
 use super::Rt;
@@ -15,29 +17,14 @@ const MAX_SUBS_PER_RELAY: usize = 10;
 /// A request with no answer by then counts as slow; the planner hedges.
 const SLOW_MS: u64 = 4_000;
 
-#[derive(Clone, Debug, PartialEq)]
-pub enum SubState {
-    Queued,
-    Waiting,
-    Live,
-    Done,
-    Failed(String),
-}
-
-pub struct Sub {
-    pub sub_id: String,
-    pub planned: Planned,
-    pub state: SubState,
-    pub sent_ms: u64,
-    pub events: u32,
-}
-
 #[derive(Default)]
 pub struct Conn {
     pub socket: Option<Socket>,
     pub open: bool,
     pub notice: Option<String>,
     pub error: Option<String>,
+    pub(super) auth: Auth,
+    pub(super) auth_until_ms: u64,
     /// Messages waiting for the socket to open (bounded by `MAX_OUTBOX`).
     pub(super) outbox: Vec<String>,
     /// Publishing keeps an otherwise idle connection until then.
@@ -68,76 +55,39 @@ impl Rt {
             scores: &self.scores,
             now_ms: now_ms(),
         };
-        let planned: HashMap<String, Planned> = plan(&wants, &ctx)
-            .into_iter()
-            .map(|p| (p.key(), p))
-            .collect();
-        let stale: Vec<String> = self
-            .net
-            .subs
-            .keys()
-            .filter(|k| !planned.contains_key(*k))
-            .cloned()
-            .collect();
-        for key in stale {
-            if let Some(sub) = self.net.subs.remove(&key)
-                && matches!(sub.state, SubState::Waiting | SubState::Live)
-            {
-                self.send(&sub.planned.relay, &ClientMessage::Close(sub.sub_id));
-            }
+        let close = requests::reconcile(
+            &mut self.net.subs,
+            plan(&wants, &ctx),
+            &mut self.net.next_sub,
+        );
+        for (relay, sub_id) in close {
+            self.send(&relay, &ClientMessage::Close(sub_id));
         }
-        for (key, item) in planned {
-            match self.net.subs.get_mut(&key) {
-                Some(sub) => sub.planned.wants = item.wants,
-                None => {
-                    self.net.next_sub += 1;
-                    let sub = Sub {
-                        sub_id: format!("q{}", self.net.next_sub),
-                        planned: item,
-                        state: SubState::Queued,
-                        sent_ms: 0,
-                        events: 0,
-                    };
-                    let relay = sub.planned.relay.clone();
-                    self.net.subs.insert(key, sub);
-                    self.pump(&relay);
-                }
-            }
-        }
-        let busy: Vec<String> = self
+        let relays: std::collections::HashSet<_> = self
             .net
             .subs
             .values()
+            .filter(|s| s.state.busy())
             .map(|s| s.planned.relay.clone())
             .collect();
+        for relay in relays {
+            self.pump(&relay);
+        }
         let now = now_ms();
-        self.net
-            .conns
-            .retain(|url, conn| busy.contains(url) || conn.keep_until_ms > now);
+        self.net.conns.retain(|url, conn| {
+            requests::busy(&self.net.subs, url)
+                || conn.keep_until_ms > now
+                || (conn.auth.pending.is_some() && conn.auth_until_ms > now)
+        });
     }
 
     /// Sends queued requests for `relay` while it has free slots.
     pub(super) fn pump(&mut self, relay: &str) {
-        if !self.ensure_conn(relay) {
+        let keys = requests::ready(&self.net.subs, relay, MAX_SUBS_PER_RELAY);
+        if keys.is_empty() || !self.ensure_conn(relay) {
             return;
         }
-        let active = |s: &&Sub| {
-            s.planned.relay == relay && matches!(s.state, SubState::Waiting | SubState::Live)
-        };
-        let mut free =
-            MAX_SUBS_PER_RELAY.saturating_sub(self.net.subs.values().filter(active).count());
-        let mut keys: Vec<String> = self
-            .net
-            .subs
-            .iter()
-            .filter(|(_, s)| s.planned.relay == relay && s.state == SubState::Queued)
-            .map(|(key, _)| key.clone())
-            .collect();
-        keys.sort();
         for key in keys {
-            if free == 0 {
-                break;
-            }
             let Some(sub) = self.net.subs.get_mut(&key) else {
                 continue;
             };
@@ -147,7 +97,6 @@ impl Rt {
             };
             sub.state = SubState::Waiting;
             sub.sent_ms = now_ms();
-            free -= 1;
             self.scores.entry(relay).reqs += 1;
             self.send(relay, &message);
             self.watch_slow(key);
@@ -200,6 +149,11 @@ impl Rt {
         let open = self.ensure_conn(relay);
         if open {
             self.send_raw(relay, &text);
+        }
+        if let Some(app) = self.app() {
+            after(PUBLISH_KEEP_MS + 1, move || {
+                app.update(|rt| rt.schedule_replan(1))
+            });
         }
         if let Some(conn) = self.net.conns.get_mut(relay) {
             conn.keep_until_ms = now_ms() + PUBLISH_KEEP_MS;

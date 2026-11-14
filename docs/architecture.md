@@ -14,8 +14,10 @@ How lkjstr is put together, for anyone changing it.
 | `lkjstr-xtask` | Repository checks and quiet gates | none |
 | `lkjstr-host` | Native static server (not yet adapted to Trunk output) | none |
 
-`lkjstr-core` is where decisions live; it has native tests. `lkjstr-web` holds
-effects only: sockets, IndexedDB, timers, NIP-07 and rendering. JavaScript is
+`lkjstr-core` is where decisions live; it has native tests. `requests` owns
+plan reconciliation, queue eligibility, authentication retries and lookup
+states; `actions` guards publication inputs; `pagination` tracks raw pages.
+`lkjstr-web` holds effects only: sockets, IndexedDB, timers, NIP-07 and rendering. JavaScript is
 limited to what Trunk and wasm-bindgen generate to load the module.
 
 ## Data flow
@@ -38,10 +40,13 @@ limited to what Trunk and wasm-bindgen generate to load the module.
 One IndexedDB database `lkjstr` with two stores:
 
 - `events`: `{id, created_at, raw}` rows, index on `created_at`. The newest
-  8000 load at startup; the in-memory store keeps at most 20000.
+  8000 load at startup; independent in-memory caps retain 16000 regular and
+  4000 replaceable events, with their indexes and profiles evicted together.
 - `kv`: `workspace`, `settings`, `session`, `scores`, `draft:*`, and
   `secret:<pubkey>` for local keys. Secrets leave storage only through the
-  explicit "Back up key" action.
+  explicit "Back up key" action. Account changes commit the session and secret
+  writes/deletions in one transaction before installing the in-memory account;
+  opening, request and transaction failures leave the previous account intact.
 
 ## Runtime handle
 

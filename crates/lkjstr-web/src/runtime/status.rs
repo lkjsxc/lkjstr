@@ -6,19 +6,7 @@ use super::Rt;
 use super::net::SubState;
 use crate::host::now_ms;
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
-pub struct Progress {
-    pub total: usize,
-    pub answered: usize,
-    pub failed: usize,
-}
-
-impl Progress {
-    /// Every planned relay has answered or failed.
-    pub fn settled(&self) -> bool {
-        self.answered + self.failed >= self.total
-    }
-}
+pub use lkjstr_core::requests::Progress;
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum Link {
@@ -67,6 +55,22 @@ impl Rt {
             }
         }
         out
+    }
+
+    /// Missing references share their prefetch want's completion state.
+    pub fn lookup(&self, event_id: &str) -> lkjstr_core::requests::Lookup {
+        let mut progress = Progress::default();
+        let mut found = false;
+        for (id, want) in &self.wants {
+            if matches!(want, lkjstr_core::plan::Want::Events { ids, .. } if ids.iter().any(|id| id == event_id))
+            {
+                progress.add(self.progress(*id));
+                found = true;
+            }
+        }
+        lkjstr_core::requests::Lookup::from_progress(
+            (found && !self.flags.replan).then_some(progress),
+        )
     }
 
     fn link(&self, url: &str) -> Option<Link> {

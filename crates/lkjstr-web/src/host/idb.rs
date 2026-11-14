@@ -9,6 +9,8 @@ use wasm_bindgen::{JsCast, JsValue, closure::Closure};
 use wasm_bindgen_futures::JsFuture;
 use web_sys::{IdbCursorDirection, IdbDatabase, IdbRequest, IdbTransactionMode};
 
+pub use super::idb_commit::kv_commit;
+
 const DB_NAME: &str = "lkjstr";
 
 type Step = Closure<dyn FnMut(web_sys::Event)>;

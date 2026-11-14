@@ -30,9 +30,10 @@ const matches = (e, f) =>
   Object.entries(f).filter(([k]) => k.startsWith('#'))
     .every(([k, v]) => e.tags.some((t) => t[0] === k.slice(1) && v.includes(t[1])));
 
-export function fakeRelay() {
+export function fakeRelay(options = {}) {
   const stored = [], published = [], clients = new Map(), searches = [];
   let remote;
+  let authRetries = 0, opened = 0;
   let reading = true;
   function send(ws, sub, event) { ws.send(JSON.stringify(['EVENT', sub, event])); }
   function add(event) {
@@ -44,18 +45,32 @@ export function fakeRelay() {
   }
   function route(ws) {
     const subs = new Map();
+    const authClosed = new Set();
+    let authenticated = !options.requireAuth;
+    opened += 1;
     clients.set(ws, subs);
     ws.onClose(() => clients.delete(ws));
     ws.onMessage((raw) => {
       const msg = JSON.parse(String(raw));
-      if (msg[0] === 'EVENT') {
+      if (msg[0] === 'AUTH') {
+        authenticated = true;
+        ws.send(JSON.stringify(['OK', msg[1].id, true, 'authenticated']));
+      } else if (msg[0] === 'EVENT') {
         if (published.length < 1000 && !published.some((e) => e.id === msg[1].id)) published.push(msg[1]);
         add(msg[1]);
         ws.send(JSON.stringify(['OK', msg[1].id, true, '']));
       } else if (msg[0] === 'REQ') {
         const [, sub, ...filters] = msg;
         if (subs.size >= 100) throw new Error('fake relay subscription bound exceeded');
+        if (!authenticated) {
+          if (authClosed.size < 100) authClosed.add(sub);
+          ws.send(JSON.stringify(['CLOSED', sub, 'auth-required: authenticate first']));
+          ws.send(JSON.stringify(['AUTH', 'local smoke challenge']));
+          return;
+        }
+        if (authClosed.delete(sub)) authRetries += 1;
         subs.set(sub, filters);
+        if (options.request?.(ws, sub, filters)) return;
         for (const f of filters) if (f.search && searches.length < 1000) searches.push(f.search);
         if (filters.some((f) => f.search === 'refused-search-query')) {
           ws.send(JSON.stringify(['CLOSED', sub, 'error: local smoke refusal']));
@@ -68,5 +83,5 @@ export function fakeRelay() {
       } else if (msg[0] === 'CLOSE') subs.delete(msg[1]);
     });
   }
-  return { route, stored, published, searches, add, setReading: (value) => { reading = value; }, setRemote: (event) => { remote = event; } };
+  return { route, stored, published, searches, add, connections: () => clients.size, opened: () => opened, authRetries: () => authRetries, setReading: (value) => { reading = value; }, setRemote: (event) => { remote = event; } };
 }

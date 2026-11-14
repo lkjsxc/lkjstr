@@ -77,26 +77,30 @@ pub fn Note(
     #[prop(optional)] depth: usize,
 ) -> impl IntoView {
     let ui = Ui::get();
-    let (shown, reposter) = if event.kind == 6 {
-        let inner = ui.app.with(|rt| {
-            lkjstr_protocol::tags::tag_values(&event, "e")
-                .first()
-                .and_then(|id| rt.store.get(id))
-        });
-        match inner {
-            Some(inner) => (inner, Some(event.pubkey.clone())),
-            None => (event.clone(), None),
+    let reposter = (event.kind == 6).then(|| event.pubkey.clone());
+    let target = lkjstr_protocol::tags::tag_values(&event, "e")
+        .into_iter()
+        .next();
+    let target_id_for_missing = StoredValue::new(target.clone());
+    let shown = Memo::new(move |_| {
+        ui.app.rev.track();
+        if event.kind == 6 {
+            target
+                .as_ref()
+                .and_then(|id| ui.app.with(|rt| rt.store.get(id)))
+        } else {
+            Some(event.clone())
         }
-    } else {
-        (event.clone(), None)
-    };
-    if event.kind == 6 && reposter.is_none() {
-        let who = event.pubkey.clone();
-        return view! {
-            <div class="note-missing">"↻ " {move || name_of(ui, &who)} " reposted a note that is still loading"</div>
-        }
-        .into_any();
-    }
+    });
+    view! { {move || match shown.get() {
+        Some(shown) => view! { <NoteBody shown=shown reposter=reposter.clone() focused=focused depth=depth/> }.into_any(),
+        None => view! { <div class="note-missing">"↻ " <super::reference::Missing id=target_id_for_missing.get_value()/></div> }.into_any(),
+    }} }
+}
+
+#[component]
+fn NoteBody(shown: Event, reposter: Option<String>, focused: bool, depth: usize) -> impl IntoView {
+    let ui = Ui::get();
     let id = shown.id.clone();
     let author = shown.pubkey.clone();
     let parent = reply_parent(&shown).or_else(|| reply_root(&shown));
@@ -104,6 +108,7 @@ pub fn Note(
         let id = id.clone();
         Memo::new(move |_| {
             ui.app.rev.track();
+            ui.app.session_rev.track();
             ui.app.with(|rt| {
                 let me = rt.session.active.clone();
                 let liked = rt
@@ -130,12 +135,21 @@ pub fn Note(
             Open::Beside,
         );
     };
-    let keydown = move |ev: KeyboardEvent| match ev.key().as_str() {
-        "Enter" | "o" => open(),
-        "p" => profile(),
-        "r" => reply(),
-        "l" => like(ui, &this.get_value()),
-        _ => {}
+    let keydown = move |ev: KeyboardEvent| {
+        use lkjstr_core::actions::{NoteAction, note_action};
+        let modified = ev.alt_key() || ev.ctrl_key() || ev.meta_key() || ev.shift_key();
+        if ev.default_prevented() || ev.repeat() || super::keys::typing(&ev) {
+            return;
+        }
+        match note_action(&ev.key(), modified) {
+            Some(NoteAction::Open) => open(),
+            Some(NoteAction::Profile) => profile(),
+            Some(NoteAction::Reply) => reply(),
+            Some(NoteAction::Like) => like(ui, &this.get_value()),
+            None => return,
+        }
+        ev.prevent_default();
+        ev.stop_propagation();
     };
     let name_key = author.clone();
     let handle_key = author.clone();
@@ -199,27 +213,5 @@ fn ReplyContext(id: String) -> impl IntoView {
                 None => "Reply in a thread".to_owned(),
             }}
         </button>
-    }
-}
-
-/// An embedded quoted note, or a link while it loads.
-#[component]
-pub fn Quote(id: String, relays: Vec<String>) -> impl IntoView {
-    let ui = Ui::get();
-    let key = id.clone();
-    let event = Memo::new(move |_| {
-        ui.app.rev.track();
-        ui.app.with(|rt| rt.store.get(&key))
-    });
-    view! {
-        <div class="quote" on:click=move |ev| { ev.stop_propagation(); ui.open_thread(&id, relays.clone()); }>
-            {move || match event.get() {
-                Some(event) => view! {
-                    <div class="quote-head"><Avatar pubkey=event.pubkey.clone() class="avatar small"/>{name_of(ui, &event.pubkey)}</div>
-                    <Content event=event compact=true/>
-                }.into_any(),
-                None => view! { <span class="muted">"Quoted note · loading"</span> }.into_any(),
-            }}
-        </div>
     }
 }

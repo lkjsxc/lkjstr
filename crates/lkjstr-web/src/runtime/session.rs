@@ -32,7 +32,7 @@ struct Saved {
     active: Option<String>,
 }
 
-#[derive(Default)]
+#[derive(Clone, Default)]
 pub struct Session {
     pub accounts: Vec<Account>,
     pub active: Option<String>,
@@ -75,7 +75,7 @@ impl Session {
             .flatten()
     }
 
-    fn saved_json(&self) -> String {
+    pub(super) fn saved_json(&self) -> String {
         serde_json::to_string(&Saved {
             accounts: self.accounts.clone(),
             active: self.active.clone(),
@@ -125,30 +125,19 @@ impl Rt {
         self.defaults = defaults;
         self.schedule_replan(30);
     }
+}
 
-    pub(super) fn save_session(&self) {
-        if let Some(db) = &self.db {
-            let _ = idb::kv_put(db, "session", &self.session.saved_json());
-        }
-    }
-
+impl Session {
     pub(super) fn add_account(&mut self, pubkey: String, signer: Signer, secret: Option<String>) {
-        if let (Some(secret), Some(db)) = (&secret, &self.db) {
-            let _ = idb::kv_put(db, &format!("secret:{pubkey}"), secret);
-        }
         if let Some(secret) = secret {
-            self.session.secrets.insert(pubkey.clone(), secret);
+            self.secrets.insert(pubkey.clone(), secret);
         }
-        self.session
-            .accounts
-            .retain(|account| account.pubkey != pubkey);
-        self.session.accounts.push(Account {
+        self.accounts.retain(|account| account.pubkey != pubkey);
+        self.accounts.push(Account {
             pubkey: pubkey.clone(),
             signer,
         });
-        self.session.active = Some(pubkey);
-        self.save_session();
-        self.apply_session_relays();
+        self.active = Some(pubkey);
     }
 }
 

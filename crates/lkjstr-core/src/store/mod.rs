@@ -4,6 +4,7 @@
 mod directory;
 mod profile;
 mod query;
+mod retention;
 
 pub use profile::Profile;
 pub use query::Query;
@@ -18,7 +19,7 @@ type Key = (u64, String);
 
 /// Relays an event was seen on, kept small: hints, not a log.
 const MAX_SEEN_RELAYS: usize = 6;
-/// Ids remembered as deleted (kind 5) so late copies stay hidden.
+/// At most this many (target id, deleting author) tombstones for late copies.
 const MAX_DELETED: usize = 4096;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -39,14 +40,20 @@ pub struct Store {
     by_tag_e: HashMap<String, Vec<String>>,
     replaceable: HashMap<(String, u64), String>,
     profiles: HashMap<String, Arc<Profile>>,
-    deleted: HashSet<String>,
+    deleted: HashSet<(String, String)>,
     cap: usize,
+    replaceable_cap: usize,
     revision: u64,
 }
 
 impl Store {
-    /// `cap` bounds non-replaceable events; the oldest are evicted first.
+    /// Each class (regular and replaceable) retains at most `cap` events.
     pub fn new(cap: usize) -> Store {
+        Self::with_caps(cap, cap)
+    }
+
+    /// Independent bounds prevent metadata from starving note retention.
+    pub fn with_caps(cap: usize, replaceable_cap: usize) -> Store {
         Store {
             events: HashMap::new(),
             seen_on: HashMap::new(),
@@ -58,6 +65,7 @@ impl Store {
             profiles: HashMap::new(),
             deleted: HashSet::new(),
             cap,
+            replaceable_cap,
             revision: 0,
         }
     }
@@ -94,20 +102,25 @@ impl Store {
 
     /// Inserts a (verified) event seen on `relay`.
     pub fn insert(&mut self, event: NostrEvent, relay: Option<&str>) -> Inserted {
-        if let Some(relay) = relay {
-            self.note_relay(&event.id, relay);
-        }
-        if self.deleted.contains(&event.id) {
+        if self
+            .deleted
+            .contains(&(event.id.clone(), event.pubkey.clone()))
+        {
             return Inserted::Deleted;
         }
         if self.events.contains_key(&event.id) {
+            if let Some(relay) = relay {
+                self.note_relay(&event.id, relay);
+            }
             return Inserted::Duplicate;
         }
         let mut outcome = Inserted::New;
         if is_replaceable_kind(event.kind) {
             let slot = (event.pubkey.clone(), event.kind);
             if let Some(old) = self.replaceable.get(&slot).and_then(|id| self.get(id)) {
-                if (old.created_at, &old.id) >= (event.created_at, &event.id) {
+                if old.created_at > event.created_at
+                    || (old.created_at == event.created_at && old.id < event.id)
+                {
                     return Inserted::Stale;
                 }
                 self.remove(&old.id);
@@ -122,6 +135,9 @@ impl Store {
         }
         if event.kind == 5 {
             self.apply_deletion(&event);
+        }
+        if let Some(relay) = relay {
+            self.note_relay(&event.id, relay);
         }
         self.index(Arc::new(event));
         self.revision += 1;
@@ -162,6 +178,12 @@ impl Store {
         let Some(event) = self.events.remove(id) else {
             return;
         };
+        if is_replaceable_kind(event.kind) {
+            self.replaceable.remove(&(event.pubkey.clone(), event.kind));
+            if event.kind == 0 {
+                self.profiles.remove(&event.pubkey);
+            }
+        }
         let key = (event.created_at, event.id.clone());
         self.by_time.remove(&key);
         if let Some(set) = self.by_author.get_mut(&event.pubkey) {
@@ -194,31 +216,5 @@ impl Store {
             }
         }
         self.seen_on.remove(id);
-    }
-
-    fn apply_deletion(&mut self, deletion: &NostrEvent) {
-        for target in tag_values(deletion, "e") {
-            let owned = self
-                .events
-                .get(&target)
-                .is_none_or(|event| event.pubkey == deletion.pubkey);
-            if owned && self.deleted.len() < MAX_DELETED {
-                self.remove(&target);
-                self.deleted.insert(target);
-            }
-        }
-    }
-
-    fn evict(&mut self) {
-        while self.events.len() > self.cap {
-            let victim = self.by_time.iter().find_map(|(_, id)| {
-                let event = self.events.get(id)?;
-                (!is_replaceable_kind(event.kind)).then(|| id.clone())
-            });
-            match victim {
-                Some(id) => self.remove(&id),
-                None => break,
-            }
-        }
     }
 }

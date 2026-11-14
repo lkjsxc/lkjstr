@@ -58,6 +58,11 @@ Checks cover:
   survive reload with relay event replay disabled.
 - Keyboard splitting and focus, narrow single-tile mode, static asset HTTP
   responses, and absence of page errors.
+- Review regressions in `scripts/browser-review.mjs`: storage open, write and
+  transaction-abort failures with atomic rollback; modified note actions;
+  replies blocked until the parent arrives; reactive repost targets; missing
+  thread completion/refusal; noise-only pages and tied timestamps; accepted
+  AUTH reissuing requests; completed session wants releasing sockets.
 
 `browser-relay.mjs` bounds fake relay events, publications, searches and
 subscriptions. `lkjstr-protocol/examples/browser-fixtures.rs` generates a
@@ -71,18 +76,23 @@ must be present.
 
 2026-11-14, revive branch:
 
-- Current expanded smoke: all 33 checks passed on the debug build and again
-  on the extracted release tarball, with external HTTP blocked and every
-  WebSocket intercepted. Reports: `tmp/smoke-fixed/report.json` and
-  `tmp/smoke-release/report.json` (ignored local artifacts).
+- Review smoke: all 51 checks passed on both debug and release builds with
+  external HTTP blocked and every WebSocket intercepted. Reports:
+  `tmp/smoke-review-debug/report.json` and
+  `tmp/smoke-review-release/report.json` (ignored local artifacts).
+- Fixed smoke timing: poll awaited IndexedDB counts before reloading, and wait
+  for deferred REQs before delivering their fake-relay responses. The faster
+  release exposed both test races; no product cache loss was involved.
+- The earlier 33-check smoke passed on the extracted release tarball.
 - Found and fixed search remaining in loading after EOSE or relay refusal,
   and Home and Notifications retaining rows across account switches.
 - Native regression covers clearing shown rows, pending arrivals and dedup
   state while preserving the timeline cap.
 - Current `pnpm check:repo`, `pnpm test:quiet`, `pnpm rust-wasm:quiet` and
-  `pnpm verify:quiet` passed. `pnpm build` also passed with `NO_COLOR=1`.
-- `tmp/lkjstr-dist.tar.gz` contains the checked release static site (about
-  1.1 MB compressed); the release WASM is 9393153 bytes (995679 bytes gzip).
+  `pnpm verify:quiet` passed. These include fmt, native/wasm clippy, workspace
+  tests, a Trunk release build and distribution checks.
+- Current release WASM: 9558588 bytes (1018701 bytes gzip). The earlier
+  `tmp/lkjstr-dist.tar.gz` predates the review fixes.
 - Docker verify: not run under the worktree-only write restriction.
 - Previous read-only public-relay checks exercised Global, Thread and Profile.
   No public relays were contacted in this verification run.

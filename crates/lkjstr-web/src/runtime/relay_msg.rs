@@ -98,13 +98,24 @@ impl Rt {
                     stats.auth_required = true;
                 }
                 self.pump(relay);
+                self.schedule_replan(200);
             }
             RelayMessage::Ok {
                 event_id,
                 accepted,
                 message,
             } => {
-                self.on_ok(relay, &event_id, accepted, message);
+                let auth = self.net.conns.get_mut(relay).is_some_and(|conn| {
+                    conn.auth
+                        .acknowledge(&event_id, accepted, relay, &mut self.net.subs)
+                });
+                if auth && accepted {
+                    self.scores.entry(relay).auth_required = false;
+                    self.pump(relay);
+                } else if !auth {
+                    self.on_ok(relay, &event_id, accepted, message);
+                }
+                self.schedule_replan(200);
             }
             RelayMessage::Notice(text) => {
                 if let Some(conn) = self.net.conns.get_mut(relay) {
@@ -134,6 +145,7 @@ impl Rt {
             self.send(relay, &ClientMessage::Close(sub_id.to_owned()));
         }
         self.pump(relay);
+        self.schedule_replan(200);
     }
 }
 

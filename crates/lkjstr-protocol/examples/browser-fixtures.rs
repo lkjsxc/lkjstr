@@ -49,6 +49,30 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     )?;
     let reaction = sign(7, "+".into(), reaction_tags(&input.root, None))?;
     let remote = sign(1, "remote-only-needle from the search relay".into(), vec![])?;
+    let repost = sign(6, String::new(), vec![vec!["e".into(), remote.id.clone()]])?;
+    let mut pages = Vec::new();
+    for n in 0..85 {
+        pages.push(
+            finalize_event(
+                &EventTemplate {
+                    pubkey: None,
+                    created_at: input
+                        .root
+                        .created_at
+                        .saturating_sub(if n < 80 { 0 } else { n }),
+                    kind: 1,
+                    tags: vec![],
+                    content: if n < 40 {
+                        format!("{{\"noise\":{n}}}")
+                    } else {
+                        format!("Older readable page note {n}")
+                    },
+                },
+                &secret,
+            )
+            .map_err(|_| "sign page fixture")?,
+        );
+    }
     let npub = encode_npub(&metadata.pubkey).map_err(|_| "could not encode public key")?;
     let nprofile = encode_nprofile(&ProfilePointer {
         pubkey: metadata.pubkey.clone(),
@@ -67,7 +91,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         "{}",
         json!({
             "verified": verified, "events": [metadata, reply, reaction], "remote": remote,
-            "npub": npub, "nprofile": nprofile, "note": note, "nevent": nevent,
+            "repost": repost, "pages": pages, "npub": npub, "nprofile": nprofile, "note": note, "nevent": nevent,
         })
     );
     Ok(())

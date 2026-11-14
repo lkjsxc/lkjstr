@@ -7,8 +7,8 @@ use lkjstr_protocol::{
     encode_nsec, finalize_event, generate_secret_key, parse_secret_key_hex,
 };
 
-use super::App;
 use super::session::{Signer, local};
+use super::{App, Session};
 use crate::host::{idb, nip07};
 
 impl App {
@@ -18,15 +18,14 @@ impl App {
     }
 
     /// Creates a fresh local key on this device.
-    pub fn generate_account(&self) -> Result<String, String> {
+    pub async fn generate_account(&self) -> Result<String, String> {
         let (pubkey, signer, secret) = local(&bytes_to_hex(generate_secret_key().as_bytes()))?;
-        self.update(|rt| rt.add_account(pubkey.clone(), signer, secret));
-        self.session_changed();
+        self.add_account(pubkey.clone(), signer, secret).await?;
         Ok(pubkey)
     }
 
     /// Accepts nsec/hex secret (local signer) or npub/hex pubkey (read-only).
-    pub fn import_account(&self, input: &str) -> Result<String, String> {
+    pub async fn import_account(&self, input: &str) -> Result<String, String> {
         let input = input.trim();
         let (pubkey, signer, secret) = match decode_nip19(input) {
             Some(NostrEntity::Nsec(secret)) => local(&secret)?,
@@ -39,41 +38,82 @@ impl App {
             }
             _ => return Err("Paste an nsec1… secret key or an npub1… public key.".into()),
         };
-        self.update(|rt| rt.add_account(pubkey.clone(), signer, secret));
-        self.session_changed();
+        self.add_account(pubkey.clone(), signer, secret).await?;
         Ok(pubkey)
     }
 
     pub async fn connect_extension(&self) -> Result<String, String> {
         let pubkey = nip07::public_key().await?;
-        self.update(|rt| rt.add_account(pubkey.clone(), Signer::Extension, None));
-        self.session_changed();
+        self.add_account(pubkey.clone(), Signer::Extension, None)
+            .await?;
         Ok(pubkey)
     }
 
-    pub fn switch_account(&self, pubkey: &str) {
+    async fn commit_session(
+        &self,
+        edit: impl FnOnce(&mut Session) -> Vec<(String, Option<String>)>,
+    ) -> Result<(), String> {
+        let (db, mut candidate) = self.update(|rt| {
+            if rt.session_busy {
+                return Err("An account change is already saving.");
+            }
+            let db = rt
+                .db
+                .clone()
+                .ok_or("Account storage unavailable. No account was changed.")?;
+            rt.session_busy = true;
+            Ok((db, rt.session.clone()))
+        })?;
+        let mut rows = edit(&mut candidate);
+        rows.push(("session".into(), Some(candidate.saved_json())));
+        let result = idb::kv_commit(&db, &rows).await;
         self.update(|rt| {
-            rt.session.active = Some(pubkey.to_owned());
-            rt.save_session();
-            rt.apply_session_relays();
+            rt.session_busy = false;
+            if result.is_ok() {
+                rt.session = candidate;
+                rt.apply_session_relays();
+            }
         });
         self.session_changed();
+        result.map_err(|_| "Account storage write failed. No account was changed.".into())
     }
 
-    pub fn remove_account(&self, pubkey: &str) {
-        self.update(|rt| {
-            rt.session.accounts.retain(|a| a.pubkey != pubkey);
-            rt.session.secrets.remove(pubkey);
-            if let Some(db) = &rt.db {
-                let _ = idb::kv_delete(db, &format!("secret:{pubkey}"));
+    async fn add_account(
+        &self,
+        pubkey: String,
+        signer: Signer,
+        secret: Option<String>,
+    ) -> Result<(), String> {
+        self.commit_session(move |session| {
+            let rows = secret
+                .as_ref()
+                .map(|value| (format!("secret:{pubkey}"), Some(value.clone())))
+                .into_iter()
+                .collect();
+            session.add_account(pubkey, signer, secret);
+            rows
+        })
+        .await
+    }
+
+    pub async fn switch_account(&self, pubkey: &str) -> Result<(), String> {
+        self.commit_session(|session| {
+            session.active = Some(pubkey.to_owned());
+            Vec::new()
+        })
+        .await
+    }
+
+    pub async fn remove_account(&self, pubkey: &str) -> Result<(), String> {
+        self.commit_session(|session| {
+            session.accounts.retain(|a| a.pubkey != pubkey);
+            session.secrets.remove(pubkey);
+            if session.active.as_deref() == Some(pubkey) {
+                session.active = session.accounts.first().map(|a| a.pubkey.clone());
             }
-            if rt.session.active.as_deref() == Some(pubkey) {
-                rt.session.active = rt.session.accounts.first().map(|a| a.pubkey.clone());
-            }
-            rt.save_session();
-            rt.apply_session_relays();
-        });
-        self.session_changed();
+            vec![(format!("secret:{pubkey}"), None)]
+        })
+        .await
     }
 
     /// Explicit user action only: the nsec of a local account, for backup.

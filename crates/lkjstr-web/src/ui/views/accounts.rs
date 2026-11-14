@@ -25,11 +25,13 @@ pub fn Accounts() -> impl IntoView {
     };
     let import = move |_| {
         let text = input.get_untracked();
-        let result = app.import_account(&text);
-        if result.is_ok() {
-            input.set(String::new());
-        }
-        report(result, "Signed in as");
+        leptos::task::spawn_local(async move {
+            let result = app.import_account(&text).await;
+            if result.is_ok() {
+                input.set(String::new());
+            }
+            report(result, "Signed in as");
+        });
     };
     let extension = move |_| {
         leptos::task::spawn_local(async move {
@@ -59,14 +61,14 @@ pub fn Accounts() -> impl IntoView {
                                 </div>
                                 {
                                     let key = pubkey.clone();
-                                    move || (!active.get()).then(|| { let key = key.clone(); view! { <button on:click=move |_| app.switch_account(&key)>"Use"</button> } })
+                                    move || (!active.get()).then(|| { let key = key.clone(); view! { <button on:click=move |_| { let key = key.clone(); leptos::task::spawn_local(async move { if let Err(e) = app.switch_account(&key).await { report(Err(e), ""); } }); }>"Use"</button> } })
                                 }
                                 {(account.signer == Signer::Local).then(|| view! {
                                     <button title="Show the secret key so you can back it up" on:click=move |_| {
                                         revealed.set(app.reveal_nsec(&key_reveal).map(|nsec| (key_reveal.clone(), nsec)));
                                     }>"Back up key"</button>
                                 })}
-                                <button class="danger" on:click=move |_| app.remove_account(&key_remove)>"Remove"</button>
+                                <button class="danger" on:click=move |_| { let key = key_remove.clone(); leptos::task::spawn_local(async move { if let Err(e) = app.remove_account(&key).await { report(Err(e), ""); } }); }>"Remove"</button>
                             </li>
                         }
                     }
@@ -82,7 +84,7 @@ pub fn Accounts() -> impl IntoView {
             })}
             <h3>"Add an account"</h3>
             <div class="row-actions">
-                <button class="primary" on:click=move |_| report(app.generate_account(), "Created a new key for")>"Create a new key"</button>
+                <button class="primary" on:click=move |_| { leptos::task::spawn_local(async move { report(app.generate_account().await, "Created a new key for"); }); }>"Create a new key"</button>
                 <button disabled=move || !nip07::available() on:click=extension title="Uses window.nostr (NIP-07)">"Use signer extension"</button>
             </div>
             <form class="search-bar" on:submit=move |ev| { ev.prevent_default(); import(()); }>

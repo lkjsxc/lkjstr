@@ -4,12 +4,14 @@
 mod drag;
 mod feed;
 mod feed_memory;
+mod feed_source;
 mod feed_state;
 mod keys;
 mod note;
 mod note_parts;
 mod notify;
 mod pane;
+mod reference;
 mod shell;
 mod text;
 mod tiles;

@@ -135,7 +135,16 @@ impl Rt {
             return;
         };
         if let Ok(event) = lkjstr_protocol::finalize_event(&template, &key) {
+            if let Some(conn) = self.net.conns.get_mut(relay) {
+                conn.auth.pending = Some(event.id.clone());
+                conn.auth_until_ms = now_ms() + OK_TIMEOUT_MS;
+            }
             self.send_raw(relay, &json!(["AUTH", event]).to_string());
+            if let Some(app) = self.app() {
+                after(OK_TIMEOUT_MS + 1, move || {
+                    app.update(|rt| rt.schedule_replan(1))
+                });
+            }
         }
     }
 }

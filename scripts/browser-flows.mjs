@@ -83,6 +83,7 @@ export async function browserFlows(page, fake, check, shot) {
   await page.locator('.accounts li:has-text("key on this device") button:has-text("Use")').click();
   await page.locator('.accounts li.active:has-text("key on this device")').waitFor();
   await page.locator('.accounts li:has-text("read only") button:has-text("Remove")').click();
+  await page.locator('.accounts li:has-text("read only")').waitFor({ state: 'hidden' });
   check('switch and remove keep the local signing account', (await page.locator('.accounts li').count()) === 1);
   await page.locator('.topbar .brand').click();
   await page.keyboard.press('n');
