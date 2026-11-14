@@ -15,6 +15,7 @@ Xtask source files implement repository checks and command orchestration.
 - [paths.rs](paths.rs): repository traversal helpers.
 - [quiet_steps.rs](quiet_steps.rs): quiet verification step definitions.
 - [rust_style.rs](rust_style.rs): Rust production style scan.
+- [rust_style_test.rs](rust_style_test.rs): test assertion exemptions and production rejection regressions.
 - [sqlite_schema_doc.rs](sqlite_schema_doc.rs): SQLite schema documentation check.
 - [storage_manifest.rs](storage_manifest.rs): storage manifest docs check.
 - [tool_path.rs](tool_path.rs): Rust toolchain path preference helpers.

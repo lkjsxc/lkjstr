@@ -12,7 +12,8 @@ Readiness requires passing focused checks and a run or explicit omission of Dock
 ## Recent Evidence
 
 2026-11-14: [NIP codec review corrections](../../../../crates/lkjstr-nips/HANDOFF.md) passed focused and quiet gates.
-Rust-style checking fails on test-only `unwrap`; Docker configuration passed, with image/container gates omitted under the worktree-only write constraint.
+The Rust-style correction, five regressions, 13 xtask tests, crate Clippy, fmt/docs/line/style checks, and all four local quiet gates pass.
+The exact `quiet docker-verify` command and Docker configuration pass locally; image/container gates remain omitted under the worktree-only write constraint.
 
 2026-09-29: [Home history continuation proof](../../../operations/verification/home-history-frontier.md) records checks, artifacts, and limits.
 

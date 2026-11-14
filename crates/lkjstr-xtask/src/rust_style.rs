@@ -2,6 +2,10 @@ use std::{fs, path::Path};
 
 use crate::paths;
 
+#[cfg(test)]
+#[path = "rust_style_test.rs"]
+mod tests;
+
 pub fn check(root: &Path) -> Result<(), String> {
     let mut problems = Vec::new();
     for file in paths::walk_files(root)? {
@@ -24,7 +28,7 @@ fn check_file(problems: &mut Vec<String>, rel: &str, text: &str) {
     let production = !is_test_path(rel);
     for (index, line) in text.lines().enumerate() {
         let scrubbed = scrub_line(line);
-        for (pattern, label) in forbidden_patterns() {
+        for (pattern, label) in forbidden_patterns(production) {
             if scrubbed.contains(&pattern) {
                 problems.push(format!("{rel}: line {} forbids {label}", index + 1));
             }
@@ -35,7 +39,7 @@ fn check_file(problems: &mut Vec<String>, rel: &str, text: &str) {
     }
 }
 
-fn forbidden_patterns() -> Vec<(String, String)> {
+fn forbidden_patterns(production: bool) -> Vec<(String, String)> {
     [
         ("dbg!", "dbg macro"),
         ("todo!", "todo macro"),
@@ -45,6 +49,7 @@ fn forbidden_patterns() -> Vec<(String, String)> {
         ("panic!", "panic macro"),
     ]
     .into_iter()
+    .filter(|(pattern, _)| production || !matches!(*pattern, ".unwrap(" | ".expect(" | "panic!"))
     .map(|(pattern, label)| (pattern.to_owned(), label.to_owned()))
     .collect()
 }

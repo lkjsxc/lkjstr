@@ -30,6 +30,12 @@ Changes are uncommitted.
 - Crate and parent README indexes now satisfy repository documentation checks.
   Protocol contracts and current-state docs record the application codec fix;
   product ownership and parity statuses are unchanged.
+- The Rust-style scanner now permits test-only `unwrap`, `expect`, and
+  `panic!` assertions in its existing test paths, matching the functional-style
+  contract. Production checks still reject these regardless of Clippy
+  allowances; unfinished/debug macros remain rejected everywhere. The same-class
+  audit covered all scanned crates and found no panic helpers in this crate's
+  production source. The contract and xtask README document the test boundary.
 
 ## Regression evidence
 
@@ -69,7 +75,7 @@ Passed:
   equality before/after formatting six illustrative fixtures.
 - `docker compose -f docker-compose.yml config --quiet`.
 
-Failed (code/policy check, not an environment failure):
+Original regression (reproduced before the scanner correction):
 
 `cargo run --offline --locked -p lkjstr-xtask -- check-rust-style` reports 210
 test-only `unwrap` calls in this crate, including original and new tests:
@@ -78,11 +84,15 @@ test-only `unwrap` calls in this crate, including original and new tests:
 crates/lkjstr-nips/tests/actions_zaps.rs: line 30 forbids unwrap call
 ```
 
-The checker forbids these even in test paths, while crate Clippy explicitly
-allows them in tests. Its policy was not weakened. The next executable step for
-this separate failure is to reconcile the test assertion policy in
-`docs/repository/functional-style.md` and the xtask Rust-style checker, then rerun
-the command above. Production paths introduce no panic helpers.
+Five scanner regressions now cover allowed test assertions and fixtures,
+production rejection despite Clippy allowances, rejection of unfinished/debug
+macros in all paths, comments/strings, and the actual repository style precheck.
+The test-path and repository regressions failed against the original scanner.
+After correction, all 13 xtask tests, crate Clippy, workspace format, docs/line
+checks, and `check-rust-style` pass. `pnpm check:repo`, `pnpm test:quiet`,
+`pnpm rust-wasm:quiet`, `pnpm verify:quiet`, `pnpm cloudflare:quiet`, and the exact
+`cargo run --offline --locked -p lkjstr-xtask -- quiet docker-verify` command
+also pass locally with four build jobs/test workers and worktree-local caches.
 
 Docker image/container gates are omitted because this session permits writes
 only inside the worktree. No deploy, production access, SSH, running-service

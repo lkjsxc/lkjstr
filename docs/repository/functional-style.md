@@ -90,6 +90,10 @@ first-party product code. Current TypeScript checks run through
 - Production paths return `Result` or `Option`; they do not panic.
 - `unwrap`, `expect`, `todo`, `unimplemented`, and placeholder functions are
   rejected outside tests.
+- The Rust-style scanner permits `unwrap`, `expect`, and `panic!` assertions
+  in integration-test paths (`tests/`) and files ending in `_test.rs`.
+  Production files remain checked even with Clippy allowances. `dbg!`,
+  `todo!`, and `unimplemented!` remain rejected in all scanned Rust files.
 - Every browser listener, timer, WebSocket, pending read, worker, and storage
   operation has an explicit owner and cleanup path.
 - Any `Rc<RefCell<_>>`, `Arc<Mutex<_>>`, static state, or interior mutability
