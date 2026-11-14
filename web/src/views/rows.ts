@@ -173,7 +173,7 @@ export function renderNotification(row: NotificationRow, env: ViewEnv): HTMLElem
       ? row.emoji.url
         ? emojiImg(row.emoji.emoji, row.emoji.url)
         : row.emoji.emoji
-      : icon(row.type === 'repost' ? 'repost' : row.type === 'zap' ? 'zap' : 'check');
+      : icon(row.type === 'repost' ? 'repost' : row.type === 'zap' ? 'zap' : 'user');
   const target = row.target;
   return h(
     'div',

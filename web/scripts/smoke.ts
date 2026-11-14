@@ -135,6 +135,17 @@ async function run(browser: Browser): Promise<void> {
   await page.locator('.th-focus').waitFor();
   await page.waitForTimeout(300);
   fact('a tab closed before a reload opens again as it was', (await seatOf())?.top === seat?.top);
+  // The tab in front is never hidden past an edge of its bar, however many tabs the tile holds.
+  await page.setViewportSize({ width: 390, height: 844 });
+  for (let i = 0; i < 3; i++) await page.locator(`.note .name`).first().click();
+  const inBar = await page.evaluate(() => {
+    const tab = document.querySelector('.pane.cur .tab.active')?.getBoundingClientRect();
+    const bar = document.querySelector('.pane.cur .strip')?.getBoundingClientRect();
+    return Boolean(tab && bar && tab.left >= bar.left && tab.right <= bar.right);
+  });
+  fact('the tab in front is in view in a full bar', inBar);
+  for (let i = 0; i < 3; i++) await page.keyboard.press('Alt+Shift+W');
+  await page.setViewportSize({ width: 1440, height: 900 });
   await page.locator('.tab[data-view^="thread"]').click({ button: 'middle' });
 
   // Menus close on Escape, an outside press, a wheel, and after choosing.

@@ -58,3 +58,26 @@ export function strip(children: (HTMLElement | HTMLElement[])[]): HTMLElement {
   sizes.observe(el);
   return el;
 }
+
+const EDGE = 28; // the fade: a tab under it is not really in view
+
+/** A new render makes new bars. Call before it with the old tiles; the result, called with the new ones, puts each
+ * bar back where it was scrolled and then brings the tab in front into view, so it never hides past an edge. */
+export function keepStrips(old: ReadonlyMap<string, HTMLElement>) {
+  const left = new Map<string, number>(); // bound: panes on screen
+  for (const [id, el] of old) left.set(id, el.querySelector('.strip')?.scrollLeft ?? 0);
+  return (next: ReadonlyMap<string, HTMLElement>): void => {
+    for (const [id, el] of next) {
+      const bar = el.querySelector<HTMLElement>('.strip');
+      const tab = bar?.querySelector<HTMLElement>('.tab.active');
+      if (!bar || !tab) continue;
+      bar.scrollLeft = left.get(id) ?? 0;
+      const b = bar.getBoundingClientRect();
+      const r = tab.getBoundingClientRect();
+      const zoom = b.width / bar.offsetWidth || 1; // the bar is drawn at the interface scale
+      if (r.right > b.right - EDGE) bar.scrollLeft += (r.right - (b.right - EDGE)) / zoom;
+      if (r.left < b.left + EDGE) bar.scrollLeft -= (b.left + EDGE - r.left) / zoom;
+      fade(bar);
+    }
+  };
+}

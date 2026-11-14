@@ -1,10 +1,10 @@
 /* The frame and the window manager. The WM rules are ytenrich's (src/ui/ui.css there), with lkjstr's tokens:
    indigo is the colour of action, vermilion (--seal) the colour of news, and nothing else is coloured. */
-:root { --paper: #f4f3ee; --bg: #fdfcf9; --raised: #ffffff; --line: #e2e0d8; --fg: #1c1c1a; --muted: #55544f; --faint: #85847d; --accent: #27598c; --wash: #e3ebf3; --seal: #d2432c; --danger: #9c3a23; --ok: #3d7350; --hover: rgba(0, 0, 0, 0.055); --sep: #cfcdc4; color-scheme: light; }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --paper: #14161a; --bg: #1a1d21; --raised: #21252a; --line: #2a2f35; --fg: #e7e5df; --muted: #a9a8a2; --faint: #7d7c77; --accent: #8fb4e3; --wash: #1f2c3b; --seal: #ec6a4f; --danger: #e08a6d; --ok: #86c097; --hover: rgba(255, 255, 255, 0.075); --sep: #3a4048; color-scheme: dark; } }
-:root[data-theme="dark"] { --paper: #14161a; --bg: #1a1d21; --raised: #21252a; --line: #2a2f35; --fg: #e7e5df; --muted: #a9a8a2; --faint: #7d7c77; --accent: #8fb4e3; --wash: #1f2c3b; --seal: #ec6a4f; --danger: #e08a6d; --ok: #86c097; --hover: rgba(255, 255, 255, 0.075); --sep: #3a4048; color-scheme: dark; }
+:root { --paper: #f4f3ee; --bg: #fdfcf9; --raised: #ffffff; --line: #e2e0d8; --fg: #1c1c1a; --muted: #55544f; --faint: #706f69; --accent: #27598c; --wash: #e3ebf3; --seal: #d2432c; --danger: #9c3a23; --ok: #3d7350; --hover: rgba(0, 0, 0, 0.055); --sep: #cfcdc4; color-scheme: light; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --paper: #14161a; --bg: #1a1d21; --raised: #21252a; --line: #2a2f35; --fg: #e7e5df; --muted: #a9a8a2; --faint: #8c8b85; --accent: #8fb4e3; --wash: #1f2c3b; --seal: #ec6a4f; --danger: #e08a6d; --ok: #86c097; --hover: rgba(255, 255, 255, 0.075); --sep: #3a4048; color-scheme: dark; } }
+:root[data-theme="dark"] { --paper: #14161a; --bg: #1a1d21; --raised: #21252a; --line: #2a2f35; --fg: #e7e5df; --muted: #a9a8a2; --faint: #8c8b85; --accent: #8fb4e3; --wash: #1f2c3b; --seal: #ec6a4f; --danger: #e08a6d; --ok: #86c097; --hover: rgba(255, 255, 255, 0.075); --sep: #3a4048; color-scheme: dark; }
 html, body { height: 100%; margin: 0; overflow: hidden; background: var(--paper); }
-body { color: var(--fg); font: 13.5px / 1.45 system-ui, -apple-system, "Segoe UI", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Yu Gothic UI", Meiryo, sans-serif; -webkit-text-size-adjust: 100%; }
+body { color: var(--fg); font: 13.5px / 1.45 system-ui, -apple-system, "Segoe UI", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans CJK JP", "Noto Sans JP", "Yu Gothic UI", Meiryo, sans-serif; -webkit-text-size-adjust: 100%; }
 .app { display: flex; flex-direction: column; height: 100dvh; }
 .bar { flex: 0 0 38px; display: flex; align-items: center; gap: 6px; min-width: 0; padding: 0 8px; border-bottom: 1px solid var(--line); zoom: var(--scale, 1); }
 .brand { padding: 0 4px; font-weight: 650; letter-spacing: -0.01em; user-select: none; }
@@ -41,6 +41,12 @@ lkjstr-spaces button.on { background: var(--fg); color: var(--bg); }
 .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--bg); font-weight: 600; }
 .btn.primary:hover:not(:disabled) { background: var(--accent); filter: brightness(1.08); }
 .btn:disabled { opacity: 0.45; cursor: default; }
+/* A primary button that cannot act yet is plainly off, not a paler promise. */
+.btn.primary:disabled { opacity: 1; background: var(--hover); border-color: transparent; color: var(--faint); }
+/* Sentences of the interface break between phrases in Japanese (never inside a word such as リアクション); what
+   people wrote keeps the ordinary rule. */
+.notif, .sitem, .ncard, .toast, .fstate, .menu, .view.pad { word-break: auto-phrase; }
+.notif .text, .view.pad .text, .view.pad input, .view.pad textarea { word-break: normal; }
 .clip { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 :host([theme="light"]) :is(.wm, .layer) { --bg: #fff; --raised: #f2f2f2; --fg: #0f0f0f; --muted: #606060; --line: rgba(0, 0, 0, 0.12); --hover: rgba(0, 0, 0, 0.06); --accent: #065fd4; --sep: #c4c4c4; --s1: #2a78d6; --s2: #eb6834; }
 .wm { position: absolute; inset: 0; display: flex; }

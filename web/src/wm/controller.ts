@@ -15,6 +15,7 @@ import { FAMILY, presetOf } from './presets.ts';
 import { type Rendered, renderLayout } from './render.ts';
 import { startResize } from './resize.ts';
 import type { Space } from './spaces.ts';
+import { keepStrips } from './strip.ts';
 import { startTabDrag } from './tab-drag.ts';
 import { mountWmKeys } from './wm-keys.ts';
 
@@ -187,8 +188,10 @@ export function createWmController(env: BaseEnv, host: Host, at: Space): Wm {
     const focused = host.root.contains(document.activeElement)
       ? (document.activeElement as HTMLElement)
       : null;
+    const strips = keepStrips(rendered?.panes ?? new Map());
     rendered = renderLayout(root, ctx);
     host.root.replaceChildren(rendered.el);
+    strips(rendered.panes);
     for (const [view, body] of rendered.bodies) {
       const el = own.el(view);
       if (el) body.append(el);

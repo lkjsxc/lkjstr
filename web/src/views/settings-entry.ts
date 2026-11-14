@@ -37,7 +37,7 @@ function control(f: SettingField, save: (v: unknown) => void): Control {
         if (n >= f.min && n <= f.max) save(n);
       },
     });
-    return { input, set: (v) => void (input.value = f.step ? Number(v).toFixed(2) : String(v)) };
+    return { input, set: (v) => void (input.value = step < 1 ? Number(v).toFixed(2) : String(v)) };
   }
   const input = h(
     'select',

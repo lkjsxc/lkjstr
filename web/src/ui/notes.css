@@ -74,6 +74,13 @@
 .act.on .i-heart, .act.on .i-bookmark { fill: currentColor; }
 .badge { flex: none; margin: 0; padding: 0 6px; border-radius: 8px; background: var(--hover); color: var(--muted); font-size: 11px; line-height: 16px; white-space: nowrap; }
 /* Threads: ancestors and replies are quieter than the focused note; replies step in by depth. */
+/* A thread: the notes being answered are joined by a rail down the avatar column, which ends in the focused note.
+   When the thread opens on that note, the stub above its avatar says there is more above. */
+.th-ancestor, .th-ancestor + .note { position: relative; }
+.th-ancestor { border-bottom-color: transparent; }
+.th-ancestor::after, .th-ancestor + .note::before { content: ""; position: absolute; left: calc(11px + var(--avatar, 36px) / 2); width: 2px; border-radius: 1px; background: var(--sep); }
+.th-ancestor::after { top: calc(13px + var(--avatar, 36px)); bottom: 0; }
+.th-ancestor + .note::before { top: 0; height: 5px; }
 .th-focus { background: var(--wash); }
 .th-focus .content > .text { font-size: calc(var(--text, 15px) + 1.5px); }
 .th-reply { padding-left: calc(12px + min(var(--depth, 1), 4) * 14px); }
