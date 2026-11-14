@@ -1,0 +1,19 @@
+#![doc = "Pure, natively testable core of lkjstr: workspace layout, event store, \
+request orchestration, relay scoring and timelines. No browser APIs here."]
+
+pub mod actions;
+pub mod content;
+pub mod layout;
+pub mod pagination;
+pub mod persistence;
+pub mod plan;
+pub mod prefetch;
+pub mod relays;
+pub mod requests;
+pub mod store;
+pub mod timeline;
+pub mod view;
+pub mod workspace;
+
+pub use view::{LauncherChoice, View, launcher_choices};
+pub use workspace::{Command, Open, Workspace};

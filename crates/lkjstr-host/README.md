@@ -17,5 +17,5 @@ The process never owns accounts, signing keys, user storage or relay connections
 The existing edge owns HTTPS. Do not add blanket COOP/COEP headers or a successful
 HTML fallback for missing JavaScript or WASM files.
 
-See [self-hosting](../../docs/operations/self-hosting.md) for build, container,
-private GitOps boundaries and verification commands.
+See [status](../../docs/status.md): this server still validates the old bridge
+layout and rejects Trunk's `dist/` until it is adapted.

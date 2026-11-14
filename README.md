@@ -2,162 +2,71 @@
 
 ## Purpose
 
-lkjstr is a browser-first Nostr workspace. It opens directly into a tiled
-app for reading timelines, composing notes, inspecting relay behavior, managing
-signing accounts, and following event threads without a server-side account
-system.
+lkjstr is a local-first Nostr client that lives in tiles. Timelines, threads,
+profiles, notifications, search, compose, relays and accounts are tabs you can
+split, stack, resize and move, with the keyboard or the pointer. It is written
+in Rust and runs in the browser as WebAssembly; there is no lkjstr server.
 
-## Table of Contents
+## What it does
 
-- [deploy/](deploy/): isolated Rust-hosted application deployment.
+- Reads Home (people you follow), Global, Notifications, Profiles, Threads and
+  Search, rendering from the local cache first and then from relays.
+- Plans relay requests for you: each author's own relays (NIP-65 outbox),
+  shared requests across tiles, scored and backed-off relays.
+- Signs with a key kept in this browser, or a NIP-07 signer extension; posts,
+  replies, likes, reposts and follows show at once and report each relay's answer.
+- Keeps your layout, accounts, drafts, relay scores and recent events on this
+  device (IndexedDB).
 
-- [Screenshot](#screenshot)
-- [What lkjstr Is](#what-lkjstr-is)
-- [What It Does](#what-it-does)
-- [How to Run](#how-to-run)
-- [How to Verify](#how-to-verify)
-- [Where Docs Live](#where-docs-live)
-- [Repository Map](#repository-map)
-- [License](#license)
+Current state, limits and next steps: [docs/status.md](docs/status.md).
 
-## Screenshot
+## Run
 
-![lkjstr showing Home, Notifications, Profile, Thread, Tweet, Stats, Accounts, and Log tabs](static/media/lkjstr-01.jpeg)
-
-## What lkjstr Is
-
-- A **single-page workspace** that starts on `/` with no landing page.
-- A **tiled pane manager** where you open, drag, and arrange tabs side by side.
-- A **browser-native Nostr client** that stores workspace, account, settings,
-  drafts, notifications, and cached events locally.
-- A **relay-aware tool** that lets you inspect connections, run custom requests,
-  and manage your own relay list without automatic protocol overrides.
-
-## What It Does
-
-### Reading
-
-- **Home** - timeline of followed pubkeys.
-- **Global** - public firehose with optional filters.
-- **Public Chat** - real NIP-28 channels, messages, hide, and mute actions.
-- **Profile** - a user's notes and metadata.
-- **Thread** - reply chains with context.
-- **Notifications** - mentions, reactions, reposts, zaps.
-- **Search** - cached matches plus NIP-50 relay filters when supported.
-
-### Writing
-
-- **Tweet** - compose and publish notes.
-- **Replies, reposts, reactions** - inline event actions.
-- **Zaps** - open or copy NIP-57 invoices; wallet custody is out of scope.
-- **Media upload** - Blossom upload with NIP-96 compatibility providers.
-- **Custom emoji** - NIP-30 emoji parsing and publishing.
-- **Profile Edit** - update active-account metadata.
-- **Public Chat messages** - create channels, send messages, reply, and edit
-  owned channel metadata.
-
-### Tools
-
-- **Accounts** - manage local signing keys and NIP-07 browser extensions.
-- **Relay Settings** - user-owned relay list with explicit import for protocol hints.
-- **Custom Request** - send raw Nostr filters to selected relays.
-- **Stats** - relay, storage, optimizer, and memory diagnostics.
-- **lkjstr Log** - current-session and durable diagnostics.
-- **Mine npub** - vanity local signing key generation.
-- **Welcome** - onboarding and quick-start reference.
-
-## How to Run
-
-Requirements: Node.js >= 24 and pnpm 11.1.2. Rust/WASM work also requires the
-Rust toolchain in `rust-toolchain.toml`.
+Requirements: the Rust toolchain in `rust-toolchain.toml` (with the
+`wasm32-unknown-unknown` target), Trunk 0.21.14, Node 24 and pnpm 11 for the
+command aliases.
 
 ```sh
-pnpm install
-pnpm dev
-pnpm build
-pnpm preview
+pnpm dev          # trunk serve on http://127.0.0.1:8417
 ```
 
-### Self-hosting
+## BUILD
 
-The Rust HTTP runtime and static browser build are described in
-[docs/operations/self-hosting.md](docs/operations/self-hosting.md).
-Build the `self-hosted` Docker target for deployment; `pnpm preview` remains a
-development tool. The default Cloudflare target is unchanged.
+From the repository root, with the requirements above installed:
 
-## How to Verify
+```sh
+CARGO_BUILD_JOBS=4 pnpm build
+mkdir -p tmp
+tar -C dist -czf tmp/lkjstr-dist.tar.gz .
+```
 
-Canonical quiet commands print one success line on pass and bounded output on
-failure:
+`pnpm build` runs `trunk build --release` and validates the output. The tarball
+contains the complete static site with `index.html` at its root. Extract it
+into the static host's document root and serve over HTTPS, with `.wasm` files
+served as `application/wasm`. This build uses `/` as its public URL. No backend
+or runtime Node process is needed.
+
+## Verify
 
 ```sh
 pnpm check:repo
 pnpm test:quiet
 pnpm rust-wasm:quiet
 pnpm verify:quiet
-pnpm ci:quiet
-pnpm cloudflare:quiet
-pnpm hosted:smoke -- https://lkjstr.com
-
-cargo fmt --check
-cargo clippy --workspace --all-targets -- -D warnings
-cargo test --workspace
-cargo run -p lkjstr-xtask -- quiet rust-wasm
-cargo run -p lkjstr-xtask -- check-docs
-cargo run -p lkjstr-xtask -- check-lines
-cargo run -p lkjstr-xtask -- check-rust-style
-cargo run -p lkjstr-xtask -- check-storage-manifest-docs
-
-docker compose -f docker-compose.yml config
-docker compose --progress quiet -f docker-compose.yml build app verify cloudflare app-smoke
+docker compose --progress quiet -f docker-compose.yml build verify
 docker compose --progress quiet -f docker-compose.yml run --rm verify
-docker compose --progress quiet -f docker-compose.yml run --rm cloudflare
-docker compose --progress quiet -f docker-compose.yml run --rm app-smoke
 ```
 
-See [docs/operations/verification.md](docs/operations/verification.md) for the
-quiet verification contract and focused gates.
+Details: [docs/verification.md](docs/verification.md).
 
-### Debugging
+## Repository map
 
-```sh
-pnpm lint
-pnpm check
-pnpm test
-pnpm verify
-pnpm cloudflare:dry-run
-pnpm cloudflare:smoke:built
-```
-
-## Where Docs Live
-
-All contracts live under [`docs/`](docs/README.md):
-
-- **[docs/current-state.md](docs/current-state.md)** - implemented app state summary.
-- **[docs/agent/](docs/agent/README.md)** - agent work loop, handoff, and skills.
-- **[docs/product/](docs/product/README.md)** - user-facing workspace behavior.
-- **[docs/protocol/](docs/protocol/README.md)** - Nostr and relay protocol support.
-- **[docs/architecture/](docs/architecture/README.md)** - runtime and data ownership.
-- **[docs/operations/](docs/operations/README.md)** - verification, CI, and data safety.
-- **[docs/repository/](docs/repository/README.md)** - layout, workflow, and style rules.
-- **[docs/security/](docs/security/README.md)** - local keys and content safety.
-- **[docs/decisions/](docs/decisions/README.md)** - durable architectural decisions.
-- **[docs/research/](docs/research/README.md)** - background notes and open questions.
-- **[docs/vision/](docs/vision/README.md)** - long-term scope and principles.
-
-## Repository Map
-
-- [`.github/_README.md`](.github/_README.md) - GitHub Actions and repository automation notes.
-- [`.cargo/`](.cargo/) - Rust workspace command configuration.
-- [`_headers`](_headers) - Cloudflare headers for worker-backed OPFS storage.
-- [`AGENTS.md`](AGENTS.md) - agent-facing repository rules.
-- [`crates/`](crates/) - Rust/WASM target crates and repository checks.
-- [`docs/`](docs/) - product, protocol, architecture, operations, and repository contracts.
-- [`scripts/`](scripts/) - repository checks and quiet verification wrappers.
-- [`src/`](src/) - SvelteKit application source.
-- [`static/`](static/) - static browser assets and manifest files.
-- [`tests/`](tests/) - focused Vitest unit and integration tests.
+- `index.html`: Trunk entry; `Cargo.toml`: the browser app package and workspace.
+- `crates/`: [protocol, core, web, host, xtask](crates/README.md).
+- `static/`: stylesheets and icons.
+- `docs/`: [documentation index](docs/README.md).
+- `scripts/browser-smoke.mjs`: browser smoke with a fake relay (`pnpm smoke:browser`).
 
 ## License
 
-See [`LICENSE`](LICENSE).
+See [LICENSE](LICENSE).

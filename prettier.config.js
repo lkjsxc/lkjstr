@@ -1,5 +1,0 @@
-export default {
-  plugins: ['prettier-plugin-svelte'],
-  singleQuote: true,
-  svelteSortOrder: 'options-scripts-markup-styles',
-};

@@ -1,23 +1,25 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="system">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#111111" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="description" content="lkjstr: a local-first Nostr client in tiles." />
     <title>lkjstr</title>
-    <link data-trunk rel="rust" data-wasm-opt="0" href="Cargo.toml" />
-    <link data-trunk rel="css" href="static/styles/ui.css" />
-    <link data-trunk rel="css" href="static/styles/workspace.css" />
-    <link data-trunk rel="css" href="static/styles/tabs.css" />
-    <link data-trunk rel="css" href="static/styles/relay-settings.css" />
-    <link data-trunk rel="css" href="static/styles/upload-settings.css" />
-    <link data-trunk rel="copy-file" href="static/sqlite-opfs-worker.js" />
-    <link
-      data-trunk
-      rel="copy-dir"
-      href="node_modules/@sqlite.org/sqlite-wasm/dist"
-      data-target-path="sqlite"
-    />
+    <link rel="icon" href="icon.svg" type="image/svg+xml" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link data-trunk rel="rust" href="Cargo.toml" data-wasm-opt="0" />
+    <link data-trunk rel="css" href="static/styles/base.css" />
+    <link data-trunk rel="css" href="static/styles/tiles.css" />
+    <link data-trunk rel="css" href="static/styles/notes.css" />
+    <link data-trunk rel="css" href="static/styles/pages.css" />
+    <link data-trunk rel="copy-file" href="static/icon.svg" />
+    <link data-trunk rel="copy-file" href="static/icon-192.png" />
+    <link data-trunk rel="copy-file" href="static/icon-512.png" />
+    <link data-trunk rel="copy-file" href="static/favicon.ico" />
+    <link data-trunk rel="copy-file" href="static/manifest.webmanifest" />
   </head>
-  <body></body>
+  <body>
+    <noscript>lkjstr needs JavaScript and WebAssembly enabled.</noscript>
+  </body>
 </html>

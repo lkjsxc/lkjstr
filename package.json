@@ -3,76 +3,22 @@
   "private": true,
   "type": "module",
   "packageManager": "pnpm@11.1.2",
+  "description": "Command aliases only. The app is Rust/WASM; see AGENTS.md.",
   "scripts": {
-    "dev": "vite dev",
-    "kit:sync": "svelte-kit sync",
-    "rust-wasm:build": "tsx scripts/build-lkjstr-web-wasm.ts",
-    "cloudflare:install-wasm-toolchain": "tsx scripts/install-wasm-toolchain.ts",
-    "build:svelte": "vite build",
-    "build": "pnpm rust-wasm:build && pnpm build:svelte && pnpm verify:wasm-assets",
-    "preview": "vite preview",
-    "check": "pnpm kit:sync && svelte-check --tsconfig ./tsconfig.json",
-    "check:repo": "tsx scripts/check-repo.ts",
-    "lint": "pnpm kit:sync && eslint . && prettier --check .",
-    "format": "prettier --write .",
-    "test": "vitest run",
-    "test:quiet": "tsx scripts/run-quiet.ts test",
-    "test:watch": "vitest",
-    "rust-wasm:quiet": "tsx scripts/run-quiet.ts rust-wasm",
-    "verify:wasm-assets": "tsx scripts/verify-built-wasm-assets.ts",
-    "app:smoke": "tsx scripts/app-smoke.ts",
-    "hosted:smoke": "tsx scripts/hosted-smoke.ts",
-    "cloudflare:smoke:built": "tsx scripts/cloudflare-worker-smoke.ts",
-    "cloudflare:dry-run": "pnpm build && pnpm cloudflare:dry-run:built",
-    "cloudflare:dry-run:built": "pnpm verify:wasm-assets && pnpm cloudflare:smoke:built && wrangler deploy --dry-run",
-    "verify": "pnpm check:repo && pnpm lint && pnpm check && pnpm test && pnpm build",
-    "verify:quiet": "tsx scripts/run-quiet.ts verify",
-    "ci:quiet": "tsx scripts/run-quiet.ts ci",
-    "cloudflare:quiet": "tsx scripts/run-quiet.ts cloudflare"
-  },
-  "dependencies": {
-    "@lucide/svelte": "^1.16.0",
-    "@noble/curves": "^2.0.1",
-    "@noble/hashes": "^2.0.1",
-    "@scure/base": "^2.0.0",
-    "@sqlite.org/sqlite-wasm": "3.53.0-build1",
-    "emoji-picker-element": "^1.29.1",
-    "qrcode": "^1.5.4",
-    "svelte-persisted-store": "^0.12.0",
-    "virtua": "^0.49.0",
-    "zod": "^4.1.13"
+    "dev": "PATH=\"$HOME/.cargo/bin:$PATH\" env -u NO_COLOR trunk serve --port 8417",
+    "build": "PATH=\"$HOME/.cargo/bin:$PATH\" env -u NO_COLOR trunk build --release && pnpm check:dist",
+    "check:dist": "PATH=\"$HOME/.cargo/bin:$PATH\" cargo run -q -p lkjstr-xtask -- check-dist",
+    "check:repo": "PATH=\"$HOME/.cargo/bin:$PATH\" cargo run -q -p lkjstr-xtask -- quiet repo",
+    "test:quiet": "PATH=\"$HOME/.cargo/bin:$PATH\" cargo run -q -p lkjstr-xtask -- quiet test",
+    "rust-wasm:quiet": "PATH=\"$HOME/.cargo/bin:$PATH\" cargo run -q -p lkjstr-xtask -- quiet rust-wasm",
+    "verify:quiet": "PATH=\"$HOME/.cargo/bin:$PATH\" cargo run -q -p lkjstr-xtask -- quiet verify",
+    "ci:quiet": "PATH=\"$HOME/.cargo/bin:$PATH\" cargo run -q -p lkjstr-xtask -- quiet ci",
+    "smoke:browser": "PATH=\"$HOME/.cargo/bin:$PATH\" node scripts/browser-smoke.mjs"
   },
   "devDependencies": {
-    "@eslint/js": "^9.39.1",
-    "@sveltejs/adapter-cloudflare": "^7.2.8",
-    "@sveltejs/adapter-static": "3.0.10",
-    "@sveltejs/kit": "^2.49.4",
-    "@sveltejs/vite-plugin-svelte": "^6.2.4",
-    "@types/node": "^24.10.1",
-    "@types/qrcode": "^1.5.6",
-    "eslint": "^9.39.1",
-    "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-svelte": "^3.17.0",
-    "globals": "^16.5.0",
-    "prettier": "^3.7.3",
-    "prettier-plugin-svelte": "^3.4.0",
-    "svelte": "^5.43.14",
-    "svelte-check": "^4.3.4",
-    "tsx": "^4.20.6",
-    "typescript": "^5.9.3",
-    "typescript-eslint": "^8.46.4",
-    "vite": "^7.1.12",
-    "vitest": "^4.0.7",
-    "wrangler": "^4.93.1"
+    "playwright-core": "1.65.0"
   },
   "engines": {
     "node": ">=24.0.0"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "esbuild",
-      "sharp",
-      "workerd"
-    ]
   }
 }

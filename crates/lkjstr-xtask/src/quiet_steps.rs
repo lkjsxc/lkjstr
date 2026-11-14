@@ -1,11 +1,8 @@
 use std::{ffi::OsString, path::Path, process::Command, time::Duration};
 
 use crate::{
-    browser_driver::chrome_driver_args,
-    e2e_gate,
     quiet_process::{QuietOutput, run_with_timeout},
     tool_path::{cargo_bin, prefer_rustup_cargo},
-    toolchain::{preflight_wasm_browser, preflight_wasm_pack, wasm_pack_bin},
 };
 
 const TAIL_BYTES: usize = 128 * 1024;
@@ -18,80 +15,56 @@ pub struct Step {
     clear_no_color: bool,
 }
 
-pub fn rust_wasm_steps() -> Vec<Step> {
+/// Rust gates: format, lint (native and wasm), tests. Jobs are capped by the
+/// caller's `CARGO_BUILD_JOBS` on shared hosts.
+pub fn rust_steps() -> Vec<Step> {
     let cargo = cargo_bin();
-    let mut steps = vec![
-        step("cargo fmt", cargo.clone(), vec!["fmt", "--check"]),
-        step(
-            "cargo clippy workspace",
-            cargo.clone(),
-            vec![
-                "clippy",
-                "--workspace",
-                "--all-targets",
-                "--",
-                "-D",
-                "warnings",
-            ],
-        ),
-        step(
-            "cargo clippy wasm",
-            cargo.clone(),
-            vec![
-                "clippy",
-                "-p",
-                "lkjstr-web",
-                "--target",
-                "wasm32-unknown-unknown",
-                "--all-targets",
-                "--",
-                "-D",
-                "warnings",
-            ],
-        ),
-        step("cargo test", cargo, vec!["test", "--workspace"]),
-        Step {
-            name: "trunk build",
-            program: OsString::from("trunk"),
-            args: os_args(vec!["build", "--release"]),
-            clear_no_color: true,
-        },
+    let clippy = [
+        "clippy",
+        "--workspace",
+        "--all-targets",
+        "--",
+        "-D",
+        "warnings",
     ];
-    if e2e_gate::enabled() {
-        steps.push(step_os(
-            "wasm-pack chrome",
-            wasm_pack_bin(),
-            wasm_pack_args("--chrome"),
-        ));
-        steps.push(step_os(
-            "wasm-pack firefox",
-            wasm_pack_bin(),
-            wasm_pack_args("--firefox"),
-        ));
-    }
-    steps
-}
-
-pub fn node_check_steps() -> Vec<Step> {
+    let wasm = [
+        "clippy",
+        "-p",
+        "lkjstr-web",
+        "--target",
+        "wasm32-unknown-unknown",
+        "--",
+        "-D",
+        "warnings",
+    ];
     vec![
-        step("pnpm check:repo", "pnpm", vec!["check:repo"]),
-        step("pnpm lint", "pnpm", vec!["lint"]),
-        step("pnpm check", "pnpm", vec!["check"]),
-        step("pnpm test", "pnpm", vec!["test"]),
+        step("cargo fmt", cargo.clone(), &["fmt", "--all", "--check"]),
+        step("cargo clippy", cargo.clone(), &clippy),
+        step("cargo clippy wasm", cargo.clone(), &wasm),
+        step("cargo test", cargo, &["test", "--workspace"]),
     ]
 }
 
-pub fn node_verify_steps() -> Vec<Step> {
-    let mut steps = node_check_steps();
-    steps.push(step("pnpm build", "pnpm", vec!["build"]));
-    steps
+/// The browser artifact: Trunk builds `dist/` from `index.html`.
+pub fn build_steps() -> Vec<Step> {
+    vec![Step {
+        name: "trunk build",
+        program: OsString::from("trunk"),
+        args: ["build", "--release"].iter().map(OsString::from).collect(),
+        clear_no_color: true,
+    }]
+}
+
+fn step(name: &'static str, program: OsString, args: &[&str]) -> Step {
+    Step {
+        name,
+        program,
+        args: args.iter().map(OsString::from).collect(),
+        clear_no_color: false,
+    }
 }
 
 pub fn run_quiet_step(root: &Path, step: &Step) -> Result<(), String> {
-    if step.name.starts_with("wasm-pack") {
-        preflight_wasm_pack(root, &step.program)?;
-        preflight_wasm_browser(root, step.name)?;
-    }
     let mut command = Command::new(&step.program);
     command.args(&step.args).current_dir(root);
     prefer_rustup_cargo(&mut command);
@@ -110,43 +83,6 @@ pub fn run_quiet_step(root: &Path, step: &Step) -> Result<(), String> {
             output_tail(&output)
         ))
     }
-}
-
-fn wasm_pack_args(browser: &'static str) -> Vec<OsString> {
-    let mut args = os_args(vec!["test", "--headless", browser]);
-    if browser == "--chrome" {
-        args.extend(chrome_driver_args());
-    }
-    args.push(OsString::from("crates/lkjstr-web"));
-    args
-}
-
-fn step<I>(name: &'static str, program: I, args: Vec<&'static str>) -> Step
-where
-    I: Into<OsString>,
-{
-    Step {
-        name,
-        program: program.into(),
-        args: os_args(args),
-        clear_no_color: false,
-    }
-}
-
-fn step_os<I>(name: &'static str, program: I, args: Vec<OsString>) -> Step
-where
-    I: Into<OsString>,
-{
-    Step {
-        name,
-        program: program.into(),
-        args,
-        clear_no_color: false,
-    }
-}
-
-fn os_args(args: Vec<&'static str>) -> Vec<OsString> {
-    args.into_iter().map(OsString::from).collect()
 }
 
 fn status_text(output: &QuietOutput) -> String {

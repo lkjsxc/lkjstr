@@ -2,16 +2,12 @@
 
 ## Purpose
 
-Rust crates own the Rust/WASM application target.
+Rust crates of lkjstr. The browser app's manifest is the root `Cargo.toml`.
 
 ## Table of Contents
 
-- [lkjstr-domain/](lkjstr-domain/): pure domain reducers and models.
-- [lkjstr-app/](lkjstr-app/): pure application composition reducers.
 - [lkjstr-protocol/](lkjstr-protocol/): Nostr protocol kernel.
-- [lkjstr-relays/](lkjstr-relays/): relay runtime state machines.
-- [lkjstr-storage/](lkjstr-storage/): storage manifest, ledger, and outcomes.
-- [lkjstr-ui/](lkjstr-ui/): Leptos workspace shell components.
-- [lkjstr-web/](lkjstr-web/): WASM browser entry and host adapters.
-- [lkjstr-host/](lkjstr-host/): native HTTP server for verified self-hosted assets.
-- [lkjstr-xtask/](lkjstr-xtask/): repository checks and command orchestration.
+- [lkjstr-core/](lkjstr-core/): layout, workspace, store, planner, scoring, timelines.
+- [lkjstr-web/](lkjstr-web/): Leptos UI, runtime and browser adapters.
+- [lkjstr-host/](lkjstr-host/): native static server (not yet adapted to Trunk output).
+- [lkjstr-xtask/](lkjstr-xtask/): repository checks and quiet gates.

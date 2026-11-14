@@ -94,3 +94,13 @@ fn event_with_tags(tags: Vec<Vec<String>>) -> NostrEvent {
 fn tag(values: &[&str]) -> Vec<String> {
     values.iter().map(|value| (*value).to_owned()).collect()
 }
+
+#[test]
+fn marked_mentions_never_become_reply_fallbacks() {
+    let mut event = event_with_tags(vec![tag(&["e", "quote", "", "mention"])]);
+    assert_eq!(reply_root(&event), None);
+    assert_eq!(reply_parent(&event), None);
+    event.tags.push(tag(&["e", "parent", "", "reply"]));
+    assert_eq!(reply_root(&event), Some("parent".into()));
+    assert_eq!(reply_parent(&event), Some("parent".into()));
+}
