@@ -133,7 +133,9 @@ pnpm fix            # biome --write
 WASM assets receive hashed names in place of the mock. Startup loads the
 package Transport adapter. `pnpm package` never rebuilds dist. It requires Python 3 for archive preflight:
 allowed file suffixes, safe paths, at most 4096 entries, nonempty regular files,
-local index references and external scripts under the edge CSP. Errors name the file.
+local index references and external scripts under the edge CSP. Network-path
+references are rejected for index links and all scripts, and base elements are
+rejected in every HTML file. Errors name the file.
 
 `pnpm shots` takes `--only=<width>-<theme>-<lang>` and `--scenes=home,thread`.
 `LKJSTR_CHROME=<path>` picks the browser for `smoke` and `shots`.

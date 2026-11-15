@@ -26,6 +26,13 @@ def local_name(name, source):
     return str(path)
 
 
+def local_url_path(url, source):
+    # A network-path reference changes the origin, even without a scheme.
+    if url.startswith("//"):
+        fail(source, "unsafe local path")
+    return url.removeprefix("/")
+
+
 def create_page_check(name, files):
     page = HTMLParser(convert_charrefs=False)
     references = set()
@@ -36,12 +43,12 @@ def create_page_check(name, files):
             fail(name, "inline event attribute")
         if tag == "script" and not attrs.get("src"):
             fail(name, "inline script")
+        if tag == "base":
+            fail(name, "custom base URL")
         if name == "index.html":
-            if tag == "base":
-                fail(name, "custom base URL")
             for key in ("href", "src"):
                 if key in attrs:
-                    target = local_name((attrs[key] or "").lstrip("/"), name)
+                    target = local_name(local_url_path(attrs[key] or "", name), name)
                     if target not in files:
                         fail(name, f"missing packaged reference {target}")
                     references.add(target)
@@ -49,8 +56,9 @@ def create_page_check(name, files):
             # Static documents may have absolute canonical/alternate links, but
             # scripts still have to resolve to a file under script-src 'self'.
             src = attrs["src"]
-            path = src.lstrip("/") if src.startswith("/") else posixpath.join(
-                posixpath.dirname(name), src)
+            path = local_url_path(src, name)
+            if not src.startswith("/"):
+                path = posixpath.join(posixpath.dirname(name), path)
             target = local_name(posixpath.normpath(path), name)
             if target not in files:
                 fail(name, f"missing packaged script {target}")

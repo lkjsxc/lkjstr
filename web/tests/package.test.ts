@@ -170,9 +170,46 @@ describe('release package preflight', () => {
       'unsafe local path',
     );
   });
-  it('rejects a custom base URL', () => {
-    rejects(valid(`${shell}<base href="/app.js">`), 'index.html', 'base URL');
-  });
+  it.each(['//app.js', '///app.js', '/&#47;app.js'])(
+    'rejects network-path references before normalization: %s',
+    (url) => {
+      for (const attr of ['href', 'src'])
+        rejects(valid(`${shell}<link ${attr}="${url}">`), 'index.html', 'unsafe local path');
+      rejects(valid(shell.replace('/app.js', url)), 'index.html', 'unsafe local path');
+      rejects(
+        valid(shell, [['en/about.html', `<script src="${url}"></script>`]]),
+        'en/about.html',
+        'unsafe local path',
+      );
+    },
+  );
+  it.each(['/app.js', '../app.js', './app.js'])(
+    'accepts packaged static script paths: %s',
+    (src) => {
+      expect(
+        check(
+          valid(shell, [
+            ['en/about.html', `<script src="${src}"></script>`],
+            ['en/app.js', 'export {};'],
+          ]),
+        ).status,
+      ).toBe(0);
+    },
+  );
+  it.each(['index.html', 'en/about.html', 'ja/ABOUT.HTML'])(
+    'rejects custom base URLs in %s',
+    (name) => {
+      for (const href of ['https://example.com/', '//example.com/', '/en/']) {
+        const base = `<BASE HREF="${href}">`;
+        const script = '<script src="/app.js"></script>';
+        for (const html of [base + script, script + base]) {
+          const entries =
+            name === 'index.html' ? valid(html + shell) : valid(shell, [[name, html]]);
+          rejects(entries, name, 'base URL');
+        }
+      }
+    },
+  );
   it('requires referenced JS and WASM', () => {
     rejects(valid('<script src="/app.js"></script>'), 'index.html', '.wasm');
     rejects(valid('<link href="/engine.wasm">'), 'index.html', '.js');
