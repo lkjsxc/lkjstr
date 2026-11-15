@@ -98,9 +98,8 @@ export function createAttachments(env: ViewEnv, changed: () => void) {
         },
       );
       if (!result.ok || !result.uploaded) {
-        target =
-          result.error?.message ??
-          (result.error?.code === 'not-found' ? t('upload.server') : target);
+        const reported = result.error?.message;
+        if (reported?.startsWith('https://') && URL.canParse(reported)) target = reported;
         showFailure(
           result.error?.code === 'not-found' && !result.error.message
             ? t('upload.noServer')

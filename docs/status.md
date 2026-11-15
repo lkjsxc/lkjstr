@@ -114,8 +114,8 @@ Implemented:
   bounded, explicitly closed RPC sockets. Remote account removal deletes its
   local session credentials.
 - Blossom and NIP-96 uploads through every account signer, with bounded waits,
-  honest server status, named failures, retained-file retry and a picker. Defaults
-  match Settings; HTTP/auth and browser evidence: [media-uploads.md](media-uploads.md).
+  honest status, named failures, stable retry destinations and Blossom base paths.
+  Defaults, bounds and evidence: [media-uploads.md](media-uploads.md).
 - Public follow/mute/bookmark/profile/relay/server actions; public people-list
   addresses and naddr resolution; notification types, grouping and persisted
   seen watermarks. Local-key NIP-44 private people/bookmark/mute entries can be

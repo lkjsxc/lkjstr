@@ -10,6 +10,8 @@ The Post composer keeps a failed File and its text in the mounted draft. A
 failure names the destination and a translated reason, with Retry and a server
 selector. Failed attachments block posting until retried or removed. Successful
 attachments become URLs and imeta tags when the post is sent.
+Retries preserve the chosen destination when an error message is plain text;
+only a reported server URL replaces it.
 
 Progress names discovery, signer permission, upload or deferred processing.
 Byte progress remains honest: zero until the response has been validated, then
@@ -27,7 +29,9 @@ empty in the engine. Changing a retry destination does not publish a server list
 ## Protocol and bounds
 
 Blossom uses PUT /upload, raw bytes and a signed kind 24242 authorization with
-upload, file hash and expiration tags. NIP-96 uses discovery, multipart POST and
+upload, file hash and expiration tags. Configured base paths are retained:
+/blossom becomes /blossom/upload; an explicit /upload suffix is used once.
+NIP-96 uses discovery, multipart POST and
 kind 27235 NIP-98 auth for the exact API URL and method. The browser supplies the
 multipart boundary. The known NIP-96 default goes directly through discovery;
 unknown servers fall back only when Blossom is absent or its preflight fails.

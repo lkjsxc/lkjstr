@@ -13,9 +13,23 @@ fn resolves_blossom_upload_endpoints() {
     );
     assert_eq!(
         blossom_upload_endpoint("https://media.example/custom").as_deref(),
-        Some("https://media.example/custom")
+        Some("https://media.example/custom/upload")
     );
     assert_eq!(blossom_upload_endpoint("http://media.example"), None);
+}
+
+#[test]
+fn preserves_blossom_base_paths_without_duplicating_upload() {
+    for path in ["", "/", "/blossom", "/blossom/", "/nested/blossom/"] {
+        let base = format!("https://media.example{path}");
+        let endpoint = format!("{}/upload", base.trim_end_matches('/'));
+        assert_eq!(blossom_upload_endpoint(&base), Some(endpoint.clone()));
+        assert_eq!(blossom_upload_endpoint(&endpoint), Some(endpoint.clone()));
+        assert_eq!(
+            blossom_upload_endpoint(&format!("{endpoint}/")),
+            Some(endpoint)
+        );
+    }
 }
 
 #[test]
