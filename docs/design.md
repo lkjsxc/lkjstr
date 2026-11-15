@@ -56,7 +56,7 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
 - The tile that keys go to is marked; `Alt+Shift` chords move between tabs
   and tiles, reopen (the closed-tab list survives a reload) and open. `X`
   closes the tab in front. `O` opens tab search over the tile: open tabs,
-  then what a new tab could be; Enter goes there.
+  then what a new tab could be; Enter goes there. An empty query omits kinds already open in this tile.
   Tab search also finds the tabs of the other workspaces, marked with their number.
   `N` goes to the Post tab that is open (a setting: always a new one).
 - Menus close on outside press, Escape, scroll and after choosing. No close
@@ -99,16 +99,15 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
 - A person whose name has not arrived is shown by a short npub, never by
   hex. When the name comes only the header line and the face are drawn
   again, so text, folds and loaded pictures stay. Tab titles follow.
-- Times are absolute: `HH:mm` within the day, `yyyy/mm/dd` otherwise and on
-  day dividers. Relative time is a setting, off by default.
+- Absolute times under day separators say `HH:mm` when the note and divider share a local day; cross-day reposts retain the original date. Elsewhere older rows include the full date; every time tooltip has the full date and time. Relative time applies in every feed and is off by default.
 - Above the header, in `--faint`: who reposted, or what is replied to.
 - Text, then media (one picture keeps its ratio up to the media height; two
   to four share a grid), then quoted notes as cards. Long notes fold by whole
   lines. Content warnings cover until pressed. A quoted note that cannot be
   shown is one quiet sentence in the same card.
-- Links have up to two 88px cards below text and media, in link order, in the
+- Links have up to two distinct 88px cards below text and media, at most 560px wide, aligned with the text, in link order, in the
   quoted-note surface: raised, hairline, 8px corners. Loading reserves the same
-  height on hold with the host; failure keeps host and path. Pictures are 120x88
+  height on hold with the host; failure, timeout or no title closes the slot using the reading anchor. Failed answers reserve nothing for their cache time. Pictures are 120x88
   (88x88 below 440px of tile), cover, absent when unknown. Site is faint 12.5px;
   title 600, two lines; muted description two lines, omitted for two-line titles.
   One accessible link opens a browser tab with noopener; no players or frames.
@@ -122,7 +121,7 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
 - Action row in `--faint` at rest: reply, repost (menu: repost, quote),
   reaction, zap in four equal slots with their counts, then pick an emoji, bookmark and more on the same rhythm, at least 44px apart where the row has 400px. Under 440px of tile the bookmark folds into the
   menu (a set one shows as a mark by the time); under 330px the zap too.
-  Reaction chips sit under the row.
+  Reaction chips sit under the row. When chips are drawn the heart has no number; otherwise it carries the total. A trailing `+` means an observed relay limit, never a count still arriving.
 - A `+` or empty reaction is a like: drawn and counted as the heart. `-` is 👎.
 - On is indigo. Keyboard selection is a wash with an indigo bar at the
   left; unread is a vermilion bar at the left.
@@ -141,7 +140,7 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
   the scrollbar keeps its span. A list in time order has a time rail
   instead: it spans every note known for the list, a busy month longer than
   a quiet one without crowding it out and empty time taking no room, dots
-  where months begin, numbers where years begin, a line for where you are;
+  where months begin, numbers where years begin, a 2px accent line across only the rightmost 16px for where you are; the current year uses normal text colour;
   pressed or dragged it goes to that time and says it, and leaves a tick to
   come back by. Other views keep a 14px scrollbar with a slim thumb that
   widens under the pointer.
@@ -188,8 +187,9 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
 - Stats is numbers and quiet marks, no prose: five figures, then a sortable
   row per relay, trouble first; three publication columns group accepted/planned,
   pending/failed and exclusions by own/inbox/capacity limits; absent is a dash.
-  Route marks, followed-author coverage and weights are sortable columns. A second
-  table shows request purposes, weights, counts and quiet completion marks.
+  Route words, followed-author coverage and weights are sortable columns. Never-connected traffic and all-zero compound cells show one dash; nonzero publication counts show even before a connection. Heads and cells name every compound part in localized tooltips.
+  Narrow tiles show Relay, Received and Answer; tapping a row unfolds the other labelled values, one row at a time, retained per tab. Relay names elide inside the host and keep the tail. No horizontal scrolling.
+  A second table shows request purposes, weights, counts and completion marks; narrow tiles show Purpose and Relay, with the request id and other values in retained unfolded lines.
 - Docs is a tab with a tree of groups and pages: what lkjstr is, release
   and licence, keys and safety, relays, filters, shortcuts, the privacy
   policy, the terms. A page names its tab and is found by name in tab search.

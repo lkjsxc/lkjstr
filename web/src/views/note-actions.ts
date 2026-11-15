@@ -81,7 +81,7 @@ export function reactionChips(row: NoteRow, env: ViewEnv): HTMLElement | null {
           onclick: (e) => (e.stopPropagation(), react(env, row, r.emoji, r.url, !r.mine)),
         },
         r.url ? emojiImg(r.emoji, r.url) : r.emoji,
-        h('span', null, countText(r.count, false, getLang())),
+        h('span', null, countText(r.count, row.counts.partial, getLang())),
       ),
     ),
   );
@@ -164,8 +164,12 @@ export function actionRow(row: NoteRow, env: ViewEnv): HTMLElement {
         { label: t('act.quote'), run: () => env.open('compose', quote) },
       ]),
     ),
-    button('heart', 'act.react', n(likes?.count ?? 0), Boolean(mine), () =>
-      react(env, row, mine?.emoji ?? DEFAULT_REACTION, mine?.url, !mine),
+    button(
+      'heart',
+      'act.react',
+      row.reactions.length ? '' : n(row.counts.reactions),
+      Boolean(mine),
+      () => react(env, row, mine?.emoji ?? DEFAULT_REACTION, mine?.url, !mine),
     ),
     zap,
     // Pure actions with no count have nothing to show a reader who cannot act.

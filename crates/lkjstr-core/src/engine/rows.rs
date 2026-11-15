@@ -155,7 +155,7 @@ pub fn row_with_lists(
             replies,
             reposts: repost_count,
             reactions: reaction_count,
-            partial: true,
+            partial: false,
         },
         reactions: reactions.into_values().collect(),
         hidden_reason: own.muted.then(|| "muted-person".into()).or_else(|| {

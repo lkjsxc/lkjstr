@@ -29,8 +29,7 @@ export function relativeTime(ms: number, now: number, lang: Lang): string {
 }
 
 export type TimeStyle = { readonly relative: boolean; readonly lang: Lang };
-/** The time on a note: `HH:mm` today; the date and the time for anything older, wherever it is drawn (a note
- * read far below its date divider still says which day it is from). */
+/** The time without a day separator: `HH:mm` today; full date and time otherwise. */
 export function noteTime(ms: number, now: number, style: TimeStyle): string {
   if (style.relative) return relativeTime(ms, now, style.lang);
   return dayOf(ms) === dayOf(now) ? clockOf(ms) : `${dayOf(ms)} ${clockOf(ms)}`;

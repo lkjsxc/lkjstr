@@ -1,6 +1,9 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import type { EngineStats } from '../src/engine/protocol.ts';
-import { bytesText, relayMark, sortRelays } from '../src/views/stats.ts';
+import { setLang } from '../src/shared/i18n.ts';
+import { createSignal } from '../src/shared/signal.ts';
+import type { ViewEnv } from '../src/views/registry.ts';
+import { bytesText, mountStats, relayMark, sortRelays } from '../src/views/stats.ts';
 
 type Relay = EngineStats['relays'][number];
 const relay = (url: string, over: Partial<Relay> = {}): Relay => ({
@@ -17,7 +20,75 @@ const relay = (url: string, over: Partial<Relay> = {}): Relay => ({
   ...over,
 });
 
+afterEach(() => {
+  localStorage.clear();
+  setLang('en');
+});
+
 describe('stats', () => {
+  it.each([
+    ['publishOwnSkipped', '.c-publishOwnSkipped', '1 / — / —'],
+    ['publishInboxSkipped', '.c-publishOwnSkipped', '— / 1 / —'],
+    ['publishCapacitySkipped', '.c-publishOwnSkipped', '— / — / 1'],
+    ['publishPlanned', '.c-publishAccepted', '— / 1'],
+    ['publishAccepted', '.c-publishAccepted', '1 / —'],
+    ['publishPending', '.c-publishPending', '1 / —'],
+    ['publishFailed', '.c-publishPending', '— / 1'],
+  ] as const)(
+    'shows %s before connecting in cells and expanded details',
+    async (field, cell, text) => {
+      const r = relay('wss://excluded.example', {
+        state: 'disconnected',
+        connectedSince: null,
+        eventsReceived: 0,
+        openSubscriptions: 0,
+        latencyMs: null,
+        [field]: 1,
+      });
+      let stats: EngineStats = {
+        relays: [r],
+        totals: {
+          eventsStored: 0,
+          cacheBytes: 0,
+          subscriptions: 0,
+          servedFromCache: 0,
+          servedFromNetwork: 0,
+        },
+        orchestration: { relaysCoveringFollowSet: 0, requestsCoalesced: 0 },
+      };
+      const visible = createSignal(true);
+      const el = document.createElement('div');
+      const off = mountStats(el, {
+        instance: 'publication-stats',
+        visible,
+        menu() {},
+        engine: { stats: async () => stats },
+      } as unknown as ViewEnv);
+      try {
+        await Promise.resolve();
+        const row = el.querySelector<HTMLElement>('.relay-stats .stats-toggle')!;
+        expect(row.querySelector(cell)?.textContent).toBe(text);
+        expect(row.querySelector('.c-data')?.textContent).toBe('—');
+        expect(row.querySelector('.c-events')?.textContent).toBe('—');
+        row.click();
+        const detail = el.querySelector<HTMLElement>('.relay-stats .stats-detail')!;
+        expect(detail.hidden).toBe(false);
+        expect([...detail.querySelectorAll('dd')].map((dd) => dd.textContent)).toContain(text);
+        // A later snapshot with no publication activity restores the dash in both views.
+        stats = { ...stats, relays: [{ ...r, [field]: 0 }] };
+        visible.set(false);
+        visible.set(true);
+        await Promise.resolve();
+        expect(row.querySelector(cell)?.textContent).toBe('—');
+        expect([...detail.querySelectorAll('dd')].every((dd) => dd.textContent !== text)).toBe(
+          true,
+        );
+      } finally {
+        off();
+      }
+    },
+  );
+
   it('marks a relay that fails, sends nothing, or answers slowly', () => {
     expect(relayMark(relay('a'))).toBeUndefined();
     expect(relayMark(relay('a', { state: 'waiting', lastError: 'refused' }))).toBe('failing');

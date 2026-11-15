@@ -68,12 +68,11 @@ Unfinished focused pages keep priority and replay their filters until EOSE.
 Completed coverage and cursors survive live resumption without exhausting history.
 Native regressions cover delayed hydration, interruption and pagination.
 Six native regressions cover routing, batching, context, refresh and release.
-The earlier 240 ms probe improved note-to-name from 1893.7 to 232.5 ms.
-Current coalescing results and remaining gaps: [cover.md](cover.md).
+The earlier 240 ms probe improved note-to-name from 1893.7 to 232.5 ms. Current coalescing results and remaining gaps: [cover.md](cover.md).
 
-Protocol 2 uses absent profile fields for unknown counts and the existing
-partial flag for lower bounds. Count requests are bounded and exact only after
-successful, untruncated, verified replies. Count deferral ends at the first 15-second page deadline; retries do not renew it.
+Protocol 2 uses absent profile fields for unknown counts; note partial flags mark observed relay-limit lower bounds (pending requests have no suffix).
+Count requests are bounded and exact only after successful, untruncated, verified replies. No alternate estimate shape remains.
+Count deferral ends at the first 15-second page deadline; retries do not renew it.
 Signed-out relays.save with an empty account is supported by the Worker and
 confirmed edits are saved by startup plumbing. The Settings action guard still
 blocks visitor edits before they reach the engine; the frontend must remove
@@ -191,7 +190,8 @@ fresh outboxes stay isolated; hidden mention requests close. See [wishes.md](wis
 ## Reader state and optional previews (2026-11-15)
 
 Protocol 5 adds bounded per-note link previews and near-note hints, including
-nested notification notes. The Worker probes health once; one HTTP request
+nested notification notes. Failed or untitled previews leave no card and are cached for one hour (successful titles: one day); links are
+deduplicated. The Worker probes health once; one HTTP request
 runs after other work. The optional Rust lkjstr-preview binary fetches public
 page metadata; static hosting works without it. No hosting changes were made.
 Reader choices persist per tab; channel drafts save at once. Deferred filter

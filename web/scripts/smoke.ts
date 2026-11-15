@@ -1729,7 +1729,7 @@ async function accounts(browser: Browser): Promise<void> {
   await page.locator('.toast.undo', { hasText: 'Removed' }).locator('button').click();
   await page.waitForFunction(() => document.querySelectorAll('.arow').length === 2);
   fact('a read-only account comes back with Undo', true);
-  await page.locator(`${av} .arow:not(.on) [data-f="use"]`).click();
+  await page.locator(`${av} .arow:has(.badge) [data-f="use"]`).click();
   await page.locator('.acct .ro').waitFor();
   for (const _ of [1, 2]) {
     const n = await count(page, '.arow');
@@ -1795,9 +1795,10 @@ async function rooms(browser: Browser, still: Record<string, unknown>): Promise<
   };
   await launch('Stats', 'stats');
   const sv = '.view[data-kind="stats"]';
-  await page.locator(`${sv} .stab tbody tr`).first().waitFor();
+  await page.locator(`${sv} .relay-stats tbody .stats-toggle`).first().waitFor();
   const figures = await page.locator(`${sv} .sval`).allInnerTexts();
-  const hosts = (): Promise<string[]> => page.locator(`${sv} .rhost`).allInnerTexts();
+  const hosts = (): Promise<string[]> =>
+    page.locator(`${sv} .relay-stats .rhost`).allTextContents();
   fact(
     'stats: five figures, and the relays in trouble first, each with its mark',
     figures.length === 5 &&
@@ -1805,23 +1806,32 @@ async function rooms(browser: Browser, still: Record<string, unknown>): Promise<
       /^\d+%$/.test(figures[2] ?? '') &&
       (await hosts())[0] === 'down.example.net' &&
       (await page.locator(`${sv} tr.m-failing .smark`).first().innerText()) === 'failing' &&
-      (await page.locator(`${sv} tr.m-slow .rhost`).innerText()) === 'slow.example.org',
+      (await page.locator(`${sv} tr.m-slow .rhost`).textContent()) === 'slow.example.org',
     [figures, await hosts()],
   );
-  const firstRow = await page.locator(`${sv} .stab tbody tr`).first().elementHandle();
+  const firstRow = await page
+    .locator(`${sv} .relay-stats tbody .stats-toggle`)
+    .first()
+    .elementHandle();
   await page.locator(`${sv} th.c-latency button`).click();
   fact(
     'stats: a column sorts by what it holds, a missing figure last',
     (await hosts())[0] === 'slow.example.org' &&
       (await page.locator(`${sv} th.c-latency`).getAttribute('aria-sort')) === 'descending' &&
-      (await page.locator(`${sv} .stab tbody tr`).last().locator('.c-latency').innerText()) === '—',
+      (await page
+        .locator(`${sv} .relay-stats tbody .stats-toggle`)
+        .last()
+        .locator('.c-latency')
+        .innerText()) === '—',
     await hosts(),
   );
   await page.waitForTimeout(2300);
   fact(
     'stats: a new answer keeps the rows it already drew',
     await page.evaluate(
-      (tr) => tr?.isConnected === true && tr.parentElement?.children.length === 9,
+      (tr) =>
+        tr?.isConnected === true &&
+        tr.parentElement?.querySelectorAll(':scope > .stats-toggle').length === 9,
       firstRow,
     ),
   );

@@ -11,6 +11,19 @@ export function mockStats(core: Core): EngineStats {
     relays: rows.map((r, i) => ({
       url: r.url,
       state: r.state,
+      route:
+        r.read && r.write
+          ? 'both'
+          : r.read
+            ? 'reading'
+            : r.write
+              ? 'writing'
+              : r.why === 'search'
+                ? 'search'
+                : r.inUse
+                  ? 'reading'
+                  : 'unused',
+      readRule: r.read ? 'reader' : r.why === 'search' ? 'search' : r.inUse ? 'hint' : 'unused',
       connectedSince: r.state === 'connected' ? core.world.base - (7 + i * 13) * 60_000 : null,
       eventsReceived: r.events,
       duplicatesDropped: dup(r.events, i),
@@ -19,6 +32,19 @@ export function mockStats(core: Core): EngineStats {
       bytesOut: r.state === 'connected' ? 900 + r.subs * 410 : 0,
       lastError: r.error ?? null,
       latencyMs: r.latencyMs ?? null,
+    })),
+    // Mock wire diagnostics derive from the test double's actual open subscriptions.
+    requests: [...core.subs.values()].slice(0, 256).map((sub) => ({
+      id: sub.id,
+      wireId: sub.id,
+      relay: rows[0]!.url,
+      purpose: sub.query.source === 'notifications' ? 'notifications' : 'visible',
+      priority: 1,
+      weight: 600,
+      received: sub.end - sub.start,
+      sent: true,
+      complete: true,
+      members: 1,
     })),
     totals: {
       eventsStored: core.world.notes.length,

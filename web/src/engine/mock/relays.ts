@@ -34,7 +34,7 @@ const KNOWN: readonly RelaySpec[] = [
     software: 'nostr-rs-relay 0.9',
   },
   {
-    url: 'wss://relay.fischer.example',
+    url: 'wss://relay.fischer.example/reading-home-a',
     state: 'connected',
     inUse: true,
     why: 'outbox',

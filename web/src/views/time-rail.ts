@@ -138,6 +138,9 @@ export function mountTimeRail(o: {
     }
     if (held && under) say(under);
     const p = position(first()?.key);
+    const year = String(new Date(p?.month ?? data?.months[0]?.at ?? 0).getUTCFullYear());
+    for (const number of marks.querySelectorAll('.time-year'))
+      number.classList.toggle('current', number.textContent === year);
     line.style.top = `${8 + (p ? noteToPlace(bands, p) : 0)}px`;
     tick.hidden = !back;
     if (back) tick.style.top = `${8 + noteToPlace(bands, back.time)}px`;

@@ -65,7 +65,14 @@ export function tabHits(api: Pick<TabFinder, 'tabs' | 'show' | 'open'>, typed: s
     );
   // A view's exact name wins over a word in another view's description ("Relays" used to choose Global).
   const exact = (c: Choice): number => Number(c.title.toLowerCase() === text.toLowerCase());
+  const here = new Set(
+    api
+      .tabs()
+      .filter((tab) => tab.here && !tab.workspace)
+      .map((tab) => kindOf(tab.tab)),
+  );
   const kinds = CHOICES.choices()
+    .filter((c) => text || !here.has(c.kind))
     .filter((c) => matchesWords(c.search, text))
     .sort((a, b) => exact(b) - exact(a));
   return [...tabs, ...kinds.map(kind), ...(text ? CHOICES.typed(text).map(kind) : [])];

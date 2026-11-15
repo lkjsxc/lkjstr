@@ -1,4 +1,4 @@
-//! Counts are exact only after successful, untruncated requests on every route.
+//! Note count suffixes report observed relay truncation, never pending requests.
 use crate::{
     engine::{Engine, rows::Row},
     store::Query,
@@ -6,7 +6,7 @@ use crate::{
 use serde_json::{Value, json};
 pub(super) fn note(row: &Row) -> Value {
     json!({"replies":row.counts.replies,"reposts":row.counts.reposts,
-        "reactions":row.counts.reactions,"zaps":0,"partial":true})
+        "reactions":row.counts.reactions,"zaps":0,"partial":false})
 }
 pub(super) fn settle(row: &mut Value, e: &Engine) {
     if row["kind"] == "note" {
@@ -21,12 +21,7 @@ pub(super) fn settle(row: &mut Value, e: &Engine) {
             ..Default::default()
         };
         f.tags.insert("e".into(), vec![id.into()]);
-        let untrusted_zaps = e
-            .store
-            .referencing(id)
-            .iter()
-            .any(|event| event.kind == 9735);
-        row["counts"]["partial"] = json!(untrusted_zaps || !e.network.count_complete(&f, &e.store));
+        row["counts"]["partial"] = json!(e.network.count_limited(&f));
     }
 }
 pub(super) fn profile(result: &mut Value, e: &Engine, p: &str) {

@@ -5,9 +5,10 @@
 import { spawn } from 'node:child_process';
 import { mkdirSync } from 'node:fs';
 import { chromium, type Page } from 'playwright-core';
+import { looksShots } from './shots-looks.ts';
 
 const here = new URL('..', import.meta.url).pathname;
-const out = `${here}../tmp/screens`;
+const out = process.env.LKJSTR_SHOTS_DIR ?? `${here}../tmp/screens`;
 const chrome =
   process.env.LKJSTR_CHROME ??
   `${process.env.HOME}/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome`;
@@ -63,14 +64,29 @@ try {
           );
           await ctx.routeWebSocket('**/*', (socket) => socket.close());
           await ctx.addInitScript((m) => localStorage.setItem('lkjstr:mock', m), mock);
+          if (name.startsWith('looks-'))
+            await ctx.addInitScript(() => {
+              if (!localStorage.getItem('lkjstr:layout:main'))
+                localStorage.setItem(
+                  'lkjstr:layout:main',
+                  JSON.stringify({
+                    type: 'pane',
+                    id: 'looks',
+                    tabs: ['global', 'home', 'compose', 'account', 'notifications', 'settings'],
+                    active: 'home',
+                  }),
+                );
+            });
           const page = await ctx.newPage();
+          page.setDefaultTimeout(10000);
+          page.on('pageerror', (e) => failed.push(`${name}-${tag}: ${e.message}`));
           try {
             await page.goto(`${base}${path}`);
             await page.waitForSelector('.note');
             await act(page);
             await page.waitForTimeout(350); // pictures and fonts
             await page.screenshot({ path: `${out}/${name}-${tag}.png` });
-            if (name === 'tabsearch' && lang === 'en')
+            if ((name === 'tabsearch' || name.startsWith('looks-')) && lang === 'en')
               await page.screenshot({ path: `${out}/${name}-${width}-${theme}.png` });
           } catch (e) {
             failed.push(`${name}-${tag}: ${String(e).split('\n')[0]}`);
@@ -85,6 +101,7 @@ try {
           await page.locator('.ncard > b').getByText(word, { exact: true }).first().click();
           await page.waitForSelector(`.view[data-kind="${kind}"] > *`);
         };
+        await looksShots(scene, lang === 'ja' ? '統計' : 'Stats');
         for (const [name, url] of [
           ['news', 'https://news.example/picture'],
           ['plain', 'https://news.example/article'],
@@ -95,13 +112,16 @@ try {
         ]) {
           await scene(`card-${name}`, '/', async (page) => {
             const row = page
-              .locator(`.note:has(.link-card[href="${url}"])`)
+              .locator(`.note:has(.text a[href="${url}"])`)
               .filter({
                 hasText: name === 'two' ? 'Two pages.' : name === 'news' ? 'A page with' : '',
               })
               .first();
             await row.locator('.nhead time').click();
-            await page.locator('.th-focus .link-card').first().waitFor();
+            await page
+              .locator(name === 'failed' ? '.th-focus' : '.th-focus .link-card')
+              .first()
+              .waitFor();
           });
         }
         await scene('tabsearch', '/', async (page) => {

@@ -13,8 +13,12 @@ import { quoteCard } from './note-quote.ts';
 import { displayName, faceButton, how, nameButton, plainName, segments } from './parts.ts';
 import type { ViewEnv } from './registry.ts';
 
-const timeOf = (at: number, env: ViewEnv): string =>
-  noteTime(at, Date.now(), { relative: env.settings.get().relativeTime, lang: getLang() });
+const timeOf = (row: NoteRow, env: ViewEnv, dated: boolean): string => {
+  const relative = env.settings.get().relativeTime;
+  // Absolute dates compare with the divider's local day; relative ages use the current time.
+  const now = dated && !relative ? (row.repostedBy?.at ?? row.at) : Date.now();
+  return noteTime(row.at, now, { relative, lang: getLang() });
+};
 
 /** Long text folds by whole lines; the button appears only when something is actually cut off. */
 function fold(text: HTMLElement): void {
@@ -36,7 +40,7 @@ function fold(text: HTMLElement): void {
 
 const drawnBy = new WeakMap<HTMLElement, string>(); // the author each drawn note shows
 /** The line over the text: name, NIP-05, time. One line of fixed height, whatever is known of the author. */
-function head(row: NoteRow, env: ViewEnv): HTMLElement {
+function head(row: NoteRow, env: ViewEnv, dated: boolean): HTMLElement {
   const a = row.author;
   return h(
     'div',
@@ -54,7 +58,11 @@ function head(row: NoteRow, env: ViewEnv): HTMLElement {
         )
       : null,
     a.bot ? h('span', { class: 'badge' }, t('note.bot')) : null,
-    h('time', { title: fullTime(row.at) }, row.pending ? t('note.sending') : timeOf(row.at, env)),
+    h(
+      'time',
+      { title: fullTime(row.at) },
+      row.pending ? t('note.sending') : timeOf(row, env, dated),
+    ),
     // Where the tile is too narrow for a bookmark button, a set bookmark is this mark instead.
     h(
       'span',
@@ -64,7 +72,7 @@ function head(row: NoteRow, env: ViewEnv): HTMLElement {
   );
 }
 
-export function renderNote(row: NoteRow, env: ViewEnv): HTMLElement {
+export function renderNote(row: NoteRow, env: ViewEnv, dated = false): HTMLElement {
   const state = readNoteState(env.instance, row.id);
   if (row.hidden && !state.shown) {
     const el = h(
@@ -91,7 +99,7 @@ export function renderNote(row: NoteRow, env: ViewEnv): HTMLElement {
       ),
     );
     const fresh = (r: NoteRow): HTMLElement => {
-      const n = renderNote(r, env);
+      const n = renderNote(r, env, dated);
       requestAnimationFrame(() => fitNote(n));
       return n;
     };
@@ -196,7 +204,7 @@ export function renderNote(row: NoteRow, env: ViewEnv): HTMLElement {
       h(
         'div',
         { class: 'nmain' },
-        head(row, env),
+        head(row, env, dated),
         body,
         actionRow(row, env),
         reactionChips(row, env),
@@ -219,14 +227,14 @@ export const bodySig = (row: NoteRow): string =>
   JSON.stringify({ ...row, author: 0, pending: 0, counts: 0, reactions: 0, mine: 0 });
 /** Redraws only the author's line and face, the chips and the action row of a drawn note: the text stays as the
  * reader left it (unfolded, uncovered), pictures are not loaded again and nothing moves under the pointer. */
-export function patchNote(el: HTMLElement, row: NoteRow, env: ViewEnv): void {
+export function patchNote(el: HTMLElement, row: NoteRow, env: ViewEnv, dated = false): void {
   const main = el.querySelector(':scope > .nrow > .nmain');
   if (!main) return;
   el.classList.toggle('pending', row.pending === true);
   const was = main.querySelector<HTMLElement>(':scope > .nhead');
   const name = was?.querySelector('.name');
   const keep = name !== null && name === document.activeElement;
-  was?.replaceWith(head(row, env));
+  was?.replaceWith(head(row, env, dated));
   if (keep)
     main.querySelector<HTMLElement>(':scope > .nhead > .name')?.focus({ preventScroll: true });
   if (JSON.stringify(row.author) !== drawnBy.get(el)) {
