@@ -131,7 +131,9 @@ pnpm fix            # biome --write
 `pnpm build -- --engine=<dir>` consumes the package described in
 [engine-package.md](engine-package.md). All engine imports, worker entries and
 WASM assets receive hashed names in place of the mock. Startup loads the
-package Transport adapter. `pnpm package` never rebuilds dist.
+package Transport adapter. `pnpm package` never rebuilds dist. It requires Python 3 for archive preflight:
+allowed file suffixes, safe paths, at most 4096 entries, nonempty regular files,
+local index references and external scripts under the edge CSP. Errors name the file.
 
 `pnpm shots` takes `--only=<width>-<theme>-<lang>` and `--scenes=home,thread`.
 `LKJSTR_CHROME=<path>` picks the browser for `smoke` and `shots`.
@@ -158,7 +160,7 @@ workspace.md describes historical layout behavior; design.md describes web/.
 ## Public pages
 
 Build-time scripts/site.ts emits seven page pairs at /en/*.html and /ja/*.html,
-sitemap.xml with build-time lastmod values, and robots.txt. Public copy lives in
+sitemap.txt (one absolute URL per line, including / and privacy.html), and robots.txt. Public copy lives in
 the paired site-words-en.ts and site-words-ja.ts tables. Shared About, Docs prose
 and shortcuts come from the app string tables and key definitions. The shared
 card image is icon-512.png. No reading script or new dependency is needed.

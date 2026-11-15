@@ -111,9 +111,14 @@ No new CORS origin, iframe policy, script permission or cookie is required.
 
 ## Public documents
 
-Serve /en/*.html and /ja/*.html as text/html, /sitemap.xml as application/xml,
-and /robots.txt as text/plain. Public HTML, site.css and discovery files
+Serve /en/*.html and /ja/*.html as text/html; /sitemap.txt and /robots.txt
+as text/plain; charset=utf-8. Public HTML, site.css and discovery files
 revalidate with no-cache, like privacy.html. Keep these concrete paths ahead
-of any app fallback. Sitemap timestamps come from the frontend build time.
+of any app fallback. The UTF-8 text sitemap lists /, privacy.html and all seven
+page pairs, one absolute URL per line. Hreflang stays in each page's alternate
+links. XML is not an accepted release type and the edge has no XML MIME mapping.
+The app shell has no canonical or alternate links: every href/src in index.html
+must name a packaged local file. Its absolute og:url metadata remains valid.
+Packaging rejects inline scripts and event attributes in every HTML file.
 The root dist check requires the seven bilingual page pairs and their shared
 assets. No ops deployment verification list exists in this checkout.

@@ -45,11 +45,21 @@ async fn sitemap_pages_are_real_bilingual_documents_and_links_resolve() -> Resul
         write(root.path(), name, b"linked asset fixture")?;
     }
     let app = lkjstr_host::app(root.path())?;
-    let sitemap = read(&app, "/sitemap.xml", "application/xml").await?;
+    let sitemap = read(&app, "/sitemap.txt", "text/plain").await?;
     let robots = read(&app, "/robots.txt", "text/plain").await?;
-    assert!(robots.contains("Sitemap: https://lkjstr.lkjsxc.com/sitemap.xml"));
-    let urls = values(&sitemap, "<loc>", "</loc>");
-    assert_eq!(urls.len(), 14);
+    assert!(robots.contains("Sitemap: https://lkjstr.lkjsxc.com/sitemap.txt"));
+    let urls: Vec<_> = sitemap.lines().collect();
+    assert_eq!(urls.len(), 16);
+    assert_eq!(urls.iter().collect::<BTreeSet<_>>().len(), urls.len());
+    assert!(urls.contains(&"https://lkjstr.lkjsxc.com/"));
+    assert!(urls.contains(&"https://lkjstr.lkjsxc.com/privacy.html"));
+    for missing in ["/sitemap.xml", "/en/missing.html", "/ja/missing.html"] {
+        let response = app
+            .clone()
+            .oneshot(Request::builder().uri(missing).body(Body::empty())?)
+            .await?;
+        assert_eq!(response.status(), StatusCode::NOT_FOUND, "{missing}");
+    }
     let mut titles = BTreeSet::new();
     let mut en = BTreeSet::new();
     let mut ja = BTreeSet::new();
@@ -58,10 +68,18 @@ async fn sitemap_pages_are_real_bilingual_documents_and_links_resolve() -> Resul
             .strip_prefix("https://lkjstr.lkjsxc.com")
             .ok_or("origin")?;
         let html = read(&app, path, "text/html").await?;
+        if path == "/" || path == "/privacy.html" {
+            continue;
+        }
         assert!(html.contains(&format!("<link rel=\"canonical\" href=\"{url}\">")));
         assert_eq!(html.matches("<h1>").count(), 1, "{path}");
         assert_eq!(html.matches("<title>").count(), 1, "{path}");
         assert!(!html.contains("<script"));
+        for code in ["en", "ja", "x-default"] {
+            let lang = if code == "x-default" { "en" } else { code };
+            let page = path.rsplit('/').next().ok_or("page")?;
+            assert!(html.contains(&format!("rel=\"alternate\" hreflang=\"{code}\" href=\"https://lkjstr.lkjsxc.com/{lang}/{page}\"")));
+        }
         let title = values(&html, "<title>", "</title>")[0];
         assert!(titles.insert(title.to_owned()), "duplicate title: {path}");
         if let Some(page) = path.strip_prefix("/en/") {

@@ -193,7 +193,7 @@ Protocol 5 adds bounded per-note link previews and near-note hints, including
 nested notification notes. Failed or untitled previews leave no card and are cached for one hour (successful titles: one day); links are
 deduplicated. The Worker probes health once; one HTTP request
 runs after other work. The optional Rust lkjstr-preview binary fetches public
-page metadata; static hosting works without it. The frontend emits bilingual public pages and a sitemap; see hosting-needs.md.
+page metadata; static hosting works without it. The frontend emits bilingual public pages and sitemap.txt; see hosting-needs.md.
 Reader choices persist per tab; channel drafts save at once. Deferred filter
 redraws preserve the control receiving focus. Enter opens only applied results. Scroll hydration restores each scroller once
 and respects page resets. Period fields accept common calendar/relative forms;

@@ -47,7 +47,7 @@ pub fn check(root: &Path) -> Result<(), String> {
             }
         }
     }
-    for path in ["sitemap.xml", "robots.txt", "site.css", "icon-512.png"] {
+    for path in ["sitemap.txt", "robots.txt", "site.css", "icon-512.png"] {
         if fs::metadata(dist.join(path)).map_or(true, |meta| meta.len() == 0) {
             return Err(format!("dist/{path}: missing or empty public asset"));
         }

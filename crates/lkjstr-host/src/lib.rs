@@ -32,7 +32,6 @@ pub fn app(root: &Path) -> io::Result<Router> {
 }
 
 async fn policy(request: Request, next: Next) -> Response {
-    let sitemap = request.uri().path() == "/sitemap.xml";
     let mut response = if request.method() != Method::GET && request.method() != Method::HEAD {
         (
             StatusCode::METHOD_NOT_ALLOWED,
@@ -49,14 +48,7 @@ async fn policy(request: Request, next: Next) -> Response {
     } else {
         "no-store"
     };
-    let served_sitemap = sitemap && response.status().is_success();
     let headers = response.headers_mut();
-    if served_sitemap {
-        headers.insert(
-            header::CONTENT_TYPE,
-            header::HeaderValue::from_static("application/xml; charset=utf-8"),
-        );
-    }
     headers.insert(
         header::CACHE_CONTROL,
         header::HeaderValue::from_static(cache),

@@ -16,11 +16,20 @@ const parse = (html: string) => {
 describe('public documentation build', () => {
   it('emits paired, script-free pages with complete metadata and shared app prose', () => {
     mkdirSync(out, { recursive: true });
-    const builtAt = new Date('2026-11-15T12:34:56Z');
-    buildPublicPages(out, builtAt);
+    buildPublicPages(out);
     expect(readdirSync(join(out, 'en')).sort()).toEqual(readdirSync(join(out, 'ja')).sort());
-    const sitemap = readFileSync(join(out, 'sitemap.xml'), 'utf8');
-    expect(sitemap.match(/<lastmod>2026-11-15T12:34:56.000Z<\/lastmod>/g)).toHaveLength(14);
+    const sitemap = readFileSync(join(out, 'sitemap.txt'), 'utf8');
+    expect(sitemap).toBe(
+      [
+        `${ORIGIN}/`,
+        `${ORIGIN}/privacy.html`,
+        ...['en', 'ja'].flatMap((lang) => PAGE_IDS.map((id) => `${ORIGIN}/${lang}/${id}.html`)),
+        '',
+      ].join('\n'),
+    );
+    expect(readFileSync(join(out, 'robots.txt'), 'utf8')).toContain(
+      `Sitemap: ${ORIGIN}/sitemap.txt\n`,
+    );
     for (const lang of ['en', 'ja'] as const) {
       setLang(lang);
       for (const id of PAGE_IDS) {
@@ -35,7 +44,6 @@ describe('public documentation build', () => {
           expect(doc.querySelector(`link[hreflang="${code}"]`)?.getAttribute('href')).toBe(
             `${ORIGIN}/${code === 'x-default' ? 'en' : code}/${id}.html`,
           );
-          expect(sitemap).toContain(`hreflang="${code}"`);
         }
         for (const field of ['title', 'description', 'url', 'image'])
           expect(

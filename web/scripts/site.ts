@@ -33,8 +33,8 @@ const prose = (s: string): string =>
     })
     .join('\n');
 
-export function buildPublicPages(out: string, builtAt = new Date()): void {
-  const urls: string[] = [];
+export function buildPublicPages(out: string): void {
+  const urls = [`${ORIGIN}/`, `${ORIGIN}/privacy.html`];
   for (const lang of ['en', 'ja'] as const) {
     setLang(lang);
     const words = lang === 'en' ? siteEn : siteJa;
@@ -115,19 +115,14 @@ ${alternates.map(({ code, href }) => `<link rel="alternate" hreflang="${code}" h
 </html>
 `,
       );
-      urls.push(
-        `<url><loc>${url}</loc><lastmod>${builtAt.toISOString()}</lastmod>${alternates.map(({ code, href }) => `<xhtml:link rel="alternate" hreflang="${code}" href="${href}"/>`).join('')}</url>`,
-      );
+      urls.push(url);
     }
   }
   setLang('en');
-  writeFileSync(
-    join(out, 'sitemap.xml'),
-    `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n${urls.join('\n')}\n</urlset>\n`,
-  );
+  writeFileSync(join(out, 'sitemap.txt'), `${urls.join('\n')}\n`);
   writeFileSync(
     join(out, 'robots.txt'),
-    `User-agent: *\nAllow: /\nSitemap: ${ORIGIN}/sitemap.xml\n`,
+    `User-agent: *\nAllow: /\nSitemap: ${ORIGIN}/sitemap.txt\n`,
   );
   copyFileSync(join(here, 'src/static/site.css'), join(out, 'site.css'));
 }
