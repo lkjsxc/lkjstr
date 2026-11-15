@@ -266,7 +266,9 @@ export const ja: Record<keyof typeof en, string> = {
   'set.relayList.d':
     '読み取りと書き込みに使うリレーです。このリストは自分のリレーとして公開されます。',
   'set.servers': '投稿: メディアサーバー',
-  'set.servers.d': '画像や動画のアップロード先です。応答のある最初のサーバーを使います。',
+  'set.servers.d':
+    '画像や動画のアップロード先です。リストの上から順に、応答のある最初のサーバーを使います。',
+  'servers.choices': '候補',
   'servers.none': 'メディアサーバーがありません。追加するまで画像を添付できません。',
   'servers.removed': '{host} を外しました',
   'servers.address': 'メディアサーバーのアドレス',

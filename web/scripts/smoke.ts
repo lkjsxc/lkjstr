@@ -1443,6 +1443,20 @@ async function pages(browser: Browser, still: Record<string, unknown>): Promise<
     (await page.locator(`${set} .sitem:visible .srow .clip`).first().innerText()) ===
       'media.example.jp',
   );
+  const offers = await page.locator(`${set} .soffers .chip`).allInnerTexts();
+  fact(
+    'media servers: a few choices, Blossom first',
+    offers[0] === '+ blossom.band' && offers.length >= 3,
+    offers,
+  );
+  await page.locator(`${set} .soffers .chip`).first().click();
+  await page.locator(`${set} .srow`, { hasText: 'blossom.band' }).waitFor();
+  fact(
+    'the recommended Blossom server goes to the front and leaves the choices',
+    (await page.locator(`${set} .sitem:visible .srow .clip`).first().innerText()) ===
+      'blossom.band' &&
+      !(await page.locator(`${set} .soffers .chip`).allInnerTexts()).includes('+ blossom.band'),
+  );
   await page.context().close();
 
   // A phone: the action row has room, by the tile's width; the bookmark is in the "…" menu.
