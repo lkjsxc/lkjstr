@@ -29,6 +29,14 @@ impl Engine {
             e.content = previous.content.clone();
             e.created_at = e.created_at.max(previous.created_at.saturating_add(1));
         }
+        if e.kind == 10005
+            && value
+            && e.tags
+                .iter()
+                .any(|t| t.first().is_some_and(|k| k == key) && t.get(1) == Some(&target))
+        {
+            return Ok(());
+        }
         e.tags
             .retain(|t| !(t.first().is_some_and(|s| s == key) && t.get(1) == Some(&target)));
         if value {
@@ -84,6 +92,10 @@ impl Engine {
             });
             return;
         }
-        self.network.publish(req, event, now);
+        if event.kind == 40 {
+            self.start_channel_create(req, event, now);
+        } else {
+            self.network.publish(req, event, now);
+        }
     }
 }

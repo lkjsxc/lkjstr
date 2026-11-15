@@ -27,7 +27,7 @@ pub(super) fn authors(
         for wrapper in store
             .referencing(&e.id)
             .into_iter()
-            .filter(|r| r.kind == 6)
+            .filter(|r| matches!(r.kind, 6 | 16))
             .take(3)
         {
             if out.len() < 6000 || out.contains_key(&wrapper.pubkey) {

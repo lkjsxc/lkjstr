@@ -77,18 +77,21 @@ impl Store {
             if out.len() >= MAX_THREAD || !seen.insert(id.clone()) {
                 continue;
             }
-            if let Some(event) = self.get(&id).filter(|event| event.kind == 1) {
+            if let Some(event) = self.get(&id).filter(|event| matches!(event.kind, 1 | 42)) {
                 queue.extend(
-                    [reply_parent(&event), reply_root(&event)]
-                        .into_iter()
-                        .flatten(),
+                    [
+                        reply_parent(&event),
+                        (event.kind != 42).then(|| reply_root(&event)).flatten(),
+                    ]
+                    .into_iter()
+                    .flatten(),
                 );
                 out.push(event);
             }
             for child in self.by_tag_e.get(&id).into_iter().flatten() {
                 if self
                     .get(child)
-                    .is_some_and(|event| event.kind == 1 && is_reply_to(&event, &id))
+                    .is_some_and(|event| matches!(event.kind, 1 | 42) && is_reply_to(&event, &id))
                 {
                     queue.push_back(child.clone());
                 }
@@ -130,7 +133,9 @@ impl Store {
             .iter()
             .rev()
             .filter_map(|(_, id)| self.events.get(id))
-            .filter(|event| event.kind == 1 && event.content.to_lowercase().contains(&needle))
+            .filter(|event| {
+                matches!(event.kind, 1 | 42) && event.content.to_lowercase().contains(&needle)
+            })
             .take(limit)
             .cloned()
             .collect()
@@ -172,8 +177,8 @@ impl Store {
         let mut out = (0, 0, 0);
         for event in self.by_tag_e.get(id).into_iter().flatten() {
             match self.events.get(event) {
-                Some(e) if e.kind == 1 && is_reply_to(e, id) => out.0 += 1,
-                Some(e) if e.kind == 6 && is_action_target(e, id) => out.1 += 1,
+                Some(e) if matches!(e.kind, 1 | 42) && is_reply_to(e, id) => out.0 += 1,
+                Some(e) if matches!(e.kind, 6 | 16) && is_action_target(e, id) => out.1 += 1,
                 Some(e) if e.kind == 7 && is_action_target(e, id) => out.2 += 1,
                 _ => {}
             }
@@ -183,7 +188,8 @@ impl Store {
 }
 
 fn is_reply_to(event: &lkjstr_protocol::NostrEvent, id: &str) -> bool {
-    reply_parent(event).as_deref() == Some(id) || reply_root(event).as_deref() == Some(id)
+    reply_parent(event).as_deref() == Some(id)
+        || (event.kind != 42 && reply_root(event).as_deref() == Some(id))
 }
 
 fn is_action_target(event: &lkjstr_protocol::NostrEvent, id: &str) -> bool {

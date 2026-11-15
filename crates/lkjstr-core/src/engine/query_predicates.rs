@@ -51,8 +51,8 @@ pub(super) fn matches_extra(e: &NostrEvent, q: &Query) -> bool {
         && f.types.as_ref().is_some_and(|types| {
             !types.iter().any(|t| match t.as_str() {
                 "all" => true,
-                "replies" => e.kind == 1 && reply_parent(e).is_some(),
-                "mentions" => e.kind == 1,
+                "replies" => matches!(e.kind, 1 | 42) && reply_parent(e).is_some(),
+                "mentions" => matches!(e.kind, 1 | 42),
                 "reposts" => e.kind == 6,
                 "reactions" => e.kind == 7,
                 "zaps" => e.kind == 9735,

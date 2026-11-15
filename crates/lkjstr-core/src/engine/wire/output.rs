@@ -10,19 +10,18 @@ impl Session {
                 at_top,
                 at_bottom,
             } => {
-                let (at_top, at_bottom) = if self.queries.get(&sub).is_some_and(|q| q.source == "profile" || q.source == "notifications" || q.notifications == Some(true)) {
+                let (at_top, at_bottom) = if self.queries.get(&sub).is_some_and(|q| q.source == "channels" || q.source == "channel" || q.source == "profile" || q.source == "notifications" || q.notifications == Some(true)) {
                     let edges = self.source_edges(&sub, engine);
                     (edges.0, at_bottom && edges.1)
                 } else { (at_top, at_bottom) };
                 let mut rows = self.rows(&sub, &items, engine);
                 for row in &mut rows { super::quote_state::settle(row, engine); }
                 self.delivered.insert(sub.clone(), rows.clone());
-                vec![Output::Rows {
-                    sub,
-                    rows,
-                    at_top,
-                    at_bottom,
-                }]
+                let mut out=vec![Output::Rows { sub:sub.clone(), rows, at_top, at_bottom }];
+                if self.queries.get(&sub).is_some_and(|q|matches!(q.source.as_str(),"channels"|"channel")) && engine.network.request_progress(&sub).1==0 {
+                    out.push(Output::State{sub,state:json!({"phase":"cache","relaysAsked":0,"relaysAnswered":0})});
+                }
+                out
             }
             p::Output::Patch { sub, ops } => {
                 // The wire protocol uses keys and insertion points, not numeric indices.
@@ -49,7 +48,7 @@ impl Session {
                 if self.queries.get(&sub).is_some_and(|q| {
                     q.notifications == Some(true) || matches!(
                         q.source.as_str(),
-                        "thread" | "profile" | "followers" | "following" | "mutes" | "list" | "notifications" | "bookmarks" | "relays" | "media-servers" | "emoji"
+                        "channels" | "channel" | "thread" | "profile" | "followers" | "following" | "mutes" | "list" | "notifications" | "bookmarks" | "relays" | "media-servers" | "emoji"
                     )
                 }) {
                     let next = self.source_rows(&sub, engine);
@@ -126,7 +125,8 @@ impl Session {
                 let empty_profile = self.queries.get(&sub).is_some_and(|q| q.source == "profile")
                     && self.delivered.get(&sub).is_some_and(|r| r.iter().all(|r| r["kind"] == "profile"))
                     && engine.views.get(&sub).is_some_and(|v| v.source_exhausted);
-                let mut out=vec![Output::State{sub:sub.clone(),state:json!({"phase":match state.as_str(){"data"=>if empty_profile {"done"} else {"live"},"not-found"=>"done",_=>"failed"},"relaysAsked":asked_relays,"relaysAnswered":answered})}];
+                let known_channel=self.queries.get(&sub).is_some_and(|q|q.source=="channel" && q.convert().and_then(|q|q.target).and_then(|id|engine.store.get(&id)).is_some_and(|e|e.kind==40));
+                let mut out=vec![Output::State{sub:sub.clone(),state:json!({"phase":match state.as_str(){"data"=>if self.queries.get(&sub).is_some_and(|q| q.source=="channels") || empty_profile {"done"} else {"live"},"not-found"=>if known_channel {"live"} else {"done"},_=>"failed"},"relaysAsked":asked_relays,"relaysAnswered":answered})}];
                 if !ops.is_empty(){out.push(Output::Patch{sub,ops});}out
             },
             p::Output::Diagnostics { sub, .. } => {
@@ -181,7 +181,9 @@ impl Session {
             q.notifications == Some(true)
                 || matches!(
                     q.source.as_str(),
-                    "thread"
+                    "channels"
+                        | "channel"
+                        | "thread"
                         | "profile"
                         | "followers"
                         | "following"

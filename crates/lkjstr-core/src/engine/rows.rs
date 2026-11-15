@@ -127,7 +127,7 @@ pub fn row_with_lists(
     let mut reposts = store
         .referencing(&event.id)
         .into_iter()
-        .filter(|e| e.kind == 6)
+        .filter(|e| matches!(e.kind, 6 | 16))
         .map(|e| author(store, &e.pubkey))
         .collect::<Vec<_>>();
     reposts.sort_by(|a, b| a.pubkey.cmp(&b.pubkey));

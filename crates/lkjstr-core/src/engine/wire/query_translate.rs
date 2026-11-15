@@ -3,6 +3,8 @@ use crate::engine::protocol as p;
 impl Query {
     pub fn convert(&self) -> Option<p::Query> {
         let source = match self.source.as_str() {
+            "channels" => p::Source::Channels,
+            "channel" => p::Source::Channel,
             "home" => p::Source::Home,
             "global" => p::Source::Global,
             "profile" => p::Source::Profile,
@@ -31,20 +33,33 @@ impl Query {
         if target.is_none()
             && let Some(reference) = &self.reference
         {
-            target = Some(
-                match lkjstr_protocol::decode_nip19(
-                    reference.strip_prefix("nostr:").unwrap_or(reference),
-                )? {
-                    lkjstr_protocol::NostrEntity::Npub(p) => p,
-                    lkjstr_protocol::NostrEntity::Nprofile(p) => p.pubkey,
-                    lkjstr_protocol::NostrEntity::Note(id) => id,
-                    lkjstr_protocol::NostrEntity::Nevent(p) => p.id,
-                    lkjstr_protocol::NostrEntity::Naddr(p) => {
-                        format!("{}:{}:{}", p.kind, p.pubkey, p.identifier)
-                    }
-                    _ => return None,
-                },
-            );
+            if let Some((id, _)) = crate::engine::channels::reference(reference) {
+                target = Some(id);
+            } else {
+                target = Some(
+                    match lkjstr_protocol::decode_nip19(
+                        reference.strip_prefix("nostr:").unwrap_or(reference),
+                    )? {
+                        lkjstr_protocol::NostrEntity::Npub(p) => p,
+                        lkjstr_protocol::NostrEntity::Nprofile(p) => p.pubkey,
+                        lkjstr_protocol::NostrEntity::Note(id) => id,
+                        lkjstr_protocol::NostrEntity::Nevent(p) => p.id,
+                        lkjstr_protocol::NostrEntity::Naddr(p) => {
+                            format!("{}:{}:{}", p.kind, p.pubkey, p.identifier)
+                        }
+                        _ => return None,
+                    },
+                );
+            }
+        }
+        let reference = if source == p::Source::Channels {
+            self.text.as_deref()
+        } else {
+            self.reference.as_deref()
+        };
+        let resolved = reference.and_then(crate::engine::channels::reference);
+        if source == p::Source::Channels {
+            target = resolved.as_ref().map(|r| r.0.clone());
         }
         Some(p::Query {
             source,
@@ -69,7 +84,12 @@ impl Query {
                 replies: self.replies,
                 reposts: self.reposts,
                 language: self.language.as_ref().and_then(|v| v.first()).cloned(),
-                text: self.text.clone(),
+                text: if source == p::Source::Channels && resolved.is_some() {
+                    None
+                } else {
+                    self.text.clone()
+                },
+                relay_hints: resolved.map(|r| r.1).unwrap_or_default(),
                 phrases: self.phrases.clone(),
                 exclude: self.exclude.clone(),
                 has: self.has.clone(),

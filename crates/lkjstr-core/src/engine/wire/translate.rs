@@ -105,6 +105,14 @@ impl Session {
                             },
                         )
                     }
+                    A::ChannelJoin { account, id, on } => {
+                        (account, p::Action::ChannelJoin { id, on })
+                    }
+                    A::ChannelSave {
+                        account,
+                        id,
+                        channel,
+                    } => (account, p::Action::ChannelSave { id, channel }),
                     A::Bookmark { account, id, on } => {
                         (account, p::Action::Bookmark { id, value: on })
                     }

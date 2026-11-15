@@ -2,7 +2,7 @@
 import { spawn } from 'node:child_process';
 import { createInterface } from 'node:readline';
 export async function rich({page,send,wait,check,note,signer,lines,fake}) {
-  check('ready advertises protocol 3',await page.evaluate(()=>window.messages.some(m=>m.t==='ready'&&m.version===3)));
+  check('ready retains protocol 3 features',await page.evaluate(()=>window.messages.some(m=>m.t==='ready'&&m.version>=3)));
   await page.evaluate(()=>{
     window.richRows={};window.richFresh={};window.richState={};
     const previous=window.worker.onmessage;

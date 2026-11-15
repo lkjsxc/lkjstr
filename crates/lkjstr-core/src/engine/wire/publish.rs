@@ -51,8 +51,27 @@ pub(super) fn publish(what: P, engine: &Engine, account: &str) -> Result<p::Acti
                     lkjstr_protocol::encode_note(&id).map_err(|_| "not-found")?
                 ));
             }
+            let channel = draft.channel.or_else(|| {
+                draft
+                    .reply_to
+                    .as_deref()
+                    .and_then(|id| engine.store.get(id))
+                    .and_then(|e| lkjstr_protocol::channel_id(&e))
+            });
+            if let Some(id) = &channel {
+                let parent = draft
+                    .reply_to
+                    .as_deref()
+                    .and_then(|id| engine.store.get(id));
+                if draft.reply_to.is_some() && parent.is_none() {
+                    return Err("not-found");
+                }
+                tags.extend(engine.channel_tags(id, parent.as_deref())?);
+            }
             (
-                if draft.long_form.is_some() {
+                if channel.is_some() {
+                    "channel"
+                } else if draft.long_form.is_some() {
                     "long-form"
                 } else if draft.reply_to.is_some() {
                     "reply"
@@ -88,6 +107,8 @@ pub(super) fn publish(what: P, engine: &Engine, account: &str) -> Result<p::Acti
                             && e.kind
                                 == if of.as_deref() == Some("reaction") {
                                     7
+                                } else if engine.store.get(&id).is_some_and(|e| e.kind == 42) {
+                                    16
                                 } else {
                                     6
                                 }

@@ -4,9 +4,18 @@
 
 Current engine cutover, verified behavior and unfinished variants; web/ owns the UI.
 
+## Protocol 4 channels (2026-11-15)
+
+The Worker now advertises protocol 4. NIP-28 creation, creator-only metadata,
+channel messages, NIP-51 joined lists, device unread marks and channel actions
+use the existing store, signer, shared relay scheduler and timestamp paging.
+Channel messages stay out of ordinary feeds and retain channel context in
+bookmarks, threads and notifications. No frontend contract changes are needed.
+Requests, bounds and conformance: [channels.md](channels.md).
+
 ## Protocol 3 integration (2026-11-15)
 
-The real Worker advertises protocol 3 at startup. Rich note filters include all-word
+Protocol 3 added rich note filters including all-word
 text, exact phrases, exclusions, image/video/link requirements, author unions,
 known-profile names and bounded verified NIP-05 query lookups. Millisecond date
 bounds round inward to Nostr seconds. Inclusive end dates follow local calendar
@@ -15,7 +24,6 @@ target content. Home/Global can mix notification rows;
 profile kinds project posts, replies, reposts (6/16), reactions and image/video
 notes. Ordinary windows accept 800 rows on either side; retainAbove remains
 bounded at 6000. Existing account discovery adopts verified NIP-65 relay lists.
-Native regressions, Worker conformance and results: [protocol3.md](protocol3.md).
 
 ## Owner feedback (2026-11-15)
 
@@ -35,8 +43,7 @@ Release candidate, gates and UI gaps: [integration-release.md](integration-relea
 The TypeScript app can build against the real SharedWorker adapter with
 pnpm build:real in web/. Its full engine graph has immutable hashed URLs.
 The frontend owns saved/bootstrap relay choice; verified owner NIP-65 lists
-then take over. Search-only relays now receive search requests independently
-of ordinary read usage. Thread focus and decoded profile deep-link headers
+then take over. Search-only relays receive requests independently of ordinary read usage. Thread focus and decoded profile deep-link headers
 cross the wire correctly. Native integration regressions cover these
 projection and relay policies. Thread rows distinguish ancestors from the focus
 and descendants; reply depth follows parent links before filtering/windowing.
@@ -190,11 +197,3 @@ A shared loopback NIP-46 fixture checks optional/required connect tokens, signin
 reload credential reuse, refusal, disappearance during signing and recovery.
 Remote RPC failures retain signer-refused versus signer-missing; losing all RPC
 sockets now fails immediately and releases sockets instead of waiting a minute.
-
-Six pagination regressions pass with the review fixes restored and fail against
-fc3cf32a's parent, including disconnect/reconnect as well as profile preemption.
-Evidence is in tmp/preemption-regression.json and the adjacent test logs.
-The earlier fast-rejection/reload check exposed a frontend draft-save race;
-the merged frontend fixes it. Earlier gates passed with conformance 57/57 and
-real smoke 71/72. Current protocol 3 results are in protocol3.md.
-No views, styles, strings or frontend policy were edited.

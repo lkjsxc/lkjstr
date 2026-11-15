@@ -13,9 +13,17 @@ impl Engine {
             self.error(Some(req), "action-limit-or-duplicate");
             return;
         }
+        if matches!(action, Action::ChannelSave { id: None, .. })
+            && self.channel_creates.len()
+                + self.signing.values().filter(|s| s.event.kind == 40).count()
+                >= 64
+        {
+            self.error(Some(req), "too-large");
+            return;
+        }
         match self.build(&account, action, now / 1000) {
             Ok(event) => {
-                if matches!(event.kind, 3 | 10000 | 10003)
+                if matches!(event.kind, 3 | 10000 | 10003 | 10005)
                     && self
                         .signing
                         .values()
@@ -61,7 +69,9 @@ impl Engine {
                 }
                 e.content = content;
                 e.tags = tags;
-                if kind == "long-form" {
+                if kind == "channel" {
+                    e.kind = 42;
+                } else if kind == "long-form" {
                     e.kind = 30023;
                 } else if kind != "note" {
                     let parent = target
@@ -69,14 +79,24 @@ impl Engine {
                         .and_then(|id| self.store.get(id))
                         .ok_or("target-unavailable")?;
                     match kind.as_str() {
-                        "reply" => e.tags.extend(lkjstr_protocol::reply_tags(&parent)),
+                        "reply" => {
+                            if let Some(id) = lkjstr_protocol::channel_id(&parent) {
+                                e.kind = 42;
+                                e.tags.extend(self.channel_tags(&id, Some(&parent))?);
+                            } else {
+                                e.tags.extend(lkjstr_protocol::reply_tags(&parent));
+                            }
+                        }
                         "quote" => {
                             e.tags.push(vec!["q".into(), parent.id.clone()]);
                             e.tags.push(vec!["p".into(), parent.pubkey.clone()]);
                         }
                         "repost" => {
-                            e.kind = 6;
+                            e.kind = if parent.kind == 42 { 16 } else { 6 };
                             e.tags.extend(lkjstr_protocol::repost_tags(&parent));
+                            if parent.kind == 42 {
+                                e.tags.push(vec!["k".into(), "42".into()]);
+                            }
                             e.content =
                                 serde_json::to_string(&*parent).map_err(|_| "serialization")?;
                         }
@@ -95,6 +115,16 @@ impl Engine {
                     }
                 }
             }
+            Action::ChannelJoin { id, on } => {
+                if !lkjstr_protocol::is_event_id(&id)
+                    || self.store.get(&id).is_some_and(|e| e.kind != 40)
+                {
+                    return Err("rejected");
+                }
+                e.kind = 10005;
+                self.edit_list(&mut e, "e", id, on)?;
+            }
+            Action::ChannelSave { id, channel } => self.channel_save(&mut e, id, channel)?,
             Action::Follow { pubkey, value } => {
                 if !is_pubkey(&pubkey) {
                     return Err("invalid-pubkey");
@@ -165,11 +195,11 @@ impl Engine {
         {
             e.created_at = e.created_at.max(previous.created_at.saturating_add(1));
         }
-        if self.client_tag && matches!(e.kind, 1 | 6 | 7 | 30023) {
+        if self.client_tag && matches!(e.kind, 1 | 6 | 7 | 16 | 40 | 41 | 42 | 30023) {
             e.tags.retain(|t| t.first().is_none_or(|k| k != "client"));
             e.tags.push(vec!["client".into(), "lkjstr".into()]);
         }
-        if matches!(e.kind, 1 | 30023) {
+        if matches!(e.kind, 1 | 42 | 30023) {
             e.tags = lkjstr_protocol::content_derived_tags(&e.content, &[], &e.tags);
             if e.tags.len() > 1000 {
                 return Err("event-too-large");

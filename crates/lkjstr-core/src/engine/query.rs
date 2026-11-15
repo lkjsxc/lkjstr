@@ -1,11 +1,8 @@
 //! Source selection and relay filters share one policy.
+use super::protocol::{Query, Source};
 use super::query_predicates::matches_extra;
-use super::{
-    protocol::{Query, Source},
-    settings::{PrivateLists, list_has, list_tags},
-};
 use crate::store::{Event, Query as StoreQuery, Store};
-use lkjstr_protocol::{NostrEvent, NostrFilter, reply_parent, tags::tag_values};
+use lkjstr_protocol::{NostrFilter, tags::tag_values};
 pub fn filter(store: &Store, q: &Query) -> NostrFilter {
     let mut f = NostrFilter {
         kinds: Some(vec![1, 6]),
@@ -17,6 +14,15 @@ pub fn filter(store: &Store, q: &Query) -> NostrFilter {
     };
     let target = q.target.clone().unwrap_or_default();
     match q.source {
+        Source::Channels => {
+            f.kinds = Some(vec![40]);
+            f.authors = None;
+            f.ids = q.target.clone().map(|id| vec![id]);
+        }
+        Source::Channel => {
+            f.kinds = Some(vec![42]);
+            f.tags.insert("e".into(), vec![target]);
+        }
         Source::Home => {
             let mut authors = q
                 .account
@@ -35,11 +41,11 @@ pub fn filter(store: &Store, q: &Query) -> NostrFilter {
             });
         }
         Source::Thread => {
-            f.kinds = Some(vec![1]);
+            f.kinds = Some(vec![1, 42]);
             f.tags.insert("e".into(), vec![target]);
         }
         Source::Notifications => {
-            f.kinds = Some(vec![1, 3, 6, 7, 9735]);
+            f.kinds = Some(vec![1, 42, 3, 6, 16, 7, 9735]);
             f.tags
                 .insert("p".into(), q.account.clone().into_iter().collect());
         }
@@ -101,6 +107,9 @@ pub fn events(store: &Store, q: &Query) -> Vec<Event> {
     if signed_out(q) {
         return vec![];
     }
+    if q.source == Source::Channels {
+        return vec![];
+    }
     if q.source == Source::Thread {
         return store
             .thread(q.target.as_deref().unwrap_or(""))
@@ -114,14 +123,18 @@ pub fn events(store: &Store, q: &Query) -> Vec<Event> {
             .collect();
     }
     let f = filter(store, q);
-    let mut events = store.feed(&StoreQuery {
-        kinds: f.kinds.clone().unwrap_or_default(),
-        authors: f.authors.clone().map(|a| a.into_iter().collect()),
-        mention: f.tags.get("p").and_then(|v| v.first()).cloned(),
-        until: f.until,
-        limit: 6000,
-        ..Default::default()
-    });
+    let mut events = if q.source == Source::Channel {
+        store.referencing(q.target.as_deref().unwrap_or(""))
+    } else {
+        store.feed(&StoreQuery {
+            kinds: f.kinds.clone().unwrap_or_default(),
+            authors: f.authors.clone().map(|a| a.into_iter().collect()),
+            mention: f.tags.get("p").and_then(|v| v.first()).cloned(),
+            until: f.until,
+            limit: 6000,
+            ..Default::default()
+        })
+    };
     if q.source == Source::Bookmarks {
         events = q
             .account
@@ -137,7 +150,9 @@ pub fn events(store: &Store, q: &Query) -> Vec<Event> {
     }
     let authors = super::rich::authors(store, q);
     events.retain(|e| {
-        authors.as_ref().is_none_or(|a| a.contains(&e.pubkey))
+        (q.source != Source::Channel
+            || lkjstr_protocol::channel_id(e).as_ref() == q.target.as_ref())
+            && authors.as_ref().is_none_or(|a| a.contains(&e.pubkey))
             && (q.source == Source::Bookmarks || lkjstr_protocol::matches_filter(e, &f))
             && if q.source == Source::Profile
                 && matches!(q.filters.show.as_deref(), Some("reposts" | "reactions"))
@@ -164,6 +179,9 @@ pub fn events(store: &Store, q: &Query) -> Vec<Event> {
             }
     });
     events.sort_by(|a, b| (b.created_at, &b.id).cmp(&(a.created_at, &a.id)));
+    if q.source == Source::Channel {
+        events.truncate(6000);
+    }
     if q.filters.notifications == Some(true) && matches!(q.source, Source::Home | Source::Global) {
         let mut news = q.clone();
         news.source = Source::Notifications;
@@ -180,10 +198,23 @@ pub fn events(store: &Store, q: &Query) -> Vec<Event> {
                 && q.source != Source::Notifications
                 && q.filters.show.as_deref() != Some("reposts")
             {
-                tag_values(&e, "e")
-                    .last()
-                    .and_then(|id| store.get(id))
-                    .or(Some(e))
+                let target = tag_values(&e, "e").last().and_then(|id| store.get(id));
+                if target.as_ref().is_some_and(|t| {
+                    t.kind == 42
+                        && matches!(
+                            q.source,
+                            Source::Home
+                                | Source::Global
+                                | Source::Relay
+                                | Source::Hashtag
+                                | Source::Search
+                                | Source::List
+                        )
+                }) {
+                    None
+                } else {
+                    target.or(Some(e))
+                }
             } else {
                 Some(e)
             }
@@ -191,50 +222,5 @@ pub fn events(store: &Store, q: &Query) -> Vec<Event> {
         .filter(|e| seen.insert(e.id.clone()))
         .collect()
 }
-pub fn hidden(store: &Store, q: &Query, e: &NostrEvent) -> Option<String> {
-    hidden_with_lists(store, q, e, &Default::default())
-}
-pub fn hidden_with_lists(
-    store: &Store,
-    q: &Query,
-    e: &NostrEvent,
-    private: &PrivateLists,
-) -> Option<String> {
-    let account = q.account.as_deref();
-    for (tag, value, reason) in [
-        ("p", e.pubkey.clone(), "muted-person"),
-        (
-            "e",
-            reply_parent(e).unwrap_or_else(|| e.id.clone()),
-            "muted-thread",
-        ),
-    ] {
-        if list_has(store, private, account, 10000, tag, &value) {
-            return Some(reason.into());
-        }
-    }
-    let mute = account.and_then(|a| store.replaceable(a, 10000))?;
-    for t in &list_tags(&mute, private) {
-        if let Some(v) = t.get(1) {
-            if t.first().is_some_and(|k| k == "word")
-                && e.content.to_lowercase().contains(&v.to_lowercase())
-            {
-                return Some("muted-word".into());
-            }
-            if t.first().is_some_and(|k| k == "t")
-                && tag_values(e, "t").iter().any(|s| s.eq_ignore_ascii_case(v))
-            {
-                return Some("muted-hashtag".into());
-            }
-        }
-    }
-    None
-}
-
-/// Apply note filters to materialized list entries as well as ordinary feeds.
-pub(super) fn matches_note(store: &Store, q: &Query, e: &NostrEvent) -> bool {
-    super::rich::authors(store, q)
-        .as_ref()
-        .is_none_or(|a| a.contains(&e.pubkey))
-        && matches_extra(e, q)
-}
+pub(super) use super::query_hidden::matches_note;
+pub use super::query_hidden::{hidden, hidden_with_lists};

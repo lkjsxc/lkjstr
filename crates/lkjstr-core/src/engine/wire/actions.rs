@@ -43,6 +43,26 @@ pub enum Action {
         account: String,
         servers: Vec<String>,
     },
+    #[serde(rename = "channel.join")]
+    ChannelJoin {
+        #[serde(rename = "as")]
+        account: String,
+        id: String,
+        on: bool,
+    },
+    #[serde(rename = "channel.save")]
+    ChannelSave {
+        #[serde(rename = "as")]
+        account: String,
+        id: Option<String>,
+        channel: serde_json::Value,
+    },
+    #[serde(rename = "channel.seen")]
+    ChannelSeen {
+        #[serde(rename = "as")]
+        account: String,
+        id: String,
+    },
     Seen {
         #[serde(rename = "as")]
         account: String,
@@ -89,6 +109,7 @@ pub enum Publish {
 #[serde(rename_all = "camelCase")]
 pub struct Draft {
     pub text: String,
+    pub channel: Option<String>,
     pub long_form: Option<LongForm>,
     pub reply_to: Option<String>,
     pub quote: Option<String>,

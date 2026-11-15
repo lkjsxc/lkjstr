@@ -5,7 +5,8 @@ use crate::store::Store;
 fn paged(v: &View) -> bool {
     matches!(
         v.query.source,
-        Source::Global
+        Source::Channel
+            | Source::Global
             | Source::Home
             | Source::Profile
             | Source::Search

@@ -16,6 +16,7 @@ Frontend (`web/`):
 
 Engine (`crates/`):
 
+- [channels.md](channels.md): NIP-28 sources, actions, bounds and verification.
 - [protocol3.md](protocol3.md): rich filters, notifications, profile kinds and gates.
 - [status.md](status.md): what works, what does not, next steps in order.
 - [architecture.md](architecture.md): crates, runtime, orchestration, storage.

@@ -43,6 +43,7 @@ impl Session {
             .unwrap_or("");
         let thread = (q.source == "thread").then(|| super::thread::positions(store, target));
         let mut out=match q.source.as_str() {
+            "channels"=>super::channels::list(e,q),
             "following"=>store.follows(target).unwrap_or_default().iter().map(|p|person(e,p,q.account.as_deref())).collect(),
             "followers"=>store.feed(&crate::store::Query{kinds:vec![3],mention:Some(target.into()),limit:6000,..Default::default()})
                 .iter().map(|v|person(e,&v.pubkey,q.account.as_deref())).collect(),
@@ -52,7 +53,7 @@ impl Session {
             }).collect()).unwrap_or_default(),
             "relays"=>e.relay_rows(),
             "diagnostics"=>{
-                let facts=json!({"events":store.len(),"eventPayloadBytes":store.payload_bytes(),"verified":e.verified,"rejected":e.rejected,"dropped":e.dropped,"persistenceQueue":e.pending.len(),"timings":e.metrics,"relayStatistics":e.network.stats(),"protocol":3});
+                let facts=json!({"events":store.len(),"eventPayloadBytes":store.payload_bytes(),"verified":e.verified,"rejected":e.rejected,"dropped":e.dropped,"persistenceQueue":e.pending.len(),"timings":e.metrics,"relayStatistics":e.network.stats(),"protocol":4});
                 facts.as_object().map(|m|m.iter().map(|(k,v)|json!({"kind":"info","key":k,"label":k,"value":v.to_string()})).collect()).unwrap_or_default()
             }
             "media-servers"=>q.account.as_deref().map(|a|e.upload_servers(a).into_iter().map(|url|json!({"kind":"server","key":url,"url":url,"protocol":e.servers.get(&url).map(|v|v.0.as_str()).unwrap_or(if crate::engine::feedback::BLOSSOM_SERVERS.contains(&url.as_str()) {"blossom"}else{"unknown"}),"ok":e.servers.get(&url).is_some_and(|v|v.1)})).collect()).unwrap_or_default(),
@@ -108,8 +109,30 @@ impl Session {
             }
             out.sort_by(|a, b| b["at"].as_u64().cmp(&a["at"].as_u64()));
         }
+        for row in &mut out {
+            if row["id"]
+                .as_str()
+                .is_some_and(|id| e.network.pending_event(id))
+            {
+                row["pending"] = json!(true);
+            }
+        }
         let mut keys = std::collections::HashSet::new();
         out.retain(|r| keys.insert(r["key"].clone().to_string()));
+        if q.source == "channel"
+            && !target.is_empty()
+            && let Some(row) = super::channels::row(
+                e,
+                target,
+                q.account.as_deref(),
+                &converted
+                    .as_ref()
+                    .map(|q| q.filters.relay_hints.clone())
+                    .unwrap_or_default(),
+            )
+        {
+            out.insert(0, row);
+        }
         if q.source == "profile" {
             out.insert(0, profile(e, target, q.account.as_deref()));
         }

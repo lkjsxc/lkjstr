@@ -1,6 +1,7 @@
+import { channels } from './engine-channels.mjs';
 // Runs within the real Worker harness; all fixture keys stay in the native signer.
 import { validateReplies, actionKinds, sourceKinds, assertCoverage, mockActionKinds } from './engine-contract.mjs';
-export async function conformance({page,send,wait,check,note,signer,lines,origin,bunkerKey,bunker,fake}) {
+export async function conformance({page,send,wait,check,note,signer,lines,origin,bunkerKey,bunker,fake,channelFake}) {
   const messages = () => page.evaluate(() => window.messages);
   const result = async (req) => {
     await wait((r) => window.messages.some((m) => m.t === 'result' && m.req === r), req);
@@ -13,9 +14,16 @@ export async function conformance({page,send,wait,check,note,signer,lines,origin
     const req=`contract-${++serial}`;
     await send({t:'act',req,action});
     if (signing) {
-      await wait((r)=>window.messages.some((m)=>(m.t==='sign'||m.t==='result')&&m.req===r),req);
-      const request=(await messages()).find((m)=>m.t==='sign'&&m.req===req);
-      if(request) { signer.stdin.write(`${request.event}\n`); const signed=JSON.parse((await lines.next()).value); await send({t:'signed',req,event:JSON.stringify(signed)}); }
+      const handled=new Set();
+      for (;;) {
+        await wait(({req,handled})=>window.messages.some(m=>(m.t==='result'&&m.req===req)||(m.t==='sign'&&m.req.startsWith(req)&&!handled.includes(m.req))),{req,handled:[...handled]});
+        const all=await messages();
+        if(all.some(m=>m.t==='result'&&m.req===req))break;
+        const request=all.find(m=>m.t==='sign'&&m.req.startsWith(req)&&!handled.has(m.req));
+        handled.add(request.req);signer.stdin.write(`${request.event}\n`);
+        const signed=JSON.parse((await lines.next()).value);
+        await send({t:'signed',req:request.req,event:JSON.stringify(signed)});
+      }
     }
     return result(req);
   }
@@ -96,6 +104,7 @@ export async function conformance({page,send,wait,check,note,signer,lines,origin
   await send({t:'close',sub:'remote-relays'});
   check('remote signing validates and publishes',(await act({a:'publish',as:bunkerKey,what:{k:'note',draft:{text:'remote fixture'}}})).ok);
   check('remote account removal commits',(await act({a:'account.remove',pubkey:bunkerKey})).ok);
+  await channels({page,send,wait,check,note,signer,lines,fake:channelFake,origin,act,kinds,bunker});
   assertCoverage(kinds,actionKinds,'action');
   assertCoverage(kinds,mockActionKinds,'mock action');
   validateReplies(await messages());

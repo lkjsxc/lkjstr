@@ -65,12 +65,14 @@ impl Network {
             let f = &r.filter;
             let priority = if profile(f) {
                 0
-            } else if r.members.contains("~account-discovery") {
-                3 + u8::from(r.page_eose)
-            } else if f.kinds.as_deref() == Some(&[1, 6, 7, 9735]) {
-                2
-            } else {
+            } else if f.ids.is_some() {
                 1
+            } else if r.members.contains("~account-discovery") {
+                4 + u8::from(r.page_eose)
+            } else if counts_filter(f) {
+                3
+            } else {
+                2
             };
             (priority, id.clone())
         });
@@ -103,8 +105,11 @@ impl Network {
                                 && !profile(&q.filter)
                                 && (profile(&r.filter)
                                     || (q.eose
-                                        && ((!r.members.contains("~account-discovery")
-                                            && counts_filter(&q.filter))
+                                        && ((r.filter.ids.is_some() && q.live)
+                                            || (channel_work(&r.filter)
+                                                && channel_work(&q.filter))
+                                            || (!r.members.contains("~account-discovery")
+                                                && counts_filter(&q.filter))
                                             || (q.members.contains("~account-discovery")
                                                 && (!r.members.contains("~account-discovery")
                                                     || !r.page_eose)))))
@@ -112,9 +117,13 @@ impl Network {
                         .map(|(id, _)| id.clone());
                     if let Some(victim) = victim {
                         let relay = r.relay.clone();
+                        let rotate = channel_work(&r.filter) && filter_live(&r.filter);
                         if let Some(q) = self.requests.get_mut(&victim) {
                             q.sent = false;
                             q.eose = false;
+                            if rotate && channel_work(&q.filter) {
+                                q.ready_at = now + 1000;
+                            }
                         }
                         self.send(&relay, json!(["CLOSE", victim]));
                     } else {
@@ -166,10 +175,20 @@ pub(super) fn filter_live(f: &NostrFilter) -> bool {
         && f.until.is_none()
         && f.kinds.as_ref().is_some_and(|ks| {
             ks.iter()
-                .any(|k| matches!(k, 1 | 6 | 7 | 9735 | 10002 | 10063))
+                .any(|k| matches!(k, 1 | 6 | 7 | 41 | 42 | 9735 | 10002 | 10005 | 10063))
         })
 }
 
 fn counts_filter(f: &NostrFilter) -> bool {
-    f.kinds.as_deref() == Some(&[1, 6, 7, 9735])
+    matches!(
+        f.kinds.as_deref(),
+        Some([1, 6, 7, 9735] | [42, 16, 7, 9735] | [1, 42, 6, 16, 7, 9735])
+    )
+}
+
+// A bounded cooldown rotates settled channel work on single-slot relays.
+fn channel_work(f: &NostrFilter) -> bool {
+    f.kinds
+        .as_ref()
+        .is_some_and(|ks| ks.iter().any(|k| matches!(k, 40 | 41 | 42 | 10005)))
 }

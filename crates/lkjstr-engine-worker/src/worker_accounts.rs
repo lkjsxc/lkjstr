@@ -150,6 +150,21 @@ pub(super) fn pump_accounts(host: &Rc<RefCell<Host>>) {
                     Err("signed-out")
                 }
             }
+            A::ChannelSeen { account, id } => {
+                if !lkjstr_protocol::is_event_id(&id) {
+                    Err("rejected")
+                } else if next.entries.iter().any(|a| a.pubkey == account) {
+                    let key = format!("channel:{account}:{id}");
+                    if next.seen.len() >= 4096 && !next.seen.contains_key(&key) {
+                        Err("too-large")
+                    } else {
+                        next.seen.insert(key, now());
+                        Ok(())
+                    }
+                } else {
+                    Err("signed-out")
+                }
+            }
             _ => Err("unsupported"),
         };
         let result = match (result, db) {

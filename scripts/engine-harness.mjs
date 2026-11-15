@@ -53,10 +53,20 @@ const historyRelay=fakeRelay({request(ws,sub,filters){
   ws.send(JSON.stringify(['EOSE',sub]));return true;
 }});
 const fake = fakeRelay(), errors = [], checks = {};
+const channelRequests=[];
+const channelFake=fakeRelay({request(ws,sub,filters){
+  for(const f of filters){
+    if(channelRequests.length<2000)channelRequests.push(f);
+    const events=channelFake.stored.filter(e=>(!f.ids||f.ids.includes(e.id))&&(!f.authors||f.authors.includes(e.pubkey))&&(!f.kinds||f.kinds.includes(e.kind))&&(f.until===undefined||e.created_at<=f.until)&&(f.since===undefined||e.created_at>=f.since)&&Object.entries(f).filter(([k])=>k.startsWith('#')).every(([k,v])=>e.tags.some(t=>t[0]===k.slice(1)&&v.includes(t[1])))).sort((a,b)=>b.created_at-a.created_at||b.id.localeCompare(a.id)).slice(0,f.limit??200);
+    for(const e of events)ws.send(JSON.stringify(['EVENT',sub,e]));
+  }
+  ws.send(JSON.stringify(['EOSE',sub]));return true;
+}});
+channelFake.requests=channelRequests;
 const bunker=await fakeBunker();
 const bunkerKey=bunker.pubkey;
 const wsServer=new bundle.wsServer({server});
-wsServer.on('connection',(ws,req)=>{if(req.url==='/bunker'){return bunker.route(ws);}const target=req.url==='/continuity'?historyRelay:fake;target.route({send:(text)=>ws.send(text),onMessage:(fn)=>ws.on('message',fn),onClose:(fn)=>ws.on('close',fn)});});
+wsServer.on('connection',(ws,req)=>{if(req.url==='/bunker'){return bunker.route(ws);}const target=req.url==='/continuity'?historyRelay:req.url==='/channels'?channelFake:fake;target.route({send:(text)=>{if(req.url==='/channels'&&JSON.parse(text)[0]==='OK')setTimeout(()=>{if(ws.readyState===1)ws.send(text);},250);else ws.send(text);},onMessage:(fn)=>ws.on('message',fn),onClose:(fn)=>ws.on('close',fn)});});
 await context.route('**/*', (r) => {
   if(r.request().url().startsWith('https://nip96.engine.test/')) {
     if(r.request().url().endsWith('/upload'))return r.fulfill({status:404,body:''});
@@ -159,10 +169,10 @@ try {
   check('NIP-07 bridge verifies and publishes with per-relay delivery',result.ok&&result.delivery[0]?.state==='ok'&&fake.published.some((e)=>e.id===signed.id));
   fake.setReading(true);
   await ownerRelays({page,send,wait,check,note,signer,lines,fake,origin});
-  await conformance({page,send,wait,check,note,signer,lines,origin,bunkerKey,bunker,fake});
+  await conformance({page,send,wait,check,note,signer,lines,origin,bunkerKey,bunker,fake,channelFake});
   await rich({page,send,wait,check,note,signer,lines,fake});
   validateReplies(await page.evaluate(()=>window.messages));
-  check('protocol 3 replies satisfy the frontend contract',true);
+  check('protocol 4 replies satisfy the frontend contract',true);
   await localDiscovery({page,send,wait,check,start,origin});
   const isolated=await browser.newContext();
   await isolated.route('**/*',r=>r.request().url().startsWith(origin)?r.continue():r.abort());

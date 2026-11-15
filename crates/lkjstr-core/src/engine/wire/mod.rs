@@ -1,5 +1,6 @@
 //! Mirrors the frontend-owned web/src/engine/protocol.ts.
 pub mod actions;
+mod channels;
 mod counts;
 mod feedback;
 mod note;
@@ -168,7 +169,7 @@ pub struct Session {
 impl Session {
     pub fn ready(shared: bool) -> Output {
         Output::Ready {
-            version: 3,
+            version: 4,
             engine: if shared {
                 "rust-wasm-shared"
             } else {
