@@ -50,7 +50,7 @@ export type Subscription = {
 };
 export type ActResult = Extract<FromEngine, { t: 'result' }>;
 export type ActWatch = {
-  progress?(sent: number, total: number): void;
+  progress?(sent: number, total: number, detail?: Extract<FromEngine, { t: 'progress' }>): void;
   delivery?(relays: readonly Delivery[]): void;
 };
 export type Accounts = { readonly accounts: readonly Account[]; readonly active?: Pubkey };
@@ -149,7 +149,8 @@ export function createEngine(transport: Transport): Engine {
     else if (msg.t === 'patch') subs.get(msg.sub)?.patch(msg.ops);
     else if (msg.t === 'fresh') subs.get(msg.sub)?.fresh?.(msg.count);
     else if (msg.t === 'state') subs.get(msg.sub)?.state?.(msg.state);
-    else if (msg.t === 'progress') pending.get(msg.req)?.watch?.progress?.(msg.sent, msg.total);
+    else if (msg.t === 'progress')
+      pending.get(msg.req)?.watch?.progress?.(msg.sent, msg.total, msg);
     else if (msg.t === 'delivery') pending.get(msg.req)?.watch?.delivery?.(msg.relays);
     else if (msg.t === 'result') {
       pending.get(msg.req)?.done(msg);
@@ -209,7 +210,25 @@ export function createEngine(transport: Transport): Engine {
     act(action, watch) {
       const req = `r${++serial}`;
       return new Promise((done) => {
-        pending.set(req, { done, watch });
+        const timer =
+          action.a === 'upload'
+            ? setTimeout(() => {
+                if (pending.delete(req))
+                  done({
+                    t: 'result',
+                    req,
+                    ok: false,
+                    error: { code: 'upload-timeout', message: action.server },
+                  });
+              }, 300_000)
+            : undefined;
+        pending.set(req, {
+          done: (result) => {
+            clearTimeout(timer);
+            done(result);
+          },
+          watch,
+        });
         transport.post(
           { t: 'act', req, action },
           action.a === 'upload' ? [action.bytes] : undefined,
@@ -235,6 +254,9 @@ export function createEngine(transport: Transport): Engine {
       window.removeEventListener('pointerdown', active, true);
       window.removeEventListener('keydown', active, true);
       clearTimeout(idleTimer);
+      for (const [req, action] of pending)
+        action.done({ t: 'result', req, ok: false, error: { code: 'offline' } });
+      pending.clear();
       transport.close();
     },
   };

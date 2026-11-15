@@ -1,10 +1,13 @@
 // The lists of Settings: who and what is muted, where uploads go, the reader's relays (`settings-relays.ts`) and
 // the way to the accounts. Every removal shows at once and can be taken back.
+
 import type { MuteRow, MuteTarget, Row, ServerRow } from '../engine/protocol.ts';
 import { hostOf, serverAddress } from '../shared/address.ts';
 import { h } from '../shared/h.ts';
 import { both, type Key, t } from '../shared/i18n.ts';
+import { SERVER_CHOICES } from '../shared/media-servers.ts';
 import type { Disposer } from '../shared/signal.ts';
+import { failureText } from './can.ts';
 import { type Keyed, reconcile, watchList } from './lists.ts';
 import { act } from './note-actions.ts';
 import { faceButton, nameButton, plainName, toast } from './parts.ts';
@@ -80,14 +83,8 @@ export function addForm(
   );
 }
 
-/** Names of upload protocols: proper nouns, the same in every language. */
-/** Media servers offered with one press: Blossom first (the first is the recommended default), then NIP-96. */
-export const SERVER_CHOICES: readonly string[] = [
-  'https://blossom.band',
-  'https://blossom.primal.net',
-  'https://nostr.build',
-  'https://nostrcheck.me',
-];
+export { SERVER_CHOICES } from '../shared/media-servers.ts';
+
 const PROTOCOLS: Partial<Record<ServerRow['protocol'], string>> = {
   blossom: 'Blossom',
   nip96: 'NIP-96',
@@ -156,12 +153,31 @@ export function listEntries(env: ViewEnv): { entries: Entry[]; dispose: Disposer
         saveServers(now);
       });
     };
-    const kind = PROTOCOLS[r.protocol] ?? t('servers.unknown');
+    const kind = PROTOCOLS[r.protocol] ?? t('servers.unconfirmed');
     return h(
       'div',
       { class: 'srow' },
       h('span', { class: 'clip', title: r.url }, hostOf(r.url)),
-      h('span', { class: r.ok ? 'muted' : 'bad' }, r.ok ? kind : t('servers.down')),
+      h(
+        'span',
+        {
+          class: r.checked ? (r.ok ? '' : 'bad') : 'muted',
+          'data-state': r.checked ? (r.ok ? 'answering' : 'failed') : 'unknown',
+          title: r.error ? failureText(r.error) : undefined,
+        },
+        r.checked && !r.ok ? t('servers.down') : kind,
+      ),
+      r.checked && !r.ok
+        ? h(
+            'button',
+            {
+              class: 'btn',
+              'data-f': 'retry',
+              onclick: () => void env.engine.act({ a: 'servers.check', server: r.url }),
+            },
+            t('compose.retry'),
+          )
+        : null,
       removeButton(hostOf(r.url), drop),
     );
   };

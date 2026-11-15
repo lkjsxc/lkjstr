@@ -30,6 +30,7 @@ mod row_media;
 mod row_model;
 pub mod rows;
 pub mod settings;
+pub mod upload;
 mod wants;
 pub mod weights;
 mod windows;
@@ -69,7 +70,8 @@ pub struct Engine {
     pub discovery_paused: bool,
     pub discovery_accounts: Vec<String>,
     pub discovery_relays: Vec<String>,
-    pub servers: BTreeMap<String, (String, bool)>,
+    pub servers: BTreeMap<String, feedback::ServerVerdict>,
+    server_revision: u64,
     pub private_lists: BTreeMap<String, Vec<Vec<String>>>,
     pub seen: BTreeMap<String, u64>,
     pub metrics: metrics::Metrics,
@@ -106,6 +108,7 @@ impl Engine {
             discovery_accounts: vec![],
             discovery_relays: vec![],
             servers: BTreeMap::new(),
+            server_revision: 0,
             private_lists: BTreeMap::new(),
             seen: BTreeMap::new(),
             metrics: Default::default(),

@@ -100,6 +100,10 @@ pub enum Output {
     },
     Reconnect,
     Progress {
+        #[serde(skip_serializing_if = "Option::is_none")]
+        server: Option<String>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        phase: Option<String>,
         req: String,
         sent: usize,
         total: usize,

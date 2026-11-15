@@ -286,6 +286,7 @@ export const en = {
   'servers.invalid': 'That is not a server address (https://…)',
   'servers.unknown': 'Unknown protocol',
   'servers.down': 'Not answering',
+  'servers.unconfirmed': 'Not confirmed',
   'about.what': 'A Nostr client that runs in this browser. There is no account with lkjstr.',
   'about.version': 'Version',
   'about.engine': 'Engine',
@@ -493,4 +494,21 @@ export const en = {
     'The host that serves this page receives no account or key. Settings, layouts, drafts and cached notes stay in this browser.\n\nTo read and post, your browser connects directly to the Nostr relays you choose and to the servers that hold media. Their operators can see your IP address and what you request or publish. Notes published to Nostr are public and may be impossible to take back.\n\nThere are no analytics, no advertising and no tracking cookies.',
   'docs.terms.b':
     'lkjstr is free software published under the Apache License 2.0. It is provided as it is, with no warranty of any kind.\n\n## Your responsibility\nYour keys and what you publish are your own responsibility. Notes published to Nostr are public and may be impossible to take back. Follow the law and the rules of the relays and media servers you use.\n\n## Third parties\nRelays, media servers and signing extensions or apps are provided by their own operators. lkjstr does not run them and is not responsible for what they hold or whether they are available.\n\n## Changes\nThis text may change as lkjstr is updated.',
+  'upload.signerMissing': 'The signer did not answer. Open your signer and retry.',
+  'upload.limit':
+    'Up to eight attachments fit in one post. Remove one and choose the remaining files again.',
+  'upload.readFailed': 'The file could not be read. Try again.',
+  'upload.noServer': 'No media server is configured. Choose one below and retry.',
+  'upload.server': 'Media server',
+  'upload.discovering': 'Checking {server}…',
+  'upload.signing': 'Waiting for permission to upload to {server}…',
+  'upload.uploading': 'Uploading to {server}…',
+  'upload.processing': '{server} is processing the file…',
+  'upload.failed': '{server}: {reason}',
+  'error.upload-network':
+    'The server could not be reached, or it does not allow uploads from this page.',
+  'error.upload-timeout': 'The upload timed out. Try again or choose another server.',
+  'error.upload-payment': 'This server requires payment. Choose another server.',
+  'error.upload-response': 'The server refused the file or returned an unreadable answer.',
+  'error.upload-discovery': 'The upload address could not be found. Choose another server.',
 };

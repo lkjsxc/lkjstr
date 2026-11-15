@@ -25,6 +25,7 @@ const CSS = [
   'ui.css',
   'notes.css',
   'views.css',
+  'compose-media.css',
   'people.css',
   'pages.css',
   'stats.css',

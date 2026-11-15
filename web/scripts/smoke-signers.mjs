@@ -53,21 +53,22 @@ async function failure(options, mode) {
       await page.reload();
       if (mode === 'reject-sign') await page.clock.resume();
       await page.locator(`${compose} textarea`).waitFor();
+      const restored =
+        (await page.locator(`${compose} .cdraft`).innerText()).includes(`keep draft ${mode}`) &&
+        (await page
+          .locator(compose)
+          .getByRole('button', { name: 'Retry', exact: true })
+          .isEnabled()) &&
+        (mode !== 'reject-sign' ||
+          (await page.locator(`${compose} textarea`).inputValue()) === draft);
       await writeFile(
         `tmp/signer-${mode}.json`,
         JSON.stringify({
           saved,
-          restored:
-            (await page.locator(compose).innerText()).includes(draft) ||
-            (await page.locator(compose).innerText()).includes(draft) ||
-            (await page.locator(`${compose} textarea`).inputValue()) === draft,
+          restored,
         }),
       );
-      check(
-        `NIP-07 ${mode} preserves draft across reload`,
-        (await page.locator(compose).innerText()).includes(draft) ||
-          (await page.locator(`${compose} textarea`).inputValue()) === draft,
-      );
+      check(`NIP-07 ${mode} preserves draft across reload`, saved && restored);
     } else
       check(`NIP-07 ${mode} creates no account`, (await page.locator('.acct.out').count()) === 1);
   } finally {

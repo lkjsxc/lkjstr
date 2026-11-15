@@ -43,6 +43,8 @@ pub enum Action {
         account: String,
         servers: Vec<String>,
     },
+    #[serde(rename = "servers.check")]
+    ServersCheck { server: String },
     #[serde(rename = "channel.join")]
     ChannelJoin {
         #[serde(rename = "as")]
@@ -77,6 +79,7 @@ pub enum Action {
     AccountRemove { pubkey: String },
     // ArrayBuffer bytes are intentionally not deserialized into JSON or logged.
     Upload {
+        server: Option<String>,
         #[serde(rename = "as")]
         account: String,
         name: String,

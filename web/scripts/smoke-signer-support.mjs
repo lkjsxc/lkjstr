@@ -10,11 +10,29 @@ async function launch(page, word, kind) {
   await page.locator('.ncard > b').getByText(word, { exact: true }).click();
   await page.locator(`.pane.cur .view[data-kind="${kind}"]:visible`).waitFor();
 }
-async function setup({ browser, base, relayUrl, pubkey, mode, sign, errors, bunker }) {
-  const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, locale: 'en-US' });
+async function setup({
+  browser,
+  base,
+  relayUrl,
+  pubkey,
+  mode,
+  sign,
+  errors,
+  bunker,
+  mediaOrigins = [],
+  storageState,
+}) {
+  const ctx = await browser.newContext({
+    viewport: { width: 1440, height: 900 },
+    locale: 'en-US',
+    storageState,
+  });
   await seedLayouts(ctx);
   await ctx.route('**/*', (route) =>
-    route.request().url().startsWith(`${base}/`) ? route.continue() : route.abort(),
+    route.request().url().startsWith(`${base}/`) ||
+    mediaOrigins.some((origin) => route.request().url().startsWith(`${origin}/`))
+      ? route.continue()
+      : route.abort(),
   );
   await ctx.exposeFunction('fixtureSign', sign);
   await ctx.addInitScript(
@@ -27,15 +45,34 @@ async function setup({ browser, base, relayUrl, pubkey, mode, sign, errors, bunk
         );
       window.signerResults = [];
       window.signerCalls = { getPublicKey: 0, signEvent: 0, decrypt: 0 };
-      const observe = (port) =>
+      const observe = (port) => {
+        const post = port.postMessage.bind(port);
+        port.postMessage = (m, ...args) => {
+          if (m.t === 'act' && m.action.a === 'upload' && window.uploadTarget && !m.action.server)
+            m.action.server = window.uploadTarget;
+          return post(m, ...args);
+        };
         port.addEventListener('message', ({ data: m }) => {
+          if (m.t === 'accounts') {
+            window.uploadAccount = m.active;
+            if (m.active)
+              localStorage.setItem(
+                `lkjstr:relays:${m.active}`,
+                JSON.stringify([{ url: relayUrl, read: true, write: true, search: true }]),
+              );
+          }
+          if (m.t === 'result' && m.req === window.uploadListReq) window.uploadListDone = m.ok;
+          if (m.t === 'result' && m.req === window.uploadListReq)
+            window.uploadListResult = { ok: m.ok, code: m.error?.code };
           if (m.t === 'result') window.signerResults.push({ ok: m.ok, code: m.error?.code });
         });
+      };
       const Shared = window.SharedWorker;
       window.SharedWorker = class extends Shared {
         constructor(...args) {
           super(...args);
           observe(this.port);
+          window.uploadPort = this.port;
         }
       };
       const Worker = window.Worker;
@@ -61,7 +98,14 @@ async function setup({ browser, base, relayUrl, pubkey, mode, sign, errors, bunk
         },
         signEvent(event) {
           window.signerCalls.signEvent++;
-          return answer('sign', () => window.fixtureSign(event));
+          if (window.uploadSignMode === 'refuse')
+            return Promise.reject(new Error('fixture refusal'));
+          if (window.uploadSignMode === 'hang') return new Promise(() => {});
+          return answer('sign', () =>
+            window.fixtureSign(
+              window.uploadSignMode === 'wrong' ? { ...event, content: 'changed auth' } : event,
+            ),
+          );
         },
         nip04: { encrypt: unsupported, decrypt: unsupported },
         nip44: { encrypt: unsupported, decrypt: unsupported },

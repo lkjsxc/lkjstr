@@ -289,6 +289,7 @@ export const ja: Record<keyof typeof en, string> = {
   'servers.invalid': 'サーバーのアドレスではありません（https://…）',
   'servers.unknown': '方式不明',
   'servers.down': '応答がありません',
+  'servers.unconfirmed': '未確認',
   'about.what':
     'ブラウザだけで動く Nostr クライアントです。lkjstr へのアカウント登録はありません。',
   'about.version': 'バージョン',
@@ -500,4 +501,20 @@ export const ja: Record<keyof typeof en, string> = {
     'アカウントや鍵は、このブラウザに保存されます。このページを配信するサーバーは、アカウントや鍵を受け取りません。設定、タブの配置、下書き、キャッシュしたノートは、このブラウザの中にだけ保存されます。\n\nノートを読み書きするとき、ブラウザはあなたが選んだ Nostr リレーと、画像などを置いているサーバーに直接つながります。それらの運営者には、接続元の IP アドレスと、あなたが要求・投稿した内容が見えます。Nostr に投稿したノートは公開され、取り消せないことがあります。\n\n解析ツール、広告、追跡用の Cookie は使っていません。',
   'docs.terms.b':
     'lkjstr は Apache License 2.0 で公開されている無償のソフトウェアです。現状のまま提供され、動作や結果についての保証はありません。\n\n## あなたの責任\n鍵の管理と、投稿する内容はあなた自身の責任です。Nostr に投稿したノートは公開され、取り消せないことがあります。法律と、利用するリレーやメディアサーバーの規則を守ってください。\n\n## 第三者のサービス\nリレー、メディアサーバー、署名用の拡張機能やアプリは、それぞれの運営者が提供するものです。lkjstr はそれらを運営しておらず、そこにある内容や、使えるかどうかに責任を負いません。\n\n## 変更\nこの文書は lkjstr の更新とともに変わることがあります。',
+  'upload.signerMissing': '署名の応答がありません。署名アプリを開いて再試行してください。',
+  'upload.limit':
+    '一度に添付できるのは8件までです。添付を減らして、残りのファイルを選び直してください。',
+  'upload.readFailed': 'ファイルを読み取れませんでした。もう一度試してください。',
+  'upload.noServer': '送信先が設定されていません。下から選んで再試行してください。',
+  'upload.server': '送信先',
+  'upload.discovering': '{server}を確認しています…',
+  'upload.signing': '{server}への送信の許可を待っています…',
+  'upload.uploading': '{server}に送信しています…',
+  'upload.processing': '{server}でファイルを処理しています…',
+  'upload.failed': '{server}への送信：{reason}',
+  'error.upload-network': '接続できないか、このページからの送信が許可されていません。',
+  'error.upload-timeout': '送信が時間切れになりました。再試行するか、別の送信先を選んでください。',
+  'error.upload-payment': 'この送信先は有料です。別の送信先を選んでください。',
+  'error.upload-response': '送信先がファイルを受け付けなかったか、応答を読み取れませんでした。',
+  'error.upload-discovery': '送信先の情報を取得できませんでした。別の送信先を選んでください。',
 };

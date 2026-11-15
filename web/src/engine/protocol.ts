@@ -365,7 +365,10 @@ export type ServerRow = {
   readonly url: string;
   /** Upload protocol the engine found there. */
   readonly protocol: 'blossom' | 'nip96' | 'unknown';
+  /** Fresh required-request evidence; unknown and optional failures have checked=false. */
   readonly ok: boolean;
+  readonly checked?: boolean;
+  readonly error?: Failure;
 };
 
 export type EmojiRow = {
@@ -520,6 +523,8 @@ export type Action =
   /** `bytes` is transferred, not copied. Answered by `progress` messages and a `result` with `uploaded`. */
   | {
       readonly a: 'upload';
+      /** One explicit destination; absent uses the first configured server. */
+      readonly server?: string;
       readonly as: Pubkey;
       readonly name: string;
       readonly mime: string;
@@ -533,6 +538,8 @@ export type Action =
   /** Replaces the media server list with `servers` (`https://host[/path]`), the preferred one first; anything
    * else fails with `rejected`. The `media-servers` rows are patched at once. */
   | { readonly a: 'servers.save'; readonly as: Pubkey; readonly servers: readonly string[] }
+  /** Recheck required NIP-96 discovery or optional BUD-06; never uploads bytes. */
+  | { readonly a: 'servers.check'; readonly server: string }
   /** Marks notifications read up to now. */
   | { readonly a: 'seen'; readonly as: Pubkey }
   // Channels (NIP-28), since version 4.
@@ -581,7 +588,12 @@ export type Failure = {
     | 'unsupported'
     | 'offline'
     | 'not-found'
-    | 'internal';
+    | 'internal'
+    | 'upload-network'
+    | 'upload-timeout'
+    | 'upload-payment'
+    | 'upload-response'
+    | 'upload-discovery';
   readonly message?: string;
 };
 
@@ -802,7 +814,14 @@ export type FromEngine =
   | { readonly t: 'fresh'; readonly sub: SubId; readonly count: number }
   | { readonly t: 'state'; readonly sub: SubId; readonly state: SubState }
   /** Upload progress. */
-  | { readonly t: 'progress'; readonly req: ReqId; readonly sent: number; readonly total: number }
+  | {
+      readonly t: 'progress';
+      readonly req: ReqId;
+      readonly sent: number;
+      readonly total: number;
+      readonly server?: string;
+      readonly phase?: 'discovering' | 'signing' | 'uploading' | 'processing';
+    }
   /** Per-relay delivery of a publish, sent as answers come in (the whole list each time). */
   | { readonly t: 'delivery'; readonly req: ReqId; readonly relays: readonly Delivery[] }
   /** The end of an action. `delivery`: the final per-relay list of a publish. `uploaded`: of an upload.

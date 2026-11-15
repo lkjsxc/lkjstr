@@ -8,7 +8,6 @@ import { chromium, type Page } from 'playwright-core';
 
 const here = new URL('..', import.meta.url).pathname;
 const out = `${here}../tmp/screens`;
-let base = '';
 const chrome =
   process.env.LKJSTR_CHROME ??
   `${process.env.HOME}/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome`;
@@ -28,7 +27,7 @@ mkdirSync(out, { recursive: true });
 const server = spawn(process.execPath, [`${here}scripts/serve.ts`, '--port=0'], {
   stdio: 'pipe',
 });
-base = await new Promise<string>((done, fail) => {
+const base = await new Promise<string>((done, fail) => {
   server.stdout?.once('data', (data) => done(String(data).trim()));
   server.once('exit', (code) => fail(new Error(`server exited ${code}`)));
 });

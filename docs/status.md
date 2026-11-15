@@ -109,9 +109,10 @@ Implemented:
   envelopes, exact signed-event validation, durable device credentials and
   bounded, explicitly closed RPC sockets. Remote account removal deletes its
   local session credentials.
-- Blossom uploads and NIP-96 discovery/multipart fallback, authenticated through
-  the account signer; 20 MiB/four-upload bounds, bounded HTTP/deadlines, honest
-  zero/completion progress and checked response hashes/URLs. No fake success.
+- Blossom and NIP-96 uploads support every signer, bounded waits and retained retries.
+  Session-only marks and ordered selection use required-request evidence; optional
+  BUD-06 failures stay unknown. One aggregate deadline bounds all fallback; failed
+  discovery retains the known protocol. Bounds and evidence: [media-uploads.md](media-uploads.md).
 - Public follow/mute/bookmark/profile/relay/server actions; public people-list
   addresses and naddr resolution; notification types, grouping and persisted
   seen watermarks. Local-key NIP-44 private people/bookmark/mute entries can be
@@ -131,8 +132,7 @@ Implemented:
 - HTML-free package and frontend Transport adapter; see engine-package.md.
 
 ## Mock answers not yet fully implemented
-
-Some variants of implemented mock messages remain incomplete:
+No top-level message/action is entirely unhandled. Incomplete variants:
 
 - open/list, open/mutes and open/bookmarks: extension/remote private-list
   decryption and encrypted-entry editing. A decrypt capability for NIP-07 is
@@ -143,9 +143,9 @@ Some variants of implemented mock messages remain incomplete:
   multi-language OR currently uses only the first language. Note search works.
 - account.add/key: NIP-46 auth_url interactive challenges and relay-switch
   negotiation. Preauthorized bunker sessions work; challenges fail explicitly.
-- upload: NIP-96 delayed processing (202) polling, cancellation and intermediate
-  byte progress; zero and committed completion are reported. HTTP failures and
-  invalid responses fail explicitly. Other media protocols are unsupported.
+- upload: cancellation and intermediate byte progress; zero and validated
+  completion are reported. NIP-96 202 processing is bounded. Other protocols
+  remain unsupported.
 - open/notifications: trusted LNURL-provider discovery for zap receipts is not
   integrated. Cached zap rows are lower-confidence receipt data; full trust
   validation is not claimed. Follow notifications reflect retained kind-3 events,

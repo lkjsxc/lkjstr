@@ -1,11 +1,12 @@
-// The composer saves typed drafts and retains failed channel messages for retry.
-import type { Delivery, Draft, Emoji, Uploaded } from '../engine/protocol.ts';
+// The composer saves drafts and retains failed posts and channel messages for retry.
+import type { Delivery, Draft, Emoji } from '../engine/protocol.ts';
 import { h, replaceChildren } from '../shared/h.ts';
 import { type Key, t } from '../shared/i18n.ts';
 import { icon } from '../shared/icons.ts';
 import { keyCaps, pressed } from '../shared/keys.ts';
 import { loadViewState, saveViewState } from '../shared/view-state.ts';
 import { ability, failureText } from './can.ts';
+import { createAttachments } from './compose-media.ts';
 import { type ChannelDraft, createChannelOutbox } from './compose-outbox.ts';
 import { createWho } from './compose-who.ts';
 import { openEmojiPicker } from './emoji-picker.ts';
@@ -24,7 +25,6 @@ type State = {
   /** Custom emoji put into the text with the picker. */
   emoji?: Emoji[];
 };
-type Item = { name: string; el: HTMLElement; done?: Uploaded };
 
 /** `channel`: the composer of a channel tab; what it sends is a message in that channel. */
 export function mountCompose(el: HTMLElement, env: ViewEnv, channel?: string): () => void {
@@ -32,7 +32,6 @@ export function mountCompose(el: HTMLElement, env: ViewEnv, channel?: string): (
   const save = (): void => saveViewState(env.instance, state);
   const owner = (state.outboxOwner ??= crypto.randomUUID());
   save();
-  let items: Item[] = []; // bound: the files of one draft
   const area = h('textarea', {
     class: 'ctext',
     rows: channel ? 2 : 4,
@@ -40,7 +39,6 @@ export function mountCompose(el: HTMLElement, env: ViewEnv, channel?: string): (
     'aria-label': t('view.compose'),
   });
   area.value = state.text ?? '';
-  const thumbs = h('div', { class: 'thumbs' });
   const result = h('div', { class: 'cresult', role: 'status' });
   const file = h('input', {
     type: 'file',
@@ -120,7 +118,7 @@ export function mountCompose(el: HTMLElement, env: ViewEnv, channel?: string): (
 
   const ready = (): void => {
     const can = ability(env.engine);
-    const busy = items.some((i) => !i.done);
+    const busy = attachments.blocked();
     post.hidden = can === 'signed-out';
     post.title = can === 'read-only' ? t('error.read-only') : (keyCaps('send')[0] ?? '');
     attach.disabled = can !== 'ok';
@@ -128,7 +126,7 @@ export function mountCompose(el: HTMLElement, env: ViewEnv, channel?: string): (
       outbox.full() ||
       busy ||
       can !== 'ok' ||
-      (!area.value.trim() && !items.length && !state.quote);
+      (!area.value.trim() && !attachments.media().length && !state.quote);
   };
 
   const outbox = createChannelOutbox(
@@ -147,60 +145,8 @@ export function mountCompose(el: HTMLElement, env: ViewEnv, channel?: string): (
 
   state.outbox = outbox.drafts;
 
-  async function upload(f: File): Promise<void> {
-    const bar = h('i');
-    const item: Item = {
-      name: f.name,
-      el: h(
-        'div',
-        { class: 'thumb' },
-        h('span', { class: 'clip' }, f.name),
-        h('span', { class: 'prog' }, bar),
-      ),
-    };
-    const remove = h(
-      'button',
-      { class: 'x', title: t('compose.drop'), 'aria-label': t('compose.drop') },
-      '×',
-    );
-    remove.addEventListener('click', () => {
-      items = items.filter((i) => i !== item);
-      item.el.remove();
-      ready();
-    });
-    item.el.append(remove);
-    items.push(item);
-    thumbs.append(item.el);
-    ready();
-    const bytes = await f.arrayBuffer();
-    const r = await env.engine.act(
-      {
-        a: 'upload',
-        as: env.engine.me(),
-        name: f.name,
-        mime: f.type || 'application/octet-stream',
-        bytes,
-      },
-      {
-        progress: (sent, total) =>
-          void (bar.style.width = `${Math.round((sent / Math.max(total, 1)) * 100)}%`),
-      },
-    );
-    if (r.ok && r.uploaded) {
-      item.done = r.uploaded;
-      item.el.classList.add('done');
-      if (r.uploaded.type === 'image')
-        item.el.prepend(h('img', { src: r.uploaded.url, alt: f.name }));
-    } else {
-      item.el.classList.add('failed');
-      item.el.append(h('span', { class: 'error' }, failureText(r.error)));
-      items = items.filter((i) => i !== item); // it stays visible until removed, but is not part of the post
-    }
-    ready();
-  }
-  const add = (files: FileList | undefined | null): void => {
-    for (const f of files ?? []) void upload(f);
-  };
+  const attachments = createAttachments(env, ready);
+  const add = (files: FileList | undefined | null): void => attachments.add(files ?? []);
 
   const showDelivery = (relays: readonly Delivery[], final: boolean): void => {
     const ok = relays.filter((r) => r.state === 'ok').length;
@@ -226,15 +172,14 @@ export function mountCompose(el: HTMLElement, env: ViewEnv, channel?: string): (
       channel,
       replyTo: state.replyTo,
       quote: state.quote,
-      media: items.flatMap((i) => (i.done ? [i.done] : [])),
+      media: attachments.media(),
       emoji: (state.emoji ?? []).filter((e) => text.includes(`:${e.code}:`)),
     };
     const clear = (): void => {
       area.value = state.text = '';
       state.replyTo = state.replyOf = state.quote = state.quoteOf = state.emoji = undefined;
       save();
-      items = [];
-      thumbs.replaceChildren();
+      attachments.clear();
       drawHead();
     };
     // Retain the entire draft before freeing the field, including ordinary posts and replies.
@@ -266,7 +211,7 @@ export function mountCompose(el: HTMLElement, env: ViewEnv, channel?: string): (
   el.replaceChildren(
     head,
     area,
-    thumbs,
+    attachments.el,
     h(
       'div',
       { class: 'cbar' },
@@ -287,6 +232,7 @@ export function mountCompose(el: HTMLElement, env: ViewEnv, channel?: string): (
     state.text = area.value;
     save();
     who.dispose();
+    attachments.dispose();
     outbox.dispose();
   };
 }

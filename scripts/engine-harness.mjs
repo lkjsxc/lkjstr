@@ -5,6 +5,7 @@ import { fallback } from './engine-fallback.mjs';
 import { coldStart } from './engine-cold-start.mjs';
 import { ownerRelays, localDiscovery, continuity } from './engine-feedback.mjs';
 import { conformance } from './engine-conformance.mjs';
+import { uploadReview } from './engine-upload-review.mjs';
 import { timeRail } from './engine-time-rail.mjs';
 import { rich } from './engine-rich.mjs';
 import { createServer } from 'node:http';
@@ -18,7 +19,7 @@ import { spawn } from 'node:child_process';
 import { createInterface } from 'node:readline';
 const root = resolve('tmp/engine-pkg'), out = resolve('tmp/engine-harness');
 await mkdir(out, { recursive: true });
-const boot = `import init,{start} from './lkjstr_engine.js'; const queued=[];self.onmessage=e=>queued.push(e);await init(); self.engineHandle=start();const input=self.onmessage;self.onmessage=e=>{if(e.data.t==='test.advance')self.engineHandle.advance_time(e.data.ms);else if(e.data.t==='test.relays')self.engineHandle.set_test_relays(e.data.relays);else input(e);};for(const e of queued)self.onmessage(e);`;
+const boot = `let uploadClock=0;const realNow=performance.now.bind(performance);Object.defineProperty(performance,'now',{value:()=>realNow()+uploadClock});import init,{start} from './lkjstr_engine.js'; const queued=[];self.onmessage=e=>queued.push(e);await init(); self.engineHandle=start();const input=self.onmessage;self.onmessage=e=>{if(e.data.t==='test.uploadClock')uploadClock=e.data.ms;else if(e.data.t==='test.advance')self.engineHandle.advance_time(e.data.ms);else if(e.data.t==='test.relays')self.engineHandle.set_test_relays(e.data.relays);else input(e);};for(const e of queued)self.onmessage(e);`;
 const server = createServer(async (req, res) => {
   const path = new URL(req.url, 'http://x').pathname;
   if (path === '/') return res.writeHead(200, {'content-type':'text/html'}).end('<!doctype html><title>Engine harness</title>');
@@ -77,7 +78,7 @@ await context.route('**/*', (r) => {
     const hash=createHash('sha256').update(Buffer.from([1,2,3,4])).digest('hex');
     return r.fulfill({status:201,contentType:'application/json',body:JSON.stringify({status:'success',nip94_event:{tags:[['url',`https://nip96.engine.test/${hash}.png`],['ox',hash],['m','image/png']]}})});
   }
-  if(['https://media.engine.test/upload','https://blossom.primal.net/upload'].includes(r.request().url())) {
+  if(['https://media.engine.test/upload','https://blossom.band/upload'].includes(r.request().url())) {
     const hash=createHash('sha256').update(r.request().postDataBuffer()).digest('hex');
     return r.fulfill({status:201,contentType:'application/json',headers:{'access-control-allow-origin':'*'},body:JSON.stringify({url:`${new URL(r.request().url()).origin}/${hash}.png`,sha256:hash,type:'image/png',size:4})});
   }
@@ -172,6 +173,7 @@ try {
   fake.setReading(true);
   await ownerRelays({page,send,wait,check,note,signer,lines,fake,origin});
   await conformance({page,send,wait,check,note,signer,lines,origin,bunkerKey,bunker,fake,channelFake});
+  await uploadReview({page,send,wait,check,note,signer,lines});
   await rich({page,send,wait,check,note,signer,lines,fake});
   await timeRail({page,send,wait,check,note,signer,lines,fake});
   validateReplies(await page.evaluate(()=>window.messages));

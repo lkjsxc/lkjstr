@@ -108,7 +108,7 @@ export async function localDiscovery({page,send,wait,check,start,origin}) {
   const key=await page.evaluate(()=>window.messages.filter(m=>m.t==='accounts').at(-1).active);
   await page.evaluate(key=>window.worker.postMessage({t:'act',req:'default-blossom',action:{a:'upload',as:key,name:'fixture.png',mime:'image/png',bytes:new Uint8Array([1,2,3,4]).buffer}}),key);
   await wait(()=>window.messages.some(m=>m.t==='result'&&m.req==='default-blossom'));
-  check('absent kind 10063 uploads through default Blossom',await page.evaluate(()=>window.messages.find(m=>m.t==='result'&&m.req==='default-blossom').uploaded?.url.startsWith('https://blossom.primal.net/')));
+  check('absent kind 10063 uploads through default Blossom',await page.evaluate(()=>window.messages.find(m=>m.t==='result'&&m.req==='default-blossom').uploaded?.url.startsWith('https://blossom.band/')));
   const relay=`${origin.replace('http:','ws:')}/local-owner`;
   const saved=await act('local-owner-save',{a:'relays.save',as:key,relays:[{url:relay,read:true,write:true}]});
   check('local discovery fixture publishes relay list',saved.ok);

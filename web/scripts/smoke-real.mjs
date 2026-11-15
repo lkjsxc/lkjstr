@@ -8,15 +8,18 @@ import { createInterface } from 'node:readline';
 import { chromium } from 'playwright-core';
 import bundle from 'playwright-core/lib/utilsBundle';
 import { fakeBunker } from '../../scripts/browser-bunker.mjs';
+import { fakeMediaSet } from '../../scripts/browser-media.mjs';
 import { fakeRelay } from '../../scripts/browser-relay.mjs';
 import { auditFixtures } from './audit-fixtures.mjs';
 import { auditOwner } from './audit-owner.mjs';
 import { channelScenarios } from './smoke-channels.mjs';
-import { realReaderChecks, visitorRelayChecks } from './smoke-reader.mjs';
+import { realReaderChecks } from './smoke-reader.mjs';
+import { finishAccounts, reviewSettings, seedRailArchive } from './smoke-real-finish.mjs';
 import { openKeyField, seedLayouts } from './smoke-seed.mjs';
 import { writeReport } from './smoke-signer-support.mjs';
 import { signerScenarios } from './smoke-signers.mjs';
 import { railSmoke } from './smoke-time-rail.ts';
+import { uploadScenarios } from './smoke-uploads.mjs';
 import { accounts, installExtension, npub, visitorChecks } from './smoke-visitors.mjs';
 
 const root = new URL('../../', import.meta.url).pathname;
@@ -36,6 +39,7 @@ const fake = fakeRelay();
 // The archive/audit can fill one 1000-event store; reader arrivals get their own bounded fixture.
 const readerFake = fakeRelay();
 const bunker = await fakeBunker();
+const media = await fakeMediaSet();
 for (const event of [fixture.note, ...fixture.events]) {
   fake.add(event);
   readerFake.add(event);
@@ -63,7 +67,13 @@ signer.stdin.write(
 fake.add(JSON.parse((await lines.next()).value));
 const server = spawn(
   process.execPath,
-  ['web/scripts/serve.ts', '--port=0', '--test-previews', `--test-relay=${relayUrl}`],
+  [
+    'web/scripts/serve.ts',
+    '--port=0',
+    '--test-previews',
+    `--test-relay=${relayUrl}`,
+    `--test-media=${Object.values(media.origins).join(',')}`,
+  ],
   { stdio: ['ignore', 'pipe', 'pipe'] },
 );
 const errors = [],
@@ -83,7 +93,7 @@ try {
     executablePath:
       process.env.LKJSTR_CHROME ??
       `${process.env.HOME}/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome`,
-    args: ['--no-sandbox', '--disable-background-networking'],
+    args: ['--no-sandbox', '--disable-background-networking', '--ignore-certificate-errors'],
   });
   const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, locale: 'en-US' });
   await seedLayouts(ctx);
@@ -103,7 +113,7 @@ try {
   // LKJSTR_SHOTS=1 also writes the review captures of this run to tmp/screens/.
   const shots = process.env.LKJSTR_SHOTS === '1';
   const shot = (p, name) => p.screenshot({ path: `tmp/screens/${name}` });
-  await signerScenarios({
+  const scenario = {
     browser,
     base,
     relayUrl,
@@ -113,19 +123,11 @@ try {
     check,
     fake,
     bunker,
-  });
+  };
+  await signerScenarios(scenario);
+  await uploadScenarios({ ...scenario, media });
   const publicationsBeforeApp = fake.published.length;
-  for (let i = 0; i < 100; i++) {
-    fake.add(
-      await fixtureSign({
-        pubkey: fixture.note.pubkey,
-        kind: 1,
-        created_at: Math.floor(Date.UTC(2026 - Math.floor(i / 20), 10 - (i % 10), 15) / 1000),
-        content: `Rail archive fixture ${i}`,
-        tags: [],
-      }),
-    );
-  }
+  await seedRailArchive({ fake, sign: fixtureSign, pubkey: fixture.note.pubkey });
   page = await ctx.newPage();
   const launch = async (word, kind) => {
     await page.locator('.pane.cur .strip').getByTitle('New tab', { exact: true }).click();
@@ -255,58 +257,18 @@ try {
       await installExtension(context, relayUrl, fixture.note.pubkey, errors);
     },
   });
-  if (shots) {
-    // Signed in, the ordinary layout as it starts, in Japanese (the language is put back afterwards).
-    // Use the reader's reset: deleting storage bypasses the live WM store, whose
-    // pending save can restore the old layout on pagehide with Home behind Post.
-    await page.locator('.pane.cur .strip').getByTitle('Tile menu', { exact: true }).click();
-    await page.locator('.menu button').getByText('Reset layout', { exact: true }).click();
-    await page.locator('.view[data-kind="home"] .note').first().waitFor();
-    check('Reset layout brings Home forward with real notes after Channels and Stats');
-    await page.evaluate(() => localStorage.setItem('lkjstr:settings', '{"language":"ja"}'));
-    await page.reload();
-    await page.locator('.view[data-kind="home"] .note').first().waitFor();
-    await page.waitForTimeout(1200);
-    check('reset Home survives reload in Japanese', (await page.locator('.pane').count()) === 3);
-    await shot(page, 'slice-signedin-1440-ja.png');
-    await page.evaluate(() => localStorage.removeItem('lkjstr:settings'));
-    await page.reload();
-    await page.locator('.view[data-kind="home"] .note').first().waitFor();
-  }
-  if (shots) check('reset Home survives another reload in English');
-  await launch('Settings', 'settings');
-  await page.getByLabel('Theme', { exact: true }).selectOption('dark');
-  await page.reload();
-  await page.waitForFunction(() => document.documentElement.dataset.theme === 'dark');
-  check('settings persist after reload');
-  const other = await ctx.newPage();
-  await other.goto(base);
-  await other.locator('.tab[data-view="global"]').click();
-  await other.locator('.view[data-kind="global"] .note').first().waitFor();
-  check('second app tab receives notes');
-  const sharedRoutes = () => fake.connections() === new Set(activePaths.values()).size;
-  for (let n = 0; n < 200 && !sharedRoutes(); n++) await page.waitForTimeout(25);
-  check('two app tabs share one socket per relay', sharedRoutes() && activePaths.size > 0);
-  check(
-    'learned owner relays survive reload and another tab bootstrap',
-    [...activePaths.values()].includes('/owner') &&
-      [...activePaths.values()].every((path) => path === '/owner' || path === '/'),
-  );
-  // Signed out again: the visitor's layout returns, here and in the other tab, and stays after a reload.
-  await page.locator('.acct').click();
-  await page.locator('.menu button', { hasText: 'Accounts' }).click();
-  await page.locator(`${accounts} [data-f="remove"]`).click();
-  await page.locator('.acct.out').waitFor();
-  await other.locator('.acct.out').waitFor();
-  const out = async (p) =>
-    (await p.locator('.pane').count()) === 1 &&
-    (await p.locator('.view[data-kind="home"]').count()) === 0 &&
-    (await p.evaluate(() => localStorage.getItem('lkjstr:account'))) === null;
-  check('removing the last account signs out everywhere', (await out(page)) && (await out(other)));
-  await page.reload();
-  await page.locator('.view[data-kind="global"] .note').first().waitFor();
-  check('signed out survives a reload', await out(page));
-  await visitorRelayChecks({ page, relayUrl, check, launch });
+  const other = await reviewSettings({
+    page,
+    ctx,
+    base,
+    fake,
+    activePaths,
+    check,
+    launch,
+    shots,
+    shot,
+  });
+  await finishAccounts({ page, other, relayUrl, check, launch });
   await realReaderChecks({
     browser,
     base,
@@ -315,9 +277,7 @@ try {
     fixture,
     fixtureSign,
     check,
-    onReader: (reader) => {
-      page = reader;
-    },
+    onReader: (reader) => (page = reader),
   });
   check('no page errors', errors.length === 0);
 } catch (error) {
@@ -329,6 +289,7 @@ try {
   server.kill();
   signer.stdin.end();
   await bunker.close();
+  await media.close();
   ws.close();
   await new Promise((done) => relay.close(done));
 }
