@@ -86,6 +86,7 @@ pub(super) struct Request {
     pub eose: bool,
     pub page_eose: bool, // Historical completion survives live resubscription.
     pub deadline: u64,
+    pub initial_deadline: u64, // Count deferral ends even if the page keeps retrying.
     pub last_event: Option<u64>,
     pub sent_at: u64,
     pub last_rx: u64,

@@ -112,6 +112,7 @@ impl Network {
                         eose: exhausted,
                         page_eose: exhausted,
                         deadline: u64::MAX,
+                        initial_deadline: u64::MAX,
                         last_event: None,
                         sent_at: 0,
                         last_rx: now,

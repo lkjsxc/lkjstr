@@ -73,7 +73,7 @@ Current coalescing results and remaining gaps: [cover.md](cover.md).
 
 Protocol 2 uses absent profile fields for unknown counts and the existing
 partial flag for lower bounds. Count requests are bounded and exact only after
-successful, untruncated, verified replies. No alternate estimate shape remains.
+successful, untruncated, verified replies. Count deferral ends at the first 15-second page deadline; retries do not renew it.
 Signed-out relays.save with an empty account is supported by the Worker and
 confirmed edits are saved by startup plumbing. The Settings action guard still
 blocks visitor edits before they reach the engine; the frontend must remove

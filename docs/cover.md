@@ -27,7 +27,9 @@ records. Normalization merges members into an existing owner request instead of
 overwriting its discovery membership, preserving the live owner refresh watch.
 
 Only reference-count filters with an e tag wait for their route's initial visible
-page to finish. Notification p-tag requests are never treated as count hydration.
+page to finish or its first 15-second deadline to expire. Backoff and retries do
+not renew this count deferral. Notification p-tag requests are never treated as
+count hydration.
 Count target
 changes still replace the live union; retaining many small live count buckets was
 rejected because it increases slots, replies and rotation. Profiles precede counts
@@ -74,7 +76,7 @@ session ships; an older negentropy advertisement alone is not used as proof.
 ## Evidence
 
 Native fixtures are engine_cover_{coalesce,filters,lists,resume,safety}_test.rs,
-engine_cover_notifications_test.rs and engine_cover_refresh_test.rs. Their
+engine_cover_{notifications,refresh,counts}_test.rs. Their
 scorecards distinguish actual scheduler frames from rejected strategy simulations.
 The original implementation is also run against the same coalescing and duplicate
 fixtures when recording the before scorecard; normal gates assert current behavior.

@@ -82,7 +82,8 @@ impl Network {
         });
         for id in ids {
             let r = &self.requests[&id];
-            // Collect the initial visible page before freezing count buckets.
+            // Collect the initial visible page before freezing count buckets,
+            // bounded by its first deadline even across backoff and retries.
             // Otherwise every verification slice creates another 200-event stream.
             if counts_filter(&r.filter)
                 && self.requests.values().any(|q| {
@@ -90,6 +91,7 @@ impl Network {
                         && q.priority <= 1
                         && !q.page_eose
                         && !q.complete
+                        && now < q.initial_deadline
                         && !q.members.is_disjoint(&r.members)
                 })
             {
