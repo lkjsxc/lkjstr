@@ -51,8 +51,8 @@ docker compose --progress quiet -f docker-compose.yml run --rm verify
 
 The Dockerfile builds the same real product. Docker is excluded by the worktree-only write rule; no services, deploys, production or CI changes occur.
 
-Earlier merge f61e5f4f passed quiet, frontend, smoke (302 mock, 128 uploads, 386 real), conformance (229) and the 240 ms probe (233.7 ms).
-Evidence: tmp/merge-current-*.log and tmp/merge-current-audit.txt. No CI, Docker, production, deployment or existing-service changes.
+Harness merge 9e03b662 retains cover repairs, main's frontend/time rails and all smoke assertions; no code repair was needed. Four quiet gates and
+frontend check/build/smoke pass (417 mock, 128 uploads); real smoke passes 534 checks with LKJSTR_SHOTS=1 and no page errors. Evidence: tmp/current-merge-*.
 
 ## Earlier integration and review
 
