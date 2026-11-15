@@ -37,6 +37,9 @@ reply context and repost actors. Profile batches share relay work, prefer
 note-delivering read relays, fall back after completion and release on hiding.
 Cached names render immediately while metadata refreshes. Visible profiles
 can preempt occupied relay slots; interrupted feeds resume after lookup.
+Interrupted pages replay their original filters until EOSE. Completed page
+coverage and cursors survive live resumption, so profile lookup cannot falsely
+exhaust history. Four native regressions cover interruption and pagination.
 Six native regressions cover routing, batching, context, refresh and release.
 The delayed loopback probe uses 240 ms responses and congested slots: baseline
 note-to-named-row 1893.7 ms; revised 232.5 ms. engine-check includes this probe.

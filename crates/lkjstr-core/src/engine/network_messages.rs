@@ -19,12 +19,14 @@ impl Network {
                 if let Some(r) = self.requests.get_mut(&subscription_id).filter(|r| {
                     r.relay == relay && r.sent && lkjstr_protocol::matches_filter(&event, &r.filter)
                 }) {
-                    r.oldest = Some(
-                        r.oldest
-                            .map_or(event.created_at, |at| at.min(event.created_at)),
-                    );
-                    if r.received.len() < r.page_limit {
-                        r.received.insert(event.id.clone());
+                    if !r.page_eose {
+                        r.oldest = Some(
+                            r.oldest
+                                .map_or(event.created_at, |at| at.min(event.created_at)),
+                        );
+                        if r.received.len() < r.page_limit {
+                            r.received.insert(event.id.clone());
+                        }
                     }
                     return Some(event);
                 }
@@ -33,10 +35,11 @@ impl Network {
                 if let Some(r) = self
                     .requests
                     .get_mut(&subscription_id)
-                    .filter(|r| r.relay == relay)
+                    .filter(|r| r.relay == relay && r.sent)
                 {
                     self.profiles_changed = true;
                     r.eose = true;
+                    r.page_eose = true;
                     r.last_rx = now;
                     if let Some(relay) = self.relays.get_mut(relay) {
                         let latency = now.saturating_sub(r.sent_at);

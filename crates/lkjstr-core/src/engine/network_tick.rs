@@ -112,7 +112,7 @@ impl Network {
             let r = &self.requests[&id];
             let relay = r.relay.clone();
             let mut f = r.filter.clone();
-            if let Some(at) = r.last_event.filter(|_| r.live) {
+            if let Some(at) = r.last_event.filter(|_| r.live && r.page_eose) {
                 f.since = Some(at.saturating_sub(2).max(f.since.unwrap_or(0)));
             }
             f.limit = Some(f.limit.unwrap_or(200).min(self.relays[&relay].max_limit));
@@ -123,9 +123,11 @@ impl Network {
                 r.next_req_at = now + 100;
             }
             if let Some(r) = self.requests.get_mut(&id) {
-                r.page_limit = f.limit.unwrap_or(200) as usize;
-                r.received.clear();
-                r.oldest = None;
+                if !r.page_eose {
+                    r.page_limit = f.limit.unwrap_or(200) as usize;
+                    r.received.clear();
+                    r.oldest = None;
+                }
                 r.sent = true;
                 r.asked = true;
                 r.sent_at = now;

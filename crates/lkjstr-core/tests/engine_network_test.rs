@@ -75,7 +75,7 @@ fn identical_views_share_work_and_visibility_releases_it() {
 #[test]
 fn hours_of_silence_reconnect_then_resubscribe_with_since() {
     let mut e = setup();
-    reqs(&mut e);
+    let heads = reqs(&mut e);
     let event = finalize_event(
         &EventTemplate {
             pubkey: None,
@@ -89,6 +89,11 @@ fn hours_of_silence_reconnect_then_resubscribe_with_since() {
     .expect("fixture");
     e.enqueue("wss://a.test/".into(), event);
     e.tick(75);
+    // Incremental reconnect is safe only after the original history completed.
+    for (relay, head) in heads {
+        e.network
+            .message(&relay, &json!(["EOSE", head[1]]).to_string(), 76);
+    }
     e.drain();
     e.network.drain_effects();
     e.tick(3 * 60 * 60 * 1000);

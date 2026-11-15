@@ -42,6 +42,7 @@ pub(super) struct Request {
     pub members: BTreeSet<String>,
     pub sent: bool,
     pub eose: bool,
+    pub page_eose: bool, // Historical completion survives live resubscription.
     pub deadline: u64,
     pub last_event: Option<u64>,
     pub sent_at: u64,
@@ -195,6 +196,7 @@ impl Network {
                         members,
                         sent: false,
                         eose: false,
+                        page_eose: false,
                         deadline: u64::MAX,
                         last_event: None,
                         sent_at: 0,

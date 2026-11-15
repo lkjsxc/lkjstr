@@ -72,6 +72,7 @@ impl Request {
         {
             self.complete = false;
             self.eose = false;
+            self.page_eose = false;
             self.asked = false;
             self.ready_at = now;
         }

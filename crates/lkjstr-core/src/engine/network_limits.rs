@@ -87,7 +87,7 @@ impl Network {
         !requests.is_empty()
             && requests
                 .iter()
-                .all(|r| r.eose && r.received.len() < r.page_limit)
+                .all(|r| r.page_eose && r.received.len() < r.page_limit)
     }
     /// The shallowest full relay page advances without skipping another relay's tail.
     pub fn page_cursor(&self, filter: &lkjstr_protocol::NostrFilter) -> Option<u64> {
@@ -103,7 +103,7 @@ impl Network {
             .values()
             .filter(|r| r.filter == *filter)
             .collect();
-        !requests.is_empty() && requests.iter().all(|r| r.eose)
+        !requests.is_empty() && requests.iter().all(|r| r.page_eose)
     }
 }
 
