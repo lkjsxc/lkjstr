@@ -130,7 +130,7 @@ fn missing_inbox_is_discovered_after_first_success_and_released_at_deadline() {
     ));
     e.tick(130002);
     assert_eq!(
-        e.network.publication_stats("wss://inbox.test/")["publishFailed"],
+        e.network.publication_stats()["wss://inbox.test/"].publish_failed,
         1
     );
     assert_eq!(e.stats()["totals"]["subscriptions"], 0);

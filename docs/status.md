@@ -159,8 +159,8 @@ Publishing now plans 12 author outboxes plus eight inbox/context routes, retries
 through a deadline and reports success on first acceptance. Missing recipient
 lists are looked up; bounded persisted receipts route deletes after reload.
 All saved accounts refresh profile/follow/relay/mute/server records independently
-of cache. Configured reads use measured coverage/quality weights. Full outbox
-two-cover, persistent backoff, focus and information weights remain deferred.
+of cache. Read routes retain page evidence; Stats aggregates publication history
+once. Full outbox two-cover, persistent backoff, focus and weights remain deferred.
 Exact bounds, measured costs and remaining design: [orchestration.md](orchestration.md).
 
 ## Verification

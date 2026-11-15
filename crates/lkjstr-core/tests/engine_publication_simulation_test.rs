@@ -154,6 +154,9 @@ fn twelve_outboxes_eight_inboxes_continue_after_first_success_and_recover_drops(
         (20, 22, 21, 100)
     );
     assert_eq!(after.bytes_out, before.bytes_out * 7);
-    assert_eq!(n.publication_stats(&relay(19))["publishAccepted"], 1);
+    assert_eq!(
+        n.publication_stats()[relay(19).as_str()].publish_accepted,
+        1
+    );
     println!("publication scorecard before={before:?} after={after:?}");
 }

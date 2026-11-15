@@ -161,3 +161,16 @@ was rerun standalone. Requested real Stats captures were saved and inspected at
 Docker is excluded by the worktree-only write restriction; changes remain
 uncommitted under the explicit no-commit instruction. No CI, production app,
 deployment or existing service was changed.
+
+## Orchestration branch review (2026-11-15)
+
+Three native regressions preserve partial and completed page evidence across
+quality changes, allow new pages and configuration changes, and keep explicit
+hints from displacing ordinary routes. The pagination regression fails against
+the pre-fix selector. Two Stats regressions cover all publication states and cap
+reasons, idle relays, repeated URLs and 32 x 2240 distinct destinations.
+All four quiet gates pass with four build jobs/test threads and worktree caches.
+Worker conformance passes 211/211 checks with no page errors; the delayed profile
+probe also passes. Gate logs are under ignored tmp/review-*.log.
+Docker remains excluded by the worktree-only write rule. Changes are uncommitted;
+no CI files, production systems, deployments or existing services were changed.

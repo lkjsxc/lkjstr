@@ -116,13 +116,31 @@ impl super::Network {
                 })
             })
             .collect();
-        select(
-            &candidates,
-            if matches!(q.source, Source::Channel | Source::Channels) {
-                24
-            } else {
-                2
-            },
-        )
+        let limit = if matches!(q.source, Source::Channel | Source::Channels) {
+            24
+        } else {
+            2
+        };
+        // A route owns page coverage and its cursor, even after EOSE. Keep it
+        // until the filter changes or the route is no longer configured for
+        // this query; quality observations must not discard that evidence.
+        // Explicit hints are appended by plan() and must not displace these slots.
+        let mut routes: Vec<_> = candidates
+            .iter()
+            .filter(|c| !q.filters.relay_hints.contains(&c.url))
+            .filter(|c| {
+                self.requests
+                    .values()
+                    .any(|r| r.relay == c.url && r.filter == *f)
+            })
+            .take(limit)
+            .map(|c| c.url.clone())
+            .collect();
+        for url in select(&candidates, limit) {
+            if routes.len() < limit && !routes.contains(&url) {
+                routes.push(url);
+            }
+        }
+        routes
     }
 }

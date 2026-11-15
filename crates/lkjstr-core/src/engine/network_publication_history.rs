@@ -11,6 +11,18 @@ pub(super) struct Record {
     #[serde(rename = "unresolvedRecipients")]
     unresolved_recipients: usize,
 }
+#[derive(Default, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PublicationStats {
+    pub publish_planned: usize,
+    pub publish_accepted: usize,
+    pub publish_failed: usize,
+    pub publish_pending: usize,
+    pub publish_skipped: usize,
+    pub publish_own_skipped: usize,
+    pub publish_inbox_skipped: usize,
+    pub publish_capacity_skipped: usize,
+}
 impl Network {
     pub fn published_routes(&self, id: &str) -> Vec<String> {
         self.publication_routes.get(id).cloned().unwrap_or_default()
@@ -84,22 +96,27 @@ impl Network {
     pub fn recent_publications(&self) -> Value {
         json!(self.publication_history)
     }
-    pub fn publication_relays(&self) -> BTreeSet<String> {
-        self.publication_history
-            .iter()
-            .flat_map(|r| r.deliveries.iter().map(|d| d.url.clone()))
-            .collect()
-    }
-    pub fn publication_stats(&self, url: &str) -> Value {
-        let ds: Vec<_> = self
-            .publication_history
-            .iter()
-            .flat_map(|r| &r.deliveries)
-            .filter(|d| d.url == url)
-            .collect();
-        let state = |s: &str| ds.iter().filter(|d| d.state == s).count();
-        let reason = |s: &str| ds.iter().filter(|d| d.reason.as_deref() == Some(s)).count();
-        json!({"publishPlanned":ds.len()-state("skipped"),"publishAccepted":state("accepted"),"publishFailed":state("rejected")+state("timeout"),"publishPending":state("pending"),"publishSkipped":state("skipped"),"publishOwnSkipped":reason("own-cap"),"publishInboxSkipped":reason("inbox-cap")+reason("person-cap"),"publishCapacitySkipped":reason("capacity")})
+    /// One pass over at most 32 x 2240 destinations, including skipped URLs.
+    pub fn publication_stats(&self) -> BTreeMap<&str, PublicationStats> {
+        let mut stats = BTreeMap::<&str, PublicationStats>::new();
+        for d in self.publication_history.iter().flat_map(|r| &r.deliveries) {
+            let row = stats.entry(d.url.as_str()).or_default();
+            row.publish_planned += usize::from(d.state != "skipped");
+            match d.state.as_str() {
+                "accepted" => row.publish_accepted += 1,
+                "rejected" | "timeout" => row.publish_failed += 1,
+                "pending" => row.publish_pending += 1,
+                "skipped" => row.publish_skipped += 1,
+                _ => {}
+            }
+            match d.reason.as_deref() {
+                Some("own-cap") => row.publish_own_skipped += 1,
+                Some("person-cap" | "inbox-cap") => row.publish_inbox_skipped += 1,
+                Some("capacity") => row.publish_capacity_skipped += 1,
+                _ => {}
+            }
+        }
+        stats
     }
     fn retain_routes(&mut self, id: String, routes: Vec<String>) {
         self.publication_route_order.retain(|old| old != &id);
@@ -152,48 +169,5 @@ impl Network {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    #[test]
-    fn discovered_routes_preserve_receipts_and_extend_durable_delete_destinations() {
-        let mut network = Network::default();
-        let destination = |url: &str, state: &str| Destination {
-            url: url.into(),
-            rule: "inbox".into(),
-            state: state.into(),
-            reason: (state == "skipped").then(|| "inbox-cap".into()),
-        };
-        let id = "a".repeat(64);
-        network.publication_history.push_back(Record {
-            id: id.clone(),
-            kind: 1,
-            at: 0,
-            unresolved_recipients: 0,
-            deliveries: vec![
-                destination("wss://accepted.test/", "accepted"),
-                destination("wss://skipped.test/", "skipped"),
-            ],
-        });
-        network.retain_routes(id.clone(), vec!["wss://accepted.test/".into()]);
-        network.extend_publication_history(
-            &id,
-            vec![
-                destination("wss://accepted.test/", "pending"),
-                destination("wss://skipped.test/", "pending"),
-                destination("wss://new.test/", "pending"),
-            ],
-        );
-        let rows = network.recent_publications();
-        assert_eq!(rows[0]["deliveries"][0]["state"], "accepted");
-        assert_eq!(rows[0]["deliveries"][1]["state"], "pending");
-        assert_eq!(rows[0]["deliveries"][2]["state"], "pending");
-        assert_eq!(network.published_routes(&id).len(), 3);
-        let mut restored = Network::default();
-        restored.restore_publication_routes(&network.publication_routes_json());
-        assert_eq!(
-            restored.published_routes(&id),
-            network.published_routes(&id)
-        );
-        assert_eq!(network.publication_revision, 1);
-    }
-}
+#[path = "network_publication_history_test.rs"]
+mod tests;

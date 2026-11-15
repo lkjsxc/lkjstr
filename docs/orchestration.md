@@ -55,9 +55,12 @@ outbox coverage, first-useful arrival share, EOSE latency, connection failures,
 rate-limit cooldown and authentication refusal. A neutral prior prevents small
 samples from dominating. A greedy marginal-coverage score values a first copy
 more than a second. Ordinary requests retain their two-route fanout and complete
-filters, preserving paging cursors and completion evidence. Channel requests
-retain their existing larger route fanout. Publication-only transports never
-become generic read routes. Explicit view hints retain their existing behavior.
+filters. Existing eligible routes stay fixed for an unchanged filter, including
+a completed page, so quality updates cannot discard coverage or cursors. New
+page filters rank afresh; changed read/search configuration still takes effect.
+Channel requests retain their existing larger route fanout. Publication-only
+transports never become generic read routes. Explicit view hints supplement
+ordinary routes without displacing their page evidence.
 
 Every saved device account, up to 32, requests kinds 0, 3, 10000, 10002 and 10063
 at startup independently of cached records or open account views. Successful
@@ -72,7 +75,9 @@ configured/discovery capacity. Profile batches cannot absorb owner refreshes.
 
 Existing per-relay event, duplicate, byte, subscription and latency observations
 remain. Additive optional publication fields count planned, accepted, failed,
-pending and excluded destinations over the last 32 publications. The UI adds
+pending and excluded destinations over the last 32 publications. Stats aggregates
+all destinations once into a URL-keyed map, including skipped candidates, and
+counts open subscriptions once before projecting relay rows. The UI adds
 three sortable numeric groups: accepted/planned, pending/failed and exclusions
 by own/inbox/capacity cap. A local horizontal table scroller preserves narrow
 views. Both string tables supply headings; no other view or CSS rhythm changes.

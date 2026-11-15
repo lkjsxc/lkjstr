@@ -147,7 +147,7 @@ fn expiry_never_sends_and_configuration_cannot_drop_pending_routes() {
     n.connected(&own[0], 30000);
     assert_eq!(sends(&mut n), 0);
     assert!(n.drain_output().iter().any(|o|matches!(o,Output::Result{deliveries,..} if deliveries.iter().all(|d|d.state=="timeout"))));
-    assert_eq!(n.publication_stats(&own[0])["publishFailed"], 1);
+    assert_eq!(n.publication_stats()[own[0].as_str()].publish_failed, 1);
 }
 #[test]
 fn no_destinations_is_honest_and_unsolicited_ack_cannot_succeed() {
