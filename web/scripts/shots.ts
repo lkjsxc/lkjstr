@@ -8,6 +8,11 @@ import { chromium, type Page } from 'playwright-core';
 import { looksShots } from './shots-looks.ts';
 
 const here = new URL('..', import.meta.url).pathname;
+process.env.TMPDIR ??= `${here}../tmp/temp`;
+process.env.XDG_CACHE_HOME ??= `${here}../tmp/cache`;
+process.env.XDG_CONFIG_HOME ??= `${here}../tmp/config`;
+process.env.XDG_DATA_HOME ??= `${here}../tmp/data`;
+mkdirSync(process.env.TMPDIR, { recursive: true });
 const out = process.env.LKJSTR_SHOTS_DIR ?? `${here}../tmp/screens`;
 const chrome =
   process.env.LKJSTR_CHROME ??
@@ -25,6 +30,7 @@ const SIZES = [
 ] as const;
 
 mkdirSync(out, { recursive: true });
+mkdirSync(`${here}../tmp/shots`, { recursive: true });
 const server = spawn(
   process.execPath,
   [`${here}scripts/serve.ts`, '--port=0', '--test-relay=ws://127.0.0.1:1'],
@@ -54,6 +60,7 @@ try {
           const ctx = await browser.newContext({
             viewport: { width, height },
             deviceScaleFactor: 1,
+            javaScriptEnabled: !name.startsWith('site-'),
             colorScheme: theme,
             locale: lang === 'ja' ? 'ja-JP' : 'en-US',
           });
@@ -82,10 +89,14 @@ try {
           page.on('pageerror', (e) => failed.push(`${name}-${tag}: ${e.message}`));
           try {
             await page.goto(`${base}${path}`);
-            await page.waitForSelector('.note');
+            await page.waitForSelector(name.startsWith('site-') ? 'article h1' : '.note');
             await act(page);
             await page.waitForTimeout(350); // pictures and fonts
-            await page.screenshot({ path: `${out}/${name}-${tag}.png` });
+            await page.screenshot({
+              path: name.startsWith('site-')
+                ? `${here}../tmp/shots/${name}-${width}-${lang}.png`
+                : `${out}/${name}-${tag}.png`,
+            });
             if ((name === 'tabsearch' || name.startsWith('looks-')) && lang === 'en')
               await page.screenshot({ path: `${out}/${name}-${width}-${theme}.png` });
           } catch (e) {
@@ -101,6 +112,12 @@ try {
           await page.locator('.ncard > b').getByText(word, { exact: true }).first().click();
           await page.waitForSelector(`.view[data-kind="${kind}"] > *`);
         };
+        if (theme === 'dark' && (width === 1440 || width === 390))
+          for (const id of ['about', 'features', 'guide'])
+            await scene(`site-${id}`, `/${lang}/${id}.html`, async (page) => {
+              if (await page.evaluate(() => document.documentElement.scrollWidth > innerWidth))
+                throw new Error('horizontal overflow');
+            });
         await looksShots(scene, lang === 'ja' ? '統計' : 'Stats');
         for (const [name, url] of [
           ['news', 'https://news.example/picture'],

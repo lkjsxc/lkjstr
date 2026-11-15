@@ -108,3 +108,12 @@ bounded cache directory. The edge overwrites X-Real-IP with the real client
 address, disables access and error logs for these routes, and retains the
 site security headers. Do not cache preview JSON in shared HTTP caches.
 No new CORS origin, iframe policy, script permission or cookie is required.
+
+## Public documents
+
+Serve /en/*.html and /ja/*.html as text/html, /sitemap.xml as application/xml,
+and /robots.txt as text/plain. Public HTML, site.css and discovery files
+revalidate with no-cache, like privacy.html. Keep these concrete paths ahead
+of any app fallback. Sitemap timestamps come from the frontend build time.
+The root dist check requires the seven bilingual page pairs and their shared
+assets. No ops deployment verification list exists in this checkout.

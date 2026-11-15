@@ -198,3 +198,11 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
 Every visible string comes from the two tables in `web/src/shared/`. Japanese is written as Japanese, with no space before particles after a
 name. Searching views works in both languages. `pnpm shots` in `web/` writes every scene at 1440, 1024 and 390, in both themes and languages, to
 `tmp/screens/`: judge a visual change there (a host without Japanese fonts shows names in the wrong weight).
+
+## Public documentation
+
+The script-free English and Japanese pages at /en/*.html and /ja/*.html use
+the same paper, background, ink and action tokens. A plain header offers the
+name, a language switch and Open lkjstr. Navigation wraps at phone width; prose
+keeps a readable measure. System light/dark preference chooses the palette.
+The app remains at /; the public pages never replace its workspace.

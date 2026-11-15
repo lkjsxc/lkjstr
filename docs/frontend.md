@@ -31,7 +31,7 @@ test double. The Rust/WASM engine replaces it at build time with
 | `src/views/` | One file per kind of tab or piece of one; `registry.ts` lists the kinds |
 | `src/shared/` | `h`, signals, settings, storage, i18n and the two string tables, key table, formats, icons |
 | `src/ui/*.css` | All styles: `ui.css` (frame, WM), `notes.css`, `views.css`, `people.css`, `pages.css` |
-| `src/static/privacy.html` | The static privacy policy page |
+| `src/static/` | Static privacy policy and public-page stylesheet |
 | `scripts/` | `build.ts`, `serve.ts`, `check.ts`, `smoke.ts`, `shots.ts` |
 | `tests/` | vitest: layout, words, keys, formats, undo, the mock engine |
 
@@ -154,3 +154,16 @@ web/ is the only interface. The Rust Worker lives in
 crates/lkjstr-engine-worker; the root Cargo.toml is a virtual workspace.
 Root pnpm build and quiet release gates build this frontend with that Worker.
 workspace.md describes historical layout behavior; design.md describes web/.
+
+## Public pages
+
+Build-time scripts/site.ts emits seven page pairs at /en/*.html and /ja/*.html,
+sitemap.xml with build-time lastmod values, and robots.txt. Public copy lives in
+the paired site-words-en.ts and site-words-ja.ts tables. Shared About, Docs prose
+and shortcuts come from the app string tables and key definitions. The shared
+card image is icon-512.png. No reading script or new dependency is needed.
+
+The About page of Docs links to every public page and the static privacy policy.
+The app shell supplies crawler metadata and bilingual noscript links.
+Run pnpm shots -- --scenes=site-about,site-features,site-guide for dark shots at
+1440 and 390 pixels in tmp/shots/site-{about,features,guide}-{1440,390}-{en,ja}.png.

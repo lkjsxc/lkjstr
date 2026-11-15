@@ -532,4 +532,11 @@ export const en = {
   'error.upload-payment': 'This server requires payment. Choose another server.',
   'error.upload-response': 'The server refused the file or returned an unreadable answer.',
   'error.upload-discovery': 'The upload address could not be found. Choose another server.',
+  'site.about': 'About',
+  'site.features': 'Features',
+  'site.guide': 'Getting started',
+  'site.shortcuts': 'Shortcuts',
+  'site.faq': 'FAQ',
+  'site.nips': 'Supported NIPs',
+  'site.changelog': 'Changelog',
 };
