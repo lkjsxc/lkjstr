@@ -312,7 +312,7 @@ async function run(browser: Browser): Promise<void> {
     'posting reports each relay',
     (await page.locator('.cresult').first().innerText()).includes('down.example.net'),
   );
-  await page.locator('.acct').click();
+  await page.locator('.brand').click();
   await page.locator('.menu button', { hasText: 'Settings' }).click();
   const size = page.locator('.sitem:has-text("Text size") input');
   await size.fill('19');
@@ -982,9 +982,26 @@ async function pages(browser: Browser, still: Record<string, unknown>): Promise<
 
   // Relays shows state and edits nothing; the list is edited in Settings, one press away.
   const menu = async (label: string): Promise<void> => {
-    await page.locator('.acct').click();
+    await page.locator('.brand').click();
     await page.locator('.menu button', { hasText: label }).click();
   };
+  // The account menu holds only what is the reader's own: their profile first, then the Accounts tab.
+  await page.locator('.acct').click();
+  const own = await page.locator('.menu button').allInnerTexts();
+  fact(
+    'the account menu: own profile, then Accounts; nothing reachable elsewhere',
+    (own[0] ?? '').includes('Profile') &&
+      own.at(-1) === 'Accounts' &&
+      !own.some((x) => /Settings|Relays|Shortcuts|About/.test(x)),
+    own,
+  );
+  await page.locator('.menu button').first().click();
+  await page.locator('.pane.cur .tab.active[data-view^="profile"]').waitFor();
+  fact(
+    'the menu’s own row opens the reader’s profile',
+    (await count(page, '.pane.cur .view[data-kind="profile"] .profile .pbtns .btn')) === 0,
+  );
+  await page.keyboard.press('Escape');
   await menu('Relays');
   const rv = '.view[data-kind="relays"]';
   await page.locator(`${rv} .rrow`).first().waitFor();
