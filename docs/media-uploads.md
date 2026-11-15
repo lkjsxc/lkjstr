@@ -19,14 +19,19 @@ complete. A retry reads a fresh ArrayBuffer from the retained File because the
 previous buffer was transferred to the Worker.
 
 The Worker tries the first server in the owner's list without a fresh required-
-request failure, in list order. The signed event size bounds this candidate list. A failed required request permits
-trying the next; an explicit retry destination stays fixed. Settings and the
-composer picker share the same session evidence. Unknown/checking rows are muted
+request failure, in list order. The signed event size bounds this candidate
+list. A failed required request permits
+trying the next; an explicit retry destination stays fixed. Fallback uses only
+the current attempt; signer failures stop even when another attachment marks
+the same destination down. If every destination is down, the first configured
+server and its failure are returned; an empty owner list alone is not-found.
+Settings and the composer picker share the same session evidence. Unknown/checking rows are muted
 and show their known protocol or Not confirmed. A failure shows Not answering,
 its translated upload reason and a row Retry. Success clears the failure at once.
 Verdicts are never persisted or restored. Retry checks required NIP-96 discovery
 or optional BUD-06 HEAD /upload; an unsupported/failed optional HEAD stays unknown.
-No root GET, favicon or short health deadline decides the mark.
+No root GET, favicon or short health deadline decides the mark. Failed protocol
+discovery preserves the known protocol; only success can replace it.
 The defaults and Settings choices are blossom.band, blossom.primal.net,
 nostr.build and nostrcheck.me, in that order. An explicit empty owner list remains
 empty in the engine. Changing a retry destination does not publish a server list.
@@ -48,8 +53,11 @@ Uploads share a 30-second abort deadline for headers and response bodies,
 with a 64 KiB response limit; required discovery and processing GETs also
 allow 30 seconds. Discovery follows at most two documents. Deferred NIP-96
 processing polls at most six times, with one-second pauses and bounded HTTP.
-The page also settles lost upload replies after 300 seconds. View disposal
-releases the server-list subscription; HTTP timers and remote sockets have
+One monotonic 285-second Worker deadline starts when the action arrives and covers all
+lookup, signer, HTTP, processing and fallback waits. Each wait is capped by the
+remaining budget; expiry stops fallback and late signing replies are discarded.
+The page settles lost replies after 300 seconds, leaving 15 seconds for dispatch.
+View disposal releases the server-list subscription; HTTP timers and remote sockets have
 settlement cleanup. Cancellation remains outside the contract.
 
 ## Evidence

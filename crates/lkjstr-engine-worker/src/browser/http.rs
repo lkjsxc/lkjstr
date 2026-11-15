@@ -10,7 +10,7 @@ pub async fn get(
     accept: &str,
     max: usize,
 ) -> Result<lkjstr_nips::identity::HttpResponse, JsValue> {
-    request_for(url, accept, max, "GET", (None, None, None), 10).await
+    request_for(url, accept, max, "GET", (None, None, None), 10_000).await
 }
 pub async fn request(
     url: &str,
@@ -21,18 +21,15 @@ pub async fn request(
     mime: Option<&str>,
     auth: Option<&str>,
 ) -> Result<lkjstr_nips::identity::HttpResponse, JsValue> {
-    request_for(url, accept, max, method, (body, mime, auth), 30).await
+    request_for(url, accept, max, method, (body, mime, auth), 30_000).await
 }
-pub async fn upload_get(url: &str) -> Result<lkjstr_nips::identity::HttpResponse, JsValue> {
-    request(url, "application/json", 65536, "GET", None, None, None).await
-}
-async fn request_for(
+pub async fn request_for(
     url: &str,
     accept: &str,
     max: usize,
     method: &str,
     (body, mime, auth): (Option<&JsValue>, Option<&str>, Option<&str>),
-    seconds: u32,
+    ms: u32,
 ) -> Result<lkjstr_nips::identity::HttpResponse, JsValue> {
     let abort = AbortController::new()?;
     let options = RequestInit::new();
@@ -51,16 +48,15 @@ async fn request_for(
         request.headers().set("Authorization", auth)?;
     }
     let cancel = abort.clone();
-    let _timer = Timer::after(seconds * 1000, move || cancel.abort())?;
+    let _timer = Timer::after(ms, move || cancel.abort())?;
     let global = js_sys::global();
     let fetch: js_sys::Function = js_sys::Reflect::get(&global, &"fetch".into())?.dyn_into()?;
     let pending: js_sys::Promise = fetch.call1(&global, &request)?.dyn_into()?;
     let cancel = abort.clone();
-    let response: Response = promise::bounded(pending, seconds.into(), "http-timeout", move || {
-        cancel.abort()
-    })
-    .await?
-    .dyn_into()?;
+    let response: Response =
+        promise::bounded_ms(pending, ms, "http-timeout", move || cancel.abort())
+            .await?
+            .dyn_into()?;
     if method == "HEAD" {
         return Ok(lkjstr_nips::identity::HttpResponse {
             status: response.status(),

@@ -115,7 +115,8 @@ Implemented:
   local session credentials.
 - Blossom and NIP-96 uploads support every signer, bounded waits and retained retries.
   Session-only marks and ordered selection use required-request evidence; optional
-  BUD-06 failures stay unknown. Bounds and evidence: [media-uploads.md](media-uploads.md).
+  BUD-06 failures stay unknown. One aggregate deadline bounds all fallback; failed
+  discovery retains the known protocol. Bounds and evidence: [media-uploads.md](media-uploads.md).
 - Public follow/mute/bookmark/profile/relay/server actions; public people-list
   addresses and naddr resolution; notification types, grouping and persisted
   seen watermarks. Local-key NIP-44 private people/bookmark/mute entries can be
@@ -136,8 +137,7 @@ Implemented:
 
 ## Mock answers not yet fully implemented
 
-No current top-level mock message or action name is entirely unhandled. These
-variants of messages the mock answers remain incomplete:
+No top-level message/action is entirely unhandled. Incomplete variants:
 
 - open/list, open/mutes and open/bookmarks: extension/remote private-list
   decryption and encrypted-entry editing. A decrypt capability for NIP-07 is

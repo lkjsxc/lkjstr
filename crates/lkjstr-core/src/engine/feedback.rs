@@ -30,6 +30,15 @@ impl Engine {
         evidence: ServerEvidence<'_>,
     ) -> u64 {
         use ServerEvidence::*;
+        // Failure cannot establish a new protocol (including failed discovery).
+        let protocol = if matches!(evidence, Required(Err(_))) {
+            self.server_row(url)["protocol"]
+                .as_str()
+                .unwrap_or("unknown")
+                .to_owned()
+        } else {
+            protocol.into()
+        };
         let (ok, error) = match evidence {
             Checking | Optional(false) => (None, None),
             Optional(true) | Required(Ok(())) => (Some(true), None),
@@ -46,7 +55,7 @@ impl Engine {
         self.servers.insert(
             url.into(),
             ServerVerdict {
-                protocol: protocol.into(),
+                protocol,
                 generation: self.server_revision,
                 ok,
                 error,
@@ -76,11 +85,26 @@ impl Engine {
         row
     }
     /// Try unknowns in list order; only fresh required-request failures are skipped.
-    pub fn upload_candidates(&self, account: &str) -> Vec<String> {
-        self.upload_servers(account)
-            .into_iter()
-            .filter(|url| !self.servers.get(url).is_some_and(|v| v.ok == Some(false)))
-            .collect()
+    pub fn upload_candidates(
+        &self,
+        account: &str,
+    ) -> Result<Vec<String>, super::upload::Unavailable> {
+        let servers = self.upload_servers(account);
+        let candidates: Vec<_> = servers
+            .iter()
+            .filter(|url| !self.servers.get(*url).is_some_and(|v| v.ok == Some(false)))
+            .cloned()
+            .collect();
+        if !candidates.is_empty() {
+            return Ok(candidates);
+        }
+        let server = servers.first().cloned();
+        let code = server
+            .as_ref()
+            .and_then(|s| self.servers.get(s))
+            .and_then(|v| v.error.clone())
+            .unwrap_or_else(|| "not-found".into());
+        Err(super::upload::Unavailable { code, server })
     }
     pub fn upload_is_nip96(&self, server: &str) -> bool {
         server.trim_end_matches('/') == MEDIA_SERVERS[2]

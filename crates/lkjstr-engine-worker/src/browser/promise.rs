@@ -9,21 +9,32 @@ pub async fn bounded(
     message: &'static str,
     cancel: impl FnOnce() + 'static,
 ) -> Result<JsValue, JsValue> {
+    bounded_ms(
+        work,
+        seconds.saturating_mul(1000).min(u32::MAX as u64) as u32,
+        message,
+        cancel,
+    )
+    .await
+}
+pub async fn bounded_ms(
+    work: Promise,
+    ms: u32,
+    message: &'static str,
+    cancel: impl FnOnce() + 'static,
+) -> Result<JsValue, JsValue> {
     let mut timer = None;
     let mut cancel = Some(cancel);
     let deadline = Promise::new(&mut |_, reject| {
         let reject = reject.clone();
         let mut cancel = cancel.take();
         let fail = reject.clone();
-        timer = Timer::after(
-            seconds.saturating_mul(1000).min(u32::MAX as u64) as u32,
-            move || {
-                if let Some(cancel) = cancel.take() {
-                    cancel();
-                }
-                let _ = reject.call1(&JsValue::NULL, &message.into());
-            },
-        )
+        timer = Timer::after(ms, move || {
+            if let Some(cancel) = cancel.take() {
+                cancel();
+            }
+            let _ = reject.call1(&JsValue::NULL, &message.into());
+        })
         .ok();
         if timer.is_none() {
             let _ = reject_timer_failure(&fail);

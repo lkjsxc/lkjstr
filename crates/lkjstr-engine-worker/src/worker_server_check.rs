@@ -27,7 +27,11 @@ pub(in crate::worker) fn pump(host: &Rc<RefCell<Host>>) {
             let (protocol, evidence) = if protocol == "nip96" {
                 (
                     protocol,
-                    ServerEvidence::Required(http::discover(&server).await.map(|_| ())),
+                    ServerEvidence::Required(
+                        http::discover(&server, Deadline::new(clock()))
+                            .await
+                            .map(|_| ()),
+                    ),
                 )
             } else {
                 let endpoint =

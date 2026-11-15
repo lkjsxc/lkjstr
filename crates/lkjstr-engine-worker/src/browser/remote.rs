@@ -16,6 +16,14 @@ pub async fn rpc(
     method: &str,
     params: Vec<String>,
 ) -> Result<String, &'static str> {
+    rpc_for(remote, method, params, 60_000).await
+}
+pub async fn rpc_for(
+    remote: &Remote,
+    method: &str,
+    params: Vec<String>,
+    ms: u32,
+) -> Result<String, &'static str> {
     let id = lkjstr_protocol::upload::hash(lkjstr_protocol::generate_secret_key().as_bytes());
     let event = remote
         .request(&id, method, params, js_sys::Date::now() as u64 / 1000)
@@ -83,7 +91,7 @@ pub async fn rpc(
             }
         }
     });
-    let result = promise::bounded(done, 60, "signer-missing", || {}).await;
+    let result = promise::bounded_ms(done, ms, "signer-missing", || {}).await;
     for slot in slots.borrow_mut().drain(..) {
         slot.borrow_mut().take();
     }

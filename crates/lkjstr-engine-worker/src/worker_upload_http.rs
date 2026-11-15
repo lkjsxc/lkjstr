@@ -1,9 +1,11 @@
 //! Upload transport; no implicit redirect, unbounded poll or unbounded response.
+use super::clock;
+use lkjstr_core::engine::upload::Deadline;
 use lkjstr_nips::identity::HttpResponse;
 use wasm_bindgen::JsValue;
 fn failure(error: JsValue) -> &'static str {
     match error.as_string().as_deref() {
-        Some("http-timeout") => "upload-timeout",
+        Some("http-timeout" | "upload-timeout") => "upload-timeout",
         Some("body-limit" | "invalid-utf8" | "empty-body") => "upload-response",
         _ if js_sys::Reflect::get(&error, &"name".into())
             .ok()
@@ -25,14 +27,12 @@ pub(super) fn status(status: u16) -> Result<(), &'static str> {
         _ => Err("upload-response"),
     }
 }
-pub(super) async fn discover(server: &str) -> Result<String, &'static str> {
+pub(super) async fn discover(server: &str, deadline: Deadline) -> Result<String, &'static str> {
     let mut server = server.to_owned();
     // NIP-96 permits delegation; cap the chain at two documents.
     for _ in 0..2 {
         let url = lkjstr_protocol::nip96_discovery_url(&server).ok_or("upload-discovery")?;
-        let response = crate::browser::http::upload_get(&url)
-            .await
-            .map_err(failure)?;
+        let response = get(&url, deadline).await.map_err(failure)?;
         if response.status != 200 {
             return Err("upload-discovery");
         }
@@ -58,6 +58,7 @@ pub(super) async fn send(
     mime: &str,
     bytes: &[u8],
     blossom: bool,
+    deadline: Deadline,
 ) -> Result<HttpResponse, &'static str> {
     let data = js_sys::Uint8Array::from(bytes);
     let body: JsValue = if blossom {
@@ -74,19 +75,22 @@ pub(super) async fn send(
             .map_err(|_| "internal")?;
         form.into()
     };
-    crate::browser::http::request(
+    crate::browser::http::request_for(
         endpoint,
         "application/json",
         65536,
         lkjstr_protocol::upload::method(blossom),
-        Some(&body),
-        if blossom { Some(mime) } else { None },
-        Some(auth),
+        (
+            Some(&body),
+            if blossom { Some(mime) } else { None },
+            Some(auth),
+        ),
+        deadline.wait(clock(), 30_000)?,
     )
     .await
     .map_err(failure)
 }
-pub(super) async fn processed(body: &str) -> Result<String, &'static str> {
+pub(super) async fn processed(body: &str, deadline: Deadline) -> Result<String, &'static str> {
     // A 202 may already contain usable final metadata (NIP-96 delayed processing).
     let value: serde_json::Value = serde_json::from_str(body).map_err(|_| "upload-response")?;
     if value["status"] == "success" && value["nip94_event"].is_object() {
@@ -97,12 +101,10 @@ pub(super) async fn processed(body: &str) -> Result<String, &'static str> {
         .filter(|u| lkjstr_core::engine::settings::valid_server(u))
         .ok_or("upload-response")?;
     for _ in 0..6 {
-        crate::browser::promise::pause(1000)
+        crate::browser::promise::pause(deadline.wait(clock(), 1000)?)
             .await
             .map_err(|_| "internal")?;
-        let response = crate::browser::http::upload_get(url)
-            .await
-            .map_err(failure)?;
+        let response = get(url, deadline).await.map_err(failure)?;
         status(response.status)?;
         let value: serde_json::Value =
             serde_json::from_str(&response.body).map_err(|_| "upload-response")?;
@@ -114,4 +116,17 @@ pub(super) async fn processed(body: &str) -> Result<String, &'static str> {
         }
     }
     Err("upload-timeout")
+}
+
+async fn get(url: &str, deadline: Deadline) -> Result<HttpResponse, JsValue> {
+    let ms = deadline.wait(clock(), 30_000).map_err(JsValue::from_str)?;
+    crate::browser::http::request_for(
+        url,
+        "application/json",
+        65536,
+        "GET",
+        (None, None, None),
+        ms,
+    )
+    .await
 }

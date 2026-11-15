@@ -5,6 +5,7 @@ import { fallback } from './engine-fallback.mjs';
 import { coldStart } from './engine-cold-start.mjs';
 import { ownerRelays, localDiscovery, continuity } from './engine-feedback.mjs';
 import { conformance } from './engine-conformance.mjs';
+import { uploadReview } from './engine-upload-review.mjs';
 import { rich } from './engine-rich.mjs';
 import { createServer } from 'node:http';
 import { readFile, writeFile, readdir, mkdir } from 'node:fs/promises';
@@ -17,7 +18,7 @@ import { spawn } from 'node:child_process';
 import { createInterface } from 'node:readline';
 const root = resolve('tmp/engine-pkg'), out = resolve('tmp/engine-harness');
 await mkdir(out, { recursive: true });
-const boot = `import init,{start} from './lkjstr_engine.js'; const queued=[];self.onmessage=e=>queued.push(e);await init(); self.engineHandle=start();const input=self.onmessage;self.onmessage=e=>{if(e.data.t==='test.advance')self.engineHandle.advance_time(e.data.ms);else if(e.data.t==='test.relays')self.engineHandle.set_test_relays(e.data.relays);else input(e);};for(const e of queued)self.onmessage(e);`;
+const boot = `let uploadClock=0;const realNow=performance.now.bind(performance);Object.defineProperty(performance,'now',{value:()=>realNow()+uploadClock});import init,{start} from './lkjstr_engine.js'; const queued=[];self.onmessage=e=>queued.push(e);await init(); self.engineHandle=start();const input=self.onmessage;self.onmessage=e=>{if(e.data.t==='test.uploadClock')uploadClock=e.data.ms;else if(e.data.t==='test.advance')self.engineHandle.advance_time(e.data.ms);else if(e.data.t==='test.relays')self.engineHandle.set_test_relays(e.data.relays);else input(e);};for(const e of queued)self.onmessage(e);`;
 const server = createServer(async (req, res) => {
   const path = new URL(req.url, 'http://x').pathname;
   if (path === '/') return res.writeHead(200, {'content-type':'text/html'}).end('<!doctype html><title>Engine harness</title>');
@@ -170,6 +171,7 @@ try {
   fake.setReading(true);
   await ownerRelays({page,send,wait,check,note,signer,lines,fake,origin});
   await conformance({page,send,wait,check,note,signer,lines,origin,bunkerKey,bunker,fake,channelFake});
+  await uploadReview({page,send,wait,check,note,signer,lines});
   await rich({page,send,wait,check,note,signer,lines,fake});
   validateReplies(await page.evaluate(()=>window.messages));
   check('protocol 4 replies satisfy the frontend contract',true);

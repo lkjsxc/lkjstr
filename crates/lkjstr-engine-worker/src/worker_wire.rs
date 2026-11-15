@@ -94,6 +94,7 @@ impl Host {
                     return;
                 }
                 self.upload_tasks.push(uploads::Task {
+                    deadline: lkjstr_core::engine::upload::Deadline::new(uploads::clock()),
                     id,
                     req,
                     account,

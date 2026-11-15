@@ -26,6 +26,7 @@ mod row_media;
 mod row_model;
 pub mod rows;
 pub mod settings;
+pub mod upload;
 mod wants;
 mod windows;
 pub mod wire;

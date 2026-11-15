@@ -174,3 +174,17 @@ tmp/shots/servers-{1440,390}-dark.png. Public fresh/ca2b23fd profile samples sho
 all four current defaults answering after successful upload; details and files
 are in ignored tmp/upload-report.md. Docker is excluded by the worktree-only
 write rule. No commits, CI edits, deployments or existing-service operations.
+
+## Upload branch review (2026-11-15)
+
+All four findings are fixed. Seven native upload policy tests include regressions
+for the aggregate budget, protocol retention, concurrent verdicts and exhausted
+selection versus an empty list. Worker conformance passes 224/224 checks with
+zero page errors, including 12 new upload checks. Its monotonic test clock proves
+HTTP, discovery, signing and processing share one budget; a late signer reply
+cannot resume an expired upload. Restored Blossom endpoints recover through both
+row checks and explicit retries. The delayed profile probe also passes.
+All four quiet gates and frontend check/build/smoke/smoke:real pass. The ordinary
+smoke includes 128 real upload checks; the full real smoke has zero page errors.
+Docker is excluded by the worktree-only write rule. Changes remain uncommitted;
+no CI edits, production access, deployments or existing-service changes occurred.
