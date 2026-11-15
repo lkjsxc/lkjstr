@@ -19,6 +19,7 @@ impl Store {
         }
         self.verified_nip05.insert(pubkey.into(), claimed.into());
         self.revision += 1;
+        self.snapshot_revision = self.revision;
         true
     }
 }
@@ -49,6 +50,7 @@ impl super::Store {
         }
         self.query_names.insert(name.into(), key);
         self.revision = self.revision.wrapping_add(1);
+        self.snapshot_revision = self.revision;
         true
     }
 }

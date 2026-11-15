@@ -87,7 +87,11 @@ impl Session {
         let revision = e.store.revision();
         let month = month_start(now / 1000);
         let index = self.timelines.entry(sub.clone()).or_default();
-        if index.revision != revision || index.month != month {
+        if (index.done && index.revision != revision)
+            || e.store.snapshot_revision() > index.revision
+            || index.month != month
+            || (index.supported && !eligible(&q, e))
+        {
             let last = index.last.take();
             let previous = if index.done {
                 std::mem::take(&mut index.keys)
@@ -111,7 +115,8 @@ impl Session {
             let batch = e.store.scan(index.cursor.as_ref(), 256);
             for event in &batch {
                 index.cursor = Some((event.created_at, event.id.clone()));
-                if query::signed_out(&q)
+                if !e.store.existed_at(&event.id, index.revision)
+                    || query::signed_out(&q)
                     || !query::accepts(&e.store, &q, event, &filter, &authors)
                     || query::hidden_with_lists(&e.store, &q, event, &e.private_lists).is_some_and(
                         |reason| {
@@ -147,12 +152,6 @@ impl Session {
             }
             if batch.len() < 256 {
                 index.done = true;
-            }
-            // Do not publish an inconsistent snapshot after deletion, mute, replacement or ingestion.
-            if index.done && index.revision != revision {
-                index.started = 0;
-                index.done = false;
-                return vec![];
             }
         }
         if !index.done {

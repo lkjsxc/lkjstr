@@ -22,6 +22,8 @@ with a month and note ordinal. The existing keeper restores anchors and
 relative offsets. A jump leaves one return place; returning consumes it.
 Home/End address the newest/oldest cached notes. The held label uses actual
 finished row times and the existing scrub wording after the target arrives.
+Loaded and unloaded jumps both retain the original row and offset. Home/End
+belong to an open popover until it closes.
 
 The sticky holder moves with its view when the WM reparents tiles. Width is
 reserved before marks arrive: 56px at 520px tile width, otherwise 16px.
@@ -36,12 +38,16 @@ the lower marks. Scrolling to the local end keeps the existing history path.
 `wire/timeline.rs` walks the store's ordered time index, 256 events per
 client Worker turn, round robin across visible subscriptions. Hidden clients
 pause this work; close/detach releases the session index. Counts debounce for
-100ms, compare store revisions, and discard inconsistent scans. Matching
+100ms and scan a fixed insertion-generation cutoff, so live or backfilled
+arrivals join the next scan without restarting partial work. Deletions,
+metadata/filter changes and late repost targets invalidate partial scans. Matching
 reuses the ordinary window predicate, including rich filters and mutes.
 There are at most 128 queries per client and 32 clients. Each query retains
 at most two store-sized key maps and one store-sized ordinal lookup. A prior
 finished map remains seekable while its replacement is built. The actual
 store remains bounded at 16000 regular plus 4000 replaceable events.
+The shared store retains one generation per event, released on removal;
+snapshots do not clone events or the store and keep the 256-event slice bound.
 
 Candidate selection no longer truncates ordinary notes at 6000, allowing
 seeks to reach every retained match. UI windows retain the existing 800-row
@@ -92,3 +98,13 @@ as `tmp/real-smoke-1-report.json` and `tmp/real-smoke-2-report.json`.
 Docker is excluded by the worktree-only write rule. No CI, deployment,
 production access, commit or existing-service changes were made. Source
 changes remain uncommitted, so the worktree is intentionally modified.
+
+Review follow-up adds three native regressions for continuous live/backfilled
+ingestion, deletion/mute invalidation and late repost resolution. Five UI cases
+cover loaded click/drag and Home/End returns with the original offset, plus
+popover keyboard ownership. All four quiet gates and frontend check/build/smoke
+pass; the Home screenshot was reviewed. Worker conformance passes 216/216 and
+the delayed profile probe passes. Real UI smoke passes 86/86 on an isolated
+retry with no page errors; the first run timed out on a detached account-removal
+button after its rail checks passed. Logs: tmp/review-real-smoke.log and
+tmp/review-real-smoke-retry.log. Docker remains excluded by the worktree rule.

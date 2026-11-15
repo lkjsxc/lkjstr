@@ -9,6 +9,7 @@ mod identity;
 mod profile;
 mod query;
 mod retention;
+mod snapshot;
 
 pub use profile::Profile;
 pub use query::Query;
@@ -51,6 +52,9 @@ pub struct Store {
     cap: usize,
     replaceable_cap: usize,
     revision: u64,
+    // One generation per retained event; removed together with its event.
+    generations: HashMap<String, u64>,
+    snapshot_revision: u64,
     evictions: u64,
     payload_bytes: usize,
     byte_cap: usize,
@@ -79,15 +83,12 @@ impl Store {
             cap,
             replaceable_cap,
             revision: 0,
+            generations: HashMap::new(),
+            snapshot_revision: 0,
             evictions: 0,
             payload_bytes: 0,
             byte_cap: 64 * 1024 * 1024,
         }
-    }
-
-    /// Increases on every visible change; views re-query when it moves.
-    pub fn revision(&self) -> u64 {
-        self.revision
     }
 
     /// Retention losses can leave additional persisted history outside this store.
@@ -159,6 +160,7 @@ impl Store {
         if let Some(relay) = relay {
             self.note_relay(&event.id, relay);
         }
+        self.record_insert(&event);
         self.index(Arc::new(event));
         self.revision += 1;
         self.evict();
@@ -199,6 +201,8 @@ impl Store {
         let Some(event) = self.events.remove(id) else {
             return;
         };
+        self.generations.remove(id);
+        self.snapshot_revision = self.revision;
         self.payload_bytes = self
             .payload_bytes
             .saturating_sub(event_payload_bytes(&event));

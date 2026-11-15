@@ -2,6 +2,7 @@
 import type { Anchor, Row, Timeline } from '../engine/protocol.ts';
 import { h } from '../shared/h.ts';
 import { typing } from '../shared/keys.ts';
+import { popoverOpen } from '../wm/menus.ts';
 import type { Keeper, Place } from './feed-place.ts';
 import { rowTime, scrubText } from './feed-scrub.ts';
 import { noteToPlace, placeToNote, type TimePlace, timeMarks, timeScale } from './time-scale.ts';
@@ -145,12 +146,12 @@ export function mountTimeRail(o: {
     if (!frame) frame = requestAnimationFrame(paint);
   };
   const go = (p: TimePlace): void => {
+    if (!returning) back = held ? origin : current();
     if (scrollTo(p)) {
       pending = undefined;
       sync();
       return;
     }
-    if (!returning) back = held ? origin : current();
     pending = p;
     pendingVersion = windowVersion;
     o.seek({ ...p, returnKey: back?.place.key });
@@ -211,6 +212,7 @@ export function mountTimeRail(o: {
       rail.hidden ||
       !data?.supported ||
       !o.active() ||
+      popoverOpen() ||
       typing(e) ||
       e.defaultPrevented ||
       e.altKey ||

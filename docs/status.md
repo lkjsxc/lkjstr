@@ -92,10 +92,10 @@ two duplicates. Ten examples and owner decisions: [engine-polish.md](engine-poli
 ## Engine contract (2026-11-14)
 
 The engine mirrors frontend protocol.ts, currently protocol 5, including
-cache-wide [time rails](time-rail.md), month counts and ordinal window seeks.
+cache-wide [time rails](time-rail.md), month counts and ordinal window seeks;
+bounded generation snapshots progress during live ingestion and reject changed membership.
 Earlier additions include key discovery, relay configuration, heartbeat,
-detach/reconnect and quote errors. The Worker conformance gate derives its
-validators from that contract and drives each current mock message, action
+detach/reconnect and quote errors. Conformance validators drive each mock message, action
 and source. Shape conformance does not establish every semantic variant.
 
 Implemented:
