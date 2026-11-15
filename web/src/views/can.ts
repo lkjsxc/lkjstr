@@ -2,7 +2,8 @@
 // that is only a public key both read everything; the controls that would publish are drawn off, and a press on
 // one says why and offers the way forward instead of failing afterwards.
 import type { Engine } from '../engine/client.ts';
-import { t } from '../shared/i18n.ts';
+import type { Failure } from '../engine/protocol.ts';
+import { type Key, t } from '../shared/i18n.ts';
 import { toast } from './parts.ts';
 import type { ViewEnv } from './registry.ts';
 
@@ -19,6 +20,10 @@ export function ability(engine: Engine): Ability {
 /** The engine understands the whole filter query, the people to keep, notifications in a timeline and the kinds
  * of a profile (protocol 3). Controls it cannot serve are not drawn. */
 export const rich = (engine: Engine): boolean => (engine.info.get()?.version ?? 0) >= 3;
+
+/** Why an action failed, in words, with what came from outside (a relay, a server, the signer). */
+export const failureText = (e: Failure | undefined): string =>
+  `${t(`error.${e?.code ?? 'internal'}` as Key)}${e?.message ? `: ${e.message}` : ''}`;
 
 /** The reason in words, with the way to the accounts. */
 export function denied(env: ViewEnv, why: Exclude<Ability, 'ok'>): void {

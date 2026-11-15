@@ -5,9 +5,12 @@ import type { SettingsStore } from '../shared/settings.ts';
 import type { Disposer, Signal } from '../shared/signal.ts';
 import type { MenuItem } from '../wm/menus.ts';
 import { mountAccount } from './account.ts';
+import { CHANNELS_SINCE } from './channel-parts.ts';
+import { mountChannels } from './channels.ts';
 import { mountCompose } from './compose.ts';
 import { mountDocs } from './docs.ts';
 import { mountFeed } from './feed.ts';
+import { gated } from './gated.ts';
 import { mountMedia } from './media.ts';
 import { mountRelays } from './relays.ts';
 import { mountSettings } from './settings.ts';
@@ -50,6 +53,8 @@ export type ViewDef = {
   readonly launch: boolean;
   /** Extra words the New tab page's filter matches. */
   readonly aliases?: string;
+  /** The protocol version the engine must speak for this view to be offered. */
+  readonly since?: number;
   readonly mount: (el: HTMLElement, env: ViewEnv) => Disposer;
 };
 
@@ -73,6 +78,19 @@ export const VIEWS: readonly ViewDef[] = [
   feed('profile', false),
   feed('following', false),
   feed('followers', false),
+  {
+    id: 'channels',
+    title: 'view.channels',
+    hint: 'view.channels.hint',
+    launch: true,
+    aliases: 'chat rooms public nip28 チャット 部屋 ルーム',
+    since: CHANNELS_SINCE,
+    mount: gated(CHANNELS_SINCE, 'channel.unsupported', mountChannels),
+  },
+  {
+    ...feed('channel', false),
+    mount: gated(CHANNELS_SINCE, 'channel.unsupported', (el, env) => mountFeed(el, env, 'channel')),
+  },
   {
     id: 'media',
     title: 'view.media',
@@ -131,6 +149,11 @@ export const VIEWS: readonly ViewDef[] = [
     mount: mountDocs,
   },
 ];
+
+/** What the engine said it speaks (0 until it has): a view it cannot serve is not offered anywhere. */
+let served = 0;
+export const setServed = (version: number): void => void (served = version);
+export const offered = (v: ViewDef): boolean => v.launch && (v.since ?? 0) <= served;
 
 /** Tab ids are `<view id>` or `<view id>~<n>`: every view can be open several times. */
 export const kindOf = (tab: string): string => tab.split('~')[0] ?? tab;

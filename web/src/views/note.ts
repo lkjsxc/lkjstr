@@ -139,6 +139,22 @@ export function renderNote(row: NoteRow, env: ViewEnv): HTMLElement {
       ),
     );
 
+  if (row.channel) {
+    // A channel message read outside its channel says where it was said, and leads there.
+    const { id, name } = row.channel;
+    const go = (e: Event): void => {
+      e.stopPropagation();
+      env.open('channel', { id, title: name || undefined }, how(e as MouseEvent));
+    };
+    context.push(
+      h(
+        'div',
+        { class: 'ctx chan' },
+        h('button', { class: 'clip', onclick: go }, `# ${name || t('view.channel')}`),
+      ),
+    );
+  }
+
   const covered = row.cw !== undefined && !env.settings.get().showSensitive;
   const text = h('div', { class: 'text' }, segments(row.segments, env));
   const content = h(

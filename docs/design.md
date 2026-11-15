@@ -25,7 +25,8 @@ doubt, do what ytenrich does.
 
 Two colours carry meaning and nothing else is coloured: indigo (`--accent`)
 is action and selection, vermilion (`--seal`) is news (unread, the new-notes
-pill). Tokens live at the top of `web/src/ui/ui.css`.
+pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest
+text, still reaches 4.5:1 on `--bg`. The theme follows the device or Settings.
 
 | Token | Light | Dark | Use |
 | --- | --- | --- | --- |
@@ -40,9 +41,6 @@ pill). Tokens live at the top of `web/src/ui/ui.css`.
 | `--accent`, `--wash` | `#27598c`, `#e3ebf3` | `#8fb4e3`, `#1f2c3b` | Links, active marks; their tint |
 | `--seal` | `#d2432c` | `#ec6a4f` | Unread bar, new-notes pill |
 
-`--faint` is the weakest text colour and still reaches 4.5:1 on `--bg` in
-both themes. The theme follows the device or is set in Settings.
-
 ## Type
 
 - One system sans stack with the Japanese families named. No web fonts.
@@ -55,23 +53,21 @@ both themes. The theme follows the device or is set in Settings.
 ## The frame
 
 - Top bar, 38px: name, nine workspace chips, new note, account. The name is
-  a menu (Settings, Relays, Docs). The relay count is a setting, off.
+  a menu (Settings, Relays, Stats, Docs). The relay count is a setting, off.
 - Signed in, the account is the active account's face (remembered on the
-  device; a read-only account has a mark on it) and a menu of what is the
-  reader's own and reachable nowhere else: their own row, which opens their
-  profile, the other accounts to switch to, and Accounts. Signed out it is
-  one filled button, "Sign in"; there is no new-note button.
+  device; read-only has a mark) and a menu of the reader's own: their row,
+  which opens their profile, the other accounts, and Accounts. Signed out
+  it is one filled button, "Sign in", and there is no new-note button.
 - At phone width the name gives its place: nine chips and the account fit.
 - Tab bars are 1.2 times the interface scale by default. The active tab has
   an indigo underline; every tab shows its close button; middle click closes.
   A full bar scrolls with the wheel, fades toward the side that hides more
-  and always keeps the tab in front in view.
+  and keeps the tab in front in view. A fixed tab width is a setting.
 - The tile that keys go to is marked; `Alt+Shift` chords move between tabs
   and tiles, reopen (the closed-tab list survives a reload) and open. `X`
-  closes the tab in front. `O` opens tab search, a small field over the
-  tile: open tabs first, then what a new tab could be; Enter goes there.
-  `N` goes to the Post tab that is open (a setting: always a new one). A
-  fixed tab width is a numeric setting.
+  closes the tab in front. `O` opens tab search over the tile: open tabs,
+  then what a new tab could be; Enter goes there. `N` goes to the Post tab
+  that is open (a setting: always a new one).
 - Menus close on outside press, Escape, scroll and after choosing. No close
   buttons on menus. Shortcuts are a page of Docs, in the platform's names.
 - Opening a note or a person opens a tab in the same tile, right after the
@@ -148,19 +144,23 @@ both themes. The theme follows the device or is set in Settings.
 - A profile's header (banner, bio, counts, "Follows you") scrolls away with
   the notes. The npub copies on click. A count is shown once it is known;
   until then the label stands alone and still opens the list.
-- A list keeps what was read (up to 800 rows), so nothing vanishes above
-  and the scrollbar keeps its span. The scrollbar is 14px to catch, a slim
-  thumb that widens under the pointer; held, it says the time of the row
-  at the top (time, date and time, or date, by the span of the list).
+- A list keeps what was read (up to 800 rows): nothing vanishes above and
+  the scrollbar keeps its span. It is 14px to catch, with a slim thumb that
+  widens under the pointer; held, it says the time of the row at the top.
 - Filters are saved with the tab. The filter row (like the notification
   toggles and the settings search) is the first row of the content: it
   scrolls away, never floats; shown by default, a setting. One query field
-  (words, "phrase", -word, from:, has:image|video|link), a period of two
-  days as yyyy/mm/dd, people to keep, notifications flowing in; own Clear.
+  whose placeholder shows what can be typed (words, from:, has:image), a
+  period of two days, people to keep, notifications flowing in; own Clear.
 - A profile lists by kind in tabs under its header: posts, replies,
-  reposts, reactions, media. A notification opens what it is about on a
-  press anywhere in its row.
-- Controls the engine cannot serve (protocol below 3) are not drawn.
+  reposts, reactions, media. A press anywhere on a notification opens it.
+- The Channels tab (NIP-28): joined ones first, a rule, the others by
+  latest message; one field narrows by name or takes an address; a joined
+  row shows a vermilion unread count, another offers Join.
+- A channel is a feed, newest first. Its head and the composer under it are
+  the first row and scroll away: the newest end of a chat is its top here.
+  The field is free at once. Elsewhere a message says `# name` above it.
+- What the engine cannot serve (protocol below 3; channels: 4) is not drawn.
 - Loading, empty, failed and end-of-list are one quiet centred line.
 
 ## Writing and acting
@@ -173,28 +173,26 @@ both themes. The theme follows the device or is set in Settings.
   hidden or closed. Removing a bookmark, a mute or a relay offers Undo too.
 - Errors are said in words, in a toast, in the reader's language.
 
-## Settings, Relays, Docs
+## Settings, Relays, Stats, Docs
 
 - Settings is ytenrich's settings page in a tab: one searchable list,
   "Group: Name" titles, a description, numbers where a number is meant, a
   mark and a reset on changed entries.
 - Relays shows state and changes nothing: one flat list, the reader's own
-  first, with state, latency, event counts and what each is used for or why
-  it is there. The relay list is edited in Settings only; the tile menu of
-  Relays opens Settings on that entry. Media servers offer a few choices
-  with one press, Blossom first.
+  first, with state, latency, event counts and why each is there. The list
+  is edited in Settings only (the tile menu leads to that entry, and to
+  Stats). Media servers offer a few choices with one press, Blossom first.
+- Stats is numbers and quiet marks, no prose: five figures, then a sortable
+  row per relay, trouble first; it refreshes in place; absent is a dash.
 - Docs is a tab with a tree of groups and pages: what lkjstr is, release
   and licence, keys and safety, relays, filters, shortcuts, the privacy
   policy, the terms. A page names its tab and is found by name in tab search.
 
-## Language
+## Language, and checking the look
 
 Every visible string comes from the two tables in `web/src/shared/`.
 Japanese is written as Japanese, with no space before particles after a
-name. Searching views works in both languages.
-
-## Checking the look
-
-`pnpm shots` in `web/` writes every scene at 1440, 1024 and 390, in both
-themes and languages, to `tmp/screens/`. Judge a visual change there; a
-host without Japanese fonts shows names in the wrong weight.
+name. Searching views works in both languages. `pnpm shots` in `web/` writes
+every scene at 1440, 1024 and 390, in both themes and languages, to
+`tmp/screens/`: judge a visual change there (a host without Japanese fonts
+shows names in the wrong weight).

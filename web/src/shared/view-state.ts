@@ -11,4 +11,8 @@ export function loadViewState<T extends object>(instance: string): Partial<T> {
 export const saveViewState = (instance: string, state: object): void =>
   kv.set(key(instance), state);
 
-export const dropViewState = (instance: string): void => kv.remove(key(instance));
+/** A tab's state goes with the tab, and with it the draft of a composer inside it (`<instance>:say`). */
+export const dropViewState = (instance: string): void => {
+  kv.remove(key(instance));
+  kv.remove(key(`${instance}:say`));
+};

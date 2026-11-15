@@ -2,7 +2,7 @@
 // note or person a pasted Nostr address names. Matching uses both languages whatever the interface language.
 import { both, t } from '../shared/i18n.ts';
 import { DOC_PAGES, docSearch } from '../views/docs.ts';
-import { VIEWS, viewOf } from '../views/registry.ts';
+import { offered, VIEWS, viewOf } from '../views/registry.ts';
 import type { Choice } from './launcher.ts';
 
 const REF = /^(npub1|nprofile1|note1|nevent1)[a-z0-9]+$/;
@@ -20,7 +20,7 @@ const choice = (kind: string, state?: object, title?: string): Choice => {
 
 export const CHOICES = {
   choices: (): Choice[] => [
-    ...VIEWS.filter((v) => v.launch).map((v) => choice(v.id)),
+    ...VIEWS.filter(offered).map((v) => choice(v.id)),
     // Each page of the Docs tab can be gone to by its own name.
     ...DOC_PAGES.map((p) => ({
       ...choice('docs', { page: p.id }, t(p.title)),

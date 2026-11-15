@@ -103,6 +103,21 @@ try {
         await scene('settings', '/', launch(lang === 'ja' ? '設定' : 'Settings', 'settings'));
         await scene('relays', '/', launch(lang === 'ja' ? 'リレー' : 'Relays', 'relays'));
         await scene('stats', '/', launch(lang === 'ja' ? '統計' : 'Stats', 'stats'));
+        const channels = launch(lang === 'ja' ? 'チャンネル' : 'Channels', 'channels');
+        await scene('channels', '/', async (page) => {
+          await channels(page);
+          // Beside the list at a width with tiles; in the same tile on a phone.
+          await page
+            .locator('.chan')
+            .first()
+            .click({ modifiers: width >= 760 ? ['Shift'] : [] });
+          await page.waitForSelector('.view[data-kind="channel"] .note');
+        });
+        await scene('backup', '/', async (page) => {
+          await launch(lang === 'ja' ? 'アカウント' : 'Accounts', 'account')(page);
+          await page.locator('.view[data-kind="account"] [data-f="backup"]').first().click();
+          await page.waitForSelector('.kbox .kfield');
+        });
         await scene('accounts', '/', launch(lang === 'ja' ? 'アカウント' : 'Accounts', 'account'));
         const guest = '{"live":false,"accounts":"none"}';
         await scene('firstrun', '/', async () => undefined, guest);

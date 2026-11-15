@@ -10,6 +10,7 @@ import { createSettings } from './shared/settings.ts';
 import { kv } from './shared/storage.ts';
 import { createTopBar } from './ui/topbar.ts';
 import { backupPending } from './views/account-key.ts';
+import { setServed } from './views/registry.ts';
 import { createWmController, type Wm } from './wm/controller.ts';
 import { createHost } from './wm/host.ts';
 import { FAMILY, familyOf } from './wm/presets.ts';
@@ -33,6 +34,7 @@ const configure = (): void =>
     mock: kv.get('mock') as { live: boolean; accounts?: 'none' } | undefined,
   });
 configure();
+engine.info.subscribe((i) => setServed(i?.version ?? 0));
 // The last account is remembered (its key, and its face and kind of signer) so the first frame already shows who
 // is reading and asks for the first lists as that person, before the engine has spoken.
 const cached = kv.get('account');

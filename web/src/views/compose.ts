@@ -1,12 +1,12 @@
 // The composer: a tab like any other. The draft is saved as it is typed and survives a reload. Pictures arrive by
 // paste, drop or the button and show their progress. Below it, the result of the latest post only.
-import type { Delivery, Emoji, Uploaded } from '../engine/protocol.ts';
+import type { Delivery, Draft, Emoji, Uploaded } from '../engine/protocol.ts';
 import { h, replaceChildren } from '../shared/h.ts';
 import { type Key, t } from '../shared/i18n.ts';
 import { icon } from '../shared/icons.ts';
 import { keyCaps, pressed } from '../shared/keys.ts';
 import { loadViewState, saveViewState } from '../shared/view-state.ts';
-import { ability } from './can.ts';
+import { ability, failureText } from './can.ts';
 import { createWho } from './compose-who.ts';
 import { openEmojiPicker } from './emoji-picker.ts';
 import type { ViewEnv } from './registry.ts';
@@ -24,7 +24,8 @@ type State = {
 };
 type Item = { name: string; el: HTMLElement; done?: Uploaded };
 
-export function mountCompose(el: HTMLElement, env: ViewEnv): () => void {
+/** `channel`: the composer of a channel tab; what it sends is a message in that channel. */
+export function mountCompose(el: HTMLElement, env: ViewEnv, channel?: string): () => void {
   const state: State = loadViewState<State>(env.instance);
   const save = (): void => saveViewState(env.instance, state);
   let items: Item[] = []; // bound: the files of one draft
@@ -32,8 +33,8 @@ export function mountCompose(el: HTMLElement, env: ViewEnv): () => void {
 
   const area = h('textarea', {
     class: 'ctext',
-    rows: 4,
-    placeholder: t(state.replyTo ? 'compose.replyHint' : 'compose.hint'),
+    rows: channel ? 2 : 4,
+    placeholder: t(state.replyTo ? 'compose.replyHint' : channel ? 'channel.say' : 'compose.hint'),
     'aria-label': t('view.compose'),
   });
   area.value = state.text ?? '';
@@ -171,13 +172,7 @@ export function mountCompose(el: HTMLElement, env: ViewEnv): () => void {
         item.el.prepend(h('img', { src: r.uploaded.url, alt: f.name }));
     } else {
       item.el.classList.add('failed');
-      item.el.append(
-        h(
-          'span',
-          { class: 'error' },
-          `${t(`error.${r.error?.code ?? 'internal'}` as Key)}${r.error?.message ? `: ${r.error.message}` : ''}`,
-        ),
-      );
+      item.el.append(h('span', { class: 'error' }, failureText(r.error)));
       items = items.filter((i) => i !== item); // it stays visible until removed, but is not part of the post
     }
     ready();
@@ -204,45 +199,37 @@ export function mountCompose(el: HTMLElement, env: ViewEnv): () => void {
   async function send(): Promise<void> {
     ready();
     if (post.disabled) return;
-    sending = true;
-    ready();
-    const media = items.flatMap((i) => (i.done ? [i.done] : []));
-    const r = await env.engine.act(
-      {
-        a: 'publish',
-        as: env.engine.me(),
-        what: {
-          k: 'note',
-          draft: {
-            text: area.value,
-            replyTo: state.replyTo,
-            quote: state.quote,
-            media,
-            emoji: (state.emoji ?? []).filter((e) => area.value.includes(`:${e.code}:`)),
-          },
-        },
-      },
-      { delivery: (relays) => showDelivery(relays, false) },
-    );
-    sending = false;
-    if (r.ok) {
-      showDelivery(r.delivery ?? [], true);
-      area.value = '';
-      state.text = '';
+    const text = area.value;
+    const draft: Draft = {
+      text,
+      channel,
+      replyTo: state.replyTo,
+      quote: state.quote,
+      media: items.flatMap((i) => (i.done ? [i.done] : [])),
+      emoji: (state.emoji ?? []).filter((e) => text.includes(`:${e.code}:`)),
+    };
+    const clear = (): void => {
+      area.value = state.text = '';
       state.replyTo = state.replyOf = state.quote = state.quoteOf = state.emoji = undefined;
       save();
       items = [];
       thumbs.replaceChildren();
       drawHead();
-    } else
-      replaceChildren(
-        result,
-        h(
-          'div',
-          { class: 'error' },
-          `${t(`error.${r.error?.code ?? 'internal'}` as Key)}${r.error?.message ? `: ${r.error.message}` : ''}`,
-        ),
-      );
+    };
+    // A chat does not wait for the relays before the next line: the field is free at once, and what could not
+    // be sent comes back into it.
+    if (channel) clear();
+    else sending = true;
+    ready();
+    const r = await env.engine.act(
+      { a: 'publish', as: env.engine.me(), what: { k: 'note', draft } },
+      { delivery: (relays) => showDelivery(relays, false) },
+    );
+    sending = false;
+    if (r.ok) showDelivery(r.delivery ?? [], true);
+    else replaceChildren(result, h('div', { class: 'error' }, failureText(r.error)));
+    if (r.ok && !channel) clear();
+    if (!r.ok && channel && !area.value) (area.value = state.text = text), save();
     ready();
   }
 

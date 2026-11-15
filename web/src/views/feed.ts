@@ -10,14 +10,15 @@ import { type Key, t } from '../shared/i18n.ts';
 import { icon } from '../shared/icons.ts';
 import { loadViewState, saveViewState } from '../shared/view-state.ts';
 import { ability, rich } from './can.ts';
+import { mountChannelDesk } from './channel-desk.ts';
 import { type BarState, mountFeedBar, typesQuery } from './feed-bar.ts';
 import { createRowList } from './feed-draw.ts';
 import { mountFeedKeys } from './feed-keys.ts';
 import { createKeeper, type Place } from './feed-place.ts';
 import { mountScrub } from './feed-scrub.ts';
+import { feedTitle } from './feed-title.ts';
 import { filterQuery } from './filter-bar.ts';
 import { onHeld } from './held.ts';
-import { plainName } from './parts.ts';
 import { mountProfileKinds } from './profile-kinds.ts';
 import type { ViewEnv } from './registry.ts';
 
@@ -39,9 +40,9 @@ type State = BarState & {
   pos?: Place;
 };
 /** Tabs opened from a note: Escape closes them once nothing is selected. */
-const CHILD = new Set(['thread', 'profile', 'hashtag', 'following', 'followers']);
+const CHILD = new Set(['thread', 'profile', 'hashtag', 'following', 'followers', 'channel']);
 const FILTERED = new Set(['home', 'global', 'hashtag', 'bookmarks', 'search', 'profile']);
-const DATED = new Set(['home', 'global', 'hashtag', 'bookmarks', 'search', 'profile']);
+const DATED = new Set(['home', 'global', 'hashtag', 'bookmarks', 'search', 'profile', 'channel']);
 /** Lists that belong to an account: signed out they have nothing to ask for, and say how to get one. */
 const OWN = new Set(['home', 'notifications', 'bookmarks']);
 
@@ -105,7 +106,7 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
   const sync = (): void => {
     const settle = keeper.hold();
     drawn.draw(rows);
-    kinds?.seat(rows[0]?.kind === 'profile' ? drawn.node(rows[0].key) : undefined);
+    kinds?.seat(rows[0] && drawn.node(rows[0].key), rows[0]);
     showState();
     seat();
     settle();
@@ -127,7 +128,7 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
   };
   const showState = (): void => {
     // A profile's header alone is not content: the line below it says whether notes are still being asked for.
-    const empty = rows.every((r) => r.kind === 'profile');
+    const empty = rows.every((r) => r.kind === 'profile' || r.kind === 'channel');
     const phase = sstate?.phase ?? 'cache';
     const key: Key | null = !empty
       ? atBottom && rows.length > 8
@@ -172,18 +173,7 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
   el.addEventListener('scroll', onScroll, { passive: true });
 
   const title = (): void => {
-    const profile = rows.find((r) => r.kind === 'profile');
-    const focus = rows.find((r) => r.kind === 'note' && r.thread?.role === 'focus');
-    const next =
-      profile?.kind === 'profile'
-        ? plainName(profile.author)
-        : focus?.kind === 'note'
-          ? plainName(focus.author)
-          : kind === 'hashtag'
-            ? `#${state.tag ?? ''}`
-            : kind === 'search' && state.text
-              ? state.text
-              : state.title;
+    const next = feedTitle(kind, rows, state);
     if (!next) return;
     if (next !== state.title) (state.title = next), save();
     env.setTitle(next);
@@ -264,7 +254,11 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
   });
 
   const kinds =
-    kind === 'profile' ? mountProfileKinds({ env, state, save, reopen: () => open() }) : undefined;
+    kind === 'profile'
+      ? mountProfileKinds({ env, state, save, reopen: () => open() })
+      : kind === 'channel'
+        ? mountChannelDesk({ env, slot: barSlot })
+        : undefined;
   if (state.title) env.setTitle(state.title);
   open(true);
   const offVisible = env.visible.subscribe((on) => {

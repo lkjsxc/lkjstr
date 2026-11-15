@@ -1791,6 +1791,83 @@ async function rooms(browser: Browser, still: Record<string, unknown>): Promise<
       firstRow,
     ),
   );
+
+  await launch('Channels', 'channels');
+  const cv = '.view[data-kind="channels"]';
+  const names = (): Promise<string[]> => page.locator(`${cv} .chan .name`).allInnerTexts();
+  await page.locator(`${cv} .chan`).first().waitFor();
+  fact(
+    'channels: the joined ones first with what is unread, then the others, each offering to be joined',
+    (await names()).slice(0, 3).join() === 'Nostr 日本語,lkjstr,写真部' &&
+      (await page.locator(`${cv} .chan.unread .cnew`).allInnerTexts()).join() === '4,2' &&
+      (await count(page, `${cv} .list > .day`)) === 1 &&
+      (await count(page, `${cv} .chan [data-f="join"]`)) === 4,
+    await names(),
+  );
+  await page.locator(`${cv} input[type="search"]`).fill('relay');
+  await page.waitForFunction(() => document.querySelectorAll('.chan').length === 1);
+  fact('channels: the field narrows the list by name', (await names())[0] === 'Relay operators');
+  await page.locator(`${cv} input[type="search"]`).fill('');
+  await page.waitForFunction(() => document.querySelectorAll('.chan').length === 7);
+  await page.locator(`${cv} .chan`).first().click();
+  const ch = '.view[data-kind="channel"]:visible';
+  await page.locator(`${ch} .note`).first().waitFor();
+  fact(
+    'a channel: its head, its messages newest first, the tab named after it',
+    (await page.locator(`${ch} .chead .pname`).innerText()) === 'Nostr 日本語' &&
+      (await page.locator('.pane.cur .tab.active > span').innerText()) === 'Nostr 日本語' &&
+      (await page.locator(`${ch} .note .text`).first().innerText()).startsWith('リレーを一つ') &&
+      (await count(page, `${ch} .ctx.chan:visible`)) === 0,
+  );
+  await page.locator(`${ch} .csay .ctext`).fill('smoke says hello');
+  await page.keyboard.press('Control+Enter');
+  await page.waitForFunction(
+    (sel) => document.querySelector(`${sel} .note .text`)?.textContent === 'smoke says hello',
+    '.view[data-kind="channel"]',
+  );
+  fact(
+    'a channel: what is typed under its head is said there, and the field is ready again',
+    (await page.locator(`${ch} .csay .ctext`).inputValue()) === '' &&
+      (await page.locator(`${ch} .chead .pname`).innerText()) === 'Nostr 日本語',
+  );
+  await page.locator('.pane.cur .tab[data-view="channels"]').click();
+  await page.waitForFunction(() => document.querySelectorAll('.chan.unread').length === 1);
+  fact(
+    'channels: a channel that was read has nothing unread, and says what was said last',
+    (await page.locator(`${cv} .chan`).first().locator('.muted').innerText()).endsWith(
+      'smoke says hello',
+    ),
+  );
+  await page
+    .locator(`${cv} .chan`, { hasText: 'Relay operators' })
+    .locator('[data-f="join"]')
+    .click();
+  await page.waitForFunction(() => document.querySelectorAll('.chan [data-f="join"]').length === 3);
+  fact(
+    'channels: a joined channel moves up among the joined',
+    (await names())[3] === 'Relay operators',
+  );
+  await page.locator(`${cv} [data-f="create"]`).click();
+  await page.locator(`${cv} .cform [data-f="name"]`).fill('smoke room');
+  await page.keyboard.press('Enter');
+  await page.locator(`${ch} .chead [data-f="edit"]`).waitFor();
+  fact(
+    'channels: a created channel opens, joined and editable by its creator',
+    (await page.locator(`${ch} .chead .pname`).innerText()) === 'smoke room' &&
+      (await page.locator(`${ch} .chead [data-f="join"]`).getAttribute('aria-pressed')) === 'true',
+  );
+  await page.locator(`${ch} .chead [data-f="edit"]`).click();
+  await page.locator(`${ch} .cform [data-f="name"]`).fill('smoke room two');
+  await page.keyboard.press('Enter');
+  await page.waitForFunction(() =>
+    [...document.querySelectorAll('.view[data-kind="channel"] .chead .pname')].some(
+      (e) => e.textContent === 'smoke room two',
+    ),
+  );
+  fact(
+    'channels: its creator renames it, and the tab follows',
+    (await page.locator('.pane.cur .tab.active > span').innerText()) === 'smoke room two',
+  );
 }
 
 if (!existsSync(`${here}../dist/index.html`)) throw new Error('build first: pnpm build');

@@ -1,7 +1,7 @@
 // Which of a person's events their profile lists: posts, replies, reposts, reactions or media, as tabs under the
 // header (they scroll away with it). Saved with the tab. An engine older than protocol 3 lists what it always
 // did, and the tabs are not drawn.
-import type { Query } from '../engine/protocol.ts';
+import type { Query, Row } from '../engine/protocol.ts';
 import { h } from '../shared/h.ts';
 import { t } from '../shared/i18n.ts';
 import { rich } from './can.ts';
@@ -17,7 +17,11 @@ export function mountProfileKinds(o: {
   state: { show?: string };
   save(): void;
   reopen(): void;
-}): { seat(header: HTMLElement | undefined): void; query(): Partial<Query>; dispose(): void } {
+}): {
+  seat(header: HTMLElement | undefined, row: Row | undefined): void;
+  query(): Partial<Query>;
+  dispose(): void;
+} {
   const bar = h('div', { class: 'pkinds', role: 'tablist' });
   let on = rich(o.env.engine);
   const draw = (): void =>
@@ -49,8 +53,8 @@ export function mountProfileKinds(o: {
     o.reopen();
   });
   return {
-    seat(header) {
-      if (!on || !header) return void bar.remove();
+    seat(header, row) {
+      if (!on || !header || row?.kind !== 'profile') return void bar.remove();
       if (bar.parentElement !== header) header.append(bar);
     },
     query: () => (on ? { show: kindOf(o.state.show) } : {}),

@@ -52,6 +52,10 @@ Seams worth knowing inside `src/views/`:
 - `account.ts` is the Accounts tab, `account-add.ts` the ways to sign in,
   `account-key.ts` the only place a secret key is shown. `can.ts` says
   whether the reader can write and what a press says when they cannot.
+- `channels.ts` is the Channels tab, `channel-desk.ts` the head and the
+  composer of a channel tab (which is `feed.ts`), `channel-parts.ts` what
+  both share. `gated.ts` keeps a view from an engine too old to serve it.
+  `stats.ts` is the Stats tab (`Engine.stats()`, asked while in front).
 - `wm/presets.ts` has two layout families: `main` for an account and `guest`
   for a visitor; `main.ts` shows the one that fits who is signed in.
 - `wm/controller.ts` owns one workspace; `wm/closed.ts` is its stored list of
