@@ -89,6 +89,12 @@
 .kfield { flex: 1 1 200px; min-width: 0; height: 28px; box-sizing: border-box; font: 12px / 1 ui-monospace, "SF Mono", "Cascadia Mono", "Noto Sans Mono", monospace; }
 .aadd { display: grid; gap: 10px; }
 .away { display: grid; gap: 4px; min-width: 0; }
+.apair { display: grid; gap: 8px; }
+.apair > [hidden] { display: none; }
+.amore { justify-self: start; padding: 2px 0; color: var(--muted); font-size: 12.5px; }
+.amore::before { content: "▸"; display: inline-block; width: 14px; color: var(--faint); }
+.amore[aria-expanded="true"]::before { content: "▾"; }
+.amore:hover { color: var(--fg); }
 .away[hidden] { display: none; }
 .aadd .addrow { max-width: none; }
 .aadd .addrow input, .aadd .btn { height: 32px; box-sizing: border-box; }

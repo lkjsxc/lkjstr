@@ -1256,6 +1256,17 @@ async function accounts(browser: Browser): Promise<void> {
     (await text(`${av} .asaid.error`)).startsWith('No signer extension was found.'),
   );
   const key = page.locator(`${av} input[type="password"]`);
+  const between = await page.locator(`${av} .apair`).evaluate((el) => el.children.length);
+  fact(
+    'two ways in stand together; the key field waits behind one quiet line',
+    between === 2 && !(await key.isVisible()),
+    between,
+  );
+  await page.locator(`${av} [data-f="other"]`).click();
+  fact(
+    'the line opens the field with the keyboard in it',
+    await key.evaluate((el) => el === document.activeElement),
+  );
   await key.fill('hunter2 is not a key');
   await key.press('Enter');
   await page.locator(`${av} .asaid.error`, { hasText: 'not an nsec' }).waitFor();
@@ -1316,6 +1327,7 @@ async function accounts(browser: Browser): Promise<void> {
   );
 
   // A read-only account is plain at the composer and on every action before anything is pressed.
+  await page.locator(`${av} [data-f="other"][aria-expanded="false"]`).click();
   await key.fill(`npub1${'q'.repeat(58)}`);
   await key.press('Enter');
   await page.locator('.acct .ro').waitFor();

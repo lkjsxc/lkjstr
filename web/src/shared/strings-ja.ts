@@ -368,6 +368,7 @@ export const ja: Record<keyof typeof en, string> = {
   'account.add.key': 'nsec・npub・bunker://',
   'account.add.keyLabel': '鍵またはアドレス',
   'account.add.submit': 'ログイン',
+  'account.add.other': '鍵や bunker アドレスでログイン',
   'account.add.create': '新しいアカウントを作る',
   'account.busy.extension': '拡張機能の応答を待っています…',
   'account.busy.key': 'ログインしています…',

@@ -1,4 +1,5 @@
 import { mkdir, writeFile } from 'node:fs/promises';
+import { seedLayouts } from './smoke-seed.mjs';
 
 // Shared loopback-only real-product signer helpers. No action/key payloads are recorded.
 const accounts = '.view[data-kind="account"]';
@@ -11,6 +12,7 @@ async function launch(page, word, kind) {
 }
 async function setup({ browser, base, relayUrl, pubkey, mode, sign, errors, bunker }) {
   const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, locale: 'en-US' });
+  await seedLayouts(ctx);
   await ctx.route('**/*', (route) =>
     route.request().url().startsWith(`${base}/`) ? route.continue() : route.abort(),
   );

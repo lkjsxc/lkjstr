@@ -1,4 +1,5 @@
 // Real NIP-46 accounts with a loopback encrypted bunker.
+import { openKeyField } from './smoke-seed.mjs';
 import { accounts, code, compose, launch, setup } from './smoke-signer-support.mjs';
 
 async function post(page, text) {
@@ -12,6 +13,7 @@ async function remote(options, secret) {
   const url = `bunker://${bunker.pubkey}?relay=${encodeURIComponent(relayUrl + path)}`;
   try {
     await page.locator('.acct.out').click();
+    await openKeyField(page);
     if (secret) {
       await page.locator(`${accounts} input`).fill(url);
       await page.locator(`${accounts} input`).press('Enter');

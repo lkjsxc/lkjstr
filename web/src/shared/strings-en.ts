@@ -366,6 +366,7 @@ export const en = {
   'account.add.key': 'nsec, npub or bunker://',
   'account.add.keyLabel': 'Key or address',
   'account.add.submit': 'Sign in',
+  'account.add.other': 'Sign in with a key or a bunker address',
   'account.add.create': 'Create a new account',
   'account.busy.extension': 'Waiting for the extension…',
   'account.busy.key': 'Signing in…',
