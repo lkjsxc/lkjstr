@@ -9,18 +9,23 @@ import { h } from '../shared/h.ts';
 import { type Key, t } from '../shared/i18n.ts';
 import { icon } from '../shared/icons.ts';
 import { loadViewState, saveViewState } from '../shared/view-state.ts';
-import { ability } from './can.ts';
+import { ability, rich } from './can.ts';
 import { type BarState, mountFeedBar, typesQuery } from './feed-bar.ts';
 import { createRowList } from './feed-draw.ts';
 import { mountFeedKeys } from './feed-keys.ts';
 import { createKeeper, type Place } from './feed-place.ts';
+import { mountScrub } from './feed-scrub.ts';
 import { filterQuery } from './filter-bar.ts';
 import { onHeld } from './held.ts';
 import { plainName } from './parts.ts';
+import { mountProfileKinds } from './profile-kinds.ts';
 import type { ViewEnv } from './registry.ts';
 
 const PAGE = 60; // rows asked for beyond what is on screen
-const KEEP = 120; // rows kept on the far side when the window slides
+// Rows the window may hold. What was read stays in the list (above and below), so the scrollbar keeps its span
+// and nothing disappears behind the reader; only past this bound does the far end go, out of sight, and it comes
+// back as the same rows at the same place when it is scrolled to again.
+const LIMIT = 800;
 const NEAR_PX = 1400;
 type State = BarState & {
   title?: string;
@@ -28,6 +33,8 @@ type State = BarState & {
   id?: string;
   ref?: string;
   tag?: string;
+  /** A profile: which of the person's events are listed. */
+  show?: string;
   /** Where the reader is, so the tab comes back to the same note after anything: a reload, another tile. */
   pos?: Place;
 };
@@ -49,7 +56,7 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
     t('bar.signedOut'),
   );
   const pill = h('button', { class: 'fresh', hidden: true });
-  const barSlot = h('div');
+  const barSlot = h('div', { class: 'fslot' });
   const tail = h('div', { class: 'ftail' });
   const drawn = createRowList(list, env, DATED.has(kind));
   let rows: Row[] = [];
@@ -79,14 +86,15 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
     id: state.id,
     ref: state.ref,
     tag: state.tag,
-    ...(kind === 'search' ? { text: state.text ?? '' } : {}),
+    ...(kind === 'search' ? { text: '' } : {}),
     ...(kind === 'notifications' ? { types: typesQuery(state.only) } : {}),
     ...(FILTERED.has(kind)
       ? filterQuery(
           { ...state.filter, ...(kind === 'search' ? { text: state.text } : {}) },
-          Date.now(),
+          rich(env.engine),
         )
       : {}),
+    ...kinds?.query(),
   });
   const request = (anchor: Anchor, before: number, after: number): void => {
     waiting = true;
@@ -97,6 +105,7 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
   const sync = (): void => {
     const settle = keeper.hold();
     drawn.draw(rows);
+    kinds?.seat(rows[0]?.kind === 'profile' ? drawn.node(rows[0].key) : undefined);
     showState();
     seat();
     settle();
@@ -147,11 +156,13 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
     const first = rows[0]?.key;
     const last = rows[rows.length - 1]?.key;
     if (top < 8 && atTop && !keys.held()) {
-      if (!live) (live = true), request('top', 0, Math.max(PAGE, Math.min(rows.length, KEEP)));
+      if (!live) (live = true), request('top', 0, Math.max(PAGE, Math.min(rows.length, LIMIT)));
     } else if (live && first)
       (live = false), request({ key: first }, 0, Math.max(rows.length, PAGE));
-    else if (room < NEAR_PX && !atBottom && last) request({ key: last }, KEEP, PAGE);
-    else if (top < NEAR_PX && !atTop && first) request({ key: first }, PAGE, KEEP);
+    else if (room < NEAR_PX && !atBottom && last)
+      request({ key: last }, Math.min(rows.length, LIMIT), PAGE);
+    else if (top < NEAR_PX && !atTop && first)
+      request({ key: first }, PAGE, Math.min(rows.length, LIMIT));
   };
   let frame = 0;
   const onScroll = (): void => {
@@ -234,13 +245,14 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
     closes: CHILD.has(kind),
     row: (key) => drawn.row(key),
     node: (key) => drawn.node(key),
-    cover: () => barSlot.offsetHeight,
     moved: () => (keeper.read(), follow()),
     top: toTop,
   });
 
   el.classList.add('feed');
-  el.replaceChildren(h('div', { class: 'fslot' }, barSlot, pill), list, status, tail);
+  const pin = h('div', { class: 'fpin' }, pill);
+  el.replaceChildren(barSlot, pin, list, status, tail);
+  const scrub = mountScrub({ el, pin, list, row: (key) => drawn.row(key) });
   const bar = mountFeedBar({
     kind,
     el,
@@ -251,6 +263,8 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
     reopen: () => (open(), title()),
   });
 
+  const kinds =
+    kind === 'profile' ? mountProfileKinds({ env, state, save, reopen: () => open() }) : undefined;
   if (state.title) env.setTitle(state.title);
   open(true);
   const offVisible = env.visible.subscribe((on) => {
@@ -273,6 +287,8 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
     offSettings();
     offHeld();
     bar();
+    kinds?.dispose();
+    scrub();
     keys.dispose();
     keeper.dispose();
     sub?.close();

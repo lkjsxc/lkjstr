@@ -9,6 +9,7 @@ import { chromium } from 'playwright-core';
 import bundle from 'playwright-core/lib/utilsBundle';
 import { fakeBunker } from '../../scripts/browser-bunker.mjs';
 import { fakeRelay } from '../../scripts/browser-relay.mjs';
+import { openKeyField, seedLayouts } from './smoke-seed.mjs';
 import { writeReport } from './smoke-signer-support.mjs';
 import { signerScenarios } from './smoke-signers.mjs';
 import { accounts, installExtension, npub, visitorChecks } from './smoke-visitors.mjs';
@@ -75,6 +76,7 @@ try {
     args: ['--no-sandbox', '--disable-background-networking'],
   });
   const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, locale: 'en-US' });
+  await seedLayouts(ctx);
   await ctx.route('**/*', (route) =>
     route.request().url().startsWith(`${base}/`) ? route.continue() : route.abort(),
   );
@@ -114,6 +116,7 @@ try {
   await page.locator('.view[data-kind="global"] .note').first().waitFor();
   check('global renders verified fixture notes');
   await visitorChecks({ page, browser, base, relayUrl, errors, shots, shot, check });
+  await openKeyField(page);
   await page.locator(`${accounts} input`).fill('not a key');
   await page.locator(`${accounts} input`).press('Enter');
   await page.locator(`${accounts} .asaid.error`).waitFor();
@@ -141,6 +144,7 @@ try {
   // A second account that is only a public key: read-only is plain before anything is pressed.
   await page.locator('.acct').click();
   await page.locator('.menu button', { hasText: 'Accounts' }).click();
+  await openKeyField(page);
   await page.locator(`${accounts} input`).fill(npub);
   await page.locator(`${accounts} input`).press('Enter');
   await page.locator(`${accounts} .arow`).nth(1).waitFor();
@@ -179,7 +183,7 @@ try {
   for (let n = 0; n < 200 && !fake.searches.includes('Engine fixture'); n++)
     await page.waitForTimeout(25);
   check('search returns relay result', fake.searches.includes('Engine fixture'));
-  await launch('Write', 'compose');
+  await launch('Post', 'compose');
   const text = `real engine smoke ${Date.now()}`;
   await page.locator('.pane.cur .view[data-kind="compose"]:visible textarea').fill(text);
   await page

@@ -38,13 +38,48 @@ async function isolatedContext(
   return context;
 }
 
+/** A reader's own arrangement, saved on the device: most facts below are about tabs and tiles, not about the
+ * default layout, and were written against this one. `fresh` in the store leaves the device empty instead. */
+const tile = (id: string, tabs: string[]): unknown => ({ type: 'pane', id, tabs, active: tabs[0] });
+const row = (id: string, dir: string, sizes: number[], children: unknown[]): unknown => ({
+  type: 'split',
+  id,
+  dir,
+  sizes,
+  children,
+});
+const arranged = (width: number): unknown =>
+  width < 760
+    ? tile('a', ['home', 'notifications', 'global', 'compose'])
+    : width < 1200
+      ? row(
+          'r',
+          'row',
+          [0.56, 0.44],
+          [tile('a', ['home', 'global']), tile('b', ['notifications', 'compose'])],
+        )
+      : row(
+          'r',
+          'row',
+          [0.38, 0.28, 0.34],
+          [
+            tile('a', ['home']),
+            row('c', 'col', [0.64, 0.36], [tile('b', ['notifications']), tile('d', ['compose'])]),
+            tile('e', ['global', 'bookmarks']),
+          ],
+        );
+
 async function open(
   browser: Browser,
   path: string,
-  store: Record<string, unknown>,
+  given: Record<string, unknown>,
   size = { width: 1440, height: 900 },
   locale = 'en-US',
 ): Promise<Page> {
+  const { fresh, ...rest } = given;
+  const store = fresh
+    ? rest
+    : { 'layout:main': arranged(size.width), 'layout:guest': tile('g', ['global']), ...rest };
   const ctx = await isolatedContext(browser, { viewport: size, locale, deviceScaleFactor: 1 });
   await ctx.addInitScript((s) => {
     for (const [k, v] of Object.entries(s))
@@ -277,7 +312,7 @@ async function run(browser: Browser): Promise<void> {
     'posting reports each relay',
     (await page.locator('.cresult').first().innerText()).includes('down.example.net'),
   );
-  await page.locator('.acct').click();
+  await page.locator('.brand').click();
   await page.locator('.menu button', { hasText: 'Settings' }).click();
   const size = page.locator('.sitem:has-text("Text size") input');
   await size.fill('19');
@@ -359,6 +394,9 @@ async function run(browser: Browser): Promise<void> {
   await accounts(browser);
   await place(browser, still);
   await keyboard(browser, still);
+  await defaults(browser, still);
+  await scrolling(still);
+  await filtering(browser, still);
 }
 
 const FEED = '.view[data-kind="home"]';
@@ -381,6 +419,258 @@ const same = (a: { key: string; off: number }, b: { key: string; off: number }):
 
 /** The reading position: the same note at the same height after a reload, another tab, another tile, another width,
  * a closed and reopened tab. */
+/** A list keeps what was read above; the scrollbar is easy to catch and says the time while it is held; a zoomed
+ * picture is moved by hand. */
+async function scrolling(still: Record<string, unknown>): Promise<void> {
+  // Headless Chromium hides scrollbars by default: this browser draws them, as a reader's does.
+  const bars = await chromium.launch({
+    executablePath: chrome,
+    args: ['--no-sandbox'],
+    ignoreDefaultArgs: ['--hide-scrollbars'],
+  });
+  const page = await open(bars, '/', still);
+  const feed = '.view[data-kind="global"]';
+  await page.locator('.tab[data-view="global"]').click();
+  await page.locator(`${feed} .note`).first().waitFor();
+  const firstKey = (): Promise<string | undefined> =>
+    page
+      .locator(`${feed} .list > .note`)
+      .first()
+      .evaluate((n) => (n as HTMLElement).dataset.key);
+  const head = await firstKey();
+  let most = 0;
+  for (let i = 0; i < 14; i++) {
+    await page.locator(feed).evaluate((el) => el.scrollTo(0, el.scrollHeight));
+    await page.waitForTimeout(160);
+    most = Math.max(most, await count(page, `${feed} .list > .note`));
+  }
+  const kept = await count(page, `${feed} .list > .note`);
+  fact(
+    'scrolling far down keeps every row above',
+    kept >= 150 && kept === most && (await firstKey()) === head,
+    [kept, most],
+  );
+  const bar = await page
+    .locator(feed)
+    .evaluate((el) => (el as HTMLElement).offsetWidth - el.clientWidth);
+  fact('the scrollbar is 14px to catch', bar === 14, bar);
+  const box = await page.locator(feed).boundingBox();
+  const x = (box?.x ?? 0) + (box?.width ?? 0) - 7;
+  await page.locator(feed).evaluate((el) => el.scrollTo(0, el.scrollHeight / 2));
+  await page.waitForTimeout(200);
+  const y = (box?.y ?? 0) + (box?.height ?? 0) / 2;
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.mouse.move(x, y - 60, { steps: 4 });
+  await page.waitForTimeout(150);
+  const said = await page.locator(`${feed} .scrub`).evaluate((el) => ({
+    shown: !(el as HTMLElement).hidden,
+    text: el.textContent ?? '',
+  }));
+  fact(
+    'a held scrollbar says the time of the row there',
+    Boolean(said.shown) &&
+      /^(\d{4}\/\d\d\/\d\d)?( ?\d\d:\d\d)?$/.test(said.text) &&
+      said.text !== '',
+    said,
+  );
+  await page.mouse.up();
+  await page.waitForTimeout(100);
+  fact(
+    'released, the label goes',
+    await page.locator(`${feed} .scrub`).evaluate((el) => (el as HTMLElement).hidden === true),
+  );
+
+  // A zoomed picture: the wheel zooms about the pointer, a drag moves it.
+  await page.locator(feed).evaluate((el) => el.scrollTo(0, 0));
+  const pic = page.locator(`${feed} .mbox`).first();
+  await pic.scrollIntoViewIfNeeded();
+  await pic.click();
+  await page.locator('.mstage img').waitFor();
+  const stage = await center(page, '.mstage');
+  await page.mouse.move(stage.x + 40, stage.y + 30);
+  await page.mouse.wheel(0, -900);
+  const at = (): Promise<string> =>
+    page.locator('.mstage img').evaluate((i) => (i as HTMLElement).style.transform);
+  const before = await at();
+  await page.mouse.down();
+  await page.mouse.move(stage.x - 80, stage.y - 40, { steps: 5 });
+  const during = await page.locator('.mstage').evaluate((el) => el.classList.contains('held'));
+  await page.mouse.up();
+  const after = await at();
+  fact(
+    'a zoomed picture is grabbed and moved, and keeps its zoom',
+    during && after !== before && after.split('scale')[1] === before.split('scale')[1],
+    [before, after],
+  );
+  await bars.close();
+}
+
+/** The filter's query, period, people and notifications; the kinds of a profile. */
+async function filtering(browser: Browser, still: Record<string, unknown>): Promise<void> {
+  const page = await open(browser, '/', { ...still, fresh: true });
+  const feed = '.view[data-kind="home"]';
+  const field = page.locator(`${feed} .rbar input`);
+  const settle = async (): Promise<void> => {
+    await page.waitForTimeout(450);
+  };
+  const authors = (): Promise<string[]> =>
+    page.locator(`${feed} .list > .note .nhead .name`).allInnerTexts();
+  const all = await count(page, `${feed} .list > .note`);
+  await field.fill('from:"Sam Rivera"');
+  await settle();
+  const sam = await authors();
+  fact(
+    'from: keeps one person’s notes',
+    sam.length > 0 && sam.every((x) => x.includes('Sam Rivera')),
+    sam,
+  );
+  await field.fill('has:image -霧');
+  await settle();
+  const pics = await page
+    .locator(`${feed} .list > .note`)
+    .evaluateAll((notes) =>
+      notes.map((n) => [
+        n.querySelector('.mbox img, .mgrid img, .media img') !== null,
+        n.textContent?.includes('霧'),
+      ]),
+    );
+  fact(
+    'has:image and -word narrow together',
+    pics.length > 0 && pics.length < all && pics.every(([img, fog]) => img && !fog),
+    pics.length,
+  );
+  await page.locator(`${feed} .rclear`).click();
+  await settle();
+  await page.locator(`${feed} .rtoggle`).click();
+  const days = page.locator(`${feed} .pdays input`);
+  fact(
+    'the period is two days, written yyyy/mm/dd',
+    (await days.count()) === 2 && (await days.first().getAttribute('placeholder')) === 'yyyy/mm/dd',
+  );
+  await days.nth(1).fill('2001/01/01');
+  await days.nth(1).press('Enter');
+  await settle();
+  fact(
+    'a period that ends before anything shows nothing',
+    (await count(page, `${feed} .list > .note`)) === 0,
+  );
+  await page.locator(`${feed} .rclear`).click();
+  await settle();
+  await page.locator(`${feed} .rtoggle`).click();
+  await page.locator(`${feed} .padd`).fill('aoi');
+  await page.locator(`${feed} .padd`).press('Enter');
+  await settle();
+  const kept = await authors();
+  fact(
+    'a person on the list narrows the feed to them and stays as a chip',
+    kept.length > 0 &&
+      new Set(kept).size === 1 &&
+      (await count(page, `${feed} .ppeople .chip`)) === 1,
+    [...new Set(kept)],
+  );
+  await page.locator(`${feed} .ppeople .chip`).click();
+  await settle();
+  await page.locator(`${feed} .prow`).last().locator('.chip').last().click();
+  await page.locator(`${feed} .list > .notif`).first().waitFor();
+  fact(
+    'notifications flow into the timeline when asked',
+    (await count(page, `${feed} .list > .notif`)) > 0,
+  );
+  await page.locator(`${feed} .rclear`).click();
+  await settle();
+  fact('and leave again', (await count(page, `${feed} .list > .notif`)) === 0);
+
+  // A profile lists by kind, in tabs under its header.
+  await page.locator(`${feed} .note .avb`).first().click();
+  const prof = '.pane.cur .view[data-kind="profile"]';
+  await page.locator(`${prof} .pkinds`).waitFor();
+  const kinds = await page.locator(`${prof} .pkind`).allInnerTexts();
+  fact(
+    'a profile’s kinds: posts, replies, reposts, reactions, media',
+    kinds.join() === 'Posts,Replies,Reposts,Reactions,Media',
+    kinds,
+  );
+  fact(
+    'posts first, and none of them answers anybody',
+    (await count(page, `${prof} .list > .note .ctx .i-reply`)) === 0,
+  );
+  await page.locator(`${prof} .pkind`).nth(4).click();
+  await page.waitForTimeout(300);
+  const media = await page
+    .locator(`${prof} .list > .note`)
+    .evaluateAll((notes) =>
+      notes.map((n) => n.querySelector('.content img, .content video, .mbox') !== null),
+    );
+  fact(
+    'media: every note carries a picture or a video',
+    media.every(Boolean) && (await page.locator(`${prof} .pkind.on`).innerText()) === 'Media',
+    media,
+  );
+  await page.context().close();
+}
+
+/** The layout of a device that holds nothing yet, for a reader and a visitor, and what "Reset layout" gives. */
+async function defaults(browser: Browser, still: Record<string, unknown>): Promise<void> {
+  const tiles = (page: Page): Promise<string[]> =>
+    page
+      .locator('.pane')
+      .evaluateAll((panes) =>
+        panes.map((p) =>
+          [...p.querySelectorAll<HTMLElement>('.tab')]
+            .map((t) => `${t.dataset.view}${t.classList.contains('active') ? '*' : ''}`)
+            .join(' '),
+        ),
+      );
+  const want = (front: string): string[] => [
+    front === 'home' ? 'global home*' : 'global* home',
+    'compose*',
+    front === 'home' ? 'account notifications* settings' : 'account* notifications settings',
+  ];
+  const page = await open(browser, '/', { ...still, fresh: true });
+  fact(
+    'a reader starts on the default layout',
+    (await tiles(page)).join() === want('home').join(),
+    await tiles(page),
+  );
+  const boxes = await page.locator('.pane').evaluateAll((panes) =>
+    panes.map((p) => {
+      const r = p.getBoundingClientRect();
+      return [Math.round(r.left), Math.round(r.top)];
+    }),
+  );
+  fact(
+    'left tile, then the composer over the account tile at the right',
+    boxes[0]?.[0] === 0 &&
+      (boxes[1]?.[0] ?? 0) > 700 &&
+      boxes[1]?.[0] === boxes[2]?.[0] &&
+      (boxes[2]?.[1] ?? 0) > (boxes[1]?.[1] ?? 0),
+    boxes,
+  );
+  await page.context().close();
+  const guest = await open(browser, '/', { mock: { live: false, accounts: 'none' }, fresh: true });
+  fact(
+    'a visitor starts on the same layout',
+    (await tiles(guest)).join() === want('global').join(),
+    await tiles(guest),
+  );
+  fact(
+    'the visitor sees the two ways in at once',
+    (await count(guest, '.view[data-kind="account"] [data-f="extension"]:visible')) === 1,
+  );
+  await guest.context().close();
+  const arrangedPage = await open(browser, '/', still);
+  await arrangedPage.locator('.pane .strip > .icon').first().click();
+  await arrangedPage.locator('.menu button').getByText('Reset layout', { exact: true }).click();
+  await arrangedPage.waitForSelector('.tab[data-view="settings"]');
+  fact(
+    'Reset layout gives the default layout',
+    (await tiles(arrangedPage)).join() === want('home').join(),
+    await tiles(arrangedPage),
+  );
+  await arrangedPage.context().close();
+}
+
 async function place(browser: Browser, still: Record<string, unknown>): Promise<void> {
   const page = await open(browser, '/', still);
   const c = await center(page, FEED);
@@ -594,8 +884,8 @@ async function keyboard(browser: Browser, still: Record<string, unknown>): Promi
     await page.evaluate(() => document.activeElement?.matches('.view') === true),
   );
   await page.keyboard.press('Shift+?');
-  await page.waitForSelector('.pane.cur .view[data-kind="shortcuts"] kbd');
-  const caps = await page.locator('.view[data-kind="shortcuts"] kbd').allInnerTexts();
+  await page.waitForSelector('.pane.cur .view[data-kind="docs"] kbd');
+  const caps = await page.locator('.view[data-kind="docs"] kbd').allInnerTexts();
   fact(
     '? lists the keys, pairs and mouse gestures',
     ['G H', 'J', 'Alt+Shift+T', 'Middle click', 'Shift+Click'].every((x) => caps.includes(x)),
@@ -615,33 +905,98 @@ async function keyboard(browser: Browser, still: Record<string, unknown>): Promi
     await page.keyboard.press('j');
     await page.screenshot({ path: shot.replace(/\.png$/, '-keys.png') });
   }
+  // Tab search: one key, a small field; it finds open tabs first and Enter goes there.
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('o');
+  await page.locator('.tsearch input').waitFor();
+  const all = await count(page, '.tab');
+  await page.keyboard.type('home');
+  fact(
+    'tab search lists the open tab first, then what could be opened',
+    (await count(page, '.tsearch .titem.open')) >= 1 &&
+      (await page.locator('.tsearch .titem').first().getAttribute('class'))?.includes('open') ===
+        true,
+  );
+  await page.keyboard.press('Enter');
+  fact(
+    'Enter goes to the open tab and opens nothing',
+    (await count(page, '.tsearch')) === 0 &&
+      (await count(page, '.pane.cur .tab.active[data-view="home"]')) === 1 &&
+      (await count(page, '.tab')) === all,
+  );
+  // The composer key returns to the composer that is open; a setting makes it open another.
+  const composers = await count(page, '.tab[data-view^="compose"]');
+  await page.keyboard.press('n');
+  fact(
+    'n goes to the Post tab that is open, with the caret in it',
+    (await count(page, '.tab[data-view^="compose"]')) === composers &&
+      (await page.evaluate(
+        () => document.activeElement?.matches('.view[data-kind="compose"] textarea') === true,
+      )) &&
+      (await page.locator(area).inputValue()) === 'jng?',
+  );
+  await page.keyboard.press('Escape');
+  await page.evaluate(() => localStorage.setItem('lkjstr:settings', '{"composeNew":true}'));
+  await page.evaluate(() =>
+    window.dispatchEvent(
+      new StorageEvent('storage', { key: 'lkjstr:settings', newValue: '{"composeNew":true}' }),
+    ),
+  );
+  await page.keyboard.press('n');
+  fact(
+    'with the setting, n opens another Post tab',
+    (await count(page, '.tab[data-view^="compose"]')) === composers + 1,
+  );
+  // One key closes the tab in front.
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('x');
+  fact('x closes the tab', (await count(page, '.tab[data-view^="compose"]')) === composers);
   await page.context().close();
 }
 
-/** The filter bar that stays away, the media tab, the emoji picker, the notification toggles. */
+/** The filter row, the media tab, the emoji picker, the notification toggles. */
 async function reading(browser: Browser, still: Record<string, unknown>): Promise<void> {
   const page = await open(browser, '/', still);
   const home = '.pane:has(.tab.active[data-view="home"])';
   const feed = '.view[data-kind="home"]';
-  fact('no filter bar until asked', (await count(page, `${feed} .rbar`)) === 0);
+  // The filter row is the first row of the content: there by default, and it scrolls away with the notes.
+  fact('the filter row is there by default', (await count(page, `${feed} .rbar`)) === 1);
   await page.locator(`${home} .strip > .icon`).first().click();
-  const item = page.locator('.menu button').first();
-  fact('the tile menu offers the filter', (await item.innerText()).includes('Filter'));
+  fact(
+    'the tile menu has no filter switch',
+    !(await page.locator('.menu').innerText()).includes('ilter'),
+  );
   await page.keyboard.press('Escape');
+  await page.locator(feed).evaluate((el) => el.scrollTo(0, 600));
+  await page.waitForTimeout(150);
+  fact(
+    'the filter row scrolls away with the notes',
+    await page.locator(feed).evaluate((el) => {
+      const bar = el.querySelector('.rbar')?.getBoundingClientRect();
+      return Boolean(bar) && (bar?.bottom ?? 0) < el.getBoundingClientRect().top;
+    }),
+  );
   await page.keyboard.press('/');
   fact(
-    '"/" shows the filter with the keyboard in it',
-    await page.evaluate(() => document.activeElement?.matches('.rbar input') === true),
+    '"/" puts the keyboard in the filter and brings it into view',
+    await page.evaluate(() => {
+      const a = document.activeElement;
+      const view = a?.closest('.view');
+      return (
+        a?.matches('.rbar input') === true &&
+        a.getBoundingClientRect().top >= (view?.getBoundingClientRect().top ?? 0)
+      );
+    }),
   );
   await page.keyboard.type('zzzz');
   await page.waitForTimeout(400);
-  await page.keyboard.press('Escape');
-  await page.keyboard.press('Escape');
-  fact('a narrowing filter stays in view', (await count(page, `${feed} .rbar`)) === 1);
-  await page.locator(`${feed} .rbar input`).fill('');
-  await page.waitForTimeout(400);
-  await page.keyboard.press('Escape');
-  fact('Escape puts an empty filter away', (await count(page, `${feed} .rbar`)) === 0);
+  fact('a narrowing row offers its own way back', (await count(page, `${feed} .rclear`)) === 1);
+  await page.locator(`${feed} .rclear`).click();
+  await page.locator(`${feed} .note`).first().waitFor();
+  fact(
+    'clearing empties the field',
+    (await page.locator(`${feed} .rbar input`).inputValue()) === '',
+  );
   await page.locator(`${feed} .note`).first().waitFor();
   const times = await page
     .locator(`${feed} .note time`)
@@ -691,6 +1046,7 @@ async function reading(browser: Browser, still: Record<string, unknown>): Promis
   await page.locator(feed).evaluate((e) => (e.scrollTop = 0));
   const note = page.locator(`${feed} .note`).nth(2);
   const smile = note.locator('.a-smile');
+  await note.scrollIntoViewIfNeeded();
   const y = (await smile.boundingBox())?.y;
   await smile.click();
   await page.locator('.epick').waitFor();
@@ -722,6 +1078,29 @@ async function reading(browser: Browser, still: Record<string, unknown>): Promis
   await page.reload();
   await page.locator(`${notes} .ntype.on`).waitFor();
   fact('the toggle is remembered', (await count(page, `${notes} .ntype.on`)) === 1);
+  // A notification answers a press anywhere, as a note does; a face opens the person, as a name does.
+  const npane = `.pane:has(.tab[data-view="notifications"])`;
+  const news = page.locator(`${notes} .notif`).first();
+  const nbox = await news.boundingBox();
+  await page.mouse.click(
+    (nbox?.x ?? 0) + (nbox?.width ?? 0) - 6,
+    (nbox?.y ?? 0) + (nbox?.height ?? 0) - 4,
+  );
+  await page.locator(`${npane} .tab.active[data-view^="thread"]`).waitFor();
+  fact('a press on a notification’s margin opens its note', true);
+  await page.keyboard.press('Escape');
+  await page.locator(`${notes} .notif .avb`).first().click();
+  await page.locator(`${npane} .tab.active[data-view^="profile"]`).waitFor();
+  fact('a face in a notification opens the person', true);
+  const order = await page
+    .locator(`${feed} .note .acts`)
+    .first()
+    .evaluate((el) => [...el.children].map((c) => c.className.match(/a-(\w+)/)?.[1]).join(' '));
+  fact(
+    'actions: reply, repost, reaction, then the rest',
+    order.startsWith('reply repost heart zap smile'),
+    order,
+  );
   await page.context().close();
 
   // A phone: one tile, so the media tab opens in it; a finger gets 40px.
@@ -842,17 +1221,36 @@ async function pages(browser: Browser, still: Record<string, unknown>): Promise<
 
   // Relays shows state and edits nothing; the list is edited in Settings, one press away.
   const menu = async (label: string): Promise<void> => {
-    await page.locator('.acct').click();
+    await page.locator('.brand').click();
     await page.locator('.menu button', { hasText: label }).click();
   };
+  // The account menu holds only what is the reader's own: their profile first, then the Accounts tab.
+  await page.locator('.acct').click();
+  const own = await page.locator('.menu button').allInnerTexts();
+  fact(
+    'the account menu: own profile, then Accounts; nothing reachable elsewhere',
+    (own[0] ?? '').includes('Profile') &&
+      own.at(-1) === 'Accounts' &&
+      !own.some((x) => /Settings|Relays|Shortcuts|About/.test(x)),
+    own,
+  );
+  await page.locator('.menu button').first().click();
+  await page.locator('.pane.cur .tab.active[data-view^="profile"]').waitFor();
+  fact(
+    'the menu’s own row opens the reader’s profile',
+    (await count(page, '.pane.cur .view[data-kind="profile"] .profile .pbtns .btn')) === 0,
+  );
+  await page.keyboard.press('Escape');
   await menu('Relays');
   const rv = '.view[data-kind="relays"]';
   await page.locator(`${rv} .rrow`).first().waitFor();
   fact(
-    'relays: the list, the others in use, the rest folded',
+    'relays: one flat list, the reader’s own first, nothing folded away',
     (await count(page, `${rv} .rrow:has(.ruse)`)) === 4 &&
-      (await count(page, `${rv} .rfold:not([open])`)) === 1,
-    await count(page, `${rv} .rrow:has(.ruse)`),
+      (await count(page, `${rv} .rrow`)) > 4 &&
+      (await count(page, `${rv} details, ${rv} h3`)) === 0 &&
+      (await count(page, `${rv} .rlist`)) === 1,
+    [await count(page, `${rv} .rrow:has(.ruse)`), await count(page, `${rv} .rrow`)],
   );
   const texts = await page.locator(`${rv} .rrow:has(.ruse) .rsub`).allInnerTexts();
   fact(
@@ -938,33 +1336,70 @@ async function pages(browser: Browser, still: Record<string, unknown>): Promise<
   );
   await page.locator('.tab.active[data-view^="settings"] > .x').click();
 
-  await menu('Shortcuts');
-  const sv = '.view[data-kind="shortcuts"]';
+  // Docs: a tree about lkjstr; the shortcuts, the version facts and the policy are pages of it, each an ordinary tab.
+  await menu('Docs');
+  const sv = '.pane.cur .view[data-kind="docs"]';
+  await page.locator(`${sv} .dtree`).waitFor();
+  const tree = await page
+    .locator(`${sv} .dtree`)
+    .evaluate((nav) =>
+      [...nav.querySelectorAll('details')].map(
+        (d) =>
+          `${d.querySelector('summary')?.textContent}: ${[...d.querySelectorAll('.ditem')].map((b) => b.textContent).join(', ')}`,
+      ),
+    );
+  fact(
+    'docs: a tree of groups and pages',
+    tree.join(' | ') ===
+      'About lkjstr: What lkjstr is, Version and licence | Using it: Keys and safety, Relays, Filters, Shortcuts | Legal: Privacy policy, Terms',
+    tree,
+  );
+  fact(
+    'docs: opens on what lkjstr is, and the tab is named after the page',
+    (await page.locator(`${sv} .ditem.on`).innerText()) === 'What lkjstr is' &&
+      (await page.locator('.pane.cur .tab.active > span').innerText()) === 'What lkjstr is' &&
+      (await page.locator(`${sv} .dpage`).innerText()).includes('runs entirely in this browser'),
+  );
+  await page.locator(`${sv} .ditem`, { hasText: 'Shortcuts' }).click();
   const caps = await page.locator(`${sv} kbd`).allInnerTexts();
   fact(
     'shortcuts: the key table, as this device names the keys',
     (await count(page, `${sv} dt`)) === Object.keys(KEYS).length &&
       caps.includes('/') &&
+      caps.includes('X') &&
+      caps.includes('O') &&
       caps.includes('Alt+Shift+1 … 9') &&
       caps.includes('Ctrl+Enter') &&
       caps.includes('Space'),
     caps,
   );
-  await menu('About');
-  const about = await page.locator('.view[data-kind="about"]').innerText();
+  await page.locator(`${sv} .ditem`, { hasText: 'Version and licence' }).click();
+  const about = await page.locator(`${sv} .dpage`).innerText();
   fact(
     'about: version, engine, source, licence',
     /lkjstr \d+\.\d+\.\d+/.test(about) &&
-      about.includes('mock, protocol 2') &&
-      (await count(page, '.view[data-kind="about"] a[href="https://github.com/lkjsxc/lkjstr"]')) ===
-        1 &&
+      about.includes('mock, protocol 3') &&
+      (await count(page, `${sv} a[href="https://github.com/lkjsxc/lkjstr"]`)) === 1 &&
       about.includes('Apache License 2.0'),
     about,
   );
+  await page.locator(`${sv} .ditem`, { hasText: 'Privacy policy' }).click();
   fact(
-    'no heading repeats a tab title',
-    (await count(page, `${sv} h1, ${rv} h1, .view[data-kind="about"] h1`)) === 0,
+    'the privacy policy and the terms are pages of the tree',
+    (await page.locator(`${sv} .dpage`).innerText()).includes('no tracking cookies') &&
+      (await page.locator('.pane.cur .tab.active > span').innerText()) === 'Privacy policy',
   );
+  await page.locator(`${sv} .dgroup summary`).first().click();
+  fact(
+    'a group of the tree closes',
+    !(await page.locator(`${sv} .ditem`, { hasText: 'What lkjstr is' }).isVisible()),
+  );
+  fact('no heading repeats a tab title', (await count(page, `${sv} h1, ${rv} h1`)) === 0);
+  await page.keyboard.press('o');
+  await page.keyboard.type('terms');
+  await page.keyboard.press('Enter');
+  await page.locator('.pane.cur .tab.active > span', { hasText: 'Terms' }).waitFor();
+  fact('tab search goes to a docs page by its name', true);
 
   // Settings: the lists, each removal undoable.
   await menu('Settings');
@@ -1007,6 +1442,20 @@ async function pages(browser: Browser, still: Record<string, unknown>): Promise<
     'settings: a media server comes back first, as it was',
     (await page.locator(`${set} .sitem:visible .srow .clip`).first().innerText()) ===
       'media.example.jp',
+  );
+  const offers = await page.locator(`${set} .soffers .chip`).allInnerTexts();
+  fact(
+    'media servers: a few choices, Blossom first',
+    offers[0] === '+ blossom.band' && offers.length >= 3,
+    offers,
+  );
+  await page.locator(`${set} .soffers .chip`).first().click();
+  await page.locator(`${set} .srow`, { hasText: 'blossom.band' }).waitFor();
+  fact(
+    'the recommended Blossom server goes to the front and leaves the choices',
+    (await page.locator(`${set} .sitem:visible .srow .clip`).first().innerText()) ===
+      'blossom.band' &&
+      !(await page.locator(`${set} .soffers .chip`).allInnerTexts()).includes('+ blossom.band'),
   );
   await page.context().close();
 
@@ -1139,6 +1588,17 @@ async function accounts(browser: Browser): Promise<void> {
     (await text(`${av} .asaid.error`)).startsWith('No signer extension was found.'),
   );
   const key = page.locator(`${av} input[type="password"]`);
+  const between = await page.locator(`${av} .apair`).evaluate((el) => el.children.length);
+  fact(
+    'two ways in stand together; the key field waits behind one quiet line',
+    between === 2 && !(await key.isVisible()),
+    between,
+  );
+  await page.locator(`${av} [data-f="other"]`).click();
+  fact(
+    'the line opens the field with the keyboard in it',
+    await key.evaluate((el) => el === document.activeElement),
+  );
   await key.fill('hunter2 is not a key');
   await key.press('Enter');
   await page.locator(`${av} .asaid.error`, { hasText: 'not an nsec' }).waitFor();
@@ -1199,6 +1659,7 @@ async function accounts(browser: Browser): Promise<void> {
   );
 
   // A read-only account is plain at the composer and on every action before anything is pressed.
+  await page.locator(`${av} [data-f="other"][aria-expanded="false"]`).click();
   await key.fill(`npub1${'q'.repeat(58)}`);
   await key.press('Enter');
   await page.locator('.acct .ro').waitFor();

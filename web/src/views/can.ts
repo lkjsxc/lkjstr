@@ -16,6 +16,10 @@ export function ability(engine: Engine): Ability {
     : 'ok';
 }
 
+/** The engine understands the whole filter query, the people to keep, notifications in a timeline and the kinds
+ * of a profile (protocol 3). Controls it cannot serve are not drawn. */
+export const rich = (engine: Engine): boolean => (engine.info.get()?.version ?? 0) >= 3;
+
 /** The reason in words, with the way to the accounts. */
 export function denied(env: ViewEnv, why: Exclude<Ability, 'ok'>): void {
   toast(

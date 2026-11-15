@@ -1,6 +1,7 @@
-// The ways to sign in, each one row with no prose: a browser extension, a key or address typed into a field that
-// never echoes, or a new account. Each row says what it is waiting for and, when it fails, what happened and the
-// way forward, right where it was pressed. A typed key leaves the field the moment it is sent and is held nowhere
+// The ways to sign in. Two actions stand together with nothing between them: a browser extension, or a new
+// account. A key or a bunker address is typed into a field that never echoes, kept behind one quiet line below
+// them. Each way says what it is waiting for and, when it fails, what happened and the way forward, right under
+// where it was pressed. A typed key leaves the field the moment it is sent and is held nowhere
 // else; nothing a signer or the engine says back is shown, so a key can never surface in a message.
 import type { Action, Failure } from '../engine/protocol.ts';
 import { h } from '../shared/h.ts';
@@ -20,10 +21,11 @@ const failure = (way: Way, remote: boolean, code: Failure['code'] | undefined): 
 };
 
 export function mountAdd(env: ViewEnv): { el: HTMLElement; sync(): void } {
+  const pair = h('div', { class: 'asaid' }); // under the two buttons, for either of them
   const said: Record<Way, HTMLElement> = {
-    extension: h('div', { class: 'asaid' }),
+    extension: pair,
     key: h('div', { class: 'asaid' }),
-    create: h('div', { class: 'asaid' }),
+    create: pair,
   };
   let busy = false;
   const say = (way: Way, text: string, failed = false): void => {
@@ -59,7 +61,7 @@ export function mountAdd(env: ViewEnv): { el: HTMLElement; sync(): void } {
   const extension = h(
     'button',
     {
-      class: 'btn wide',
+      class: 'btn primary wide',
       'data-f': 'extension',
       onclick: () =>
         void run('extension', { a: 'account.add', how: 'extension' }, 'account.busy.extension'),
@@ -117,21 +119,36 @@ export function mountAdd(env: ViewEnv): { el: HTMLElement; sync(): void } {
     },
     t('account.add.create'),
   );
-  const createRow = h('div', { class: 'away' }, create, said.create);
+  const keyRow = h('div', { class: 'away', hidden: true }, form, said.key);
+  const other: HTMLElement = h(
+    'button',
+    {
+      class: 'amore',
+      'data-f': 'other',
+      'aria-expanded': false,
+      onclick: () => {
+        keyRow.hidden = !keyRow.hidden;
+        other.setAttribute('aria-expanded', String(!keyRow.hidden));
+        if (!keyRow.hidden) field.focus();
+      },
+    },
+    t('account.add.other'),
+  );
   function sync(): void {
     extension.disabled = create.disabled = field.disabled = busy;
     submit.disabled = busy || !field.value.trim();
     // An engine that cannot show a key afterwards is not asked to make one.
-    createRow.hidden = !canKey(env);
+    create.hidden = !canKey(env);
   }
   sync();
   return {
     el: h(
       'div',
       { class: 'aadd' },
-      h('div', { class: 'away' }, extension, said.extension),
-      h('div', { class: 'away' }, form, said.key),
-      createRow,
+      h('div', { class: 'apair' }, extension, create),
+      pair,
+      other,
+      keyRow,
     ),
     sync,
   };

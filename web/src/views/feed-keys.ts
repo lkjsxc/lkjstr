@@ -37,8 +37,6 @@ export function mountFeedKeys(o: {
   readonly closes: boolean;
   readonly row: (key: string) => Row | undefined;
   readonly node: (key: string) => HTMLElement | undefined;
-  /** The height of what covers the top of the scroller (the filter bar). */
-  readonly cover: () => number;
   /** The selection scrolled the list, or was set or dropped. */
   readonly moved: () => void;
   readonly top: () => void;
@@ -60,7 +58,7 @@ export function mountFeedKeys(o: {
   const reveal = (node: HTMLElement): void => {
     const box = el.getBoundingClientRect();
     const r = node.getBoundingClientRect();
-    const top = box.top + o.cover();
+    const top = box.top;
     if (r.top < top) el.scrollTop += r.top - top;
     else if (r.bottom > box.bottom) el.scrollTop += Math.min(r.bottom - box.bottom, r.top - top);
   };
@@ -78,7 +76,7 @@ export function mountFeedKeys(o: {
   const step = (dir: 1 | -1): void => {
     const all = rowEls();
     const box = el.getBoundingClientRect();
-    const top = box.top + o.cover();
+    const top = box.top;
     const at = all.indexOf(o.node(cursor) ?? el);
     const r = all[at]?.getBoundingClientRect();
     // Scrolled away from the selection (or none yet): start from what is on screen.

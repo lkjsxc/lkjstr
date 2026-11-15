@@ -1,13 +1,14 @@
-// The top bar: the name (a menu of the tabs about lkjstr itself), the workspace chips, and at the right the
+// The top bar: the name (a menu of the tabs about lkjstr itself: Settings, Relays, Docs), the workspace chips, and at the right the
 // composer and the account. Signed out, the account is one button that opens the sign-in tab; signed in, it is the
-// active account's face and a menu that switches accounts. The relay count shows only when the setting asks.
+// active account's face and a menu of what is the reader's own: their profile, the other accounts to switch to,
+// and the Accounts tab. Everything else is reached from the name. The relay count shows only when asked for.
 import type { Engine } from '../engine/client.ts';
 import { h, replaceChildren } from '../shared/h.ts';
 import { t } from '../shared/i18n.ts';
 import { icon } from '../shared/icons.ts';
 import type { SettingsStore } from '../shared/settings.ts';
 import { avatar, plainName } from '../views/parts.ts';
-import { openMenu } from '../wm/menus.ts';
+import { type MenuItem, openMenu } from '../wm/menus.ts';
 
 export type TopBar = { render(): void; dispose(): void };
 export function createTopBar(
@@ -22,21 +23,36 @@ export function createTopBar(
 ): TopBar {
   const relays = h('button', { class: 'relays muted', onclick: () => o.open('relays') });
   const account: HTMLElement = h('button', { class: 'acct' });
-  const pages = (...kinds: ('account' | 'settings' | 'relays' | 'shortcuts' | 'about')[]) =>
+  const pages = (...kinds: ('account' | 'settings' | 'relays' | 'docs')[]) =>
     kinds.map((kind) => ({ label: t(`view.${kind}`), run: () => o.open(kind) }));
   const brand: HTMLElement = h('button', { class: 'brand' }, 'lkjstr');
   brand.addEventListener('click', () =>
-    openMenu(o.layer, brand, pages('settings', 'relays', 'shortcuts', 'about')),
+    openMenu(o.layer, brand, pages('settings', 'relays', 'docs')),
   );
   account.addEventListener('click', () => {
     const a = o.engine.accounts.get();
     if (!a.active) return o.open('account');
+    const me = a.accounts.find((x) => x.author.pubkey === a.active);
+    const others = a.accounts.filter((x) => x.author.pubkey !== a.active);
     openMenu(o.layer, account, [
-      ...a.accounts.map((x) => ({
-        label: `${x.author.pubkey === a.active ? '✓ ' : ''}${plainName(x.author)}${x.signer === 'none' ? ` (${t('account.signer.none')})` : ''}`,
+      ...(me
+        ? [
+            {
+              label: plainName(me.author),
+              sub: t('view.profile'),
+              lead: avatar(me.author, 'av'),
+              run: () =>
+                o.open('profile', { pubkey: me.author.pubkey, title: plainName(me.author) }),
+            },
+          ]
+        : []),
+      ...others.map((x, i) => ({
+        label: `${plainName(x.author)}${x.signer === 'none' ? ` (${t('account.signer.none')})` : ''}`,
+        lead: avatar(x.author, 'av sm'),
+        sep: i === 0,
         run: () => void o.engine.act({ a: 'account.use', pubkey: x.author.pubkey }),
       })),
-      ...pages('account', 'settings', 'relays', 'shortcuts', 'about'),
+      { ...pages('account')[0], sep: true } as MenuItem,
     ]);
   });
   const render = (): void => {

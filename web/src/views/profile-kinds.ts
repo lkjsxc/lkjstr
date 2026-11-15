@@ -1,0 +1,59 @@
+// Which of a person's events their profile lists: posts, replies, reposts, reactions or media, as tabs under the
+// header (they scroll away with it). Saved with the tab. An engine older than protocol 3 lists what it always
+// did, and the tabs are not drawn.
+import type { Query } from '../engine/protocol.ts';
+import { h } from '../shared/h.ts';
+import { t } from '../shared/i18n.ts';
+import { rich } from './can.ts';
+import type { ViewEnv } from './registry.ts';
+
+export const PROFILE_KINDS = ['posts', 'replies', 'reposts', 'reactions', 'media'] as const;
+export type ProfileKind = (typeof PROFILE_KINDS)[number];
+const kindOf = (show: string | undefined): ProfileKind =>
+  PROFILE_KINDS.find((k) => k === show) ?? 'posts';
+
+export function mountProfileKinds(o: {
+  env: ViewEnv;
+  state: { show?: string };
+  save(): void;
+  reopen(): void;
+}): { seat(header: HTMLElement | undefined): void; query(): Partial<Query>; dispose(): void } {
+  const bar = h('div', { class: 'pkinds', role: 'tablist' });
+  let on = rich(o.env.engine);
+  const draw = (): void =>
+    bar.replaceChildren(
+      ...PROFILE_KINDS.map((k) =>
+        h(
+          'button',
+          {
+            class: k === kindOf(o.state.show) ? 'pkind on' : 'pkind',
+            role: 'tab',
+            'aria-selected': k === kindOf(o.state.show),
+            onclick: (e) => {
+              e.stopPropagation();
+              if (k === kindOf(o.state.show)) return;
+              o.state.show = k;
+              o.save();
+              draw();
+              o.reopen();
+            },
+          },
+          t(`pkind.${k}`),
+        ),
+      ),
+    );
+  draw();
+  const off = o.env.engine.info.subscribe(() => {
+    if (on === rich(o.env.engine)) return;
+    on = !on;
+    o.reopen();
+  });
+  return {
+    seat(header) {
+      if (!on || !header) return void bar.remove();
+      if (bar.parentElement !== header) header.append(bar);
+    },
+    query: () => (on ? { show: kindOf(o.state.show) } : {}),
+    dispose: off,
+  };
+}

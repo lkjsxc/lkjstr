@@ -1,8 +1,9 @@
 /* Feeds, the filter bar, the composer. */
 .feed { position: relative; }
 /* A tile wider than a page: the list keeps a reading measure in the middle of it. */
-.feed > .fslot, .feed > .list, .feed > .fstate { max-width: 720px; margin-inline: auto; }
-.fslot { position: sticky; top: 0; z-index: 3; }
+.feed > .fslot, .feed > .fpin, .feed > .list, .feed > .fstate { max-width: 720px; margin-inline: auto; }
+/* The filter row is the first row of the content and scrolls away with it. Only the new-notes pill is pinned. */
+.fpin { position: sticky; top: 0; z-index: 3; height: 0; }
 .view:focus { outline: none; }
 .fbar { padding: 6px 8px; border-bottom: 1px solid var(--line); background: var(--bg); }
 .fbar .rbar { position: static; margin: 0; padding: 0; }
@@ -10,8 +11,24 @@
 .rtoggle, .rbar input { height: 28px; }
 .rtoggle { flex: 0 0 30px; font-size: 11px; }
 .rtoggle.set { color: var(--accent); border-color: var(--accent); }
+.rclear[hidden] { display: none; }
+.rclear { flex: none; align-self: center; padding: 0 4px; font-size: 12.5px; white-space: nowrap; }
 .prow > .muted:first-child { flex: 0 0 76px; }
-.fresh { position: absolute; top: calc(100% + 8px); left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 4px; width: max-content; height: 26px; padding: 0 12px; border-radius: 13px; background: var(--seal); color: #fff; font-size: 12.5px; font-weight: 600; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25); }
+.pdays, .ppeople { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; min-width: 0; }
+.pdays input, .padd { box-sizing: border-box; height: 26px; padding: 0 6px; border-radius: 6px; font-size: 12.5px; font-variant-numeric: tabular-nums; }
+.pdays input { width: 104px; }
+.pdays input[aria-invalid] { border-color: var(--danger); }
+.padd { flex: 1 1 140px; min-width: 0; max-width: 220px; }
+.ppeople .chip.on { border-color: var(--accent); background: var(--wash); color: var(--fg); }
+/* A profile's kinds: quiet tabs under its header. */
+.pkinds { display: flex; gap: 2px; margin: 10px -4px -9px; overflow-x: auto; scrollbar-width: none; }
+.pkind { flex: none; padding: 6px 10px; color: var(--muted); font-size: 13px; white-space: nowrap; }
+.pkind:hover { color: var(--fg); }
+.pkind.on { color: var(--fg); font-weight: 600; box-shadow: inset 0 -2px var(--accent); }
+/* The time beside a held scrollbar thumb. */
+.scrub { position: absolute; right: 6px; z-index: 4; padding: 2px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--raised); box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25); color: var(--fg); font-size: 12.5px; font-variant-numeric: tabular-nums; white-space: nowrap; pointer-events: none; }
+.scrub[hidden] { display: none; }
+.fresh { position: absolute; top: 8px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 4px; width: max-content; height: 26px; padding: 0 12px; border-radius: 13px; background: var(--seal); color: #fff; font-size: 12.5px; font-weight: 600; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25); }
 .fresh .i { width: 13px; height: 13px; }
 .fstate { padding: 14px 12px 28px; font-size: 12.5px; text-align: center; }
 .fstate:empty { display: none; }
@@ -54,6 +71,7 @@
 .mstage { position: relative; flex: 1; min-height: 0; overflow: hidden; user-select: none; }
 .mstage.k-image { cursor: zoom-in; touch-action: none; }
 .mstage.pan { cursor: grab; }
+.mstage.pan.held { cursor: grabbing; }
 .mstage img { position: absolute; top: 0; left: 0; max-width: none; transform-origin: 0 0; will-change: transform; }
 .mstage video { display: block; width: 100%; height: 100%; object-fit: contain; background: #000; }
 .mstage.k-audio { display: grid; place-items: center; padding: 0 12px; }

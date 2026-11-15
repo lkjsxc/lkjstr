@@ -1,5 +1,5 @@
-// The keys that work in every tab: moving between tabs and tiles, the pairs that go somewhere (G then H), a new
-// note, the list of keys, and Escape out of a field. Single keys never fire while typing; the Alt+Shift ones do
+// The keys that work in every tab: moving between tabs and tiles, closing one, searching them, the pairs that go
+// somewhere (G then H), the composer, the list of keys, and Escape out of a field. Single keys never fire while typing; the Alt+Shift ones do
 // not either, so the same chord can keep its meaning inside text (selecting by word on Apple devices).
 import { type KeyId, pressed, typing } from '../shared/keys.ts';
 import { popoverOpen } from './menus.ts';
@@ -13,10 +13,12 @@ export type WmKeyOps = {
   newTab(): void;
   close(): void;
   reopen(): void;
-  /** Shows a tab of this kind in the current tile: the one that is there, or a new one. */
-  go(kind: string): void;
-  /** Always a new tab. */
-  open(kind: string): void;
+  /** Shows a tab of this kind in the current tile: the one that is there, or a new one (starting with `state`). */
+  go(kind: string, state?: object): void;
+  /** The composer, with the keyboard in it. */
+  compose(): void;
+  /** The field that searches the open tabs and what a new one could be. */
+  search(): void;
 };
 
 export function mountWmKeys(ops: WmKeyOps): () => void {
@@ -32,8 +34,9 @@ export function mountWmKeys(ops: WmKeyOps): () => void {
     ['goHome', () => ops.go('home')],
     ['goNotifications', () => ops.go('notifications')],
     ['goBookmarks', () => ops.go('bookmarks')],
-    ['compose', () => ops.open('compose')],
-    ['help', () => ops.go('shortcuts')],
+    ['compose', ops.compose],
+    ['tabSearch', ops.search],
+    ['help', () => ops.go('docs', { page: 'shortcuts' })],
   ];
   const key = (e: KeyboardEvent): void => {
     if (e.defaultPrevented || popoverOpen()) return;

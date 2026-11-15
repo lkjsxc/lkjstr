@@ -81,6 +81,13 @@ export function addForm(
 }
 
 /** Names of upload protocols: proper nouns, the same in every language. */
+/** Media servers offered with one press: Blossom first (the first is the recommended default), then NIP-96. */
+export const SERVER_CHOICES: readonly string[] = [
+  'https://blossom.band',
+  'https://blossom.primal.net',
+  'https://nostr.build',
+  'https://nostrcheck.me',
+];
 const PROTOCOLS: Partial<Record<ServerRow['protocol'], string>> = {
   blossom: 'Blossom',
   nip96: 'NIP-96',
@@ -167,6 +174,32 @@ export function listEntries(env: ViewEnv): { entries: Entry[]; dispose: Disposer
     return true;
   });
 
+  // A few servers many people use, one press each; the Blossom ones first, and the first of them goes to the front
+  // of the list, where the preferred server stands. Only those not on the list are offered.
+  const offers = h('div', { class: 'soffers' });
+  const drawOffers = (): void => {
+    const have = new Set(servers.map((x) => x.url));
+    const rest = SERVER_CHOICES.filter((url) => !have.has(url));
+    offers.hidden = rest.length === 0;
+    offers.replaceChildren(
+      h('span', { class: 'muted' }, t('servers.choices')),
+      ...rest.map((url) =>
+        h(
+          'button',
+          {
+            class: 'chip',
+            'data-server': url,
+            onclick: () => {
+              const now = servers.map((x) => x.url);
+              saveServers(url === SERVER_CHOICES[0] ? [url, ...now] : [...now, url]);
+            },
+          },
+          `+ ${hostOf(url)}`,
+        ),
+      ),
+    );
+  };
+
   const offs = [
     watchList(env, 'mutes', (rows: readonly Row[], loaded) => {
       muted = rows.filter((r): r is MuteRow => r.kind === 'mute');
@@ -179,6 +212,7 @@ export function listEntries(env: ViewEnv): { entries: Entry[]; dispose: Disposer
     watchList(env, 'media-servers', (rows: readonly Row[], loaded) => {
       servers = rows.filter((r): r is ServerRow => r.kind === 'server');
       serverBox.draw(servers, loaded);
+      drawOffers();
     }),
   ];
   return {
@@ -192,7 +226,7 @@ export function listEntries(env: ViewEnv): { entries: Entry[]; dispose: Disposer
         ),
       ),
       ...mutes.map((m) => entryOf(`set.mute.${m.k}`, m.box.el, forms[m.k] ?? null)),
-      entryOf('set.servers', serverBox.el, serverForm),
+      entryOf('set.servers', serverBox.el, serverForm, offers),
     ],
     dispose: () => offs.forEach((off) => off()),
   };

@@ -1,0 +1,51 @@
+import { describe, expect, it } from 'vitest';
+import { scrubText } from '../src/views/feed-scrub.ts';
+import { filterActive, filterNarrows, filterQuery } from '../src/views/filter-bar.ts';
+
+describe('the filter of a feed', () => {
+  it('a filter becomes query fields; an untouched one adds nothing', () => {
+    expect(filterQuery({})).toEqual({});
+    expect(filterQuery({ text: ' 猫 ', replies: false, media: 'only' })).toEqual({
+      text: '猫',
+      replies: false,
+      media: 'only',
+    });
+    const day = new Date(2026, 10, 14).getTime();
+    expect(filterQuery({ start: '2026-11-14', end: '2026-11-14' })).toEqual({
+      since: day,
+      until: day + 86_400_000 - 1,
+    });
+    expect(
+      filterQuery({
+        text: '猫 "静かな 朝" -spam -"buy now" from:aoi from:"Sam Rivera" has:image has:LINK has:x',
+        people: ['aoi', 'taro'],
+        news: true,
+      }),
+    ).toEqual({
+      text: '猫 has:x',
+      phrases: ['静かな 朝'],
+      exclude: ['spam', 'buy now'],
+      from: ['aoi', 'Sam Rivera', 'taro'],
+      has: ['image', 'link'],
+      notifications: true,
+    });
+    // An engine older than protocol 3 gets the typed words as they are, and nothing it does not know.
+    expect(filterQuery({ text: 'from:aoi "x y"', people: ['taro'], news: true }, false)).toEqual({
+      text: 'from:aoi "x y"',
+    });
+    expect(filterActive({ text: 'x' })).toBe(false);
+    expect(filterActive({ reposts: false })).toBe(true);
+    expect(filterNarrows({ text: 'x' })).toBe(true);
+    expect(filterNarrows({ shown: true, open: true, text: ' ' })).toBe(false);
+    expect(filterActive({ people: ['aoi'] })).toBe(true);
+  });
+});
+
+describe('the time beside a held scrollbar', () => {
+  it('says as much as the span of the list needs', () => {
+    const at = new Date(2026, 10, 15, 9, 5).getTime();
+    expect(scrubText(at, at + 3_600_000, at - 3_600_000)).toBe('09:05');
+    expect(scrubText(at, at + 3_600_000, at - 3 * 86_400_000)).toBe('2026/11/15 09:05');
+    expect(scrubText(at, at, at - 200 * 86_400_000)).toBe('2026/11/15');
+  });
+});

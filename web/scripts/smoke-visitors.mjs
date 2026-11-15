@@ -1,5 +1,6 @@
 // Existing visitor/key checks shared by the real-engine smoke.
 import { randomBytes } from 'node:crypto';
+import { openKeyField, seedLayouts } from './smoke-seed.mjs';
 
 const accounts = '.view[data-kind="account"]:visible';
 // The npub of a public key nobody here has metadata for (the curve's generator point: nobody's account).
@@ -61,6 +62,7 @@ async function visitorChecks({ page, browser, base, relayUrl, errors, shots, sho
   /** A fresh visitor in a context of their own: no account, the loopback relay only. */
   const visit = async (options, path = '') => {
     const fresh = await browser.newContext(options);
+    await seedLayouts(fresh);
     await fresh.route('**/*', (route) =>
       route.request().url().startsWith(`${base}/`) ? route.continue() : route.abort(),
     );
@@ -197,6 +199,7 @@ async function visitorChecks({ page, browser, base, relayUrl, errors, shots, sho
   const throwaway = bech32('nsec', randomBytes(32).toString('hex'));
   const keyed = await visit({ viewport: { width: 1024, height: 768 }, locale: 'en-US' });
   await keyed.locator('.acct.out').click();
+  await openKeyField(keyed);
   await keyed.locator(`${accounts} input`).fill(throwaway);
   await keyed.locator(`${accounts} input`).press('Enter');
   await keyed.locator('.acct:not(.out)').waitFor();

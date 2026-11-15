@@ -11,6 +11,12 @@ export type MenuItem = {
   readonly danger?: boolean;
   /** The key that does the same, shown quietly at the right. */
   readonly key?: string;
+  /** Drawn before the label (a face). */
+  readonly lead?: HTMLElement;
+  /** A second, quieter line under the label. */
+  readonly sub?: string;
+  /** A hairline above this item: it starts another group. */
+  readonly sep?: boolean;
 };
 export type PopoverOpts = {
   /** A panel stays through a window resize (an on-screen keyboard opening) and is only put back in place. */
@@ -90,7 +96,8 @@ export function openMenu(
   const menu = h(
     'div',
     { class: 'menu', role: 'menu' },
-    items.map((it) =>
+    items.flatMap((it) => [
+      it.sep ? h('div', { class: 'msep', role: 'separator' }) : null,
       h(
         'button',
         {
@@ -99,10 +106,13 @@ export function openMenu(
           class: it.danger ? 'danger' : null,
           onclick: () => (close(), it.run()),
         },
-        it.label,
+        it.lead ?? null,
+        it.sub
+          ? h('span', { class: 'mtext' }, it.label, h('span', { class: 'msub' }, it.sub))
+          : it.label,
         it.key ? h('kbd', null, it.key) : null,
       ),
-    ),
+    ]),
   );
   // The keyboard is in the menu from the start: the arrows walk it, Enter chooses, Escape gives the keyboard back.
   const enabled = (): HTMLElement[] => [...menu.querySelectorAll<HTMLElement>('button:enabled')];

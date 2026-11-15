@@ -7,7 +7,9 @@
 .note.pending { opacity: 0.7; }
 .note.hid { padding: 6px 12px; font-size: 12.5px; }
 .nrow { display: grid; grid-template-columns: var(--avatar, 36px) minmax(0, 1fr); gap: 0 10px; }
-.avb { align-self: start; padding: 0; border-radius: 50%; }
+.avb { align-self: start; flex: none; padding: 0; border-radius: 50%; line-height: 0; }
+.avb:hover .av { filter: brightness(0.94); }
+.person > .avb, .qhead > .avb, .nfaces > .avb, .known > .avb { align-self: center; }
 .av { display: inline-grid; place-items: center; flex: none; width: var(--avatar, 36px); height: var(--avatar, 36px); overflow: hidden; border-radius: 50%; color: #fff; font-size: calc(var(--avatar, 36px) * 0.45); font-weight: 600; line-height: 1; user-select: none; vertical-align: middle; }
 .av img { width: 100%; height: 100%; object-fit: cover; }
 .av.sm { --avatar: 20px; }
@@ -61,11 +63,12 @@
 .rchip:hover { border-color: var(--sep); color: var(--fg); }
 .rchip.on { border-color: var(--accent); background: var(--wash); color: var(--fg); }
 .rchip .emo { height: 16px; vertical-align: 0; }
-/* The action row: icons with quiet counts, each in a slot of fixed width so a count never moves its neighbours. */
+/* The action row: reply, repost, reaction, then the rest. The four that carry a count share the width equally,
+   so every count starts at the same distance from its icon and never moves its neighbours; the three without
+   one are squares of the same size. */
 .acts { display: flex; max-width: 420px; margin: 1px 0 0 -7px; color: var(--faint); }
 .act { display: flex; align-items: center; gap: 4px; flex: 1 0 30px; min-width: auto; height: 28px; padding: 0 7px; border-radius: 6px; font-size: 12.5px; font-variant-numeric: tabular-nums; }
 .act.a-more, .act.a-bookmark, .act.a-smile { flex: 0 0 30px; min-width: 30px; }
-.act.a-smile { justify-content: flex-end; }
 .act > span { white-space: nowrap; }
 /* By the tile's width, not the window's: a narrow tile always shows the same six buttons, then drops the zap. The bookmark and the zap stay in the "…" menu, and a set bookmark is a small mark beside the time. */
 .bmark { display: none; flex: none; align-self: center; color: var(--accent); }

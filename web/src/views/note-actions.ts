@@ -1,4 +1,4 @@
-// What can be done with a note: the icon row (reply, repost or quote, any emoji, like, zap, bookmark, more) and
+// What can be done with a note: the icon row (reply, repost or quote, like, zap, then any emoji, bookmark, more) and
 // under it the reaction chips, so the row never moves when the first reaction arrives. Every action shows at once (the engine patches the row) and reports a failure in words.
 import type { ActResult } from '../engine/client.ts';
 import type { Action, NoteRow } from '../engine/protocol.ts';
@@ -162,16 +162,16 @@ export function actionRow(row: NoteRow, env: ViewEnv): HTMLElement {
         { label: t('act.quote'), run: () => env.open('compose', quote) },
       ]),
     ),
+    button('heart', 'act.react', n(row.counts.reactions), Boolean(mine), () =>
+      react(env, row, mine?.emoji ?? DEFAULT_REACTION, mine?.url, !mine),
+    ),
+    zap,
     // Pure actions with no count have nothing to show a reader who cannot act.
     off
       ? null
       : button('smile', 'emoji.pick', '', false, (el) =>
           openEmojiPicker(env, el, (p) => react(env, row, p.emoji, p.url, true)),
         ),
-    button('heart', 'act.react', n(row.counts.reactions), Boolean(mine), () =>
-      react(env, row, mine?.emoji ?? DEFAULT_REACTION, mine?.url, !mine),
-    ),
-    zap,
     off ? null : mark,
     button('more', 'act.more', '', false, (el) => openMenu(env.layer, el, moreItems()), false),
   );
