@@ -104,7 +104,11 @@ async function remote(options, secret) {
         (await page.locator(`${compose} textarea`).inputValue()) === 'next remote note',
     );
     bunker.up();
-    await post(page, 'keep bunker outage draft');
+    await page
+      .locator(`${compose} .cdraft`)
+      .filter({ hasText: 'keep bunker outage draft' })
+      .getByRole('button', { name: 'Retry', exact: true })
+      .click();
     await page.waitForFunction(() =>
       [...document.querySelectorAll('.cresult')].some((e) => e.textContent.includes('Delivered')),
     );

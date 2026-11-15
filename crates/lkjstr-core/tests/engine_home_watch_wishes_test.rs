@@ -3,6 +3,7 @@ use lkjstr_core::engine::{
     network::{Effect, Network},
     protocol::{Query, Source},
 };
+use lkjstr_core::store::Store;
 use lkjstr_protocol::NostrFilter;
 use serde_json::{Value, json};
 fn frames(n: &mut Network) -> Vec<Value> {
@@ -33,7 +34,11 @@ fn an_owners_home_keeps_its_follow_watch_after_eose_and_releases_it_on_close() {
         source: Source::Profile,
         ..Default::default()
     };
-    n.plan(vec![("lookup".into(), f.clone(), lookup.clone())], 0);
+    n.plan(
+        vec![("lookup".into(), f.clone(), lookup.clone())],
+        &Store::new(16),
+        0,
+    );
     n.connected(relay, 0);
     let first = frames(&mut n);
     let id = first.iter().find(|v| v[0] == "REQ").expect("request")[1].clone();
@@ -48,6 +53,7 @@ fn an_owners_home_keeps_its_follow_watch_after_eose_and_releases_it_on_close() {
             ("lookup".into(), f.clone(), lookup.clone()),
             ("home".into(), f.clone(), home),
         ],
+        &Store::new(16),
         200,
     );
     n.tick(200);
@@ -55,7 +61,7 @@ fn an_owners_home_keeps_its_follow_watch_after_eose_and_releases_it_on_close() {
     let id = again.iter().find(|v| v[0] == "REQ").expect("live request")[1].clone();
     n.message(relay, &json!(["EOSE", id]).to_string(), 201);
     assert!(!frames(&mut n).iter().any(|v| v[0] == "CLOSE"));
-    n.plan(vec![("lookup".into(), f, lookup)], 202);
+    n.plan(vec![("lookup".into(), f, lookup)], &Store::new(16), 202);
     assert!(frames(&mut n).iter().any(|v| v[0] == "CLOSE"));
 }
 
@@ -98,7 +104,7 @@ fn live_follow_watch_and_timeline_share_one_slot_in_either_arrival_order() {
                 } else {
                     feed.clone()
                 }];
-                n.plan(wants.clone(), 0);
+                n.plan(wants.clone(), &Store::new(16), 0);
                 n.connected(relay, 1);
                 let first = frames(&mut n);
                 let initial = first.iter().find(|f| f[0] == "REQ").expect("initial");
@@ -115,7 +121,7 @@ fn live_follow_watch_and_timeline_share_one_slot_in_either_arrival_order() {
                         Query::default(),
                     ));
                 }
-                n.plan(wants, 100);
+                n.plan(wants, &Store::new(16), 100);
                 let mut active = Some(initial[1].clone());
                 let mut served = std::collections::BTreeMap::<u64, usize>::new();
                 served.insert(if watch_first { 3 } else { 1 }, 1);
@@ -143,7 +149,7 @@ fn live_follow_watch_and_timeline_share_one_slot_in_either_arrival_order() {
                     "timeline resumes"
                 );
                 assert!(served.values().sum::<usize>() <= 11, "bounded rotation");
-                n.plan(vec![], 4100);
+                n.plan(vec![], &Store::new(16), 4100);
                 let closed = frames(&mut n);
                 assert!(closed.iter().any(|f| f[0] == "CLOSE"));
                 n.tick(5000);

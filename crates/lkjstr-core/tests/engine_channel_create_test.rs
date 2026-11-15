@@ -94,3 +94,82 @@ fn sign_requests(s: &mut wire::Session, e: &mut Engine, key: &SecretKeyBytes) {
         }
     }
 }
+
+#[test]
+fn create_accepts_different_relays_per_stage_and_keeps_background_delivery_identity() {
+    let key = generate_secret_key();
+    let list = finalize_event(
+        &EventTemplate {
+            pubkey: None,
+            created_at: 0,
+            kind: 10005,
+            tags: vec![],
+            content: String::new(),
+        },
+        &key,
+    )
+    .expect("list");
+    let owner = list.pubkey.clone();
+    let mut e = Engine::new();
+    let mut s = wire::Session::default();
+    let second = "wss://second.test/";
+    e.store.insert(list, None);
+    e.network.configure(vec![RELAY.into(), second.into()], 0);
+    e.network.connected(RELAY, 1);
+    e.network.connected(second, 1);
+    accept(
+        &mut s,
+        &mut e,
+        json!({"t":"act","req":"create","action":{"a":"channel.save","as":owner,"channel":{"name":"room","about":""}}}),
+        1000,
+    );
+    sign_requests(&mut s, &mut e, &key);
+    // Publication wants reconnect transports that had no read work.
+    e.network.connected(RELAY, 1001);
+    e.network.connected(second, 1001);
+    let frames = engine_review_support::frames(&mut e);
+    let id = |kind| {
+        frames
+            .iter()
+            .find(|f| f[0] == "EVENT" && f[1]["kind"] == kind)
+            .expect("published stage")[1]["id"]
+            .clone()
+    };
+    let creation = id(40);
+    let joined = id(10005);
+    e.network
+        .message(RELAY, &json!(["OK", creation, true, ""]).to_string(), 1002);
+    assert!(!output(&mut s, &mut e).iter().any(|m| m["t"] == "result"));
+    e.network
+        .message(second, &json!(["OK", joined, true, ""]).to_string(), 1003);
+    let messages = output(&mut s, &mut e);
+    let result = messages
+        .iter()
+        .find(|m| m["t"] == "result")
+        .expect("create result");
+    assert_eq!(result["req"], "create");
+    assert_eq!(result["ok"], true);
+    assert_eq!(result["id"], creation);
+    e.network
+        .message(second, &json!(["OK", creation, true, ""]).to_string(), 1004);
+    let messages = output(&mut s, &mut e);
+    assert!(
+        messages
+            .iter()
+            .any(|m| m["t"] == "delivery" && m["req"] == "create")
+    );
+    assert!(!messages.iter().any(|m| m["t"] == "result"));
+    e.network.tick(31000);
+    let messages = output(&mut s, &mut e);
+    assert!(
+        messages
+            .iter()
+            .any(|m| m["t"] == "delivery" && m["req"] == "create")
+    );
+    assert!(
+        !messages
+            .iter()
+            .any(|m| m["req"].as_str().is_some_and(|r| r.contains('~')))
+    );
+    assert!(!messages.iter().any(|m| m["t"] == "result"));
+}

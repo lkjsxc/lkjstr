@@ -1,4 +1,4 @@
-//! Two signed publications form a create. Report the creation id only after both settle.
+//! Two signed publications form a create. Both need one acceptance before success.
 use super::{
     Engine,
     protocol::{Action, Delivery, Output},
@@ -11,7 +11,13 @@ pub(super) struct Creation {
     error: Option<String>,
 }
 impl Engine {
-    pub(super) fn start_channel_create(&mut self, req: String, event: NostrEvent, now: u64) {
+    pub(super) fn start_channel_create(
+        &mut self,
+        req: String,
+        event: NostrEvent,
+        routes: Vec<super::publication_plan::Destination>,
+        now: u64,
+    ) {
         let id = event.id.clone();
         let account = event.pubkey.clone();
         self.channel_creates.insert(
@@ -23,7 +29,8 @@ impl Engine {
                 error: None,
             },
         );
-        self.network.publish(format!("{req}~channel40"), event, now);
+        self.network
+            .publish(format!("{req}~channel40"), event, routes, now);
         self.action(
             format!("{req}~channel10005"),
             account,
@@ -44,13 +51,16 @@ impl Engine {
                     .map(|r| (r.to_owned(), 0))
                     .or_else(|| r.strip_suffix("~channel10005").map(|r| (r.to_owned(), 1)))
             });
-            let Some((req, stage)) = stage.filter(|(r, _)| self.channel_creates.contains_key(r))
-            else {
+            let Some((req, stage)) = stage else {
                 out.push(output);
                 continue;
             };
             let Some(job) = self.channel_creates.get_mut(&req) else {
-                out.push(output);
+                // Background deliveries outlive the combined success result.
+                out.push(match output {
+                    Output::Delivery { deliveries, .. } => Output::Delivery { req, deliveries },
+                    other => other,
+                });
                 continue;
             };
             match output {
@@ -82,7 +92,7 @@ impl Engine {
                     let key = delivery.relay.clone();
                     if deliveries
                         .get(&key)
-                        .is_none_or(|old| old.state == "accepted")
+                        .is_none_or(|old| old.state != "accepted")
                     {
                         deliveries.insert(key, delivery);
                     }

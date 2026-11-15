@@ -86,6 +86,9 @@ Seams worth knowing inside `src/views/`:
   drawn for an engine that reports less.
 - Protocol 5 adds `their-home`, the bounded local `people` directory, selected
   mention ranges and kind-0 picture revisions; see [wishes.md](wishes.md).
+- Protocol 5 adds exact cached month counts and per-window ordinals (`timeline`),
+  plus month/ordinal anchors on the existing `window` input. Supported lists
+  use the [time rail](time-rail.md); unsupported sources retain native scrolling.
 - `hint` (visible subscriptions, page hidden, idle, network quality) and
   `configure` (engine-side settings; the interface owns their storage).
 

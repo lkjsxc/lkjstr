@@ -1,5 +1,5 @@
 // The composer saves typed drafts and retains failed channel messages for retry.
-import type { Delivery, Draft, Emoji, Mention, Uploaded } from '../engine/protocol.ts';
+import type { Delivery, Draft, Emoji, Failure, Mention, Uploaded } from '../engine/protocol.ts';
 import { h, replaceChildren } from '../shared/h.ts';
 import { type Key, t } from '../shared/i18n.ts';
 import { icon } from '../shared/icons.ts';
@@ -7,7 +7,7 @@ import { keyCaps, pressed } from '../shared/keys.ts';
 import { kv } from '../shared/storage.ts';
 import { loadViewState, saveViewState } from '../shared/view-state.ts';
 import { openMenu } from '../wm/menus.ts';
-import { ability } from './can.ts';
+import { ability, failureText } from './can.ts';
 import { createComposeMedia } from './compose-media.ts';
 import { createMentions } from './compose-mentions.ts';
 import { type ChannelDraft, createChannelOutbox } from './compose-outbox.ts';
@@ -196,7 +196,8 @@ export function mountCompose(el: HTMLElement, env: ViewEnv, channel?: string): (
   state.outbox = undefined;
   const media = createComposeMedia(thumbs, env, state, save, ready);
 
-  function showDelivery(relays: readonly Delivery[], final: boolean): void {
+  function showDelivery(relays: readonly Delivery[], final: boolean, error?: Failure): void {
+    if (error) return replaceChildren(result, h('div', { class: 'error' }, failureText(error)));
     const ok = relays.filter((r) => r.state === 'ok').length;
     const failed = relays.filter((r) => r.state === 'failed' || r.state === 'timeout');
     replaceChildren(

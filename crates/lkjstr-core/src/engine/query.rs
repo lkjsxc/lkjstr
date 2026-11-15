@@ -138,7 +138,7 @@ pub fn events(store: &Store, q: &Query) -> Vec<Event> {
             authors: f.authors.clone().map(|a| a.into_iter().collect()),
             mention: f.tags.get("p").and_then(|v| v.first()).cloned(),
             until: f.until,
-            limit: 6000,
+            limit: store.len(),
             ..Default::default()
         })
     };
@@ -156,39 +156,8 @@ pub fn events(store: &Store, q: &Query) -> Vec<Event> {
             .unwrap_or_default();
     }
     let authors = super::rich::authors(store, q);
-    events.retain(|e| {
-        (q.source != Source::Channel
-            || lkjstr_protocol::channel_id(e).as_ref() == q.target.as_ref())
-            && authors.as_ref().is_none_or(|a| a.contains(&e.pubkey))
-            && (q.source == Source::Bookmarks || lkjstr_protocol::matches_filter(e, &f))
-            && if q.source == Source::Profile
-                && matches!(q.filters.show.as_deref(), Some("reposts" | "reactions"))
-            {
-                tag_values(e, "e")
-                    .last()
-                    .and_then(|id| store.get(id))
-                    .is_none_or(|target| {
-                        let mut shown = q.clone();
-                        shown.filters.authors = None;
-                        shown.filters.from = None;
-                        shown.filters.since = None;
-                        shown.filters.until = None;
-                        matches_extra(&target, &shown)
-                    })
-            } else if e.kind == 6 && q.source != Source::Notifications {
-                q.filters.reposts != Some(false)
-                    && tag_values(e, "e")
-                        .last()
-                        .and_then(|id| store.get(id))
-                        .is_none_or(|target| matches_note(store, q, &target))
-            } else {
-                matches_extra(e, q)
-            }
-    });
+    events.retain(|e| accepts(store, q, e, &f, &authors));
     events.sort_by(|a, b| (b.created_at, &b.id).cmp(&(a.created_at, &a.id)));
-    if q.source == Source::Channel {
-        events.truncate(6000);
-    }
     if q.filters.notifications == Some(true)
         && matches!(q.source, Source::Home | Source::Global | Source::TheirHome)
     {
@@ -234,3 +203,39 @@ pub fn events(store: &Store, q: &Query) -> Vec<Event> {
 }
 pub(super) use super::query_hidden::matches_note;
 pub use super::query_hidden::{hidden, hidden_with_lists};
+
+/// Shared membership predicate for ordinary windows and the incremental time index.
+pub(super) fn accepts(
+    store: &Store,
+    q: &Query,
+    e: &lkjstr_protocol::NostrEvent,
+    f: &NostrFilter,
+    authors: &Option<Vec<String>>,
+) -> bool {
+    (q.source != Source::Channel || lkjstr_protocol::channel_id(e).as_ref() == q.target.as_ref())
+        && authors.as_ref().is_none_or(|a| a.contains(&e.pubkey))
+        && (q.source == Source::Bookmarks || lkjstr_protocol::matches_filter(e, f))
+        && if q.source == Source::Profile
+            && matches!(q.filters.show.as_deref(), Some("reposts" | "reactions"))
+        {
+            tag_values(e, "e")
+                .last()
+                .and_then(|id| store.get(id))
+                .is_none_or(|target| {
+                    let mut shown = q.clone();
+                    shown.filters.authors = None;
+                    shown.filters.from = None;
+                    shown.filters.since = None;
+                    shown.filters.until = None;
+                    matches_extra(&target, &shown)
+                })
+        } else if e.kind == 6 && q.source != Source::Notifications {
+            q.filters.reposts != Some(false)
+                && tag_values(e, "e")
+                    .last()
+                    .and_then(|id| store.get(id))
+                    .is_none_or(|target| matches_note(store, q, &target))
+        } else {
+            matches_extra(e, q)
+        }
+}

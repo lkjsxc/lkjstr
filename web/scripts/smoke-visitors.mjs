@@ -240,4 +240,4 @@ async function visitorChecks({ page, browser, base, relayUrl, errors, shots, sho
   await keyed.context().close();
 }
 
-export { accounts, installExtension, npub, visitorChecks };
+export { accounts, bech32, installExtension, npub, visitorChecks };

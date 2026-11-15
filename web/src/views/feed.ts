@@ -13,12 +13,14 @@ import { createFresh } from './feed-fresh.ts';
 import { mountFeedKeys } from './feed-keys.ts';
 import { createKeeper, type Place } from './feed-place.ts';
 import { mountScrub } from './feed-scrub.ts';
+import { CHILD, DATED, FILTERED, OWN } from './feed-sources.ts';
 import { feedTitle } from './feed-title.ts';
 import { filterQuery } from './filter-bar.ts';
 import { onHeld } from './held.ts';
 import { mountProfileKinds } from './profile-kinds.ts';
 import type { ViewEnv } from './registry.ts';
 import { watchHomeTitle } from './their-home.ts';
+import { mountTimeRail } from './time-rail.ts';
 
 const PAGE = 60; // rows asked for beyond what is on screen
 const LIMIT = 800;
@@ -32,27 +34,6 @@ type State = BarState & {
   show?: string;
   pos?: Place;
 };
-const CHILD = new Set(['thread', 'profile', 'hashtag', 'following', 'followers', 'channel']);
-const FILTERED = new Set([
-  'their-home',
-  'home',
-  'global',
-  'hashtag',
-  'bookmarks',
-  'search',
-  'profile',
-]);
-const DATED = new Set([
-  'their-home',
-  'home',
-  'global',
-  'hashtag',
-  'bookmarks',
-  'search',
-  'profile',
-  'channel',
-]);
-const OWN = new Set(['home', 'notifications', 'bookmarks']);
 export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => void {
   const state: State = loadViewState<State>(env.instance);
   const save = (): void => saveViewState(env.instance, state);
@@ -105,6 +86,9 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
     ...kinds?.query(),
   });
   const request = (anchor: Anchor, before: number, after: number): void => {
+    const extra = Math.max(0, before + after - LIMIT);
+    if (before > after) before -= extra;
+    else after -= extra;
     waiting = true;
     sub?.window(anchor, before, after);
   };
@@ -118,6 +102,7 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
     settle();
     fresh.read(rows);
     keys.paint();
+    rail.sync();
   };
   let seated = kind !== 'thread' || Boolean(state.pos);
   const seat = (): void => {
@@ -132,7 +117,6 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
     if (rows[0] !== focus) keeper.set({ key: focus.key, off: 0 });
   };
   const showState = (): void => {
-    // A profile's header alone is not content: the line below it says whether notes are still being asked for.
     const empty = rows.every((r) => r.kind === 'profile' || r.kind === 'channel');
     const phase = sstate?.phase ?? 'cache';
     const key: Key | null = !empty
@@ -146,15 +130,15 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
           : phase === 'failed'
             ? 'feed.failed'
             : 'feed.empty';
-    // Signed out, a list of one's own is not "empty": the one thing to say is the way in.
     if (empty && !account && OWN.has(kind)) status.replaceChildren(signIn);
     else status.textContent = key ? t(key) : '';
     status.title = sstate?.lastArrival
       ? t('feed.lastArrival', { time: fullTime(sstate.lastArrival) })
       : '';
   };
+  /** Decides, from where the reader is, which window the engine should keep. */
   const follow = (): void => {
-    if (waiting || !sub || !env.visible.get()) return;
+    if (waiting || rail.busy() || !sub || !env.visible.get()) return;
     const top = el.scrollTop;
     const room = el.scrollHeight - top - el.clientHeight;
     const first = rows[0]?.key;
@@ -183,6 +167,7 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
   };
   const open = (keep = false): void => {
     sub?.close();
+    rail.reset();
     rows = [];
     const place = keep ? keeper.get() : undefined;
     if (!keep) keeper.forget(), keys.clear();
@@ -196,6 +181,7 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
         atTop = top;
         atBottom = bottom;
         waiting = false;
+        rail.window();
         if (jump) (jump = false), keeper.forget();
         sync();
         // The place is a row that no longer exists (deleted, muted, a filter): the list starts over from its head.
@@ -209,6 +195,7 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
         sync();
         title(); // a name that arrives late renames the tab in place
       },
+      timeline: (next) => rail.timeline(next),
       fresh(count) {
         fresh.show(count);
       },
@@ -229,7 +216,6 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
     jump = live = true;
     request('top', 0, PAGE);
   };
-
   const keys = mountFeedKeys({
     el,
     list,
@@ -243,6 +229,22 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
   el.classList.add('feed');
   const pin = h('div', { class: 'fpin' }, pill);
   el.replaceChildren(barSlot, pin, list, status, tail);
+  const rail = mountTimeRail({
+    candidate: DATED.has(kind) && kind !== 'bookmarks',
+    version: () => env.engine.info.get()?.version ?? 5,
+    el,
+    list,
+    tail,
+    keeper,
+    rows: () => rows,
+    active: () => env.visible.get() && Boolean(el.closest('.pane.cur')),
+    seek: (anchor) => {
+      keys.clear();
+      live = false;
+      request(anchor, PAGE, PAGE);
+    },
+  });
+  const offInfo = env.engine.info.subscribe(rail.sync);
   const scrub = mountScrub({ el, pin, list, row: (key) => drawn.row(key) });
   const bar = mountFeedBar({
     kind,
@@ -278,12 +280,14 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
   return () => {
     cancelAnimationFrame(frame);
     offVisible();
+    offInfo();
     offAccounts();
     offSettings();
     offHeld();
     bar();
     kinds?.dispose();
     scrub();
+    rail.dispose();
     keys.dispose();
     keeper.dispose();
     sub?.close();

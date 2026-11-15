@@ -1,6 +1,6 @@
 use super::{
     Engine, Signing,
-    protocol::{Action, Delivery, Output},
+    protocol::{Action, Output},
 };
 use lkjstr_protocol::{NostrEvent, UnsignedNostrEvent, is_pubkey};
 impl Engine {
@@ -171,7 +171,7 @@ impl Engine {
                 e.content = content;
             }
             Action::RelaysSave { relays } => {
-                if relays.len() > 8 {
+                if relays.len() > 64 {
                     return Err("invalid-relay");
                 }
                 e.kind = 10002;

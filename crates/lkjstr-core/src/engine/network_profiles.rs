@@ -4,7 +4,9 @@ impl Network {
     pub(super) fn stabilize_profiles(&self, desired: &mut Desired) {
         let keys: Vec<_> = desired
             .iter()
-            .filter(|(_, (f, _))| f.kinds.as_deref() == Some(&[0]))
+            .filter(|(_, (f, members))| {
+                f.kinds.as_deref() == Some(&[0]) && !members.contains("~account-discovery")
+            })
             .map(|(key, _)| key.clone())
             .collect();
         // At most 128 visible views x 6000 authors per configured relay.
@@ -21,11 +23,9 @@ impl Network {
                 }
             }
         }
-        for request in self
-            .requests
-            .values()
-            .filter(|r| r.filter.kinds.as_deref() == Some(&[0]))
-        {
+        for request in self.requests.values().filter(|r| {
+            r.filter.kinds.as_deref() == Some(&[0]) && !r.members.contains("~account-discovery")
+        }) {
             let Some(people) = pending.get_mut(&request.relay) else {
                 continue;
             };

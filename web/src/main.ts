@@ -8,6 +8,7 @@ import { rememberAccounts, rememberedAccounts, rememberFace } from './shared/fac
 import { resolveLang, setLang } from './shared/i18n.ts';
 import { pressedAt, watchPairs } from './shared/keys.ts';
 import { spacesKey } from './shared/layout-store.ts';
+import { migrateStorage } from './shared/migrate.ts';
 import { learnPerson } from './shared/people.ts';
 import { createSettings } from './shared/settings.ts';
 import { kv } from './shared/storage.ts';
@@ -22,6 +23,7 @@ import { createSpacesBar } from './wm/spaces-bar.ts';
 import { createWmStore } from './wm/store.ts';
 
 watchPairs(window);
+migrateStorage();
 const settings = createSettings();
 let language = resolveLang(settings.get().language);
 setLang(language);

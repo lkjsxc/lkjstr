@@ -14,6 +14,7 @@ mod query_translate;
 mod quote_state;
 mod sources;
 mod thread;
+mod timeline;
 mod translate;
 use actions::Action;
 use queries::{Anchor, Config, Hint, Query};
@@ -73,6 +74,10 @@ pub enum Input {
 #[derive(Serialize)]
 #[serde(tag = "t", rename_all = "camelCase")]
 pub enum Output {
+    Timeline {
+        sub: String,
+        timeline: serde_json::Value,
+    },
     Stats {
         req: String,
         stats: serde_json::Value,
@@ -165,6 +170,10 @@ pub struct Failure {
 pub struct Session {
     pub queries: std::collections::BTreeMap<String, Query>,
     pub config: Config,
+    timelines: std::collections::BTreeMap<String, timeline::Index>,
+    timeline_turn: usize,
+    return_keys: std::collections::BTreeMap<String, String>,
+    timeline_visible: Option<std::collections::BTreeSet<String>>,
     pub(super) windows: std::collections::BTreeMap<String, (Option<String>, usize, usize)>,
     pub(super) delivered: std::collections::BTreeMap<String, Vec<serde_json::Value>>,
 }

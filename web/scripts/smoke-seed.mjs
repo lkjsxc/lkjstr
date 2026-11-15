@@ -8,6 +8,7 @@ async function seedLayouts(ctx) {
     const put = (key, value) => {
       if (!localStorage.getItem(key)) localStorage.setItem(key, JSON.stringify(value));
     };
+    put('lkjstr:migration', 'owner-audit-1');
     put('lkjstr:layout:guest', tile('g', ['global']));
     if (innerWidth >= 1200)
       put('lkjstr:layout:main', {

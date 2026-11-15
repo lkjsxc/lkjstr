@@ -40,7 +40,7 @@ fn joined_list_and_multiple_channels_rotate_on_one_slot_and_release_on_close() {
             },
         ));
     }
-    network.plan(wants, 0);
+    network.plan(wants, &lkjstr_core::store::Store::new(0), 0);
     network.connected(relay, 1);
     let mut served = std::collections::BTreeSet::new();
     for now in (100..=4000).step_by(100) {
@@ -71,7 +71,7 @@ fn joined_list_and_multiple_channels_rotate_on_one_slot_and_release_on_close() {
         ),
         "a paused successful empty joined-list lookup remains usable"
     );
-    network.plan(vec![], 4100);
+    network.plan(vec![], &lkjstr_core::store::Store::new(0), 4100);
     assert!(
         network
             .drain_effects()
@@ -93,7 +93,7 @@ fn channel_and_global_work_both_resume_on_one_slot() {
             ..Default::default()
         };
         let feed = ("global".into(), global, Query::default());
-        n.plan(vec![feed.clone()], 0);
+        n.plan(vec![feed.clone()], &lkjstr_core::store::Store::new(0), 0);
         n.connected(relay, 1);
         let mut global_id = String::new();
         for effect in n.drain_effects() {
@@ -122,6 +122,7 @@ fn channel_and_global_work_both_resume_on_one_slot() {
                     },
                 ),
             ],
+            &lkjstr_core::store::Store::new(0),
             100,
         );
         let mut channel_served = false;

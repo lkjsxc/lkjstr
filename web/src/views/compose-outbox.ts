@@ -13,11 +13,15 @@ export type ChannelDraft = {
   error?: Failure;
   delivery?: readonly Delivery[];
 };
+type Watch = {
+  draw(): void;
+  delivery(relays: readonly Delivery[], final: boolean, error?: Failure): void;
+};
 type Box = {
   id: string;
   drafts: ChannelDraft[];
   busy: Set<ChannelDraft>;
-  listeners: Set<() => void>;
+  listeners: Set<Watch>;
 };
 // One entry per mounted composer or unsettled send; released when both are gone.
 const boxes = new Map<string, Box>();
@@ -25,7 +29,7 @@ export function createChannelOutbox(
   env: ViewEnv,
   legacy: ChannelDraft[],
   changed: () => void,
-  delivery: (relays: readonly Delivery[], final: boolean) => void,
+  delivery: Watch['delivery'],
   edit: (draft: Draft) => boolean,
 ) {
   const key = `${env.instance}:outbox`;
@@ -49,8 +53,11 @@ export function createChannelOutbox(
   const notify = (): void => {
     // A retired tab may still have an unsettled send; it must not recreate or overwrite a fresh tab.
     if (loadViewState<{ id: string }>(key).id === id) saveViewState(key, { id, drafts });
-    for (const listener of listeners) listener();
+    for (const listener of listeners) listener.draw();
     release();
+  };
+  const delivered: Watch['delivery'] = (...args) => {
+    for (const listener of listeners) listener.delivery(...args);
   };
   const remove = (item: ChannelDraft): void => {
     const index = drafts.indexOf(item);
@@ -67,7 +74,7 @@ export function createChannelOutbox(
         ) => h('button', { class: 'btn', disabled: pending, onclick: run }, t(label));
         return h(
           'div',
-          { class: 'cresult' },
+          { class: 'cresult cdraft' },
           h('div', { class: 'text' }, item.draft.text),
           ...(item.draft.media ?? []).map((m) =>
             h('a', { href: m.url, target: '_blank', rel: 'noreferrer' }, m.url),
@@ -108,6 +115,7 @@ export function createChannelOutbox(
   async function send(item: ChannelDraft): Promise<void> {
     if (busy.has(item)) return;
     busy.add(item);
+    delivered([], false);
     notify();
     const r = await env.engine.act(
       { a: 'publish', as: item.as, what: { k: 'note', draft: item.draft } },
@@ -120,14 +128,16 @@ export function createChannelOutbox(
     );
     busy.delete(item);
     if (r.ok) {
-      delivery(r.delivery ?? [], true);
+      delivered(r.delivery ?? [], true);
       remove(item);
     } else {
       item.error = r.error;
+      delivered([], true, r.error ?? { code: 'internal' });
       notify();
     }
   }
-  listeners.add(draw);
+  const watch = { draw, delivery };
+  listeners.add(watch);
   // First draw is deferred until the composer has its outbox handle.
   queueMicrotask(draw);
   return {
@@ -159,7 +169,7 @@ export function createChannelOutbox(
       return true;
     },
     dispose() {
-      listeners.delete(draw);
+      listeners.delete(watch);
       release();
     },
   };

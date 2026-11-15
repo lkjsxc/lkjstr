@@ -16,6 +16,7 @@ import type {
   Query,
   Row,
   SubState,
+  Timeline,
   ToEngine,
 } from './protocol.ts';
 
@@ -37,6 +38,7 @@ export type SubHandlers = {
   rows(rows: readonly Row[], atTop: boolean, atBottom: boolean): void;
   patch(ops: readonly PatchOp[]): void;
   fresh?(count: number): void;
+  timeline?(timeline: Timeline): void;
   state?(state: SubState): void;
 };
 export type Subscription = {
@@ -157,7 +159,8 @@ export function createEngine(transport: Transport): Engine {
     if (msg.t === 'rows') {
       learnRows(msg.rows);
       subs.get(msg.sub)?.rows(msg.rows, msg.atTop, msg.atBottom);
-    } else if (msg.t === 'patch') {
+    } else if (msg.t === 'timeline') subs.get(msg.sub)?.timeline?.(msg.timeline);
+    else if (msg.t === 'patch') {
       for (const op of msg.ops) {
         if (op.op === 'update') learnRows([op.row]);
         else if (op.op === 'insert') learnRows(op.rows);
@@ -195,7 +198,18 @@ export function createEngine(transport: Transport): Engine {
       return {
         id,
         window: (anchor, before, after) =>
-          transport.post({ t: 'window', sub: id, anchor, before, after }),
+          transport.post({
+            t: 'window',
+            sub: id,
+            anchor,
+            before,
+            after,
+            // Protocol 3 retains up to 6000 cached rows already read. An 800-row moving window otherwise
+            // discards the beginning while paging down, making a return to the top fetch and jump.
+            ...(anchor !== 'top' && before > 0 && (info.get()?.version ?? 0) >= 3
+              ? { retainAbove: true }
+              : {}),
+          }),
         visible(on) {
           if (on === visible.has(id)) return;
           if (on) visible.add(id);

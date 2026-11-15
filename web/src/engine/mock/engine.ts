@@ -1,10 +1,6 @@
-// The mock engine: answers the protocol from an in-memory world, with the behaviours the interface must cope
-// with (arrivals, batched patches, slow and failing relays, partial counts). It is also the test double: `handle`
-// takes a message and `post` receives the answers, with no Worker in between.
+import type { EngineConfig, FromEngine } from '../protocol.ts';
 import {
   type Account,
-  type EngineConfig,
-  type FromEngine,
   type PatchOp,
   PROTOCOL_VERSION,
   type Query,
@@ -15,6 +11,7 @@ import { createActions } from './actions.ts';
 import { type Entry, entry, matches, select } from './query.ts';
 import { relays } from './relays.ts';
 import { mockStats } from './stats.ts';
+import { sendTimelines, timeKey } from './timeline.ts';
 import { createWorld, type MNote } from './world.ts';
 
 const PATCH_MS = 80;
@@ -28,10 +25,12 @@ type Sub = {
   windowed: boolean;
   fresh: number;
   ops: PatchOp[];
+  timeline?: string;
+  anchor?: string;
+  returnKey?: string;
 };
 export type MockEngine = { handle(msg: ToEngine): void; dispose(): void };
 export type Core = ReturnType<typeof createCore>;
-
 function createCore(post: (msg: FromEngine) => void, now: () => number) {
   const world = createWorld(now());
   const subs = new Map<string, Sub>(); // bound: the interface's open subscriptions
@@ -39,6 +38,16 @@ function createCore(post: (msg: FromEngine) => void, now: () => number) {
   const who = createAccounts();
   let unread = 3;
   let flushing = false;
+  const timelines = (): void => sendTimelines(subs.values(), post, now());
+  let timelineQueued = false;
+  const queueTimeline = (): void => {
+    if (timelineQueued) return;
+    timelineQueued = true;
+    later(PATCH_MS, () => {
+      timelineQueued = false;
+      timelines();
+    });
+  };
   const me = (): string => who.active() ?? '';
   const later = (ms: number, fn: () => void): void => {
     const t = setTimeout(() => (timers.delete(t), fn()), ms);
@@ -46,6 +55,7 @@ function createCore(post: (msg: FromEngine) => void, now: () => number) {
   };
   const flush = (): void => {
     flushing = false;
+    timelines();
     for (const s of subs.values()) {
       if (!s.ops.length) continue;
       post({ t: 'patch', sub: s.id, ops: s.ops });
@@ -61,9 +71,9 @@ function createCore(post: (msg: FromEngine) => void, now: () => number) {
     const list: Account[] = who.list().map((a, i) => ({ ...a, unread: i === 0 ? unread : 0 }));
     post({ t: 'accounts', accounts: list, active: who.active() });
   };
-
   return {
     world,
+    timelines,
     clientTag: true,
     subs,
     post,
@@ -73,20 +83,17 @@ function createCore(post: (msg: FromEngine) => void, now: () => number) {
     accounts,
     who,
     setUnread: (n: number) => void (unread = n),
-    /** The connection summary, from the relay rows as they are now. */
     status(): void {
       const used = relays(world).filter((r) => r.inUse || r.read || r.write);
       const connected = used.filter((r) => r.state === 'connected').length;
       post({ t: 'status', connected, wanted: used.length, offline: false });
     },
-    /** A note changed: every window that shows it gets the row again. */
     changed(id: string): void {
       for (const s of subs.values())
         s.entries.forEach((e, i) => {
           if (e.key === id && inWindow(s, i)) push(s, { op: 'update', row: e.row() });
         });
     },
-    /** A new note: inserted where a window follows the head, counted where it does not. */
     arrived(n: MNote): void {
       for (const s of subs.values()) {
         const note = s.query.source !== 'thread' && matches(world, s.query, n, me());
@@ -103,6 +110,7 @@ function createCore(post: (msg: FromEngine) => void, now: () => number) {
         const e = entry(world, n, { me: me(), reposts: s.query.reposts });
         const first = s.entries[at]?.key ?? null;
         s.entries.splice(at, 0, e);
+        queueTimeline();
         if (!s.windowed) continue;
         if (s.live) s.end++, push(s, { op: 'insert', before: first, rows: [e.row()] });
         else s.start++, s.end++, post({ t: 'fresh', sub: s.id, count: ++s.fresh });
@@ -113,8 +121,6 @@ function createCore(post: (msg: FromEngine) => void, now: () => number) {
         });
       }
     },
-    /** Lists whose membership changed (a mute, a bookmark, a deletion): the difference goes out as ops.
-     * `refresh` also sends every row that stayed (a follow changes what person rows say). */
     resync(only?: (q: Query) => boolean, refresh = false): void {
       for (const s of subs.values()) {
         if (only && !only(s.query)) continue;
@@ -123,6 +129,7 @@ function createCore(post: (msg: FromEngine) => void, now: () => number) {
         const had = new Set(s.entries.map((e) => e.key));
         const wasBottom = s.end === s.entries.length;
         s.entries = next;
+        queueTimeline();
         if (!s.windowed) continue;
         const index = new Map(next.map((e, i) => [e.key, i]));
         for (const e of shown) if (!index.has(e.key)) push(s, { op: 'remove', key: e.key });
@@ -155,7 +162,6 @@ function createCore(post: (msg: FromEngine) => void, now: () => number) {
     },
   };
 }
-
 export function createMockEngine(post: (msg: FromEngine) => void, now = Date.now): MockEngine {
   const core = createCore(post, now);
   const { world, subs, later } = core;
@@ -168,8 +174,6 @@ export function createMockEngine(post: (msg: FromEngine) => void, now = Date.now
     if (config.mock?.live === false) return;
     liveTimer = setInterval(() => act.tick(), 2600);
   };
-  /** Says ready and who is signed in: at the first `configure` (which may ask for a first visit with nobody
-   * signed in), or by itself a moment later for an interface that never configures. */
   const start = (): void => {
     if (started) return;
     started = true;
@@ -179,7 +183,6 @@ export function createMockEngine(post: (msg: FromEngine) => void, now = Date.now
     live();
   };
   later(40, start);
-
   return {
     handle(msg) {
       if (msg.t === 'stats') post({ t: 'stats', req: msg.req, stats: mockStats(core) });
@@ -225,6 +228,7 @@ export function createMockEngine(post: (msg: FromEngine) => void, now = Date.now
           ops: [],
         };
         subs.set(s.id, s);
+        core.timelines();
         const nobody =
           !core.me() && ['home', 'notifications', 'bookmarks'].includes(msg.query.source);
         const done =
@@ -266,10 +270,10 @@ export function createMockEngine(post: (msg: FromEngine) => void, now = Date.now
       else if (msg.t === 'window') {
         const s = subs.get(msg.sub);
         if (!s) return;
-        const found =
-          msg.anchor === 'top'
-            ? 0
-            : s.entries.findIndex((e) => e.key === (msg.anchor as { key: string }).key);
+        const key = timeKey(s.entries, msg.anchor, core.now());
+        s.anchor = key;
+        if (msg.anchor !== 'top' && 'month' in msg.anchor) s.returnKey = msg.anchor.returnKey;
+        const found = msg.anchor === 'top' ? 0 : s.entries.findIndex((e) => e.key === key);
         const at = Math.max(0, found);
         s.live = msg.anchor === 'top' || found < 0;
         s.start = Math.max(0, at - (msg.retainAbove ? 6000 : msg.before));
@@ -284,6 +288,7 @@ export function createMockEngine(post: (msg: FromEngine) => void, now = Date.now
           atTop: s.start === 0,
           atBottom: s.end === s.entries.length,
         });
+        core.timelines();
       } else if (msg.t === 'act') act.run(msg.req, msg.action);
     },
     dispose() {

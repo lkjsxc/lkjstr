@@ -33,6 +33,14 @@ frontend-owned protocol.ts and visible interface wording remain unchanged.
 - Existing owner blocks keep client tags enabled by default, list-aware Blossom
   defaults with NIP-96 fallback, measured stats and cache-only rowAtTime.
 
+## Additive orchestration observations
+
+Stats adds optional publication counters per relay and recentPublications with
+up to 32 plans, destination rules/states/cap reasons and unresolved recipient
+counts. Existing delivery messages continue after the first successful result.
+No timeline ordering or capability gate changes. The exact semantics and
+unimplemented planner portions are in [orchestration.md](orchestration.md).
+
 ## Verification
 
 The web check, mock build/smoke, repository check and all quiet Rust/release gates

@@ -3,7 +3,6 @@
 ## Purpose
 
 Gates for the sole TypeScript frontend and Rust/WASM Worker product.
-
 ## Quiet gates
 
 Each root gate prints one ok line on success and a bounded tail on failure.
@@ -62,7 +61,6 @@ docker compose --progress quiet -f docker-compose.yml run --rm verify
 
 The Dockerfile builds the same real frontend and Worker with Node/pnpm and
 wasm-bindgen-cli. Docker is unavailable in this session and was not attempted.
-No services, deployments, production systems or CI workflows were changed.
 
 ## Current record
 
@@ -90,9 +88,9 @@ client tags, default Blossom/NIP-96 and 5000 relay-paged rows with timestamp tie
 Twelve native regressions cover discovery, bounds, tags, upload selection, stats,
 retained windows and history refill/preemption. Frontend check, build and smoke
 also pass with the additive protocol/stub mirror. Reports are under ignored tmp/.
-The release and conformance builds run sequentially because they share temporary
-Worker assets. Docker is excluded by the worktree-only write restriction.
-No commit, CI change, production access, deployment or existing-service restart.
+Release and conformance builds run sequentially: they share temporary assets.
+Docker is excluded by the worktree-only rule. No commit, CI edit, deployment,
+production access or existing-service restart.
 
 ## Discovery relay-limit review (2026-11-15)
 
@@ -155,6 +153,48 @@ combinations of arrival order, shared discovery and live/finite timelines on a
 single-slot relay, including resumption, bounded rotation and close cleanup.
 The second browser notification batch waits past the retained anchor second,
 so random same-second id ordering cannot place it below that anchor.
-Run logs, retries and the file list are in ignored tmp/review-fixes-report.md.
-Browser fixtures use loopback traffic and fresh data; jobs and test workers stay
-at four. Docker remains excluded by the worktree-only write restriction.
+Logs, retries and files: tmp/review-fixes-report.md.
+
+## Owner returning-profile audit (2026-11-15)
+
+Shared mock/real checks capture dark views at 1440 and 390, upgrade historical
+bundles on the same origin/storage and retain real-engine rows after reading
+past 800. Failure/retry checks inspect saved drafts while the input is free.
+Remounts protect the next draft. Scope and gaps: [owner-audit.md](owner-audit.md).
+
+Owner audit final: frontend check, build, shots and 432-check mock smoke pass.
+All four quiet gates pass; Worker conformance passes 211 checks without page
+errors. Two consecutive real UI smokes pass 166 checks each with no page errors.
+Historical UI upgrades pass 28 checks; actual historical WASM/IndexedDB/cache
+upgrades pass 34, including saved periods and retained Shortcuts page identity.
+Public Channels discovery and Stats fetch purposes remain open; see owner-audit.md.
+
+## Main and owner audit integration (2026-11-15)
+
+The merged tree keeps main's scrolling, windowing and time rail implementation
+and the owner audit's draft, migration and browser isolation repairs. Width
+checks allow two pixels beside the rail. Mock smoke reports and server-start
+failure handling survive.
+Frontend check/build, all four quiet gates and mock smoke (441 checks) pass.
+Real smoke with LKJSTR_SHOTS=1 passes 174 checks without page errors. Desktop
+and phone rail captures were reviewed. Worker conformance passes 216 checks
+without page errors; the delayed profile probe passes. Logs: tmp/merge-*.log.
+
+## Orchestration (2026-11-15)
+
+All four quiet gates and frontend check/build/mock smoke pass. Stats captures
+pass at 1440 dark English and 390 dark Japanese. Conformance passes 211/211
+with no page errors; the delayed profile probe measures 229.1 ms at 240 ms delay.
+Read/publication scorecards, public read-only observation, bounds and deferred
+design: orchestration.md and ignored tmp/orchestration-report.md. Two real UI
+smokes pass 84/84 with no page errors; an interrupted driver (exit 143) was rerun
+standalone. Real Stats captures were inspected at 1440 and 390 in one tile.
+
+## Orchestration branch review (2026-11-15)
+
+Three native regressions preserve page evidence across quality changes, allow
+new pages/configuration and keep hints from displacing routes. Pagination fails
+against the pre-fix selector. Two Stats regressions cover publication states,
+cap reasons, idle relays, repeated URLs and 32 x 2240 distinct destinations.
+Worker conformance passes 211/211 checks with no page errors; the delayed profile
+probe also passes. Gate logs are under ignored tmp/review-*.log.

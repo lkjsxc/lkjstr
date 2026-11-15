@@ -9,10 +9,13 @@ import { chromium } from 'playwright-core';
 import bundle from 'playwright-core/lib/utilsBundle';
 import { fakeBunker } from '../../scripts/browser-bunker.mjs';
 import { fakeRelay } from '../../scripts/browser-relay.mjs';
+import { auditFixtures } from './audit-fixtures.mjs';
+import { auditOwner } from './audit-owner.mjs';
 import { channelScenarios } from './smoke-channels.mjs';
 import { openKeyField, seedLayouts } from './smoke-seed.mjs';
 import { signerFace, writeReport } from './smoke-signer-support.mjs';
 import { signerScenarios } from './smoke-signers.mjs';
+import { railSmoke } from './smoke-time-rail.ts';
 import { accounts, installExtension, npub, visitorChecks } from './smoke-visitors.mjs';
 import { wishes } from './smoke-wishes.mjs';
 
@@ -29,7 +32,8 @@ const signer = spawn('cargo', ['run', '-q', '-p', 'lkjstr-core', '--example', 'e
 signer.stderr.resume();
 const lines = createInterface({ input: signer.stdout })[Symbol.asyncIterator]();
 const fixture = JSON.parse((await lines.next()).value);
-const fake = fakeRelay();
+// Combined wishes, archive and owner-audit data retain at most 2000 loopback events.
+const fake = fakeRelay({ maxEvents: 2000 });
 const bunker = await fakeBunker();
 for (const event of [fixture.note, ...fixture.events]) fake.add(event);
 let signing = Promise.resolve();
@@ -204,6 +208,17 @@ try {
     bunker,
   });
   const publicationsBeforeApp = fake.published.length;
+  for (let i = 0; i < 100; i++) {
+    fake.add(
+      await fixtureSign({
+        pubkey: fixture.note.pubkey,
+        kind: 1,
+        created_at: Math.floor(Date.UTC(2026 - Math.floor(i / 20), 10 - (i % 10), 15) / 1000),
+        content: `Rail archive fixture ${i}`,
+        tags: [],
+      }),
+    );
+  }
   page = await ctx.newPage();
   const launch = async (word, kind) => {
     await page.locator('.pane.cur .strip').getByTitle('New tab', { exact: true }).click();
@@ -227,6 +242,7 @@ try {
   await page.locator(`${accounts} [data-f="extension"]`).click();
   await page.locator('.view[data-kind="home"] .note').first().waitFor();
   check('home renders signed-in notes');
+  await railSmoke(page, check, shots);
   check(
     'signing in brings the ordinary layout',
     (await page.locator('.pane').count()) === 4 &&
@@ -340,7 +356,22 @@ try {
     'reaction reaches relay',
     fake.published.some((e) => e.kind === 7),
   );
-  await channelScenarios({ page, launch, check, fake });
+  await channelScenarios({ page, launch, check, fake, shots, shot });
+  await auditFixtures({ fake, sign: fixtureSign, owner: fixture.note.pubkey, note: fixture.note });
+  check('combined fixture retains the owner audit mute list', fake.stored.some((e) =>
+    e.kind === 10000 && e.pubkey === fixture.note.pubkey && e.tags.some((t) => t[0] === 'p'),
+  ));
+  await auditOwner({
+    browser,
+    base,
+    real: true,
+    pubkey: fixture.note.pubkey,
+    check,
+    prepare: async (context) => {
+      await context.exposeFunction('fixtureSign', fixtureSign);
+      await installExtension(context, relayUrl, fixture.note.pubkey, errors);
+    },
+  });
   if (shots) {
     // Signed in, the ordinary layout as it starts, in Japanese (the language is put back afterwards).
     // Use the reader's reset: deleting storage bypasses the live WM store, whose

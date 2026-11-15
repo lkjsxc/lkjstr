@@ -3,7 +3,8 @@ use super::{Engine, protocol::Source, query};
 use lkjstr_protocol::{NostrFilter, tags::tag_values};
 impl Engine {
     pub(super) fn replan(&mut self, now: u64) {
-        let mut wants = self.profile_wants();
+        let mut wants = self.publication_wants(now);
+        wants.extend(self.profile_wants());
         wants.extend(self.discovery_wants());
         wants.extend(self.channel_action_wants());
         for (sub, v) in self.views.iter().filter(|(_, v)| v.visible) {
@@ -54,7 +55,7 @@ impl Engine {
             }
             self.network.relay_order = order;
         }
-        self.network.plan(wants, now);
+        self.network.plan(wants, &self.store, now);
     }
 }
 fn requests(

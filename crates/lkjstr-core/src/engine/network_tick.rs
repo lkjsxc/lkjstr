@@ -1,6 +1,7 @@
 use super::*;
 impl Network {
     pub fn tick(&mut self, now: u64) {
+        self.admit_configured(now);
         let relays: Vec<_> = self.relays.keys().cloned().collect();
         for url in relays {
             let r = &self.relays[&url];
@@ -8,10 +9,9 @@ impl Network {
                 .requests
                 .values()
                 .any(|r| r.relay == url && !r.complete)
-                || self
-                    .publications
-                    .values()
-                    .any(|p| p.deliveries.get(&url).is_some_and(|s| s == "pending"));
+                || self.publications.values().any(|p| {
+                    now < p.deadline && p.deliveries.get(&url).is_some_and(|s| s == "pending")
+                });
             if !wanted {
                 if r.online || r.connecting {
                     self.effects.push(Effect::Disconnect(url.clone()));
@@ -63,12 +63,12 @@ impl Network {
         ids.sort_by_key(|id| {
             let r = &self.requests[id];
             let f = &r.filter;
-            let priority = if profile(f) {
+            let priority = if r.members.contains("~account-discovery") {
+                4 + u8::from(r.page_eose)
+            } else if profile(f) {
                 0
             } else if f.ids.is_some() {
                 1
-            } else if r.members.contains("~account-discovery") {
-                4 + u8::from(r.page_eose)
             } else if counts_filter(f) {
                 3
             } else {
@@ -86,13 +86,13 @@ impl Network {
             {
                 continue;
             }
-            if !profile(&r.filter) && now < self.relays[&r.relay].next_req_at {
+            if !visible_profile(r) && now < self.relays[&r.relay].next_req_at {
                 continue;
             }
             let max = self.relays[&r.relay].max_reqs.clamp(1, 8);
             let count = counts.entry(r.relay.clone()).or_default();
             if *count >= max {
-                if profile(&r.filter) || !counts_filter(&r.filter) || !r.page_eose {
+                if visible_profile(r) || !counts_filter(&r.filter) || !r.page_eose {
                     // Names may interrupt feeds; channels and visible follow watches
                     // rotate after EOSE. Discovery tails alone never interrupt live work.
                     // Interrupted requests retain their page coverage and resume later.
@@ -102,11 +102,17 @@ impl Network {
                         .find(|(_, q)| {
                             q.relay == r.relay
                                 && q.sent
-                                && !profile(&q.filter)
-                                && (profile(&r.filter)
+                                && !visible_profile(q)
+                                && (visible_profile(r)
                                     || (q.eose
                                         && ((q.list_watch
                                             && !r.members.contains("~account-discovery"))
+                                            || ((r.members.contains("~account-discovery")
+                                                || r.members
+                                                    .iter()
+                                                    .any(|m| m.starts_with("~publication:")))
+                                                && !r.page_eose
+                                                && q.live)
                                             || (r.filter.ids.is_some() && q.live)
                                             || ((slot_sharing(r) || counts_filter(&r.filter))
                                                 && (slot_sharing(q) || q.live))
@@ -151,7 +157,7 @@ impl Network {
             }
             f.limit = Some(f.limit.unwrap_or(200).min(self.relays[&relay].max_limit));
             let frame = json!(["REQ", id, filter_to_value(&f)]);
-            let is_profile = profile(&f);
+            let is_profile = visible_profile(r);
             self.send(&relay, frame);
             if !is_profile && let Some(r) = self.relays.get_mut(&relay) {
                 r.next_req_at = now + 100;
@@ -169,9 +175,13 @@ impl Network {
                 r.deadline = now + 15000;
             }
         }
-        self.send_pending();
+        self.send_pending(now);
         self.settle(now);
     }
+}
+
+fn visible_profile(r: &Request) -> bool {
+    profile(&r.filter) && !r.members.contains("~account-discovery")
 }
 
 fn profile(f: &NostrFilter) -> bool {

@@ -37,7 +37,7 @@ export function fakeRelay(options = {}) {
   let reading = true;
   function send(ws, sub, event) { ws.send(JSON.stringify(['EVENT', sub, event])); }
   function add(event) {
-    if (stored.length >= 1000 || stored.some((e) => e.id === event.id)) return;
+    if (stored.length >= (options.maxEvents ?? 1000) || stored.some((e) => e.id === event.id)) return;
     stored.push(event);
     for (const [ws, subs] of clients) {
       for (const [sub, filters] of subs) if (filters.some((f) => matches(event, f))) send(ws, sub, event);

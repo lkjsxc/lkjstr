@@ -22,7 +22,8 @@
  * `people` returns at most six prefix matches from the device, follows first, then participants of `id`'s
  * thread. `authors` instead requests those profiles (at most 32); `ref` explicitly resolves a person.
  * Author.profileId identifies kind 0 for image retry. Draft.mentions holds selected UTF-16 text ranges;
- * the engine validates their labels, expands them to nostr:npub and derives p tags. */
+ * the engine validates their labels, expands them to nostr:npub and derives p tags.
+ * Also adds cache-wide month counts, window ordinals and month/ordinal anchors for time rails. */
 export const PROTOCOL_VERSION = 5;
 
 /** Chosen by the interface, unique among its open subscriptions. */
@@ -121,7 +122,10 @@ export type Query = {
 
 /** Where a window sits. `top` follows the head of the list: new rows are inserted as they arrive. A key holds
  * the list still around that row: rows that arrive above are only counted (`fresh`). */
-export type Anchor = 'top' | { readonly key: RowKey };
+export type Anchor =
+  | 'top'
+  | { readonly key: RowKey }
+  | { readonly month: Millis; readonly offset: number; readonly returnKey?: RowKey };
 
 // ───────────────────────────────────────── view models ─────────────────────────────────────────
 
@@ -676,6 +680,27 @@ export type EngineStats = {
     readonly bytesOut: number;
     readonly lastError: string | null;
     readonly latencyMs: number | null;
+    /** Delivery counts across the last 32 publications; absent on older engines. */
+    readonly publishPlanned?: number;
+    readonly publishAccepted?: number;
+    readonly publishFailed?: number;
+    readonly publishOwnSkipped?: number;
+    readonly publishInboxSkipped?: number;
+    readonly publishCapacitySkipped?: number;
+    readonly publishPending?: number;
+  }[];
+  /** Last 32 publications in this engine session, including excluded destinations. */
+  readonly recentPublications?: readonly {
+    readonly id: string;
+    readonly kind: number;
+    readonly at: Millis;
+    readonly unresolvedRecipients?: number;
+    readonly deliveries: readonly {
+      readonly url: string;
+      readonly rule: 'own' | 'inbox' | 'reply' | 'delete';
+      readonly state: 'pending' | 'accepted' | 'rejected' | 'timeout' | 'skipped';
+      readonly reason?: 'own-cap' | 'person-cap' | 'inbox-cap' | 'capacity';
+    }[];
   }[];
   readonly totals: {
     readonly eventsStored: number;
@@ -692,7 +717,23 @@ export type EngineStats = {
   };
 };
 // end engine-added
+/** Protocol 5: exact cached note counts, UTC month starts, newest first. No relay estimates.
+ * Positions name ordinals within those months, independent of the loaded window. */
+export type Timeline = {
+  readonly anchor?: RowKey;
+  readonly newest: Millis;
+  readonly oldest: Millis;
+  readonly months: readonly { readonly at: Millis; readonly count: number }[];
+  readonly positions: readonly {
+    readonly key: RowKey;
+    readonly month: Millis;
+    readonly offset: number;
+  }[];
+  readonly supported: boolean;
+  readonly older: boolean;
+};
 export type FromEngine =
+  | { readonly t: 'timeline'; readonly sub: SubId; readonly timeline: Timeline }
   // engine-added 2026-11-15: 4
   | { readonly t: 'stats'; readonly req: ReqId; readonly stats: EngineStats }
   // end engine-added

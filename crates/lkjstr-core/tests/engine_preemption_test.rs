@@ -34,7 +34,11 @@ fn setup(until: Option<u64>) -> (Network, NostrFilter, Value) {
         limit: Some(200),
         ..Default::default()
     };
-    n.plan(vec![("feed".into(), filter.clone(), Query::default())], 0);
+    n.plan(
+        vec![("feed".into(), filter.clone(), Query::default())],
+        &lkjstr_core::store::Store::new(0),
+        0,
+    );
     n.connected(RELAY, 10);
     let head = requests(&mut n).remove(0);
     (n, filter, head)
@@ -60,6 +64,7 @@ fn preempt(n: &mut Network, filter: &NostrFilter, head: &Value) {
             ("feed".into(), filter.clone(), Query::default()),
             ("profile".into(), profile, Query::default()),
         ],
+        &lkjstr_core::store::Store::new(0),
         30,
     );
     let lookup = requests(n).remove(0);

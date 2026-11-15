@@ -9,6 +9,7 @@ Index of lkjstr's documentation. Start with [status.md](status.md).
 Frontend (`web/`):
 
 - [design.md](design.md): the look and the interaction rules, as built.
+- [time-rail.md](time-rail.md): cache-wide month scale, native fallbacks and verification.
 - [frontend.md](frontend.md): structure of `web/`, the engine boundary, gates.
 - [integration-release.md](integration-release.md): real-engine release candidate and UI gaps.
 - [hosting-needs.md](hosting-needs.md): what the static host must serve.
@@ -19,6 +20,7 @@ Engine (`crates/`):
 - [channels.md](channels.md): NIP-28 sources, actions, bounds and verification.
 - [protocol3.md](protocol3.md): rich filters, notifications, profile kinds and gates.
 - [status.md](status.md): what works, what does not, next steps in order.
+- [orchestration.md](orchestration.md): publication routing, freshness, weights and limits.
 - [architecture.md](architecture.md): crates, runtime, orchestration, storage.
 - [verification.md](verification.md): gates, browser checks and their results.
 - [decisions.md](decisions.md): durable decisions and why.
@@ -37,3 +39,4 @@ Engine (`crates/`):
 - [Owner engine feedback](owner-feedback.md): relay discovery, tags, media, stats and continuity.
 
 - [wishes.md](wishes.md): owner wishes, protocol 5 and verification boundaries.
+- [owner-audit.md](owner-audit.md): returning profiles and owner complaint verification.

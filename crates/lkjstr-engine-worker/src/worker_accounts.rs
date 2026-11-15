@@ -115,6 +115,7 @@ pub(super) fn pump_accounts(host: &Rc<RefCell<Host>>) {
     let weak = Rc::downgrade(host);
     wasm_bindgen_futures::spawn_local(async move {
         let ((id, req, action), mut next, db, watermark) = task;
+        let refresh = matches!(&action, A::AccountAdd { .. } | A::AccountUse { .. });
         let result = match action {
             A::AccountAdd { how, key } => {
                 if how == "key" && key.as_deref().is_some_and(|v| v.starts_with("bunker://")) {
@@ -199,6 +200,11 @@ pub(super) fn pump_accounts(host: &Rc<RefCell<Host>>) {
                     h.engine.notification_ties = h.accounts.notification_ties.clone();
                     h.account_revision = u64::MAX;
                     h.engine.invalidate();
+                    h.apply_relay_owner(false);
+                    if refresh && let Some(account) = h.accounts.active.clone() {
+                        let at = h.time();
+                        h.engine.refresh_account(&account, at);
+                    }
                     for id in h.sessions.keys() {
                         send_accounts(&h, *id);
                     }
