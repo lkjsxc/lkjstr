@@ -37,6 +37,11 @@ impl Network {
             r.useful += 1;
             self.quality_revision = self.quality_revision.wrapping_add(1);
         }
+        self.observe_verified(relay, e, now);
+    }
+    /// Exact copies of retained verified events advance resumption watermarks,
+    /// but never earn first-arrival credit in Stats or quality ranking.
+    pub fn observe_verified(&mut self, relay: &str, e: &NostrEvent, now: u64) {
         for r in self
             .requests
             .values_mut()

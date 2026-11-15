@@ -62,6 +62,14 @@ Channel requests retain their existing larger route fanout. Publication-only
 transports never become generic read routes. Explicit view hints supplement
 ordinary routes without displacing their page evidence.
 
+Hydration now collects pending authors, event IDs, counts and finite kind-3
+lookups for 75 ms. Profiles already in the store are not fetched again by visible
+rows; owner discovery still refreshes independently. Missing profiles start on
+one delivering route and fall back after termination. Limits, exact-duplicate
+resume evidence, finite-envelope cancellation and measured results are in
+[cover.md](cover.md). Complete-filter feed fanout remains two; no dynamic author
+cover or cross-relay range exclusion is claimed.
+
 Every saved device account, up to 32, requests kinds 0, 3, 10000, 10002 and 10063
 at startup independently of cached records or open account views. Successful
 sign-in/account switching resets that account's discovery cursors. Each kind and

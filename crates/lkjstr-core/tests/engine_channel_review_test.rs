@@ -196,14 +196,15 @@ fn pending_counts_can_interrupt_settled_channel_work_on_a_full_relay() {
         &lkjstr_core::store::Store::new(0),
         110,
     );
+    n.tick(185);
     let frames = sends(&mut n);
     assert!(frames.iter().any(|f| f[0] == "CLOSE" && f[1] == request[1]));
     let count = frames
         .iter()
         .find(|f| f[0] == "REQ" && f[2]["kinds"] == json!([42, 16, 7, 9735]))
         .expect("counts request");
-    n.message(RELAY, &json!(["EOSE", count[1]]).to_string(), 111);
-    n.tick(112);
+    n.message(RELAY, &json!(["EOSE", count[1]]).to_string(), 186);
+    n.tick(187);
     assert!(n.drain_output().iter().any(|o| matches!(o, protocol::Output::Status { sub, state, .. } if sub == "room" && state == "not-found")));
     n.tick(1220);
     assert!(

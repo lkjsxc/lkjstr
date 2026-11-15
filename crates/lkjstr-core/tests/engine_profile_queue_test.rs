@@ -69,6 +69,7 @@ fn full_window_authors_are_requested_in_bounded_relay_batches() {
         1,
     );
     e.network.connected("wss://relay.test/", 2);
+    e.network.tick(76);
     let frames: Vec<Value> = e
         .network
         .drain_effects()

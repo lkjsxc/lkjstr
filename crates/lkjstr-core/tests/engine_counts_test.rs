@@ -109,6 +109,7 @@ fn exact_counts_require_all_routes_untruncated_verified_and_successful() {
             0,
         );
         n.connected(relay, 0);
+        n.tick(75);
         let frames: Vec<Value> = n
             .drain_effects()
             .into_iter()
@@ -122,7 +123,7 @@ fn exact_counts_require_all_routes_untruncated_verified_and_successful() {
         assert!(!n.count_limited(&filter));
         if outcome == "truncated" {
             let event = signed(7, vec![vec!["e".into(), "a".repeat(64)]]);
-            n.message(relay, &json!(["EVENT", id, event]).to_string(), 1);
+            n.message(relay, &json!(["EVENT", id, event]).to_string(), 76);
             store.insert(event, None);
         }
         match outcome {
@@ -130,12 +131,12 @@ fn exact_counts_require_all_routes_untruncated_verified_and_successful() {
                 n.message(
                     relay,
                     &json!(["CLOSED", id, "blocked: fixture"]).to_string(),
-                    2,
+                    77,
                 );
             }
-            "timeout" => n.tick(15001),
+            "timeout" => n.tick(15076),
             _ => {
-                n.message(relay, &json!(["EOSE", id]).to_string(), 2);
+                n.message(relay, &json!(["EOSE", id]).to_string(), 77);
             }
         }
         assert_eq!(

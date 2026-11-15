@@ -1729,7 +1729,7 @@ async function accounts(browser: Browser): Promise<void> {
   await page.locator('.toast.undo', { hasText: 'Removed' }).locator('button').click();
   await page.waitForFunction(() => document.querySelectorAll('.arow').length === 2);
   fact('a read-only account comes back with Undo', true);
-  await page.locator(`${av} .arow:not(.on) [data-f="use"]`).click();
+  await page.locator(`${av} .arow:has(.badge) [data-f="use"]`).click();
   await page.locator('.acct .ro').waitFor();
   for (const _ of [1, 2]) {
     const n = await count(page, '.arow');

@@ -157,12 +157,14 @@ fn requests(
             limit: Some(200),
             ..Default::default()
         });
-        result.push(NostrFilter {
-            authors: Some(vec![p.clone()]),
-            kinds: Some(vec![3]),
-            limit: Some(1),
-            ..Default::default()
-        });
+        if store.replaceable(p, 3).is_none() {
+            result.push(NostrFilter {
+                authors: Some(vec![p.clone()]),
+                kinds: Some(vec![3]),
+                limit: Some(1),
+                ..Default::default()
+            });
+        }
     }
     let mut prefetch = crate::prefetch::collect_window(&events[range.clone()], store);
     for event in &events[range] {

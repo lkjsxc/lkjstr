@@ -34,13 +34,15 @@ CLOSED and NOTICE recognize rate-limited, too many requests and slow down. Repea
 refusal increases cooldown from 30 to 120 seconds. Publication retry also observes
 this cooldown. Live streams already accepted by a relay continue receiving.
 
-Finite requests can share one immutable REQ envelope only when NIP-11 explicitly
-advertises max_filters. The cap is eight, max_limit applies independently to each
-filter, and subscription counts count envelopes. Matching events split back into
-logical requests; one EOSE completes the union. Cancellation closes the envelope
-and reschedules remaining members with fresh wire IDs and their original evidence.
-Late replies from cancelled envelopes cannot settle replacements. Live streams stay
-independent. Unadvertised max_filters conservatively means one.
+Finite requests share immutable REQ envelopes. Explicit NIP-11 max_filters wins,
+capped at eight. A NIP-01 advertisement permits two when no explicit cap exists;
+unknown relays use one. A rejected multi-filter envelope retries as single filters
+and disables inference for that transport. max_limit applies independently to each
+filter; subscriptions count envelopes. Matching events split into logical requests;
+one EOSE completes the union. Removing a finite member keeps an envelope while
+another member owns it, avoiding replay. Removing the last member closes it.
+Fresh wire IDs isolate replacements from late cancelled replies. Live streams stay
+independent. Current traffic measurements and limitations: [cover.md](cover.md).
 
 ## Work and information weights
 

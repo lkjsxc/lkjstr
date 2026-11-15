@@ -56,7 +56,7 @@ fn reqs(e: &mut Engine) -> Vec<(String, Value)> {
         .collect()
 }
 #[test]
-fn cached_name_is_inline_and_still_refreshes_on_the_delivering_relay() {
+fn cached_name_is_inline_and_needs_no_duplicate_metadata_request() {
     let mut e = setup();
     let key = generate_secret_key();
     let sign = |kind, content: &str| {
@@ -81,8 +81,9 @@ fn cached_name_is_inline_and_still_refreshes_on_the_delivering_relay() {
         |o| matches!(o, Output::Rows {items,..} if items.iter().any(|r|r.author.name=="known"))
     ));
     e.network.connected("wss://c.test/", 1);
+    e.network.tick(75);
     let frames = reqs(&mut e);
-    assert!(frames.iter().any(|(r, f)| r == "wss://c.test/"
+    assert!(!frames.iter().any(|(r, f)| r == "wss://c.test/"
         && f[2]["kinds"] == json!([0])
         && f[2]["authors"] == json!([note.pubkey])));
     e.input(
@@ -91,12 +92,7 @@ fn cached_name_is_inline_and_still_refreshes_on_the_delivering_relay() {
         },
         2,
     );
-    assert!(
-        e.network
-            .drain_effects()
-            .iter()
-            .any(|f| matches!(f,Effect::Disconnect(r) if r=="wss://c.test/"))
-    );
+    assert!(!e.network.relays["wss://c.test/"].online);
 }
 #[test]
 fn nested_quotes_reply_headers_and_repost_actors_share_one_author_batch() {
@@ -122,6 +118,7 @@ fn nested_quotes_reply_headers_and_repost_actors_share_one_author_batch() {
     open(&mut e, "one");
     open(&mut e, "two");
     e.network.connected("wss://c.test/", 1);
+    e.network.tick(75);
     let frames = reqs(&mut e);
     let profiles: Vec<_> = frames
         .iter()
@@ -157,6 +154,7 @@ fn profile_preempts_a_full_relay_then_the_feed_resumes() {
     let note = event(1, "arrives", vec![]);
     e.enqueue("wss://a.test/".into(), note.clone());
     e.tick(100);
+    e.tick(175);
     let frames = reqs(&mut e);
     let lookup = &frames
         .iter()
@@ -176,6 +174,7 @@ fn profile_preempts_a_full_relay_then_the_feed_resumes() {
     );
     // Absence on the delivering relay now allows fallback, without removing it.
     e.network.connected("wss://b.test/", 351);
+    e.network.tick(425);
     assert!(
         reqs(&mut e)
             .iter()
@@ -191,6 +190,7 @@ fn arriving_authors_do_not_cancel_a_delayed_batch() {
     reqs(&mut e);
     e.enqueue("wss://a.test/".into(), event(1, "first", vec![]));
     e.tick(100);
+    e.tick(175);
     let first = reqs(&mut e)
         .into_iter()
         .find(|(_, f)| f[2]["kinds"] == json!([0]))

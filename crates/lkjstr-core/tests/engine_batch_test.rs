@@ -39,6 +39,7 @@ fn one_envelope_keeps_independent_limits_matches_and_union_completion() {
                     format!("sub{i}"),
                     NostrFilter {
                         ids: Some(vec![e.id.clone()]),
+                        kinds: Some(vec![40]),
                         limit: Some(10),
                         ..Default::default()
                     },
@@ -86,7 +87,7 @@ fn one_envelope_keeps_independent_limits_matches_and_union_completion() {
     );
 }
 #[test]
-fn cancelling_a_member_releases_and_resumes_the_remaining_envelope() {
+fn cancelling_one_finite_member_keeps_the_other_without_replaying_its_answer() {
     let mut n = Network::default();
     n.configure(vec![R.into()], 0);
     n.relay_information(R, r#"{"limitation":{"max_filters":4}}"#);
@@ -96,6 +97,7 @@ fn cancelling_a_member_releases_and_resumes_the_remaining_envelope() {
                 format!("sub{i}"),
                 NostrFilter {
                     ids: Some(vec![format!("{i:064x}")]),
+                    kinds: Some(vec![40]),
                     ..Default::default()
                 },
                 Query::default(),
@@ -108,23 +110,16 @@ fn cancelling_a_member_releases_and_resumes_the_remaining_envelope() {
     assert_eq!(initial.iter().filter(|f| f[0] == "REQ").count(), 1);
     n.plan(vec![wants[0].clone()], &Store::new(0), 201);
     let changed = frames(&mut n);
-    assert!(changed.iter().any(|f| f[0] == "CLOSE"));
-    let req = changed
-        .iter()
-        .find(|f| f[0] == "REQ")
-        .expect("remaining member resumes");
-    assert_eq!(req.as_array().expect("array").len(), 3);
+    assert!(
+        changed.is_empty(),
+        "the surviving finite filter needs no replay"
+    );
     let old = initial
         .iter()
         .find(|f| f[0] == "REQ")
         .expect("initial envelope");
-    assert_ne!(old[1], req[1]);
+    assert!(!n.lookup_complete(&format!("{:064x}", 0)));
     n.message(R, &json!(["EOSE", old[1]]).to_string(), 202);
-    assert!(
-        !n.lookup_complete(&format!("{:064x}", 0)),
-        "late EOSE cannot settle a replacement"
-    );
-    n.message(R, &json!(["EOSE", req[1]]).to_string(), 203);
     assert!(n.lookup_complete(&format!("{:064x}", 0)));
     assert!(!n.lookup_complete(&format!("{:064x}", 1)));
 }

@@ -78,6 +78,17 @@ impl Network {
                 subscription_id,
                 message,
             } => {
+                let split = !quality::limited(&message)
+                    && self
+                        .requests
+                        .values()
+                        .filter(|r| r.relay == relay && r.wire_id == subscription_id && r.sent)
+                        .count()
+                        > 1;
+                if split && let Some(r) = self.relays.get_mut(relay) {
+                    r.max_filters = 1;
+                    r.single_filters = true;
+                }
                 for r in self
                     .requests
                     .values_mut()
@@ -89,9 +100,13 @@ impl Network {
                         relay.last_error = Some(message.chars().take(512).collect());
                     }
                     r.deadline = now;
-                    r.complete = !quality::limited(&message);
+                    r.complete = !split && !quality::limited(&message);
                     r.sent = false;
-                    r.ready_at = if r.complete { now } else { now + 30000 };
+                    r.ready_at = if r.complete || split {
+                        now
+                    } else {
+                        now + 30000
+                    };
                     r.eose = false;
                 }
                 if quality::limited(&message) {

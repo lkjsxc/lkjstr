@@ -54,6 +54,9 @@ impl Network {
             }
             r.wire_id = wire.clone();
             r.sent = true;
+            if !r.asked {
+                r.initial_deadline = now + 15000;
+            }
             r.asked = true;
             r.sent_at = now;
             r.last_rx = now;

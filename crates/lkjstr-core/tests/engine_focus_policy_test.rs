@@ -43,7 +43,7 @@ fn focus_precedes_hydration_and_incomplete_focused_pages_are_not_interrupted() {
         ("details".into(), hydration, Query::default()),
     ];
     n.plan(wants.clone(), &Store::new(0), 0);
-    n.connected(R, 1);
+    n.connected(R, 75);
     let first = reqs(&mut n);
     assert_eq!(first.len(), 1);
     assert_eq!(first[0][2]["kinds"], json!([1, 6]));
@@ -90,7 +90,7 @@ fn completed_focus_waits_for_delayed_hydration_then_resumes() {
     ];
     let store = Store::new(0);
     n.plan(wants.clone(), &store, 0);
-    n.connected(R, 1);
+    n.connected(R, 75);
     let head = reqs(&mut n).remove(0);
     n.message(R, &json!(["EOSE", head[1]]).to_string(), 202);
     n.tick(301);
@@ -143,7 +143,7 @@ fn unfinished_focus_can_preempt_an_inflight_profile_lookup() {
         Query::default(),
     );
     n.plan(vec![hydration.clone()], &store, 0);
-    n.connected(R, 1);
+    n.connected(R, 75);
     assert_eq!(reqs(&mut n)[0][2]["kinds"], json!([0]));
     n.focused_sub = Some("keyboard".into());
     n.plan(
