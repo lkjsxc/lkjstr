@@ -246,12 +246,8 @@ export function mountCompose(el: HTMLElement, env: ViewEnv): () => void {
     ready();
   }
 
-  let timer: ReturnType<typeof setTimeout> | undefined;
-  area.addEventListener('input', () => {
-    ready();
-    clearTimeout(timer);
-    timer = setTimeout(() => ((state.text = area.value), save()), 300);
-  });
+  // Saved on every keystroke (one small stored key): a reload a moment after typing must not lose the last words.
+  area.addEventListener('input', () => (ready(), (state.text = area.value), save()));
   area.addEventListener('keydown', (e) => {
     if (pressed(e, 'send')) e.preventDefault(), void send();
   });
@@ -289,7 +285,6 @@ export function mountCompose(el: HTMLElement, env: ViewEnv): () => void {
   drawHead();
   if (state.replyTo || state.quote) requestAnimationFrame(() => area.focus());
   return () => {
-    clearTimeout(timer);
     state.text = area.value;
     save();
     who.dispose();
