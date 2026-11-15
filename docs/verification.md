@@ -186,15 +186,15 @@ deployment or existing-service change occurred.
 Four quiet gates, frontend check/build, mock (302) and real (207, with shots) smoke, shots and conformance (216) pass. Harness merge is committed. Review
 keeps both suites and main's time rail; strict protocol 5 conformance is restored. Logs: tmp/reconcile-*.log.
 
-## Media upload/main conflict resolution (2026-11-15)
+## Media upload/main merge verification (2026-11-15)
 
 Composer keeps retained upload controls and main's owner-scoped outbox.
 Upload and protocol-5 time-rail/reader suites both run. The server capture closes
 before restoring the shared layout, preserving the original composer tab.
 Four quiet gates and web check/build pass; mock smoke is 302/302 and upload
 smoke is 128/128. Real smoke with shots is 386/386 with zero page errors.
-Focused desktop/phone shots and 229-check conformance pass; the delayed profile
-probe measures 230.8 ms at 240 ms delay. Logs: ignored tmp/merge-*.
-Files have no conflict markers. Git still has eight unmerged entries: its index
-is read-only outside this worktree. No commit or CI edit; Docker is excluded by
-the worktree-only write rule. No production, deployment or existing-service work.
+Desktop/phone review captures and 229-check conformance pass; the delayed profile
+probe measures 229.6 ms at 240 ms delay. Fresh logs: ignored tmp/reconcile-*.
+The harness committed the merge; Git has no unmerged entries or conflict markers.
+Signer reload checks require saved state, a retryable retained post and the exact
+latest edit. No commit, CI edit, Docker, production, deployment or service work.
