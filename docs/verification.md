@@ -196,5 +196,5 @@ deployment or existing-service change occurred.
 
 ## Notes/main merge (2026-11-15)
 
-Four quiet gates, frontend check/build, mock (305) and real (207) smoke, shots and conformance (216) pass.
-Reader fixtures use a separate bounded loopback store; index updates await the worktree-only exception.
+Four quiet gates, frontend check/build, mock (302) and real (207, with shots) smoke, shots and conformance (216) pass.
+Harness merge is committed. Review keeps both suites and main's time rail; strict protocol 5 conformance is restored. Logs: tmp/reconcile-*.log.
