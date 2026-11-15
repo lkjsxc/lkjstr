@@ -7,6 +7,7 @@ import { dirname, resolve } from 'node:path';
 import { type Browser, chromium, type Page } from 'playwright-core';
 import { dayOf } from '../src/shared/format.ts';
 import { KEYS } from '../src/shared/keys.ts';
+import { railSmoke } from './smoke-time-rail.ts';
 
 const here = new URL('..', import.meta.url).pathname;
 process.env.TMPDIR ??= resolve(here, '../tmp/temp');
@@ -115,6 +116,7 @@ const center = async (page: Page, sel: string): Promise<{ x: number; y: number }
 async function run(browser: Browser): Promise<void> {
   const still = { mock: { live: false } };
   const page = await open(browser, '/', still);
+  await railSmoke(page, fact, process.env.LKJSTR_SHOTS === '1');
   if (shot) mkdirSync(dirname(shot), { recursive: true }), await page.screenshot({ path: shot });
   const home = '.pane:has(.tab.active[data-view="home"])';
 
@@ -466,7 +468,7 @@ async function scrolling(still: Record<string, unknown>): Promise<void> {
   const bar = await page
     .locator(feed)
     .evaluate((el) => (el as HTMLElement).offsetWidth - el.clientWidth);
-  fact('the scrollbar is 14px to catch', bar === 14, bar);
+  fact('time-ordered lists hide the native scrollbar', bar === 0, bar);
   const box = await page.locator(feed).boundingBox();
   const x = (box?.x ?? 0) + (box?.width ?? 0) - 7;
   await page.locator(feed).evaluate((el) => el.scrollTo(0, el.scrollHeight / 2));
@@ -476,7 +478,7 @@ async function scrolling(still: Record<string, unknown>): Promise<void> {
   await page.mouse.down();
   await page.mouse.move(x, y - 60, { steps: 4 });
   await page.waitForTimeout(150);
-  const said = await page.locator(`${feed} .scrub`).evaluate((el) => ({
+  const said = await page.locator(`${feed} .time-rail .scrub`).evaluate((el) => ({
     shown: !(el as HTMLElement).hidden,
     text: el.textContent ?? '',
   }));
@@ -491,7 +493,9 @@ async function scrolling(still: Record<string, unknown>): Promise<void> {
   await page.waitForTimeout(100);
   fact(
     'released, the label goes',
-    await page.locator(`${feed} .scrub`).evaluate((el) => (el as HTMLElement).hidden === true),
+    await page
+      .locator(`${feed} .time-rail .scrub`)
+      .evaluate((el) => (el as HTMLElement).hidden === true),
   );
 
   // A zoomed picture: the wheel zooms about the pointer, a drag moves it.
@@ -1391,7 +1395,7 @@ async function pages(browser: Browser, still: Record<string, unknown>): Promise<
   fact(
     'about: version, engine, source, licence',
     /lkjstr \d+\.\d+\.\d+/.test(about) &&
-      about.includes('mock, protocol 4') &&
+      about.includes('mock, protocol 5') &&
       (await count(page, `${sv} a[href="https://github.com/lkjsxc/lkjstr"]`)) === 1 &&
       about.includes('Apache License 2.0'),
     about,
@@ -1917,6 +1921,10 @@ try {
 }
 writeFileSync(
   resolve(here, '../tmp/audit-smoke-count.json'),
+  JSON.stringify({ checks: facts, failures: failures.length }),
+);
+writeFileSync(
+  resolve(here, '../tmp/smoke-mock-report.json'),
   JSON.stringify({ checks: facts, failures: failures.length }),
 );
 if (failures.length) console.log(failures.join('\n')), process.exit(1);

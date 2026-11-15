@@ -30,7 +30,15 @@ pub struct Query {
 #[serde(untagged)]
 pub enum Anchor {
     Top(String),
-    Key { key: String },
+    Key {
+        key: String,
+    },
+    Month {
+        month: u64,
+        offset: usize,
+        #[serde(rename = "returnKey")]
+        return_key: Option<String>,
+    },
 }
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]

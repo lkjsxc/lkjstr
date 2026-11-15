@@ -7,6 +7,10 @@ pub(super) fn load(host: &Rc<RefCell<Host>>) {
             Ok(db) => {
                 let saved = idb::kv_get(&db, "engine-accounts").await.ok().flatten();
                 let cached = idb::newest_events(&db, 2000).await;
+                let complete = match (&cached, idb::count_events(&db).await) {
+                    (Ok(rows), Ok(count)) => count as usize <= rows.len(),
+                    _ => false,
+                };
                 if let Some(h) = weak.upgrade() {
                     let mut h = h.borrow_mut();
                     if h.stopped {
@@ -14,6 +18,7 @@ pub(super) fn load(host: &Rc<RefCell<Host>>) {
                         return;
                     }
                     h.db = Some(db);
+                    h.engine.cached_history_complete = complete;
                     if let Some(saved) = saved {
                         h.accounts = serde_json::from_str(&saved).unwrap_or_default();
                     }
@@ -28,11 +33,15 @@ pub(super) fn load(host: &Rc<RefCell<Host>>) {
                     }
                     match cached {
                         Ok(rows) => {
+                            let dropped = h.engine.dropped;
                             for raw in rows {
                                 if let Ok(e) = lkjstr_protocol::compact::decode(&raw) {
                                     h.engine.enqueue("cache".into(), e);
+                                } else {
+                                    h.engine.cached_history_complete = false;
                                 }
                             }
+                            h.engine.cached_history_complete &= h.engine.dropped == dropped;
                         }
                         Err(_) => post(
                             &h,

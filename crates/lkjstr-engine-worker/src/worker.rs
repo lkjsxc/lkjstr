@@ -130,6 +130,11 @@ fn schedule(host: &Rc<RefCell<Host>>) {
                 let at = h.time();
                 let begin = crate::measure::now();
                 h.engine.tick(at);
+                for (id, session) in &h.sessions {
+                    for out in session.borrow_mut().timeline_tick(&h.engine, at) {
+                        h.scope.direct(*id, &out);
+                    }
+                }
                 let elapsed = crate::measure::now() - begin;
                 h.engine.metrics.tick(elapsed);
             }

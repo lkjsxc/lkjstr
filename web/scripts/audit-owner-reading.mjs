@@ -79,9 +79,13 @@ export async function auditReading({ page, find, fact, view, peopleToken, messag
   await fact(
     36,
     'full-width',
-    await first.evaluate(
-      (e) => Math.abs(e.getBoundingClientRect().width - e.closest('.view').clientWidth) < 32,
-    ),
+    await first.evaluate((e) => {
+      const feed = e.closest('.view');
+      const style = getComputedStyle(feed);
+      const width =
+        feed.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+      return Math.abs(e.getBoundingClientRect().width - width) < 2;
+    }),
   );
   await global.evaluate((e) => {
     e.scrollTop = 500;

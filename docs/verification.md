@@ -162,3 +162,16 @@ errors. Two consecutive real UI smokes pass 166 checks each with no page errors.
 Historical UI upgrades pass 28 checks; actual historical WASM/IndexedDB/cache
 upgrades pass 34, including saved periods and retained Shortcuts page identity.
 Public Channels discovery and Stats fetch purposes remain open; see owner-audit.md.
+
+## Main and owner audit integration (2026-11-15)
+
+The merged tree keeps main's scrolling, windowing and time rail implementation
+and the owner audit's draft, migration and browser isolation repairs. Shared
+audit width checks measure the content space beside the reserved rail, within
+two pixels. Both mock smoke reports and server-start failure handling survive.
+Frontend check/build, all four quiet gates and mock smoke (441 checks) pass.
+Real smoke with LKJSTR_SHOTS=1 passes 174 checks without page errors. Desktop
+and phone rail captures were reviewed. Docker remains excluded by the
+worktree-only write rule. No CI workflows or existing services were changed.
+Worker conformance passes 216 checks with no page errors; the delayed
+profile probe also passes. Gate logs are under ignored tmp/merge-*.log.
