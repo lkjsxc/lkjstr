@@ -60,7 +60,10 @@ docker compose --progress quiet -f docker-compose.yml run --rm verify
 The Dockerfile builds the same real product. Docker is excluded by the
 worktree-only write rule; no services, deploys, production or CI changes occur.
 
-The records below describe earlier runs and merges; they predate the current uncommitted merge.
+Merge f61e5f4f keeps upload/read orchestration, main's scrolling/time rails, both browser suites and stricter filter-focus/signer reload checks.
+Frontend check/build, four quiet gates, mock smoke (302), uploads (128), real smoke (386 with LKJSTR_SHOTS=1) and conformance (229) pass; no page errors.
+The 240 ms profile probe measures 233.7 ms. Four jobs/threads, worktree caches. Evidence: tmp/merge-current-*.log and tmp/merge-current-audit.txt.
+Earlier records predate this committed merge. No commit, CI edit, Docker, production, deploy or existing-service changes occurred.
 
 ## Earlier integration and review
 
