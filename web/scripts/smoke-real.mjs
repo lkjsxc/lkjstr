@@ -358,9 +358,13 @@ try {
   );
   await channelScenarios({ page, launch, check, fake, shots, shot });
   await auditFixtures({ fake, sign: fixtureSign, owner: fixture.note.pubkey, note: fixture.note });
-  check('combined fixture retains the owner audit mute list', fake.stored.some((e) =>
-    e.kind === 10000 && e.pubkey === fixture.note.pubkey && e.tags.some((t) => t[0] === 'p'),
-  ));
+  check(
+    'combined fixture retains the owner audit mute list',
+    fake.stored.some(
+      (e) =>
+        e.kind === 10000 && e.pubkey === fixture.note.pubkey && e.tags.some((t) => t[0] === 'p'),
+    ),
+  );
   await auditOwner({
     browser,
     base,
