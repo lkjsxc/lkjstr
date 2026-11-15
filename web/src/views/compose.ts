@@ -13,6 +13,7 @@ import type { ViewEnv } from './registry.ts';
 
 type Ref = { name: string; text: string };
 type State = {
+  outboxOwner?: string;
   text?: string;
   outbox?: ChannelDraft[];
   replyTo?: string;
@@ -29,8 +30,9 @@ type Item = { name: string; el: HTMLElement; done?: Uploaded };
 export function mountCompose(el: HTMLElement, env: ViewEnv, channel?: string): () => void {
   const state: State = loadViewState<State>(env.instance);
   const save = (): void => saveViewState(env.instance, state);
+  const owner = (state.outboxOwner ??= crypto.randomUUID());
+  save();
   let items: Item[] = []; // bound: the files of one draft
-  let sending = false;
   const area = h('textarea', {
     class: 'ctext',
     rows: channel ? 2 : 4,
@@ -123,24 +125,27 @@ export function mountCompose(el: HTMLElement, env: ViewEnv, channel?: string): (
     post.title = can === 'read-only' ? t('error.read-only') : (keyCaps('send')[0] ?? '');
     attach.disabled = can !== 'ok';
     post.disabled =
-      sending ||
-      !!outbox?.full() ||
+      outbox.full() ||
       busy ||
       can !== 'ok' ||
       (!area.value.trim() && !items.length && !state.quote);
   };
 
-  const outbox = channel
-    ? createChannelOutbox(
-        env,
-        (state.outbox ??= []),
-        () => {
-          save();
-          ready();
-        },
-        (relays, final) => showDelivery(relays, final),
-      )
-    : undefined;
+  const outbox = createChannelOutbox(
+    env,
+    owner,
+    (state.outbox ??= []),
+    () => {
+      save();
+      ready();
+    },
+    (relays, final, error) =>
+      error
+        ? replaceChildren(result, h('div', { class: 'error' }, failureText(error)))
+        : showDelivery(relays, final),
+  );
+
+  state.outbox = outbox.drafts;
 
   async function upload(f: File): Promise<void> {
     const bar = h('i');
@@ -232,24 +237,11 @@ export function mountCompose(el: HTMLElement, env: ViewEnv, channel?: string): (
       thumbs.replaceChildren();
       drawHead();
     };
-    // Retain the entire draft before freeing the input for the next message.
-    if (outbox) {
-      outbox.publish(draft);
-      clear();
-      ready();
-      return;
-    }
-    sending = true;
+    // Retain the entire draft before freeing the field, including ordinary posts and replies.
+    outbox.publish(draft);
+    clear();
     ready();
-    const r = await env.engine.act(
-      { a: 'publish', as: env.engine.me(), what: { k: 'note', draft } },
-      { delivery: (relays) => showDelivery(relays, false) },
-    );
-    sending = false;
-    if (r.ok) showDelivery(r.delivery ?? [], true);
-    else replaceChildren(result, h('div', { class: 'error' }, failureText(r.error)));
-    if (r.ok) clear();
-    ready();
+    area.focus({ preventScroll: true });
   }
 
   // Saved on every keystroke (one small stored key): a reload a moment after typing must not lose the last words.
@@ -287,7 +279,7 @@ export function mountCompose(el: HTMLElement, env: ViewEnv, channel?: string): (
       who.signIn,
     ),
     result,
-    ...(outbox ? [outbox.el] : []),
+    outbox.el,
   );
   drawHead();
   if (state.replyTo || state.quote) requestAnimationFrame(() => area.focus());
@@ -295,5 +287,6 @@ export function mountCompose(el: HTMLElement, env: ViewEnv, channel?: string): (
     state.text = area.value;
     save();
     who.dispose();
+    outbox.dispose();
   };
 }

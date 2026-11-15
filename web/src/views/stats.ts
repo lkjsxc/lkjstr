@@ -13,7 +13,8 @@ import type { ViewEnv } from './registry.ts';
 
 type Relay = EngineStats['relays'][number];
 export type Mark = 'failing' | 'silent' | 'slow';
-type SortKey = 'health' | 'events' | 'dup' | 'latency' | 'subs' | 'data';
+type PublishKey = 'publishAccepted' | 'publishPending' | 'publishOwnSkipped';
+type SortKey = 'health' | 'events' | 'dup' | 'latency' | 'subs' | 'data' | PublishKey;
 type Sort = { by: SortKey; up: boolean };
 const EVERY_MS = 2000;
 const SLOW_MS = 1000;
@@ -44,6 +45,9 @@ const VALUE: Record<SortKey, (r: Relay) => number | null> = {
   latency: (r) => r.latencyMs,
   subs: (r) => r.openSubscriptions,
   data: (r) => r.bytesIn + r.bytesOut,
+  publishAccepted: (r) => r.publishAccepted ?? null,
+  publishOwnSkipped: (r) => r.publishOwnSkipped ?? null,
+  publishPending: (r) => r.publishPending ?? null,
 };
 /** The relays in the order asked for: largest first (`up`: smallest first), a missing figure always last, ties
  * by what was received and then by name, so rows do not swap places between two answers. Pure, tested. */
@@ -66,6 +70,12 @@ const tally = (el: HTMLElement, n: number): void => {
   put(el, num(n));
   el.classList.toggle('nil', n === 0);
 };
+const PUBLISH = {
+  publishAccepted: ['publishAccepted', 'publishPlanned'],
+  publishPending: ['publishPending', 'publishFailed'],
+  publishOwnSkipped: ['publishOwnSkipped', 'publishInboxSkipped', 'publishCapacitySkipped'],
+} as const;
+const PUBLISH_KEYS = Object.keys(PUBLISH) as PublishKey[];
 const COLUMNS: readonly (readonly [SortKey, Key])[] = [
   ['health', 'stats.relay'],
   ['events', 'stats.events'],
@@ -73,6 +83,7 @@ const COLUMNS: readonly (readonly [SortKey, Key])[] = [
   ['latency', 'stats.latency'],
   ['subs', 'stats.subs'],
   ['data', 'stats.data'],
+  ...PUBLISH_KEYS.map((key) => [key, `stats.${key}`] as const),
 ];
 
 export function mountStats(el: HTMLElement, env: ViewEnv): () => void {
@@ -107,10 +118,11 @@ export function mountStats(el: HTMLElement, env: ViewEnv): () => void {
   const heads = COLUMNS.map(([key, label]) => {
     const th = h(
       'th',
-      { class: `c-${key}`, scope: 'col' },
+      { class: `c-${key}`, scope: 'col', style: key === 'health' ? 'min-width:160px' : undefined },
       h(
         'button',
         {
+          title: key === 'publishOwnSkipped' ? t('stats.publishLimits') : undefined,
           onclick: () => {
             sort.up = sort.by === key ? !sort.up : false;
             sort.by = key;
@@ -140,6 +152,7 @@ export function mountStats(el: HTMLElement, env: ViewEnv): () => void {
     const error = h('div', { class: 'rsub muted' });
     const bar = h('span');
     const [events, dup, latency, subs, data, at] = Array.from({ length: 6 }, () => h('span'));
+    const publishing = PUBLISH_KEYS.map((key) => ({ key, value: h('span') }));
     const tr = h(
       'tr',
       null,
@@ -164,6 +177,7 @@ export function mountStats(el: HTMLElement, env: ViewEnv): () => void {
       cell('latency', latency as HTMLElement),
       cell('subs', subs as HTMLElement),
       cell('data', data as HTMLElement),
+      ...publishing.map(({ key, value }) => cell(key, value)),
       cell('since', at as HTMLElement),
     );
     const set = (r: Relay, most: number): void => {
@@ -171,7 +185,7 @@ export function mountStats(el: HTMLElement, env: ViewEnv): () => void {
       const cls = `s-${r.state}${m ? ` m-${m}` : ''}`;
       if (tr.className !== cls) tr.className = cls;
       put(mark, m ? t(`stats.${m}`) : '');
-      put(error, r.lastError ?? '');
+      put(error, r.lastError === 'capacity' ? t('stats.capacity') : (r.lastError ?? ''));
       tally(events as HTMLElement, r.eventsReceived);
       bar.style.width = `${most ? Math.round((r.eventsReceived / most) * 100) : 0}%`;
       tally(dup as HTMLElement, r.duplicatesDropped);
@@ -179,6 +193,19 @@ export function mountStats(el: HTMLElement, env: ViewEnv): () => void {
       tally(subs as HTMLElement, r.openSubscriptions);
       put(data as HTMLElement, `↓ ${bytesText(r.bytesIn)}  ↑ ${bytesText(r.bytesOut)}`);
       (data as HTMLElement).classList.toggle('nil', r.bytesIn + r.bytesOut === 0);
+      for (const { key, value } of publishing) {
+        const counts = PUBLISH[key].map((field) => r[field]);
+        put(
+          value,
+          counts.every((n) => n === undefined)
+            ? NONE
+            : counts.map((n) => (n === undefined ? NONE : num(n))).join(' / '),
+        );
+        value.classList.toggle(
+          'nil',
+          counts.every((n) => !n),
+        );
+      }
       const c = r.connectedSince;
       const day = c !== null && dayOf(c) !== dayOf(Date.now()) ? `${dayOf(c)} ` : '';
       put(at as HTMLElement, c === null ? NONE : `${day}${clockOf(c)}`);
@@ -252,7 +279,7 @@ export function mountStats(el: HTMLElement, env: ViewEnv): () => void {
   el.replaceChildren(
     h('div', { class: 'sfigs' }, ...Object.values(figs).map((f) => f.node)),
     state,
-    table,
+    h('div', { style: 'overflow-x:auto' }, table),
   );
   env.menu(() => [{ label: t('view.relays'), run: () => env.open('relays') }]);
   const off = env.visible.subscribe(watch);

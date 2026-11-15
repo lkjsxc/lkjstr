@@ -57,7 +57,11 @@ export function tabHits(api: Pick<TabFinder, 'tabs' | 'show' | 'open'>, typed: s
         go: () => api.show(tab, workspace),
       }),
     );
-  const kinds = CHOICES.choices().filter((c) => matchesWords(c.search, text));
+  // A view's exact name wins over a word in another view's description ("Relays" used to choose Global).
+  const exact = (c: Choice): number => Number(c.title.toLowerCase() === text.toLowerCase());
+  const kinds = CHOICES.choices()
+    .filter((c) => matchesWords(c.search, text))
+    .sort((a, b) => exact(b) - exact(a));
   return [...tabs, ...kinds.map(kind), ...(text ? CHOICES.typed(text).map(kind) : [])];
 }
 

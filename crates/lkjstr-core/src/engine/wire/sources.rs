@@ -64,7 +64,7 @@ impl Session {
                 q.convert().map(|converted|query::events(store,&converted).into_iter().next().map(|event|e.list_tags(&event).iter().filter(|t|t.first().is_some_and(|k|k=="p")).filter_map(|t|t.get(1)).map(|p|person(e,p,q.account.as_deref())).collect()).unwrap_or_default()).unwrap_or_default()
             }
             _ => converted.as_ref().map(|converted| {
-                query::events(store, converted).into_iter().take(6000)
+                query::events(store, converted).into_iter()
                     .filter(|event| query::hidden_with_lists(store, converted, event, &e.private_lists).is_none())
                     .filter_map(|event| {
                         let position = match &thread {

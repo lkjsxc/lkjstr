@@ -9,7 +9,6 @@ import { chromium, type Page } from 'playwright-core';
 const here = new URL('..', import.meta.url).pathname;
 const out = `${here}../tmp/screens`;
 let base = '';
-const port = 0;
 const chrome =
   process.env.LKJSTR_CHROME ??
   `${process.env.HOME}/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome`;
@@ -26,12 +25,13 @@ const SIZES = [
 ] as const;
 
 mkdirSync(out, { recursive: true });
-const server = spawn(process.execPath, [`${here}scripts/serve.ts`, `--port=${port}`], {
+const server = spawn(process.execPath, [`${here}scripts/serve.ts`, '--port=0'], {
   stdio: 'pipe',
 });
-base = await new Promise<string>((r) =>
-  server.stdout?.once('data', (data) => r(String(data).trim())),
-);
+base = await new Promise<string>((done, fail) => {
+  server.stdout?.once('data', (data) => done(String(data).trim()));
+  server.once('exit', (code) => fail(new Error(`server exited ${code}`)));
+});
 const browser = await chromium.launch({ executablePath: chrome, args: ['--no-sandbox'] });
 try {
   for (const [width, height] of SIZES)

@@ -168,6 +168,7 @@ fn pending_counts_can_interrupt_settled_channel_work_on_a_full_relay() {
     counts.tags.insert("e".into(), vec!["a".repeat(64)]);
     n.plan(
         vec![("room".into(), channel.clone(), protocol::Query::default())],
+        &lkjstr_core::store::Store::new(0),
         0,
     );
     n.connected(RELAY, 1);
@@ -192,6 +193,7 @@ fn pending_counts_can_interrupt_settled_channel_work_on_a_full_relay() {
             ("room".into(), channel, protocol::Query::default()),
             ("room".into(), counts, protocol::Query::default()),
         ],
+        &lkjstr_core::store::Store::new(0),
         110,
     );
     let frames = sends(&mut n);

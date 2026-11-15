@@ -63,6 +63,7 @@ struct Host {
     timer: Option<Timer>,
     db: Option<web_sys::IdbDatabase>,
     next_persist: u64,
+    publication_persisted: u64,
     flushing: bool,
     stopped: bool,
     clock_offset: u64,
@@ -103,6 +104,7 @@ pub fn start() -> Result<WorkerHandle, JsValue> {
         timer: None,
         db: None,
         next_persist: 0,
+        publication_persisted: 0,
         flushing: false,
         stopped: false,
         clock_offset: 0,
@@ -136,6 +138,11 @@ fn schedule(host: &Rc<RefCell<Host>>) {
                 let at = h.time();
                 let begin = crate::measure::now();
                 h.engine.tick(at);
+                for (id, session) in &h.sessions {
+                    for out in session.borrow_mut().timeline_tick(&h.engine, at) {
+                        h.scope.direct(*id, &out);
+                    }
+                }
                 let elapsed = crate::measure::now() - begin;
                 h.engine.metrics.tick(elapsed);
             }

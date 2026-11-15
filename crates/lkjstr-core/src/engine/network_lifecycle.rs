@@ -10,6 +10,7 @@ impl Network {
         self.tick(now);
     }
     pub fn disconnected(&mut self, relay: &str, now: u64) {
+        self.profiles_changed = true;
         self.effects.push(Effect::Disconnect(relay.into()));
         if let Some(r) = self.relays.get_mut(relay) {
             r.online = false;
@@ -18,6 +19,9 @@ impl Network {
             r.last_error = Some("connection-lost".into());
             r.failures = r.failures.saturating_add(1);
             r.retry_at = now + 1000 * (1u64 << r.failures.min(6)) + (r.received % 997);
+        }
+        for p in self.publications.values_mut() {
+            p.sent.remove(relay);
         }
         for r in self.requests.values_mut().filter(|r| r.relay == relay) {
             if !r.complete {

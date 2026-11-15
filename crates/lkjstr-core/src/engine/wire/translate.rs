@@ -29,6 +29,11 @@ impl Session {
                 self.preview_visible = hint.visible_subs.clone();
                 self.preview_save_data = hint.save_data;
                 self.preview_hidden = hint.page_hidden;
+                self.timeline_visible = Some(if hint.page_hidden {
+                    Default::default()
+                } else {
+                    hint.visible_subs.iter().cloned().collect()
+                });
                 vec![p::Input::Hint {
                     visible_subs: hint.visible_subs,
                     page_hidden: hint.page_hidden,
@@ -41,6 +46,7 @@ impl Session {
                     return Err((None, "subscription-limit"));
                 }
                 let converted = query.convert().ok_or((None, "unsupported"))?;
+                self.timelines.remove(&sub);
                 self.queries.insert(sub.clone(), *query);
                 vec![p::Input::Open {
                     sub,
@@ -52,6 +58,8 @@ impl Session {
                 self.delivered.remove(&sub);
                 self.windows.remove(&sub);
                 self.preview_near.remove(&sub);
+                self.timelines.remove(&sub);
+                self.return_keys.remove(&sub);
                 vec![p::Input::Close { sub }]
             }
             Input::Window {
@@ -67,6 +75,21 @@ impl Session {
                 let anchor = match anchor {
                     Anchor::Top(_) => None,
                     Anchor::Key { key } => Some(key),
+                    Anchor::Month {
+                        month,
+                        offset,
+                        return_key,
+                    } => {
+                        if let Some(key) = return_key {
+                            self.return_keys.insert(sub.clone(), key);
+                        }
+                        Some(
+                            self.timelines
+                                .get(&sub)
+                                .and_then(|i| i.key(month, offset))
+                                .ok_or((None, "timeline-unavailable"))?,
+                        )
+                    }
                 };
                 let before = if retain_above { 6000 } else { before.min(800) };
                 self.windows

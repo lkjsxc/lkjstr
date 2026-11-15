@@ -56,8 +56,7 @@ Accounts can be created/imported through the Accounts tab. Protocol 2 supports
 explicit local nsec backup; external signers and read-only accounts refuse it.
 Secret-bearing input/output debug representations are redacted.
 
-The conformance gate now uses this worktree's contract, without fetching a
-branch. See engine-package.md for commands and current verification artifacts.
+Conformance uses this worktree's contract; commands/artifacts: engine-package.md.
 
 ## Engine polish (2026-11-15)
 
@@ -70,8 +69,7 @@ Interrupted pages replay their original filters until EOSE. Completed page
 coverage and cursors survive live resumption, so profile lookup cannot falsely
 exhaust history. Four native regressions cover interruption and pagination.
 Six native regressions cover routing, batching, context, refresh and release.
-The delayed loopback probe uses 240 ms responses and congested slots: baseline
-note-to-named-row 1893.7 ms; revised 232.5 ms. engine-check includes this probe.
+The 240 ms congested-slot probe improves note-to-name from 1893.7 to 232.5 ms.
 
 Protocol 2 uses absent profile fields for unknown counts and the existing
 partial flag for lower bounds. Count requests are bounded and exact only after
@@ -90,12 +88,12 @@ two duplicates. Ten examples and owner decisions: [engine-polish.md](engine-poli
 
 ## Engine contract (2026-11-14)
 
-The engine mirrors the fetched frontend's protocol.ts and mock action/message
-inventory. docs/protocol-additions.patch adds accepted public-key discovery,
-separate relay configuration, heartbeat/detach/reconnect and quote errors.
-The real Worker conformance gate derives validators from that TypeScript file;
-it drives every current mock message kind, every action name and every source.
-Shape conformance does not establish completeness of every semantic variant.
+The engine mirrors frontend protocol.ts, currently protocol 5, including
+cache-wide [time rails](time-rail.md), month counts and ordinal window seeks;
+bounded generation snapshots progress during live ingestion and reject changed membership.
+Earlier additions include key discovery, relay configuration, heartbeat,
+detach/reconnect and quote errors. Conformance validators drive each mock message, action
+and source. Shape conformance does not establish every semantic variant.
 
 Implemented:
 
@@ -135,8 +133,7 @@ Implemented:
 
 ## Mock answers not yet fully implemented
 
-No current top-level mock message or action name is entirely unhandled. These
-variants of messages the mock answers remain incomplete:
+Some variants of implemented mock messages remain incomplete:
 
 - open/list, open/mutes and open/bookmarks: extension/remote private-list
   decryption and encrypted-entry editing. A decrypt capability for NIP-07 is
@@ -155,28 +152,30 @@ variants of messages the mock answers remain incomplete:
   validation is not claimed. Follow notifications reflect retained kind-3 events,
   not an unbounded historical follow/unfollow ledger.
 
-Remaining scheduling work includes outbox-aware routing in the new scheduler,
-coalescing and adaptive hints. Language heuristics remain English/Japanese
-script detection. Repeated/suspension stress and complete privacy coverage are
-not established by the finite conformance suite.
+Publishing now plans 12 author outboxes plus eight inbox/context routes, retries
+through a deadline and reports success on first acceptance. Missing recipient
+lists are looked up; bounded persisted receipts route deletes after reload.
+All saved accounts refresh profile/follow/relay/mute/server records independently
+of cache. Read routes retain page evidence; Stats aggregates publication history
+once. Full outbox two-cover, persistent backoff, focus and weights remain deferred.
+Exact bounds, measured costs and remaining design: [orchestration.md](orchestration.md).
 
 ## Verification
 
-The latest gate counts, artifact sizes and cold-start measurements are recorded
-in engine-package.md, engine-performance.md and verification.md. Browser runs
-use fresh ports/data, loopback WebSockets and intercepted HTTP only.
+Gate counts and cold-start measurements: engine-package.md, engine-performance.md
+and verification.md. Audit repairs/open gaps: [owner-audit.md](owner-audit.md).
+Browser runs use fresh ports/data, loopback WebSockets and intercepted HTTP only.
 Docker Compose remains excluded by the explicit worktree-only write rule:
-image/container storage is outside this worktree. No commit, deployment,
-production access, CI edit or existing-service restart is performed.
+image/container storage is outside this worktree. No commit, deployment, production access, CI edit or service restart is performed.
+
 ## One product
 
-web/ is the only interface. crates/lkjstr-engine-worker owns the Worker and
-its browser effects; the root Cargo.toml is a virtual workspace. The Leptos
-UI/runtime, root HTML entry, exclusive styles/icons and browser drivers are
-removed. Shared static icons and the loopback relay helper remain in use.
-Root build and quiet release gates build web/ with the real engine. No Trunk
-installation is needed. Docker configuration follows that build but cannot
-be run in this environment. Historical UI results do not verify this product.
+web/ is the only interface; lkjstr-engine-worker owns browser effects.
+Cargo.toml is virtual. Leptos and its entry/styles/drivers are removed. Shared
+static icons and the loopback relay helper remain.
+Root build and quiet gates build web/ with the real engine, without Trunk.
+Docker follows that build but cannot run here. Historical UI results do not
+verify this product.
 
 ## Signer conformance follow-up (2026-11-15)
 
@@ -188,6 +187,7 @@ A shared loopback NIP-46 fixture checks optional/required connect tokens, signin
 reload credential reuse, refusal, disappearance during signing and recovery.
 Remote RPC failures retain signer-refused versus signer-missing; losing all RPC
 sockets now fails immediately and releases sockets instead of waiting a minute.
+
 ## Reader state and optional previews (2026-11-15)
 
 Protocol 5 adds bounded per-note link previews and near-note hints, including

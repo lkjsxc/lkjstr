@@ -36,6 +36,16 @@ the existing transport contract does not need to change with the crate name.
    Hiding/closing views releases their wants; heartbeat expiry releases clients.
 7. The main thread renders finished rows without parsing events or opening relays.
 
+## Relay decisions
+
+publication_plan.rs makes explicit kind-aware delivery plans; publication_discovery
+fills missing inbox lists under the same deadline. Network owns retries and early
+success, plus bounded Stats receipts and a durable deletion-route ledger.
+read_plan.rs ranks configured routes by coverage and measured quality without
+changing complete filters or chronological feeds. Device-account refresh uses
+independent per-kind requests. Bounds, scorecards and deferred work are in
+[orchestration.md](orchestration.md).
+
 ## Bounds and storage
 
 The Worker database is lkjstr-wasm. Compact event tuples coexist with reads of

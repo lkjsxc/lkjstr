@@ -1,0 +1,173 @@
+//! Bounded route receipts: last 32 plans for Stats, 2048 authored route sets for deletes.
+use super::*;
+use crate::engine::{protocol::Delivery, publication_plan::Destination};
+use serde::{Deserialize, Serialize};
+#[derive(Clone, Serialize, Deserialize)]
+pub(super) struct Record {
+    id: String,
+    kind: u64,
+    at: u64,
+    deliveries: Vec<Destination>,
+    #[serde(rename = "unresolvedRecipients")]
+    unresolved_recipients: usize,
+}
+#[derive(Default, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PublicationStats {
+    pub publish_planned: usize,
+    pub publish_accepted: usize,
+    pub publish_failed: usize,
+    pub publish_pending: usize,
+    pub publish_skipped: usize,
+    pub publish_own_skipped: usize,
+    pub publish_inbox_skipped: usize,
+    pub publish_capacity_skipped: usize,
+}
+impl Network {
+    pub fn published_routes(&self, id: &str) -> Vec<String> {
+        self.publication_routes.get(id).cloned().unwrap_or_default()
+    }
+    pub(super) fn remember_publication(
+        &mut self,
+        event: &NostrEvent,
+        deliveries: Vec<Destination>,
+        now: u64,
+    ) {
+        if self.publication_history.len() >= 32 {
+            self.publication_history.pop_front();
+        }
+        // Keep attempted destinations too: a missing ACK does not prove absence.
+        let routes = deliveries
+            .iter()
+            .filter(|d| d.state != "skipped")
+            .map(|d| d.url.clone())
+            .collect();
+        self.retain_routes(event.id.clone(), routes);
+        self.publication_revision = self.publication_revision.wrapping_add(1);
+        self.publication_history.push_back(Record {
+            id: event.id.clone(),
+            kind: event.kind,
+            at: now,
+            deliveries,
+            unresolved_recipients: crate::engine::publication_discovery::recipients(event).len(),
+        });
+    }
+    pub(super) fn update_publication(&mut self, id: &str, deliveries: &[Delivery]) {
+        if let Some(record) = self.publication_history.iter_mut().find(|r| r.id == id) {
+            for d in &mut record.deliveries {
+                if let Some(next) = deliveries.iter().find(|next| next.relay == d.url) {
+                    d.state.clone_from(&next.state);
+                }
+            }
+        }
+    }
+    pub(in crate::engine) fn extend_publication_history(
+        &mut self,
+        id: &str,
+        routes: Vec<Destination>,
+    ) {
+        let mut retained = self.published_routes(id);
+        for route in &routes {
+            if route.state != "skipped" && !retained.contains(&route.url) && retained.len() < 64 {
+                retained.push(route.url.clone());
+            }
+        }
+        if retained != self.published_routes(id) {
+            self.retain_routes(id.to_owned(), retained);
+            self.publication_revision = self.publication_revision.wrapping_add(1);
+        }
+        if let Some(record) = self.publication_history.iter_mut().find(|r| r.id == id) {
+            for route in routes {
+                if let Some(old) = record.deliveries.iter_mut().find(|d| d.url == route.url) {
+                    if old.state == "skipped" && route.state != "skipped" {
+                        *old = route;
+                    }
+                } else if record.deliveries.len() < 2240 {
+                    record.deliveries.push(route);
+                }
+            }
+        }
+    }
+    pub(in crate::engine) fn set_unresolved_recipients(&mut self, id: &str, count: usize) {
+        if let Some(record) = self.publication_history.iter_mut().find(|r| r.id == id) {
+            record.unresolved_recipients = count.min(32);
+        }
+    }
+    pub fn recent_publications(&self) -> Value {
+        json!(self.publication_history)
+    }
+    /// One pass over at most 32 x 2240 destinations, including skipped URLs.
+    pub fn publication_stats(&self) -> BTreeMap<&str, PublicationStats> {
+        let mut stats = BTreeMap::<&str, PublicationStats>::new();
+        for d in self.publication_history.iter().flat_map(|r| &r.deliveries) {
+            let row = stats.entry(d.url.as_str()).or_default();
+            row.publish_planned += usize::from(d.state != "skipped");
+            match d.state.as_str() {
+                "accepted" => row.publish_accepted += 1,
+                "rejected" | "timeout" => row.publish_failed += 1,
+                "pending" => row.publish_pending += 1,
+                "skipped" => row.publish_skipped += 1,
+                _ => {}
+            }
+            match d.reason.as_deref() {
+                Some("own-cap") => row.publish_own_skipped += 1,
+                Some("person-cap" | "inbox-cap") => row.publish_inbox_skipped += 1,
+                Some("capacity") => row.publish_capacity_skipped += 1,
+                _ => {}
+            }
+        }
+        stats
+    }
+    fn retain_routes(&mut self, id: String, routes: Vec<String>) {
+        self.publication_route_order.retain(|old| old != &id);
+        self.publication_route_order.push_back(id.clone());
+        self.publication_route_bytes += routes.iter().map(String::len).sum::<usize>();
+        if let Some(old) = self.publication_routes.insert(id, routes) {
+            self.publication_route_bytes -= old.iter().map(String::len).sum::<usize>();
+        }
+        while self.publication_route_order.len() > 2048
+            || self.publication_route_bytes > 4 * 1024 * 1024
+        {
+            if let Some(old) = self.publication_route_order.pop_front()
+                && let Some(routes) = self.publication_routes.remove(&old)
+            {
+                self.publication_route_bytes -= routes.iter().map(String::len).sum::<usize>();
+            }
+        }
+    }
+    pub fn publication_routes_json(&self) -> String {
+        let ordered: Vec<_> = self
+            .publication_route_order
+            .iter()
+            .filter_map(|id| self.publication_routes.get(id).map(|routes| (id, routes)))
+            .collect();
+        serde_json::to_string(&ordered).unwrap_or_default()
+    }
+    pub fn restore_publication_routes(&mut self, raw: &str) {
+        // No migration: malformed state starts clean. The blob and FIFO are bounded.
+        self.publication_routes.clear();
+        self.publication_route_order.clear();
+        self.publication_route_bytes = 0;
+        if raw.len() > 8 * 1024 * 1024 {
+            return;
+        }
+        let Ok(routes) = serde_json::from_str::<Vec<(String, Vec<String>)>>(raw) else {
+            return;
+        };
+        for (id, rs) in routes.into_iter().rev().take(2048).rev() {
+            if !lkjstr_protocol::is_event_id(&id) {
+                continue;
+            }
+            let routes = rs
+                .into_iter()
+                .filter_map(|r| crate::engine::settings::strict_relay(&r))
+                .take(64)
+                .collect();
+            self.retain_routes(id, routes);
+        }
+    }
+}
+
+#[cfg(test)]
+#[path = "network_publication_history_test.rs"]
+mod tests;

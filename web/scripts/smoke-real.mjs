@@ -9,11 +9,14 @@ import { chromium } from 'playwright-core';
 import bundle from 'playwright-core/lib/utilsBundle';
 import { fakeBunker } from '../../scripts/browser-bunker.mjs';
 import { fakeRelay } from '../../scripts/browser-relay.mjs';
+import { auditFixtures } from './audit-fixtures.mjs';
+import { auditOwner } from './audit-owner.mjs';
 import { channelScenarios } from './smoke-channels.mjs';
 import { realReaderChecks, visitorRelayChecks } from './smoke-reader.mjs';
 import { openKeyField, seedLayouts } from './smoke-seed.mjs';
 import { writeReport } from './smoke-signer-support.mjs';
 import { signerScenarios } from './smoke-signers.mjs';
+import { railSmoke } from './smoke-time-rail.ts';
 import { accounts, installExtension, npub, visitorChecks } from './smoke-visitors.mjs';
 
 const root = new URL('../../', import.meta.url).pathname;
@@ -30,8 +33,13 @@ signer.stderr.resume();
 const lines = createInterface({ input: signer.stdout })[Symbol.asyncIterator]();
 const fixture = JSON.parse((await lines.next()).value);
 const fake = fakeRelay();
+// The archive/audit can fill one 1000-event store; reader arrivals get their own bounded fixture.
+const readerFake = fakeRelay();
 const bunker = await fakeBunker();
-for (const event of [fixture.note, ...fixture.events]) fake.add(event);
+for (const event of [fixture.note, ...fixture.events]) {
+  fake.add(event);
+  readerFake.add(event);
+}
 let signing = Promise.resolve();
 const relay = createServer();
 const ws = new bundle.wsServer({ server: relay });
@@ -41,7 +49,7 @@ ws.on('connection', (socket, req) => {
     return bunker.route(socket, req.url === '/bunker-secret');
   activePaths.set(socket, req.url);
   socket.on('close', () => activePaths.delete(socket));
-  fake.route({
+  (req.url === '/reader' ? readerFake : fake).route({
     send: (text) => socket.send(text),
     onMessage: (fn) => socket.on('message', fn),
     onClose: (fn) => socket.on('close', fn),
@@ -107,6 +115,17 @@ try {
     bunker,
   });
   const publicationsBeforeApp = fake.published.length;
+  for (let i = 0; i < 100; i++) {
+    fake.add(
+      await fixtureSign({
+        pubkey: fixture.note.pubkey,
+        kind: 1,
+        created_at: Math.floor(Date.UTC(2026 - Math.floor(i / 20), 10 - (i % 10), 15) / 1000),
+        content: `Rail archive fixture ${i}`,
+        tags: [],
+      }),
+    );
+  }
   page = await ctx.newPage();
   const launch = async (word, kind) => {
     await page.locator('.pane.cur .strip').getByTitle('New tab', { exact: true }).click();
@@ -130,6 +149,7 @@ try {
   await page.locator(`${accounts} [data-f="extension"]`).click();
   await page.locator('.view[data-kind="home"] .note').first().waitFor();
   check('home renders signed-in notes');
+  await railSmoke(page, check, shots);
   check(
     'signing in brings the ordinary layout',
     (await page.locator('.pane').count()) === 4 &&
@@ -157,6 +177,12 @@ try {
   await page.locator(`${accounts} .arow`).nth(1).waitFor();
   await page.locator('.acct .ro').waitFor();
   await page.locator('.view[data-kind="compose"] .cwho .badge').first().waitFor();
+  // Account badges update before the replacement list windows arrive.
+  await page.waitForFunction(
+    () =>
+      document.querySelectorAll('.note .act.off').length > 0 &&
+      document.querySelectorAll('.note .act.a-reply:not(.off)').length === 0,
+  );
   check(
     'a read-only account says so at the composer and on every action',
     (await page.locator('.view[data-kind="compose"] .btn.primary:visible').first().isDisabled()) &&
@@ -216,7 +242,19 @@ try {
     'reaction reaches relay',
     fake.published.some((e) => e.kind === 7),
   );
-  await channelScenarios({ page, launch, check, fake });
+  await channelScenarios({ page, launch, check, fake, shots, shot });
+  await auditFixtures({ fake, sign: fixtureSign, owner: fixture.note.pubkey, note: fixture.note });
+  await auditOwner({
+    browser,
+    base,
+    real: true,
+    pubkey: fixture.note.pubkey,
+    check,
+    prepare: async (context) => {
+      await context.exposeFunction('fixtureSign', fixtureSign);
+      await installExtension(context, relayUrl, fixture.note.pubkey, errors);
+    },
+  });
   if (shots) {
     // Signed in, the ordinary layout as it starts, in Japanese (the language is put back afterwards).
     // Use the reader's reset: deleting storage bypasses the live WM store, whose
@@ -272,8 +310,8 @@ try {
   await realReaderChecks({
     browser,
     base,
-    relayUrl,
-    fake,
+    relayUrl: `${relayUrl}/reader`,
+    fake: readerFake,
     fixture,
     fixtureSign,
     check,

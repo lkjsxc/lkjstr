@@ -97,6 +97,7 @@ pub fn start_shared() -> Result<SharedWorkerHandle, JsValue> {
         db: None,
         next_persist: 0,
         flushing: false,
+        publication_persisted: 0,
         stopped: false,
         clock_offset: 0,
         preview_probed: false,

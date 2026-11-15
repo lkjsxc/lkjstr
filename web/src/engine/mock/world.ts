@@ -194,6 +194,15 @@ export function createWorld(now: number) {
     const at = base - (200 + i * 47 + ((i * 13) % 11)) * MIN;
     add({ ...make({ by, ago: 0, text }, idOf(9300 + i), at), channel: idOf(9000) });
   }
+  // Historical fixture notes make out-of-window month seeks observable in development and smoke.
+  for (let i = 0; i < 80; i++) {
+    const at = Date.UTC(
+      new Date(base).getUTCFullYear() - 1 - Math.floor(i / 12),
+      11 - (i % 12),
+      15,
+    );
+    add(make({ by: 'taro', ago: 0, text: `Archive fixture ${i}` }, idOf(9500 + i), at));
+  }
   notes.sort((a, b) => b.at - a.at);
   for (const [i, n] of notes.entries()) n.partial = i < 40 && i % 4 === 1;
 

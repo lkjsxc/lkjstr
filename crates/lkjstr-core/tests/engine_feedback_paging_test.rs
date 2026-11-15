@@ -70,7 +70,11 @@ fn history_preempts_settled_count_requests_and_counts_resume() {
         kinds: Some(vec![1, 6, 7, 9735]),
         ..Default::default()
     };
-    n.plan(vec![("counts".into(), counts.clone(), Query::default())], 0);
+    n.plan(
+        vec![("counts".into(), counts.clone(), Query::default())],
+        &lkjstr_core::store::Store::new(0),
+        0,
+    );
     n.connected(RELAY, 1);
     let req = n
         .drain_effects()
@@ -93,6 +97,7 @@ fn history_preempts_settled_count_requests_and_counts_resume() {
             ("counts".into(), counts, Query::default()),
             ("feed".into(), page, Query::default()),
         ],
+        &lkjstr_core::store::Store::new(0),
         110,
     );
     let effects = n

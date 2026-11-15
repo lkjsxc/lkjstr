@@ -45,7 +45,7 @@ pub enum Input {
         relays: Vec<String>,
     },
 }
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct Query {
     pub source: Source,
@@ -78,7 +78,7 @@ pub enum Source {
     Channels,
     Channel,
 }
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct Filters {
     pub authors: Option<Vec<String>>,

@@ -19,6 +19,9 @@ pub mod network;
 mod network_limits;
 pub mod preview;
 pub mod protocol;
+mod publication_discovery;
+pub mod publication_plan;
+mod publication_routes;
 pub mod query;
 mod query_hidden;
 mod query_predicates;
@@ -63,13 +66,15 @@ pub struct Engine {
     channel_pending: BTreeMap<String, channel_pending::Pending>,
     pub client_tag: bool,
     pub discovery_paused: bool,
-    pub discovery_account: Option<String>,
+    pub discovery_accounts: Vec<String>,
     pub discovery_relays: Vec<String>,
     pub servers: BTreeMap<String, (String, bool)>,
     pub private_lists: BTreeMap<String, Vec<Vec<String>>>,
     pub seen: BTreeMap<String, u64>,
     pub metrics: metrics::Metrics,
     pub store: Store,
+    /// False when persisted history extends beyond the hydrated store: no partial time rail.
+    pub cached_history_complete: bool,
     pub signed_out_global_filter: bool,
     pub pending: crate::persistence::PendingEvents,
     pub network: Network,
@@ -97,13 +102,14 @@ impl Engine {
             channel_pending: BTreeMap::new(),
             client_tag: true,
             discovery_paused: false,
-            discovery_account: None,
+            discovery_accounts: vec![],
             discovery_relays: vec![],
             servers: BTreeMap::new(),
             private_lists: BTreeMap::new(),
             seen: BTreeMap::new(),
             metrics: Default::default(),
             store: Store::with_caps(16000, 4000),
+            cached_history_complete: true,
             signed_out_global_filter: true,
             pending: Default::default(),
             network: Network::default(),
@@ -180,6 +186,7 @@ impl Engine {
         self.resume_channel_actions(now);
         if self.network.publications.len() != self.pending_publications {
             self.pending_publications = self.network.publications.len();
+            self.replan(now);
             for v in self.views.values_mut() {
                 v.dirty = true;
             }
