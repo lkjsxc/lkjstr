@@ -348,6 +348,7 @@ export type ServerRow = {
   readonly url: string;
   /** Upload protocol the engine found there. */
   readonly protocol: 'blossom' | 'nip96' | 'unknown';
+  /** A successful upload has confirmed this server; false does not establish a failure. */
   readonly ok: boolean;
 };
 
@@ -503,6 +504,8 @@ export type Action =
   /** `bytes` is transferred, not copied. Answered by `progress` messages and a `result` with `uploaded`. */
   | {
       readonly a: 'upload';
+      /** One explicit destination; absent uses the first configured server. */
+      readonly server?: string;
       readonly as: Pubkey;
       readonly name: string;
       readonly mime: string;
@@ -564,7 +567,12 @@ export type Failure = {
     | 'unsupported'
     | 'offline'
     | 'not-found'
-    | 'internal';
+    | 'internal'
+    | 'upload-network'
+    | 'upload-timeout'
+    | 'upload-payment'
+    | 'upload-response'
+    | 'upload-discovery';
   readonly message?: string;
 };
 
@@ -719,7 +727,14 @@ export type FromEngine =
   | { readonly t: 'fresh'; readonly sub: SubId; readonly count: number }
   | { readonly t: 'state'; readonly sub: SubId; readonly state: SubState }
   /** Upload progress. */
-  | { readonly t: 'progress'; readonly req: ReqId; readonly sent: number; readonly total: number }
+  | {
+      readonly t: 'progress';
+      readonly req: ReqId;
+      readonly sent: number;
+      readonly total: number;
+      readonly server?: string;
+      readonly phase?: 'discovering' | 'signing' | 'uploading' | 'processing';
+    }
   /** Per-relay delivery of a publish, sent as answers come in (the whole list each time). */
   | { readonly t: 'delivery'; readonly req: ReqId; readonly relays: readonly Delivery[] }
   /** The end of an action. `delivery`: the final per-relay list of a publish. `uploaded`: of an upload.

@@ -77,6 +77,7 @@ pub enum Action {
     AccountRemove { pubkey: String },
     // ArrayBuffer bytes are intentionally not deserialized into JSON or logged.
     Upload {
+        server: Option<String>,
         #[serde(rename = "as")]
         account: String,
         name: String,

@@ -16,6 +16,7 @@ Frontend (`web/`):
 
 Engine (`crates/`):
 
+- [media-uploads.md](media-uploads.md): destinations, failure/retry, bounds and proof.
 - [channels.md](channels.md): NIP-28 sources, actions, bounds and verification.
 - [protocol3.md](protocol3.md): rich filters, notifications, profile kinds and gates.
 - [status.md](status.md): what works, what does not, next steps in order.

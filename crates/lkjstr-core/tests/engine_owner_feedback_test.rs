@@ -183,7 +183,7 @@ fn client_tag_defaults_on_for_every_authored_kind_and_can_be_disabled() {
 fn blossom_defaults_do_not_override_an_explicit_server_list() {
     let mut e = Engine::new();
     let empty = event(1, 10063, "", vec![]);
-    assert_eq!(e.upload_servers(&empty.pubkey).len(), 3);
+    assert_eq!(e.upload_servers(&empty.pubkey).len(), 4);
     let account = empty.pubkey.clone();
     e.store.insert(empty, None);
     assert!(e.upload_servers(&account).is_empty());

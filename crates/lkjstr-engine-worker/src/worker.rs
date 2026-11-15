@@ -40,7 +40,7 @@ struct Host {
     bootstrap_relays: Vec<lkjstr_core::engine::wire::RelayConfig>,
     relay_owner: Option<(String, String)>,
     account_revision: u64,
-    upload_tasks: Vec<(u64, String, String, String, String, Vec<u8>)>,
+    upload_tasks: Vec<uploads::Task>,
     upload_inflight: usize,
     auth_next: u64,
     upload_auth: BTreeMap<(u64, String), (lkjstr_protocol::UnsignedNostrEvent, js_sys::Function)>,

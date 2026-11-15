@@ -37,15 +37,18 @@ pub async fn request(
     if let Some(auth) = auth {
         request.headers().set("Authorization", auth)?;
     }
+    let seconds = if method == "GET" { 10 } else { 30 };
     let cancel = abort.clone();
-    let _timer = Timer::after(10000, move || cancel.abort())?;
+    let _timer = Timer::after(seconds * 1000, move || cancel.abort())?;
     let global = js_sys::global();
     let fetch: js_sys::Function = js_sys::Reflect::get(&global, &"fetch".into())?.dyn_into()?;
     let pending: js_sys::Promise = fetch.call1(&global, &request)?.dyn_into()?;
     let cancel = abort.clone();
-    let response: Response = promise::bounded(pending, 10, "http-timeout", move || cancel.abort())
-        .await?
-        .dyn_into()?;
+    let response: Response = promise::bounded(pending, seconds.into(), "http-timeout", move || {
+        cancel.abort()
+    })
+    .await?
+    .dyn_into()?;
     let reader: ReadableStreamDefaultReader = response
         .body()
         .ok_or_else(|| JsValue::from_str("empty-body"))?

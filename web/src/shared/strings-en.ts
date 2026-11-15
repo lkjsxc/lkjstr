@@ -271,14 +271,15 @@ export const en = {
   'set.relayList': 'Relays: Your relay list',
   'set.relayList.d': 'The relays you read from and write to. This list is published as yours.',
   'set.servers': 'Posting: Media servers',
-  'set.servers.d': 'Where pictures and video are uploaded. The first one that answers is used.',
+  'set.servers.d':
+    'Pictures and video go to the first server. If an upload fails, you can retry with another.',
   'servers.choices': 'Suggestions',
   'servers.none': 'No media server. Pictures cannot be attached until one is added.',
   'servers.removed': 'Removed {host}',
   'servers.address': 'Media server address',
   'servers.invalid': 'That is not a server address (https://…)',
   'servers.unknown': 'Unknown protocol',
-  'servers.down': 'Not answering',
+  'servers.unconfirmed': 'Not confirmed',
   'about.what':
     'A Nostr client that runs in this browser. There is no lkjstr server and no account with us.',
   'about.version': 'Version',
@@ -466,4 +467,21 @@ export const en = {
     'lkjstr has no server of its own. The host that serves this page receives no account, no key, and nothing you read or write. Settings, layouts, drafts and cached notes stay in this browser.\n\nTo read and post, your browser connects directly to the Nostr relays you choose and to the servers that hold media. Their operators can see your IP address and what you request or publish. Notes published to Nostr are public and may be impossible to take back.\n\nThere are no analytics, no advertising and no tracking cookies.',
   'docs.terms.b':
     'lkjstr is free software published under the Apache License 2.0. It is provided as it is, with no warranty of any kind.\n\n## Your responsibility\nYour keys and what you publish are your own responsibility. Notes published to Nostr are public and may be impossible to take back. Follow the law and the rules of the relays and media servers you use.\n\n## Third parties\nRelays, media servers and signing extensions or apps are provided by their own operators. lkjstr does not run them and is not responsible for what they hold or whether they are available.\n\n## Changes\nThis text may change as lkjstr is updated.',
+  'upload.signerMissing': 'The signer did not answer. Open your signer and retry.',
+  'upload.limit':
+    'Up to eight attachments fit in one post. Remove one and choose the remaining files again.',
+  'upload.readFailed': 'The file could not be read. Try again.',
+  'upload.noServer': 'No media server is configured. Choose one below and retry.',
+  'upload.server': 'Media server',
+  'upload.discovering': 'Checking {server}…',
+  'upload.signing': 'Waiting for permission to upload to {server}…',
+  'upload.uploading': 'Uploading to {server}…',
+  'upload.processing': '{server} is processing the file…',
+  'upload.failed': '{server}: {reason}',
+  'error.upload-network':
+    'The server could not be reached, or it does not allow uploads from this page.',
+  'error.upload-timeout': 'The upload timed out. Try again or choose another server.',
+  'error.upload-payment': 'This server requires payment. Choose another server.',
+  'error.upload-response': 'The server refused the file or returned an unreadable answer.',
+  'error.upload-discovery': 'The upload address could not be found. Choose another server.',
 };

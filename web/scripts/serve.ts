@@ -21,11 +21,20 @@ const TYPES: Record<string, string> = {
 const testRelay = process.argv.find((a) => a.startsWith('--test-relay='))?.slice(13);
 if (testRelay && !/^ws:\/\/127\.0\.0\.1:\d+$/.test(testRelay))
   throw new Error('loopback relay required');
+const testMedia =
+  process.argv
+    .find((a) => a.startsWith('--test-media='))
+    ?.slice(13)
+    .split(',') ?? [];
+if (testMedia.some((url) => !/^https:\/\/127\.0\.0\.1:\d+$/.test(url)))
+  throw new Error('loopback media required');
 const CSP = [
   "default-src 'self'",
   "script-src 'self' 'wasm-unsafe-eval'",
   "style-src 'self' 'unsafe-inline'",
-  testRelay ? `connect-src 'self' ${testRelay}` : "connect-src 'self' https: wss:",
+  testRelay
+    ? `connect-src 'self' ${testRelay} ${testMedia.join(' ')}`
+    : "connect-src 'self' https: wss:",
   "img-src 'self' https: data: blob:",
   "media-src 'self' https: data: blob:",
   "frame-ancestors 'none'",

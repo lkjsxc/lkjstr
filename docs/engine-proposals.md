@@ -64,3 +64,13 @@ startup. Add disk compaction and that browser benchmark before claiming it.
 The frontend's protocol 2 remains authoritative. The proposed estimate objects
 were rejected during integration. Unknown profile fields are absent; known
 numbers use the existing partial flag. No alternate unknown representation.
+
+## Upload feedback (2026-11-15, accepted in frontend contract)
+
+Upload actions may select one `server`; absent uses the first owner/default
+server. Progress optionally includes `server` and `phase` (discovering, signing,
+uploading, processing). Upload-specific failure codes distinguish network/CORS,
+timeout, payment, discovery and invalid response. Existing byte progress and
+result shapes remain compatible. ServerRow.ok records positive upload
+confirmation, not a live health check. The frontend owns the additive fields in
+protocol.ts. See media-uploads.md for bounds and browser evidence.

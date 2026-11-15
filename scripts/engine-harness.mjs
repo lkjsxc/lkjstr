@@ -76,7 +76,7 @@ await context.route('**/*', (r) => {
     const hash=createHash('sha256').update(Buffer.from([1,2,3,4])).digest('hex');
     return r.fulfill({status:201,contentType:'application/json',body:JSON.stringify({status:'success',nip94_event:{tags:[['url',`https://nip96.engine.test/${hash}.png`],['ox',hash],['m','image/png']]}})});
   }
-  if(['https://media.engine.test/upload','https://blossom.primal.net/upload'].includes(r.request().url())) {
+  if(['https://media.engine.test/upload','https://blossom.band/upload'].includes(r.request().url())) {
     const hash=createHash('sha256').update(r.request().postDataBuffer()).digest('hex');
     return r.fulfill({status:201,contentType:'application/json',headers:{'access-control-allow-origin':'*'},body:JSON.stringify({url:`${new URL(r.request().url()).origin}/${hash}.png`,sha256:hash,type:'image/png',size:4})});
   }

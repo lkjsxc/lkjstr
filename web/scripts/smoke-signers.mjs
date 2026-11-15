@@ -38,7 +38,7 @@ async function failure(options, mode) {
       if (mode === 'reject-sign') {
         // Deterministically reload inside the 300 ms draft debounce window.
         await page.clock.install();
-        await page.clock.pauseAt(new Date());
+        await page.clock.pauseAt(new Date(Date.now() + 10_000));
         draft += ' latest edit';
         await page.locator(`${compose} textarea`).fill(draft);
       }

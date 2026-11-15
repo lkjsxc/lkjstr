@@ -55,6 +55,7 @@ Seams worth knowing inside `src/views/`:
 - `channels.ts` is the Channels tab, `channel-desk.ts` the head and the
   composer of a channel tab (which is `feed.ts`), `channel-parts.ts` what
   both share. `gated.ts` keeps a view from an engine too old to serve it.
+  `compose-media.ts` retains failed files and their retry/server controls;
   `stats.ts` is the Stats tab (`Engine.stats()`, asked while in front).
 - `wm/presets.ts` has two layout families: `main` for an account and `guest`
   for a visitor; `main.ts` shows the one that fits who is signed in.
@@ -113,7 +114,7 @@ pnpm build          # mock ../dist, prints "ok build"
 pnpm build:real     # Rust package plus real-engine ../dist
 pnpm smoke:real     # real app against loopback fixtures only
 pnpm package        # pack current dist into ../tmp/lkjstr-dist.tar.gz
-pnpm smoke          # build, then drive Chromium against the mock; prints "ok smoke"
+pnpm smoke          # mock UI, then real-engine loopback uploads; prints ok lines
 pnpm shots          # screenshots to ../tmp/screens (all sizes, themes, languages)
 pnpm vitest run tests/undo.test.ts   # one test file
 pnpm fix            # biome --write

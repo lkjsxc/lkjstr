@@ -80,22 +80,22 @@ impl Host {
                         name,
                         mime,
                         bytes,
+                        server,
                     },
             } => {
                 if self.upload_inflight >= 4 {
                     self.scope.direct(id, &Session::failure(req, "too-large"));
                     return;
                 }
-                self.scope.direct(
+                self.upload_tasks.push(uploads::Task {
                     id,
-                    &lkjstr_core::engine::wire::Output::Progress {
-                        req: req.clone(),
-                        sent: 0,
-                        total: bytes.len(),
-                    },
-                );
-                self.upload_tasks
-                    .push((id, req, account, name, mime, bytes));
+                    req,
+                    account,
+                    name,
+                    mime,
+                    bytes,
+                    server,
+                });
                 self.upload_inflight += 1;
                 return;
             }

@@ -8,11 +8,14 @@ import { createInterface } from 'node:readline';
 import { chromium } from 'playwright-core';
 import bundle from 'playwright-core/lib/utilsBundle';
 import { fakeBunker } from '../../scripts/browser-bunker.mjs';
+import { fakeMediaSet } from '../../scripts/browser-media.mjs';
 import { fakeRelay } from '../../scripts/browser-relay.mjs';
 import { channelScenarios } from './smoke-channels.mjs';
+import { finishAccounts } from './smoke-real-finish.mjs';
 import { openKeyField, seedLayouts } from './smoke-seed.mjs';
 import { writeReport } from './smoke-signer-support.mjs';
 import { signerScenarios } from './smoke-signers.mjs';
+import { uploadScenarios } from './smoke-uploads.mjs';
 import { accounts, installExtension, npub, visitorChecks } from './smoke-visitors.mjs';
 
 const root = new URL('../../', import.meta.url).pathname;
@@ -30,6 +33,7 @@ const lines = createInterface({ input: signer.stdout })[Symbol.asyncIterator]();
 const fixture = JSON.parse((await lines.next()).value);
 const fake = fakeRelay();
 const bunker = await fakeBunker();
+const media = await fakeMediaSet();
 for (const event of [fixture.note, ...fixture.events]) fake.add(event);
 let signing = Promise.resolve();
 const relay = createServer();
@@ -54,7 +58,12 @@ signer.stdin.write(
 fake.add(JSON.parse((await lines.next()).value));
 const server = spawn(
   process.execPath,
-  ['web/scripts/serve.ts', '--port=0', `--test-relay=${relayUrl}`],
+  [
+    'web/scripts/serve.ts',
+    '--port=0',
+    `--test-relay=${relayUrl}`,
+    `--test-media=${Object.values(media.origins).join(',')}`,
+  ],
   { stdio: ['ignore', 'pipe', 'pipe'] },
 );
 const errors = [],
@@ -74,7 +83,7 @@ try {
     executablePath:
       process.env.LKJSTR_CHROME ??
       `${process.env.HOME}/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome`,
-    args: ['--no-sandbox', '--disable-background-networking'],
+    args: ['--no-sandbox', '--disable-background-networking', '--ignore-certificate-errors'],
   });
   const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, locale: 'en-US' });
   await seedLayouts(ctx);
@@ -104,6 +113,18 @@ try {
     check,
     fake,
     bunker,
+  });
+  await uploadScenarios({
+    browser,
+    base,
+    relayUrl,
+    pubkey: fixture.note.pubkey,
+    sign: fixtureSign,
+    errors,
+    check,
+    fake,
+    bunker,
+    media,
   });
   const publicationsBeforeApp = fake.published.length;
   page = await ctx.newPage();
@@ -253,43 +274,7 @@ try {
     [...activePaths.values()].includes('/owner') &&
       [...activePaths.values()].every((path) => path === '/owner' || path === '/'),
   );
-  // Signed out again: the visitor's layout returns, here and in the other tab, and stays after a reload.
-  await page.locator('.acct').click();
-  await page.locator('.menu button', { hasText: 'Accounts' }).click();
-  await page.locator(`${accounts} [data-f="remove"]`).click();
-  await page.locator('.acct.out').waitFor();
-  await other.locator('.acct.out').waitFor();
-  const out = async (p) =>
-    (await p.locator('.pane').count()) === 1 &&
-    (await p.locator('.view[data-kind="home"]').count()) === 0 &&
-    (await p.evaluate(() => localStorage.getItem('lkjstr:account'))) === null;
-  check('removing the last account signs out everywhere', (await out(page)) && (await out(other)));
-  await page.reload();
-  await page.locator('.view[data-kind="global"] .note').first().waitFor();
-  check('signed out survives a reload', await out(page));
-  await launch('Settings', 'settings');
-  const relayField = page.getByLabel('Relay address', { exact: true });
-  await relayField.fill(`${relayUrl}/visitor`);
-  await relayField.press('Enter');
-  await page.waitForTimeout(500);
-  check(
-    'signed-out relay edit is saved',
-    await page.evaluate(
-      (url) =>
-        JSON.parse(localStorage.getItem('lkjstr:relays:') ?? '[]').some(
-          (r) => r.url.replace(/\/$/, '') === url,
-        ),
-      `${relayUrl}/visitor`,
-    ),
-  );
-  await page.reload();
-  await page.getByLabel('Relay address', { exact: true }).waitFor();
-  // The form mounts before the engine returns its persisted relay rows.
-  const visitorRelay = page.locator(
-    `[data-entry="set.relayList"] .rhost[title^="${relayUrl}/visitor"]`,
-  );
-  await visitorRelay.waitFor();
-  check('signed-out relay edit survives reload', (await visitorRelay.count()) === 1);
+  await finishAccounts({ page, other, relayUrl, check, launch });
   check('no page errors', errors.length === 0);
 } catch (error) {
   checks.failure = String(error);
@@ -300,6 +285,7 @@ try {
   server.kill();
   signer.stdin.end();
   await bunker.close();
+  await media.close();
   ws.close();
   await new Promise((done) => relay.close(done));
 }

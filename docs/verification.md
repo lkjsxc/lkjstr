@@ -29,7 +29,8 @@ Then run pnpm build:real and pnpm smoke:real for the shipped engine graph.
 The real check covers Global/Home, note/profile/thread navigation, search,
 compose/sign/publish, reactions, relay settings across reload and two tabs.
 All browser servers bind fresh loopback ports and use fresh local data.
-HTTP is intercepted, relays are loopback fixtures, and no checks publish to
+HTTP uses loopback TLS media fixtures or interception, relays are loopback
+fixtures, and no checks publish to
 public relays. browser-relay.mjs remains a shared bounded fixture helper.
 The Leptos-only browser drivers and their CSS/string guards have been removed.
 
@@ -145,3 +146,17 @@ All four quiet gates, real UI smoke and Worker conformance pass; the delayed
 profile probe passes without page errors. Frontend check, build, mock smoke and
 composer/channel screenshots pass. Docker remains excluded by the worktree-only
 write rule. Changes remain uncommitted; no CI or existing services were changed.
+
+## Media upload repair (2026-11-15)
+
+Frontend check passes 69 tests. The ordinary smoke also runs a real TLS media
+matrix for both protocols and all three signers; the full real smoke passes
+251 checks twice consecutively, with zero page errors and review screenshots.
+Eleven-second responses catch the old HTTP deadline; stalled headers/bodies,
+wrong/refused/missing signers, metadata checks, retained files, another-server
+retry and narrow Japanese failure controls are covered. Request/auth unit tests
+and a cross-language default-list guard remain in the repository. Fresh accounts
+show neutral unconfirmed server rows instead of false no-response failures.
+The manual public sample is excluded from gates. See media-uploads.md for bounds
+and ignored tmp/upload-report.md for per-server results and incomplete cleanup.
+Docker is excluded by the worktree-only write rule. No commits or CI edits.

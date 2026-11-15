@@ -1,18 +1,24 @@
 //! Cheap bounded observations and upload defaults. No event bodies or keys.
 use super::Engine;
 use serde_json::{Value, json};
-pub const BLOSSOM_SERVERS: [&str; 3] = [
+pub const MEDIA_SERVERS: [&str; 4] = [
+    "https://blossom.band",
     "https://blossom.primal.net",
-    "https://blossom.nostr.build",
-    "https://nostr.download",
+    "https://nostr.build",
+    "https://nostrcheck.me",
 ];
+pub const BLOSSOM_SERVERS: [&str; 3] = [MEDIA_SERVERS[0], MEDIA_SERVERS[1], MEDIA_SERVERS[3]];
 impl Engine {
+    pub fn upload_is_nip96(&self, server: &str) -> bool {
+        server.trim_end_matches('/') == MEDIA_SERVERS[2]
+            || self.servers.get(server).is_some_and(|v| v.0 == "nip96")
+    }
     /// An explicit kind 10063, including an empty list, overrides defaults.
     pub fn upload_servers(&self, account: &str) -> Vec<String> {
         self.store
             .replaceable(account, 10063)
             .map(|e| lkjstr_protocol::tags::tag_values(&e, "server"))
-            .unwrap_or_else(|| BLOSSOM_SERVERS.iter().map(|s| (*s).into()).collect())
+            .unwrap_or_else(|| MEDIA_SERVERS.iter().map(|s| (*s).into()).collect())
     }
     /// Never choose a default while the owner list lookup is still unresolved.
     pub fn upload_servers_ready(&self, account: &str) -> bool {
