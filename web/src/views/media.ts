@@ -10,7 +10,7 @@ import { loadViewState, saveViewState } from '../shared/view-state.ts';
 import { copy } from './parts.ts';
 import { createPlayer, type Player } from './player.ts';
 import type { ViewEnv } from './registry.ts';
-import { type Zoom, zoomable } from './zoom.ts';
+import { type Zoom, type ZoomPosition, zoomable } from './zoom.ts';
 
 export type MediaState = {
   media?: readonly Media[];
@@ -20,6 +20,7 @@ export type MediaState = {
   played?: boolean;
   /** Seconds into the video or sound at `index`. */
   at?: number;
+  zoom?: Record<string, ZoomPosition>;
 };
 
 export function mountMedia(el: HTMLElement, env: ViewEnv): () => void {
@@ -90,10 +91,20 @@ export function mountMedia(el: HTMLElement, env: ViewEnv): () => void {
     if (m.type === 'image') {
       const img = h('img', { src: m.url, alt: m.alt ?? '', draggable: false, decoding: 'async' });
       replaceChildren(stage, img);
-      zoom = zoomable(stage, img, m, {
-        scale: (s) => void (scale.textContent = `${Math.round(s * 100)}%`),
-        flick: (dir) => go(index + dir),
-      });
+      zoom = zoomable(
+        stage,
+        img,
+        m,
+        {
+          scale: (s) => void (scale.textContent = `${Math.round(s * 100)}%`),
+          flick: (dir) => go(index + dir),
+          changed: (position) => {
+            state.zoom = { ...state.zoom, [index]: position };
+            saveViewState(env.instance, state);
+          },
+        },
+        state.zoom?.[index],
+      );
     } else {
       player = createPlayer(m, {
         at: state.at,

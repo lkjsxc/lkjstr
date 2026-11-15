@@ -2,6 +2,7 @@
 use super::*;
 impl Network {
     pub fn configure(&mut self, urls: Vec<String>, now: u64) {
+        self.remember_quality(now);
         let mut seen = BTreeSet::new();
         self.relay_order = urls
             .iter()
@@ -66,6 +67,7 @@ impl Network {
                     ..Default::default()
                 },
             );
+            self.apply_quality(&url, now);
             if self.deferred_relays.remove(&url) {
                 self.profiles_changed = true;
             }

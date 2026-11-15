@@ -32,6 +32,7 @@ fn imported_hints_are_bounded_and_discovery_does_not_enable_publishing() {
     assert!(!e.network.known["wss://hint.test/"].write);
     e.input(
         lkjstr_core::engine::protocol::Input::Hint {
+            focused_sub: None,
             visible_subs: vec![],
             page_hidden: false,
             idle: false,

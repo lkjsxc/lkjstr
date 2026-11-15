@@ -81,8 +81,7 @@ impl Engine {
             if let Some(r) = self.network.requests.remove(&id)
                 && r.sent
             {
-                self.network
-                    .send(&r.relay, serde_json::json!(["CLOSE", id]));
+                self.network.close_group(&r.relay, &r.wire_id);
             }
         }
         self.replan(now);

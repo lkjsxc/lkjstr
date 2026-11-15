@@ -1,53 +1,36 @@
 // A note, drawn from the engine's view model exactly as it arrives. A press on a person opens their profile, on
 // the text or the time the note's thread, on a quoted card the quoted note: the same everywhere.
-import type { NoteRow, Quote } from '../engine/protocol.ts';
+import type { NoteRow } from '../engine/protocol.ts';
 import { fullTime, noteTime } from '../shared/format.ts';
 import { type Child, h } from '../shared/h.ts';
 import { getLang, t } from '../shared/i18n.ts';
 import { icon } from '../shared/icons.ts';
+import { readNoteState, writeNoteState } from '../shared/note-state.ts';
+import { linkCards } from './link-cards.ts';
 import { actionRow, reactionChips } from './note-actions.ts';
 import { mediaGrid } from './note-media.ts';
+import { quoteCard } from './note-quote.ts';
 import { displayName, faceButton, how, nameButton, plainName, segments } from './parts.ts';
 import type { ViewEnv } from './registry.ts';
 
 const timeOf = (at: number, env: ViewEnv): string =>
   noteTime(at, Date.now(), { relative: env.settings.get().relativeTime, lang: getLang() });
 
-function quoteCard(q: Quote, env: ViewEnv): HTMLElement {
-  if (q.state !== 'ok') return h('div', { class: 'quote muted' }, t(`quote.${q.state}`));
-  const el = h(
-    'div',
-    { class: 'quote', role: 'link', tabindex: 0 },
-    h(
-      'div',
-      { class: 'qhead' },
-      faceButton(q.author, env, 'av sm'),
-      nameButton(q.author, env),
-      h('time', { title: fullTime(q.at) }, timeOf(q.at, env)),
-    ),
-    q.cw !== undefined
-      ? h('div', { class: 'muted' }, t('note.cw', { reason: q.cw }))
-      : h('div', { class: 'qtext' }, segments(q.segments, env)),
-    q.cw === undefined && q.media.length
-      ? h('div', { class: 'muted qmedia' }, icon('image'), String(q.media.length))
-      : null,
-  );
-  el.addEventListener('click', (e) => {
-    e.stopPropagation();
-    env.open('thread', { id: q.id, title: plainName(q.author) }, how(e));
-  });
-  return el;
-}
-
 /** Long text folds by whole lines; the button appears only when something is actually cut off. */
 function fold(text: HTMLElement): void {
+  if (text.classList.contains('open')) return;
   if (text.scrollHeight <= text.clientHeight + 2) return;
   const more = h('button', { class: 'lnk fold' }, t('note.more'));
   more.addEventListener('click', (e) => {
     e.stopPropagation();
     text.classList.add('open');
+    const note = text.closest<HTMLElement>('[data-note]');
+    if (note?.dataset.instance && note.dataset.note)
+      writeNoteState(note.dataset.instance, note.dataset.note, { unfolded: true });
+    text.closest('.content')?.classList.remove('folded');
     more.remove();
   });
+  text.closest('.content')?.classList.add('folded');
   text.after(more);
 }
 
@@ -82,7 +65,8 @@ function head(row: NoteRow, env: ViewEnv): HTMLElement {
 }
 
 export function renderNote(row: NoteRow, env: ViewEnv): HTMLElement {
-  if (row.hidden) {
+  const state = readNoteState(env.instance, row.id);
+  if (row.hidden && !state.shown) {
     const el = h(
       'div',
       { class: 'note hid muted' },
@@ -92,7 +76,17 @@ export function renderNote(row: NoteRow, env: ViewEnv): HTMLElement {
     el.append(
       h(
         'button',
-        { class: 'lnk', onclick: () => el.replaceWith(fresh({ ...row, hidden: undefined })) },
+        {
+          class: 'lnk',
+          onclick: () => {
+            writeNoteState(env.instance, row.id, { shown: true });
+            const n = fresh({ ...row, hidden: undefined });
+            n.dataset.key = row.key;
+            el.className = 'note-shell revealed';
+            el.replaceChildren(n);
+            n.dispatchEvent(new CustomEvent('note-revealed', { bubbles: true }));
+          },
+        },
         t('hidden.show'),
       ),
     );
@@ -155,16 +149,20 @@ export function renderNote(row: NoteRow, env: ViewEnv): HTMLElement {
     );
   }
 
-  const covered = row.cw !== undefined && !env.settings.get().showSensitive;
-  const text = h('div', { class: 'text' }, segments(row.segments, env));
-  const content = h(
-    'div',
-    { class: 'content' },
-    row.segments.length ? text : null,
-    mediaGrid(row.media, env, plainName(row.author)),
-    row.quotes.map((q) => quoteCard(q, env)),
-  );
-  let body: HTMLElement = content;
+  const covered = row.cw !== undefined && !env.settings.get().showSensitive && !state.warning;
+  let text = h('div');
+  const makeContent = (): HTMLElement => {
+    text = h('div', { class: state.unfolded ? 'text open' : 'text' }, segments(row.segments, env));
+    return h(
+      'div',
+      { class: 'content' },
+      row.segments.length ? text : null,
+      mediaGrid(row.media, env, plainName(row.author), row.id),
+      row.quotes.map((q) => quoteCard(q, env, row.id)),
+      env.settings.get().linkPreviews ? linkCards(row.previews) : null,
+    );
+  };
+  let body: HTMLElement;
   if (covered) {
     body = h(
       'button',
@@ -174,15 +172,20 @@ export function renderNote(row: NoteRow, env: ViewEnv): HTMLElement {
     );
     body.addEventListener('click', (e) => {
       e.stopPropagation();
-      body.replaceWith(content);
+      writeNoteState(env.instance, row.id, { warning: true });
+      body.replaceWith(makeContent());
+      text.dispatchEvent(new CustomEvent('note-revealed', { bubbles: true }));
       fold(text);
     });
-  }
+  } else body = makeContent();
   const thread = row.thread;
   const el = h(
     'article',
     {
       class: `note${thread ? ` th-${thread.role}` : ''}${row.pending ? ' pending' : ''}`,
+      'data-note': row.id,
+      'data-previews': row.previews ? '' : null,
+      'data-instance': env.instance,
       style: thread?.depth ? `--depth:${thread.depth}` : null,
     },
     context,

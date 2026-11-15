@@ -1,7 +1,6 @@
 # Status
 
 ## Purpose
-
 Current engine behavior and unfinished variants.
 
 ## Protocol 4 channels (2026-11-15)
@@ -10,15 +9,14 @@ Protocol 4 channels use the existing store, signer, scheduler and paging for
 creator-only metadata, messages, joined lists and unread marks. Channel messages
 stay out of ordinary feeds. Early edits wait for the joined list; Stats and
 client-tag settings use the real engine. Opened targets retain discovery capacity.
-Channel work rotates alongside feeds. The UI tracks discovery phases and retains
-full failed drafts for retry. Separate metadata requests protect busy channels;
-repost filters accept kinds 6 and 16. Native and UI checks: [channels.md](channels.md).
+Channel work rotates alongside feeds; the UI tracks discovery and full retry
+drafts. Separate metadata requests protect busy channels; reposts accept kinds
+6 and 16. Native and UI checks: [channels.md](channels.md).
 
 ## Protocol 3 integration (2026-11-15)
 
-Protocol 3 added rich note filters including all-word
-text, exact phrases, exclusions, image/video/link requirements, author unions,
-known-profile names and bounded verified NIP-05 query lookups. Millisecond date
+Protocol 3 added all-word text, phrases, exclusions, media/link filters, author
+unions, known-profile names and bounded verified NIP-05 query lookups. Millisecond date
 bounds round inward to Nostr seconds. Inclusive end dates follow local calendar
 days across daylight-saving changes. Hide-reposts checks wrappers before resolving
 target content. Home/Global can mix notification rows;
@@ -41,8 +39,7 @@ Bounds, counter meanings, conformance and limitations: [owner-feedback.md](owner
 
 Release candidate, gates and UI gaps: [integration-release.md](integration-release.md).
 
-The TypeScript app can build against the real SharedWorker adapter with
-pnpm build:real in web/. Its full engine graph has immutable hashed URLs.
+web/ pnpm build:real packages the real SharedWorker with immutable hashed URLs.
 The frontend owns saved/bootstrap relay choice; verified owner NIP-65 lists
 then take over. Search-only relays receive requests independently of ordinary read usage. Thread focus and decoded profile deep-link headers
 cross the wire correctly. Native integration regressions cover these
@@ -57,8 +54,7 @@ Accounts can be created/imported through the Accounts tab. Protocol 2 supports
 explicit local nsec backup; external signers and read-only accounts refuse it.
 Secret-bearing input/output debug representations are redacted.
 
-The conformance gate now uses this worktree's contract, without fetching a
-branch. See engine-package.md for commands and current verification artifacts.
+Conformance uses this worktree's contract; commands/artifacts: engine-package.md.
 
 ## Engine polish (2026-11-15)
 
@@ -66,13 +62,12 @@ Visible windows batch up to 6000 authors per view, including nested quotes,
 reply context and repost actors. Profile batches share relay work, prefer
 note-delivering read relays, fall back after completion and release on hiding.
 Cached names render immediately while metadata refreshes. Visible profiles
-can preempt occupied relay slots; interrupted feeds resume after lookup.
-Interrupted pages replay their original filters until EOSE. Completed page
-coverage and cursors survive live resumption, so profile lookup cannot falsely
-exhaust history. Four native regressions cover interruption and pagination.
+can preempt occupied relay slots; completed focused feeds wait for lookup replies.
+Unfinished focused pages keep priority and replay their filters until EOSE.
+Completed coverage and cursors survive live resumption without exhausting history.
+Native regressions cover delayed hydration, interruption and pagination.
 Six native regressions cover routing, batching, context, refresh and release.
-The delayed loopback probe uses 240 ms responses and congested slots: baseline
-note-to-named-row 1893.7 ms; revised 232.5 ms. engine-check includes this probe.
+The 240 ms congested-slot probe improves note-to-name from 1893.7 to 232.5 ms.
 
 Protocol 2 uses absent profile fields for unknown counts and the existing
 partial flag for lower bounds. Count requests are bounded and exact only after
@@ -113,9 +108,10 @@ Implemented:
   envelopes, exact signed-event validation, durable device credentials and
   bounded, explicitly closed RPC sockets. Remote account removal deletes its
   local session credentials.
-- Blossom uploads and NIP-96 discovery/multipart fallback, authenticated through
-  the account signer; 20 MiB/four-upload bounds, bounded HTTP/deadlines, honest
-  zero/completion progress and checked response hashes/URLs. No fake success.
+- Blossom and NIP-96 uploads support every signer, bounded waits and retained retries.
+  Session-only marks and ordered selection use required-request evidence; optional
+  BUD-06 failures stay unknown. One aggregate deadline bounds all fallback; failed
+  discovery retains the known protocol. Bounds and evidence: [media-uploads.md](media-uploads.md).
 - Public follow/mute/bookmark/profile/relay/server actions; public people-list
   addresses and naddr resolution; notification types, grouping and persisted
   seen watermarks. Local-key NIP-44 private people/bookmark/mute entries can be
@@ -135,8 +131,7 @@ Implemented:
 - HTML-free package and frontend Transport adapter; see engine-package.md.
 
 ## Mock answers not yet fully implemented
-
-Some variants of implemented mock messages remain incomplete:
+No top-level message/action is entirely unhandled. Incomplete variants:
 
 - open/list, open/mutes and open/bookmarks: extension/remote private-list
   decryption and encrypted-entry editing. A decrypt capability for NIP-07 is
@@ -147,9 +142,9 @@ Some variants of implemented mock messages remain incomplete:
   multi-language OR currently uses only the first language. Note search works.
 - account.add/key: NIP-46 auth_url interactive challenges and relay-switch
   negotiation. Preauthorized bunker sessions work; challenges fail explicitly.
-- upload: NIP-96 delayed processing (202) polling, cancellation and intermediate
-  byte progress; zero and committed completion are reported. HTTP failures and
-  invalid responses fail explicitly. Other media protocols are unsupported.
+- upload: cancellation and intermediate byte progress; zero and validated
+  completion are reported. NIP-96 202 processing is bounded. Other protocols
+  remain unsupported.
 - open/notifications: trusted LNURL-provider discovery for zap receipts is not
   integrated. Cached zap rows are lower-confidence receipt data; full trust
   validation is not claimed. Notifications exclude kind-3 contact lists, including
@@ -160,8 +155,8 @@ through a deadline and reports success on first acceptance. Missing recipient
 lists are looked up; bounded persisted receipts route deletes after reload.
 All saved accounts refresh profile/follow/relay/mute/server records independently
 of cache. Read routes retain page evidence; Stats aggregates publication history
-once. Full outbox two-cover, persistent backoff, focus and weights remain deferred.
-Exact bounds, measured costs and remaining design: [orchestration.md](orchestration.md).
+once. Routing and scheduling lazily share account weights within each plan;
+Authorless routes skip graphs. Two-cover and weighted retention: [outbox.md](outbox.md).
 
 ## Verification
 
@@ -171,18 +166,11 @@ Browser runs use fresh ports/data, loopback WebSockets and intercepted HTTP only
 Docker is excluded: its storage is outside this worktree. No commit, deployment,
 production access, CI edit or existing-service restart is performed.
 
-Branch review covers first-list guards, eviction, search, signers and mute policy.
-Earlier review: four quiet gates and 53 checks; tmp/engine-harness/report.json.
-
 ## One product
 
-web/ is the only interface. crates/lkjstr-engine-worker owns the Worker and
-its browser effects; the root Cargo.toml is a virtual workspace. The Leptos
-UI/runtime, root HTML entry, exclusive styles/icons and browser drivers are
-removed. Shared static icons and the loopback relay helper remain in use.
-Root build and quiet release gates build web/ with the real engine; no Trunk is needed.
-
-Review regressions cover counts, window refill, history and failed profiles.
+web/ is the only interface; lkjstr-engine-worker owns browser effects. The root
+workspace is virtual; Leptos/Trunk are removed. Shared icons and loopback fixtures
+remain. Root/Docker gates build this real product; historical UI checks do not.
 
 ## Signer conformance follow-up (2026-11-15)
 
@@ -198,3 +186,13 @@ likes and dislike. Notification counts use grouped rows and persist timestamp
 ties. Fields stay focused; composers clear before signing. Follow watches share
 relay slots with timelines, including shared discovery. Edit swaps retain drafts;
 fresh outboxes stay isolated; hidden mention requests close. See [wishes.md](wishes.md).
+## Reader state and optional previews (2026-11-15)
+
+Protocol 5 adds bounded per-note link previews and near-note hints, including
+nested notification notes. The Worker probes health once; one HTTP request
+runs after other work. The optional Rust lkjstr-preview binary fetches public
+page metadata; static hosting works without it. No hosting changes were made.
+Reader choices persist per tab; channel drafts save at once. Deferred filter
+redraws preserve the control receiving focus. Enter opens only applied results. Scroll hydration restores each scroller once
+and respects page resets. Period fields accept common calendar/relative forms;
+tab search spans workspaces. Gates and browser coverage: verification.md.

@@ -249,6 +249,7 @@ export function createWorld(now: number) {
   };
 
   return {
+    linkPreviews: true,
     base,
     notes,
     byId,

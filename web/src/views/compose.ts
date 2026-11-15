@@ -1,4 +1,4 @@
-// The composer saves typed drafts and retains failed channel messages for retry.
+// The composer saves typed drafts and retains failed posts and channel messages for retry.
 import type { Delivery, Draft, Emoji, Failure, Mention, Uploaded } from '../engine/protocol.ts';
 import { h, replaceChildren } from '../shared/h.ts';
 import { type Key, t } from '../shared/i18n.ts';
@@ -8,7 +8,7 @@ import { kv } from '../shared/storage.ts';
 import { loadViewState, saveViewState } from '../shared/view-state.ts';
 import { openMenu } from '../wm/menus.ts';
 import { ability, failureText } from './can.ts';
-import { createComposeMedia } from './compose-media.ts';
+import { createComposeMedia } from './compose-media-state.ts';
 import { createMentions } from './compose-mentions.ts';
 import { type ChannelDraft, createChannelOutbox } from './compose-outbox.ts';
 import { createWho } from './compose-who.ts';
@@ -229,7 +229,7 @@ export function mountCompose(el: HTMLElement, env: ViewEnv, channel?: string): (
       area.value = state.text = '';
       state.mentions = [];
       mentions.reset();
-      state.quote = state.quoteOf = state.emoji = undefined;
+      state.replyTo = state.replyOf = state.quote = state.quoteOf = state.emoji = undefined;
       save();
       media.clear();
       drawHead();
@@ -291,5 +291,6 @@ export function mountCompose(el: HTMLElement, env: ViewEnv, channel?: string): (
     who.dispose();
     outbox.dispose();
     mentions.dispose();
+    media.dispose();
   };
 }

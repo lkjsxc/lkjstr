@@ -31,6 +31,8 @@ pub enum Input {
     Hint {
         #[serde(rename = "visibleSubs")]
         visible_subs: Vec<String>,
+        #[serde(default, rename = "focusedSub")]
+        focused_sub: Option<String>,
         #[serde(default, rename = "pageHidden")]
         page_hidden: bool,
         #[serde(default)]

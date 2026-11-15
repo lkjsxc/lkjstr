@@ -3,6 +3,7 @@ import type { Query } from '../engine/protocol.ts';
 import { h } from '../shared/h.ts';
 import { type Key, t } from '../shared/i18n.ts';
 import { pressed } from '../shared/keys.ts';
+import { periodField } from './period-field.ts';
 
 export type Filter = {
   /** The query as typed. */
@@ -12,6 +13,7 @@ export type Filter = {
   media?: 'only' | 'none';
   /** The period: local days as `yyyy-mm-dd`, both included. */
   start?: string;
+  dates?: { start?: string; end?: string };
   end?: string;
   /** Only these people, each as typed (a name, an npub, a NIP-05 name). */
   people?: string[];
@@ -99,18 +101,18 @@ export const filterNarrows = (f: Filter): boolean => filterActive(f) || Boolean(
 export function filterBar(
   f: Filter,
   placeholder: Key,
-  onChange: (next: Filter, typing: boolean) => void,
+  onChange: (next: Filter, typing: boolean, apply?: boolean) => void,
   /** Escape in an empty field. */
   leave: () => void,
   /** Takes every narrowing back: offered in the row while there is one. */
   clear: (() => void) | undefined,
   opts: FilterOpts,
 ): HTMLElement & { dispose(): void } {
-  const change = (next: Filter, typed: boolean): void => {
+  const change = (next: Filter, typed: boolean, apply = true): void => {
     f = next;
     drawPeople();
     if (reset) reset.hidden = !filterNarrows(next);
-    onChange(next, typed);
+    onChange(next, typed, apply);
   };
   const line = (label: Key, ...body: (HTMLElement | null)[]): HTMLElement =>
     h('div', { class: 'prow' }, h('span', { class: 'muted' }, t(label)), ...body);
@@ -142,38 +144,15 @@ export function filterBar(
     [true, 'filter.show'],
     [false, 'filter.hide'],
   ] as const;
-  // Days are typed and shown as yyyy/mm/dd, as every date here is; a day that is not one is marked and ignored.
-  const day = (key: 'start' | 'end', label: Key): HTMLElement => {
-    const field = h('input', {
-      type: 'text',
-      inputmode: 'numeric',
-      size: 10,
-      value: (f[key] ?? '').replaceAll('-', '/'),
-      placeholder: 'yyyy/mm/dd',
-      'aria-label': t(label),
-      title: t(label),
-    });
-    const apply = (): void => {
-      if (reset && field.value) reset.hidden = false;
-      const m = /^(\d{4})[/\-.](\d{1,2})[/\-.](\d{1,2})$/.exec(field.value.trim());
-      const next = m ? `${m[1]}-${m[2]?.padStart(2, '0')}-${m[3]?.padStart(2, '0')}` : undefined;
-      const invalid = !!field.value.trim() && dayStart(next) === undefined;
-      if (invalid) return field.setAttribute('aria-invalid', 'true');
-      field.removeAttribute('aria-invalid');
-      if (f[key] !== next) change({ ...f, [key]: next }, true);
-    };
-    field.addEventListener('input', (e) => {
-      if (!(e as InputEvent).isComposing) apply();
-    });
-    field.addEventListener('blur', apply);
-    field.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' && !e.isComposing) {
-        e.preventDefault();
-        apply();
-      }
-    });
-    return field;
-  };
+  const day = (key: 'start' | 'end', label: Key): HTMLElement =>
+    periodField(
+      key,
+      label,
+      f[key],
+      (next) => change({ ...f, [key]: next, dates: { ...f.dates, [key]: undefined } }, false),
+      f.dates?.[key],
+      (raw) => change({ ...f, dates: { ...f.dates, [key]: raw } }, true, false),
+    );
   const person = h('input', {
     type: 'text',
     class: 'padd',
@@ -272,13 +251,17 @@ export function filterBar(
       )
     : null;
   let timer: ReturnType<typeof setTimeout> | undefined;
+  let appliedText = f.text ?? '';
   const flush = (): void => {
     clearTimeout(timer);
-    if (input.value !== (f.text ?? '')) change({ ...f, text: input.value }, true);
+    if (input.value === appliedText) return;
+    appliedText = input.value;
+    change({ ...f, text: input.value }, true);
   };
   input.addEventListener('input', () => {
     if (reset) reset.hidden = !filterNarrows({ ...f, text: input.value });
     clearTimeout(timer);
+    change({ ...f, text: input.value }, true, false);
     timer = setTimeout(flush, 250);
   });
   input.addEventListener('blur', flush);

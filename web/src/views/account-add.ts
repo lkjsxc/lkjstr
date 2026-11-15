@@ -6,6 +6,7 @@
 import type { Action, Failure } from '../engine/protocol.ts';
 import { h } from '../shared/h.ts';
 import { type Key, t } from '../shared/i18n.ts';
+import { loadViewState, saveViewState } from '../shared/view-state.ts';
 import { canKey, creatingAccount, markCreated } from './account-key.ts';
 import type { ViewEnv } from './registry.ts';
 
@@ -119,15 +120,17 @@ export function mountAdd(env: ViewEnv): { el: HTMLElement; sync(): void } {
     },
     t('account.add.create'),
   );
-  const keyRow = h('div', { class: 'away', hidden: true }, form, said.key);
+  const otherOpen = loadViewState<{ otherOpen: boolean }>(env.instance).otherOpen === true;
+  const keyRow = h('div', { class: 'away', hidden: !otherOpen }, form, said.key);
   const other: HTMLElement = h(
     'button',
     {
       class: 'amore',
       'data-f': 'other',
-      'aria-expanded': false,
+      'aria-expanded': otherOpen,
       onclick: () => {
         keyRow.hidden = !keyRow.hidden;
+        saveViewState(env.instance, { ...loadViewState(env.instance), otherOpen: !keyRow.hidden });
         other.setAttribute('aria-expanded', String(!keyRow.hidden));
         if (!keyRow.hidden) field.focus();
       },

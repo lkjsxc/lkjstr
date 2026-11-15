@@ -26,13 +26,15 @@ pub struct BlossomAuthInput {
 }
 
 pub fn blossom_upload_endpoint(server: &str) -> Option<String> {
-    let url = valid_https_url(server.trim())?;
-    let path = url.path();
-    if path.is_empty() || path == "/" {
-        Some(format!("{}/upload", url.origin().ascii_serialization()))
+    let mut url = valid_https_url(server.trim())?;
+    let path = url.path().trim_end_matches('/');
+    let endpoint = if path.ends_with("/upload") {
+        path.to_owned()
     } else {
-        Some(url.as_str().to_owned())
-    }
+        format!("{path}/upload")
+    };
+    url.set_path(&endpoint);
+    Some(url.into())
 }
 
 pub fn blossom_upload_auth_event(input: BlossomAuthInput) -> UnsignedNostrEvent {

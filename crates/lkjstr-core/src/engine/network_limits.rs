@@ -22,6 +22,14 @@ impl Network {
             {
                 r.max_limit = limit.clamp(1, 200);
             }
+            if let Some(limit) = info
+                .limitation
+                .as_ref()
+                .and_then(|l| l.get("max_filters"))
+                .and_then(|v| v.as_u64())
+            {
+                r.max_filters = limit.clamp(1, 8) as usize;
+            }
             r.nip11 = true;
         }
     }
@@ -82,7 +90,7 @@ impl Network {
         let requests: Vec<_> = self
             .requests
             .values()
-            .filter(|r| r.filter == *filter)
+            .filter(|r| r.page_filter == *filter)
             .collect();
         !requests.is_empty()
             && requests
@@ -93,7 +101,7 @@ impl Network {
     pub fn page_cursor(&self, filter: &lkjstr_protocol::NostrFilter) -> Option<u64> {
         self.requests
             .values()
-            .filter(|r| r.filter == *filter && r.received.len() >= r.page_limit)
+            .filter(|r| r.page_filter == *filter && r.received.len() >= r.page_limit)
             .filter_map(|r| r.oldest)
             .max()
     }
@@ -101,7 +109,7 @@ impl Network {
         let requests: Vec<_> = self
             .requests
             .values()
-            .filter(|r| r.filter == *filter)
+            .filter(|r| r.page_filter == *filter)
             .collect();
         !requests.is_empty() && requests.iter().all(|r| r.page_eose)
     }

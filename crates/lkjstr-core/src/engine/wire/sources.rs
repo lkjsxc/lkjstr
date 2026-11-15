@@ -51,6 +51,8 @@ impl Session {
             return vec![];
         };
         let store = &e.store;
+        let weights =
+            crate::engine::weights::Weights::new(store, &e.private_lists, q.account.as_deref());
         let converted = q.convert();
         let target = converted
             .as_ref()
@@ -61,9 +63,9 @@ impl Session {
         let mut out=match q.source.as_str() {
             "people"=>super::people::people(e,q),
             "channels"=>super::channels::list(e,q),
-            "following"=>store.follows(target).unwrap_or_default().iter().map(|p|person(e,p,q.account.as_deref())).collect(),
+            "following"=>store.follows(target).unwrap_or_default().iter().map(|p|person(e,p,q.account.as_deref(), weights.person(p))).collect(),
             "followers"=>store.feed(&crate::store::Query{kinds:vec![3],mention:Some(target.into()),limit:6000,..Default::default()})
-                .iter().map(|v|person(e,&v.pubkey,q.account.as_deref())).collect(),
+                .iter().map(|v|person(e,&v.pubkey,q.account.as_deref(), weights.person(&v.pubkey))).collect(),
             "mutes"=>q.account.as_deref().and_then(|a|store.replaceable(a,10000)).map(|event|e.list_tags(&event).iter().filter_map(|tag|{
                 let value=tag.get(1)?;let target=match tag.first()?.as_str(){"p"=>json!({"k":"person","pubkey":value}),"word"=>json!({"k":"word","word":value}),"t"=>json!({"k":"hashtag","tag":value}),"e"=>json!({"k":"thread","id":value}),_=>return None};
                 let mut v=json!({"kind":"mute","key":format!("mute:{}:{value}",tag[0]),"target":target});if tag[0]=="p"{v["author"]=super::note::author(&rows::author(store,value));}Some(v)
@@ -73,12 +75,12 @@ impl Session {
                 let facts=json!({"events":store.len(),"eventPayloadBytes":store.payload_bytes(),"verified":e.verified,"rejected":e.rejected,"dropped":e.dropped,"persistenceQueue":e.pending.len(),"timings":e.metrics,"relayStatistics":e.network.stats(),"protocol":5});
                 facts.as_object().map(|m|m.iter().map(|(k,v)|json!({"kind":"info","key":k,"label":k,"value":v.to_string()})).collect()).unwrap_or_default()
             }
-            "media-servers"=>q.account.as_deref().map(|a|e.upload_servers(a).into_iter().map(|url|json!({"kind":"server","key":url,"url":url,"protocol":e.servers.get(&url).map(|v|v.0.as_str()).unwrap_or(if crate::engine::feedback::BLOSSOM_SERVERS.contains(&url.as_str()) {"blossom"}else{"unknown"}),"ok":e.servers.get(&url).is_some_and(|v|v.1)})).collect()).unwrap_or_default(),
+            "media-servers"=>q.account.as_deref().map(|a|e.upload_servers(a).into_iter().map(|url|e.server_row(&url)).collect()).unwrap_or_default(),
             "emoji"=>q.account.as_deref().and_then(|a|store.replaceable(a,10030)).map(|event|lkjstr_protocol::custom_emojis(&event).into_iter().map(|e|json!({"kind":"emoji","key":format!("emoji:{}",e.shortcode),"set":"","code":e.shortcode,"url":e.url})).collect()).unwrap_or_default(),
             "notifications"=>super::notifications::notifications(q,e),
             "bookmarks"=>q.account.as_deref().and_then(|a|store.replaceable(a,10003)).map(|list|e.list_tags(&list).iter().filter(|t|t.first().is_some_and(|k|k=="e")).filter_map(|t|store.get(t.get(1)?)).filter(|event|converted.as_ref().is_some_and(|q|query::matches_note(store,q,event))).map(|event|super::note::note(&rows::row_with_lists(store,&event,q.account.as_deref(),0,&e.private_lists),store,q.account.as_deref())).collect()).unwrap_or_default(),
             "list"=>{
-                q.convert().map(|converted|query::events(store,&converted).into_iter().next().map(|event|e.list_tags(&event).iter().filter(|t|t.first().is_some_and(|k|k=="p")).filter_map(|t|t.get(1)).map(|p|person(e,p,q.account.as_deref())).collect()).unwrap_or_default()).unwrap_or_default()
+                q.convert().map(|converted|query::events(store,&converted).into_iter().next().map(|event|e.list_tags(&event).iter().filter(|t|t.first().is_some_and(|k|k=="p")).filter_map(|t|t.get(1)).map(|p|person(e,p,q.account.as_deref(), weights.person(p))).collect()).unwrap_or_default()).unwrap_or_default()
             }
             _ => converted.as_ref().map(|converted| {
                 query::events(store, converted).into_iter()
@@ -172,16 +174,21 @@ impl Session {
         out
     }
 }
-pub(super) fn person(e: &Engine, p: &str, account: Option<&str>) -> Value {
+pub(super) fn person(e: &Engine, p: &str, account: Option<&str>, weight: u64) -> Value {
     let store = &e.store;
-    json!({"kind":"person","key":p,"author":super::note::author(&rows::author(store,p)),
+    json!({"kind":"person","key":p,"weight":weight,"author":super::note::author(&rows::author(store,p)),
         "about":store.profile(p).map(|p|p.about.lines().next().unwrap_or("").chars().take(160).collect::<String>()).unwrap_or_default(),
         "followed":account.and_then(|a|store.follows(a)).is_some_and(|f|f.iter().any(|key|key==p)),"followsYou":store.follows(p).is_some_and(|f|account.is_some_and(|a|f.iter().any(|key|key==a))),"self":account==Some(p)})
 }
 fn profile(e: &Engine, p: &str, account: Option<&str>) -> Value {
     let store = &e.store;
     let a = rows::author(store, p);
-    let mut result = person(e, p, account);
+    let mut result = person(
+        e,
+        p,
+        account,
+        crate::engine::weights::Weights::new(store, &e.private_lists, account).person(p),
+    );
     result["kind"] = json!("profile");
     result["key"] = json!(format!("profile:{p}"));
     let meta = store.profile(p).unwrap_or_default();

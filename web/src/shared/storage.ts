@@ -4,6 +4,8 @@
 const PREFIX = 'lkjstr:';
 const memory = new Map<string, string>(); // bound: used only when the browser refuses storage; one entry per key
 
+const decoded = new Map<string, { raw: string; value: unknown }>(); // bound: one per stored UI key
+
 const backend = (): Storage | null => {
   try {
     return globalThis.localStorage ?? null;
@@ -23,14 +25,26 @@ const parse = (raw: string | null | undefined): unknown => {
 export const kv = {
   get(key: string): unknown {
     const s = backend();
-    return parse(s ? s.getItem(PREFIX + key) : memory.get(key));
+    const raw = memory.get(key) ?? s?.getItem(PREFIX + key);
+    if (raw === undefined || raw === null) {
+      decoded.delete(key);
+      return undefined;
+    }
+    const cached = decoded.get(key);
+    if (cached?.raw === raw) return cached.value;
+    const value = parse(raw);
+    decoded.set(key, { raw, value });
+    return value;
   },
   set(key: string, value: unknown): void {
     const raw = JSON.stringify(value);
+    decoded.set(key, { raw, value });
     try {
       const s = backend();
-      if (s) s.setItem(PREFIX + key, raw);
-      else memory.set(key, raw);
+      if (s) {
+        s.setItem(PREFIX + key, raw);
+        memory.delete(key);
+      } else memory.set(key, raw);
     } catch {
       memory.set(key, raw); // quota: this session only
     }
@@ -50,6 +64,7 @@ export const kv = {
   remove(key: string): void {
     backend()?.removeItem(PREFIX + key);
     memory.delete(key);
+    decoded.delete(key);
   },
   keys(prefix = ''): string[] {
     const s = backend();

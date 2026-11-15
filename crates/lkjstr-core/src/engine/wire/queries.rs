@@ -44,6 +44,7 @@ pub enum Anchor {
 #[serde(rename_all = "camelCase")]
 pub struct Hint {
     pub visible_subs: Vec<String>,
+    pub focused_sub: Option<String>,
     pub page_hidden: bool,
     #[serde(default)]
     pub idle: bool,
@@ -54,6 +55,8 @@ pub struct Hint {
 }
 #[derive(Debug, Clone, Deserialize, Default)]
 pub struct Config {
+    #[serde(default, rename = "linkPreviews")]
+    pub link_previews: Option<bool>,
     #[serde(default)]
     pub language: String,
     #[serde(default, rename = "clientTag")]

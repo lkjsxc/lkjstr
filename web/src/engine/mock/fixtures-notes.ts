@@ -403,6 +403,16 @@ export const NOTES: readonly NoteSpec[] = [
     text: 'Reminder that your relay list is public infrastructure for everyone trying to find your notes. Keep it short and alive.\n#nostr',
   },
   { by: 'aoi', ago: 760, text: '夕方の商店街。', media: [[1067, 1600, 25, '提灯のともる商店街']] },
+  { by: 'aoi', ago: 190, text: 'A page with a picture. https://news.example/picture' },
+  { by: 'aoi', ago: 190, text: 'A page without a picture. https://news.example/article' },
+  { by: 'aoi', ago: 190, text: 'A post. https://x.com/aoi/status/123' },
+  { by: 'aoi', ago: 190, text: 'A link. https://unavailable.example/path' },
+  { by: 'aoi', ago: 190, text: '日本語の記事。 https://news.example/japanese' },
+  {
+    by: 'aoi',
+    ago: 190,
+    text: 'Two pages. https://news.example/picture https://news.example/article',
+  },
 ];
 
 /** Sentences for the older, generated part of the timeline (enough rows to scroll for a long time). */

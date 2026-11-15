@@ -1,17 +1,12 @@
 # Design
 
 ## Purpose
-
-How lkjstr looks and behaves, as built in `web/`. This document and the
-owner's brief decide questions of look and feel; change it in the same change
+How lkjstr looks and behaves, as built in `web/`. This document and the owner's brief decide questions of look and feel; change it in the same change
 as the code. Structure and commands are in [frontend.md](frontend.md).
 
 ## Character
-
-A calm reading and writing tool that stays open all day beside other work.
-It is the same family as ytenrich: the same window manager, tab bars, menus,
-launcher, workspaces and settings page, with lkjstr's own colours. When in
-doubt, do what ytenrich does.
+A calm reading and writing tool that stays open all day beside other work. It is the same family as ytenrich: the same window manager, tab bars, menus,
+launcher, workspaces and settings page, with lkjstr's own colours. When in doubt, do what ytenrich does.
 
 - Text first. The content is the interface; a tab starts with its content: no
   heading repeating the tab title, no explanatory text, no welcome page.
@@ -19,14 +14,13 @@ doubt, do what ytenrich does.
   (media 8px, quoted notes 8px, chips, buttons 6px) and for things that float.
 - Nothing moves under the reader. Media boxes have their shape before they
   load, counts have fixed slots, a redraw keeps the row on screen where it was.
+- A redraw never undoes the reader: what was unfolded, shown, chosen or sorted stays so, with the tab, across a reload.
 - Shadows only under what floats: menus, pickers, tab search, toasts.
 - A field that has the keyboard is never rewritten or replaced by a redraw; half-typed text stays as typed.
 
 ## Colour
-Two colours carry meaning and nothing else is coloured: indigo (`--accent`)
-is action and selection, vermilion (`--seal`) is news (unread, the new-notes
-pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest
-text, still reaches 4.5:1 on `--bg`. The theme follows the device or Settings.
+Two colours carry meaning and nothing else is coloured: indigo (`--accent`) is action and selection, vermilion (`--seal`) is news (unread, the new-notes
+pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest text, still reaches 4.5:1 on `--bg`. The theme follows the device or Settings.
 
 | Token | Light | Dark | Use |
 | --- | --- | --- | --- |
@@ -43,15 +37,13 @@ text, still reaches 4.5:1 on `--bg`. The theme follows the device or Settings.
 
 ## Type
 - One system sans stack with the Japanese families named. No web fonts.
-- Interface 13.5px / 1.45. Note text 15px / 1.6 (a setting); the focused note
-  of a thread is 1.5px larger. Headers and context lines 12.5 to 13.5px.
+- Interface 13.5px / 1.45. Note text 15px / 1.6 (a setting); the focused note of a thread is 1.5px larger. Headers and context lines 12.5 to 13.5px.
 - Names are 600; everything else regular. Numbers that change are tabular.
-- Note text uses `line-break: strict`. Interface sentences break by phrase in
-  Japanese (`word-break: auto-phrase`), never inside a word.
+- Note text uses `line-break: strict`. Interface sentences break by phrase in Japanese (`word-break: auto-phrase`), never inside a word.
 
 ## The frame
-- Top bar, 38px: name, nine workspace chips, new note, account. The name is
-  a menu (Settings, Relays, Stats, Docs). The relay count is a setting, off.
+- Top bar, 38px: name, nine workspace chips, tab search, new note, account.
+  The name is a menu (Settings, Relays, Stats, Docs). The relay count is a setting, off.
 - Signed in, the account is the active account's face (remembered on the
   device; read-only has a mark) and a menu of the reader's own: their row,
   which opens their profile, the other accounts, and Accounts. Signed out
@@ -64,12 +56,12 @@ text, still reaches 4.5:1 on `--bg`. The theme follows the device or Settings.
 - The tile that keys go to is marked; `Alt+Shift` chords move between tabs
   and tiles, reopen (the closed-tab list survives a reload) and open. `X`
   closes the tab in front. `O` opens tab search over the tile: open tabs,
-  then what a new tab could be; Enter goes there. `N` goes to the Post tab
-  that is open (a setting: always a new one).
+  then what a new tab could be; Enter goes there.
+  Tab search also finds the tabs of the other workspaces, marked with their number.
+  `N` goes to the Post tab that is open (a setting: always a new one).
 - Menus close on outside press, Escape, scroll and after choosing. No close
   buttons on menus. Shortcuts are a page of Docs, in the platform's names.
-- Opening a note or a person opens a tab in the same tile, right after the
-  current one, in front. Shift-click splits, middle click opens behind.
+- Opening a note or a person opens a tab in the same tile, right after the current one, in front. Shift-click splits, middle click opens behind.
 - The address bar stays `/`; `/n/<note>` and `/p/<npub>` open a tab.
 - The default layout, also what "Reset layout" gives: Global and Home at
   the left; at the right Post over Accounts, Notifications, Settings. One
@@ -100,9 +92,7 @@ text, still reaches 4.5:1 on `--bg`. The theme follows the device or Settings.
   actions that publish are drawn off (those without a count are not shown),
   Follow is off. A press says why in a toast that leads to the accounts. An
   account's own list, signed out, shows Sign in in place of an empty line.
-
 ## A note
-
 - Avatar circle (36px, a setting) in its own column; header line with name,
   NIP-05 with a tick when verified, and the time right-aligned. A face
   opens the profile wherever it is drawn, as the name does.
@@ -116,6 +106,14 @@ text, still reaches 4.5:1 on `--bg`. The theme follows the device or Settings.
   to four share a grid), then quoted notes as cards. Long notes fold by whole
   lines. Content warnings cover until pressed. A quoted note that cannot be
   shown is one quiet sentence in the same card.
+- Links have up to two 88px cards below text and media, in link order, in the
+  quoted-note surface: raised, hairline, 8px corners. Loading reserves the same
+  height on hold with the host; failure keeps host and path. Pictures are 120x88
+  (88x88 below 440px of tile), cover, absent when unknown. Site is faint 12.5px;
+  title 600, two lines; muted description two lines, omitted for two-line titles.
+  One accessible link opens a browser tab with noopener; no players or frames.
+  Cards fold with long text. Covered notes fetch nothing until opened. Link
+  previews are on by default, off with data saver, and disclose the service.
 - A zoomed picture is dragged by hand; the wheel zooms about the pointer.
 - A picture's box has its final size before the file loads, tinted `--hold`
   (the note's dimensions, otherwise 3:2); a picture of unknown size keeps the
@@ -128,9 +126,7 @@ text, still reaches 4.5:1 on `--bg`. The theme follows the device or Settings.
 - A `+` or empty reaction is a like: drawn and counted as the heart. `-` is 👎.
 - On is indigo. Keyboard selection is a wash with an indigo bar at the
   left; unread is a vermilion bar at the left.
-
 ## Lists
-
 - At the top of a feed new notes flow in by themselves. Anywhere else the
   position holds and a pill counts what is above.
 - The reading position is an anchor note plus offset: it survives reload,
@@ -154,12 +150,13 @@ text, still reaches 4.5:1 on `--bg`. The theme follows the device or Settings.
   scrolls away, never floats; shown by default, a setting. One query field
   whose placeholder shows what can be typed (words, from:, has:image), a
   period of two days, people to keep, notifications flowing in; own Clear. An unchanged query keeps results and reading position.
+  A period accepts common date forms and relative days; it is normalised to yyyy/mm/dd when the field is left.
 - A profile lists by kind in tabs under its header: posts, replies,
   reposts, reactions, media. A press anywhere on a notification opens it.
   Notification toggles cover reactions, replies/mentions, reposts and zaps.
 - The Channels tab (NIP-28): joined ones first, a rule, the others by
-  latest message; one field narrows by name or takes an address; a joined
-  row shows a vermilion unread count, another offers Join.
+  latest message; a name/address field saves drafts at once. Enter waits for matching
+  results. Joined rows show a vermilion unread count; others offer Join.
 - A channel is a feed, newest first. Its head and the composer under it are
   the first row and scroll away: the newest end of a chat is its top here.
   The field is free at once. Pending and failed messages stay below it, with
@@ -169,7 +166,6 @@ text, still reaches 4.5:1 on `--bg`. The theme follows the device or Settings.
 - A profile offers its owner's Home: the notes of the people they follow, as a tab of its own.
 
 ## Writing and acting
-
 - The composer is the Post tab: text at note size, who is posting (a button
   that switches accounts), emoji, media, Post. A primary button that cannot
   act yet is neutral. Sending and failed drafts stay below the field; failed Edit swaps keep both drafts.
@@ -180,9 +176,7 @@ text, still reaches 4.5:1 on `--bg`. The theme follows the device or Settings.
   and sent only when its Undo toast (8 seconds) has gone, or when the page is
   hidden or closed. Removing a bookmark, a mute or a relay offers Undo too.
 - Errors are said in words, in a toast, in the reader's language.
-
 ## Settings, Relays, Stats, Docs
-
 - Settings is ytenrich's settings page in a tab: one searchable list,
   "Group: Name" titles, a description, numbers where a number is meant, a
   mark and a reset on changed entries.
@@ -190,18 +184,17 @@ text, still reaches 4.5:1 on `--bg`. The theme follows the device or Settings.
   first, with state, latency, event counts and why each is there. The list
   is edited in Settings only (the tile menu leads to that entry, and to
   Stats). Media servers offer a few choices with one press, Blossom first.
+  A media server is marked as not answering only by a request an upload needs; a server not yet checked is not drawn as down.
 - Stats is numbers and quiet marks, no prose: five figures, then a sortable
   row per relay, trouble first; three publication columns group accepted/planned,
   pending/failed and exclusions by own/inbox/capacity limits; absent is a dash.
+  Route marks, followed-author coverage and weights are sortable columns. A second
+  table shows request purposes, weights, counts and quiet completion marks.
 - Docs is a tab with a tree of groups and pages: what lkjstr is, release
   and licence, keys and safety, relays, filters, shortcuts, the privacy
   policy, the terms. A page names its tab and is found by name in tab search.
-
+  Selecting another page opens it at the top; restoring a tab keeps its position.
 ## Language, and checking the look
-
-Every visible string comes from the two tables in `web/src/shared/`.
-Japanese is written as Japanese, with no space before particles after a
-name. Searching views works in both languages. `pnpm shots` in `web/` writes
-every scene at 1440, 1024 and 390, in both themes and languages, to
-`tmp/screens/`: judge a visual change there (a host without Japanese fonts
-shows names in the wrong weight).
+Every visible string comes from the two tables in `web/src/shared/`. Japanese is written as Japanese, with no space before particles after a
+name. Searching views works in both languages. `pnpm shots` in `web/` writes every scene at 1440, 1024 and 390, in both themes and languages, to
+`tmp/screens/`: judge a visual change there (a host without Japanese fonts shows names in the wrong weight).

@@ -8,6 +8,10 @@ impl Session {
         engine: &Engine,
     ) -> Result<Vec<p::Input>, (Option<String>, &'static str)> {
         Ok(match input {
+            Input::Preview { sub, ids } => {
+                self.preview_near(sub, ids);
+                vec![]
+            }
             Input::Stats { .. }
             | Input::RowAtTime { .. }
             | Input::Relays { .. }
@@ -22,6 +26,9 @@ impl Session {
                 vec![p::Input::GlobalPolicy { enabled }]
             }
             Input::Hint { hint } => {
+                self.preview_visible = hint.visible_subs.clone();
+                self.preview_save_data = hint.save_data;
+                self.preview_hidden = hint.page_hidden;
                 self.timeline_visible = Some(if hint.page_hidden {
                     Default::default()
                 } else {
@@ -29,6 +36,7 @@ impl Session {
                 });
                 vec![p::Input::Hint {
                     visible_subs: hint.visible_subs,
+                    focused_sub: hint.focused_sub,
                     page_hidden: hint.page_hidden,
                     idle: hint.idle,
                     save_data: hint.save_data,
@@ -50,6 +58,7 @@ impl Session {
                 self.queries.remove(&sub);
                 self.delivered.remove(&sub);
                 self.windows.remove(&sub);
+                self.preview_near.remove(&sub);
                 self.timelines.remove(&sub);
                 self.return_keys.remove(&sub);
                 vec![p::Input::Close { sub }]

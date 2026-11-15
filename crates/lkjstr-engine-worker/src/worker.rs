@@ -30,6 +30,8 @@ mod defaults;
 use defaults::initial_engine;
 #[path = "worker_accounts.rs"]
 mod accounts;
+#[path = "worker_preview.rs"]
+mod previews;
 #[path = "worker_relays.rs"]
 mod relay_config;
 #[path = "worker_sign.rs"]
@@ -37,11 +39,14 @@ mod signing;
 #[path = "worker_upload.rs"]
 mod uploads;
 struct Host {
+    preview_probed: bool,
+    preview_busy: bool,
     bootstrap_relays: Vec<lkjstr_core::engine::wire::RelayConfig>,
     relay_owner: Option<(String, String)>,
     account_revision: u64,
-    upload_tasks: Vec<(u64, String, String, String, String, Vec<u8>)>,
+    upload_tasks: Vec<uploads::Task>,
     upload_inflight: usize,
+    server_checks: Vec<(u64, String, String, String, u64)>, // shared four-request bound
     auth_next: u64,
     upload_auth: BTreeMap<(u64, String), (lkjstr_protocol::UnsignedNostrEvent, js_sys::Function)>,
 
@@ -60,6 +65,7 @@ struct Host {
     db: Option<web_sys::IdbDatabase>,
     next_persist: u64,
     publication_persisted: u64,
+    quality_persisted: u64,
     flushing: bool,
     stopped: bool,
     clock_offset: u64,
@@ -85,6 +91,7 @@ pub fn start() -> Result<WorkerHandle, JsValue> {
         relay_owner: None,
         upload_tasks: vec![],
         upload_inflight: 0,
+        server_checks: vec![],
         auth_next: 0,
         upload_auth: BTreeMap::new(),
         accounts: Default::default(),
@@ -101,9 +108,12 @@ pub fn start() -> Result<WorkerHandle, JsValue> {
         db: None,
         next_persist: 0,
         publication_persisted: 0,
+        quality_persisted: 0,
         flushing: false,
         stopped: false,
         clock_offset: 0,
+        preview_probed: false,
+        preview_busy: false,
         identity_inflight: 0,
         identity_attempts: BTreeMap::new(),
     }));
@@ -219,7 +229,9 @@ fn pump(host: &Rc<RefCell<Host>>) {
     accounts::pump_accounts(host);
     accounts::status(host);
     uploads::pump_uploads(host);
+    uploads::checks::pump(host);
     shared::expire(host);
+    previews::pump_previews(host);
 }
 #[path = "worker_handle.rs"]
 mod handle;

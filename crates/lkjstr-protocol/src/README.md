@@ -6,6 +6,7 @@ Protocol source files define event, filter, message, signing, and NIP behavior.
 
 ## Table of Contents
 
+- `upload.rs`: Worker upload auth, request methods and checked response metadata.
 - `blossom.rs`: Blossom upload endpoint, auth, and descriptor helpers.
 - `bytes.rs`: byte, hex, ASCII, and UTF-8 helpers.
 - `content_media.rs`: content and `imeta` media attachment helpers.

@@ -154,7 +154,13 @@ fn settled_discovery_resumes_without_cycling_after_feed_releases_slot() {
     assert_eq!(feed[2]["kinds"], json!([1, 6]));
     e.input(Input::Close { sub: "feed".into() }, 1201);
     let resumed = req(&mut e);
-    assert!(ids.contains(&resumed[1].to_string()));
+    assert!(
+        !ids.contains(&resumed[1].to_string()),
+        "resumption has a fresh wire id"
+    );
+    assert!(
+        [0, 3, 10000, 10002, 10063].contains(&resumed[2]["kinds"][0].as_u64().expect("owner kind"))
+    );
     eose(&mut e, &resumed, 1202);
     e.network.tick(1301);
     assert!(!frames(&mut e).iter().any(|f| f[0] == "REQ"));

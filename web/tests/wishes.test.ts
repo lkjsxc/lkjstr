@@ -2,7 +2,7 @@ import { afterEach, expect, it, vi } from 'vitest';
 import type { ActResult } from '../src/engine/client.ts';
 import { setLang } from '../src/shared/i18n.ts';
 import { learnPerson } from '../src/shared/people.ts';
-import { saveViewState } from '../src/shared/view-state.ts';
+import { loadViewState, saveViewState } from '../src/shared/view-state.ts';
 import { mountCompose } from '../src/views/compose.ts';
 import { mountFeedBar } from '../src/views/feed-bar.ts';
 import { avatar } from '../src/views/parts.ts';
@@ -45,12 +45,13 @@ it('keeps period node, half-typed value and selection through account and filter
     expect(input.value).toBe(expected);
     expect(input.selectionStart).toBe(expected.length);
   }
-  expect(reopen).toHaveBeenCalledTimes(1);
+  expect(reopen).not.toHaveBeenCalled();
   input.setSelectionRange(3, 3);
   x.env.settings.patch({ showFilters: false });
   expect(input.selectionStart).toBe(3);
   expect(input.isConnected).toBe(true);
   input.blur();
+  expect(reopen).toHaveBeenCalledTimes(1);
   await Promise.resolve();
   expect(slot.querySelector<HTMLInputElement>('.pdays input')?.value).toBe('2000/01/01');
   off();
@@ -119,6 +120,7 @@ for (const channel of [undefined, 'room'])
     const area = x.el.querySelector('textarea')!;
     (x.el.querySelector('.primary') as HTMLButtonElement).click();
     expect(area.value).toBe('');
+    expect(loadViewState<{ replyTo: string }>(x.env.instance).replyTo).toBeUndefined();
     expect(document.activeElement).toBe(area);
     expect(x.el.querySelector('.thumb')).toBeNull();
     area.value = 'next';

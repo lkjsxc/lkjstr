@@ -15,6 +15,7 @@
  * create an account on it.
  * 3: the query fields `phrases`, `exclude`, `has`, `from`, `notifications` and `show`. The interface draws their
  * controls only for an engine that reports 3 or more, and sends an older one the plain words in `text`.
+ * 5: optional link previews, engine configuration and the near-note hint.
  * 4: channels (NIP-28): the sources `channels` and `channel`, `ChannelRow`, `NoteRow.channel`, `Draft.channel` and
  * the actions `channel.join`, `channel.save`, `channel.seen`. The interface draws no channel control for an engine
  * that reports less. */
@@ -205,7 +206,18 @@ export type Counts = {
   readonly partial: boolean;
 };
 
+/** Since version 5. Absent previews means the service is unavailable. At most two, in link order. */
+export type LinkPreview = {
+  readonly source: string;
+  readonly url: string;
+  readonly siteName?: string;
+  readonly title?: string;
+  readonly description?: string;
+  readonly imageUrl?: string | null;
+  readonly kind: 'loading' | 'link' | 'page' | 'post';
+};
 export type NoteRow = {
+  readonly previews?: readonly LinkPreview[];
   readonly kind: 'note';
   readonly key: RowKey;
   /** Event id (hex) of the note itself: for a repost row, the reposted note. */
@@ -280,6 +292,8 @@ export type ProfileRow = {
 };
 
 export type PersonRow = {
+  /** Account-scoped selection weight; zero excludes a muted person. Feeds stay chronological. */
+  readonly weight?: number;
   readonly kind: 'person';
   readonly key: RowKey;
   readonly author: Author;
@@ -360,7 +374,10 @@ export type ServerRow = {
   readonly url: string;
   /** Upload protocol the engine found there. */
   readonly protocol: 'blossom' | 'nip96' | 'unknown';
+  /** Fresh required-request evidence; unknown and optional failures have checked=false. */
   readonly ok: boolean;
+  readonly checked?: boolean;
+  readonly error?: Failure;
 };
 
 export type EmojiRow = {
@@ -522,6 +539,8 @@ export type Action =
   /** `bytes` is transferred, not copied. Answered by `progress` messages and a `result` with `uploaded`. */
   | {
       readonly a: 'upload';
+      /** One explicit destination; absent uses the first configured server. */
+      readonly server?: string;
       readonly as: Pubkey;
       readonly name: string;
       readonly mime: string;
@@ -535,6 +554,8 @@ export type Action =
   /** Replaces the media server list with `servers` (`https://host[/path]`), the preferred one first; anything
    * else fails with `rejected`. The `media-servers` rows are patched at once. */
   | { readonly a: 'servers.save'; readonly as: Pubkey; readonly servers: readonly string[] }
+  /** Recheck required NIP-96 discovery or optional BUD-06; never uploads bytes. */
+  | { readonly a: 'servers.check'; readonly server: string }
   /** Marks notifications read up to now. */
   | { readonly a: 'seen'; readonly as: Pubkey }
   // Channels (NIP-28), since version 4.
@@ -583,7 +604,12 @@ export type Failure = {
     | 'unsupported'
     | 'offline'
     | 'not-found'
-    | 'internal';
+    | 'internal'
+    | 'upload-network'
+    | 'upload-timeout'
+    | 'upload-payment'
+    | 'upload-response'
+    | 'upload-discovery';
   readonly message?: string;
 };
 
@@ -598,6 +624,8 @@ export type Account = {
 export type Hint = {
   /** Subscriptions whose tab is in front; the others may be paused. */
   readonly visibleSubs: readonly SubId[];
+  /** Subscription in the tile receiving keyboard input, when it has one. */
+  readonly focusedSub?: SubId;
   readonly pageHidden: boolean;
   /** No input for a few minutes. */
   readonly idle: boolean;
@@ -608,6 +636,8 @@ export type Hint = {
 
 /** Engine-side settings. The interface stores settings and sends the whole object whenever one changes. */
 export type EngineConfig = {
+  /** Since version 5. Default on; data saver always disables it. */
+  readonly linkPreviews?: boolean;
   // engine-added 2026-11-15: 2
   /** Include the lkjstr client tag on authored events (default true). */
   readonly clientTag?: boolean;
@@ -625,6 +655,8 @@ export type EngineConfig = {
 // ───────────────────────────────────────── messages ─────────────────────────────────────────
 
 export type ToEngine =
+  /** Since version 5. Near, uncovered note ids only, lowest priority; an empty list releases wants. */
+  | { readonly t: 'preview'; readonly sub: SubId; readonly ids: readonly string[] }
   // engine-added 2026-11-15: 4
   | { readonly t: 'stats'; readonly req: ReqId }
   // end engine-added
@@ -669,10 +701,33 @@ export type ToEngine =
 
 // engine-added 2026-11-15: 4
 export type EngineStats = {
+  /** At most 256 logical requests; wireId groups filters sharing one envelope. */
+  readonly requests?: readonly {
+    readonly id: string;
+    readonly relay: string;
+    readonly wireId: string;
+    readonly purpose:
+      | 'focused'
+      | 'visible'
+      | 'history'
+      | 'notifications'
+      | 'own'
+      | 'hydration'
+      | 'prefetch';
+    readonly priority: number;
+    readonly weight: number;
+    readonly received: number;
+    readonly sent: boolean;
+    readonly complete: boolean;
+    readonly members: number;
+  }[];
   readonly relays: readonly {
     readonly url: string;
     readonly state: string;
     readonly connectedSince: Millis | null;
+    readonly readRule?: 'reader' | 'search' | 'hint' | 'unused';
+    readonly followedCovered?: number;
+    readonly weight?: number | null;
     readonly eventsReceived: number;
     readonly duplicatesDropped: number;
     readonly openSubscriptions: number;
@@ -775,7 +830,14 @@ export type FromEngine =
   | { readonly t: 'fresh'; readonly sub: SubId; readonly count: number }
   | { readonly t: 'state'; readonly sub: SubId; readonly state: SubState }
   /** Upload progress. */
-  | { readonly t: 'progress'; readonly req: ReqId; readonly sent: number; readonly total: number }
+  | {
+      readonly t: 'progress';
+      readonly req: ReqId;
+      readonly sent: number;
+      readonly total: number;
+      readonly server?: string;
+      readonly phase?: 'discovering' | 'signing' | 'uploading' | 'processing';
+    }
   /** Per-relay delivery of a publish, sent as answers come in (the whole list each time). */
   | { readonly t: 'delivery'; readonly req: ReqId; readonly relays: readonly Delivery[] }
   /** The end of an action. `delivery`: the final per-relay list of a publish. `uploaded`: of an upload.

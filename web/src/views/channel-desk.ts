@@ -6,6 +6,7 @@
 import type { ChannelRow, Query, Row } from '../engine/protocol.ts';
 import { h, replaceChildren } from '../shared/h.ts';
 import { t } from '../shared/i18n.ts';
+import { loadViewState } from '../shared/view-state.ts';
 import { ability } from './can.ts';
 import { channelFace, channelForm, channelName, joinButton } from './channel-parts.ts';
 import { mountCompose } from './compose.ts';
@@ -90,6 +91,13 @@ export function mountChannelDesk(o: { env: ViewEnv; slot: HTMLElement }): {
   return {
     seat(_header, row) {
       if (row?.kind !== 'channel') return;
+      if (
+        !channel &&
+        row.own &&
+        loadViewState<{ channelEdit: { open: boolean; id?: string } }>(env.instance).channelEdit
+          ?.open
+      )
+        edit(row);
       channel = row;
       desk.hidden = false;
       draw(row);

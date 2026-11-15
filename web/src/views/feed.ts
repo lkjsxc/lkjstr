@@ -17,13 +17,15 @@ import { CHILD, DATED, FILTERED, OWN } from './feed-sources.ts';
 import { feedTitle } from './feed-title.ts';
 import { filterQuery } from './filter-bar.ts';
 import { onHeld } from './held.ts';
+import { pauseNoteAudio } from './note-audio.ts';
+import { createPreviewWants } from './preview-wants.ts';
 import { mountProfileKinds } from './profile-kinds.ts';
 import type { ViewEnv } from './registry.ts';
 import { watchHomeTitle } from './their-home.ts';
 import { mountTimeRail } from './time-rail.ts';
 
-const PAGE = 60; // rows asked for beyond what is on screen
-const LIMIT = 800;
+const PAGE = 60; // Prefetch size.
+const LIMIT = 800; // Maximum retained rows.
 const NEAR_PX = 1400;
 type State = BarState & {
   title?: string;
@@ -33,6 +35,7 @@ type State = BarState & {
   tag?: string;
   show?: string;
   pos?: Place;
+  extent?: number;
 };
 export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => void {
   const state: State = loadViewState<State>(env.instance);
@@ -51,6 +54,7 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
   const drawn = createRowList(list, env, DATED.has(kind));
   let rows: Row[] = [];
   let sub: Subscription | undefined;
+  const previews = createPreviewWants(el, () => sub);
   let atTop = true;
   let atBottom = false;
   let live = true;
@@ -89,6 +93,9 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
     const extra = Math.max(0, before + after - LIMIT);
     if (before > after) before -= extra;
     else after -= extra;
+    if (kind === 'thread' && before + after > (state.extent ?? PAGE)) {
+      (state.extent = Math.min(LIMIT, before + after)), save();
+    }
     waiting = true;
     sub?.window(anchor, before, after);
   };
@@ -102,7 +109,7 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
     settle();
     fresh.read(rows);
     keys.paint();
-    rail.sync();
+    previews.sync(), rail.sync();
   };
   let seated = kind !== 'thread' || Boolean(state.pos);
   const seat = (): void => {
@@ -136,7 +143,6 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
       ? t('feed.lastArrival', { time: fullTime(sstate.lastArrival) })
       : '';
   };
-  /** Decides, from where the reader is, which window the engine should keep. */
   const follow = (): void => {
     if (waiting || rail.busy() || !sub || !env.visible.get()) return;
     const top = el.scrollTop;
@@ -184,7 +190,6 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
         rail.window();
         if (jump) (jump = false), keeper.forget();
         sync();
-        // The place is a row that no longer exists (deleted, muted, a filter): the list starts over from its head.
         if (keeper.get() && !keeper.put() && (kind !== 'notifications' || rows.length > 0))
           keeper.forget();
         title();
@@ -206,7 +211,7 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
     });
     sub.visible(env.visible.get());
     if (place) request({ key: place.key }, PAGE, PAGE);
-    else request('top', 0, PAGE);
+    else request('top', 0, Math.max(PAGE, state.extent ?? PAGE));
     sync();
   };
   const toTop = (): void => {
@@ -266,28 +271,23 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
   const owner = kind === 'their-home' ? watchHomeTitle(env, state, save) : undefined;
   const offVisible = env.visible.subscribe((on) => {
     sub?.visible(on);
+    if (!on) pauseNoteAudio(list);
     if (on) seat(), keeper.put(), follow();
   });
   const offAccounts = env.engine.accounts.subscribe((a) => {
     const now = ability(env.engine);
     if ((a.active ?? '') !== account)
       (account = a.active ?? ''), (can = now), drawn.clear(), open();
-    // The same reader, now known to be read-only (or no longer): the action rows are drawn again.
     else if (now !== can) (can = now), drawn.clear(), sync();
   });
   const offHeld = onHeld(() => void (rows.length && sync()));
   const offSettings = env.settings.subscribe(() => (drawn.clear(), sync()));
   return () => {
     cancelAnimationFrame(frame);
-    offVisible();
-    offInfo();
-    offAccounts();
-    offSettings();
-    offHeld();
-    bar();
+    for (const off of [offVisible, offInfo, offAccounts, offSettings, offHeld, bar]) off();
     kinds?.dispose();
     scrub();
-    rail.dispose();
+    previews.dispose(), drawn.dispose(), rail.dispose();
     keys.dispose();
     keeper.dispose();
     sub?.close();

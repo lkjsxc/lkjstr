@@ -55,7 +55,8 @@ impl Engine {
             }
             self.network.relay_order = order;
         }
-        self.network.plan(wants, &self.store, now);
+        self.network
+            .plan_with_lists(wants, &self.store, &self.private_lists, now);
     }
 }
 fn requests(

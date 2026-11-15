@@ -70,8 +70,10 @@ pub(super) fn people(e: &Engine, q: &Query) -> Vec<Value> {
         )
     });
     keys.dedup();
+    let weights =
+        crate::engine::weights::Weights::new(store, &e.private_lists, q.account.as_deref());
     keys.into_iter()
         .take(if q.authors.is_some() { 32 } else { 6 })
-        .map(|p| person(e, &p, q.account.as_deref()))
+        .map(|p| person(e, &p, q.account.as_deref(), weights.person(&p)))
         .collect()
 }

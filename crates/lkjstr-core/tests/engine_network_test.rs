@@ -58,6 +58,7 @@ fn identical_views_share_work_and_visibility_releases_it() {
     assert!(reqs(&mut e).is_empty());
     e.input(
         Input::Hint {
+            focused_sub: None,
             visible_subs: vec![],
             page_hidden: false,
             idle: false,

@@ -1,8 +1,3 @@
-// The Stats tab: how the engine is doing, in numbers and small marks, with no prose. Five figures answer at a
-// glance (are the relays there, do they cover the people followed, how much came from the device, what was saved,
-// how much is kept), then one row per relay, sortable, the ones in trouble first. It asks the engine every two
-// seconds while it is in front and changes only the text that changed, so nothing flickers. A figure the engine
-// did not give is a dash, and an engine that keeps no statistics is said to keep none.
 import type { EngineStats } from '../engine/protocol.ts';
 import { hostOf } from '../shared/address.ts';
 import { clockOf, dayOf } from '../shared/format.ts';
@@ -10,18 +5,23 @@ import { h } from '../shared/h.ts';
 import { getLang, type Key, t } from '../shared/i18n.ts';
 import { loadViewState, saveViewState } from '../shared/view-state.ts';
 import type { ViewEnv } from './registry.ts';
+import {
+  ROUTING,
+  type RoutingKey,
+  requestTable,
+  routingCells,
+  routingValue,
+} from './stats-routing.ts';
 
 type Relay = EngineStats['relays'][number];
 export type Mark = 'failing' | 'silent' | 'slow';
 type PublishKey = 'publishAccepted' | 'publishPending' | 'publishOwnSkipped';
-type SortKey = 'health' | 'events' | 'dup' | 'latency' | 'subs' | 'data' | PublishKey;
+type SortKey = 'health' | 'events' | 'dup' | 'latency' | 'subs' | 'data' | PublishKey | RoutingKey;
 type Sort = { by: SortKey; up: boolean };
 const EVERY_MS = 2000;
 const SLOW_MS = 1000;
 const NONE = '—';
 
-/** What is wrong with a relay, if anything: it cannot be reached, it is connected and asked but sends nothing,
- * or it answers slowly. Pure, tested. */
 export function relayMark(r: Relay): Mark | undefined {
   if (r.state === 'failed' || r.state === 'waiting') return 'failing';
   if (r.state !== 'connected') return undefined;
@@ -29,7 +29,6 @@ export function relayMark(r: Relay): Mark | undefined {
   return r.latencyMs !== null && r.latencyMs >= SLOW_MS ? 'slow' : undefined;
 }
 const num = (n: number): string => n.toLocaleString(getLang() === 'ja' ? 'ja-JP' : 'en-US');
-/** A size in decimal units, one digit after the point below 100. */
 export function bytesText(n: number): string {
   const units = ['B', 'kB', 'MB', 'GB'];
   let v = n;
@@ -39,6 +38,9 @@ export function bytesText(n: number): string {
 }
 const RANK: Record<Mark, number> = { failing: 0, silent: 1, slow: 2 };
 const VALUE: Record<SortKey, (r: Relay) => number | null> = {
+  readRule: (r) => routingValue('readRule', r),
+  followedCovered: (r) => routingValue('followedCovered', r),
+  weight: (r) => routingValue('weight', r),
   health: (r) => -(RANK[relayMark(r) ?? 'slow'] + (relayMark(r) ? 0 : 1)),
   events: (r) => r.eventsReceived,
   dup: (r) => r.duplicatesDropped,
@@ -49,8 +51,6 @@ const VALUE: Record<SortKey, (r: Relay) => number | null> = {
   publishOwnSkipped: (r) => r.publishOwnSkipped ?? null,
   publishPending: (r) => r.publishPending ?? null,
 };
-/** The relays in the order asked for: largest first (`up`: smallest first), a missing figure always last, ties
- * by what was received and then by name, so rows do not swap places between two answers. Pure, tested. */
 export function sortRelays(relays: readonly Relay[], sort: Sort): Relay[] {
   const value = VALUE[sort.by];
   return [...relays].sort((a, b) => {
@@ -61,11 +61,9 @@ export function sortRelays(relays: readonly Relay[], sort: Sort): Relay[] {
   });
 }
 
-/** Sets a text only when it differs, so an unchanged figure is not touched. */
 const put = (el: HTMLElement, text: string): void => {
   if (el.textContent !== text) el.textContent = text;
 };
-/** A count in a row: a nought is there, but quiet. */
 const tally = (el: HTMLElement, n: number): void => {
   put(el, num(n));
   el.classList.toggle('nil', n === 0);
@@ -78,6 +76,7 @@ const PUBLISH = {
 const PUBLISH_KEYS = Object.keys(PUBLISH) as PublishKey[];
 const COLUMNS: readonly (readonly [SortKey, Key])[] = [
   ['health', 'stats.relay'],
+  ...ROUTING.map((key) => [key, `stats.${key}`] as const),
   ['events', 'stats.events'],
   ['dup', 'stats.dup'],
   ['latency', 'stats.latency'],
@@ -136,6 +135,7 @@ export function mountStats(el: HTMLElement, env: ViewEnv): () => void {
     return { key, th };
   });
   const since = h('th', { class: 'c-since', scope: 'col' }, t('stats.since'));
+  const requests = requestTable();
   const body = h('tbody');
   const table = h(
     'table',
@@ -152,6 +152,7 @@ export function mountStats(el: HTMLElement, env: ViewEnv): () => void {
     const error = h('div', { class: 'rsub muted' });
     const bar = h('span');
     const [events, dup, latency, subs, data, at] = Array.from({ length: 6 }, () => h('span'));
+    const routing = routingCells();
     const publishing = PUBLISH_KEYS.map((key) => ({ key, value: h('span') }));
     const tr = h(
       'tr',
@@ -168,6 +169,7 @@ export function mountStats(el: HTMLElement, env: ViewEnv): () => void {
         ),
         error,
       ),
+      ...routing.nodes,
       cell(
         'events',
         events as HTMLElement,
@@ -181,6 +183,7 @@ export function mountStats(el: HTMLElement, env: ViewEnv): () => void {
       cell('since', at as HTMLElement),
     );
     const set = (r: Relay, most: number): void => {
+      routing.update(r);
       const m = relayMark(r);
       const cls = `s-${r.state}${m ? ` m-${m}` : ''}`;
       if (tr.className !== cls) tr.className = cls;
@@ -215,6 +218,7 @@ export function mountStats(el: HTMLElement, env: ViewEnv): () => void {
 
   function draw(s: EngineStats): void {
     last = s;
+    requests.update(s);
     state.hidden = true;
     table.hidden = false;
     const marks = s.relays.map(relayMark);
@@ -280,6 +284,7 @@ export function mountStats(el: HTMLElement, env: ViewEnv): () => void {
     h('div', { class: 'sfigs' }, ...Object.values(figs).map((f) => f.node)),
     state,
     h('div', { style: 'overflow-x:auto' }, table),
+    requests.node,
   );
   env.menu(() => [{ label: t('view.relays'), run: () => env.open('relays') }]);
   const off = env.visible.subscribe(watch);

@@ -6,6 +6,7 @@ import type { Engine } from '../engine/client.ts';
 import { h, replaceChildren } from '../shared/h.ts';
 import { t } from '../shared/i18n.ts';
 import { icon } from '../shared/icons.ts';
+import { keyCaps } from '../shared/keys.ts';
 import type { SettingsStore } from '../shared/settings.ts';
 import { avatar, plainName } from '../views/parts.ts';
 import { type MenuItem, openMenu } from '../wm/menus.ts';
@@ -18,6 +19,7 @@ export function createTopBar(
     settings: SettingsStore;
     spaces: HTMLElement;
     layer: HTMLElement;
+    search(): void;
     open(kind: string, state?: object): void;
   },
 ): TopBar {
@@ -76,12 +78,32 @@ export function createTopBar(
         me?.signer === 'none' ? h('span', { class: 'ro', title: t('error.read-only') }) : null,
       );
     faceSig = nextFace;
+    search.title = `${t('tabs.search')} (${keyCaps('tabSearch')[0]})`;
+    search.setAttribute('aria-label', t('tabs.search'));
     compose.hidden = !a.active; // a visitor cannot post: the bar offers the way in instead
     compose.title = t('view.compose');
     compose.setAttribute('aria-label', t('view.compose'));
   };
+  const search = h(
+    'button',
+    {
+      class: 'icon',
+      'data-tab-search': '',
+      onclick: o.search,
+      onpointerdown: (e) => e.preventDefault(),
+    },
+    icon('search'),
+  );
   const compose = h('button', { class: 'icon', onclick: () => o.open('compose') }, icon('pen'));
-  bar.replaceChildren(brand, o.spaces, h('span', { class: 'grow' }), relays, compose, account);
+  bar.replaceChildren(
+    brand,
+    o.spaces,
+    h('span', { class: 'grow' }),
+    relays,
+    search,
+    compose,
+    account,
+  );
   const offs = [
     o.engine.accounts.subscribe(render),
     o.engine.status.subscribe(render),

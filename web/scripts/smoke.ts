@@ -7,6 +7,7 @@ import { dirname, resolve } from 'node:path';
 import { type Browser, chromium, type Page } from 'playwright-core';
 import { dayOf } from '../src/shared/format.ts';
 import { KEYS } from '../src/shared/keys.ts';
+import { notesChecks } from './smoke-notes.ts';
 import { railSmoke } from './smoke-time-rail.ts';
 import { wishes } from './smoke-wishes.mjs';
 
@@ -414,6 +415,12 @@ async function run(browser: Browser): Promise<void> {
   await scrolling(still);
   await filtering(browser, still);
   await rooms(browser, still);
+  const reader = await open(browser, '/', {
+    mock: { live: true },
+    'layout:main': tile('reader', ['global']),
+  });
+  await notesChecks(reader, fact);
+  await reader.context().close();
 }
 
 const FEED = '.view[data-kind="home"]';
@@ -1571,7 +1578,7 @@ async function accounts(browser: Browser): Promise<void> {
       (await count(page, '.tab[data-view="global"]')) === 1 &&
       (await count(page, '.fstate:not(:empty)')) === 0 &&
       (await text('.acct.out')) === 'Sign in' &&
-      (await page.locator('.bar .icon').isHidden()),
+      (await page.locator('.bar .icon:has(.i-pen)').isHidden()),
   );
   fact(
     'first visit: what would publish is drawn off, counts stay',

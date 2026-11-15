@@ -16,6 +16,8 @@ pub fn filter(store: &Store, q: &Query) -> NostrFilter {
     match q.source {
         Source::Channels => {
             f.kinds = Some(vec![40]);
+            f.since = None;
+            f.until = None;
             f.authors = None;
             f.ids = q.target.clone().map(|id| vec![id]);
         }

@@ -1,6 +1,7 @@
 use super::*;
 impl Network {
     pub fn tick(&mut self, now: u64) {
+        self.now = now;
         self.admit_configured(now);
         let relays: Vec<_> = self.relays.keys().cloned().collect();
         for url in relays {
@@ -52,29 +53,31 @@ impl Network {
                 r.eose = false;
                 r.last_rx = now;
                 let relay = r.relay.clone();
-                self.send(&relay, json!(["CLOSE", id]));
+                let wire = r.wire_id.clone();
+                self.close_group(&relay, &wire);
             }
         }
         let mut counts: BTreeMap<String, usize> = BTreeMap::new();
+        let mut wires = BTreeSet::new();
         for r in self.requests.values().filter(|r| r.sent) {
+            if !wires.insert((&r.relay, &r.wire_id)) {
+                continue;
+            }
             *counts.entry(r.relay.clone()).or_default() += 1;
         }
         let mut ids: Vec<_> = self.requests.keys().cloned().collect();
         ids.sort_by_key(|id| {
             let r = &self.requests[id];
-            let f = &r.filter;
-            let priority = if r.members.contains("~account-discovery") {
-                4 + u8::from(r.page_eose)
-            } else if profile(f) {
-                0
-            } else if f.ids.is_some() {
-                1
-            } else if counts_filter(f) {
-                3
-            } else {
-                2
-            };
-            (priority, id.clone())
+            (
+                r.priority
+                    + if r.purpose == "own" && r.page_eose {
+                        3
+                    } else {
+                        0
+                    },
+                std::cmp::Reverse(r.weight),
+                id.clone(),
+            )
         });
         for id in ids {
             let r = &self.requests[&id];
@@ -86,12 +89,15 @@ impl Network {
             {
                 continue;
             }
-            if !visible_profile(r) && now < self.relays[&r.relay].next_req_at {
+            if now < self.relays[&r.relay].cooldown_until
+                || (!visible_profile(r) && now < self.relays[&r.relay].next_req_at)
+            {
                 continue;
             }
             let max = self.relays[&r.relay].max_reqs.clamp(1, 8);
             let count = counts.entry(r.relay.clone()).or_default();
             if *count >= max {
+                let focused_page = r.priority == 0 && !r.page_eose;
                 if visible_profile(r) || !counts_filter(&r.filter) || !r.page_eose {
                     // Names may interrupt feeds; channels and visible follow watches
                     // rotate after EOSE. Discovery tails alone never interrupt live work.
@@ -102,8 +108,10 @@ impl Network {
                         .find(|(_, q)| {
                             q.relay == r.relay
                                 && q.sent
-                                && !visible_profile(q)
-                                && (visible_profile(r)
+                                && (!visible_profile(q) || (focused_page && q.priority > 0))
+                                && (q.priority != 0 || q.eose)
+                                && ((focused_page && q.priority > 0)
+                                    || visible_profile(r)
                                     || (q.eose
                                         && ((q.list_watch
                                             && !r.members.contains("~account-discovery"))
@@ -129,6 +137,7 @@ impl Network {
                     if let Some(victim) = victim {
                         let relay = r.relay.clone();
                         let rotate = slot_sharing(r) || r.live;
+                        let wire = self.requests[&victim].wire_id.clone();
                         if let Some(q) = self.requests.get_mut(&victim) {
                             q.sent = false;
                             q.eose = false;
@@ -139,7 +148,7 @@ impl Network {
                                 q.ready_at = now + 1000;
                             }
                         }
-                        self.send(&relay, json!(["CLOSE", victim]));
+                        self.close_group(&relay, &wire);
                     } else {
                         continue;
                     }
@@ -149,31 +158,7 @@ impl Network {
             } else {
                 *count += 1;
             }
-            let r = &self.requests[&id];
-            let relay = r.relay.clone();
-            let mut f = r.filter.clone();
-            if let Some(at) = r.last_event.filter(|_| r.live && r.page_eose) {
-                f.since = Some(at.saturating_sub(2).max(f.since.unwrap_or(0)));
-            }
-            f.limit = Some(f.limit.unwrap_or(200).min(self.relays[&relay].max_limit));
-            let frame = json!(["REQ", id, filter_to_value(&f)]);
-            let is_profile = visible_profile(r);
-            self.send(&relay, frame);
-            if !is_profile && let Some(r) = self.relays.get_mut(&relay) {
-                r.next_req_at = now + 100;
-            }
-            if let Some(r) = self.requests.get_mut(&id) {
-                if !r.page_eose {
-                    r.page_limit = f.limit.unwrap_or(200) as usize;
-                    r.received.clear();
-                    r.oldest = None;
-                }
-                r.sent = true;
-                r.asked = true;
-                r.sent_at = now;
-                r.last_rx = now;
-                r.deadline = now + 15000;
-            }
+            self.send_group(&id, now);
         }
         self.send_pending(now);
         self.settle(now);

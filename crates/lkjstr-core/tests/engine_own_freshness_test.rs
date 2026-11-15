@@ -104,6 +104,7 @@ fn device_owner_removal_and_page_hiding_release_freshness_requests() {
     assert_eq!(requests(&mut e).len(), 1);
     e.input(
         Input::Hint {
+            focused_sub: None,
             visible_subs: vec![],
             page_hidden: true,
             idle: false,

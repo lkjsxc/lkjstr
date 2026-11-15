@@ -17,9 +17,11 @@ Frontend (`web/`):
 
 Engine (`crates/`):
 
+- [media-uploads.md](media-uploads.md): destinations, failure/retry, bounds and proof.
 - [channels.md](channels.md): NIP-28 sources, actions, bounds and verification.
 - [protocol3.md](protocol3.md): rich filters, notifications, profile kinds and gates.
 - [status.md](status.md): what works, what does not, next steps in order.
+- [outbox.md](outbox.md): read cursors, durable quality, focus, weights and purposes.
 - [orchestration.md](orchestration.md): publication routing, freshness, weights and limits.
 - [architecture.md](architecture.md): crates, runtime, orchestration, storage.
 - [verification.md](verification.md): gates, browser checks and their results.

@@ -54,9 +54,13 @@ impl Engine {
                     limit: Some(1),
                     ..Default::default()
                 };
-                let mut routes =
-                    self.network
-                        .read_routes(&filter, &Query::default(), &self.store, now);
+                let mut routes = self.network.read_routes(
+                    &filter,
+                    &Query::default(),
+                    &self.store,
+                    &mut super::weights::PlanWeights::new(&self.store, &self.private_lists),
+                    now,
+                );
                 if routes.is_empty() {
                     routes = self
                         .network

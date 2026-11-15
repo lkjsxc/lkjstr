@@ -10,6 +10,7 @@ pub(super) fn load(host: &Rc<RefCell<Host>>) {
                     .await
                     .ok()
                     .flatten();
+                let quality = idb::kv_get(&db, "relay-quality-v1").await.ok().flatten();
                 let cached = idb::newest_events(&db, 2000).await;
                 let complete = match (&cached, idb::count_events(&db).await) {
                     (Ok(rows), Ok(count)) => count as usize <= rows.len(),
@@ -30,6 +31,9 @@ pub(super) fn load(host: &Rc<RefCell<Host>>) {
                     h.engine.notification_ties = h.accounts.notification_ties.clone();
                     if let Some(routes) = routes {
                         h.engine.network.restore_publication_routes(&routes);
+                    }
+                    if let Some(quality) = quality {
+                        h.engine.network.restore_quality(&quality, now());
                     }
                     h.loaded = true;
                     for id in h.sessions.keys().copied().collect::<Vec<_>>() {
@@ -81,7 +85,8 @@ pub(super) fn persist(host: &Rc<RefCell<Host>>) {
         if h.stopped
             || h.flushing
             || (h.engine.pending.is_empty()
-                && h.publication_persisted == h.engine.network.publication_revision)
+                && h.publication_persisted == h.engine.network.publication_revision
+                && h.quality_persisted == h.engine.network.quality_revision)
             || now() < h.next_persist
         {
             return;
@@ -102,13 +107,24 @@ pub(super) fn persist(host: &Rc<RefCell<Host>>) {
             .collect::<Vec<_>>();
         let routes = h.engine.network.publication_routes_json();
         let revision = h.engine.network.publication_revision;
-        (db, rows, batch, routes, revision)
+        (
+            db,
+            rows,
+            batch,
+            routes,
+            revision,
+            h.engine.network.quality_json(h.time()),
+            h.engine.network.quality_revision,
+        )
     };
     let weak = Rc::downgrade(host);
     wasm_bindgen_futures::spawn_local(async move {
         let begin = crate::measure::now();
         let result = match idb::kv_put(&work.0, "publication-routes-v1", &work.3).await {
-            Ok(()) => idb::put_events(&work.0, &work.1).await,
+            Ok(()) => match idb::kv_put(&work.0, "relay-quality-v1", &work.5).await {
+                Ok(()) => idb::put_events(&work.0, &work.1).await,
+                Err(error) => Err(error),
+            },
             Err(error) => Err(error),
         };
         // Physical disk bound: keep the newest 20000; run only after a committed batch.
@@ -124,6 +140,7 @@ pub(super) fn persist(host: &Rc<RefCell<Host>>) {
             if result.is_ok() {
                 h.engine.pending.committed(&work.2);
                 h.publication_persisted = work.4;
+                h.quality_persisted = work.6;
                 h.engine.metrics.commit(crate::measure::now() - begin);
             } else {
                 post(

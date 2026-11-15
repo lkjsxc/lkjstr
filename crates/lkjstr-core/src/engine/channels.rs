@@ -109,12 +109,18 @@ pub(super) fn wants(store: &Store, q: &super::Query) -> Vec<NostrFilter> {
             .chain(
                 store
                     .feed(&crate::store::Query {
-                        kinds: vec![40],
+                        kinds: vec![40, 41],
                         limit: 1000,
                         ..Default::default()
                     })
                     .iter()
-                    .map(|e| e.id.clone()),
+                    .filter_map(|e| {
+                        if e.kind == 40 {
+                            Some(e.id.clone())
+                        } else {
+                            tag_values(e, "e").into_iter().find(|id| is_event_id(id))
+                        }
+                    }),
             )
             .collect()
     };
@@ -129,6 +135,13 @@ pub(super) fn wants(store: &Store, q: &super::Query) -> Vec<NostrFilter> {
         ids.truncate(1000);
     }
     let mut out = vec![];
+    if q.source == Source::Channels && q.target.is_none() {
+        out.push(NostrFilter {
+            kinds: Some(vec![41]),
+            limit: Some(100),
+            ..Default::default()
+        });
+    }
     if let Some(account) = &q.account {
         out.push(NostrFilter {
             authors: Some(vec![account.clone()]),
@@ -138,11 +151,18 @@ pub(super) fn wants(store: &Store, q: &super::Query) -> Vec<NostrFilter> {
         });
     }
     for ids in ids.chunks(120) {
-        out.push(NostrFilter {
-            ids: Some(ids.to_vec()),
-            limit: Some(120),
-            ..Default::default()
-        });
+        let missing: Vec<_> = ids
+            .iter()
+            .filter(|id| store.get(id).is_none())
+            .cloned()
+            .collect();
+        if !missing.is_empty() {
+            out.push(NostrFilter {
+                ids: Some(missing),
+                limit: Some(120),
+                ..Default::default()
+            });
+        }
         // Metadata must not compete with newer messages for a relay's limit.
         for kind in [41, 42] {
             let mut f = NostrFilter {

@@ -43,6 +43,7 @@ export type SubHandlers = {
 };
 export type Subscription = {
   readonly id: string;
+  near(ids: readonly string[]): void;
   window(anchor: Anchor, before: number, after: number): void;
   /** Whether its tab is in front (the engine may pause what is not). */
   visible(on: boolean): void;
@@ -50,7 +51,7 @@ export type Subscription = {
 };
 export type ActResult = Extract<FromEngine, { t: 'result' }>;
 export type ActWatch = {
-  progress?(sent: number, total: number): void;
+  progress?(sent: number, total: number, detail?: Extract<FromEngine, { t: 'progress' }>): void;
   delivery?(relays: readonly Delivery[]): void;
 };
 export type Accounts = { readonly accounts: readonly Account[]; readonly active?: Pubkey };
@@ -61,7 +62,7 @@ export type Engine = {
   readonly info: Signal<{ engine: string; version: number } | null>;
   /** The active account's pubkey ('' when signed out). */
   me(): Pubkey;
-  open(query: Query, handlers: SubHandlers): Subscription;
+  open(query: Query, handlers: SubHandlers, owner?: HTMLElement): Subscription;
   act(action: Action, watch?: ActWatch): Promise<ActResult>;
   /** What the engine measured about itself, now. Undefined: this engine did not answer (it keeps no statistics). */
   stats(): Promise<EngineStats | undefined>;
@@ -76,6 +77,7 @@ const STATS_MS = 4000;
 export function createEngine(transport: Transport): Engine {
   const subs = new Map<string, SubHandlers>(); // bound: open subscriptions (one per mounted list)
   const pending = new Map<string, { done(r: ActResult): void; watch?: ActWatch }>(); // bound: actions in flight
+  const owners = new Map<string, HTMLElement>(); // bound: open subscriptions
   const visible = new Set<string>(); // bound: as `subs`
   const asked = new Map<string, (s: EngineStats | undefined) => void>(); // bound: `stats` requests in flight
   const accounts = createSignal<Accounts>({ accounts: [] });
@@ -98,6 +100,7 @@ export function createEngine(transport: Transport): Engine {
         t: 'hint',
         hint: {
           visibleSubs: [...visible],
+          focusedSub: [...visible].find((id) => owners.get(id)?.closest('.pane.cur')),
           pageHidden: document.visibilityState === 'hidden',
           idle,
           saveData: net?.saveData === true,
@@ -108,11 +111,13 @@ export function createEngine(transport: Transport): Engine {
     });
   };
   const active = (): void => {
-    if (idle) (idle = false), hint();
+    idle = false;
+    hint();
     clearTimeout(idleTimer);
     idleTimer = setTimeout(() => ((idle = true), hint()), IDLE_MS);
   };
   document.addEventListener('visibilitychange', hint);
+  document.addEventListener('focusin', hint);
   window.addEventListener('pointerdown', active, { passive: true, capture: true });
   window.addEventListener('keydown', active, { passive: true, capture: true });
   active();
@@ -168,7 +173,8 @@ export function createEngine(transport: Transport): Engine {
       subs.get(msg.sub)?.patch(msg.ops);
     } else if (msg.t === 'fresh') subs.get(msg.sub)?.fresh?.(msg.count);
     else if (msg.t === 'state') subs.get(msg.sub)?.state?.(msg.state);
-    else if (msg.t === 'progress') pending.get(msg.req)?.watch?.progress?.(msg.sent, msg.total);
+    else if (msg.t === 'progress')
+      pending.get(msg.req)?.watch?.progress?.(msg.sent, msg.total, msg);
     else if (msg.t === 'delivery') pending.get(msg.req)?.watch?.delivery?.(msg.relays);
     else if (msg.t === 'result') {
       pending.get(msg.req)?.done(msg);
@@ -191,12 +197,16 @@ export function createEngine(transport: Transport): Engine {
     status,
     info,
     me: () => accounts.get().active ?? '',
-    open(query, handlers) {
+    open(query, handlers, owner) {
       const id = `s${++serial}`;
       subs.set(id, handlers);
+      if (owner) owners.set(id, owner);
       transport.post({ t: 'open', sub: id, query });
       return {
         id,
+        near: (ids) => {
+          if ((info.get()?.version ?? 0) >= 5) transport.post({ t: 'preview', sub: id, ids });
+        },
         window: (anchor, before, after) =>
           transport.post({
             t: 'window',
@@ -219,6 +229,8 @@ export function createEngine(transport: Transport): Engine {
         close() {
           if (!subs.delete(id)) return;
           visible.delete(id);
+          owners.delete(id);
+          hint();
           transport.post({ t: 'close', sub: id });
         },
       };
@@ -226,7 +238,25 @@ export function createEngine(transport: Transport): Engine {
     act(action, watch) {
       const req = `r${++serial}`;
       return new Promise((done) => {
-        pending.set(req, { done, watch });
+        const timer =
+          action.a === 'upload'
+            ? setTimeout(() => {
+                if (pending.delete(req))
+                  done({
+                    t: 'result',
+                    req,
+                    ok: false,
+                    error: { code: 'upload-timeout', message: action.server },
+                  });
+              }, 300_000)
+            : undefined;
+        pending.set(req, {
+          done: (result) => {
+            clearTimeout(timer);
+            done(result);
+          },
+          watch,
+        });
         transport.post(
           { t: 'act', req, action },
           action.a === 'upload' ? [action.bytes] : undefined,
@@ -248,10 +278,14 @@ export function createEngine(transport: Transport): Engine {
     configure: (config) => transport.post({ t: 'configure', config }),
     dispose() {
       document.removeEventListener('visibilitychange', hint);
+      document.removeEventListener('focusin', hint);
       window.removeEventListener('pointerdown', active, true);
       window.removeEventListener('keydown', active, true);
       clearTimeout(idleTimer);
       offPeople();
+      for (const [req, action] of pending)
+        action.done({ t: 'result', req, ok: false, error: { code: 'offline' } });
+      pending.clear();
       transport.close();
     },
   };

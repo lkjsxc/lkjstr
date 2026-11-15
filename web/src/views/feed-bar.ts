@@ -113,6 +113,7 @@ export function mountFeedBar(o: {
 
   const search = kind === 'search';
   const filter = (): Filter => ({ ...state.filter, ...(search ? { text: state.text } : {}) });
+  let applied = JSON.stringify(filterQuery(filter(), rich(env.engine)));
   const input = (): HTMLInputElement | null => slot.querySelector('input');
   const draw = (): void => {
     if (
@@ -131,16 +132,17 @@ export function mountFeedBar(o: {
       filterBar(
         f,
         search ? 'filter.search' : 'filter.query',
-        (next, typed) => {
-          const previous = filter();
+        (next, typed, apply = true) => {
           if (search) state.text = next.text;
           state.filter = search ? { ...next, text: undefined } : next;
           o.save();
           const full = rich(env.engine);
-          const narrowed =
-            JSON.stringify(filterQuery(next, full)) !== JSON.stringify(filterQuery(previous, full));
+          if (!apply) return;
+          const query = JSON.stringify(filterQuery(next, full));
+          const narrowed = query !== applied;
+          applied = query;
           if (!typed) draw();
-          if (narrowed || typed) o.reopen();
+          if (narrowed) o.reopen();
         },
         () => show(false),
         search ? undefined : clear,
@@ -167,6 +169,7 @@ export function mountFeedBar(o: {
   };
   const clear = (): void => {
     state.filter = {};
+    applied = JSON.stringify(filterQuery(filter(), rich(env.engine)));
     drafts.clear();
     slot.replaceChildren();
     o.save();

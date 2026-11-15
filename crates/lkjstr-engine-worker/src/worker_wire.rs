@@ -1,7 +1,7 @@
 use super::*;
+use lkjstr_core::engine::wire::{Input as W, Output as O, Session, actions::Action as A};
 impl Host {
     pub(super) fn receive_value(&mut self, id: u64, value: JsValue) {
-        use lkjstr_core::engine::wire::{Input as W, Session, actions::Action as A};
         if let Ok(mut input) = serde_wasm_bindgen::from_value::<W>(value.clone()) {
             if let W::Act {
                 req,
@@ -29,9 +29,7 @@ impl Host {
             self.receive(id, input);
         }
     }
-
     pub(super) fn receive(&mut self, id: u64, input: lkjstr_core::engine::wire::Input) {
-        use lkjstr_core::engine::wire::{Input as W, Session, actions::Action as A};
         if !self.loaded {
             if self.startup.len() < 256 {
                 self.startup.push((id, input));
@@ -42,10 +40,17 @@ impl Host {
             self.engine.client_tag = config.client_tag.unwrap_or(true);
         }
         match input {
+            W::Act {
+                req,
+                action: A::ServersCheck { server },
+            } => {
+                uploads::checks::start(self, id, req, server);
+                return;
+            }
             W::Stats { req } => {
                 self.scope.direct(
                     id,
-                    &lkjstr_core::engine::wire::Output::Stats {
+                    &O::Stats {
                         req,
                         stats: self.engine.stats(),
                     },
@@ -80,22 +85,23 @@ impl Host {
                         name,
                         mime,
                         bytes,
+                        server,
                     },
             } => {
                 if self.upload_inflight >= 4 {
                     self.scope.direct(id, &Session::failure(req, "too-large"));
                     return;
                 }
-                self.scope.direct(
+                self.upload_tasks.push(uploads::Task {
+                    deadline: lkjstr_core::engine::upload::Deadline::new(uploads::clock()),
                     id,
-                    &lkjstr_core::engine::wire::Output::Progress {
-                        req: req.clone(),
-                        sent: 0,
-                        total: bytes.len(),
-                    },
-                );
-                self.upload_tasks
-                    .push((id, req, account, name, mime, bytes));
+                    req,
+                    account,
+                    name,
+                    mime,
+                    bytes,
+                    server,
+                });
                 self.upload_inflight += 1;
                 return;
             }
@@ -104,7 +110,7 @@ impl Host {
                 action: A::AccountKey { pubkey },
             } => {
                 let result = match self.accounts.backup_key(&pubkey) {
-                    Ok(key) => lkjstr_core::engine::wire::Output::Result {
+                    Ok(key) => O::Result {
                         req,
                         ok: true,
                         error: None,
@@ -127,8 +133,7 @@ impl Host {
                 return;
             }
             W::Heartbeat => {
-                self.scope
-                    .direct(id, &lkjstr_core::engine::wire::Output::Heartbeat);
+                self.scope.direct(id, &O::Heartbeat);
                 if let Sink::Shared { clients, .. } = &mut self.scope {
                     clients.heartbeat(id, now());
                 }
@@ -180,8 +185,7 @@ impl Host {
                     } else {
                         self.discovery
                             .insert((id, req.clone()), self.time() + 60000);
-                        self.scope
-                            .direct(id, &lkjstr_core::engine::wire::Output::GetPublicKey { req });
+                        self.scope.direct(id, &O::GetPublicKey { req });
                     }
                 } else if self.account_tasks.len() < 32 {
                     self.account_tasks
@@ -208,11 +212,11 @@ impl Host {
             }
             _ => {}
         }
-        let opened = if let lkjstr_core::engine::wire::Input::Open { sub, .. } = &input {
-            Some(sub.clone())
-        } else {
-            None
+        let opened = match &input {
+            W::Open { sub, .. } => Some(sub.clone()),
+            _ => None,
         };
+        let refresh_previews = matches!(&input, W::Configure { .. } | W::Hint { .. });
         let translated = self
             .sessions
             .get(&id)
@@ -231,15 +235,16 @@ impl Host {
                     }
                 }
             }
-            Some(Err((Some(req), code))) => self
-                .scope
-                .direct(id, &lkjstr_core::engine::wire::Session::failure(req, code)),
+            Some(Err((Some(req), code))) => self.scope.direct(id, &Session::failure(req, code)),
             Some(Err((None, _))) => {
                 if let Some(sub) = opened {
-                    self.scope.direct(id,&lkjstr_core::engine::wire::Output::State{sub,state:serde_json::json!({"phase":"failed","relaysAsked":0,"relaysAnswered":0,"error":"unsupported"})});
+                    self.scope.direct(id,&O::State{sub,state:serde_json::json!({"phase":"failed","relaysAsked":0,"relaysAnswered":0,"error":"unsupported"})});
                 }
             }
             _ => {}
+        }
+        if refresh_previews {
+            previews::refresh(self);
         }
     }
 }

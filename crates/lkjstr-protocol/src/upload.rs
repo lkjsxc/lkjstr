@@ -3,6 +3,9 @@ use crate::UnsignedNostrEvent;
 use base64::{Engine as _, engine::general_purpose::STANDARD};
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
+pub fn method(blossom: bool) -> &'static str {
+    if blossom { "PUT" } else { "POST" }
+}
 pub fn hash(bytes: &[u8]) -> String {
     crate::bytes_to_hex(&Sha256::digest(bytes))
 }

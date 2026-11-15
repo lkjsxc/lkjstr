@@ -209,6 +209,7 @@ fn arriving_authors_do_not_cancel_a_delayed_batch() {
     e.tick(350);
     e.input(
         Input::Hint {
+            focused_sub: None,
             visible_subs: vec![],
             page_hidden: true,
             idle: false,

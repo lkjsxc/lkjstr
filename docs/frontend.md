@@ -55,6 +55,7 @@ Seams worth knowing inside `src/views/`:
 - `channels.ts` is the Channels tab, `channel-desk.ts` the head and the
   composer of a channel tab (which is `feed.ts`), `channel-parts.ts` what
   both share. `gated.ts` keeps a view from an engine too old to serve it.
+  `compose-media.ts` retains failed files and their retry/server controls;
   `stats.ts` is the Stats tab (`Engine.stats()`, asked while in front).
 - `wm/presets.ts` has two layout families: `main` for an account and `guest`
   for a visitor; `main.ts` shows the one that fits who is signed in.
@@ -80,6 +81,9 @@ Seams worth knowing inside `src/views/`:
 - Protocol 3 adds the query fields `phrases`, `exclude`, `has`, `from`,
   `notifications` and `show`. The interface draws their controls only for an
   engine that reports 3 (`views/can.ts`: `rich`).
+- Protocol 5 adds optional `NoteRow.previews`, `linkPreviews` configuration,
+  and the `preview` near-note hint. The Worker probes same-origin health once;
+  absent service means absent cards. UI hints carry ids, never parsed links.
 - Protocol 4 adds channels (NIP-28): the sources `channels` and `channel`,
   `ChannelRow`, `NoteRow.channel`, `Draft.channel` and the actions
   `channel.join`, `channel.save`, `channel.seen`. Nothing about channels is
@@ -118,7 +122,7 @@ pnpm build          # mock ../dist, prints "ok build"
 pnpm build:real     # Rust package plus real-engine ../dist
 pnpm smoke:real     # real app against loopback fixtures only
 pnpm package        # pack current dist into ../tmp/lkjstr-dist.tar.gz
-pnpm smoke          # build, then drive Chromium against the mock; prints "ok smoke"
+pnpm smoke          # mock UI, then real-engine loopback uploads; prints ok lines
 pnpm shots          # screenshots to ../tmp/screens (all sizes, themes, languages)
 pnpm vitest run tests/undo.test.ts   # one test file
 pnpm fix            # biome --write

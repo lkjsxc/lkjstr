@@ -102,13 +102,8 @@ explicit cost, not a Pareto improvement across all read and write metrics.
 The manual real-WASM public probe is scripts/engine-orchestration-sample.mjs;
 it permits REQ/CLOSE only and is excluded from automated gates.
 
-Deferred cleanly: dynamic author-outbox discovery and a device-dependent global
-two-cover planner, persisted relay quality/backoff, keyboard-focus scheduling,
-merged multi-filter REQs, and person/event weights for hydration and retention.
-Global author-sharded requests need paging evidence keyed by route and shard,
-with union completion and stable cursors, before replacing whole-filter routing.
-Persisted observations need bounded age-decayed samples and restart-clock tests.
-Focus scheduling needs an explicit focused-subscription protocol field. Person
-weights should be one account-scoped policy with mute exclusion and separately
-validated interaction evidence; retention needs quality/freshness adversarial
-fixtures. These are not exposed as partially implemented settings or weights.
+The read follow-up now ships route-local cursors, durable cooldown/quality,
+finite multi-filter envelopes, focused work, account-scoped weights, request
+purposes and channel metadata discovery. Exact scope, scorecards and remaining
+designs: [outbox.md](outbox.md). Dynamic author two-cover, live count-bucket merging
+and weighted retention remain out of the product.

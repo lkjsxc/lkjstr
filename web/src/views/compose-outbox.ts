@@ -3,7 +3,7 @@ import type { Delivery, Draft, Failure } from '../engine/protocol.ts';
 import { h } from '../shared/h.ts';
 import { t } from '../shared/i18n.ts';
 import { kv } from '../shared/storage.ts';
-import { loadViewState, saveViewState } from '../shared/view-state.ts';
+import { loadViewState } from '../shared/view-state.ts';
 import { failureText } from './can.ts';
 import type { ViewEnv } from './registry.ts';
 
@@ -43,7 +43,7 @@ export function createChannelOutbox(
       listeners: new Set(),
     };
     boxes.set(key, box);
-    saveViewState(key, { id: box.id, drafts: box.drafts });
+    kv.set(`view:${key}`, { id: box.id, drafts: box.drafts });
   }
   const { id, drafts, busy, listeners } = box;
   const release = (): void => {
@@ -52,7 +52,7 @@ export function createChannelOutbox(
   const el = h('div', { class: 'outbox' });
   const notify = (): void => {
     // A retired tab may still have an unsettled send; it must not recreate or overwrite a fresh tab.
-    if (loadViewState<{ id: string }>(key).id === id) saveViewState(key, { id, drafts });
+    if (loadViewState<{ id: string }>(key).id === id) kv.set(`view:${key}`, { id, drafts });
     for (const listener of listeners) listener.draw();
     release();
   };

@@ -1,13 +1,34 @@
-//! Four concurrent uploads, 20 MiB each; auth waits and HTTP requests are bounded.
+//! Four uploads, 20 MiB each. One visible destination; every signer/HTTP wait ends.
 use super::*;
+use lkjstr_core::engine::upload::Deadline;
 use lkjstr_core::engine::wire::{Output as W, Session};
-use lkjstr_protocol::{UnsignedNostrEvent, upload};
+#[path = "worker_upload_attempt.rs"]
+mod attempt;
+#[path = "worker_server_check.rs"]
+pub(super) mod checks;
+#[path = "worker_upload_http.rs"]
+mod http;
+#[path = "worker_upload_sign.rs"]
+mod signing;
+pub(super) fn clock() -> u64 {
+    crate::measure::now() as u64
+}
+pub(super) struct Task {
+    pub id: u64,
+    pub req: String,
+    pub account: String,
+    pub name: String,
+    pub mime: String,
+    pub bytes: Vec<u8>,
+    pub server: Option<String>,
+    pub deadline: Deadline,
+}
 pub(super) fn pump_uploads(host: &Rc<RefCell<Host>>) {
     let tasks = std::mem::take(&mut host.borrow_mut().upload_tasks);
-    for (id, req, account, name, mime, bytes) in tasks {
+    for mut task in tasks {
         let host = host.clone();
         wasm_bindgen_futures::spawn_local(async move {
-            let result = run(&host, id, &account, &name, &mime, &bytes).await;
+            let result = task.run(&host).await;
             let mut h = host.borrow_mut();
             h.upload_inflight = h.upload_inflight.saturating_sub(1);
             if h.stopped {
@@ -15,16 +36,9 @@ pub(super) fn pump_uploads(host: &Rc<RefCell<Host>>) {
             }
             let out = match result {
                 Ok(uploaded) => {
-                    h.scope.direct(
-                        id,
-                        &W::Progress {
-                            req: req.clone(),
-                            sent: bytes.len(),
-                            total: bytes.len(),
-                        },
-                    );
+                    task.progress(&h, "uploading", task.bytes.len());
                     W::Result {
-                        req,
+                        req: task.req,
                         ok: true,
                         uploaded: Some(uploaded),
                         key: None,
@@ -33,191 +47,89 @@ pub(super) fn pump_uploads(host: &Rc<RefCell<Host>>) {
                         id: None,
                     }
                 }
-                Err(code) => Session::failure(req, code),
+                Err(code) => {
+                    let mut result = Session::failure(task.req, &code);
+                    if let W::Result {
+                        error: Some(error), ..
+                    } = &mut result
+                    {
+                        error.code = code;
+                        error.message = task.server;
+                    }
+                    result
+                }
             };
-            h.scope.direct(id, &out);
+            h.scope.direct(task.id, &out);
         });
     }
 }
-async fn sign(
-    host: &Rc<RefCell<Host>>,
-    id: u64,
-    event: UnsignedNostrEvent,
-) -> Result<lkjstr_protocol::NostrEvent, &'static str> {
-    let remote = host.borrow().accounts.remote(&event.pubkey);
-    if let Some(remote) = remote {
-        let raw = crate::browser::remote::rpc(
-            &remote,
-            "sign_event",
-            vec![serde_json::to_string(&event).map_err(|_| "internal")?],
-        )
-        .await?;
-        let signed =
-            lkjstr_protocol::parse_nostr_event_json(&raw, None).map_err(|_| "signer-refused")?;
-        lkjstr_core::actions::validate_signed_event(&event, &signed)
-            .map_err(|_| "signer-refused")?;
-        return Ok(signed);
-    }
-    let local = host.borrow().accounts.sign(&event)?;
-    if let Some(event) = local {
-        return Ok(event);
-    }
-    let req = {
-        let mut h = host.borrow_mut();
-        h.auth_next += 1;
-        format!("upload-auth-{}", h.auth_next)
-    };
-    let promise = js_sys::Promise::new(&mut |resolve, _| {
-        let mut h = host.borrow_mut();
-        h.upload_auth
-            .insert((id, req.clone()), (event.clone(), resolve));
-        h.scope.direct(
-            id,
-            &W::Sign {
-                req: req.clone(),
-                pubkey: event.pubkey.clone(),
-                event: serde_json::to_string(&event).unwrap_or_default(),
+impl Task {
+    fn progress(&self, host: &Host, phase: &str, sent: usize) {
+        host.scope.direct(
+            self.id,
+            &W::Progress {
+                req: self.req.clone(),
+                server: self.server.clone(),
+                phase: Some(phase.into()),
+                sent,
+                total: self.bytes.len(),
             },
         );
-    });
-    let result = crate::browser::promise::bounded(promise, 60, "signer-missing", || {}).await;
-    host.borrow_mut().upload_auth.remove(&(id, req));
-    let raw = result
-        .map_err(|_| "signer-missing")?
-        .as_string()
-        .ok_or("signer-refused")?;
-    let signed =
-        lkjstr_protocol::parse_nostr_event_json(&raw, None).map_err(|_| "signer-refused")?;
-    lkjstr_core::actions::validate_signed_event(&event, &signed).map_err(|_| "signer-refused")?;
-    Ok(signed)
-}
-async fn run(
-    host: &Rc<RefCell<Host>>,
-    id: u64,
-    account: &str,
-    name: &str,
-    mime: &str,
-    bytes: &[u8],
-) -> Result<serde_json::Value, &'static str> {
-    host.borrow().accounts.require_signer(account)?;
-    if !(mime.starts_with("image/") || mime.starts_with("video/") || mime.starts_with("audio/")) {
-        return Err("unsupported");
     }
-    for _ in 0..150 {
-        if host.borrow().stopped {
-            return Err("offline");
+    async fn run(&mut self, host: &Rc<RefCell<Host>>) -> Result<serde_json::Value, String> {
+        self.progress(&host.borrow(), "discovering", 0);
+        host.borrow().accounts.require_signer(&self.account)?;
+        if !(self.mime.starts_with("image/")
+            || self.mime.starts_with("video/")
+            || self.mime.starts_with("audio/"))
+        {
+            return Err("unsupported".into());
         }
-        if host.borrow().engine.upload_servers_ready(account) {
-            break;
-        }
-        crate::browser::promise::pause(100)
-            .await
-            .map_err(|_| "internal")?;
-    }
-    if !host.borrow().engine.upload_servers_ready(account) {
-        return Err("offline");
-    }
-    let servers = {
-        let h = host.borrow();
-        h.engine.upload_servers(account)
-    };
-    if servers.is_empty() {
-        return Err("not-found");
-    }
-    let hash = upload::hash(bytes);
-    let mut failure = "offline";
-    for server in servers.into_iter().take(8) {
-        if !lkjstr_core::engine::settings::valid_server(&server) {
-            continue;
-        }
-        for blossom in [true, false] {
-            if host.borrow().stopped {
-                return Err("offline");
+        if self.server.is_none() {
+            for _ in 0..150 {
+                if host.borrow().stopped {
+                    return Err("offline".into());
+                }
+                if host.borrow().engine.upload_servers_ready(&self.account) {
+                    break;
+                }
+                crate::browser::promise::pause(self.deadline.wait(clock(), 100)?)
+                    .await
+                    .map_err(|_| "internal")?;
             }
-            let endpoint = if blossom {
-                format!("{}/upload", server.trim_end_matches('/'))
-            } else {
-                let parsed = url_origin(&server).ok_or("rejected")?;
-                let discovery = crate::browser::http::get(
-                    &format!("{parsed}/.well-known/nostr/nip96.json"),
-                    "application/json",
-                    65536,
-                )
-                .await;
-                let Ok(discovery) = discovery else {
-                    continue;
-                };
-                let value: serde_json::Value =
-                    serde_json::from_str(&discovery.body).unwrap_or_default();
-                let Some(api) = value["api_url"]
-                    .as_str()
-                    .filter(|u| lkjstr_core::engine::settings::valid_server(u))
-                else {
-                    continue;
-                };
-                api.to_owned()
-            };
-            let event = sign(
-                host,
-                id,
-                upload::auth(account.into(), now() / 1000, &endpoint, &hash, blossom),
-            )
-            .await?;
-            let auth = upload::authorization(&event).map_err(|_| "internal")?;
-            let data = js_sys::Uint8Array::from(bytes);
-            let body: JsValue = if blossom {
-                data.into()
-            } else {
-                let parts = js_sys::Array::new();
-                parts.push(&data);
-                let options = web_sys::BlobPropertyBag::new();
-                options.set_type(mime);
-                let blob = web_sys::Blob::new_with_u8_array_sequence_and_options(&parts, &options)
-                    .map_err(|_| "internal")?;
-                let form = web_sys::FormData::new().map_err(|_| "internal")?;
-                form.append_with_blob_and_filename("file", &blob, name)
-                    .map_err(|_| "internal")?;
-                form.into()
-            };
-            let response = crate::browser::http::request(
-                &endpoint,
-                "application/json",
-                65536,
-                if blossom { "PUT" } else { "POST" },
-                Some(&body),
-                if blossom { Some(mime) } else { None },
-                Some(&auth),
-            )
-            .await;
-            if let Ok(response) = response {
-                failure = if response.status == 413 {
-                    "too-large"
-                } else {
-                    "rejected"
-                };
-                if matches!(response.status, 200 | 201)
-                    && let Some(value) = upload::uploaded(&response.body, mime, &hash, blossom)
-                {
-                    let mut h = host.borrow_mut();
-                    // At most 64 discovered servers across replaced lists.
-                    if h.engine.servers.len() >= 64
-                        && let Some(old) = h.engine.servers.keys().next().cloned()
-                    {
-                        h.engine.servers.remove(&old);
-                    }
-                    h.engine.servers.insert(
-                        server.clone(),
-                        (if blossom { "blossom" } else { "nip96" }.into(), true),
-                    );
-                    h.engine.invalidate();
+            if !host.borrow().engine.upload_servers_ready(&self.account) {
+                return Err("upload-discovery".into());
+            }
+        }
+        let candidates = if let Some(server) = self.server.clone() {
+            vec![server]
+        } else {
+            match host.borrow().engine.upload_candidates(&self.account) {
+                Ok(servers) => servers,
+                Err(error) => {
+                    self.server = error.server;
+                    return Err(error.code);
+                }
+            }
+        };
+        let mut error = "not-found";
+        for server in candidates {
+            self.deadline.wait(clock(), 1)?;
+            self.server = Some(server.clone());
+            match self.run_server(host, &server).await {
+                Ok(value) => {
+                    self.deadline.wait(clock(), 1)?;
                     return Ok(value);
+                }
+                Err(failure) => {
+                    self.deadline.wait(clock(), 1)?;
+                    error = failure.code;
+                    if !failure.fallback {
+                        return Err(error.into());
+                    }
                 }
             }
         }
+        Err(error.into())
     }
-    Err(failure)
-}
-fn url_origin(url: &str) -> Option<String> {
-    let authority = url.strip_prefix("https://")?.split('/').next()?;
-    Some(format!("https://{authority}"))
 }

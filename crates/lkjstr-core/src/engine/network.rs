@@ -3,6 +3,8 @@ use super::protocol::{Output, Query, Source};
 use lkjstr_protocol::{NostrEvent, NostrFilter, filter_to_value, normalize_relay_url};
 use serde_json::{Value, json};
 use std::collections::{BTreeMap, BTreeSet};
+#[path = "network_batch.rs"]
+mod batch;
 #[path = "network_cancel.rs"]
 mod cancellation;
 #[path = "network_config.rs"]
@@ -15,12 +17,22 @@ mod lists;
 mod messages;
 #[path = "network_stats.rs"]
 mod observations;
+#[path = "network_paging.rs"]
+mod paging;
+#[path = "network_plan.rs"]
+mod planning;
+#[path = "request_policy.rs"]
+mod policy;
 #[path = "network_profiles.rs"]
 mod profiles;
 #[path = "network_publication_history.rs"]
 mod publication_history;
 #[path = "network_publications.rs"]
 mod publications;
+#[path = "network_quality.rs"]
+mod quality;
+#[path = "network_observations.rs"]
+mod routing_observations;
 #[path = "network_tick.rs"]
 mod scheduler;
 use scheduler::filter_live;
@@ -36,6 +48,10 @@ pub enum Effect {
 }
 #[derive(Default)]
 pub struct Relay {
+    pub cooldown_until: u64,
+    pub quality_at: u64,
+    pub prior_useful: u64,
+    pub prior_received: u64,
     pub online: bool,
     pub connecting: bool,
     pub last_rx: u64,
@@ -50,6 +66,7 @@ pub struct Relay {
     pub useful: u64,
     pub sent: u64,
     pub max_reqs: usize,
+    pub max_filters: usize,
     pub max_limit: u64,
     pub nip11: bool,
     pub next_req_at: u64,
@@ -57,7 +74,12 @@ pub struct Relay {
 }
 pub(super) struct Request {
     pub relay: String,
+    pub wire_id: String,
+    pub purpose: &'static str,
+    pub priority: u8,
+    pub weight: u64,
     pub filter: NostrFilter,
+    pub page_filter: NostrFilter, // Logical union, independent of the route cursor.
     pub members: BTreeSet<String>,
     pub sent: bool,
     pub eose: bool,
@@ -91,6 +113,10 @@ pub(super) struct Publication {
 #[derive(Default)]
 pub struct Network {
     pub relays: BTreeMap<String, Relay>,
+    observations: BTreeMap<String, quality::Observation>,
+    pub quality_revision: u64,
+    pub focused_sub: Option<String>,
+    pub now: u64,
     pub relay_order: Vec<String>,
     // At most 24 configured routes awaiting a free slot; retried each tick.
     pub deferred_relays: BTreeSet<String>,
@@ -112,128 +138,4 @@ pub struct Network {
     pub(super) profiles_changed: bool,
     pub verifying: bool,
     pub(super) reported: BTreeMap<String, String>,
-}
-impl Network {
-    pub fn plan(
-        &mut self,
-        wants: Vec<(String, NostrFilter, Query)>,
-        store: &crate::store::Store,
-        now: u64,
-    ) {
-        self.reported
-            .retain(|sub, _| wants.iter().any(|(id, _, _)| id == sub));
-        if self.relays.is_empty() {
-            for (sub, _, _) in &wants {
-                if self.reported.get(sub).is_none_or(|s| s != "error") {
-                    self.output.push(Output::Status {
-                        sub: sub.clone(),
-                        state: "error".into(),
-                        asked_relays: 0,
-                        answered_relays: 0,
-                    });
-                    self.reported.insert(sub.clone(), "error".into());
-                }
-            }
-        }
-        let live_lists = lists::views(&wants);
-        let mut desired = Desired::new();
-        for (sub, f, q) in wants {
-            let routes: Vec<String> = if q.source == Source::Relay {
-                q.target
-                    .into_iter()
-                    .filter(|r| self.relays.contains_key(r))
-                    .collect()
-            } else {
-                self.read_routes(&f, &q, store, now)
-            };
-            let mut routes = routes;
-            routes.extend(
-                q.filters
-                    .relay_hints
-                    .iter()
-                    .filter(|u| self.relays.contains_key(*u))
-                    .cloned(),
-            );
-            routes.sort();
-            routes.dedup();
-            for r in routes {
-                let key = (r, filter_to_value(&f).to_string());
-                let entry = desired.entry(key).or_insert((f.clone(), BTreeSet::new()));
-                entry.1.insert(sub.clone());
-            }
-        }
-        self.stabilize_profiles(&mut desired);
-        let mut retained = BTreeSet::new();
-        for ((relay, _key), (filter, members)) in desired {
-            let list_watch = lists::watch(&filter, &members, &live_lists);
-            let live = filter_live(&filter) || members.contains("~account-discovery") || list_watch;
-            let existing = self
-                .requests
-                .iter_mut()
-                .find(|(_, r)| r.relay == relay && r.filter == filter);
-            if let Some((id, r)) = existing {
-                let close = r.watch_list(live, now);
-                r.list_watch = list_watch;
-                let relay = r.relay.clone();
-                let id = id.clone();
-                r.refresh_profile(&members, now);
-                r.live |= members.contains("~account-discovery");
-                r.members = members;
-                retained.insert(id.clone());
-                if close {
-                    self.send(&relay, json!(["CLOSE", id]));
-                }
-            } else {
-                self.next += 1;
-                let id = format!("e{}", self.next);
-                retained.insert(id.clone());
-                self.requests.insert(
-                    id,
-                    Request {
-                        relay,
-                        filter: filter.clone(),
-                        members,
-                        sent: false,
-                        eose: false,
-                        page_eose: false,
-                        deadline: u64::MAX,
-                        last_event: None,
-                        sent_at: 0,
-                        last_rx: now,
-                        complete: false,
-                        live,
-                        list_watch,
-                        asked: false,
-                        ready_at: now,
-                        received: BTreeSet::new(),
-                        page_limit: 200,
-                        oldest: None,
-                        retry_delay: 1000,
-                    },
-                );
-            }
-        }
-        let obsolete: Vec<_> = self
-            .requests
-            .keys()
-            .filter(|id| !retained.contains(*id))
-            .cloned()
-            .collect();
-        for id in obsolete {
-            if let Some(r) = self.requests.remove(&id)
-                && r.sent
-            {
-                self.send(&r.relay, json!(["CLOSE", id]));
-            }
-        }
-        self.tick(now);
-    }
-    pub(super) fn send(&mut self, relay: &str, value: Value) {
-        if let Some(r) = self.relays.get_mut(relay) {
-            r.sent += 1;
-            r.bytes_out += value.to_string().len() as u64;
-        }
-        self.effects
-            .push(Effect::Send(relay.into(), value.to_string()));
-    }
 }
