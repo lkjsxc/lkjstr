@@ -17,6 +17,7 @@ import { startResize } from './resize.ts';
 import type { Space } from './spaces.ts';
 import { keepStrips } from './strip.ts';
 import { startTabDrag } from './tab-drag.ts';
+import { goCompose, openTabSearch, type TabFinder } from './tab-search.ts';
 import { mountWmKeys } from './wm-keys.ts';
 
 export type Wm = {
@@ -24,6 +25,8 @@ export type Wm = {
   open(kind: string, state?: object): void;
   /** Shows the tab of this kind that is already open somewhere, or opens one (the way to the accounts). */
   go(kind: string): void;
+  /** A tab to write in, with the keyboard in it: the one that is open, unless the setting asks for a new one. */
+  compose(): void;
   /** Closes every tab of this kind (the sign-in tab has done its work once someone is signed in). */
   drop(kind: string): void;
   dispose(): void;
@@ -215,8 +218,28 @@ export function createWmController(env: BaseEnv, host: Host, at: Space, family =
     const next = load(value);
     if (next && !disposed && JSON.stringify(next) !== JSON.stringify(root)) set(next, false);
   });
+  const finder: TabFinder = {
+    anchor: () => rendered?.panes.get(cur()?.id ?? '')?.querySelector('.strip') ?? host.root,
+    tabs: () =>
+      L.views(root)
+        .filter((v) => kindOf(v) !== NEW_TAB)
+        .map((tab) => ({ tab, title: own.title(tab), here: cur()?.tabs.includes(tab) === true })),
+    show,
+    open: (kind, state) => openFrom(cur()?.active ?? '')(kind, state),
+    front: () => own.el(cur()?.active ?? ''),
+  };
+  const compose = (): void => goCompose(finder, env.settings.get().composeNew);
   const step = <T>(list: readonly T[], at: number, dir: number): T | undefined =>
     list[(at + dir + list.length) % list.length];
+  /** The tile before or after the current one (wrapping). */
+  const beside = (dir: number): L.PaneNode | undefined => {
+    const all = L.panes(root);
+    return step(
+      all,
+      all.findIndex((x) => x.id === cur()?.id),
+      dir,
+    );
+  };
   const offKeys = mountWmKeys({
     tab(dir) {
       const p = cur();
@@ -224,22 +247,12 @@ export function createWmController(env: BaseEnv, host: Host, at: Space, family =
       if (next) show(next);
     },
     tile(dir) {
-      const all = L.panes(root);
-      const next = step(
-        all,
-        all.findIndex((x) => x.id === cur()?.id),
-        dir,
-      );
+      const next = beside(dir);
       if (next) show(next.active);
     },
     send() {
-      const all = L.panes(root);
       const p = cur();
-      const to = step(
-        all,
-        all.findIndex((x) => x.id === p?.id),
-        1,
-      );
+      const to = beside(1);
       if (!p || !to || to.id === p.id) return;
       const tab = p.active;
       set(L.moveView(root, tab, to.id, 'center', to.tabs.length));
@@ -254,11 +267,8 @@ export function createWmController(env: BaseEnv, host: Host, at: Space, family =
       if (there) show(there);
       else if (p) openFrom(p.active)(kind), show(cur()?.active ?? '');
     },
-    open(kind) {
-      openFrom(cur()?.active ?? '')(kind);
-      const field = own.el(cur()?.active ?? '')?.querySelector<HTMLElement>('textarea, input');
-      field?.focus({ preventScroll: true });
-    },
+    compose,
+    search: () => openTabSearch(host.layer, finder),
   });
   render();
 
@@ -273,6 +283,7 @@ export function createWmController(env: BaseEnv, host: Host, at: Space, family =
       if (there) show(there);
       else openFrom('')(kind);
     },
+    compose,
     dispose() {
       disposed = true;
       offStore();

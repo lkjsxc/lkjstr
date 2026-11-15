@@ -712,6 +712,52 @@ async function keyboard(browser: Browser, still: Record<string, unknown>): Promi
     await page.keyboard.press('j');
     await page.screenshot({ path: shot.replace(/\.png$/, '-keys.png') });
   }
+  // Tab search: one key, a small field; it finds open tabs first and Enter goes there.
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('o');
+  await page.locator('.tsearch input').waitFor();
+  const all = await count(page, '.tab');
+  await page.keyboard.type('home');
+  fact(
+    'tab search lists the open tab first, then what could be opened',
+    (await count(page, '.tsearch .titem.open')) >= 1 &&
+      (await page.locator('.tsearch .titem').first().getAttribute('class'))?.includes('open') ===
+        true,
+  );
+  await page.keyboard.press('Enter');
+  fact(
+    'Enter goes to the open tab and opens nothing',
+    (await count(page, '.tsearch')) === 0 &&
+      (await count(page, '.pane.cur .tab.active[data-view="home"]')) === 1 &&
+      (await count(page, '.tab')) === all,
+  );
+  // The composer key returns to the composer that is open; a setting makes it open another.
+  const composers = await count(page, '.tab[data-view^="compose"]');
+  await page.keyboard.press('n');
+  fact(
+    'n goes to the Post tab that is open, with the caret in it',
+    (await count(page, '.tab[data-view^="compose"]')) === composers &&
+      (await page.evaluate(
+        () => document.activeElement?.matches('.view[data-kind="compose"] textarea') === true,
+      )) &&
+      (await page.locator(area).inputValue()) === 'jng?',
+  );
+  await page.keyboard.press('Escape');
+  await page.evaluate(() => localStorage.setItem('lkjstr:settings', '{"composeNew":true}'));
+  await page.evaluate(() =>
+    window.dispatchEvent(
+      new StorageEvent('storage', { key: 'lkjstr:settings', newValue: '{"composeNew":true}' }),
+    ),
+  );
+  await page.keyboard.press('n');
+  fact(
+    'with the setting, n opens another Post tab',
+    (await count(page, '.tab[data-view^="compose"]')) === composers + 1,
+  );
+  // One key closes the tab in front.
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('x');
+  fact('x closes the tab', (await count(page, '.tab[data-view^="compose"]')) === composers);
   await page.context().close();
 }
 

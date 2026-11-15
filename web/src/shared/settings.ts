@@ -18,6 +18,7 @@ export const DEFAULT_SETTINGS = {
   showFilters: true, // the filter row at the top of timelines and notifications
   showRelayCount: false, // connected relays in the top bar
   showSensitive: false, // content-warned notes open
+  composeNew: false, // the composer key always opens a new tab instead of going to the open one
 };
 export type Settings = typeof DEFAULT_SETTINGS;
 export type SettingKey = keyof Settings;
@@ -49,6 +50,7 @@ export const SETTINGS_SCHEMA: readonly SettingField[] = [
   field('tabWidth', num(0, 400)),
   field('closeClicks', num(1, 5)),
   field('showRelayCount', BOOL),
+  field('composeNew', BOOL),
 ];
 
 export const SETTINGS_KEY = 'settings';

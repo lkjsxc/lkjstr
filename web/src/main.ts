@@ -73,7 +73,12 @@ const top = createTopBar(host.bar, {
   settings,
   spaces: bar.el,
   layer: host.layer,
-  open: (kind, state) => (kind === 'account' ? ctl?.go(kind) : ctl?.open(kind, state)),
+  open: (kind, state) =>
+    kind === 'account'
+      ? ctl?.go(kind)
+      : kind === 'compose' && !state
+        ? ctl?.compose()
+        : ctl?.open(kind, state),
 });
 update();
 // Signing in brings the reader's own layout, signing out the visitor's. A key that still has to be saved keeps
