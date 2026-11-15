@@ -7,6 +7,7 @@ struct Client {
     visible: BTreeSet<String>,
     last_seen: u64,
     page_hidden: bool,
+    focused: Option<String>,
 }
 #[derive(Default)]
 pub struct Clients {
@@ -45,6 +46,9 @@ impl Clients {
                 let sub = ns(sub);
                 c.subs.remove(&sub);
                 c.visible.remove(&sub);
+                if c.focused.as_ref() == Some(&sub) {
+                    c.focused = None;
+                }
                 Input::Close { sub }
             }
             Input::Window {
@@ -74,6 +78,7 @@ impl Clients {
             },
             Input::Hint {
                 visible_subs,
+                focused_sub,
                 page_hidden,
                 idle,
                 save_data,
@@ -88,7 +93,15 @@ impl Clients {
                         .filter(|s| c.subs.contains(s))
                         .collect()
                 };
+                c.focused = focused_sub.map(ns).filter(|s| c.visible.contains(s));
+                let focused_sub = self
+                    .clients
+                    .values()
+                    .filter(|c| c.focused.is_some())
+                    .max_by_key(|c| c.last_seen)
+                    .and_then(|c| c.focused.clone());
                 return vec![Input::Hint {
+                    focused_sub,
                     visible_subs: self
                         .clients
                         .values()

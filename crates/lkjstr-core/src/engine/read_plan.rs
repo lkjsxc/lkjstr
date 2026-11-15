@@ -15,6 +15,13 @@ pub struct Candidate {
 /// counts twice. Unknown authors stay on ordinary reader-selected routes.
 /// This bounded selector does not claim global two-cover or discover transports.
 pub fn select(candidates: &[Candidate], limit: usize) -> Vec<String> {
+    select_weighted(candidates, limit, |_| 1)
+}
+pub fn select_weighted(
+    candidates: &[Candidate],
+    limit: usize,
+    person: impl Fn(&str) -> u64,
+) -> Vec<String> {
     let mut selected = Vec::new();
     let mut covered = BTreeMap::<&str, usize>::new();
     while selected.len() < limit.min(candidates.len()) {
@@ -24,11 +31,13 @@ pub fn select(candidates: &[Candidate], limit: usize) -> Vec<String> {
             .max_by(|a, b| {
                 let utility = |r: &Candidate| {
                     let gain = r.authors.iter().fold(0u64, |sum, author| {
-                        sum.saturating_add(match covered.get(author.as_str()) {
-                            None => 2,
-                            Some(1) => 1,
-                            _ => 0,
-                        })
+                        sum.saturating_add(person(author).saturating_mul(
+                            match covered.get(author.as_str()) {
+                                None => 2,
+                                Some(1) => 1,
+                                _ => 0,
+                            },
+                        ))
                     });
                     r.weight.saturating_mul(1 + gain)
                 };
@@ -70,6 +79,7 @@ impl super::Network {
         f: &lkjstr_protocol::NostrFilter,
         q: &crate::engine::protocol::Query,
         store: &crate::store::Store,
+        private: &crate::engine::settings::PrivateLists,
         now: u64,
     ) -> Vec<String> {
         use crate::engine::protocol::Source;
@@ -87,6 +97,8 @@ impl super::Network {
                 let usage = self.known.get(url)?;
                 if !(if q.source == Source::Search {
                     usage.search
+                } else if q.source == Source::Channels {
+                    usage.read || usage.search
                 } else {
                     usage.read
                 }) {
@@ -94,20 +106,7 @@ impl super::Network {
                 }
                 Some(Candidate {
                     url: url.clone(),
-                    weight: weight(
-                        r.useful,
-                        r.received,
-                        r.latency_ms,
-                        r.failures,
-                        (!r.online && !r.connecting && now < r.retry_at)
-                            || (now < r.next_req_at
-                                && r.last_error
-                                    .as_deref()
-                                    .is_some_and(|e| e.starts_with("rate-limited:"))),
-                        r.last_error
-                            .as_deref()
-                            .is_some_and(|e| e.starts_with("auth-required:")),
-                    ),
+                    weight: r.quality_weight(now),
                     authors: authors
                         .iter()
                         .filter(|(_, list)| list.iter().any(|(u, _, write)| u == url && *write))
@@ -131,12 +130,13 @@ impl super::Network {
             .filter(|c| {
                 self.requests
                     .values()
-                    .any(|r| r.relay == c.url && r.filter == *f)
+                    .any(|r| r.relay == c.url && r.page_filter == *f)
             })
             .take(limit)
             .map(|c| c.url.clone())
             .collect();
-        for url in select(&candidates, limit) {
+        let weights = crate::engine::weights::Weights::new(store, private, q.account.as_deref());
+        for url in select_weighted(&candidates, limit, |p| weights.person(p)) {
             if routes.len() < limit && !routes.contains(&url) {
                 routes.push(url);
             }

@@ -63,6 +63,24 @@ describe('stats', () => {
     ]);
   });
 
+  it('sorts measured coverage and weights while keeping absent fields last', () => {
+    const rows = [
+      relay('absent'),
+      relay('zero', { followedCovered: 0, weight: 0 }),
+      relay('covered', { followedCovered: 20, weight: 600 }),
+    ];
+    expect(sortRelays(rows, { by: 'followedCovered', up: false }).map((r) => r.url)).toEqual([
+      'covered',
+      'zero',
+      'absent',
+    ]);
+    expect(sortRelays(rows, { by: 'weight', up: true }).map((r) => r.url)).toEqual([
+      'zero',
+      'covered',
+      'absent',
+    ]);
+  });
+
   it('writes sizes in decimal units', () => {
     expect(bytesText(0)).toBe('0 B');
     expect(bytesText(999)).toBe('999 B');

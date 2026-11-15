@@ -29,6 +29,7 @@ impl Session {
                 });
                 vec![p::Input::Hint {
                     visible_subs: hint.visible_subs,
+                    focused_sub: hint.focused_sub,
                     page_hidden: hint.page_hidden,
                     idle: hint.idle,
                     save_data: hint.save_data,

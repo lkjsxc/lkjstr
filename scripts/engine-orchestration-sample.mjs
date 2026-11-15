@@ -9,7 +9,9 @@ const npub = 'npub180cvv07tjdrrgpa0j7j7tmnyl2yr6yr7l8j4s3evf6u64th6gkwsyjh6w6';
 const provenance = 'https://fiatjaf.com/'; // Author's own page links this nostr:npub.
 const relays = ['wss://relay.damus.io/', 'wss://nos.lol/', 'wss://relay.primal.net/'];
 const durationMs = 30000;
-const root = resolve('tmp/engine-pkg');
+const root = resolve(process.env.LKJSTR_SAMPLE_ENGINE ?? 'tmp/engine-pkg');
+const withChannels = process.env.LKJSTR_SAMPLE_CHANNELS === '1';
+const allowInfo = process.env.LKJSTR_SAMPLE_NIP11 === '1';
 for (const [key, dir] of Object.entries({TMPDIR:'tmp/temp', XDG_CACHE_HOME:'tmp/cache', XDG_CONFIG_HOME:'tmp/config', XDG_DATA_HOME:'tmp/data'})) {
   process.env[key] = resolve(dir);
   await mkdir(process.env[key], {recursive:true});
@@ -18,6 +20,7 @@ const boot = `
 const allowed = new Set(${JSON.stringify(relays)});
 const observed = new Map();
 const ids = new Set();
+const requests = [], notices = [];
 const metrics = {attemptedConnections:0, connectionsOpened:0, requests:0, closes:0,
   eventsReceived:0, duplicateEvents:0, bytesIn:0, bytesOut:0, prohibitedFrames:0};
 const encoder = new TextEncoder();
@@ -36,6 +39,7 @@ self.WebSocket = new Proxy(NativeSocket, {construct(Target, args) {
     metrics.bytesIn += size; row.bytesIn += size;
     if (typeof data !== 'string') return;
     let frame; try {frame = JSON.parse(data);} catch {return;}
+    if (['NOTICE','CLOSED'].includes(frame[0]) && notices.length < 256) notices.push({at:Date.now(),url,frame,preceding:requests.filter(r=>r.url===url).slice(-8)});
     if (frame[0] !== 'EVENT') return;
     metrics.eventsReceived++; row.eventsReceived++;
     if (ids.has(frame[2]?.id)) {metrics.duplicateEvents++; row.duplicateEvents++;}
@@ -55,6 +59,7 @@ self.WebSocket = new Proxy(NativeSocket, {construct(Target, args) {
         }
       }
       metrics.requests++; row.requests++;
+      if (requests.length < 512) requests.push({at:Date.now(),url,id:frame[1],filters:frame.slice(2)});
     }
     else metrics.closes++;
     const size = encoder.encode(data).length;
@@ -68,7 +73,7 @@ const queued = []; self.onmessage = e => queued.push(e);
 await init(); self.engineHandle = start();
 const input = self.onmessage;
 self.onmessage = e => e.data.t === 'sample.metrics'
-  ? self.postMessage({t:'sample.metrics', metrics, relays:[...observed.values()]}) : input(e);
+  ? self.postMessage({t:'sample.metrics', at:Date.now(), metrics, requests, notices, relays:[...observed.values()]}) : input(e);
 for (const event of queued) self.onmessage(event);
 `;
 const server = createServer(async (req, res) => {
@@ -86,15 +91,19 @@ const origin = `http://127.0.0.1:${server.address().port}`;
 const browser = await chromium.launch({executablePath:process.env.LKJSTR_CHROME, args:['--no-sandbox']});
 const result = {sampledAt:new Date().toISOString(), npub, provenance, configuredRelays:relays, durationMs,
   groundTruthShare:null, publishDeliveries:null,
-  limitations:['Public ground truth is unknown.', 'Publication is prohibited.', 'NIP-11 and other HTTP lookups are blocked.']};
+  limitations:['Public ground truth is unknown.', 'Publication is prohibited.', allowInfo ? 'Only NIP-11 HTTP lookups are permitted.' : 'All external HTTP is blocked.']};
 try {
   const context = await browser.newContext();
   // Only local assets and guarded WebSockets. No profile-media HTTP or signer.
-  await context.route('**/*', route => route.request().url().startsWith(origin) ? route.continue() : route.abort());
+  await context.route('**/*', route => {
+    const req = route.request();
+    const info = allowInfo && req.headers().accept === 'application/nostr+json' && relays.some(r => req.url() === r.replace('wss:', 'https:'));
+    return new URL(req.url()).origin === origin || info ? route.continue() : route.abort();
+  });
   const page = await context.newPage();
   await page.goto(origin);
   await page.evaluate(({npub, relays}) => {
-    window.sample = {ready:false, notes:[], firstScreenMs:null, firstNoteMs:null, errors:[], stats:null, wire:null};
+    window.sample = {channels:[], ready:false, notes:[], firstScreenMs:null, firstNoteMs:null, errors:[], stats:null, wire:null};
     const ids = new Set();
     const worker = window.worker = new Worker('/worker.js', {type:'module'});
     worker.onerror = () => window.sample.errors.push('worker-error');
@@ -109,6 +118,7 @@ try {
       if (m.t === 'stats') s.stats = m.stats;
       if (m.t === 'sample.metrics') s.wire = m;
       const rows = [...(m.rows ?? []), ...(m.ops ?? []).flatMap(op => op.row ? [op.row] : op.rows ?? [])];
+      for (const row of rows) if (row.kind === 'channel' && row.creator && !s.channels.some(c=>c.id===row.id)) s.channels.push({id:row.id,name:row.name});
       for (const row of rows) if (row.kind === 'note' && !ids.has(row.id)) {
         ids.add(row.id);
         s.firstNoteMs ??= Math.round(performance.now() - s.started);
@@ -130,6 +140,24 @@ try {
     return {firstScreenMs, firstNoteMs, uniqueVerifiedNotes, errors, wire, stats};
   });
   Object.assign(result, sample);
+  if (withChannels) {
+    await page.evaluate(() => {
+      window.worker.postMessage({t:'open',sub:'public-channels',query:{source:'channels'}});
+      window.worker.postMessage({t:'window',sub:'public-channels',anchor:'top',before:0,after:50});
+    });
+    const channelStart = Date.now();
+    await page.waitForFunction(() => window.sample.channels.length > 0, null, {timeout:135000}).catch(() => {});
+    await page.waitForTimeout(2000);
+    result.channelWaitMs = Date.now() - channelStart;
+    await page.evaluate(() => {
+      window.sample.wire = null;
+      window.worker.postMessage({t:'close',sub:'public-channels'});
+      window.worker.postMessage({t:'sample.metrics'});
+    });
+    await page.waitForFunction(() => window.sample.wire);
+    result.channelSample = await page.evaluate(() => ({channels:window.sample.channels,wire:window.sample.wire}));
+    if (result.channelSample.wire.metrics.prohibitedFrames) throw new Error('read-only transport guard triggered');
+  }
   if (sample.wire.metrics.prohibitedFrames) throw new Error('read-only transport guard triggered');
   if (sample.errors.length) throw new Error('worker failed');
   if (sample.stats.relays.some(r => r.lastError?.includes('bad req'))) throw new Error('relay rejected malformed request');
@@ -138,9 +166,9 @@ try {
   process.exitCode = 1;
 } finally {
   await mkdir('tmp', {recursive:true});
-  await writeFile('tmp/orchestration-public.json', JSON.stringify(result, null, 2));
+  await writeFile(process.env.LKJSTR_SAMPLE_OUTPUT ?? 'tmp/orchestration-public.json', JSON.stringify(result, null, 2));
   console.log(JSON.stringify({firstScreenMs:result.firstScreenMs, uniqueVerifiedNotes:result.uniqueVerifiedNotes,
-    metrics:result.wire?.metrics, error:result.error}));
+    metrics:result.wire?.metrics, channels:result.channelSample?.channels.length, notices:result.channelSample?.wire.notices.length, error:result.error}));
   await browser.close();
   await new Promise(ok => server.close(ok));
 }

@@ -22,6 +22,7 @@ fn clients_have_isolated_ids_visibility_and_signing_responses() {
     let inputs = c.input(
         a,
         Input::Hint {
+            focused_sub: None,
             visible_subs: vec![],
             page_hidden: true,
             idle: false,

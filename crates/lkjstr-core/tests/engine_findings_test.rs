@@ -32,6 +32,7 @@ fn first_lists_require_successful_untruncated_owner_lookup() {
             },
         );
         e.network.connected(RELAY, 1);
+        e.network.tick(101);
         let req = frames(&mut e)
             .into_iter()
             .find(|f| f[0] == "REQ" && f[2]["authors"] == json!([key]))
@@ -185,6 +186,7 @@ fn evicted_owner_events_do_not_become_evidence_of_empty_lists() {
         },
     );
     e.network.connected(RELAY, 1);
+    e.network.tick(101);
     let req = frames(&mut e)
         .into_iter()
         .find(|f| f[0] == "REQ" && f[2]["authors"] == json!([key]))

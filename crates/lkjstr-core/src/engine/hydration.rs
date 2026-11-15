@@ -85,12 +85,25 @@ impl Engine {
             .cloned()
             .collect();
         for (sub, view) in self.views.iter().filter(|(_, v)| v.visible) {
-            for (author, seen) in authors(
+            let weights = super::weights::Weights::new(
+                &self.store,
+                &self.private_lists,
+                view.query.account.as_deref(),
+            );
+            let mut people: Vec<_> = authors(
                 &self.store,
                 view,
                 &self.network,
                 self.signed_out_global_filter,
-            ) {
+            )
+            .into_iter()
+            .filter(|(author, _)| weights.person(author) > 0)
+            .collect();
+            people.sort_by_key(|(author, _)| {
+                (std::cmp::Reverse(weights.person(author)), author.clone())
+            });
+            people.truncate(6000);
+            for (author, seen) in people {
                 let delivered: Vec<_> = seen
                     .into_iter()
                     .filter(|u| reads.contains(u))

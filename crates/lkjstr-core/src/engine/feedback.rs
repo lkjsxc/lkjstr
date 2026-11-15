@@ -20,11 +20,16 @@ impl Engine {
             || self.network.list_loaded(&self.store, account, 10063)
     }
     pub fn stats(&self) -> Value {
+        let followed = self
+            .views
+            .values()
+            .filter(|v| v.visible && v.query.source == super::protocol::Source::Home)
+            .filter_map(|v| v.query.account.as_deref())
+            .flat_map(|a| self.store.follows(a).unwrap_or_default())
+            .collect::<std::collections::BTreeSet<_>>();
+        let coverage = self.network.followed_coverage(&followed, &self.store);
         let publication_stats = self.network.publication_stats();
-        let mut open_subscriptions = std::collections::BTreeMap::<&str, usize>::new();
-        for request in self.network.requests.values().filter(|q| q.sent) {
-            *open_subscriptions.entry(&request.relay).or_default() += 1;
-        }
+        let open_subscriptions = self.network.open_wires();
         let urls = self
             .network
             .relays
@@ -44,23 +49,24 @@ impl Engine {
             if let (Some(row), Some(publication)) = (row.as_object_mut(), json!(publication_stats.get(url.as_str()).unwrap_or(&no_publications)).as_object()) {
                 row.extend(publication.clone());
             }
+            if let (Some(row), Some(routing)) = (row.as_object_mut(), self.network.routing_stats(url, coverage.get(url).copied().unwrap_or(0)).as_object()) { row.extend(routing.clone()); }
             row
         }).collect::<Vec<_>>();
         let network = self.network.relays.values().map(|r| r.useful).sum::<u64>();
-        let subscriptions = self.network.requests.values().filter(|q| q.sent).count();
+        let subscriptions: usize = open_subscriptions.values().sum();
         let coalesced = self
             .network
             .requests
             .values()
             .map(|q| q.members.len().saturating_sub(1))
-            .sum::<usize>();
-        let followed = self
-            .views
-            .values()
-            .filter(|v| v.visible && v.query.source == super::protocol::Source::Home)
-            .filter_map(|v| v.query.account.as_deref())
-            .flat_map(|a| self.store.follows(a).unwrap_or_default())
-            .collect::<std::collections::BTreeSet<_>>();
+            .sum::<usize>()
+            + self
+                .network
+                .requests
+                .values()
+                .filter(|r| r.sent)
+                .count()
+                .saturating_sub(subscriptions);
         let covering = self
             .network
             .requests
@@ -76,7 +82,7 @@ impl Engine {
             .map(|q| &q.relay)
             .collect::<std::collections::BTreeSet<_>>()
             .len();
-        json!({"recentPublications":self.network.recent_publications(),"relays":relays,"totals":{"eventsStored":self.store.len(),"cacheBytes":self.store.payload_bytes(),
+        json!({"requests":self.network.request_stats(),"recentPublications":self.network.recent_publications(),"relays":relays,"totals":{"eventsStored":self.store.len(),"cacheBytes":self.store.payload_bytes(),
             "subscriptions":subscriptions,"servedFromCache":self.metrics.served_from_cache,"servedFromNetwork":network},
             "orchestration":{"relaysCoveringFollowSet":covering,"requestsCoalesced":coalesced}})
     }

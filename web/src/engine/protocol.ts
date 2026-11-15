@@ -271,6 +271,8 @@ export type ProfileRow = {
 };
 
 export type PersonRow = {
+  /** Account-scoped selection weight; zero excludes a muted person. Feeds stay chronological. */
+  readonly weight?: number;
   readonly kind: 'person';
   readonly key: RowKey;
   readonly author: Author;
@@ -582,6 +584,8 @@ export type Account = {
 export type Hint = {
   /** Subscriptions whose tab is in front; the others may be paused. */
   readonly visibleSubs: readonly SubId[];
+  /** Subscription in the tile receiving keyboard input, when it has one. */
+  readonly focusedSub?: SubId;
   readonly pageHidden: boolean;
   /** No input for a few minutes. */
   readonly idle: boolean;
@@ -653,10 +657,33 @@ export type ToEngine =
 
 // engine-added 2026-11-15: 4
 export type EngineStats = {
+  /** At most 256 logical requests; wireId groups filters sharing one envelope. */
+  readonly requests?: readonly {
+    readonly id: string;
+    readonly relay: string;
+    readonly wireId: string;
+    readonly purpose:
+      | 'focused'
+      | 'visible'
+      | 'history'
+      | 'notifications'
+      | 'own'
+      | 'hydration'
+      | 'prefetch';
+    readonly priority: number;
+    readonly weight: number;
+    readonly received: number;
+    readonly sent: boolean;
+    readonly complete: boolean;
+    readonly members: number;
+  }[];
   readonly relays: readonly {
     readonly url: string;
     readonly state: string;
     readonly connectedSince: Millis | null;
+    readonly readRule?: 'reader' | 'search' | 'hint' | 'unused';
+    readonly followedCovered?: number;
+    readonly weight?: number | null;
     readonly eventsReceived: number;
     readonly duplicatesDropped: number;
     readonly openSubscriptions: number;

@@ -39,6 +39,7 @@ impl Network {
                         ..Default::default()
                     },
                 );
+                self.apply_quality(&d.url, now);
             }
         }
         let deliveries: BTreeMap<String, String> = routes
@@ -89,7 +90,10 @@ impl Network {
                     && p.sent
                         .get(relay)
                         .is_none_or(|at| now.saturating_sub(*at) >= 5000)
-                    && self.relays.get(relay).is_some_and(|r| r.online)
+                    && self
+                        .relays
+                        .get(relay)
+                        .is_some_and(|r| r.online && now >= r.cooldown_until)
                 {
                     p.sent.insert(relay.clone(), now);
                     frames.push((relay.clone(), p.event.clone()));
@@ -114,6 +118,9 @@ impl Network {
             })
             .cloned()
             .collect();
+        if !idle.is_empty() {
+            self.remember_quality(self.now);
+        }
         for url in idle {
             if self
                 .relays
@@ -182,7 +189,8 @@ impl Network {
                 r.sent = false;
                 let relay = r.relay.clone();
                 if was_sent {
-                    self.send(&relay, json!(["CLOSE", id]));
+                    let wire = r.wire_id.clone();
+                    self.close_group(&relay, &wire);
                 }
             }
         }

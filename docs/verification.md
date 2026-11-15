@@ -174,3 +174,24 @@ Worker conformance passes 211/211 checks with no page errors; the delayed profil
 probe also passes. Gate logs are under ignored tmp/review-*.log.
 Docker remains excluded by the worktree-only write rule. Changes are uncommitted;
 no CI files, production systems, deployments or existing services were changed.
+
+## Read orchestration follow-up (2026-11-15)
+
+All four quiet gates pass, as do frontend check, build and mock smoke. Worker
+conformance passes 216 checks with zero page errors; the delayed-profile probe
+measures 229.5 ms at 240 ms relay delay. Both real UI smokes pass 92 checks with
+zero page errors. Each uses fresh loopback ports and browser contexts.
+
+The first conformance attempt exposed healthy connection deadlines being saved
+as retry delays. Persistence now records retry only for disconnected transports,
+uses the engine clock, and has healthy-reload and rollback regressions. The rerun
+passes shared ownership, fallback leadership, reload and three-hour idle cases.
+Fresh wire IDs reject late EOSE after cancellation; resumption tests now assert
+filter identity and fresh envelopes instead of reusing subscription IDs.
+
+Stats captures were inspected at 1440 dark English and 390 dark Japanese in the
+mock, plus real outbox-stats-1440-dark and outbox-stats-390-dark captures. Native
+scorecards, the guarded public comparison and explicit omitted designs are in
+[outbox.md](outbox.md) and ignored tmp/outbox-report.md. Docker is excluded by the
+worktree-only write rule. No CI, production app, deployment or existing service
+was changed.

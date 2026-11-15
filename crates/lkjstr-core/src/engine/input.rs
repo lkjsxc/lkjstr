@@ -62,10 +62,13 @@ impl Engine {
             }
             Input::Hint {
                 visible_subs,
+                focused_sub,
                 page_hidden,
                 ..
             } => {
                 self.discovery_paused = page_hidden;
+                self.network.focused_sub =
+                    focused_sub.filter(|s| !page_hidden && visible_subs.contains(s));
                 for (id, v) in &mut self.views {
                     v.visible = !page_hidden && visible_subs.contains(id);
                 }

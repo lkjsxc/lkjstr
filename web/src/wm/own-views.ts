@@ -72,6 +72,7 @@ export function createOwnViews(
           const made: Mounted = { el, dispose: () => undefined, visible, top: 0 };
           const dispose = def?.mount(el, {
             ...env,
+            engine: { ...env.engine, open: (q, handlers) => env.engine.open(q, handlers, el) },
             instance: instance(tab),
             setTitle,
             visible,

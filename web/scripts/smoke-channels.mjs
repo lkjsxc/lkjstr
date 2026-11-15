@@ -104,7 +104,7 @@ export async function channelScenarios({ page, launch, check, fake, shots, shot 
     for (const width of [1440, 390]) {
       await page.setViewportSize({ width, height: width === 390 ? 844 : 900 });
       await page.locator('.statsv .stab:visible tbody tr').first().waitFor();
-      await shot(page, `orchestration-stats-${width}-dark.png`);
+      await shot(page, `outbox-stats-${width}-dark.png`);
     }
     if (viewport) await page.setViewportSize(viewport);
     await page.emulateMedia({ colorScheme: dark ? 'dark' : 'light' });

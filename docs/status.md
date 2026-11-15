@@ -160,15 +160,15 @@ through a deadline and reports success on first acceptance. Missing recipient
 lists are looked up; bounded persisted receipts route deletes after reload.
 All saved accounts refresh profile/follow/relay/mute/server records independently
 of cache. Read routes retain page evidence; Stats aggregates publication history
-once. Full outbox two-cover, persistent backoff, focus and weights remain deferred.
-Exact bounds, measured costs and remaining design: [orchestration.md](orchestration.md).
+once. Route cursors, durable cooldowns, focus, weights and request purposes ship.
+Two-cover and weighted retention remain deferred: [outbox.md](outbox.md).
 
 ## Verification
 
 Gate results: verification.md and engine-package.md. Browser runs use fresh
 ports/data, loopback WebSockets and intercepted HTTP only.
 Docker Compose remains excluded by the explicit worktree-only write rule:
-image/container storage is outside this worktree. No commit, deployment,
+image/container storage is outside this worktree. No deployment,
 production access, CI edit or existing-service restart is performed.
 
 Branch review covers first-list guards, eviction, search, signers and mute policy.

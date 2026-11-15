@@ -20,10 +20,16 @@ impl Network {
             } => {
                 if let Some(r) = self.relays.get_mut(relay) {
                     r.received += 1;
+                    self.quality_revision = self.quality_revision.wrapping_add(1);
                 }
-                if let Some(r) = self.requests.get_mut(&subscription_id).filter(|r| {
-                    r.relay == relay && r.sent && lkjstr_protocol::matches_filter(&event, &r.filter)
+                let mut accepted = false;
+                for r in self.requests.values_mut().filter(|r| {
+                    r.wire_id == subscription_id
+                        && r.relay == relay
+                        && r.sent
+                        && lkjstr_protocol::matches_filter(&event, &r.filter)
                 }) {
+                    accepted = true;
                     if !r.page_eose {
                         r.oldest = Some(
                             r.oldest
@@ -33,16 +39,20 @@ impl Network {
                             r.received.insert(event.id.clone());
                         }
                     }
+                }
+                if accepted {
                     return Some(event);
                 }
             }
             lkjstr_protocol::RelayMessage::Eose(subscription_id) => {
-                if let Some(r) = self
+                let mut close = false;
+                for r in self
                     .requests
-                    .get_mut(&subscription_id)
-                    .filter(|r| r.relay == relay && r.sent)
+                    .values_mut()
+                    .filter(|r| r.wire_id == subscription_id && r.relay == relay && r.sent)
                 {
                     self.profiles_changed = true;
+                    self.quality_revision = self.quality_revision.wrapping_add(1);
                     r.eose = true;
                     r.page_eose = true;
                     r.last_rx = now;
@@ -57,34 +67,35 @@ impl Network {
                     if !r.live {
                         r.complete = true;
                         r.sent = false;
-                        let relay = r.relay.clone();
-                        self.send(&relay, json!(["CLOSE", subscription_id]));
+                        close = true;
                     }
+                }
+                if close {
+                    self.send(relay, json!(["CLOSE", subscription_id]));
                 }
             }
             lkjstr_protocol::RelayMessage::Closed {
                 subscription_id,
                 message,
             } => {
-                if let Some(r) = self
+                for r in self
                     .requests
-                    .get_mut(&subscription_id)
-                    .filter(|r| r.relay == relay)
+                    .values_mut()
+                    .filter(|r| r.wire_id == subscription_id && r.relay == relay)
                 {
                     self.profiles_changed = true;
+                    self.quality_revision = self.quality_revision.wrapping_add(1);
                     if let Some(relay) = self.relays.get_mut(relay) {
                         relay.last_error = Some(message.chars().take(512).collect());
                     }
                     r.deadline = now;
-                    r.complete = !message.starts_with("rate-limited:");
+                    r.complete = !quality::limited(&message);
                     r.sent = false;
                     r.ready_at = if r.complete { now } else { now + 30000 };
-                    if message.starts_with("rate-limited:")
-                        && let Some(relay) = self.relays.get_mut(relay)
-                    {
-                        relay.next_req_at = now + 30000;
-                    }
                     r.eose = false;
+                }
+                if quality::limited(&message) {
+                    self.cool_down(relay, now);
                 }
             }
             lkjstr_protocol::RelayMessage::Ok {
@@ -97,7 +108,7 @@ impl Network {
                     && p.sent.contains_key(relay)
                     && now < p.deadline
                 {
-                    let retry = !accepted && message.starts_with("rate-limited:");
+                    let retry = !accepted && quality::limited(&message);
                     if !retry {
                         p.deliveries.insert(
                             relay.into(),
@@ -127,8 +138,15 @@ impl Network {
                         });
                     }
                     self.profiles_changed = true;
+                    self.quality_revision = self.quality_revision.wrapping_add(1);
                     self.update_publication(&event_id, &deliveries);
+                    if retry {
+                        self.cool_down(relay, now);
+                    }
                 }
+            }
+            lkjstr_protocol::RelayMessage::Notice(message) if quality::limited(&message) => {
+                self.cool_down(relay, now);
             }
             _ => {}
         }

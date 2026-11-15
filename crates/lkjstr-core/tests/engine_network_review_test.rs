@@ -108,6 +108,7 @@ fn connecting_sockets_are_released_on_close_hide_and_watchdog() {
         e.input(
             if hide {
                 Input::Hint {
+                    focused_sub: None,
                     visible_subs: vec![],
                     page_hidden: true,
                     idle: false,

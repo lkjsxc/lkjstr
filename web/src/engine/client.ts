@@ -60,7 +60,7 @@ export type Engine = {
   readonly info: Signal<{ engine: string; version: number } | null>;
   /** The active account's pubkey ('' when signed out). */
   me(): Pubkey;
-  open(query: Query, handlers: SubHandlers): Subscription;
+  open(query: Query, handlers: SubHandlers, owner?: HTMLElement): Subscription;
   act(action: Action, watch?: ActWatch): Promise<ActResult>;
   /** What the engine measured about itself, now. Undefined: this engine did not answer (it keeps no statistics). */
   stats(): Promise<EngineStats | undefined>;
@@ -75,6 +75,7 @@ const STATS_MS = 4000;
 export function createEngine(transport: Transport): Engine {
   const subs = new Map<string, SubHandlers>(); // bound: open subscriptions (one per mounted list)
   const pending = new Map<string, { done(r: ActResult): void; watch?: ActWatch }>(); // bound: actions in flight
+  const owners = new Map<string, HTMLElement>(); // bound: open subscriptions
   const visible = new Set<string>(); // bound: as `subs`
   const asked = new Map<string, (s: EngineStats | undefined) => void>(); // bound: `stats` requests in flight
   const accounts = createSignal<Accounts>({ accounts: [] });
@@ -97,6 +98,7 @@ export function createEngine(transport: Transport): Engine {
         t: 'hint',
         hint: {
           visibleSubs: [...visible],
+          focusedSub: [...visible].find((id) => owners.get(id)?.closest('.pane.cur')),
           pageHidden: document.visibilityState === 'hidden',
           idle,
           saveData: net?.saveData === true,
@@ -107,11 +109,13 @@ export function createEngine(transport: Transport): Engine {
     });
   };
   const active = (): void => {
-    if (idle) (idle = false), hint();
+    idle = false;
+    hint();
     clearTimeout(idleTimer);
     idleTimer = setTimeout(() => ((idle = true), hint()), IDLE_MS);
   };
   document.addEventListener('visibilitychange', hint);
+  document.addEventListener('focusin', hint);
   window.addEventListener('pointerdown', active, { passive: true, capture: true });
   window.addEventListener('keydown', active, { passive: true, capture: true });
   active();
@@ -163,9 +167,10 @@ export function createEngine(transport: Transport): Engine {
     status,
     info,
     me: () => accounts.get().active ?? '',
-    open(query, handlers) {
+    open(query, handlers, owner) {
       const id = `s${++serial}`;
       subs.set(id, handlers);
+      if (owner) owners.set(id, owner);
       transport.post({ t: 'open', sub: id, query });
       return {
         id,
@@ -180,6 +185,8 @@ export function createEngine(transport: Transport): Engine {
         close() {
           if (!subs.delete(id)) return;
           visible.delete(id);
+          owners.delete(id);
+          hint();
           transport.post({ t: 'close', sub: id });
         },
       };
@@ -209,6 +216,7 @@ export function createEngine(transport: Transport): Engine {
     configure: (config) => transport.post({ t: 'configure', config }),
     dispose() {
       document.removeEventListener('visibilitychange', hint);
+      document.removeEventListener('focusin', hint);
       window.removeEventListener('pointerdown', active, true);
       window.removeEventListener('keydown', active, true);
       clearTimeout(idleTimer);

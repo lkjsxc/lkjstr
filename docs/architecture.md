@@ -41,9 +41,10 @@ publication_plan.rs makes explicit kind-aware delivery plans; publication_discov
 fills missing inbox lists under the same deadline. Network owns retries and early
 success, plus bounded Stats receipts and a durable deletion-route ledger.
 read_plan.rs ranks configured routes by coverage and measured quality without
-changing complete filters or chronological feeds. Device-account refresh uses
+changing chronological feeds. Route-local cursors separate logical pages from
+wire envelopes. Account weights and request purposes are pure core policy. Device-account refresh uses
 independent per-kind requests. Bounds, scorecards and deferred work are in
-[orchestration.md](orchestration.md).
+[orchestration.md](orchestration.md) and [outbox.md](outbox.md).
 
 ## Bounds and storage
 

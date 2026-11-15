@@ -30,6 +30,7 @@ mod row_model;
 pub mod rows;
 pub mod settings;
 mod wants;
+pub mod weights;
 mod windows;
 pub mod wire;
 use crate::store::Store;

@@ -44,6 +44,7 @@ pub enum Anchor {
 #[serde(rename_all = "camelCase")]
 pub struct Hint {
     pub visible_subs: Vec<String>,
+    pub focused_sub: Option<String>,
     pub page_hidden: bool,
     #[serde(default)]
     pub idle: bool,

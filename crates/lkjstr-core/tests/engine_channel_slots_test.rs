@@ -135,7 +135,8 @@ fn channel_and_global_work_both_resume_on_one_slot() {
                     let f: Value = serde_json::from_str(&text).expect("frame");
                     if f[0] == "REQ" {
                         active += 1;
-                        if f[1] == global_id {
+                        if f[2]["kinds"] == json!([1, 6]) {
+                            assert_ne!(f[1], global_id, "resumption uses a fresh wire id");
                             global_resumed |= channel_served;
                         } else {
                             channel_served = true;

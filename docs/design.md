@@ -1,13 +1,11 @@
 # Design
 
 ## Purpose
-
 How lkjstr looks and behaves, as built in `web/`. This document and the
 owner's brief decide questions of look and feel; change it in the same change
 as the code. Structure and commands are in [frontend.md](frontend.md).
 
 ## Character
-
 A calm reading and writing tool that stays open all day beside other work.
 It is the same family as ytenrich: the same window manager, tab bars, menus,
 launcher, workspaces and settings page, with lkjstr's own colours. When in
@@ -22,7 +20,6 @@ doubt, do what ytenrich does.
 - Shadows only under what floats: menus, pickers, tab search, toasts.
 
 ## Colour
-
 Two colours carry meaning and nothing else is coloured: indigo (`--accent`)
 is action and selection, vermilion (`--seal`) is news (unread, the new-notes
 pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest
@@ -42,7 +39,6 @@ text, still reaches 4.5:1 on `--bg`. The theme follows the device or Settings.
 | `--seal` | `#d2432c` | `#ec6a4f` | Unread bar, new-notes pill |
 
 ## Type
-
 - One system sans stack with the Japanese families named. No web fonts.
 - Interface 13.5px / 1.45. Note text 15px / 1.6 (a setting); the focused note
   of a thread is 1.5px larger. Headers and context lines 12.5 to 13.5px.
@@ -51,7 +47,6 @@ text, still reaches 4.5:1 on `--bg`. The theme follows the device or Settings.
   Japanese (`word-break: auto-phrase`), never inside a word.
 
 ## The frame
-
 - Top bar, 38px: name, nine workspace chips, new note, account. The name is
   a menu (Settings, Relays, Stats, Docs). The relay count is a setting, off.
 - Signed in, the account is the active account's face (remembered on the
@@ -79,7 +74,6 @@ text, still reaches 4.5:1 on `--bg`. The theme follows the device or Settings.
 - A list fills its tile. Only media, single form controls and prose pages keep a measure of their own.
 
 ## Signed out, and accounts
-
 - A visitor's layout is their own but starts from the same arrangement, with
   Global and the Accounts tab in front (a reader: Home and Notifications).
   No welcome page, no prose. Signing in shows the reader's own layout and
@@ -105,7 +99,6 @@ text, still reaches 4.5:1 on `--bg`. The theme follows the device or Settings.
   account's own list, signed out, shows Sign in in place of an empty line.
 
 ## A note
-
 - Avatar circle (36px, a setting) in its own column; header line with name,
   NIP-05 with a tick when verified, and the time right-aligned. A face
   opens the profile wherever it is drawn, as the name does.
@@ -191,6 +184,8 @@ text, still reaches 4.5:1 on `--bg`. The theme follows the device or Settings.
 - Stats is numbers and quiet marks, no prose: five figures, then a sortable
   row per relay, trouble first; three publication columns group accepted/planned,
   pending/failed and exclusions by own/inbox/capacity limits; absent is a dash.
+  Route marks, followed-author coverage and weights are sortable columns. A second
+  table shows request purposes, weights, counts and quiet completion marks.
 - Docs is a tab with a tree of groups and pages: what lkjstr is, release
   and licence, keys and safety, relays, filters, shortcuts, the privacy
   policy, the terms. A page names its tab and is found by name in tab search.

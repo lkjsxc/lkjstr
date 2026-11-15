@@ -51,6 +51,7 @@ fn discovery_is_independent_of_views_and_retains_indexers() {
     assert!(!e.network.known["wss://index.test/"].write);
     e.input(
         Input::Hint {
+            focused_sub: None,
             visible_subs: vec![],
             page_hidden: true,
             idle: false,
