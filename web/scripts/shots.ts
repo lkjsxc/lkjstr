@@ -8,7 +8,8 @@ import { chromium, type Page } from 'playwright-core';
 
 const here = new URL('..', import.meta.url).pathname;
 const out = `${here}../tmp/screens`;
-const port = 18800 + Math.floor(Math.random() * 100);
+let base = '';
+const port = 0;
 const chrome =
   process.env.LKJSTR_CHROME ??
   `${process.env.HOME}/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome`;
@@ -28,7 +29,9 @@ mkdirSync(out, { recursive: true });
 const server = spawn(process.execPath, [`${here}scripts/serve.ts`, `--port=${port}`], {
   stdio: 'pipe',
 });
-await new Promise((r) => server.stdout?.once('data', r));
+base = await new Promise<string>((r) =>
+  server.stdout?.once('data', (data) => r(String(data).trim())),
+);
 const browser = await chromium.launch({ executablePath: chrome, args: ['--no-sandbox'] });
 try {
   for (const [width, height] of SIZES)
@@ -53,11 +56,13 @@ try {
           await ctx.addInitScript((m) => localStorage.setItem('lkjstr:mock', m), mock);
           const page = await ctx.newPage();
           try {
-            await page.goto(`http://127.0.0.1:${port}${path}`);
+            await page.goto(`${base}${path}`);
             await page.waitForSelector('.note');
             await act(page);
             await page.waitForTimeout(350); // pictures and fonts
             await page.screenshot({ path: `${out}/${name}-${tag}.png` });
+            if (name === 'tabsearch' && lang === 'en')
+              await page.screenshot({ path: `${out}/${name}-${width}-${theme}.png` });
           } catch (e) {
             failed.push(`${name}-${tag}: ${String(e).split('\n')[0]}`);
           }
@@ -71,6 +76,29 @@ try {
           await page.locator('.ncard > b').getByText(word, { exact: true }).first().click();
           await page.waitForSelector(`.view[data-kind="${kind}"] > *`);
         };
+        for (const [name, url] of [
+          ['news', 'https://news.example/picture'],
+          ['plain', 'https://news.example/article'],
+          ['x', 'https://x.com/aoi/status/123'],
+          ['failed', 'https://unavailable.example/path'],
+          ['ja', 'https://news.example/japanese'],
+          ['two', 'https://news.example/picture'],
+        ]) {
+          await scene(`card-${name}`, '/', async (page) => {
+            const row = page
+              .locator(`.note:has(.link-card[href="${url}"])`)
+              .filter({
+                hasText: name === 'two' ? 'Two pages.' : name === 'news' ? 'A page with' : '',
+              })
+              .first();
+            await row.locator('.nhead time').click();
+            await page.locator('.th-focus .link-card').first().waitFor();
+          });
+        }
+        await scene('tabsearch', '/', async (page) => {
+          await page.locator('.bar [data-tab-search]').click();
+          await page.locator('.tsearch input').waitFor();
+        });
         await scene('home', '/', async () => undefined);
         await scene('profile', '/p/aoi', (page) =>
           page.waitForSelector('.profile').then(() => undefined),

@@ -4,6 +4,7 @@
 import { h, replaceChildren } from '../shared/h.ts';
 import { t } from '../shared/i18n.ts';
 import { pressed } from '../shared/keys.ts';
+import { loadViewState, saveViewState } from '../shared/view-state.ts';
 
 export const NEW_TAB = 'new';
 export type Choice = {
@@ -32,7 +33,8 @@ export const matchesWords = (search: string, typed: string): boolean =>
     .filter(Boolean)
     .every((w) => search.includes(w));
 
-export function mountLauncher(el: HTMLElement, api: LauncherApi): Launcher {
+export function mountLauncher(el: HTMLElement, api: LauncherApi, instance = ''): Launcher {
+  const state = loadViewState<{ search?: string }>(instance);
   const list = h('div');
   const shown = (): Choice[] => {
     const text = filter.value.trim();
@@ -47,6 +49,8 @@ export function mountLauncher(el: HTMLElement, api: LauncherApi): Launcher {
       h('span', { class: 'muted' }, c.hint),
     );
   const update = (): void => {
+    state.search = filter.value;
+    if (instance) saveViewState(instance, state);
     const all = shown();
     replaceChildren(
       list,
@@ -61,6 +65,7 @@ export function mountLauncher(el: HTMLElement, api: LauncherApi): Launcher {
   };
   const filter = h('input', {
     type: 'search',
+    value: state.search ?? '',
     class: 'wide',
     placeholder: t('launcher.placeholder'),
     'aria-label': t('launcher.placeholder'),

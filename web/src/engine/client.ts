@@ -40,6 +40,7 @@ export type SubHandlers = {
 };
 export type Subscription = {
   readonly id: string;
+  near(ids: readonly string[]): void;
   window(anchor: Anchor, before: number, after: number): void;
   /** Whether its tab is in front (the engine may pause what is not). */
   visible(on: boolean): void;
@@ -166,6 +167,9 @@ export function createEngine(transport: Transport): Engine {
       transport.post({ t: 'open', sub: id, query });
       return {
         id,
+        near: (ids) => {
+          if ((info.get()?.version ?? 0) >= 5) transport.post({ t: 'preview', sub: id, ids });
+        },
         window: (anchor, before, after) =>
           transport.post({ t: 'window', sub: id, anchor, before, after }),
         visible(on) {

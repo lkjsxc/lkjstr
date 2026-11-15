@@ -4,7 +4,8 @@
 
 lkjstr is a browser-only, local-first Nostr client with a tiled workspace.
 Timelines, threads, profiles, notifications, search, composer, media, relays
-and settings run entirely in the browser. There is no lkjstr backend.
+and settings run entirely in the browser. The optional same-origin preview
+service retrieves public page metadata; accounts and relay data stay local.
 
 ## Parts
 

@@ -10,6 +10,7 @@ import bundle from 'playwright-core/lib/utilsBundle';
 import { fakeBunker } from '../../scripts/browser-bunker.mjs';
 import { fakeRelay } from '../../scripts/browser-relay.mjs';
 import { channelScenarios } from './smoke-channels.mjs';
+import { realReaderChecks, visitorRelayChecks } from './smoke-reader.mjs';
 import { openKeyField, seedLayouts } from './smoke-seed.mjs';
 import { writeReport } from './smoke-signer-support.mjs';
 import { signerScenarios } from './smoke-signers.mjs';
@@ -54,7 +55,7 @@ signer.stdin.write(
 fake.add(JSON.parse((await lines.next()).value));
 const server = spawn(
   process.execPath,
-  ['web/scripts/serve.ts', '--port=0', `--test-relay=${relayUrl}`],
+  ['web/scripts/serve.ts', '--port=0', '--test-previews', `--test-relay=${relayUrl}`],
   { stdio: ['ignore', 'pipe', 'pipe'] },
 );
 const errors = [],
@@ -267,29 +268,19 @@ try {
   await page.reload();
   await page.locator('.view[data-kind="global"] .note').first().waitFor();
   check('signed out survives a reload', await out(page));
-  await launch('Settings', 'settings');
-  const relayField = page.getByLabel('Relay address', { exact: true });
-  await relayField.fill(`${relayUrl}/visitor`);
-  await relayField.press('Enter');
-  await page.waitForTimeout(500);
-  check(
-    'signed-out relay edit is saved',
-    await page.evaluate(
-      (url) =>
-        JSON.parse(localStorage.getItem('lkjstr:relays:') ?? '[]').some(
-          (r) => r.url.replace(/\/$/, '') === url,
-        ),
-      `${relayUrl}/visitor`,
-    ),
-  );
-  await page.reload();
-  await page.getByLabel('Relay address', { exact: true }).waitFor();
-  // The form mounts before the engine returns its persisted relay rows.
-  const visitorRelay = page.locator(
-    `[data-entry="set.relayList"] .rhost[title^="${relayUrl}/visitor"]`,
-  );
-  await visitorRelay.waitFor();
-  check('signed-out relay edit survives reload', (await visitorRelay.count()) === 1);
+  await visitorRelayChecks({ page, relayUrl, check, launch });
+  await realReaderChecks({
+    browser,
+    base,
+    relayUrl,
+    fake,
+    fixture,
+    fixtureSign,
+    check,
+    onReader: (reader) => {
+      page = reader;
+    },
+  });
   check('no page errors', errors.length === 0);
 } catch (error) {
   checks.failure = String(error);

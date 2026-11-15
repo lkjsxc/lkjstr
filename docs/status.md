@@ -169,12 +169,6 @@ use fresh ports/data, loopback WebSockets and intercepted HTTP only.
 Docker Compose remains excluded by the explicit worktree-only write rule:
 image/container storage is outside this worktree. No commit, deployment,
 production access, CI edit or existing-service restart is performed.
-
-The branch-review fixes add five native regression tests for first-list guards,
-cache eviction, search routing, signer replacement and decrypted mute policy.
-The earlier branch-review run passed all four quiet gates and 53 local browser
-checks using the then-fetched contract. Report: tmp/engine-harness/report.json.
-
 ## One product
 
 web/ is the only interface. crates/lkjstr-engine-worker owns the Worker and
@@ -184,9 +178,6 @@ removed. Shared static icons and the loopback relay helper remain in use.
 Root build and quiet release gates build web/ with the real engine. No Trunk
 installation is needed. Docker configuration follows that build but cannot
 be run in this environment. Historical UI results do not verify this product.
-
-Review regressions cover nonnegative numeric counts, filtered-window refill,
-anchorless history fetches, and refused, timed-out or truncated profile lookups.
 
 ## Signer conformance follow-up (2026-11-15)
 
@@ -198,3 +189,12 @@ A shared loopback NIP-46 fixture checks optional/required connect tokens, signin
 reload credential reuse, refusal, disappearance during signing and recovery.
 Remote RPC failures retain signer-refused versus signer-missing; losing all RPC
 sockets now fails immediately and releases sockets instead of waiting a minute.
+## Reader state and optional previews (2026-11-15)
+
+Protocol 5 adds bounded per-note link previews and near-note hints. The Worker
+probes health once and runs HTTP after other work, with one request in flight.
+The optional Rust lkjstr-preview binary fetches public page metadata; static
+hosting remains usable without it. No hosting changes have been performed.
+Reader reveals and unfolds are stored with each tab, independently of rows;
+period fields accept common calendar and relative forms, and tab search finds
+other workspaces. Passing gates and browser coverage are in verification.md.

@@ -9,3 +9,6 @@ Implement the native static-asset server without browser or account ownership.
 - [assets.rs](assets.rs): bounded validation of the immutable deployment tree.
 - [lib.rs](lib.rs): HTTP routing, file service and response policy.
 - [main.rs](main.rs): check, serve, probe and graceful shutdown commands.
+
+- [preview/](preview/): optional bounded page metadata service.
+- [bin/](bin/): separate preview executable.

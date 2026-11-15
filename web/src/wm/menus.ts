@@ -38,7 +38,9 @@ export function openPopover(
   current?.();
   // What had the keyboard when it opened (a list driven by keys, not the button a key pressed for it).
   const before = document.activeElement as HTMLElement | null;
-  const inside = (e: Event): boolean => e.composedPath().includes(el);
+  const inside = (e: Event): boolean =>
+    e.composedPath().includes(el) ||
+    (el.classList.contains('tsearch') && !!(e.target as Element).closest?.('[data-tab-search]'));
   const close = (): void => {
     if (current !== close) return;
     current = undefined;

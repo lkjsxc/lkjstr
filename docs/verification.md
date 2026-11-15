@@ -145,3 +145,18 @@ All four quiet gates, real UI smoke and Worker conformance pass; the delayed
 profile probe passes without page errors. Frontend check, build, mock smoke and
 composer/channel screenshots pass. Docker remains excluded by the worktree-only
 write rule. Changes remain uncommitted; no CI or existing services were changed.
+
+## Notes, reader state and previews (2026-11-15)
+
+Frontend check, build and mock smoke pass. The four quiet root gates pass.
+Worker conformance passes 211/211 with no page errors; the delayed profile
+probe passes. Two full real-engine smokes pass 116/116 each, including a real
+minute of loopback arrivals, reveals/unfolds, metadata patches, reload/reopen,
+profile kind, zoom, inline audio, Docs choices, Stats sort, Settings drafts, dates,
+and cross-workspace tab search. Off/data-saver and covered-note request checks
+pass. Native preview tests cover refusal, deadlines, redirect budgets, charset
+handling, cache expiry/bounds/restart, CORS, permission and one-attempt policy.
+The card/tab-search matrix has 56 captures at 1440/390 in both themes/languages.
+No commit, CI edit, existing-service restart, production access or deployment
+was performed. Docker is excluded by the worktree-only write restriction.
+The service deployment handoff and state audit are in ignored tmp/ reports.

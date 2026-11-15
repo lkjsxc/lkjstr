@@ -17,6 +17,7 @@ mod input;
 pub mod metrics;
 pub mod network;
 mod network_limits;
+pub mod preview;
 pub mod protocol;
 pub mod query;
 mod query_hidden;
@@ -54,6 +55,7 @@ struct Signing {
     deadline: u64,
 }
 pub struct Engine {
+    pub previews: preview::Previews,
     pending_publications: usize,
     // At most 64 in-flight two-event creates; removed after both terminal outcomes.
     channel_creates: BTreeMap<String, channel_create::Creation>,
@@ -89,6 +91,7 @@ impl Default for Engine {
 impl Engine {
     pub fn new() -> Self {
         Self {
+            previews: Default::default(),
             pending_publications: 0,
             channel_creates: BTreeMap::new(),
             channel_pending: BTreeMap::new(),

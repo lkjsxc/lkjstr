@@ -13,8 +13,8 @@ export type TabFinder = {
   /** The tile the field opens over. */
   anchor(): HTMLElement;
   /** Every open tab of the workspace with its title, in tile order; `here`: in the current tile. */
-  tabs(): readonly { tab: string; title: string; here?: boolean }[];
-  show(tab: string): void;
+  tabs(): readonly { tab: string; title: string; here?: boolean; workspace?: number }[];
+  show(tab: string, workspace?: number): void;
   /** A new tab in the current tile, in front. */
   open(kind: string, state?: object): void;
   /** The element of the tab in front of the current tile. */
@@ -23,13 +23,13 @@ export type TabFinder = {
 
 /** The composer with the keyboard in it: the open one (in this tile, else anywhere), or with `fresh` a new one. */
 export function goCompose(api: TabFinder, fresh: boolean): void {
-  const all = api.tabs().filter((x) => kindOf(x.tab) === 'compose');
+  const all = api.tabs().filter((x) => !x.workspace && kindOf(x.tab) === 'compose');
   const there = fresh ? undefined : (all.find((x) => x.here) ?? all[0]);
   if (there) api.show(there.tab);
   else api.open('compose');
   api.front()?.querySelector<HTMLElement>('textarea')?.focus({ preventScroll: true });
 }
-type Hit = { title: string; hint: string; go(): void; open: boolean };
+type Hit = { title: string; hint: string; go(): void; open: boolean; workspace?: number };
 
 /** What the typed text finds: open tabs first, then the kinds a tab can be. Exported for tests. */
 export function tabHits(api: Pick<TabFinder, 'tabs' | 'show' | 'open'>, typed: string): Hit[] {
@@ -48,12 +48,22 @@ export function tabHits(api: Pick<TabFinder, 'tabs' | 'show' | 'open'>, typed: s
       const words = `${title} ${v ? both(v.title) : ''} ${tab}`.toLowerCase();
       return matchesWords(words, text);
     })
-    .map(({ tab, title }): Hit => ({ title, hint: '', open: true, go: () => api.show(tab) }));
+    .map(
+      ({ tab, title, workspace }): Hit => ({
+        title,
+        hint: '',
+        open: true,
+        workspace,
+        go: () => api.show(tab, workspace),
+      }),
+    );
   const kinds = CHOICES.choices().filter((c) => matchesWords(c.search, text));
   return [...tabs, ...kinds.map(kind), ...(text ? CHOICES.typed(text).map(kind) : [])];
 }
 
+let closeSearch: (() => void) | undefined;
 export function openTabSearch(layer: HTMLElement, api: TabFinder): void {
+  if (closeSearch) return closeSearch();
   const list = h('div', { class: 'tlist', role: 'listbox' });
   let hits: Hit[] = [];
   let at = 0;
@@ -81,6 +91,7 @@ export function openTabSearch(layer: HTMLElement, api: TabFinder): void {
                 onclick: () => pick(hit),
               },
               h('span', { class: 'clip' }, hit.title),
+              hit.workspace ? h('span', { class: 'tworkspace' }, String(hit.workspace)) : null,
               hit.hint ? h('span', { class: 'muted clip' }, hit.hint) : null,
             ),
           )
@@ -103,7 +114,13 @@ export function openTabSearch(layer: HTMLElement, api: TabFinder): void {
     },
   });
   const el = h('div', { class: 'tsearch' }, field, list);
-  const close = openPopover(layer, api.anchor(), el, { panel: true });
+  const close = openPopover(layer, api.anchor(), el, {
+    panel: true,
+    closed: () => {
+      closeSearch = undefined;
+    },
+  });
+  closeSearch = close;
   draw();
   field.focus({ preventScroll: true });
 }

@@ -114,6 +114,7 @@ export const en = {
   'filter.any': 'Any',
   'filter.mediaOnly': 'Only with',
   'filter.mediaNone': 'Without',
+  'filter.dateUnreadable': 'Not read as a date. Examples: 2026/11/15, 11/15, 3d',
   'filter.start': 'From',
   'filter.end': 'To',
   'filter.people': 'People',
@@ -169,6 +170,11 @@ export const en = {
   'set.showFilters': 'Reading: Filter row',
   'set.showFilters.d':
     'Puts the filter row at the top of timelines and notifications. Switched off, “/” still brings it and it stays while it narrows a list.',
+  'set.linkPreviews': 'Notes: Link previews',
+  'set.linkPreviews.d':
+    "Show a card with the title and picture of a linked page. To fetch it, the link's address is sent to lkjstr's preview service.",
+  'docs.previewPrivacy':
+    'When link previews are on, the addresses of linked pages are sent to lkjstr’s preview service to retrieve their titles and pictures.',
   'set.showSensitive': 'Reading: Open content warnings',
   'set.showSensitive.d': 'Show notes with a content warning without asking.',
   'set.uiScale': 'Layout: UI scale',
@@ -202,6 +208,7 @@ export const en = {
   'bar.relays': '{n}/{all} relays',
   'view.media': 'Media',
   'view.media.hint': 'Pictures and video of a note',
+  'media.reveal': 'Show media',
   'media.view': 'View media',
   'media.prev': 'Previous',
   'media.next': 'Next',
@@ -279,8 +286,7 @@ export const en = {
   'servers.invalid': 'That is not a server address (https://…)',
   'servers.unknown': 'Unknown protocol',
   'servers.down': 'Not answering',
-  'about.what':
-    'A Nostr client that runs in this browser. There is no lkjstr server and no account with us.',
+  'about.what': 'A Nostr client that runs in this browser. There is no account with lkjstr.',
   'about.version': 'Version',
   'about.engine': 'Engine',
   'about.engineIs': '{name}, protocol {n}',
@@ -451,7 +457,7 @@ export const en = {
   'docs.privacy': 'Privacy policy',
   'docs.terms': 'Terms',
   'docs.what.b':
-    'lkjstr is a Nostr client that runs entirely in this browser. There is no lkjstr server and no account with us. Fetching, storing, signing and publishing all happen here, and the browser talks to relays directly.\n\n## Tiles and tabs\nThe window is divided into tiles, and each tile holds tabs. Home, Global, Notifications, Post, a profile, a thread: everything you open is a tab. Drag a tab to reorder it, to move it to another tile, or drop it on the edge of a tile to split. The numbers in the top bar are nine workspaces, each with a layout of its own.\n\n## Reading\nA press on a note opens its thread, and a press on a name or a face opens the profile, as a new tab in the same tile. Shift-click splits it beside, a middle click opens it behind. At the very top of a list new notes flow in by themselves; anywhere else your place is kept and only a count of what is new is shown.\n\n## Posting\nWrite in the Post tab. A reaction or a repost is not sent until its Undo has gone, so a wrong press can be taken back as if it never happened.',
+    'lkjstr is a Nostr client that runs entirely in this browser. There is no account with lkjstr. Fetching, storing, signing and publishing all happen here, and the browser talks to relays directly.\n\n## Tiles and tabs\nThe window is divided into tiles, and each tile holds tabs. Home, Global, Notifications, Post, a profile, a thread: everything you open is a tab. Drag a tab to reorder it, to move it to another tile, or drop it on the edge of a tile to split. The numbers in the top bar are nine workspaces, each with a layout of its own.\n\n## Reading\nA press on a note opens its thread, and a press on a name or a face opens the profile, as a new tab in the same tile. Shift-click splits it beside, a middle click opens it behind. At the very top of a list new notes flow in by themselves; anywhere else your place is kept and only a count of what is new is shown.\n\n## Posting\nWrite in the Post tab. A reaction or a repost is not sent until its Undo has gone, so a wrong press can be taken back as if it never happened.',
   'docs.keys.b':
     'A Nostr account is its key. Whoever holds the secret key (nsec) is the account; a lost key cannot be restored by anyone and a leaked one cannot be revoked.\n\n## Ways to sign in\n- Browser extension (NIP-07): the key stays in the extension and lkjstr only asks it to sign. The safest way.\n- Remote signer (bunker://, NIP-46): the key stays in another signing app and never reaches lkjstr.\n- A new account, or an nsec: the key is stored in this browser. Save it with “Back up key” as soon as it is created.\n- An npub: read-only. You cannot post or react.\n\n## What lkjstr does\nA typed key is never shown, leaves the field the moment it is sent, and appears in no message. A secret key is shown only inside “Back up key”, and is covered again when you leave the page.\n\n## What to watch\nOn a shared computer avoid the ways that store a key, and remove the account when you are done. Clearing the browser’s data also removes the keys stored on this device.',
   'docs.relays.b':
@@ -463,7 +469,7 @@ export const en = {
   'docs.filters.rich':
     '## The query\n- words: notes that contain every word\n- "a phrase": notes that contain it exactly\n- -word: notes that do not contain it\n- from:name: notes by that person (a name, an npub or a NIP-05 name)\n- has:image, has:video, has:link: notes with a picture, a video or a link\n\n## The rest\n▶ opens the rest: showing replies and reposts, with or without media, a period from one day to another, the people to keep, and whether notifications flow into the timeline.',
   'docs.privacy.b':
-    'lkjstr has no server of its own. The host that serves this page receives no account, no key, and nothing you read or write. Settings, layouts, drafts and cached notes stay in this browser.\n\nTo read and post, your browser connects directly to the Nostr relays you choose and to the servers that hold media. Their operators can see your IP address and what you request or publish. Notes published to Nostr are public and may be impossible to take back.\n\nThere are no analytics, no advertising and no tracking cookies.',
+    'The host that serves this page receives no account or key. Settings, layouts, drafts and cached notes stay in this browser.\n\nTo read and post, your browser connects directly to the Nostr relays you choose and to the servers that hold media. Their operators can see your IP address and what you request or publish. Notes published to Nostr are public and may be impossible to take back.\n\nThere are no analytics, no advertising and no tracking cookies.',
   'docs.terms.b':
     'lkjstr is free software published under the Apache License 2.0. It is provided as it is, with no warranty of any kind.\n\n## Your responsibility\nYour keys and what you publish are your own responsibility. Notes published to Nostr are public and may be impossible to take back. Follow the law and the rules of the relays and media servers you use.\n\n## Third parties\nRelays, media servers and signing extensions or apps are provided by their own operators. lkjstr does not run them and is not responsible for what they hold or whether they are available.\n\n## Changes\nThis text may change as lkjstr is updated.',
 };

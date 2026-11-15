@@ -1,6 +1,3 @@
-// Every list of rows is this one view: home, global, a hashtag, search, bookmarks, a thread, a profile, people,
-// notifications. It keeps a window of rows around what is on screen and never lets the content jump: at the very
-// top new notes flow in by themselves; anywhere else the position holds and a quiet pill counts what is above.
 import type { Subscription } from '../engine/client.ts';
 import { applyOps } from '../engine/ops.ts';
 import type { Anchor, Query, Row, Source, SubState } from '../engine/protocol.ts';
@@ -19,6 +16,8 @@ import { mountScrub } from './feed-scrub.ts';
 import { feedTitle } from './feed-title.ts';
 import { filterQuery } from './filter-bar.ts';
 import { onHeld } from './held.ts';
+import { pauseNoteAudio } from './note-audio.ts';
+import { createPreviewWants } from './preview-wants.ts';
 import { mountProfileKinds } from './profile-kinds.ts';
 import type { ViewEnv } from './registry.ts';
 
@@ -38,6 +37,7 @@ type State = BarState & {
   show?: string;
   /** Where the reader is, so the tab comes back to the same note after anything: a reload, another tile. */
   pos?: Place;
+  extent?: number;
 };
 /** Tabs opened from a note: Escape closes them once nothing is selected. */
 const CHILD = new Set(['thread', 'profile', 'hashtag', 'following', 'followers', 'channel']);
@@ -62,6 +62,7 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
   const drawn = createRowList(list, env, DATED.has(kind));
   let rows: Row[] = [];
   let sub: Subscription | undefined;
+  const previews = createPreviewWants(el, () => sub);
   let atTop = true;
   let atBottom = false;
   let live = true;
@@ -98,11 +99,14 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
     ...kinds?.query(),
   });
   const request = (anchor: Anchor, before: number, after: number): void => {
+    if (kind === 'thread' && before + after > (state.extent ?? PAGE)) {
+      state.extent = Math.min(LIMIT, before + after);
+      save();
+    }
     waiting = true;
     sub?.window(anchor, before, after);
   };
 
-  /** Draws the rows and keeps what is on screen where it is. */
   const sync = (): void => {
     const settle = keeper.hold();
     drawn.draw(rows);
@@ -111,6 +115,7 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
     seat();
     settle();
     keys.paint();
+    previews.sync();
   };
   /** A thread opens on its focused note, the notes it answers above it: room is kept below so that the note can
    * stand at the top of the tile however few replies follow. */
@@ -217,7 +222,7 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
     });
     sub.visible(env.visible.get());
     if (place) request({ key: place.key }, PAGE, PAGE);
-    else request('top', 0, PAGE);
+    else request('top', 0, Math.max(PAGE, state.extent ?? PAGE));
     sync();
   };
   /** To the newest notes, wherever the window is. Nothing is shown in between: the scroll waits for the rows. */
@@ -263,6 +268,7 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
   open(true);
   const offVisible = env.visible.subscribe((on) => {
     sub?.visible(on);
+    if (!on) pauseNoteAudio(list);
     if (on) seat(), keeper.put(), follow();
   });
   const offAccounts = env.engine.accounts.subscribe((a) => {
@@ -283,6 +289,8 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
     bar();
     kinds?.dispose();
     scrub();
+    previews.dispose();
+    drawn.dispose();
     keys.dispose();
     keeper.dispose();
     sub?.close();

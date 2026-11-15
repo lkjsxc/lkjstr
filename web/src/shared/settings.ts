@@ -17,6 +17,7 @@ export const DEFAULT_SETTINGS = {
   relativeTime: false, // "3m" instead of the time of day
   showFilters: true, // the filter row at the top of timelines and notifications
   showRelayCount: false, // connected relays in the top bar
+  linkPreviews: true,
   showSensitive: false, // content-warned notes open
   composeNew: false, // the composer key always opens a new tab instead of going to the open one
   clientTag: true, // what the reader publishes says it was written with lkjstr
@@ -46,6 +47,7 @@ export const SETTINGS_SCHEMA: readonly SettingField[] = [
   field('relativeTime', BOOL),
   field('showFilters', BOOL),
   field('showSensitive', BOOL),
+  field('linkPreviews', BOOL),
   field('uiScale', num(0.5, 2, 0.05)),
   field('tabScale', num(0.8, 2, 0.05)),
   field('tabWidth', num(0, 400)),

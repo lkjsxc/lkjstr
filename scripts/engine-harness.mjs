@@ -110,6 +110,7 @@ try {
   all.forEach((e)=>fake.add(e));
   await send({t:'test.relays',relays:[origin.replace('http:','ws:')]});
   await send({t:'heartbeat'});
+  await send({t:'preview',sub:'global',ids:[]});
   await wait(()=>window.messages.some(m=>m.t==='heartbeat'));
   check('heartbeat is acknowledged by the Worker',true);
   await send({t:'open',sub:'global',query:{source:'global'}});

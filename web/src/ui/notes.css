@@ -98,3 +98,17 @@
 .th-focus .content > .text { font-size: calc(var(--text, 15px) + 1.5px); }
 .th-reply { padding-left: calc(12px + min(var(--depth, 1), 4) * 14px); }
 .day { padding: 3px 12px; border-bottom: 1px solid var(--line); background: var(--paper); color: var(--faint); font-size: 12px; font-variant-numeric: tabular-nums; text-align: center; }
+
+/* Link cards share the quoted-note surface; no loading or failure changes their height. */
+.link-card { font-size: 13.5px; line-height: 1.4; display: flex; box-sizing: border-box; height: 88px; min-height: 88px; margin-top: 8px; overflow: hidden; border: 1px solid var(--line); border-radius: 8px; background: var(--raised); color: var(--fg); }
+.link-card:hover { text-decoration: none; border-color: var(--sep); }
+.link-card.loading { background: var(--hold); }
+.lcpicture { flex: 0 0 120px; width: 120px; height: 88px; object-fit: cover; }
+.lcwords { display: flex; flex: 1; min-width: 0; flex-direction: column; padding: 7px 10px; }
+.lcsite { color: var(--faint); font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lctitle, .lcdesc { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; line-height: 19px; }
+.lctitle { font-size: 15px; font-weight: 600; }
+.lcdesc { color: var(--muted); font-size: 12.5px; line-height: 16px; }
+.lcdesc[hidden] { display: none; }
+.content.folded > .link-card { font-size: 13.5px; line-height: 1.4; display: none; }
+@container (max-width: 439px) { .lcpicture { flex-basis: 88px; width: 88px; } }

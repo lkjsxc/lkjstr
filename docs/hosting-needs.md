@@ -3,7 +3,7 @@
 ## Purpose
 
 What a static host must do to serve the build in `dist/` made by `web/`.
-There is no server-side code: any host that can meet this list will do.
+The browser works on any static host meeting this list; previews are optional.
 `web/scripts/serve.ts` is the reference implementation and what the smoke
 test runs against.
 
@@ -86,7 +86,7 @@ expected of the host; nothing is precompressed.
 
 ## What the host does not need
 
-No server-side rendering, no API, no WebSocket endpoint, no cookies, no
+No server-side rendering, no required API, no WebSocket endpoint, no cookies, no
 relay proxy, no accounts. There is no service worker today.
 
 ## Checking a host
@@ -97,3 +97,14 @@ curl -sI https://<host>/p/npub1example | head -1          # 200, text/html
 curl -sI https://<host>/missing.js | head -1              # 404
 curl -sI https://<host>/engine-<hash>.wasm | grep -i content-type
 ```
+
+## Optional preview route
+
+The separate lkjstr-preview Rust binary serves GET /preview?url= and
+GET /preview/health. Route these exact paths before the SPA fallback, preserving
+the path. A missing service must return an error or HTML without health JSON;
+the Worker then keeps links plain. The service binds loopback, with a writable
+bounded cache directory. The edge overwrites X-Real-IP with the real client
+address, disables access and error logs for these routes, and retains the
+site security headers. Do not cache preview JSON in shared HTTP caches.
+No new CORS origin, iframe policy, script permission or cookie is required.

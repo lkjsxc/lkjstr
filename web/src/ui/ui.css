@@ -11,7 +11,7 @@ body { color: var(--fg); font: 13.5px / 1.45 system-ui, -apple-system, "Segoe UI
 .bar > .brand { flex: none; height: 28px; padding: 0 6px; border-radius: 6px; }
 .bar > .brand:hover { background: var(--hover); }
 .grow { flex: 1; }
-.bar .icon { display: grid; place-items: center; width: 28px; height: 28px; }
+.bar .icon { flex: 0 0 28px; display: grid; place-items: center; width: 28px; height: 28px; }
 .acct { display: grid; place-items: center; min-width: 28px; height: 28px; padding: 0; border-radius: 50%; color: var(--accent); }
 .acct { position: relative; flex: none; }
 .acct:hover { box-shadow: 0 0 0 2px var(--hover); }
@@ -25,7 +25,7 @@ body { color: var(--fg); font: 13.5px / 1.45 system-ui, -apple-system, "Segoe UI
   .bar { gap: 4px; padding: 0 6px; }
   .bar > .brand { display: none; }
   lkjstr-spaces { margin: 0 2px 0 0; gap: 1px; }
-  lkjstr-spaces button { flex-basis: 25px; width: 25px; }
+  lkjstr-spaces button { flex-basis: 28px; width: 28px; }
 }
 .relays { font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .stage { position: relative; flex: 1; min-height: 0; }
@@ -181,3 +181,6 @@ input[type="number"] { width: 70px; }
 .ncard:hover, .ncard:focus-visible, .ncard.first { border-color: var(--accent); outline: none; }
 .ncard b { font-size: 14px; font-weight: 500; }
 .ncard .badge { margin: 4px 0 0; }
+
+.tworkspace { margin-left: auto; color: var(--faint); font-variant-numeric: tabular-nums; }
+@media (max-width: 480px) { .bar { gap: 3px; padding: 0 4px; } .bar > .grow { flex: 0; } lkjstr-spaces { margin: 0; gap: 0; } }

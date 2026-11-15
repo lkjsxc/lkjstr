@@ -1,4 +1,5 @@
 mod assets;
+pub mod preview;
 
 pub use assets::validate_root;
 use axum::{

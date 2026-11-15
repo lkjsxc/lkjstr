@@ -19,6 +19,7 @@ doubt, do what ytenrich does.
   (media 8px, quoted notes 8px, chips, buttons 6px) and for things that float.
 - Nothing moves under the reader. Media boxes have their shape before they
   load, counts have fixed slots, a redraw keeps the row on screen where it was.
+- A redraw never undoes the reader: what was unfolded, shown, chosen or sorted stays so, with the tab, across a reload.
 - Shadows only under what floats: menus, pickers, tab search, toasts.
 
 ## Colour
@@ -52,8 +53,8 @@ text, still reaches 4.5:1 on `--bg`. The theme follows the device or Settings.
 
 ## The frame
 
-- Top bar, 38px: name, nine workspace chips, new note, account. The name is
-  a menu (Settings, Relays, Stats, Docs). The relay count is a setting, off.
+- Top bar, 38px: name, nine workspace chips, tab search, new note, account.
+  The name is a menu (Settings, Relays, Stats, Docs). The relay count is a setting, off.
 - Signed in, the account is the active account's face (remembered on the
   device; read-only has a mark) and a menu of the reader's own: their row,
   which opens their profile, the other accounts, and Accounts. Signed out
@@ -66,8 +67,9 @@ text, still reaches 4.5:1 on `--bg`. The theme follows the device or Settings.
 - The tile that keys go to is marked; `Alt+Shift` chords move between tabs
   and tiles, reopen (the closed-tab list survives a reload) and open. `X`
   closes the tab in front. `O` opens tab search over the tile: open tabs,
-  then what a new tab could be; Enter goes there. `N` goes to the Post tab
-  that is open (a setting: always a new one).
+  then what a new tab could be; Enter goes there.
+  Tab search also finds the tabs of the other workspaces, marked with their number.
+  `N` goes to the Post tab that is open (a setting: always a new one).
 - Menus close on outside press, Escape, scroll and after choosing. No close
   buttons on menus. Shortcuts are a page of Docs, in the platform's names.
 - Opening a note or a person opens a tab in the same tile, right after the
@@ -79,7 +81,6 @@ text, still reaches 4.5:1 on `--bg`. The theme follows the device or Settings.
 - A list fills its tile. Only media, single form controls and prose pages keep a measure of their own.
 
 ## Signed out, and accounts
-
 - A visitor's layout is their own but starts from the same arrangement, with
   Global and the Accounts tab in front (a reader: Home and Notifications).
   No welcome page, no prose. Signing in shows the reader's own layout and
@@ -103,9 +104,7 @@ text, still reaches 4.5:1 on `--bg`. The theme follows the device or Settings.
   actions that publish are drawn off (those without a count are not shown),
   Follow is off. A press says why in a toast that leads to the accounts. An
   account's own list, signed out, shows Sign in in place of an empty line.
-
 ## A note
-
 - Avatar circle (36px, a setting) in its own column; header line with name,
   NIP-05 with a tick when verified, and the time right-aligned. A face
   opens the profile wherever it is drawn, as the name does.
@@ -119,6 +118,14 @@ text, still reaches 4.5:1 on `--bg`. The theme follows the device or Settings.
   to four share a grid), then quoted notes as cards. Long notes fold by whole
   lines. Content warnings cover until pressed. A quoted note that cannot be
   shown is one quiet sentence in the same card.
+- Links have up to two 88px cards below text and media, in link order, in the
+  quoted-note surface: raised, hairline, 8px corners. Loading reserves the same
+  height on hold with the host; failure keeps host and path. Pictures are 120x88
+  (88x88 below 440px of tile), cover, absent when unknown. Site is faint 12.5px;
+  title 600, two lines; muted description two lines, omitted for two-line titles.
+  One accessible link opens a browser tab with noopener; no players or frames.
+  Cards fold with long text. Covered notes fetch nothing until opened. Link
+  previews are on by default, off with data saver, and disclose the service.
 - A zoomed picture is dragged by hand; the wheel zooms about the pointer.
 - A picture's box has its final size before the file loads, tinted `--hold`
   (the note's dimensions, otherwise 3:2); a picture of unknown size keeps the
@@ -131,9 +138,7 @@ text, still reaches 4.5:1 on `--bg`. The theme follows the device or Settings.
   Reaction chips sit under the row.
 - On is indigo. Keyboard selection is a wash with an indigo bar at the
   left; unread is a vermilion bar at the left.
-
 ## Lists
-
 - At the top of a feed new notes flow in by themselves. Anywhere else the
   position holds and a pill counts what is above.
 - The reading position is an anchor note plus offset: it survives reload,
@@ -152,6 +157,7 @@ text, still reaches 4.5:1 on `--bg`. The theme follows the device or Settings.
   scrolls away, never floats; shown by default, a setting. One query field
   whose placeholder shows what can be typed (words, from:, has:image), a
   period of two days, people to keep, notifications flowing in; own Clear.
+  A period accepts common date forms and relative days; it is normalised to yyyy/mm/dd when the field is left.
 - A profile lists by kind in tabs under its header: posts, replies,
   reposts, reactions, media. A press anywhere on a notification opens it.
 - The Channels tab (NIP-28): joined ones first, a rule, the others by
@@ -163,9 +169,7 @@ text, still reaches 4.5:1 on `--bg`. The theme follows the device or Settings.
   Retry and discard for failures, preserving attachments across reload. Elsewhere a message says `# name` above it.
 - What the engine cannot serve (protocol below 3; channels: 4) is not drawn.
 - Loading, empty, failed and end-of-list are one quiet centred line.
-
 ## Writing and acting
-
 - The composer is the Post tab: text at note size, who is posting (a button
   that switches accounts), emoji, media, Post. A primary button that cannot
   act yet is neutral. Only the most recent result is shown below.
@@ -173,9 +177,7 @@ text, still reaches 4.5:1 on `--bg`. The theme follows the device or Settings.
   and sent only when its Undo toast (8 seconds) has gone, or when the page is
   hidden or closed. Removing a bookmark, a mute or a relay offers Undo too.
 - Errors are said in words, in a toast, in the reader's language.
-
 ## Settings, Relays, Stats, Docs
-
 - Settings is ytenrich's settings page in a tab: one searchable list,
   "Group: Name" titles, a description, numbers where a number is meant, a
   mark and a reset on changed entries.
@@ -188,9 +190,7 @@ text, still reaches 4.5:1 on `--bg`. The theme follows the device or Settings.
 - Docs is a tab with a tree of groups and pages: what lkjstr is, release
   and licence, keys and safety, relays, filters, shortcuts, the privacy
   policy, the terms. A page names its tab and is found by name in tab search.
-
 ## Language, and checking the look
-
 Every visible string comes from the two tables in `web/src/shared/`.
 Japanese is written as Japanese, with no space before particles after a
 name. Searching views works in both languages. `pnpm shots` in `web/` writes

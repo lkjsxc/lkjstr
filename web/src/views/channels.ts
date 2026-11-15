@@ -110,9 +110,9 @@ export function mountChannels(el: HTMLElement, env: ViewEnv): () => void {
   let timer: ReturnType<typeof setTimeout> | undefined;
   find.addEventListener('input', () => {
     clearTimeout(timer);
+    state.text = find.value;
+    saveViewState(env.instance, state);
     timer = setTimeout(() => {
-      state.text = find.value;
-      saveViewState(env.instance, state);
       open();
     }, 250);
   });
@@ -148,7 +148,9 @@ export function mountChannels(el: HTMLElement, env: ViewEnv): () => void {
     list,
     status,
   );
-  making(false);
+  making(
+    loadViewState<{ channelEdit: { open: boolean } }>(env.instance).channelEdit?.open === true,
+  );
   open();
   const offs = [
     env.engine.accounts.subscribe((a) => {

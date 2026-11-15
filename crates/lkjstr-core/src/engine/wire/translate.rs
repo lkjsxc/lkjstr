@@ -8,6 +8,10 @@ impl Session {
         engine: &Engine,
     ) -> Result<Vec<p::Input>, (Option<String>, &'static str)> {
         Ok(match input {
+            Input::Preview { sub, ids } => {
+                self.preview_near(sub, ids);
+                vec![]
+            }
             Input::Stats { .. }
             | Input::RowAtTime { .. }
             | Input::Relays { .. }
@@ -21,12 +25,17 @@ impl Session {
                 self.config = config;
                 vec![p::Input::GlobalPolicy { enabled }]
             }
-            Input::Hint { hint } => vec![p::Input::Hint {
-                visible_subs: hint.visible_subs,
-                page_hidden: hint.page_hidden,
-                idle: hint.idle,
-                save_data: hint.save_data,
-            }],
+            Input::Hint { hint } => {
+                self.preview_visible = hint.visible_subs.clone();
+                self.preview_save_data = hint.save_data;
+                self.preview_hidden = hint.page_hidden;
+                vec![p::Input::Hint {
+                    visible_subs: hint.visible_subs,
+                    page_hidden: hint.page_hidden,
+                    idle: hint.idle,
+                    save_data: hint.save_data,
+                }]
+            }
             Input::Open { sub, query } => {
                 if self.queries.len() >= 128 && !self.queries.contains_key(&sub) {
                     return Err((None, "subscription-limit"));
@@ -42,6 +51,7 @@ impl Session {
                 self.queries.remove(&sub);
                 self.delivered.remove(&sub);
                 self.windows.remove(&sub);
+                self.preview_near.remove(&sub);
                 vec![p::Input::Close { sub }]
             }
             Input::Window {
