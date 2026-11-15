@@ -53,7 +53,7 @@ pub(super) fn matches_extra(e: &NostrEvent, q: &Query) -> bool {
                 "all" => true,
                 "replies" => matches!(e.kind, 1 | 42) && reply_parent(e).is_some(),
                 "mentions" => matches!(e.kind, 1 | 42),
-                "reposts" => e.kind == 6,
+                "reposts" => matches!(e.kind, 6 | 16),
                 "reactions" => e.kind == 7,
                 "zaps" => e.kind == 9735,
                 "follows" => e.kind == 3,

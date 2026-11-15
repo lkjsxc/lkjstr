@@ -92,7 +92,7 @@ impl Network {
             let max = self.relays[&r.relay].max_reqs.clamp(1, 8);
             let count = counts.entry(r.relay.clone()).or_default();
             if *count >= max {
-                if profile(&r.filter) || !counts_filter(&r.filter) {
+                if profile(&r.filter) || !counts_filter(&r.filter) || !r.page_eose {
                     // Names may interrupt feeds; pending work may interrupt settled
                     // discovery. Discovery tails never interrupt other live work.
                     // Interrupted requests retain their page coverage and resume later.
@@ -106,7 +106,8 @@ impl Network {
                                 && (profile(&r.filter)
                                     || (q.eose
                                         && ((r.filter.ids.is_some() && q.live)
-                                            || (channel_work(&r.filter)
+                                            || ((channel_work(&r.filter)
+                                                || counts_filter(&r.filter))
                                                 && channel_work(&q.filter))
                                             || (!r.members.contains("~account-discovery")
                                                 && counts_filter(&q.filter))

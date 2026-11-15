@@ -36,6 +36,10 @@ Events use the existing 16000 regular / 4000 replaceable memory caps and
 20000-event physical retention. Channel metadata is derived from that store,
 without a separate unbounded cache. List projection uses at most 6000 creations;
 metadata/message discovery targets at most 1000 channel ids in 120-id batches.
+Metadata and messages use separate requests, each limited to 200 events, so
+newer messages cannot displace metadata. Notification repost filters include
+both kind 6 and generic kind 16 reposts. Pending visible-count lookups can
+interrupt settled channel work so extra metadata requests cannot starve them.
 Discovery of channel lists and messages follows visible views and releases on
 hide/close. Identical filters share requests. Finite reference lookups can
 interrupt settled live subscriptions and release their slots at EOSE.

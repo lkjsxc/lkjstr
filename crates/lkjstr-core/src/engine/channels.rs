@@ -137,13 +137,16 @@ pub(super) fn wants(store: &Store, q: &super::Query) -> Vec<NostrFilter> {
             limit: Some(120),
             ..Default::default()
         });
-        let mut f = NostrFilter {
-            kinds: Some(vec![41, 42]),
-            limit: Some(200),
-            ..Default::default()
-        };
-        f.tags.insert("e".into(), ids.to_vec());
-        out.push(f);
+        // Metadata must not compete with newer messages for a relay's limit.
+        for kind in [41, 42] {
+            let mut f = NostrFilter {
+                kinds: Some(vec![kind]),
+                limit: Some(200),
+                ..Default::default()
+            };
+            f.tags.insert("e".into(), ids.to_vec());
+            out.push(f);
+        }
     }
     out
 }

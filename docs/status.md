@@ -11,7 +11,8 @@ channel messages, NIP-51 joined lists, device unread marks and channel actions
 use the existing store, signer, shared relay scheduler and timestamp paging.
 Channel messages stay out of ordinary feeds and retain channel context in
 bookmarks, threads and notifications. No frontend contract changes are needed.
-Requests, bounds and conformance: [channels.md](channels.md).
+Separate metadata requests protect busy-channel updates; repost notification
+filters accept kinds 6 and 16. Native regressions and bounds: [channels.md](channels.md).
 
 ## Protocol 3 integration (2026-11-15)
 
