@@ -15,14 +15,17 @@ pnpm build:real in web/. Its full engine graph has immutable hashed URLs.
 The frontend owns saved/bootstrap relay choice; verified owner NIP-65 lists
 then take over. Search-only relays now receive search requests independently
 of ordinary read usage. Thread focus and decoded profile deep-link headers
-cross the wire correctly. Five new native integration regressions cover these
-projection and relay policies. Product UI, strings and CSS remain unchanged.
+cross the wire correctly. Native integration regressions cover these
+projection and relay policies. Thread rows distinguish ancestors from the focus
+and descendants; reply depth follows parent links before filtering/windowing.
+Sibling branches are not projected as replies to the focus.
 
-The supplied quote-error protocol addition exposes a UI gap: note.ts expects
-quote.error, which neither string table defines. The frontend TypeScript gate
-therefore cannot pass without the UI owner's decision. There is also no
-account-add control; the local end-to-end smoke sets up its fixture extension
-account through a second real transport port. It then drives existing controls.
+Quote lookup errors now have English/Japanese failure text, with a rendering
+regression test. Two native thread regressions cover ancestors, nested replies,
+root-only replies, missing parents, filters, windows and public references.
+There is still no account-add control; the local end-to-end smoke sets up its
+fixture extension account through a second real transport port. It then drives
+existing controls.
 
 The conformance gate now uses this worktree's contract, without fetching a
 branch. See engine-package.md for commands and current verification artifacts.

@@ -13,6 +13,7 @@ impl Session {
             .and_then(|q| q.target.as_deref())
             .or(q.account.as_deref())
             .unwrap_or("");
+        let thread = (q.source == "thread").then(|| super::thread::positions(store, target));
         let mut out=match q.source.as_str() {
             "following"=>store.follows(target).unwrap_or_default().iter().map(|p|person(e,p,q.account.as_deref())).collect(),
             "followers"=>store.feed(&crate::store::Query{kinds:vec![3],mention:Some(target.into()),limit:6000,..Default::default()})
@@ -33,8 +34,22 @@ impl Session {
             "list"=>{
                 q.convert().map(|converted|query::events(store,&converted).into_iter().next().map(|event|e.list_tags(&event).iter().filter(|t|t.first().is_some_and(|k|k=="p")).filter_map(|t|t.get(1)).map(|p|person(e,p,q.account.as_deref())).collect()).unwrap_or_default()).unwrap_or_default()
             }
-            _=>q.convert().map(|converted|query::events(store,&converted).into_iter().take(6000).filter(|event|query::hidden_with_lists(store,&converted,event,&e.private_lists).is_none())
-                .map(|event|{let mut v=super::note::note(&rows::row_with_lists(store,&event,q.account.as_deref(),0,&e.private_lists),store,q.account.as_deref());if q.source=="thread" {v["thread"]=json!({"role":if target==event.id{"focus"}else{"reply"},"depth":if target==event.id{0}else{1}});}v}).collect()).unwrap_or_default(),
+            _ => converted.as_ref().map(|converted| {
+                query::events(store, converted).into_iter().take(6000)
+                    .filter(|event| query::hidden_with_lists(store, converted, event, &e.private_lists).is_none())
+                    .filter_map(|event| {
+                        let position = match &thread {
+                            Some(positions) => Some(*positions.get(&event.id)?),
+                            None => None,
+                        };
+                        let row = rows::row_with_lists(store, &event, q.account.as_deref(), 0, &e.private_lists);
+                        let mut value = super::note::note(&row, store, q.account.as_deref());
+                        if let Some((role, depth)) = position {
+                            value["thread"] = json!({"role":role,"depth":depth});
+                        }
+                        Some(value)
+                    }).collect()
+            }).unwrap_or_default(),
         };
         if q.source == "profile" {
             out.insert(0, profile(e, target, q.account.as_deref()));

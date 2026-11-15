@@ -7,10 +7,11 @@ its release candidate, verification and the remaining UI ownership decisions.
 
 ## Item results
 
-1. Partial: protocol-additions.patch is applied and the mock handles relay,
+1. Done: protocol-additions.patch is applied and the mock handles relay,
    heartbeat, detach and public-key messages. Mock tests and browser smoke pass.
-   The frontend TypeScript gate fails at note.ts:68 because quote.error is not
-   in either string table. Visible UI and wording remain untouched.
+   Quote lookup errors have localized English/Japanese text and a rendering
+   regression. Thread projection has ancestor roles and parent-based depths,
+   covered by two native regressions.
 2. Done: pnpm build:real in web/ packages Rust, rewrites and hashes the engine
    dependency graph, and boots the app through the real workerTransport.
    Saved bootstrap settings are selected per account. Independent search
@@ -32,12 +33,16 @@ its release candidate, verification and the remaining UI ownership decisions.
 
 ## Gates
 
-- web/: build and smoke pass. Vitest: 38 tests in four files pass. Biome passes.
-- web/: check fails only on the missing quote.error string at note.ts:68.
-- Root: check:repo, test:quiet, rust-wasm:quiet and verify:quiet pass.
+- Review: web/ check and build pass, including TypeScript, Biome and 39 tests
+  in five files. Smoke passes; thread shots pass all 12 language/theme/width
+  combinations, with desktop English and mobile Japanese captures inspected.
+  The missing quote.error check failure is fixed.
+- Review: check:repo, test:quiet, rust-wasm:quiet and verify:quiet pass.
+  All three added regressions failed against the original projection/strings.
 - scripts/engine-check.sh: all 54 conformance checks pass against the current
   worktree contract, without fetching an external branch.
-- Docker is unavailable and was not attempted.
+- Docker was not attempted: daemon storage would violate the worktree-only
+  write restriction.
 - Jobs/test workers are capped at four. Browser profiles, caches and temporary
   paths for the new commands live under ignored tmp/.
 
@@ -74,8 +79,6 @@ search-only relay routing, thread focus and decoded profile deep-link headers.
 
 ## UI gaps and owner decisions
 
-- Quote state error: quoted-note cards have no localized quote.error label.
-  This blocks pnpm check. The UI owner must choose its displayed failure text.
 - Accounts/account.add: the top bar says Sign in, but neither its menu nor
   Settings provides a first-account control. A person cannot add a signer in
   the current interface. The owner must supply that control before signed-in
@@ -87,5 +90,6 @@ Plumbing changes are in web/src/engine/, startup imports in web/src/main.ts,
 web/scripts/, engine/transport.js, scripts/engine-*, and the core/Worker crates.
 Regression tests are engine_frontend_test.rs, engine-startup.test.ts and the
 mock tests. Build, host requirements and status docs describe the real build.
-No CSS, component markup, icons, string tables or CI workflows were changed.
+Review corrections add the two quote-error strings and thread projection
+regressions. No CSS, component markup, icons or CI workflows were changed.
 No commit, deployment or production access was performed.

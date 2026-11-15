@@ -40,6 +40,7 @@ export const en = {
   copied: 'Copied',
   copyFailed: 'Could not copy',
   'quote.missing': 'The quoted note was not found.',
+  'quote.error': 'The quoted note could not be loaded.',
   'quote.loading': 'Looking for the quoted note…',
   'quote.muted': 'A note by someone you muted.',
   'quote.deleted': 'The quoted note was deleted.',

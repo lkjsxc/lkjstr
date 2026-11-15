@@ -7,6 +7,7 @@ pub mod queries;
 mod query_translate;
 mod quote_state;
 mod sources;
+mod thread;
 mod translate;
 use actions::Action;
 use queries::{Anchor, Config, Hint, Query};

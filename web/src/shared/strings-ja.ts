@@ -42,6 +42,7 @@ export const ja: Record<keyof typeof en, string> = {
   copied: 'コピーしました',
   copyFailed: 'コピーできませんでした',
   'quote.missing': '引用されたノートは見つかりませんでした。',
+  'quote.error': '引用されたノートを読み込めませんでした。',
   'quote.loading': '引用されたノートを探しています…',
   'quote.muted': 'ミュートした人のノートです。',
   'quote.deleted': '引用されたノートは削除されました。',

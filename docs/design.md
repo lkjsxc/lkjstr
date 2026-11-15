@@ -84,7 +84,8 @@ both themes. The theme follows the device or is set in Settings.
   is being replied to.
 - Text, then media (one picture keeps its ratio up to the media height; two
   to four share a grid), then quoted notes as cards. Long notes fold by whole
-  lines. Content warnings cover until pressed.
+  lines. Content warnings cover until pressed. A quoted-note lookup failure
+  appears as a quiet, localized line saying it could not be loaded.
 - Action row in `--faint` at rest: reply, repost (menu: repost, quote), pick
   an emoji, like, zap, bookmark, more. Counts sit in fixed slots. Under 440px
   of tile the bookmark folds into the menu (a set one shows as a mark by the
