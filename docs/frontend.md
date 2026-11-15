@@ -15,7 +15,7 @@ esbuild for bundling. The main thread draws and nothing else: it never parses
 an event, opens a socket or touches the event store. Everything that is not
 pixels belongs to the engine, which runs in a Worker.
 
-Today the worker is the mock engine (`src/engine/mock/`), which is also the
+The default development worker is the mock engine (`src/engine/mock/`), which is also the
 test double. The Rust/WASM engine replaces it at build time with
 `--engine=<dir>`; nothing in the interface changes.
 
@@ -82,15 +82,20 @@ pnpm install
 pnpm dev            # rebuild ../dist on change (mock engine)
 pnpm serve          # serve ../dist on 127.0.0.1:8417 with the production headers
 pnpm check          # the gate: repo rules, tsc, biome, vitest; prints "ok check"
-pnpm build          # ../dist, prints "ok build"
+pnpm build          # mock ../dist, prints "ok build"
+pnpm build:real     # Rust package plus real-engine ../dist
+pnpm smoke:real     # real app against loopback fixtures only
+pnpm package        # pack current dist into ../tmp/lkjstr-dist.tar.gz
 pnpm smoke          # build, then drive Chromium against the mock; prints "ok smoke"
 pnpm shots          # screenshots to ../tmp/screens (all sizes, themes, languages)
 pnpm vitest run tests/undo.test.ts   # one test file
 pnpm fix            # biome --write
 ```
 
-`pnpm build -- --engine=<dir>` publishes `<dir>/engine.js` (a module worker)
-and its `.wasm` under hashed names in place of the mock.
+`pnpm build -- --engine=<dir>` consumes the package described in
+[engine-package.md](engine-package.md). All engine imports, worker entries and
+WASM assets receive hashed names in place of the mock. Startup loads the
+package Transport adapter. `pnpm package` never rebuilds dist.
 
 `pnpm shots` takes `--only=<width>-<theme>-<lang>` and `--scenes=home,thread`.
 `LKJSTR_CHROME=<path>` picks the browser for `smoke` and `shots`.

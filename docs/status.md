@@ -3,7 +3,29 @@
 ## Purpose
 
 Current engine cutover, verified behavior and explicitly unfinished variants.
-The independent frontend owns web/ on web/next-20261114; it is not edited here.
+The independent frontend owns visible UI in web/. Integration changes only
+engine plumbing, startup and build/test/release scripts.
+
+## Frontend integration (2026-11-15)
+
+Release candidate, gates and UI gaps: [integration-release.md](integration-release.md).
+
+The TypeScript app can build against the real SharedWorker adapter with
+pnpm build:real in web/. Its full engine graph has immutable hashed URLs.
+The frontend owns saved/bootstrap relay choice; verified owner NIP-65 lists
+then take over. Search-only relays now receive search requests independently
+of ordinary read usage. Thread focus and decoded profile deep-link headers
+cross the wire correctly. Five new native integration regressions cover these
+projection and relay policies. Product UI, strings and CSS remain unchanged.
+
+The supplied quote-error protocol addition exposes a UI gap: note.ts expects
+quote.error, which neither string table defines. The frontend TypeScript gate
+therefore cannot pass without the UI owner's decision. There is also no
+account-add control; the local end-to-end smoke sets up its fixture extension
+account through a second real transport port. It then drives existing controls.
+
+The conformance gate now uses this worktree's contract, without fetching a
+branch. See engine-package.md for commands and current verification artifacts.
 
 ## Engine contract (2026-11-14)
 

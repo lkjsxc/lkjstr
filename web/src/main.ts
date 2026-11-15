@@ -1,6 +1,7 @@
 // lkjstr: the page. It starts from what is saved on this device (settings, layouts, the last account) and draws
 // at once; the engine answers from its worker when it is ready.
-import { createEngine, workerTransport } from './engine/client.ts';
+import { createEngine } from './engine/client.ts';
+import { createTransport } from './engine/startup.ts';
 import { resolveLang, setLang } from './shared/i18n.ts';
 import { pressedAt, watchPairs } from './shared/keys.ts';
 import { spacesKey } from './shared/layout-store.ts';
@@ -20,7 +21,7 @@ let language = resolveLang(settings.get().language);
 setLang(language);
 document.documentElement.lang = language;
 
-const engine = createEngine(workerTransport(__ENGINE_URL__));
+const engine = createEngine(await createTransport(__ENGINE_URL__));
 const configure = (): void =>
   engine.configure({
     language,

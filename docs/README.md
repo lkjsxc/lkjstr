@@ -10,6 +10,7 @@ Frontend (`web/`):
 
 - [design.md](design.md): the look and the interaction rules, as built.
 - [frontend.md](frontend.md): structure of `web/`, the engine boundary, gates.
+- [integration-release.md](integration-release.md): real-engine release candidate and UI gaps.
 - [hosting-needs.md](hosting-needs.md): what the static host must serve.
 - [repost.md](repost.md): public-source repost comparison.
 

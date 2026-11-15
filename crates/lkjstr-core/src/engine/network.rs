@@ -117,11 +117,7 @@ impl Network {
     pub fn plan(&mut self, wants: Vec<(String, NostrFilter, Query)>, now: u64) {
         self.reported
             .retain(|sub, _| wants.iter().any(|(id, _, _)| id == sub));
-        let mut ranked: Vec<_> = self
-            .relays
-            .iter()
-            .filter(|(u, _)| self.known.get(*u).is_none_or(|r| r.read))
-            .collect();
+        let mut ranked: Vec<_> = self.relays.iter().collect();
         ranked.sort_by_key(|(url, r)| {
             (
                 std::cmp::Reverse(r.useful.saturating_sub(r.failures as u64)),
@@ -154,7 +150,13 @@ impl Network {
                 preferred
                     .iter()
                     .filter(|u| {
-                        q.source != Source::Search || self.known.get(*u).is_none_or(|r| r.search)
+                        self.known.get(*u).is_none_or(|r| {
+                            if q.source == Source::Search {
+                                r.search
+                            } else {
+                                r.read
+                            }
+                        })
                     })
                     .take(2)
                     .cloned()

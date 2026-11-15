@@ -5,6 +5,8 @@ export PATH="$HOME/.cargo/bin:$PATH"
 export CARGO_BUILD_JOBS=4 RUST_TEST_THREADS=4
 export CARGO_HOME="${CARGO_HOME:-$PWD/tmp/cargo-home}"
 export XDG_CACHE_HOME="${XDG_CACHE_HOME:-$PWD/tmp/cache}"
+export XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$PWD/tmp/config}"
+export XDG_DATA_HOME="${XDG_DATA_HOME:-$PWD/tmp/data}"
 export TMPDIR="$PWD/tmp/temp"
 mkdir -p "$TMPDIR"
 sh scripts/engine-contract-prepare.sh > tmp/engine-contract.log 2>&1 || { tail -20 tmp/engine-contract.log; exit 1; }

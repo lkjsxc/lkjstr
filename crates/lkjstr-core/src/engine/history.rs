@@ -15,7 +15,8 @@ fn paged(v: &View) -> bool {
     )
 }
 pub(super) fn exhausted(network: &Network, store: &Store, v: &View) -> bool {
-    !paged(v)
+    query::signed_out(&v.query)
+        || !paged(v)
         || network.page_exhausted(
             v.history
                 .as_ref()

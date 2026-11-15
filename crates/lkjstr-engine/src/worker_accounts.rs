@@ -24,6 +24,7 @@ pub(super) fn status(host: &Rc<RefCell<Host>>) {
     if !h.loaded {
         return;
     }
+    h.apply_relay_owner(false);
     if h.account_revision != h.engine.store.revision() {
         h.account_revision = h.engine.store.revision();
         let lists = h

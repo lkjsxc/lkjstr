@@ -1,7 +1,7 @@
-// Generate validators directly from the fetched TypeScript AST; no hand-copied shapes.
-import ts from '../tmp/type-tools/node_modules/typescript/lib/typescript.js';
+// Generate validators directly from the worktree TypeScript AST; no hand-copied shapes.
+import ts from 'typescript';
 import { readFile } from 'node:fs/promises';
-const text = await readFile('tmp/protocol-added.ts', 'utf8');
+const text = await readFile('web/src/engine/protocol.ts', 'utf8');
 const file = ts.createSourceFile('protocol.ts', text, ts.ScriptTarget.Latest, true);
 const aliases = new Map(file.statements.filter(ts.isTypeAliasDeclaration).map((s) => [s.name.text, s.type]));
 function shape(node) {
@@ -50,7 +50,7 @@ export function assertCoverage(actual, expected, name) {
   if (absent.length) throw new Error(`missing ${name} scenarios: ${absent.join(', ')}`);
 }
 
-const mock = await readFile('tmp/frontend-mock.ts','utf8');
+const mock = await readFile('web/src/engine/mock/engine.ts','utf8');
 export const mockMessageKinds=[...new Set([...mock.matchAll(/msg\.t\s*===\s*'([^']+)'/g)].map(m=>m[1]))];
-const actions=await readFile('tmp/frontend-actions.ts','utf8');
+const actions=await readFile('web/src/engine/mock/actions.ts','utf8');
 export const mockActionKinds=[...new Set([...actions.matchAll(/case\s+'([^']+)'/g)].map(m=>m[1]))];

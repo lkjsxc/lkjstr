@@ -6,6 +6,8 @@ export CARGO_BUILD_JOBS=4
 export LKJSTR_ENGINE_HARNESS=0
 export CARGO_HOME="${CARGO_HOME:-$PWD/tmp/cargo-home}"
 export XDG_CACHE_HOME="${XDG_CACHE_HOME:-$PWD/tmp/cache}"
+export XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$PWD/tmp/config}"
+export XDG_DATA_HOME="${XDG_DATA_HOME:-$PWD/tmp/data}"
 export TMPDIR="$PWD/tmp/temp"
 mkdir -p "$TMPDIR"
 sh scripts/engine-build.sh > tmp/engine-package.log 2>&1 || { tail -40 tmp/engine-package.log; exit 1; }

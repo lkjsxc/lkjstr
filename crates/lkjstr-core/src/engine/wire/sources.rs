@@ -7,7 +7,12 @@ impl Session {
             return vec![];
         };
         let store = &e.store;
-        let target = q.pubkey.as_deref().or(q.account.as_deref()).unwrap_or("");
+        let converted = q.convert();
+        let target = converted
+            .as_ref()
+            .and_then(|q| q.target.as_deref())
+            .or(q.account.as_deref())
+            .unwrap_or("");
         let mut out=match q.source.as_str() {
             "following"=>store.follows(target).unwrap_or_default().iter().map(|p|person(e,p,q.account.as_deref())).collect(),
             "followers"=>store.feed(&crate::store::Query{kinds:vec![3],mention:Some(target.into()),limit:6000,..Default::default()})
@@ -29,7 +34,7 @@ impl Session {
                 q.convert().map(|converted|query::events(store,&converted).into_iter().next().map(|event|e.list_tags(&event).iter().filter(|t|t.first().is_some_and(|k|k=="p")).filter_map(|t|t.get(1)).map(|p|person(e,p,q.account.as_deref())).collect()).unwrap_or_default()).unwrap_or_default()
             }
             _=>q.convert().map(|converted|query::events(store,&converted).into_iter().take(6000).filter(|event|query::hidden_with_lists(store,&converted,event,&e.private_lists).is_none())
-                .map(|event|{let mut v=super::note::note(&rows::row_with_lists(store,&event,q.account.as_deref(),0,&e.private_lists),store,q.account.as_deref());if q.source=="thread" {v["thread"]=json!({"role":if q.id.as_ref()==Some(&event.id){"focus"}else{"reply"},"depth":if q.id.as_ref()==Some(&event.id){0}else{1}});}v}).collect()).unwrap_or_default(),
+                .map(|event|{let mut v=super::note::note(&rows::row_with_lists(store,&event,q.account.as_deref(),0,&e.private_lists),store,q.account.as_deref());if q.source=="thread" {v["thread"]=json!({"role":if target==event.id{"focus"}else{"reply"},"depth":if target==event.id{0}else{1}});}v}).collect()).unwrap_or_default(),
         };
         if q.source == "profile" {
             out.insert(0, profile(e, target, q.account.as_deref()));

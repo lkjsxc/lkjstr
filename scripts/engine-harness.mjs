@@ -99,6 +99,9 @@ try {
   const note=all.find((e)=>e.kind===1);if(!note)throw new Error('fixture has no note');
   all.forEach((e)=>fake.add(e));
   await send({t:'test.relays',relays:[origin.replace('http:','ws:')]});
+  await send({t:'heartbeat'});
+  await wait(()=>window.messages.some(m=>m.t==='heartbeat'));
+  check('heartbeat is acknowledged by the Worker',true);
   await send({t:'open',sub:'global',query:{source:'global'}});
   await wait(()=>window.messages.some((m)=>m.t==='patch'&&m.sub==='global'));
   check('verified fake-relay rows cross the Worker boundary',true);
@@ -157,6 +160,7 @@ try {
   fake.setReading(true);
   await conformance({page,send,wait,check,note,signer,lines,origin,bunkerKey});
   signer.stdin.end();
+  await send({t:'detach'});
   await page.evaluate(()=>window.worker.terminate());
   for(let n=0;n<100&&fake.connections();n++)await page.waitForTimeout(25);
   const other=await context.newPage();await other.goto(origin);

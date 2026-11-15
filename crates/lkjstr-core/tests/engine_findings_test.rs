@@ -109,7 +109,7 @@ fn search_uses_two_best_eligible_relays() {
         .map(|i| RelayConfig {
             url: format!("wss://r{i}.test/"),
             read: i != 2,
-            write: true,
+            write: i != 2,
             search: i >= 2,
         })
         .collect();
@@ -133,7 +133,7 @@ fn search_uses_two_best_eligible_relays() {
             _ => None,
         })
         .collect();
-    assert_eq!(routes, vec![configs[3].url.clone(), configs[4].url.clone()]);
+    assert_eq!(routes, vec![configs[2].url.clone(), configs[3].url.clone()]);
 }
 
 #[test]

@@ -44,7 +44,7 @@ impl Session {
                 if self.queries.get(&sub).is_some_and(|q| {
                     matches!(
                         q.source.as_str(),
-                        "profile" | "followers" | "following" | "mutes" | "list" | "notifications" | "bookmarks" | "relays" | "media-servers" | "emoji"
+                        "thread" | "profile" | "followers" | "following" | "mutes" | "list" | "notifications" | "bookmarks" | "relays" | "media-servers" | "emoji"
                     )
                 }) {
                     let next = self.source_rows(&sub, engine);
@@ -162,7 +162,8 @@ impl Session {
         if q.is_some_and(|q| {
             matches!(
                 q.source.as_str(),
-                "profile"
+                "thread"
+                    | "profile"
                     | "followers"
                     | "following"
                     | "mutes"

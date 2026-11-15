@@ -74,6 +74,8 @@ pub fn start_shared() -> Result<SharedWorkerHandle, JsValue> {
     let host = Rc::new(RefCell::new(Host {
         engine: initial_engine(),
         account_revision: 0,
+        bootstrap_relays: vec![],
+        relay_owner: None,
         upload_tasks: vec![],
         upload_inflight: 0,
         auth_next: 0,

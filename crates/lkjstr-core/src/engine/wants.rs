@@ -17,6 +17,9 @@ impl Engine {
 }
 fn requests(store: &crate::store::Store, v: &super::View) -> Vec<NostrFilter> {
     let q = &v.query;
+    if query::signed_out(q) {
+        return vec![];
+    }
     let mut result = vec![query::filter(store, q)];
     result.extend(v.history.clone());
     if q.source == Source::Thread

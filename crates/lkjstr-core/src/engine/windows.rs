@@ -89,6 +89,14 @@ impl Engine {
         });
         v.at_bottom = at_bottom;
         v.rows = items;
+        if query::signed_out(&v.query) {
+            self.outgoing.push(Output::Status {
+                sub: sub.into(),
+                state: "not-found".into(),
+                asked_relays: 0,
+                answered_relays: 0,
+            });
+        }
     }
 }
 

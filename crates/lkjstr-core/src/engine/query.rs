@@ -69,7 +69,23 @@ pub fn filter(store: &Store, q: &Query) -> NostrFilter {
     }
     f
 }
+/// These views have no event source until an account is selected.
+pub(super) fn signed_out(q: &Query) -> bool {
+    q.account.is_none()
+        && matches!(
+            q.source,
+            Source::Home
+                | Source::Notifications
+                | Source::Bookmarks
+                | Source::Mutes
+                | Source::Emoji
+                | Source::MediaServers
+        )
+}
 pub fn events(store: &Store, q: &Query) -> Vec<Event> {
+    if signed_out(q) {
+        return vec![];
+    }
     if q.source == Source::Thread {
         return store
             .thread(q.target.as_deref().unwrap_or(""))

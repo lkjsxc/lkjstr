@@ -30,11 +30,15 @@ mod defaults;
 use defaults::initial_engine;
 #[path = "worker_accounts.rs"]
 mod accounts;
+#[path = "worker_relays.rs"]
+mod relay_config;
 #[path = "worker_sign.rs"]
 mod signing;
 #[path = "worker_upload.rs"]
 mod uploads;
 struct Host {
+    bootstrap_relays: Vec<lkjstr_core::engine::wire::RelayConfig>,
+    relay_owner: Option<(String, String)>,
     account_revision: u64,
     upload_tasks: Vec<(u64, String, String, String, String, Vec<u8>)>,
     upload_inflight: usize,
@@ -76,6 +80,8 @@ pub fn start() -> Result<WorkerHandle, JsValue> {
     let host = Rc::new(RefCell::new(Host {
         engine: initial_engine(),
         account_revision: 0,
+        bootstrap_relays: vec![],
+        relay_owner: None,
         upload_tasks: vec![],
         upload_inflight: 0,
         auth_next: 0,

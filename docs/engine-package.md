@@ -5,46 +5,45 @@
 Build the real Worker as static assets for the independently owned frontend.
 There is no generated HTML, Trunk invocation, deployment or frontend source edit.
 
-## Build
+## Build and release
 
 ```sh
-sh scripts/engine-package.sh
+cd web
+pnpm build:real
+pnpm smoke:real
+pnpm package
 ```
 
-Requires the installed Rust/WASM toolchain and wasm-bindgen 0.2.122. Cargo and
-wasm-bindgen caches default to ignored worktree directories. Override the binary
-with LKJSTR_WASM_BINDGEN. All builds use four jobs. The command prints byte sizes.
-The output directory is tmp/engine-dist; copy its contents to the frontend's
-public/engine directory. File names and measured sizes are recorded below.
+build:real runs scripts/engine-package.sh, then builds web/ with
+--engine=../tmp/engine-dist. The Rust toolchain, wasm-bindgen 0.2.122,
+Node 24 and pnpm 11 are required. Caches and build output stay in ignored
+worktree paths; Cargo jobs and test workers are capped at four.
 
-The module exports workerTransport(options): the same post/listen/close
-Transport accepted by the frontend's createEngine. It also exports
-createMockEngine(post): the mock's handle/dispose factory shape, backed by Rust.
-The optional relay array is sent separately from EngineConfig. No relays are
-silently selected by the engine.
+The package remains usable independently with sh scripts/engine-package.sh.
+It writes transport.js, shared.js, worker.js, lkjstr_engine.js and its WASM
+module to tmp/engine-dist. The frontend hashes the full dependency graph,
+rewrites every import/Worker/WASM URL, and references the adapter and WASM
+by absolute path in index.html. No mutable engine asset names are shipped.
 
-## Three frontend lines
+Startup uses workerTransport from the package instead of the mock Worker.
+The frontend selects saved relay settings for the cached account when present;
+otherwise DEFAULT_RELAYS in web/src/engine/startup.ts is the single default.
+Successful relay saves persist in frontend storage. A verified active-account
+NIP-65 list replaces bootstrap read/write usage; bootstrap search usage remains.
+Replaying another tab's bootstrap cannot override that learned owner list.
 
-Replace the existing import, add the transport import, and replace creation:
-
-```ts
-import { createEngine } from './engine/client.ts';
-const { workerTransport } = await import(/* @vite-ignore */ new URL('/engine/transport.js', location.href).href);
-const engine = createEngine(workerTransport({ relays: [{ url: 'wss://nos.lol/', read: true, write: true, search: false }] }));
-```
-
-That relay is an explicit integration example, not a test destination. Pass the
-frontend's chosen relay configuration instead. Apply protocol-additions.patch
-to the frontend-owned protocol.ts. The computed module URL keeps these static
-Worker assets outside the frontend bundler; the current ES2023 target supports
-this import. No UI edits are included in this worktree.
+pnpm build and pnpm smoke still build the mock. pnpm package packs the current
+dist without rebuilding, so a real release cannot silently become a mock.
+The archive is tmp/lkjstr-dist.tar.gz; validate it with the host's unmodified
+release.py unpack function before handing it off. Nothing is deployed here.
 
 The adapter handles NIP-07 public-key discovery, heartbeat and detach. Existing
 client.ts continues handling event signing. SharedWorker is preferred. The
 fallback uses one dedicated Worker under an exclusive Web Lock, with a
 BroadcastChannel forwarding ports. Loss of the leader releases the lock;
 followers reconnect and replay queries/windows/configuration. Pending actions
-fail with offline and are never replayed. There is no wall-clock leader lease.
+fail with offline and are never replayed. There is no wall-clock leader lease. Worker names, locks and channels are scoped
+to the hashed adapter URL so an older engine graph can coexist during a release.
 
 ## Contract gate and benchmark
 
@@ -53,12 +52,20 @@ sh scripts/engine-check.sh
 LKJSTR_COLD_START=1 sh scripts/engine-check.sh
 ```
 
-The gate fetches the current frontend into an ignored standalone Git repository,
-applies the additions to a temporary copy, and derives reply validators from
-that TypeScript AST (pinned TypeScript 5.9.3). Patch conflicts, new untested mock
+The gate reads the authoritative contract and mock inventory from this merged
+worktree and derives reply validators from its TypeScript AST (pinned
+TypeScript 5.9.3). It performs no fetch or Git operation. New untested mock
 message/action kinds and invalid reply shapes fail the gate. The real WASM
 Worker uses fresh IndexedDB, a loopback relay, intercepted media HTTP and an
 in-process fixture signer. No public traffic is permitted.
+
+pnpm smoke:real exercises the actual TypeScript app with production headers
+and a loopback-only connect-src override. External HTTP is blocked. It covers
+home/global, note/profile navigation, search, composition through NIP-07,
+publication/reaction, settings reload and two app tabs sharing one engine.
+There is no account-add UI yet: only the fixture account setup uses a second
+real adapter port; composition and reactions use the app's existing controls.
+The report is tmp/smoke-real/report.json.
 
 The optional benchmark seeds 100000 physical signed compact rows. Timings are
 reported, not thresholded. Reports live in tmp/engine-harness. See
@@ -66,17 +73,7 @@ engine-performance.md and status.md for measurements and unsupported variants.
 
 ## Artifact inventory
 
-Product package (bytes), built without harness exports:
-
-| File | Bytes |
-| --- | --- |
-| lkjstr_engine_bg.wasm | 3217564 |
-| lkjstr_engine.js | 45402 |
-| worker.js | 285 |
-| shared.js | 225 |
-| transport.js | 7309 |
-| Total | 3270785 |
-
-Fetched frontend contract: 3c236c89743dd5d76d11cfecfb17e380e2b962ad.
-The package inventory is independent of the cold benchmark fixture file, which
-is excluded from the output directory.
+The package command prints current byte sizes. Harness exports and fixture
+files are excluded from product output; the frontend copies every required
+engine dependency explicitly. The release has one WASM module, three hashed
+engine JavaScript modules, the hashed adapter, and the unchanged UI assets.

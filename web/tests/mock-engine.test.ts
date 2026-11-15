@@ -28,6 +28,25 @@ afterEach(() => {
 });
 
 describe('mock engine', () => {
+  it('acknowledges heartbeats, replaces bootstrap relays and releases on detach', () => {
+    engine.handle({ t: 'heartbeat' });
+    expect(last('heartbeat')).toEqual({ t: 'heartbeat' });
+    engine.handle({
+      t: 'relays',
+      relays: [{ url: 'wss://local.test/', read: true, write: true, search: false }],
+    });
+    engine.handle({ t: 'open', sub: 'relay-list', query: { source: 'relays' } });
+    engine.handle({ t: 'window', sub: 'relay-list', anchor: 'top', before: 0, after: 30 });
+    expect(last('rows')?.rows).toContainEqual(
+      expect.objectContaining({ url: 'wss://local.test/' }),
+    );
+    engine.handle({ t: 'detach' });
+    const count = out.length;
+    engine.handle({ t: 'window', sub: 'relay-list', anchor: 'top', before: 0, after: 30 });
+    vi.advanceTimersByTime(3000);
+    expect(out).toHaveLength(count);
+  });
+
   it('says ready, then who is signed in', () => {
     expect(out[0]).toMatchObject({ t: 'ready', engine: 'mock' });
     expect(last('accounts')?.active).toBe(SELF.author.pubkey);

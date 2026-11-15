@@ -1,21 +1,22 @@
 // Build: node scripts/build.ts [--watch] [--engine=<dir>]. Writes the static site to ../dist: one HTML file, hashed
 // scripts and styles, no inline script (the host's CSP is `script-src 'self' 'wasm-unsafe-eval'`).
-// Without --engine the mock engine is bundled as the worker. With it, <dir>/engine.js (a module worker) and
-// <dir>/*.wasm are published under hashed names; `__ENGINE_WASM__` in engine.js becomes the wasm's address.
+// Without --engine the mock is bundled as a worker. With it, the HTML-free engine package
+// is published as one hashed dependency graph, including the adapter and both worker entries.
 import { execSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import {
   copyFileSync,
   watch as fsWatch,
   mkdirSync,
-  readdirSync,
   readFileSync,
   rmSync,
   writeFileSync,
 } from 'node:fs';
 import { join } from 'node:path';
 import * as esbuild from 'esbuild';
+import { engineAssets } from './engine-assets.ts';
 
+process.env.GOMAXPROCS ??= '4';
 const here = new URL('..', import.meta.url).pathname;
 const out = join(here, '..', 'dist');
 const watch = process.argv.includes('--watch');
@@ -68,15 +69,7 @@ async function build(): Promise<void> {
   let engine: string;
   let wasm = '';
   if (engineDir) {
-    const file = readdirSync(engineDir).find((n) => n.endsWith('.wasm'));
-    if (!file) throw new Error(`no .wasm in ${engineDir}`);
-    const bytes = readFileSync(join(engineDir, file));
-    wasm = emit(hashed('engine', 'wasm', bytes), bytes);
-    const js = readFileSync(join(engineDir, 'engine.js'), 'utf8').replaceAll(
-      '__ENGINE_WASM__',
-      wasm,
-    );
-    engine = emit(hashed('engine', 'js', js), js);
+    ({ engine, wasm } = engineAssets(engineDir, out));
   } else {
     const js = await bundle('src/engine/mock/worker.ts', define);
     engine = emit(hashed('engine', 'js', js), js);
@@ -85,7 +78,11 @@ async function build(): Promise<void> {
   const cssText = CSS.map((f) => readFileSync(join(here, 'src/ui', f), 'utf8')).join('\n');
   const css = (await esbuild.transform(cssText, { loader: 'css', minify: !watch })).code;
   const boot = await bundle('src/boot.ts', define, true);
-  const app = await bundle('src/main.ts', { ...define, __ENGINE_URL__: JSON.stringify(engine) });
+  const app = await bundle('src/main.ts', {
+    ...define,
+    __ENGINE_URL__: JSON.stringify(engine),
+    __REAL_ENGINE__: JSON.stringify(Boolean(engineDir)),
+  });
   const html = readFileSync(join(here, 'src/index.html'), 'utf8')
     .replace('__CSS__', emit(hashed('app', 'css', css), css))
     .replace('__BOOT__', emit(hashed('boot', 'js', boot), boot))
@@ -93,7 +90,7 @@ async function build(): Promise<void> {
     .replace(
       '__PRELOAD__',
       wasm
-        ? `<link rel="preload" href="${wasm}" as="fetch" type="application/wasm" crossorigin />`
+        ? `<link rel="modulepreload" href="${engine}" /><link rel="preload" href="${wasm}" as="fetch" type="application/wasm" crossorigin />`
         : '',
     );
   writeFileSync(join(out, 'index.html'), html);

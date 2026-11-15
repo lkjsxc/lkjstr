@@ -1,6 +1,8 @@
 // Frontend Transport interface. No relay, event parsing or secret handling here.
 export function workerTransport(options = {}) {
   const client = crypto.randomUUID();
+  // Old and new hashed engine graphs may coexist during an atomic release.
+  const namespace = `lkjstr-engine-v1:${import.meta.url}`;
   let receive = () => {}, closed = false, port, worker, release, epoch;
   let config, relays = options.relays ? { t: 'relays', relays: options.relays } : undefined, hint;
   const subs = new Map(); // bounded by engine's 128-subscription limit
@@ -54,7 +56,7 @@ export function workerTransport(options = {}) {
   let channel, peers, attachLocal, restartLeader;
   let lastAlive=performance.now();
   const connectShared = () => {
-    worker = new SharedWorker(url('shared.js'), { type: 'module', name: 'lkjstr-engine-v1' });
+    worker = new SharedWorker(url('shared.js'), { type: 'module', name: namespace });
     port = worker.port;
     port.onmessage = (e) => void message(e.data);
     port.start();
@@ -63,7 +65,7 @@ export function workerTransport(options = {}) {
   if (!options.dedicated && typeof SharedWorker !== 'undefined') connectShared();
   else {
     if (!navigator.locks || !globalThis.BroadcastChannel) throw new Error('Web Locks and BroadcastChannel required');
-    channel = new BroadcastChannel('lkjstr-engine-v1');
+    channel = new BroadcastChannel(namespace);
     peers = new Map(); // max 32, matching Rust port ownership
     const attach = (id) => {
       if (peers.has(id)) return;
@@ -106,7 +108,7 @@ export function workerTransport(options = {}) {
     // The browser releases this exclusive lock when its page dies. No clock lease.
     const abort = new AbortController();
     release = () => abort.abort();
-    navigator.locks.request('lkjstr-engine-v1', { signal: abort.signal }, async () => {
+    navigator.locks.request(namespace, { signal: abort.signal }, async () => {
       if (closed) return;
       restartLeader=()=>{
         worker?.terminate();

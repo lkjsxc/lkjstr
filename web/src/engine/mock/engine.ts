@@ -176,7 +176,18 @@ export function createMockEngine(post: (msg: FromEngine) => void, now = Date.now
 
   return {
     handle(msg) {
-      if (msg.t === 'configure') (config = msg.config), live();
+      if (msg.t === 'heartbeat') post({ t: 'heartbeat' });
+      else if (msg.t === 'detach') {
+        clearInterval(liveTimer);
+        core.dispose();
+      } else if (msg.t === 'relays') {
+        if (msg.relays.length > 8) return;
+        world.state.relays = [...msg.relays];
+        core.resync((q) => q.source === 'relays', true);
+        core.status();
+      } else if (msg.t === 'publicKey') {
+        // Only the real engine initiates signer discovery. No pending request in the mock.
+      } else if (msg.t === 'configure') (config = msg.config), live();
       else if (msg.t === 'open') {
         const s: Sub = {
           id: msg.sub,

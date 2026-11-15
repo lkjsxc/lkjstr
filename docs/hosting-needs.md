@@ -15,7 +15,8 @@ test runs against.
 | --- | --- |
 | `index.html` | The only page of the app. References the files below by absolute path |
 | `app-<hash>.js`, `boot-<hash>.js`, `app-<hash>.css` | Interface; `boot` is a classic script, `app` a module |
-| `engine-<hash>.js` | The engine's module worker (the mock engine in a mock build) |
+| `engine-<hash>.js` | Real Transport adapter, or the mock worker in a mock build |
+| `engine-{wasm,shared,worker}-<hash>.js` | Real build: WASM glue and both worker entries |
 | `engine-<hash>.wasm` | Only in a build made with `--engine=<dir>` |
 | `privacy.html`, `LICENSE.txt` | Static pages linked from the About tab |
 | `icon.svg`, `icon-192.png`, `icon-512.png`, `favicon.ico`, `manifest.webmanifest` | Icons and the web app manifest |

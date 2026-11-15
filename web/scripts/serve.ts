@@ -17,17 +17,21 @@ const TYPES: Record<string, string> = {
   '.txt': 'text/plain; charset=utf-8',
   '.webmanifest': 'application/manifest+json',
 };
+// A test-only loopback allowlist; the release CSP still permits chosen public relays.
+const testRelay = process.argv.find((a) => a.startsWith('--test-relay='))?.slice(13);
+if (testRelay && !/^ws:\/\/127\.0\.0\.1:\d+$/.test(testRelay))
+  throw new Error('loopback relay required');
 const CSP = [
   "default-src 'self'",
   "script-src 'self' 'wasm-unsafe-eval'",
   "style-src 'self' 'unsafe-inline'",
-  "connect-src 'self' https: wss:",
+  testRelay ? `connect-src 'self' ${testRelay}` : "connect-src 'self' https: wss:",
   "img-src 'self' https: data: blob:",
   "media-src 'self' https: data: blob:",
   "frame-ancestors 'none'",
 ].join('; ');
 
-createServer((req, res) => {
+const server = createServer((req, res) => {
   const path = normalize(decodeURIComponent(new URL(req.url ?? '/', 'http://x').pathname));
   let file = join(dist, path);
   if (!file.startsWith(dist)) return void res.writeHead(400).end();
@@ -44,4 +48,6 @@ createServer((req, res) => {
     'Cache-Control': hashedName ? 'public, max-age=31536000, immutable' : 'no-cache',
   });
   res.end(readFileSync(file));
-}).listen(port, '127.0.0.1', () => console.log(`http://127.0.0.1:${port}`));
+}).listen(port, '127.0.0.1', () =>
+  console.log(`http://127.0.0.1:${(server.address() as { port: number }).port}`),
+);

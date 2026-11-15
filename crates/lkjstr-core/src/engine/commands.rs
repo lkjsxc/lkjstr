@@ -128,6 +128,9 @@ impl Engine {
                 e.content = content;
             }
             Action::RelaysSave { relays } => {
+                if relays.len() > 8 {
+                    return Err("invalid-relay");
+                }
                 e.kind = 10002;
                 for r in relays {
                     let url = super::settings::strict_relay(&r.url).ok_or("invalid-relay")?;

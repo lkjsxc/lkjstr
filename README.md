@@ -16,8 +16,9 @@ It runs entirely in the browser; there is no lkjstr server.
   [crates/README.md](crates/README.md).
 - `web/src/engine/protocol.ts`: the messages between the two.
 
-The interface currently ships with a mock engine so its feel can be finished
-first. `crates/lkjstr-web`, the earlier Leptos interface built by Trunk from
+The default development build uses the mock engine. `pnpm build:real` in
+`web/` builds the Rust engine and the interface together; see
+[engine-package.md](docs/engine-package.md) for release and local browser gates. `crates/lkjstr-web`, the earlier Leptos interface built by Trunk from
 the root `index.html`, stays in the tree while the engine is cut out of it.
 
 ## Frontend: run, build, verify
@@ -30,7 +31,10 @@ pnpm install
 pnpm dev      # rebuilds ../dist on change
 pnpm serve    # http://127.0.0.1:8417, with the production headers
 pnpm check    # repo rules, tsc, biome, vitest: prints "ok check"
-pnpm build    # the static site in ../dist: prints "ok build"
+pnpm build:real # the interface plus real Rust/WASM engine in ../dist
+pnpm smoke:real # loopback-only real app browser check
+pnpm package  # pack current dist to ../tmp/lkjstr-dist.tar.gz
+pnpm build    # the mock static site in ../dist: prints "ok build"
 pnpm smoke    # drives Chromium against the build: prints "ok smoke"
 pnpm shots    # screenshots of every view to ../tmp/screens
 ```

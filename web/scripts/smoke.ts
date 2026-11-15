@@ -3,11 +3,17 @@
 // LKJSTR_CHROME=<path> picks the browser; --shot=<file> also writes one screenshot of the first page.
 import { type ChildProcess, spawn } from 'node:child_process';
 import { existsSync, mkdirSync } from 'node:fs';
-import { dirname } from 'node:path';
+import { dirname, resolve } from 'node:path';
 import { type Browser, chromium, type Page } from 'playwright-core';
+import { dayOf } from '../src/shared/format.ts';
 import { KEYS } from '../src/shared/keys.ts';
 
 const here = new URL('..', import.meta.url).pathname;
+process.env.TMPDIR ??= resolve(here, '../tmp/temp');
+process.env.XDG_CACHE_HOME ??= resolve(here, '../tmp/cache');
+process.env.XDG_CONFIG_HOME ??= resolve(here, '../tmp/config');
+process.env.XDG_DATA_HOME ??= resolve(here, '../tmp/data');
+mkdirSync(process.env.TMPDIR, { recursive: true });
 const port = 18400 + Math.floor(Math.random() * 400);
 const base = `http://127.0.0.1:${port}`;
 const chrome =
@@ -623,7 +629,15 @@ async function reading(browser: Browser, still: Record<string, unknown>): Promis
   await page.keyboard.press('Escape');
   fact('Escape puts an empty filter away', (await count(page, `${feed} .rbar`)) === 0);
   await page.locator(`${feed} .note`).first().waitFor();
-  const times = await page.locator(`${feed} .day ~ .note time`).allInnerTexts();
+  const times = await page
+    .locator(`${feed} .note time`)
+    .evaluateAll(
+      (els, today) =>
+        els
+          .filter((e) => !e.getAttribute('title')?.startsWith(today))
+          .map((e) => e.textContent ?? ''),
+      dayOf(Date.now()),
+    );
   fact(
     'older notes carry their date',
     times.every((x) => /^\d{4}\/\d\d\/\d\d \d\d:\d\d$/.test(x)),
@@ -1052,14 +1066,15 @@ const server: ChildProcess = spawn(
   { stdio: 'pipe' },
 );
 await new Promise((r) => server.stdout?.once('data', r));
-const browser = await chromium.launch({ executablePath: chrome, args: ['--no-sandbox'] });
+let browser: Browser | undefined;
 try {
+  browser = await chromium.launch({ executablePath: chrome, args: ['--no-sandbox'] });
   await run(browser);
 } catch (e) {
   const at = /smoke\.ts:(\d+)/.exec((e as Error).stack ?? '')?.[1] ?? '?';
   failures.push(`threw at line ${at}: ${(e as Error).message.split('\n')[0]}`);
 } finally {
-  await browser.close();
+  await browser?.close();
   server.kill();
 }
 if (failures.length) console.log(failures.join('\n')), process.exit(1);

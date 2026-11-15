@@ -40,7 +40,7 @@ const run = (name: string, cmd: string): void => {
 };
 run('tsc', 'node_modules/.bin/tsc -p .');
 run('biome', 'node_modules/.bin/biome check .');
-run('vitest', 'node_modules/.bin/vitest run');
+run('vitest', 'node_modules/.bin/vitest run --maxWorkers=4');
 
 if (problems.length) {
   console.log(problems.join('\n'));

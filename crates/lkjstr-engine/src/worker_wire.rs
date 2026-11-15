@@ -90,8 +90,7 @@ impl Host {
                 return;
             }
             W::Relays { relays } => {
-                let at = self.time();
-                let _ = self.engine.configure_relays(relays, at);
+                self.bootstrap(relays);
                 return;
             }
             W::PublicKey { req, pubkey, error } => {
