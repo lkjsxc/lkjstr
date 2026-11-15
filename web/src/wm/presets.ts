@@ -1,7 +1,6 @@
 // Default layouts. Two layout families of nine workspaces each: `main` is the reader's own once signed in, `guest`
-// is what a visitor reads in while signed out (nothing there needs an account, so no tile starts empty). Signing
-// in shows `main` and signing out shows `guest` again; each keeps what was arranged in it. A tile can be any size,
-// so the first workspace is chosen by the width of the window it is first drawn in.
+// is what a visitor reads in while signed out. Signing in shows `main` and signing out shows `guest` again; each
+// keeps what was arranged in it. Both start from the same arrangement, which is also what "reset layout" gives.
 import { NEW_TAB } from './launcher.ts';
 import { type LayoutNode, pane, split } from './layout.ts';
 
@@ -10,23 +9,26 @@ export const GUEST = 'guest';
 /** The family for who is reading: an account's own, or the visitor's. */
 export const familyOf = (signedIn: boolean): string => (signedIn ? FAMILY : GUEST);
 
-/** Workspace 1: Home, then Notifications over the composer, then Global beside them; fewer columns when narrow. */
-export function homePreset(width = globalThis.innerWidth || 1440): LayoutNode {
-  if (width < 760) return pane(['home', 'notifications', 'global', 'compose']);
-  if (width < 1200)
-    return split(
-      'row',
-      [pane(['home', 'global']), pane(['notifications', 'compose'])],
-      [0.56, 0.44],
-    );
+/** Workspace 1, for a visitor and a reader alike: Global and Home at the left; at the right the composer over
+ * Accounts, Notifications and Settings. What is in front fits who reads: a visitor starts on Global with the way
+ * in beside it, a reader on Home with their notifications. A window too narrow for two columns gets one tile. */
+export function homePreset(width = globalThis.innerWidth || 1440, family = FAMILY): LayoutNode {
+  const guest = family === GUEST;
+  const read = ['global', 'home'];
+  const own = ['account', 'notifications', 'settings'];
+  const front = guest ? 'global' : 'home';
+  if (width < 760) return pane([...read, 'compose', ...own], front);
   return split(
     'row',
     [
-      pane(['home']),
-      split('col', [pane(['notifications']), pane(['compose'])], [0.64, 0.36]),
-      pane(['global', 'bookmarks']),
+      pane(read, front),
+      split(
+        'col',
+        [pane(['compose']), pane(own, guest ? 'account' : 'notifications')],
+        [0.34, 0.66],
+      ),
     ],
-    [0.38, 0.28, 0.34],
+    width < 1200 ? [0.56, 0.44] : [0.6, 0.4],
   );
 }
 
@@ -34,10 +36,8 @@ export function homePreset(width = globalThis.innerWidth || 1440): LayoutNode {
 const readingPreset = (): LayoutNode => pane(['global', 'bookmarks']);
 
 export const presetOf = (space = 1, width?: number, family = FAMILY): LayoutNode =>
-  family === GUEST
-    ? pane([space === 1 ? 'global' : NEW_TAB])
-    : space === 1
-      ? homePreset(width)
-      : space === 2
-        ? readingPreset()
-        : pane([NEW_TAB]);
+  space === 1
+    ? homePreset(width, family)
+    : space === 2 && family !== GUEST
+      ? readingPreset()
+      : pane([NEW_TAB]);

@@ -38,13 +38,48 @@ async function isolatedContext(
   return context;
 }
 
+/** A reader's own arrangement, saved on the device: most facts below are about tabs and tiles, not about the
+ * default layout, and were written against this one. `fresh` in the store leaves the device empty instead. */
+const tile = (id: string, tabs: string[]): unknown => ({ type: 'pane', id, tabs, active: tabs[0] });
+const row = (id: string, dir: string, sizes: number[], children: unknown[]): unknown => ({
+  type: 'split',
+  id,
+  dir,
+  sizes,
+  children,
+});
+const arranged = (width: number): unknown =>
+  width < 760
+    ? tile('a', ['home', 'notifications', 'global', 'compose'])
+    : width < 1200
+      ? row(
+          'r',
+          'row',
+          [0.56, 0.44],
+          [tile('a', ['home', 'global']), tile('b', ['notifications', 'compose'])],
+        )
+      : row(
+          'r',
+          'row',
+          [0.38, 0.28, 0.34],
+          [
+            tile('a', ['home']),
+            row('c', 'col', [0.64, 0.36], [tile('b', ['notifications']), tile('d', ['compose'])]),
+            tile('e', ['global', 'bookmarks']),
+          ],
+        );
+
 async function open(
   browser: Browser,
   path: string,
-  store: Record<string, unknown>,
+  given: Record<string, unknown>,
   size = { width: 1440, height: 900 },
   locale = 'en-US',
 ): Promise<Page> {
+  const { fresh, ...rest } = given;
+  const store = fresh
+    ? rest
+    : { 'layout:main': arranged(size.width), 'layout:guest': tile('g', ['global']), ...rest };
   const ctx = await isolatedContext(browser, { viewport: size, locale, deviceScaleFactor: 1 });
   await ctx.addInitScript((s) => {
     for (const [k, v] of Object.entries(s))
@@ -359,6 +394,7 @@ async function run(browser: Browser): Promise<void> {
   await accounts(browser);
   await place(browser, still);
   await keyboard(browser, still);
+  await defaults(browser, still);
 }
 
 const FEED = '.view[data-kind="home"]';
@@ -381,6 +417,67 @@ const same = (a: { key: string; off: number }, b: { key: string; off: number }):
 
 /** The reading position: the same note at the same height after a reload, another tab, another tile, another width,
  * a closed and reopened tab. */
+/** The layout of a device that holds nothing yet, for a reader and a visitor, and what "Reset layout" gives. */
+async function defaults(browser: Browser, still: Record<string, unknown>): Promise<void> {
+  const tiles = (page: Page): Promise<string[]> =>
+    page
+      .locator('.pane')
+      .evaluateAll((panes) =>
+        panes.map((p) =>
+          [...p.querySelectorAll<HTMLElement>('.tab')]
+            .map((t) => `${t.dataset.view}${t.classList.contains('active') ? '*' : ''}`)
+            .join(' '),
+        ),
+      );
+  const want = (front: string): string[] => [
+    front === 'home' ? 'global home*' : 'global* home',
+    'compose*',
+    front === 'home' ? 'account notifications* settings' : 'account* notifications settings',
+  ];
+  const page = await open(browser, '/', { ...still, fresh: true });
+  fact(
+    'a reader starts on the default layout',
+    (await tiles(page)).join() === want('home').join(),
+    await tiles(page),
+  );
+  const boxes = await page.locator('.pane').evaluateAll((panes) =>
+    panes.map((p) => {
+      const r = p.getBoundingClientRect();
+      return [Math.round(r.left), Math.round(r.top)];
+    }),
+  );
+  fact(
+    'left tile, then the composer over the account tile at the right',
+    boxes[0]?.[0] === 0 &&
+      (boxes[1]?.[0] ?? 0) > 700 &&
+      boxes[1]?.[0] === boxes[2]?.[0] &&
+      (boxes[2]?.[1] ?? 0) > (boxes[1]?.[1] ?? 0),
+    boxes,
+  );
+  await page.context().close();
+  const guest = await open(browser, '/', { mock: { live: false, accounts: 'none' }, fresh: true });
+  fact(
+    'a visitor starts on the same layout',
+    (await tiles(guest)).join() === want('global').join(),
+    await tiles(guest),
+  );
+  fact(
+    'the visitor sees the two ways in at once',
+    (await count(guest, '.view[data-kind="account"] [data-f="extension"]:visible')) === 1,
+  );
+  await guest.context().close();
+  const arrangedPage = await open(browser, '/', still);
+  await arrangedPage.locator('.pane .strip > .icon').first().click();
+  await arrangedPage.locator('.menu button').getByText('Reset layout', { exact: true }).click();
+  await arrangedPage.waitForSelector('.tab[data-view="settings"]');
+  fact(
+    'Reset layout gives the default layout',
+    (await tiles(arrangedPage)).join() === want('home').join(),
+    await tiles(arrangedPage),
+  );
+  await arrangedPage.context().close();
+}
+
 async function place(browser: Browser, still: Record<string, unknown>): Promise<void> {
   const page = await open(browser, '/', still);
   const c = await center(page, FEED);

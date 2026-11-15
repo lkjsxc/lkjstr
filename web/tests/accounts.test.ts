@@ -4,6 +4,7 @@ import { SELF } from '../src/engine/mock/people.ts';
 import type { Action, Author, FromEngine, ProfileRow } from '../src/engine/protocol.ts';
 import { rememberedFace, rememberFace } from '../src/shared/face.ts';
 import { nameText, plainName, shortNpub, unnamed } from '../src/views/parts.ts';
+import { panes } from '../src/wm/layout.ts';
 import { familyOf, presetOf } from '../src/wm/presets.ts';
 
 const HEX = 'ab'.repeat(32);
@@ -44,9 +45,11 @@ describe('the remembered face', () => {
 });
 
 describe('the layout families', () => {
-  it('a visitor reads Global in one tile; an account gets its own layout', () => {
-    expect(presetOf(1, 1440, familyOf(false))).toMatchObject({ tabs: ['global'] });
-    expect(presetOf(1, 1440, familyOf(true))).toMatchObject({ type: 'split' });
+  it('both start from one arrangement; what is in front fits who reads', () => {
+    const fronts = (signedIn: boolean): string[] =>
+      panes(presetOf(1, 1440, familyOf(signedIn))).map((p) => p.active);
+    expect(fronts(false)).toEqual(['global', 'compose', 'account']);
+    expect(fronts(true)).toEqual(['home', 'compose', 'notifications']);
   });
 });
 

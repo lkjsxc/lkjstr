@@ -30,13 +30,15 @@ import { insertAt, zoneAt } from '../src/wm/tab-drag.ts';
 const shape = (n: L.LayoutNode): unknown =>
   n.type === 'pane' ? n.tabs.join('|') : { [n.dir]: n.children.map(shape) };
 
+const SPLIT_L = 'home';
+const RIGHT = { col: ['compose', 'account|notifications|settings'] };
+
 describe('layout', () => {
   it('presets follow the window width and only name known views', () => {
-    expect(shape(homePreset(1440))).toEqual({
-      row: ['home', { col: ['notifications', 'compose'] }, 'global|bookmarks'],
-    });
-    expect(shape(homePreset(1024))).toEqual({ row: ['home|global', 'notifications|compose'] });
-    expect(shape(homePreset(390))).toBe('home|notifications|global|compose');
+    const two = { row: ['global|home', { col: ['compose', 'account|notifications|settings'] }] };
+    expect(shape(homePreset(1440))).toEqual(two);
+    expect(shape(homePreset(1024))).toEqual(two);
+    expect(shape(homePreset(390))).toBe('global|home|compose|account|notifications|settings');
     expect(shape(presetOf(5))).toBe('new');
     const known = new Set(VIEWS.map((v) => v.id));
     expect(L.views(homePreset(1440)).filter((v) => !known.has(v))).toEqual([]);
@@ -44,19 +46,17 @@ describe('layout', () => {
   it('a new tab is inserted right after the tab it was opened from, in the same pane', () => {
     const root = homePreset(1024);
     const p = L.paneOfView(root, 'home') as L.PaneNode;
-    const next = L.moveView(root, 'thread', p.id, 'center', 1);
-    expect(shape(next)).toEqual({ row: ['home|thread|global', 'notifications|compose'] });
+    const next = L.moveView(root, 'thread', p.id, 'center', 2);
+    expect(shape(next)).toEqual({ row: ['global|home|thread', RIGHT] });
     expect(L.paneOfView(next, 'thread')?.active).toBe('thread');
-    expect(L.panes(next)).toHaveLength(2);
+    expect(L.panes(next)).toHaveLength(3);
   });
   it('split, close and stored layouts round-trip', () => {
     const root = homePreset(1024);
     const p = L.paneOfView(root, 'home') as L.PaneNode;
     const split = L.moveView(root, 'global', p.id, 'right');
-    expect(shape(split)).toEqual({ row: ['home', 'global', 'notifications|compose'] });
-    expect(shape(L.removeView(split, 'global') as L.LayoutNode)).toEqual({
-      row: ['home', 'notifications|compose'],
-    });
+    expect(shape(split)).toEqual({ row: [SPLIT_L, 'global', RIGHT] });
+    expect(shape(L.removeView(split, 'global') as L.LayoutNode)).toEqual({ row: ['home', RIGHT] });
     expect(shape(parseLayout(JSON.parse(JSON.stringify(split))) as L.LayoutNode)).toEqual(
       shape(split),
     );
