@@ -42,6 +42,7 @@ struct Host {
     account_revision: u64,
     upload_tasks: Vec<uploads::Task>,
     upload_inflight: usize,
+    server_checks: Vec<(u64, String, String, String, u64)>, // shared four-request bound
     auth_next: u64,
     upload_auth: BTreeMap<(u64, String), (lkjstr_protocol::UnsignedNostrEvent, js_sys::Function)>,
 
@@ -84,6 +85,7 @@ pub fn start() -> Result<WorkerHandle, JsValue> {
         relay_owner: None,
         upload_tasks: vec![],
         upload_inflight: 0,
+        server_checks: vec![],
         auth_next: 0,
         upload_auth: BTreeMap::new(),
         accounts: Default::default(),
@@ -212,6 +214,7 @@ fn pump(host: &Rc<RefCell<Host>>) {
     accounts::pump_accounts(host);
     accounts::status(host);
     uploads::pump_uploads(host);
+    uploads::checks::pump(host);
     shared::expire(host);
 }
 #[path = "worker_handle.rs"]

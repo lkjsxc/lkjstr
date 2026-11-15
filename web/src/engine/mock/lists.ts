@@ -127,6 +127,7 @@ export function finite(w: World, q: Query): Row[] | undefined {
         url,
         protocol: i ? 'blossom' : 'nip96',
         ok: true,
+        checked: true,
       }));
     case 'emoji':
       return Object.entries(EMOJI).map(([code, url], i) => ({

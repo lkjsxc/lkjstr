@@ -183,6 +183,7 @@ text, still reaches 4.5:1 on `--bg`. The theme follows the device or Settings.
   first, with state, latency, event counts and why each is there. The list
   is edited in Settings only (the tile menu leads to that entry, and to
   Stats). Media servers offer a few choices with one press, Blossom first.
+  A media server is marked as not answering only by a request an upload needs; a server not yet checked is not drawn as down.
 - Stats is numbers and quiet marks, no prose: five figures, then a sortable
   row per relay, trouble first; it refreshes in place; absent is a dash.
 - Docs is a tab with a tree of groups and pages: what lkjstr is, release

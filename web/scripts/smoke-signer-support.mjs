@@ -20,8 +20,13 @@ async function setup({
   errors,
   bunker,
   mediaOrigins = [],
+  storageState,
 }) {
-  const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, locale: 'en-US' });
+  const ctx = await browser.newContext({
+    viewport: { width: 1440, height: 900 },
+    locale: 'en-US',
+    storageState,
+  });
   await seedLayouts(ctx);
   await ctx.route('**/*', (route) =>
     route.request().url().startsWith(`${base}/`) ||
@@ -40,7 +45,13 @@ async function setup({
         );
       window.signerResults = [];
       window.signerCalls = { getPublicKey: 0, signEvent: 0, decrypt: 0 };
-      const observe = (port) =>
+      const observe = (port) => {
+        const post = port.postMessage.bind(port);
+        port.postMessage = (m, ...args) => {
+          if (m.t === 'act' && m.action.a === 'upload' && window.uploadTarget && !m.action.server)
+            m.action.server = window.uploadTarget;
+          return post(m, ...args);
+        };
         port.addEventListener('message', ({ data: m }) => {
           if (m.t === 'accounts') {
             window.uploadAccount = m.active;
@@ -55,6 +66,7 @@ async function setup({
             window.uploadListResult = { ok: m.ok, code: m.error?.code };
           if (m.t === 'result') window.signerResults.push({ ok: m.ok, code: m.error?.code });
         });
+      };
       const Shared = window.SharedWorker;
       window.SharedWorker = class extends Shared {
         constructor(...args) {

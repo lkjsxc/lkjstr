@@ -8,10 +8,86 @@ pub const MEDIA_SERVERS: [&str; 4] = [
     "https://nostrcheck.me",
 ];
 pub const BLOSSOM_SERVERS: [&str; 3] = [MEDIA_SERVERS[0], MEDIA_SERVERS[1], MEDIA_SERVERS[3]];
+/// Session-only evidence. Never restore reachability from disk.
+#[derive(Default)]
+pub struct ServerVerdict {
+    pub protocol: String,
+    pub generation: u64,
+    pub ok: Option<bool>,
+    pub error: Option<String>,
+}
+/// Optional BUD-06 failures are inconclusive; only required HTTP can fail a server.
+pub enum ServerEvidence<'a> {
+    Checking,
+    Optional(bool),
+    Required(Result<(), &'a str>),
+}
 impl Engine {
+    pub fn observe_server(
+        &mut self,
+        url: &str,
+        protocol: &str,
+        evidence: ServerEvidence<'_>,
+    ) -> u64 {
+        use ServerEvidence::*;
+        let (ok, error) = match evidence {
+            Checking | Optional(false) => (None, None),
+            Optional(true) | Required(Ok(())) => (Some(true), None),
+            Required(Err(code)) => (Some(false), Some(code.into())),
+        };
+        // At most 64 session observations, independent of persisted account/event data.
+        if self.servers.len() >= 64
+            && !self.servers.contains_key(url)
+            && let Some(old) = self.servers.keys().next().cloned()
+        {
+            self.servers.remove(&old);
+        }
+        self.server_revision += 1;
+        self.servers.insert(
+            url.into(),
+            ServerVerdict {
+                protocol: protocol.into(),
+                generation: self.server_revision,
+                ok,
+                error,
+            },
+        );
+        self.invalidate();
+        self.server_revision
+    }
+    pub fn server_row(&self, url: &str) -> Value {
+        let verdict = self.servers.get(url);
+        let protocol =
+            verdict
+                .map(|v| v.protocol.as_str())
+                .unwrap_or(if self.upload_is_nip96(url) {
+                    "nip96"
+                } else if BLOSSOM_SERVERS.contains(&url) {
+                    "blossom"
+                } else {
+                    "unknown"
+                });
+        let mut row = json!({"kind":"server","key":url,"url":url,"protocol":protocol,
+            "ok":verdict.and_then(|v|v.ok).unwrap_or(false),
+            "checked":verdict.is_some_and(|v|v.ok.is_some())});
+        if let Some(code) = verdict.and_then(|v| v.error.as_ref()) {
+            row["error"] = json!({"code":code});
+        }
+        row
+    }
+    /// Try unknowns in list order; only fresh required-request failures are skipped.
+    pub fn upload_candidates(&self, account: &str) -> Vec<String> {
+        self.upload_servers(account)
+            .into_iter()
+            .filter(|url| !self.servers.get(url).is_some_and(|v| v.ok == Some(false)))
+            .collect()
+    }
     pub fn upload_is_nip96(&self, server: &str) -> bool {
         server.trim_end_matches('/') == MEDIA_SERVERS[2]
-            || self.servers.get(server).is_some_and(|v| v.0 == "nip96")
+            || self
+                .servers
+                .get(server)
+                .is_some_and(|v| v.protocol == "nip96")
     }
     /// An explicit kind 10063, including an empty list, overrides defaults.
     pub fn upload_servers(&self, account: &str) -> Vec<String> {

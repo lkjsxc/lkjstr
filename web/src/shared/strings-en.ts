@@ -271,14 +271,14 @@ export const en = {
   'set.relayList': 'Relays: Your relay list',
   'set.relayList.d': 'The relays you read from and write to. This list is published as yours.',
   'set.servers': 'Posting: Media servers',
-  'set.servers.d':
-    'Pictures and video go to the first server. If an upload fails, you can retry with another.',
+  'set.servers.d': 'Where pictures and video are uploaded. The first one that answers is used.',
   'servers.choices': 'Suggestions',
   'servers.none': 'No media server. Pictures cannot be attached until one is added.',
   'servers.removed': 'Removed {host}',
   'servers.address': 'Media server address',
   'servers.invalid': 'That is not a server address (https://…)',
   'servers.unknown': 'Unknown protocol',
+  'servers.down': 'Not answering',
   'servers.unconfirmed': 'Not confirmed',
   'about.what':
     'A Nostr client that runs in this browser. There is no lkjstr server and no account with us.',

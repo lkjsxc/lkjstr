@@ -348,8 +348,10 @@ export type ServerRow = {
   readonly url: string;
   /** Upload protocol the engine found there. */
   readonly protocol: 'blossom' | 'nip96' | 'unknown';
-  /** A successful upload has confirmed this server; false does not establish a failure. */
+  /** Fresh required-request evidence; unknown and optional failures have checked=false. */
   readonly ok: boolean;
+  readonly checked?: boolean;
+  readonly error?: Failure;
 };
 
 export type EmojiRow = {
@@ -519,6 +521,8 @@ export type Action =
   /** Replaces the media server list with `servers` (`https://host[/path]`), the preferred one first; anything
    * else fails with `rejected`. The `media-servers` rows are patched at once. */
   | { readonly a: 'servers.save'; readonly as: Pubkey; readonly servers: readonly string[] }
+  /** Recheck required NIP-96 discovery or optional BUD-06; never uploads bytes. */
+  | { readonly a: 'servers.check'; readonly server: string }
   /** Marks notifications read up to now. */
   | { readonly a: 'seen'; readonly as: Pubkey }
   // Channels (NIP-28), since version 4.

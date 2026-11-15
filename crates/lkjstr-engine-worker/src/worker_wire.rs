@@ -29,7 +29,6 @@ impl Host {
             self.receive(id, input);
         }
     }
-
     pub(super) fn receive(&mut self, id: u64, input: lkjstr_core::engine::wire::Input) {
         use lkjstr_core::engine::wire::{Input as W, Session, actions::Action as A};
         if !self.loaded {
@@ -42,6 +41,13 @@ impl Host {
             self.engine.client_tag = config.client_tag.unwrap_or(true);
         }
         match input {
+            W::Act {
+                req,
+                action: A::ServersCheck { server },
+            } => {
+                uploads::checks::start(self, id, req, server);
+                return;
+            }
             W::Stats { req } => {
                 self.scope.direct(
                     id,
@@ -231,9 +237,7 @@ impl Host {
                     }
                 }
             }
-            Some(Err((Some(req), code))) => self
-                .scope
-                .direct(id, &lkjstr_core::engine::wire::Session::failure(req, code)),
+            Some(Err((Some(req), code))) => self.scope.direct(id, &Session::failure(req, code)),
             Some(Err((None, _))) => {
                 if let Some(sub) = opened {
                     self.scope.direct(id,&lkjstr_core::engine::wire::Output::State{sub,state:serde_json::json!({"phase":"failed","relaysAsked":0,"relaysAnswered":0,"error":"unsupported"})});

@@ -274,13 +274,14 @@ export const ja: Record<keyof typeof en, string> = {
     '読み取りと書き込みに使うリレーです。このリストは自分のリレーとして公開されます。',
   'set.servers': '投稿: メディアサーバー',
   'set.servers.d':
-    '画像や動画は先頭の送信先に送ります。失敗したら別の送信先を選んで再送信できます。',
+    '画像や動画のアップロード先です。リストの上から順に、応答のある最初のサーバーを使います。',
   'servers.choices': '候補',
   'servers.none': 'メディアサーバーがありません。追加するまで画像を添付できません。',
   'servers.removed': '{host} を外しました',
   'servers.address': 'メディアサーバーのアドレス',
   'servers.invalid': 'サーバーのアドレスではありません（https://…）',
   'servers.unknown': '方式不明',
+  'servers.down': '応答がありません',
   'servers.unconfirmed': '未確認',
   'about.what':
     'ブラウザだけで動く Nostr クライアントです。lkjstr のサーバーも、アカウント登録もありません。',

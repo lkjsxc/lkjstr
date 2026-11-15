@@ -39,6 +39,7 @@ export async function conformance({page,send,wait,check,note,signer,lines,origin
   }
   check('all protocol sources return typed windows',true);
   check('bad relay save rejects the entire action',(await act({a:'relays.save',as:note.pubkey,relays:[{url:'https://bad.test',read:true,write:true}] })).error?.code==='rejected');
+  check('invalid media retry is rejected',(await act({a:'servers.check',server:'http://bad.test'})).error?.code==='rejected');
   check('bad server save rejects the entire action',(await act({a:'servers.save',as:note.pubkey,servers:['http://bad.test']})).error?.code==='rejected');
   check('relay usage flags survive signed replacement',(await act({a:'relays.save',as:note.pubkey,relays:[{url:origin.replace('http:','ws:'),read:true,write:true},{url:'wss://unused.test',read:false,write:false}]},true)).ok);
   check('server list replacement publishes',(await act({a:'servers.save',as:note.pubkey,servers:['https://media.engine.test']},true)).ok);

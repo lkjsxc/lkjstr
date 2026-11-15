@@ -1,7 +1,10 @@
 //! Four uploads, 20 MiB each. One visible destination; every signer/HTTP wait ends.
 use super::*;
+use lkjstr_core::engine::feedback::ServerEvidence;
 use lkjstr_core::engine::wire::{Output as W, Session};
 use lkjstr_protocol::upload;
+#[path = "worker_server_check.rs"]
+pub(super) mod checks;
 #[path = "worker_upload_http.rs"]
 mod http;
 #[path = "worker_upload_sign.rs"]
@@ -92,25 +95,64 @@ impl Task {
             if !host.borrow().engine.upload_servers_ready(&self.account) {
                 return Err("upload-discovery");
             }
-            self.server = host
-                .borrow()
-                .engine
-                .upload_servers(&self.account)
-                .into_iter()
-                .next();
         }
-        let server = self.server.clone().ok_or("not-found")?;
-        if !lkjstr_core::engine::settings::valid_server(&server) {
+        let candidates = self
+            .server
+            .clone()
+            .map(|s| vec![s])
+            .unwrap_or_else(|| host.borrow().engine.upload_candidates(&self.account));
+        let mut error = "not-found";
+        for server in candidates {
+            self.server = Some(server.clone());
+            match self.run_server(host, &server).await {
+                Ok(value) => return Ok(value),
+                Err(code) => {
+                    error = code;
+                    // Only a failed required request permits trying the next destination.
+                    if !host
+                        .borrow()
+                        .engine
+                        .servers
+                        .get(&server)
+                        .is_some_and(|v| v.ok == Some(false))
+                    {
+                        return Err(code);
+                    }
+                }
+            }
+        }
+        Err(error)
+    }
+    fn record<T>(
+        &self,
+        host: &Rc<RefCell<Host>>,
+        server: &str,
+        blossom: bool,
+        result: Result<T, &'static str>,
+    ) -> Result<T, &'static str> {
+        host.borrow_mut().engine.observe_server(
+            server,
+            if blossom { "blossom" } else { "nip96" },
+            ServerEvidence::Required(result.as_ref().map(|_| ()).map_err(|e| *e)),
+        );
+        result
+    }
+    async fn run_server(
+        &self,
+        host: &Rc<RefCell<Host>>,
+        server: &str,
+    ) -> Result<serde_json::Value, &'static str> {
+        if !lkjstr_core::engine::settings::valid_server(server) {
             return Err("rejected");
         }
-        let nip96 = host.borrow().engine.upload_is_nip96(&server);
+        let nip96 = host.borrow().engine.upload_is_nip96(server);
         let hash = upload::hash(&self.bytes);
         let mut blossom = !nip96;
         let mut endpoint = if blossom {
-            lkjstr_protocol::blossom_upload_endpoint(&server).ok_or("rejected")?
+            lkjstr_protocol::blossom_upload_endpoint(server).ok_or("rejected")?
         } else {
             self.progress(&host.borrow(), "discovering", 0);
-            http::discover(&server).await?
+            self.record(host, server, false, http::discover(server).await)?
         };
         loop {
             if host.borrow().stopped {
@@ -147,7 +189,7 @@ impl Task {
                     .is_ok_and(|r| matches!(r.status, 404 | 405))
             {
                 self.progress(&host.borrow(), "discovering", 0);
-                endpoint = http::discover(&server).await?;
+                endpoint = self.record(host, server, false, http::discover(server).await)?;
                 blossom = false;
                 continue;
             }
@@ -155,35 +197,29 @@ impl Task {
             let response = match response {
                 Err("upload-network") if blossom => {
                     self.progress(&host.borrow(), "discovering", 0);
-                    endpoint = http::discover(&server)
-                        .await
-                        .map_err(|_| "upload-network")?;
+                    endpoint = self.record(
+                        host,
+                        server,
+                        true,
+                        http::discover(server).await.map_err(|_| "upload-network"),
+                    )?;
                     blossom = false;
                     continue;
                 }
-                other => other?,
+                other => self.record(host, server, blossom, other)?,
             };
-            http::status(response.status)?;
+            self.record(host, server, blossom, http::status(response.status))?;
             let mut body = response.body;
             if !blossom && response.status == 202 {
                 self.progress(&host.borrow(), "processing", 0);
-                body = http::processed(&body).await?;
+                body = self.record(host, server, blossom, http::processed(&body).await)?;
             }
-            let value =
-                upload::uploaded(&body, &self.mime, &hash, blossom).ok_or("upload-response")?;
-            let mut h = host.borrow_mut();
-            // At most 64 remembered server observations.
-            if h.engine.servers.len() >= 64
-                && let Some(old) = h.engine.servers.keys().next().cloned()
-            {
-                h.engine.servers.remove(&old);
-            }
-            h.engine.servers.insert(
+            return self.record(
+                host,
                 server,
-                (if blossom { "blossom" } else { "nip96" }.into(), true),
+                blossom,
+                upload::uploaded(&body, &self.mime, &hash, blossom).ok_or("upload-response"),
             );
-            h.engine.invalidate();
-            return Ok(value);
         }
     }
 }

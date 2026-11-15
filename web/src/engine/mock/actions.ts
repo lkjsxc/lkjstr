@@ -173,6 +173,8 @@ export function createActions(core: Core) {
         sync();
         return deliver(req);
       }
+      case 'servers.check':
+        return done(req);
       case 'servers.save': {
         const bad = a.servers.find((u) => serverAddress(u) !== u);
         if (bad) return fail(req, 'rejected', `not a server address: ${bad}`);

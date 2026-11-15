@@ -30,7 +30,7 @@ pub(super) async fn discover(server: &str) -> Result<String, &'static str> {
     // NIP-96 permits delegation; cap the chain at two documents.
     for _ in 0..2 {
         let url = lkjstr_protocol::nip96_discovery_url(&server).ok_or("upload-discovery")?;
-        let response = crate::browser::http::get(&url, "application/json", 65536)
+        let response = crate::browser::http::upload_get(&url)
             .await
             .map_err(failure)?;
         if response.status != 200 {
@@ -100,7 +100,7 @@ pub(super) async fn processed(body: &str) -> Result<String, &'static str> {
         crate::browser::promise::pause(1000)
             .await
             .map_err(|_| "internal")?;
-        let response = crate::browser::http::get(url, "application/json", 65536)
+        let response = crate::browser::http::upload_get(url)
             .await
             .map_err(failure)?;
         status(response.status)?;

@@ -10,7 +10,7 @@ pub async fn get(
     accept: &str,
     max: usize,
 ) -> Result<lkjstr_nips::identity::HttpResponse, JsValue> {
-    request(url, accept, max, "GET", None, None, None).await
+    request_for(url, accept, max, "GET", (None, None, None), 10).await
 }
 pub async fn request(
     url: &str,
@@ -20,6 +20,19 @@ pub async fn request(
     body: Option<&JsValue>,
     mime: Option<&str>,
     auth: Option<&str>,
+) -> Result<lkjstr_nips::identity::HttpResponse, JsValue> {
+    request_for(url, accept, max, method, (body, mime, auth), 30).await
+}
+pub async fn upload_get(url: &str) -> Result<lkjstr_nips::identity::HttpResponse, JsValue> {
+    request(url, "application/json", 65536, "GET", None, None, None).await
+}
+async fn request_for(
+    url: &str,
+    accept: &str,
+    max: usize,
+    method: &str,
+    (body, mime, auth): (Option<&JsValue>, Option<&str>, Option<&str>),
+    seconds: u32,
 ) -> Result<lkjstr_nips::identity::HttpResponse, JsValue> {
     let abort = AbortController::new()?;
     let options = RequestInit::new();
@@ -37,7 +50,6 @@ pub async fn request(
     if let Some(auth) = auth {
         request.headers().set("Authorization", auth)?;
     }
-    let seconds = if method == "GET" { 10 } else { 30 };
     let cancel = abort.clone();
     let _timer = Timer::after(seconds * 1000, move || cancel.abort())?;
     let global = js_sys::global();
@@ -49,6 +61,13 @@ pub async fn request(
     })
     .await?
     .dyn_into()?;
+    if method == "HEAD" {
+        return Ok(lkjstr_nips::identity::HttpResponse {
+            status: response.status(),
+            final_url: response.url(),
+            body: String::new(),
+        });
+    }
     let reader: ReadableStreamDefaultReader = response
         .body()
         .ok_or_else(|| JsValue::from_str("empty-body"))?

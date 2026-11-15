@@ -1,12 +1,13 @@
 // Both media protocols, all account signers, real cross-origin preflights and UI retry.
 import { openKeyField } from './smoke-seed.mjs';
+import { serverMarkScenarios } from './smoke-server-marks.mjs';
 import { accounts, compose, launch, setup } from './smoke-signer-support.mjs';
 export async function uploadScenarios(options) {
   const { check, bunker } = options;
   const results = await Promise.allSettled(
     ['local', 'extension', 'remote'].map(async (signer) => {
       const media = options.media.bySigner[signer];
-      const page = await setup({
+      let page = await setup({
         ...options,
         mode: 'upload',
         mediaOrigins: Object.values(media.origins),
@@ -29,8 +30,8 @@ export async function uploadScenarios(options) {
         const defaults = page.locator('[data-entry="set.servers"] .slist .srow');
         await defaults.first().waitFor();
         check(
-          `upload ${signer} untested defaults are neutral and unconfirmed`,
-          (await defaults.allTextContents()).every((text) => text.includes('Not confirmed')) &&
+          `upload ${signer} untested defaults show muted protocols`,
+          (await defaults.allTextContents()).every((text) => /Blossom|NIP-96/.test(text)) &&
             (await defaults.locator('.bad').count()) === 0,
         );
         if (process.env.LKJSTR_SHOTS === '1')
@@ -48,9 +49,16 @@ export async function uploadScenarios(options) {
             'base64',
           ),
         };
+        if (signer === 'extension') {
+          page = await serverMarkScenarios({ ...options, page, media, file });
+          await page.locator(`${compose} textarea`).fill(text);
+        }
         for (const protocol of ['blossom', 'nip96']) {
           const origin = media.origins[protocol];
           const alternate = media.origins[protocol === 'blossom' ? 'nip96' : 'blossom'];
+          await page.evaluate((origin) => {
+            window.uploadTarget = origin;
+          }, origin);
           // Settings saves this same list action. The transport is observed only in test setup.
           await page.evaluate(
             ({ origin, alternate }) => {
@@ -184,6 +192,9 @@ export async function uploadScenarios(options) {
         if (signer === 'extension') {
           await page.evaluate(() => localStorage.setItem('lkjstr:settings', '{"language":"ja"}'));
           await page.reload();
+          await page.evaluate((origin) => {
+            window.uploadTarget = origin;
+          }, media.origins.nip96);
           await page.locator(`${compose} textarea`).waitFor();
           await page.setViewportSize({ width: 390, height: 844 });
           media.set('nip96', 'refuse');
@@ -216,6 +227,9 @@ export async function uploadScenarios(options) {
           await page.locator(`${compose} .thumb.done`).waitFor();
           check('upload Japanese retry retains the file');
         }
+      } catch (error) {
+        console.error(`upload scenario ${signer}: ${String(error)}`);
+        throw error;
       } finally {
         bunker.up();
         bunker.refuse(false);

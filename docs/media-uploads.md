@@ -18,10 +18,15 @@ Byte progress remains honest: zero until the response has been validated, then
 complete. A retry reads a fresh ArrayBuffer from the retained File because the
 previous buffer was transferred to the Worker.
 
-The composer selects one destination, using the owner's first configured server
-before the built-in choices. The Worker no longer silently walks eight servers.
-Untested Settings rows say Not confirmed, not Not answering: no health probe
-has taken place. Only a successful upload confirms the protocol.
+The Worker tries the first server in the owner's list without a fresh required-
+request failure, in list order. The signed event size bounds this candidate list. A failed required request permits
+trying the next; an explicit retry destination stays fixed. Settings and the
+composer picker share the same session evidence. Unknown/checking rows are muted
+and show their known protocol or Not confirmed. A failure shows Not answering,
+its translated upload reason and a row Retry. Success clears the failure at once.
+Verdicts are never persisted or restored. Retry checks required NIP-96 discovery
+or optional BUD-06 HEAD /upload; an unsupported/failed optional HEAD stays unknown.
+No root GET, favicon or short health deadline decides the mark.
 The defaults and Settings choices are blossom.band, blossom.primal.net,
 nostr.build and nostrcheck.me, in that order. An explicit empty owner list remains
 empty in the engine. Changing a retry destination does not publish a server list.
@@ -40,7 +45,8 @@ Refusals, payment requirements and invalid metadata are visible failures.
 There are four concurrent Worker uploads, each at most 20 MiB. An implicit
 server-list lookup waits at most 15 seconds. Signers wait at most 60 seconds;
 Uploads share a 30-second abort deadline for headers and response bodies,
-with a 64 KiB response limit; discovery and polling GETs have 10 seconds. Discovery follows at most two documents. Deferred NIP-96
+with a 64 KiB response limit; required discovery and processing GETs also
+allow 30 seconds. Discovery follows at most two documents. Deferred NIP-96
 processing polls at most six times, with one-second pauses and bounded HTTP.
 The page also settles lost upload replies after 300 seconds. View disposal
 releases the server-list subscription; HTTP timers and remote sockets have
@@ -66,6 +72,7 @@ unique per run. Public HTTP is blocked in these gates.
 Protocol references checked for this repair:
 
 - https://github.com/hzrd149/blossom/blob/master/buds/02.md
+- https://github.com/hzrd149/blossom/blob/master/buds/06.md
 - https://github.com/nostr-protocol/nips/blob/master/96.md
 - https://github.com/nostr-protocol/nips/blob/master/98.md
 - https://blossom.band/ (endpoints and free upload limits)

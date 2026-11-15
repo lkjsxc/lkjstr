@@ -18,14 +18,21 @@ export async function fakeMedia() {
       if (requests.length >= 1000) requests.shift();
       const record = { protocol, method: req.method, path, mode };
       requests.push(record);
+      if (path === '/') return void res.writeHead(200, { 'content-type': 'text/plain' }).end('No root CORS');
       if (req.method === 'OPTIONS') {
         record.allowed = mode !== 'cors';
         return void res.writeHead(204, mode === 'cors' ? {} : headers).end();
       }
       const reply = (status, value) => { if (!res.destroyed) res.writeHead(status, headers).end(JSON.stringify(value)); };
-      if (path === '/.well-known/nostr/nip96.json') return reply(protocol === 'nip96' ? 200 : 404, { api_url: `${origins.nip96}/api` });
+      if (mode === 'dead') return reply(503, {});
+      if (req.method === 'HEAD') return void res.writeHead(mode === 'no-head' ? 405 : 200, headers).end();
+      if (path === '/.well-known/nostr/nip96.json') {
+        if (protocol === 'nip96' && mode === 'slow') await new Promise(done => setTimeout(done, 11000));
+        return reply(protocol === 'nip96' ? 200 : 404, { api_url: `${origins.nip96}/api` });
+      }
       if (protocol === 'nip96' && path === '/upload') return reply(404, {});
       if (path === '/processing') {
+        if (mode === 'processing') await new Promise(done => setTimeout(done, 11000));
         const blob = blobs.get(protocol);
         return reply(201, { status: 'success', nip94_event: { tags: [['url', `${origins[protocol]}/${blob.hash}.png`], ['ox', blob.hash], ['m', 'image/png']] } });
       }

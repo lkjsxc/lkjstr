@@ -43,6 +43,8 @@ pub enum Action {
         account: String,
         servers: Vec<String>,
     },
+    #[serde(rename = "servers.check")]
+    ServersCheck { server: String },
     #[serde(rename = "channel.join")]
     ChannelJoin {
         #[serde(rename = "as")]

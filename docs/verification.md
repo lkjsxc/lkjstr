@@ -160,3 +160,17 @@ show neutral unconfirmed server rows instead of false no-response failures.
 The manual public sample is excluded from gates. See media-uploads.md for bounds
 and ignored tmp/upload-report.md for per-server results and incomplete cleanup.
 Docker is excluded by the worktree-only write rule. No commits or CI edits.
+
+## Media server status mark (2026-11-15)
+
+Native verdict/selection tests and a Settings rendering test cover unknown,
+required failure and recovery. Both smoke gates cover a root without CORS,
+working uploads, row Retry, optional BUD-06 failure, persisted old-down reset,
+shared reasons and ordered fallback. Discovery and processing GETs delayed by
+11 seconds pass with the same 30-second deadline as upload.
+All quiet gates and frontend check/build/smoke/shots pass. Conformance is 212/212;
+two consecutive real smokes are 263/263 each, with zero page errors. Captures:
+tmp/shots/servers-{1440,390}-dark.png. Public fresh/ca2b23fd profile samples show
+all four current defaults answering after successful upload; details and files
+are in ignored tmp/upload-report.md. Docker is excluded by the worktree-only
+write rule. No commits, CI edits, deployments or existing-service operations.

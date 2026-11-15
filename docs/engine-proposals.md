@@ -74,3 +74,10 @@ timeout, payment, discovery and invalid response. Existing byte progress and
 result shapes remain compatible. ServerRow.ok records positive upload
 confirmation, not a live health check. The frontend owns the additive fields in
 protocol.ts. See media-uploads.md for bounds and browser evidence.
+
+## Media server evidence
+
+Additive frontend contract: ServerRow.checked distinguishes unknown from a fresh
+required-request verdict; error carries the same translated code as upload.
+servers.check retries required NIP-96 discovery or optional BUD-06. Optional
+failures stay unknown. Evidence is session-only and shared across subscribers.
