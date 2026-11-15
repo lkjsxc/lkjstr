@@ -163,8 +163,7 @@ export function mountCompose(el: HTMLElement, env: ViewEnv, channel?: string): (
             }
             area.value = '';
             media.clear();
-            restore(draft);
-            outbox.removeDraft(draft);
+            if (restore(draft)) outbox.removeDraft(draft);
           },
         },
       ]);

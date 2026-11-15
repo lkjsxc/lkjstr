@@ -55,14 +55,15 @@ export function setup() {
       };
     },
   } as unknown as Engine;
+  const visible = createSignal(true);
   const env = {
     engine,
     instance: `wish-test-${++serial}`,
-    visible: createSignal(true),
+    visible,
     settings: createSettings(),
     layer: document.createElement('div'),
   } as unknown as ViewEnv;
   const el = document.createElement('div');
   document.body.append(el, env.layer);
-  return { env, el, engine, requests, act };
+  return { env, el, engine, requests, act, visible };
 }

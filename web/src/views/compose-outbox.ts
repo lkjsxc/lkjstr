@@ -13,7 +13,12 @@ export type ChannelDraft = {
   error?: Failure;
   delivery?: readonly Delivery[];
 };
-type Box = { drafts: ChannelDraft[]; busy: Set<ChannelDraft>; listeners: Set<() => void> };
+type Box = {
+  id: string;
+  drafts: ChannelDraft[];
+  busy: Set<ChannelDraft>;
+  listeners: Set<() => void>;
+};
 // One entry per mounted composer or unsettled send; released when both are gone.
 const boxes = new Map<string, Box>();
 export function createChannelOutbox(
@@ -24,18 +29,28 @@ export function createChannelOutbox(
   edit: (draft: Draft) => boolean,
 ) {
   const key = `${env.instance}:outbox`;
+  const saved = loadViewState<{ id: string; drafts: ChannelDraft[] }>(key);
   let box = boxes.get(key);
-  if (!box) {
-    const saved = loadViewState<{ drafts?: ChannelDraft[] }>(key);
-    box = { drafts: saved.drafts ?? legacy, busy: new Set(), listeners: new Set() };
+  if (!box || box.id !== saved.id) {
+    box = {
+      id: crypto.randomUUID(),
+      drafts: saved.drafts ?? legacy,
+      busy: new Set(),
+      listeners: new Set(),
+    };
     boxes.set(key, box);
+    saveViewState(key, { id: box.id, drafts: box.drafts });
   }
-  const { drafts, busy, listeners } = box;
+  const { id, drafts, busy, listeners } = box;
+  const release = (): void => {
+    if (!busy.size && !listeners.size && boxes.get(key) === box) boxes.delete(key);
+  };
   const el = h('div', { class: 'outbox' });
   const notify = (): void => {
-    saveViewState(key, { drafts });
+    // A retired tab may still have an unsettled send; it must not recreate or overwrite a fresh tab.
+    if (loadViewState<{ id: string }>(key).id === id) saveViewState(key, { id, drafts });
     for (const listener of listeners) listener();
-    if (!busy.size && !listeners.size) boxes.delete(key);
+    release();
   };
   const remove = (item: ChannelDraft): void => {
     const index = drafts.indexOf(item);
@@ -125,7 +140,7 @@ export function createChannelOutbox(
     },
     retain(draft: Draft) {
       drafts.push({ as: env.engine.me(), draft });
-      if (!kv.persist(`view:${key}`, { drafts })) {
+      if (!kv.persist(`view:${key}`, { id, drafts })) {
         drafts.pop();
         return false;
       }
@@ -135,7 +150,7 @@ export function createChannelOutbox(
     publish(draft: Draft) {
       const item = { as: env.engine.me(), draft };
       drafts.push(item);
-      if (!kv.persist(`view:${key}`, { drafts })) {
+      if (!kv.persist(`view:${key}`, { id, drafts })) {
         drafts.pop();
         return false;
       }
@@ -145,7 +160,7 @@ export function createChannelOutbox(
     },
     dispose() {
       listeners.delete(draw);
-      if (!busy.size) boxes.delete(key);
+      release();
     },
   };
 }

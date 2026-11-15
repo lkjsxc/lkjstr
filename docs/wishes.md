@@ -12,7 +12,10 @@ that owner's kind 3 and maintains a feed of those follows. An empty or unknown
 list cannot widen into Global. It works signed out and uses ordinary filters.
 Its owner profile is requested separately to keep the tab title current. The
 kind-3 watch remains live after EOSE while that Home is visible; it reopens a
-previously completed lookup and releases on hide/close. Routing is unchanged.
+previously completed lookup and releases on hide/close. On constrained relays,
+it shares slots with live feeds after EOSE using the channel rotation cooldown,
+including when its filter is shared with account discovery. Finite timeline
+requests can also interrupt a settled watch. Routing is unchanged.
 
 `people` serves six local prefix matches, ranked by follows, participants of
 `id`'s thread, then the device directory. Matching uses NFKC and lowercase over
@@ -57,7 +60,8 @@ Filter redraws defer while an input owns the keyboard. Complete valid periods
 apply without formatting the active input; invalid and partial text stays as
 typed. Field draft strings survive subsequent bar redraws. People chips update
 beside their input. Settings controls already update in place; Enter commits
-numeric controls, and list fields commit on blur as well as submission.
+numeric controls, and list fields commit on blur as well as submission. Query
+blur and Enter flush only changed text; an unchanged field does not reopen a feed.
 
 Post, reply and channel use one outbox. It saves the complete outgoing draft
 before clearing and focusing the field, before calling any signer. There can be
@@ -69,6 +73,11 @@ can transiently retain 21 drafts. Outbox persistence is independent of the input
 so an old send completing after remount cannot overwrite newly typed text.
 A failed durable write keeps the draft in its field and does not publish it.
 Uploaded attachments and selected mention ranges travel with the saved draft.
+A failed Edit restoration keeps the outgoing draft after retaining the input.
+Closing a tab captures its input and companion outboxes for explicit reopening;
+a fresh tab clears all those keys. Outbox identities prevent late sends from
+recreating deleted state or overwriting a reused instance. Mention and pasted
+address requests close on hide, reopen on show and release on unmount.
 
 ## Verification
 

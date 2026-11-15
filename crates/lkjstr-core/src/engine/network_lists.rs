@@ -8,10 +8,8 @@ pub(super) fn views(wants: &[(String, NostrFilter, Query)]) -> BTreeSet<String> 
         .map(|(sub, _, _)| sub.clone())
         .collect()
 }
-pub(super) fn live(f: &NostrFilter, members: &BTreeSet<String>, views: &BTreeSet<String>) -> bool {
-    super::filter_live(f)
-        || members.contains("~account-discovery")
-        || (f.kinds.as_deref() == Some(&[3]) && members.iter().any(|sub| views.contains(sub)))
+pub(super) fn watch(f: &NostrFilter, members: &BTreeSet<String>, views: &BTreeSet<String>) -> bool {
+    f.kinds.as_deref() == Some(&[3]) && members.iter().any(|sub| views.contains(sub))
 }
 impl Request {
     pub(super) fn watch_list(&mut self, live: bool, now: u64) -> bool {

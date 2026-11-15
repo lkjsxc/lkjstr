@@ -62,6 +62,7 @@ pub(super) struct Request {
     pub last_rx: u64,
     pub complete: bool,
     pub live: bool,
+    pub list_watch: bool, // Visible TheirHome watch, even when shared with account discovery.
     pub asked: bool,
     pub ready_at: u64,
     // At most the transmitted page limit (<= 200) distinct IDs.
@@ -163,13 +164,15 @@ impl Network {
         self.stabilize_profiles(&mut desired);
         let mut retained = BTreeSet::new();
         for ((relay, _key), (filter, members)) in desired {
-            let live = lists::live(&filter, &members, &live_lists);
+            let list_watch = lists::watch(&filter, &members, &live_lists);
+            let live = filter_live(&filter) || members.contains("~account-discovery") || list_watch;
             let existing = self
                 .requests
                 .iter_mut()
                 .find(|(_, r)| r.relay == relay && r.filter == filter);
             if let Some((id, r)) = existing {
                 let close = r.watch_list(live, now);
+                r.list_watch = list_watch;
                 let relay = r.relay.clone();
                 let id = id.clone();
                 r.refresh_profile(&members, now);
@@ -197,6 +200,7 @@ impl Network {
                         last_rx: now,
                         complete: false,
                         live,
+                        list_watch,
                         asked: false,
                         ready_at: now,
                         received: BTreeSet::new(),

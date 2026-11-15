@@ -41,3 +41,35 @@ it('refuses an Edit swap when the current input cannot be retained durably', () 
   expect(box.el.textContent).not.toContain('current input');
   box.dispose();
 });
+
+for (const restored of [false, true])
+  it(`preserves both drafts during an Edit swap when restoration ${restored ? 'succeeds' : 'fails'}`, () => {
+    const x = setup();
+    const media = [{ url: 'https://example.test/outgoing.png', mime: 'image/png', type: 'image' }];
+    const inputMedia = [{ ...media[0], url: 'https://example.test/input.png' }];
+    saveViewState(x.env.instance, {
+      text: 'current input',
+      media: inputMedia,
+      outbox: [{ as: person.pubkey, draft: { text: 'outgoing draft', media } }],
+    });
+    let off = mountCompose(x.el, x.env);
+    const persist = kv.persist.bind(kv);
+    vi.spyOn(kv, 'persist').mockImplementation((key, value) =>
+      key === `view:${x.env.instance}` && !restored ? false : persist(key, value),
+    );
+    [...x.el.querySelectorAll('button')].find((b) => b.textContent === 'Edit')!.click();
+    x.env.layer.querySelector<HTMLButtonElement>('[role=menuitem]')!.click();
+    expect(x.el.querySelector('textarea')?.value).toBe(restored ? 'outgoing draft' : '');
+    expect(x.el.querySelector('.outbox')?.textContent).toContain('current input');
+    expect(x.el.querySelector('.outbox')?.textContent?.includes('outgoing draft')).toBe(!restored);
+    off();
+    vi.restoreAllMocks();
+    off = mountCompose(x.el, x.env);
+    expect(x.el.querySelector('.outbox')?.textContent).toContain(inputMedia[0]!.url);
+    if (!restored) {
+      [...x.el.querySelectorAll('button')].find((b) => b.textContent === 'Edit')!.click();
+    }
+    expect(x.el.querySelector('textarea')?.value).toBe('outgoing draft');
+    expect(x.el.querySelector('.thumb.done')?.textContent).toContain(media[0]!.url);
+    off();
+  });

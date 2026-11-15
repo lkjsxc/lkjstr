@@ -56,7 +56,18 @@ export async function wishNotifications({ page, real, events, width, fact, engin
       el.scrollTop = 180;
     });
     await page.waitForTimeout(200);
-    if (real) await events({ kind: 'notifications', width });
+    if (real) {
+      // This batch must sort above the held anchor. Same-second ids can instead
+      // sort below it, where no new-row pill is expected.
+      const latest = await page.evaluate(() => {
+        const sub = Object.keys(window.wish.sources).find(
+          (key) => window.wish.sources[key] === 'notifications',
+        );
+        return window.wish.messages.findLast((m) => m.t === 'rows' && m.sub === sub).rows[0].at;
+      });
+      await page.waitForFunction((at) => Date.now() >= at + 1000, latest);
+      await events({ kind: 'notifications', width });
+    }
     await page.locator(`${view('notifications')} .fresh:not([hidden])`).waitFor({ timeout: 20000 });
     await page.locator(view('notifications')).evaluate((el) => {
       el.scrollTop = 0;

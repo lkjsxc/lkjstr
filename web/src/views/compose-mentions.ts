@@ -1,4 +1,3 @@
-// Menu and selected text ranges only. The engine ranks people, resolves addresses and expands the draft.
 import type { Subscription } from '../engine/client.ts';
 import type { Author, Mention, Row } from '../engine/protocol.ts';
 import { h } from '../shared/h.ts';
@@ -140,7 +139,12 @@ export function createMentions(
       ),
     );
   };
+  const releasePasted = (): void => {
+    for (const item of pasted.values()) item.sub.close();
+    pasted.clear();
+  };
   const scanPasted = (): void => {
+    if (!env.visible.get()) return;
     const refs = new Set(
       [...area.value.matchAll(/(?:nostr:)?(?:npub1|nprofile1)[a-z0-9]+/gi)]
         .slice(0, 32)
@@ -172,7 +176,12 @@ export function createMentions(
     drawPreview();
   };
   const suggest = (): void => {
-    if (composing || (env.engine.info?.get()?.version ?? 0) < 5 || area.value === closed)
+    if (
+      !env.visible.get() ||
+      composing ||
+      (env.engine.info?.get()?.version ?? 0) < 5 ||
+      area.value === closed
+    )
       return hide();
     const before = area.value.slice(0, area.selectionStart);
     const found = /(?:^|[\s(])@([^\s@]+(?:@[^\s@]*)?)$/u.exec(before);
@@ -261,6 +270,15 @@ export function createMentions(
   area.addEventListener('compositionstart', begin);
   area.addEventListener('compositionend', finish);
   document.addEventListener('pointerdown', outside);
+  const offVisible = env.visible.subscribe((on) => {
+    if (on) {
+      scanPasted();
+      suggest();
+    } else {
+      hide();
+      releasePasted();
+    }
+  });
   scanPasted();
   return {
     el,
@@ -273,7 +291,8 @@ export function createMentions(
     },
     dispose() {
       hide();
-      for (const p of pasted.values()) p.sub.close();
+      offVisible();
+      releasePasted();
       document.removeEventListener('pointerdown', outside);
     },
   };

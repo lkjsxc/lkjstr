@@ -3,7 +3,12 @@
 // scroll position survives the re-renders that detach it.
 import { t } from '../shared/i18n.ts';
 import { createSignal, type Signal } from '../shared/signal.ts';
-import { dropViewState, loadViewState, saveViewState } from '../shared/view-state.ts';
+import {
+  dropViewState,
+  loadViewState,
+  restoreViewState,
+  snapshotViewState,
+} from '../shared/view-state.ts';
 import { freshTab, kindOf, type ViewEnv, viewOf } from '../views/registry.ts';
 import { type Launcher, type LauncherApi, mountLauncher, NEW_TAB } from './launcher.ts';
 import type { MenuItem } from './menus.ts';
@@ -100,14 +105,14 @@ export function createOwnViews(
     fresh(kind, used, state) {
       const tab = freshTab(kind, used);
       dropViewState(instance(tab));
-      if (state) saveViewState(instance(tab), state);
+      if (state) restoreViewState(instance(tab), state);
       titles.delete(tab);
       return tab;
     },
     retire(tab) {
       mounts.get(tab)?.dispose(); // a view writes what it still held (its reading position) as it goes
       mounts.delete(tab);
-      const state = loadViewState<object>(instance(tab));
+      const state = snapshotViewState(instance(tab));
       dropViewState(instance(tab));
       return state;
     },

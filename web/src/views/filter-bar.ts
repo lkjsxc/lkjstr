@@ -272,19 +272,19 @@ export function filterBar(
       )
     : null;
   let timer: ReturnType<typeof setTimeout> | undefined;
+  const flush = (): void => {
+    clearTimeout(timer);
+    if (input.value !== (f.text ?? '')) change({ ...f, text: input.value }, true);
+  };
   input.addEventListener('input', () => {
     if (reset) reset.hidden = !filterNarrows({ ...f, text: input.value });
     clearTimeout(timer);
-    timer = setTimeout(() => change({ ...f, text: input.value }, true), 250);
+    timer = setTimeout(flush, 250);
   });
-  input.addEventListener('blur', () => {
-    clearTimeout(timer);
-    change({ ...f, text: input.value }, true);
-  });
+  input.addEventListener('blur', flush);
   input.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && !e.isComposing) {
-      clearTimeout(timer);
-      change({ ...f, text: input.value }, true);
+      flush();
     }
     if (pressed(e, 'filterLeave') && !input.value) e.preventDefault(), leave();
   });

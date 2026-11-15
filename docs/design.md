@@ -148,7 +148,7 @@ text, still reaches 4.5:1 on `--bg`. The theme follows the device or Settings.
   toggles and the settings search) is the first row of the content: it
   scrolls away, never floats; shown by default, a setting. One query field
   whose placeholder shows what can be typed (words, from:, has:image), a
-  period of two days, people to keep, notifications flowing in; own Clear.
+  period of two days, people to keep, notifications flowing in; own Clear. An unchanged query keeps results and reading position.
 - A profile lists by kind in tabs under its header: posts, replies,
   reposts, reactions, media. A press anywhere on a notification opens it.
 - The Channels tab (NIP-28): joined ones first, a rule, the others by
@@ -160,14 +160,14 @@ text, still reaches 4.5:1 on `--bg`. The theme follows the device or Settings.
   Retry, Edit and discard for failures, preserving attachments across reload. Elsewhere a message says `# name` above it.
 - What the engine cannot serve (protocol below 3; channels: 4) is not drawn.
 - Loading, empty, failed and end-of-list are one quiet centred line.
-
 - A profile offers its owner's Home: the notes of the people they follow, as a tab of its own.
 
 ## Writing and acting
 
 - The composer is the Post tab: text at note size, who is posting (a button
   that switches accounts), emoji, media, Post. A primary button that cannot
-  act yet is neutral. Sending and failed drafts stay below the field.
+  act yet is neutral. Sending and failed drafts stay below the field; failed Edit swaps keep both drafts.
+  Reopened tabs restore drafts; fresh tabs start empty. Hidden composers release mention lookups.
 - Pressing Post empties the field and leaves the caret in it at once, whatever the signer; what is being sent is shown below, and a failure keeps its text.
 - `@` and letters offer people under the caret: follows first; Enter takes one.
 - Every wrong click can be taken back. A like or a repost is drawn at once

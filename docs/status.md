@@ -192,8 +192,9 @@ are redacted. Lost RPC sockets fail immediately and release their resources.
 
 ## Owner wishes (2026-11-15)
 
-Protocol 5 adds another account's Home, local mention suggestions, explicit
-profile requests and selected mention expansion. Account faces carry full
-metadata. Reactions normalize likes and dislike; notification fresh/unread
-counts use grouped visible rows and persist timestamp ties. The frontend keeps
-focused fields and frees composers before signing. Details: [wishes.md](wishes.md).
+Protocol 5 adds another account's Home, local mentions, profile requests and
+selected mention expansion. Account metadata is complete; reactions normalize
+likes and dislike. Notification counts use grouped rows and persist timestamp
+ties. Fields stay focused; composers clear before signing. Follow watches share
+relay slots with timelines, including shared discovery. Edit swaps retain drafts;
+fresh outboxes stay isolated; hidden mention requests close. See [wishes.md](wishes.md).

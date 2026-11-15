@@ -145,3 +145,16 @@ All four quiet gates, real UI smoke and Worker conformance pass; the delayed
 profile probe passes without page errors. Frontend check, build, mock smoke and
 composer/channel screenshots pass. Docker remains excluded by the worktree-only
 write rule. Changes remain uncommitted; no CI or existing services were changed.
+
+## Owner-wishes branch review (2026-11-15)
+
+Ten frontend regressions cover failed Edit swaps and attachments across remount,
+unchanged query commits, fresh/closed outbox state, late send isolation and hidden
+mention subscriptions. The native follow-watch regression exercises eight
+combinations of arrival order, shared discovery and live/finite timelines on a
+single-slot relay, including resumption, bounded rotation and close cleanup.
+The second browser notification batch waits past the retained anchor second,
+so random same-second id ordering cannot place it below that anchor.
+Run logs, retries and the file list are in ignored tmp/review-fixes-report.md.
+Browser fixtures use loopback traffic and fresh data; jobs and test workers stay
+at four. Docker remains excluded by the worktree-only write restriction.

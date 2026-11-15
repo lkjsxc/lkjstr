@@ -93,8 +93,8 @@ impl Network {
             let count = counts.entry(r.relay.clone()).or_default();
             if *count >= max {
                 if profile(&r.filter) || !counts_filter(&r.filter) || !r.page_eose {
-                    // Names may interrupt feeds; pending work may interrupt settled
-                    // discovery. Discovery tails never interrupt other live work.
+                    // Names may interrupt feeds; channels and visible follow watches
+                    // rotate after EOSE. Discovery tails alone never interrupt live work.
                     // Interrupted requests retain their page coverage and resume later.
                     let victim = self
                         .requests
@@ -105,13 +105,14 @@ impl Network {
                                 && !profile(&q.filter)
                                 && (profile(&r.filter)
                                     || (q.eose
-                                        && ((r.filter.ids.is_some() && q.live)
-                                            || ((channel_work(&r.filter)
-                                                || counts_filter(&r.filter))
-                                                && (channel_work(&q.filter) || q.live))
+                                        && ((q.list_watch
+                                            && !r.members.contains("~account-discovery"))
+                                            || (r.filter.ids.is_some() && q.live)
+                                            || ((slot_sharing(r) || counts_filter(&r.filter))
+                                                && (slot_sharing(q) || q.live))
                                             || (r.live
                                                 && !r.members.contains("~account-discovery")
-                                                && channel_work(&q.filter))
+                                                && slot_sharing(q))
                                             || (!r.members.contains("~account-discovery")
                                                 && counts_filter(&q.filter))
                                             || (q.members.contains("~account-discovery")
@@ -121,13 +122,13 @@ impl Network {
                         .map(|(id, _)| id.clone());
                     if let Some(victim) = victim {
                         let relay = r.relay.clone();
-                        let rotate = channel_work(&r.filter) || r.live;
+                        let rotate = slot_sharing(r) || r.live;
                         if let Some(q) = self.requests.get_mut(&victim) {
                             q.sent = false;
                             q.eose = false;
                             if rotate
                                 && !q.members.contains("~account-discovery")
-                                && (channel_work(&q.filter) || q.live)
+                                && (slot_sharing(q) || q.live)
                             {
                                 q.ready_at = now + 1000;
                             }
@@ -193,9 +194,11 @@ fn counts_filter(f: &NostrFilter) -> bool {
     )
 }
 
-// A bounded cooldown rotates channel work alongside ordinary live feeds.
-fn channel_work(f: &NostrFilter) -> bool {
-    f.kinds
-        .as_ref()
-        .is_some_and(|ks| ks.iter().any(|k| matches!(k, 40 | 41 | 42 | 10005)))
+// A bounded cooldown shares slots between channels, follow watches and live feeds.
+fn slot_sharing(r: &Request) -> bool {
+    r.list_watch
+        || r.filter
+            .kinds
+            .as_ref()
+            .is_some_and(|ks| ks.iter().any(|k| matches!(k, 40 | 41 | 42 | 10005)))
 }
