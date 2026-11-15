@@ -122,7 +122,10 @@ Captures in ignored tmp/screens/ (earlier ones moved to tmp/screens-earlier/):
 slice-firstrun-1440.png (public relays, signed out), slice-signin-390-dark-ja.png,
 slice-profile-pending-1440-dark.png, slice-signedin-1440-ja.png (loopback).
 
-Release candidate: ARTIFACT_LINE
+Release candidate: tmp/lkjstr-dist.tar.gz, 733776 bytes, 17 files, built by
+pnpm build:real and pnpm package at commit 4cd7bbda (About shows it).
+SHA-256: 4b999f5667c17a5bc9ba995244103452ec09eb89192fa8a2b5d37b2701fcbf7b.
+The digest in the Artifact section above is the earlier candidate's.
 
 ## Files
 
