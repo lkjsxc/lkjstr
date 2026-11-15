@@ -12,8 +12,9 @@ impl Session {
                 vec![]
             }
             Input::Configure { config } => {
+                let enabled = config.signed_out_global_filter.unwrap_or(true);
                 self.config = config;
-                vec![]
+                vec![p::Input::GlobalPolicy { enabled }]
             }
             Input::Hint { hint } => vec![p::Input::Hint {
                 visible_subs: hint.visible_subs,

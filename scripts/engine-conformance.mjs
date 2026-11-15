@@ -51,8 +51,8 @@ export async function conformance({page,send,wait,check,note,signer,lines,origin
   await send({t:'signed',req:uploadSign.req,event:JSON.stringify(signed)});
   check('Blossom upload returns validated metadata',(await result(req)).uploaded?.sha256?.length===64);
   check('NIP-96 server replacement publishes',(await act({a:'servers.save',as:note.pubkey,servers:['https://nip96.engine.test']},true)).ok);
-  await page.evaluate(key=>window.worker.postMessage({t:'act',req:'nip96-upload',action:{a:'upload',as:key,name:'fixture.png',mime:'image/png',bytes:new Uint8Array([1,2,3,4]).buffer}}),note.pubkey);
   const handled=new Set((await messages()).filter(m=>m.t==='sign').map(m=>m.req));
+  await page.evaluate(key=>window.worker.postMessage({t:'act',req:'nip96-upload',action:{a:'upload',as:key,name:'fixture.png',mime:'image/png',bytes:new Uint8Array([1,2,3,4]).buffer}}),note.pubkey);
   for(let n=0;n<2;n++) {
     await wait(used=>window.messages.some(m=>m.t==='sign'&&m.req.startsWith('upload-auth-')&&!used.includes(m.req)),[...handled]);
     const request=(await messages()).find(m=>m.t==='sign'&&m.req.startsWith('upload-auth-')&&!handled.has(m.req));

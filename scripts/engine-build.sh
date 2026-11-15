@@ -4,6 +4,9 @@ set -eu
 export CARGO_BUILD_JOBS=4
 engine_features=""
 if [ "${LKJSTR_ENGINE_HARNESS:-0}" = "1" ]; then engine_features="--features=harness"; fi
-cargo build --release $engine_features -p lkjstr-engine --target wasm32-unknown-unknown
-bindgen="${LKJSTR_WASM_BINDGEN:-${XDG_CACHE_HOME:-$PWD/tmp/cache}/trunk/wasm-bindgen-0.2.122/wasm-bindgen}"
+cargo build --release $engine_features -p lkjstr-engine-worker --target wasm32-unknown-unknown
+bindgen="${LKJSTR_WASM_BINDGEN:-wasm-bindgen}"
+if ! command -v "$bindgen" >/dev/null 2>&1; then
+  bindgen="$PWD/tmp/cache/wasm-bindgen/wasm-bindgen"
+fi
 "$bindgen" --target web --out-dir tmp/engine-pkg target/wasm32-unknown-unknown/release/lkjstr_engine.wasm

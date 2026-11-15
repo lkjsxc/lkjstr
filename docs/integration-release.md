@@ -28,8 +28,8 @@ its release candidate, verification and the remaining UI ownership decisions.
 5. Done: real build and smoke, then pnpm package produced
    tmp/lkjstr-dist.tar.gz. The unmodified host unpack function accepted all
    16 files, with no changes to their contents. Digest and size are below.
-6. Not done: the Leptos interface and its historical gates remain. No partial
-   deletion or migration was attempted.
+6. At integration time the Leptos interface remained. Engine polish subsequently
+   removed it and redirected the root gates; see engine-polish.md.
 
 ## Gates
 

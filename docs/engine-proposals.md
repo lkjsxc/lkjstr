@@ -58,3 +58,20 @@ The measured 100000-event sparse-author workload improved from 3087.80 ms to
 are in engine-performance.md. This supports keeping filtering/indexing in Rust
 and sending bounded finished windows; it does not prove a cold 100000-row disk
 startup. Add disk compaction and that browser benchmark before claiming it.
+
+## Count estimates (2026-11-15)
+
+Additive fields applied to protocol.ts: Counts.estimates (replies, reposts,
+reactions, zaps), ProfileRow.countEstimates (following, followers, notes).
+Each uses CountEstimate: unknown with no value, or at-least/exact with value.
+Existing numeric fields remain numbers; -1 accompanies unknown estimates.
+No unqueried field claims zero. Consumers should draw from estimates when
+present. partial remains for compatibility and is not a per-metric claim.
+The real engine reports retained positives as lower bounds and a known kind-3
+follow list as exact; zap totals remain unknown without provider validation.
+
+## Signed-out Global policy (2026-11-15)
+
+EngineConfig.signedOutGlobalFilter?: boolean is additive and defaults true.
+Only Global without an account uses the policy. No new UI control is required
+for engine clients to opt out; the interface owns any eventual setting control.

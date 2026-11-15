@@ -69,7 +69,7 @@ pub(super) fn note(row: &Row, store: &Store, account: Option<&str>) -> Value {
     let (segments, media, quotes) = parts(row);
     let mut v = json!({"kind":"note","key":row.id,"id":row.id,"bech32":lkjstr_protocol::encode_note(&row.id).unwrap_or_else(|_|row.id.clone()),
         "author":author(&row.author),"at":row.created_at.saturating_mul(1000),"segments":segments,"media":media,"quotes":quotes,
-        "counts":{"replies":row.counts.replies,"reposts":row.counts.reposts,"reactions":row.counts.reactions,"zaps":0,"partial":true},
+        "counts":super::counts::note(row),
         "reactions":row.reactions.iter().map(|r|{let mut v=json!({"emoji":r.content,"count":r.count,"mine":r.mine});if let Some(url)=&r.url{v["url"]=json!(url);}v}).collect::<Vec<_>>(),
         "mine":{"reposted":row.own.reposted,"bookmarked":row.own.bookmarked,"own":Some(row.author.pubkey.as_str())==account}});
     if let Some(cw) = &row.warning {

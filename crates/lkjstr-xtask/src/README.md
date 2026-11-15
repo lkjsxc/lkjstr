@@ -1,22 +1,18 @@
-# Xtask Source
+# Xtask source
 
 ## Purpose
 
-Xtask source files implement repository checks and command orchestration.
+Repository validation and quiet verification for the frontend/Worker product.
 
 ## Table of Contents
 
-- [browser_driver.rs](browser_driver.rs): browser-driver selection for WASM checks.
-- [command.rs](command.rs): quiet command matrix runner.
-- [doc_check.rs](doc_check.rs): documentation shape and topology checks.
-- [doc_shape.rs](doc_shape.rs): required headings for task and skill docs.
-- [line_check.rs](line_check.rs): documentation and source line caps.
-- [main.rs](main.rs): xtask command dispatch.
-- [paths.rs](paths.rs): repository traversal helpers.
-- [quiet_steps.rs](quiet_steps.rs): quiet verification step definitions.
-- [rust_style.rs](rust_style.rs): Rust production style scan.
-- [rust_style_test.rs](rust_style_test.rs): test assertion exemptions and production rejection regressions.
-- [sqlite_schema_doc.rs](sqlite_schema_doc.rs): SQLite schema documentation check.
-- [storage_manifest.rs](storage_manifest.rs): storage manifest docs check.
-- [tool_path.rs](tool_path.rs): Rust toolchain path preference helpers.
-- [toolchain.rs](toolchain.rs): required Rust/WASM tool preflight diagnostics.
+- command.rs: quiet gate matrix.
+- dist_check.rs: real frontend asset checks.
+- doc_check.rs: documentation topology and shape.
+- line_check.rs: documentation/source caps.
+- main.rs: command dispatch.
+- paths.rs: bounded repository traversal exclusions.
+- quiet_process.rs: command output and timeout handling.
+- quiet_steps.rs: Rust and real frontend/Worker build steps.
+- rust_style.rs and rust_style_test.rs: production Rust rules and regressions.
+- tool_path.rs: installed Rust tool selection.

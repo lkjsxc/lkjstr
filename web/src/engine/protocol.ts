@@ -152,7 +152,18 @@ export type Reaction = {
   readonly mine: boolean;
 };
 
+/** Legacy numeric fields carry -1 for unknown when estimates are supplied. */
+export type CountEstimate =
+  | { readonly state: 'unknown' }
+  | { readonly state: 'at-least' | 'exact'; readonly value: number };
+
 export type Counts = {
+  readonly estimates?: {
+    readonly replies: CountEstimate;
+    readonly reposts: CountEstimate;
+    readonly reactions: CountEstimate;
+    readonly zaps: CountEstimate;
+  };
   readonly replies: number;
   readonly reposts: number;
   readonly reactions: number;
@@ -212,6 +223,11 @@ export type ProfileRow = {
   readonly website?: string;
   /** Lightning address, shown as text. */
   readonly lud16?: string;
+  readonly countEstimates?: {
+    readonly following: CountEstimate;
+    readonly followers: CountEstimate;
+    readonly notes: CountEstimate;
+  };
   readonly following: number;
   readonly followers: number;
   readonly notes: number;
@@ -492,6 +508,8 @@ export type Hint = {
 
 /** Engine-side settings. The interface stores settings and sends the whole object whenever one changes. */
 export type EngineConfig = {
+  /** Default true. Applies only to Global queries without an account. */
+  readonly signedOutGlobalFilter?: boolean;
   /** Interface language, for the engine's language heuristics. */
   readonly language: string;
   /** Hide notes the engine judges to be repeated or spam (shown as one quiet line each). */

@@ -1,8 +1,20 @@
 // View models of the mock world: the rows exactly as the real engine will hand them over.
-import type { Author, NoteRow, PersonRow, ProfileRow, Quote, Reaction } from '../protocol.ts';
+import type {
+  Author,
+  CountEstimate,
+  NoteRow,
+  PersonRow,
+  ProfileRow,
+  Quote,
+  Reaction,
+} from '../protocol.ts';
 import { banner } from './art.ts';
 import { EMOJI, FOLLOWERS, type Person, SELF } from './people.ts';
 import type { MNote, World } from './world.ts';
+
+const estimate = (value: number, partial: boolean): CountEstimate =>
+  partial && value === 0 ? { state: 'unknown' } : { state: partial ? 'at-least' : 'exact', value };
+const legacy = (value: number, partial: boolean): number => (partial && value === 0 ? -1 : value);
 
 const firstLine = (text: string): string => (text.split('\n')[0] ?? '').slice(0, 120);
 
@@ -64,10 +76,22 @@ export function noteRow(w: World, n: MNote, o: RowOpts): NoteRow {
       : undefined,
     cw: n.cw,
     counts: {
-      replies: w.repliesTo(n.id).length,
-      reposts: n.reposts.length + (n.mineReposted ? 1 : 0),
-      reactions: [...n.reactions.values()].reduce((s, r) => s + r.count, 0),
-      zaps: n.zaps,
+      replies: legacy(w.repliesTo(n.id).length, n.partial),
+      reposts: legacy(n.reposts.length + (n.mineReposted ? 1 : 0), n.partial),
+      reactions: legacy(
+        [...n.reactions.values()].reduce((s, r) => s + r.count, 0),
+        n.partial,
+      ),
+      zaps: legacy(n.zaps, n.partial),
+      estimates: {
+        replies: estimate(w.repliesTo(n.id).length, n.partial),
+        reposts: estimate(n.reposts.length + (n.mineReposted ? 1 : 0), n.partial),
+        reactions: estimate(
+          [...n.reactions.values()].reduce((s, r) => s + r.count, 0),
+          n.partial,
+        ),
+        zaps: estimate(n.zaps, n.partial),
+      },
       partial: n.partial,
     },
     reactions: reactionsOf(n),
@@ -98,9 +122,14 @@ export function profileRow(w: World, p: Person, me: string): ProfileRow {
     about: w.byId.size ? segmentAbout(p.about) : [],
     website: p.website,
     lud16: p.lud16,
+    countEstimates: {
+      following: estimate(40 + ((p.hue * 7) % 400), p.hue % 2 === 0),
+      followers: estimate(120 + ((p.hue * 13) % 5000), p.hue % 2 === 0),
+      notes: estimate(mine.length, p.hue % 2 === 0),
+    },
     following: 40 + ((p.hue * 7) % 400),
     followers: 120 + ((p.hue * 13) % 5000),
-    notes: mine.length,
+    notes: legacy(mine.length, p.hue % 2 === 0),
     partial: p.hue % 2 === 0,
     followed: w.state.following.has(pk),
     followsYou: FOLLOWERS.has(pk) && pk !== me,

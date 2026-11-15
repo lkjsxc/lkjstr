@@ -1,0 +1,33 @@
+[package]
+name = "lkjstr-engine-worker"
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+version.workspace = true
+[lints]
+workspace = true
+[lib]
+name = "lkjstr_engine"
+crate-type = ["cdylib", "rlib"]
+[dependencies]
+serde-wasm-bindgen = "0.6.5"
+lkjstr-nips = { path = "../lkjstr-nips" }
+lkjstr-core = { path = "../lkjstr-core" }
+lkjstr-protocol = { path = "../lkjstr-protocol" }
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.145"
+js-sys = "0.3.99"
+wasm-bindgen = "0.2.122"
+wasm-bindgen-futures = "0.4.72"
+web-sys = { version = "0.3.99", features = [
+ "FormData", "Blob", "BlobPropertyBag",
+ "Request", "RequestInit", "RequestRedirect", "Response", "Headers", "AbortController", "AbortSignal",
+ "ReadableStream", "ReadableStreamDefaultReader",
+ "WebSocket", "CloseEvent", "MessageEvent", "Event", "DedicatedWorkerGlobalScope", "SharedWorkerGlobalScope",
+ "WorkerGlobalScope", "MessagePort", "IdbFactory", "IdbDatabase", "IdbRequest",
+ "IdbOpenDbRequest", "IdbTransaction", "IdbTransactionMode", "IdbObjectStore",
+ "IdbObjectStoreParameters", "IdbIndex", "IdbCursorWithValue", "IdbCursorDirection",
+ "DomStringList"
+] }
+[features]
+harness = []

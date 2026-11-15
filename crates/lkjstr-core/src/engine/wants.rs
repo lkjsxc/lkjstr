@@ -3,7 +3,7 @@ use super::{Engine, protocol::Source, query};
 use lkjstr_protocol::{NostrFilter, tags::tag_values};
 impl Engine {
     pub(super) fn replan(&mut self, now: u64) {
-        let mut wants = Vec::new();
+        let mut wants = self.profile_wants();
         for (sub, v) in self.views.iter().filter(|(_, v)| v.visible) {
             if matches!(v.query.source, Source::Relays | Source::Diagnostics) {
                 continue;
@@ -31,7 +31,6 @@ fn requests(store: &crate::store::Store, v: &super::View) -> Vec<NostrFilter> {
             ..Default::default()
         });
     }
-    let mut people = Vec::new();
     if let Some(account) = &q.account {
         let kinds: Vec<_> = [0, 3, 10000, 10003, 10002, 10030, 10063]
             .into_iter()
@@ -46,26 +45,9 @@ fn requests(store: &crate::store::Store, v: &super::View) -> Vec<NostrFilter> {
             });
         }
     }
-    if matches!(q.source, Source::Profile | Source::Following)
-        && let Some(target) = &q.target
-    {
-        people.push(target.clone());
-    }
     let events = query::events(store, q);
     let range = super::windows::range(v, &events);
     let prefetch = crate::prefetch::collect_window(&events[range], store);
-    people.extend(prefetch.people);
-    people.sort();
-    people.dedup();
-    people.truncate(120);
-    if !people.is_empty() {
-        result.push(NostrFilter {
-            authors: Some(people),
-            kinds: Some(vec![0, 10002]),
-            limit: Some(240),
-            ..Default::default()
-        });
-    }
     let mut ids = prefetch.notes;
     if q.source == Source::Bookmarks
         && let Some(list) = q

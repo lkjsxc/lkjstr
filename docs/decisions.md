@@ -41,3 +41,11 @@ Durable decisions, newest first, with the reason for each.
 - Protocol details stay in `lkjstr-protocol`; a separate `lkjstr-nips` crate
   is being built in parallel and will plug in behind `plan::Directory` and
   `relays::Scores`.
+
+## 2026-11-15: one frontend and one Worker
+
+- web/ is the sole TypeScript interface. The Leptos UI/runtime, root HTML
+  entry and exclusive styles/browser drivers were removed.
+- The Worker moved to crates/lkjstr-engine-worker. Root Cargo.toml is a virtual
+  workspace; root build and release gates use the real frontend/Worker graph.
+- This supersedes the root-package and Trunk choices recorded above.

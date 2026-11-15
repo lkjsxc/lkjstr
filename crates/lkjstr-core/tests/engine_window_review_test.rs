@@ -160,6 +160,7 @@ fn fresh_clears_on_return_to_head_and_when_preceding_rows_disappear() {
 #[test]
 fn advancing_cached_tail_fetches_until_pages_before_claiming_bottom() {
     let mut e = Engine::new();
+    e.signed_out_global_filter = false;
     e.input(
         Input::Configure {
             relays: vec![RELAY.into()],

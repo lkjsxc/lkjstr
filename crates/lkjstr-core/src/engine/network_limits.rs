@@ -135,3 +135,24 @@ impl Network {
             })
     }
 }
+
+impl Network {
+    pub fn profile_finished(&self, author: &str, relays: &[String]) -> bool {
+        if self.verifying {
+            return false;
+        }
+        let rs: Vec<_> = self
+            .requests
+            .values()
+            .filter(|r| {
+                (relays.is_empty() || relays.contains(&r.relay))
+                    && r.filter.kinds.as_deref() == Some(&[0])
+                    && r.filter
+                        .authors
+                        .as_ref()
+                        .is_some_and(|a| a.iter().any(|a| a == author))
+            })
+            .collect();
+        !rs.is_empty() && rs.iter().all(|r| r.asked && (r.eose || r.complete))
+    }
+}

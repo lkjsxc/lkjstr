@@ -1,5 +1,6 @@
 //! Mirrors web/next-20261114:web/src/engine/protocol.ts (authoritative).
 pub mod actions;
+mod counts;
 mod note;
 mod notifications;
 mod output;

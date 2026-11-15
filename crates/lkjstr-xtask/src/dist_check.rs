@@ -1,4 +1,4 @@
-//! `check-dist`: the Trunk output is complete and loadable without a browser:
+//! `check-dist`: the real frontend output is complete without a browser:
 //! every script, stylesheet and WASM module that `index.html` names exists,
 //! and the WASM modules carry the WebAssembly header.
 
@@ -27,7 +27,7 @@ fn referenced(html: &str) -> Vec<String> {
 pub fn check(root: &Path) -> Result<(), String> {
     let dist = root.join("dist");
     let html = fs::read_to_string(dist.join("index.html"))
-        .map_err(|error| format!("dist/index.html: {error} (run trunk build first)"))?;
+        .map_err(|error| format!("dist/index.html: {error} (run pnpm build first)"))?;
     let assets = referenced(&html);
     if !assets.iter().any(|a| a.ends_with(".wasm")) || !assets.iter().any(|a| a.ends_with(".js")) {
         return Err("dist/index.html does not reference the app's .js and .wasm".to_owned());

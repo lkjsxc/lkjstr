@@ -30,6 +30,30 @@ existing controls.
 The conformance gate now uses this worktree's contract, without fetching a
 branch. See engine-package.md for commands and current verification artifacts.
 
+## Engine polish (2026-11-15)
+
+Visible windows batch up to 4096 authors per view, including nested quotes,
+reply context and repost actors. Profile batches share relay work, prefer
+note-delivering read relays, fall back after completion and release on hiding.
+Cached names render immediately while metadata refreshes. Visible profiles
+can preempt occupied relay slots; interrupted feeds resume after lookup.
+Six native regressions cover routing, batching, context, refresh and release.
+The delayed loopback probe uses 240 ms responses and congested slots: baseline
+note-to-named-row 1893.7 ms; revised 232.5 ms. engine-check includes this probe.
+
+Counts carry optional per-metric estimates: unknown, at-least N or exact N.
+Unqueried numeric fields use -1; observed positive totals are lower bounds.
+A known empty follow list is exactly zero. Zap totals remain unknown until
+trusted receipt validation is integrated. The mock emits the same states.
+The frontend owner must consume estimates to draw unknown counts; no renderer
+or strings changed here. Native and mock tests cover these distinctions.
+
+Signed-out Global defaults to deterministic window filtering: three notes per
+author, ten-minute duplicate bursts and no-profile rows after lookup completion.
+EngineConfig.signedOutGlobalFilter disables it; signed-in feeds are untouched.
+The manual read-only sample held 65/200 rows: 33 author cap, 30 no profile and
+two duplicates. Ten examples and owner decisions: [engine-polish.md](engine-polish.md).
+
 ## Engine contract (2026-11-14)
 
 The engine mirrors the fetched frontend's protocol.ts and mock action/message
@@ -116,8 +140,12 @@ cache eviction, search routing, signer replacement and decrypted mute policy.
 All four quiet gates pass; the rebuilt Worker passes 53 local browser checks
 using the existing fetched contract. Report: tmp/engine-harness/report.json.
 
-## Retained application
+## One product
 
-The previous Leptos/Trunk app remains available. Historical UI/design results
-in verification.md do not verify the new independent frontend. This change
-contains engine, protocol, packaging and verification work only.
+web/ is the only interface. crates/lkjstr-engine-worker owns the Worker and
+its browser effects; the root Cargo.toml is a virtual workspace. The Leptos
+UI/runtime, root HTML entry, exclusive styles/icons and browser drivers are
+removed. Shared static icons and the loopback relay helper remain in use.
+Root build and quiet release gates build web/ with the real engine. No Trunk
+installation is needed. Docker configuration follows that build but cannot
+be run in this environment. Historical UI results do not verify this product.

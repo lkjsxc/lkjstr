@@ -17,4 +17,5 @@ fi
 node scripts/engine-harness.mjs > tmp/engine-harness.log 2>&1 || {
   node -e 'const r=require("./tmp/engine-harness/report.json");console.error(r.checks.failure??r.errors)'; exit 1;
 }
+node scripts/engine-profile-latency.mjs > tmp/engine-profile-latency.log 2>&1 || { tail -20 tmp/engine-profile-latency.log; exit 1; }
 echo 'ok engine-conformance'

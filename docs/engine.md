@@ -4,7 +4,7 @@
 
 Rust/WASM owns relay traffic, verification, storage, finished view models and
 protocol actions. The TypeScript frontend owns pixels and the NIP-07 bridge.
-The retained Leptos app imports only browser adapters during cutover.
+The only interface is web/; crates/lkjstr-engine-worker is the Worker host.
 
 ## Build and entry
 
@@ -12,8 +12,8 @@ Run `sh scripts/engine-package.sh` for the frontend-loadable package, described
 in [engine-package.md](engine-package.md). For raw bindings, run
 `sh scripts/engine-build.sh` after setting the local cache environment. Generated web-target wasm-bindgen output is in
 `tmp/engine-pkg`. Initialize that module inside a Worker and retain `start()`.
-Call `stop()` before disposing the handle. The `worker` Cargo feature enables
-entry exports; the old app disables it to avoid a duplicate start symbol.
+Call `stop()` before disposing the handle. The Worker owns its WASM entry;
+the harness feature only adds test-control exports.
 The product requires only generated loader JavaScript plus frontend bootstrap.
 
 `start_shared()` uses the same host with MessagePorts, one engine per origin
@@ -23,8 +23,7 @@ callbacks, cancellable timers and IndexedDB, with explicit stop/drop cleanup.
 
 ## Authoritative contract
 
-The frontend contract is `web/src/engine/protocol.ts` on web/next-20261114.
-It arrived during implementation. `lkjstr-core::engine::wire` mirrors its
+The frontend contract is this worktree's `web/src/engine/protocol.ts`. `lkjstr-core::engine::wire` mirrors its
 `t`, `a`, `k` tags, flat query filters, millisecond timestamps, typed rows,
 key-based patches, signer JSON strings and correlated action results.
 `serde-wasm-bindgen` converts structured-clone values directly, without a JSON

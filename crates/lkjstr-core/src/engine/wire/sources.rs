@@ -93,27 +93,7 @@ fn profile(e: &Engine, p: &str, account: Option<&str>) -> Value {
     result["banner"] = json!(meta.banner);
     result["website"] = json!(meta.website);
     result["lud16"] = json!(meta.lud16);
-    result["following"] = json!(store.follows(p).map(|f| f.len()).unwrap_or(0));
-    result["followers"] = json!(
-        store
-            .feed(&crate::store::Query {
-                kinds: vec![3],
-                mention: Some(p.into()),
-                limit: 6000,
-                ..Default::default()
-            })
-            .len()
-    );
-    result["notes"] = json!(
-        store
-            .feed(&crate::store::Query {
-                kinds: vec![1],
-                authors: Some([p.into()].into_iter().collect()),
-                limit: 6000,
-                ..Default::default()
-            })
-            .len()
-    );
+    super::counts::profile(&mut result, e, p);
     result["partial"] = json!(true);
     result["muted"] = json!(crate::engine::settings::list_has(
         store,

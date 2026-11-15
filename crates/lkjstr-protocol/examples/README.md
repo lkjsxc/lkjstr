@@ -10,4 +10,4 @@ browser client.
   reply, reaction, search, repost and timestamp-tied pagination fixtures. It
   emits those public events, NIP-19
   links and a verification result. It never emits or stores the secret key.
-  `scripts/browser-relay.mjs` invokes it during `pnpm smoke:browser`.
+  `scripts/browser-relay.mjs` invokes it for loopback engine/browser checks.

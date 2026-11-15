@@ -7,8 +7,12 @@ use std::collections::{BTreeMap, BTreeSet};
 mod lifecycle;
 #[path = "network_messages.rs"]
 mod messages;
+#[path = "network_profiles.rs"]
+mod profiles;
 #[path = "network_tick.rs"]
 mod scheduler;
+use scheduler::filter_live;
+type Desired = BTreeMap<(String, String), (NostrFilter, BTreeSet<String>)>;
 #[derive(Debug, Clone)]
 pub enum Effect {
     Inspect(String),
@@ -69,6 +73,7 @@ pub struct Network {
     pub(super) output: Vec<Output>,
     pub(super) publications: BTreeMap<String, Publication>,
     next: u64,
+    pub(super) profiles_changed: bool,
     pub verifying: bool,
     pub(super) reported: BTreeMap<String, String>,
 }
@@ -138,8 +143,7 @@ impl Network {
                 }
             }
         }
-        let mut desired: BTreeMap<(String, String), (NostrFilter, BTreeSet<String>)> =
-            BTreeMap::new();
+        let mut desired = Desired::new();
         for (sub, f, q) in wants {
             let routes: Vec<String> = if q.source == Source::Relay {
                 q.target
@@ -168,6 +172,7 @@ impl Network {
                 entry.1.insert(sub.clone());
             }
         }
+        self.stabilize_profiles(&mut desired);
         let mut retained = BTreeSet::new();
         for ((relay, _key), (filter, members)) in desired {
             let existing = self
@@ -175,6 +180,7 @@ impl Network {
                 .iter_mut()
                 .find(|(_, r)| r.relay == relay && r.filter == filter);
             if let Some((id, r)) = existing {
+                r.refresh_profile(&members, now);
                 r.members = members;
                 retained.insert(id.clone());
             } else {
@@ -239,12 +245,4 @@ impl Network {
         "nip11":r.nip11,"maxReqs":r.max_reqs,"latencyMs":r.latency_ms,
         "activeReqs":self.requests.values().filter(|q|q.relay==*url && q.sent).count()})).collect::<Vec<_>>())
     }
-}
-
-fn filter_live(f: &NostrFilter) -> bool {
-    f.ids.is_none()
-        && f.until.is_none()
-        && f.kinds
-            .as_ref()
-            .is_some_and(|ks| ks.iter().any(|k| matches!(k, 1 | 6 | 7 | 9735)))
 }

@@ -112,10 +112,9 @@ Finish a change with `pnpm check`, `pnpm build` and `pnpm smoke`, and run
 - Both string tables have the same keys and placeholders, and the Japanese
   one contains no English sentence.
 
-## The old interface
+## Product boundary
 
-`crates/lkjstr-web` (Leptos, built by Trunk from the root `index.html`) is
-the interface this one replaces. It stays in the tree because the engine
-branch still builds from it. Do not extend it, and do not take its documents
-([workspace.md](workspace.md), the UI part of
-[architecture.md](architecture.md)) as describing `web/`.
+web/ is the only interface. The Rust Worker lives in
+crates/lkjstr-engine-worker; the root Cargo.toml is a virtual workspace.
+Root pnpm build and quiet release gates build this frontend with that Worker.
+workspace.md describes historical layout behavior; design.md describes web/.

@@ -24,9 +24,22 @@ impl Engine {
         let events = query::events(&self.store, &v.query);
         let range = range(v, &events);
         let (start, end) = (range.start, range.end);
-        let items: Vec<_> = events[start.min(end)..end]
+        let window = &events[start.min(end)..end];
+        let held = if self.signed_out_global_filter
+            && v.query.account.is_none()
+            && v.query.source == Source::Global
+        {
+            super::global::classify(&self.store, window, |p| {
+                self.network.profile_finished(p, &[])
+            })
+        } else {
+            vec![None; window.len()]
+        };
+        let items: Vec<_> = window
             .iter()
-            .map(|e| {
+            .zip(held)
+            .filter(|(_, reason)| reason.is_none())
+            .map(|(e, _)| {
                 let mut r = rows::row_with_lists(
                     &self.store,
                     e,

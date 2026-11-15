@@ -58,7 +58,8 @@ impl Network {
         for r in self.requests.values().filter(|r| r.sent) {
             *counts.entry(r.relay.clone()).or_default() += 1;
         }
-        let ids: Vec<_> = self.requests.keys().cloned().collect();
+        let mut ids: Vec<_> = self.requests.keys().cloned().collect();
+        ids.sort_by_key(|id| (!profile(&self.requests[id].filter), id.clone()));
         for id in ids {
             let r = &self.requests[&id];
             if now < r.ready_at
@@ -69,15 +70,36 @@ impl Network {
             {
                 continue;
             }
-            if now < self.relays[&r.relay].next_req_at {
+            if !profile(&r.filter) && now < self.relays[&r.relay].next_req_at {
                 continue;
             }
             let max = self.relays[&r.relay].max_reqs.clamp(1, 8);
             let count = counts.entry(r.relay.clone()).or_default();
             if *count >= max {
-                continue;
+                if profile(&r.filter) {
+                    // A visible name may interrupt a live feed, which resumes after EOSE.
+                    let victim = self
+                        .requests
+                        .iter()
+                        .find(|(_, q)| q.relay == r.relay && q.sent && !profile(&q.filter))
+                        .map(|(id, _)| id.clone());
+                    if let Some(victim) = victim {
+                        let relay = r.relay.clone();
+                        if let Some(q) = self.requests.get_mut(&victim) {
+                            q.sent = false;
+                            q.eose = false;
+                        }
+                        self.send(&relay, json!(["CLOSE", victim]));
+                    } else {
+                        continue;
+                    }
+                } else {
+                    continue;
+                }
+            } else {
+                *count += 1;
             }
-            *count += 1;
+            let r = &self.requests[&id];
             let relay = r.relay.clone();
             let mut f = r.filter.clone();
             if let Some(at) = r.last_event.filter(|_| r.live) {
@@ -85,8 +107,9 @@ impl Network {
             }
             f.limit = Some(f.limit.unwrap_or(200).min(self.relays[&relay].max_limit));
             let frame = json!(["REQ", id, filter_to_value(&f)]);
+            let is_profile = profile(&f);
             self.send(&relay, frame);
-            if let Some(r) = self.relays.get_mut(&relay) {
+            if !is_profile && let Some(r) = self.relays.get_mut(&relay) {
                 r.next_req_at = now + 100;
             }
             if let Some(r) = self.requests.get_mut(&id) {
@@ -103,4 +126,16 @@ impl Network {
         self.send_pending();
         self.settle(now);
     }
+}
+
+fn profile(f: &NostrFilter) -> bool {
+    f.kinds.as_deref() == Some(&[0])
+}
+
+pub(super) fn filter_live(f: &NostrFilter) -> bool {
+    f.ids.is_none()
+        && f.until.is_none()
+        && f.kinds
+            .as_ref()
+            .is_some_and(|ks| ks.iter().any(|k| matches!(k, 1 | 6 | 7 | 9735)))
 }
