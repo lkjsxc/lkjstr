@@ -9,6 +9,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("{}", json!({"pubkey":key.public_key()}));
     for line in io::stdin().lock().lines() {
         let input: Value = serde_json::from_str(&line?)?;
+        if let Some(fixture) = input.get("fixture") {
+            let unsigned: p::UnsignedNostrEvent = serde_json::from_value(fixture.clone())?;
+            if unsigned.pubkey != key.public_key() {
+                return Err("wrong fixture author".into());
+            }
+            let event =
+                p::sign_event_with_secret_hex(&unsigned, &p::bytes_to_hex(secret.as_bytes()))
+                    .map_err(|_| "fixture signing failed")?;
+            println!("{}", serde_json::to_string(&event)?);
+            continue;
+        }
         let event: p::NostrEvent = serde_json::from_value(input["event"].clone())?;
         if !matches!(p::verify_event(&event), p::VerificationResult::Ok(_)) {
             return Err("invalid RPC event".into());

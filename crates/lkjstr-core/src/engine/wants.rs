@@ -4,6 +4,7 @@ use lkjstr_protocol::{NostrFilter, tags::tag_values};
 impl Engine {
     pub(super) fn replan(&mut self, now: u64) {
         let mut wants = self.profile_wants();
+        wants.extend(self.discovery_wants());
         for (sub, v) in self.views.iter().filter(|(_, v)| v.visible) {
             if matches!(v.query.source, Source::Relays | Source::Diagnostics) {
                 continue;

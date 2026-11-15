@@ -31,3 +31,5 @@ Engine (`crates/`):
   design.md for `web/`.
 - [design-review.md](design-review.md): review of the previous design text;
   historical.
+
+- [Owner engine feedback](owner-feedback.md): relay discovery, tags, media, stats and continuity.

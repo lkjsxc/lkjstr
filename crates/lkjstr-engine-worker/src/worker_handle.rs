@@ -37,3 +37,15 @@ impl WorkerHandle {
         pump(&self.host);
     }
 }
+
+#[cfg(feature = "harness")]
+#[wasm_bindgen]
+impl WorkerHandle {
+    pub fn set_test_relays(&mut self, urls: JsValue) {
+        if let Ok(relays) = serde_wasm_bindgen::from_value::<Vec<String>>(urls) {
+            let mut h = self.host.borrow_mut();
+            let at = h.time();
+            h.engine.input(Input::Configure { relays }, at);
+        }
+    }
+}

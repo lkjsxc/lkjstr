@@ -17,6 +17,7 @@ impl Network {
                     self.effects.push(Effect::Disconnect(url.clone()));
                     if let Some(r) = self.relays.get_mut(&url) {
                         r.online = false;
+                        r.connected_since = None;
                         r.connecting = false;
                         r.retry_at = now;
                     }
@@ -86,12 +87,18 @@ impl Network {
             let max = self.relays[&r.relay].max_reqs.clamp(1, 8);
             let count = counts.entry(r.relay.clone()).or_default();
             if *count >= max {
-                if profile(&r.filter) {
-                    // A visible name may interrupt a live feed, which resumes after EOSE.
+                if profile(&r.filter) || !counts_filter(&r.filter) {
+                    // Names may interrupt feeds; feeds may interrupt settled counts.
+                    // Interrupted requests retain their page coverage and resume later.
                     let victim = self
                         .requests
                         .iter()
-                        .find(|(_, q)| q.relay == r.relay && q.sent && !profile(&q.filter))
+                        .find(|(_, q)| {
+                            q.relay == r.relay
+                                && q.sent
+                                && !profile(&q.filter)
+                                && (profile(&r.filter) || (counts_filter(&q.filter) && q.eose))
+                        })
                         .map(|(id, _)| id.clone());
                     if let Some(victim) = victim {
                         let relay = r.relay.clone();
@@ -147,7 +154,12 @@ fn profile(f: &NostrFilter) -> bool {
 pub(super) fn filter_live(f: &NostrFilter) -> bool {
     f.ids.is_none()
         && f.until.is_none()
-        && f.kinds
-            .as_ref()
-            .is_some_and(|ks| ks.iter().any(|k| matches!(k, 1 | 6 | 7 | 9735)))
+        && f.kinds.as_ref().is_some_and(|ks| {
+            ks.iter()
+                .any(|k| matches!(k, 1 | 6 | 7 | 9735 | 10002 | 10063))
+        })
+}
+
+fn counts_filter(f: &NostrFilter) -> bool {
+    f.kinds.as_deref() == Some(&[1, 6, 7, 9735])
 }

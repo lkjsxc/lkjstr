@@ -61,7 +61,9 @@ impl Engine {
                 }
                 e.content = content;
                 e.tags = tags;
-                if kind != "note" {
+                if kind == "long-form" {
+                    e.kind = 30023;
+                } else if kind != "note" {
                     let parent = target
                         .as_deref()
                         .and_then(|id| self.store.get(id))
@@ -163,7 +165,11 @@ impl Engine {
         {
             e.created_at = e.created_at.max(previous.created_at.saturating_add(1));
         }
-        if e.kind == 1 {
+        if self.client_tag && matches!(e.kind, 1 | 6 | 7 | 30023) {
+            e.tags.retain(|t| t.first().is_none_or(|k| k != "client"));
+            e.tags.push(vec!["client".into(), "lkjstr".into()]);
+        }
+        if matches!(e.kind, 1 | 30023) {
             e.tags = lkjstr_protocol::content_derived_tags(&e.content, &[], &e.tags);
             if e.tags.len() > 1000 {
                 return Err("event-too-large");

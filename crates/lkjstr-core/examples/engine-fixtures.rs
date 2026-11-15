@@ -44,7 +44,27 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
     for line in io::stdin().lock().lines() {
         let line = line?;
-        let unsigned: UnsignedNostrEvent = serde_json::from_str(&line)?;
+        let value: serde_json::Value = serde_json::from_str(&line)?;
+        if let Some(count) = value["fixtureRows"].as_u64() {
+            let events = (0..count.min(6000))
+                .map(|i| {
+                    finalize_event(
+                        &EventTemplate {
+                            pubkey: None,
+                            created_at: 1700100000 + i / 4,
+                            kind: 1,
+                            tags: vec![],
+                            content: format!("Continuity fixture {i}"),
+                        },
+                        &key,
+                    )
+                })
+                .collect::<Result<Vec<_>, _>>()
+                .map_err(|_| "fixture signing failed")?;
+            println!("{}", serde_json::to_string(&events)?);
+            continue;
+        }
+        let unsigned: UnsignedNostrEvent = serde_json::from_value(value)?;
         let signed = finalize_event(
             &EventTemplate {
                 pubkey: Some(unsigned.pubkey),

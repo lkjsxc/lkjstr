@@ -1,9 +1,11 @@
 //! Mirrors web/next-20261114:web/src/engine/protocol.ts (authoritative).
 pub mod actions;
 mod counts;
+mod feedback;
 mod note;
 mod notifications;
 mod output;
+mod publish;
 pub mod queries;
 mod query_translate;
 mod quote_state;
@@ -16,6 +18,14 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Deserialize)]
 #[serde(tag = "t", rename_all = "camelCase")]
 pub enum Input {
+    Stats {
+        req: String,
+    },
+    RowAtTime {
+        req: String,
+        sub: String,
+        at: u64,
+    },
     Configure {
         config: Config,
     },
@@ -44,6 +54,8 @@ pub enum Input {
         anchor: Anchor,
         before: usize,
         after: usize,
+        #[serde(default, rename = "retainAbove")]
+        retain_above: bool,
     },
     Act {
         req: String,
@@ -58,6 +70,19 @@ pub enum Input {
 #[derive(Serialize)]
 #[serde(tag = "t", rename_all = "camelCase")]
 pub enum Output {
+    Stats {
+        req: String,
+        stats: serde_json::Value,
+    },
+    RowAtTime {
+        req: String,
+        sub: String,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        key: Option<String>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        at: Option<u64>,
+        cached: bool,
+    },
     Heartbeat,
     GetPublicKey {
         req: String,

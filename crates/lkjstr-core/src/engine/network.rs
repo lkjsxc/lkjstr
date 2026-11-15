@@ -3,12 +3,18 @@ use super::protocol::{Output, Query, Source};
 use lkjstr_protocol::{NostrEvent, NostrFilter, filter_to_value, normalize_relay_url};
 use serde_json::{Value, json};
 use std::collections::{BTreeMap, BTreeSet};
+#[path = "network_config.rs"]
+mod configuration;
 #[path = "network_lifecycle.rs"]
 mod lifecycle;
 #[path = "network_messages.rs"]
 mod messages;
+#[path = "network_stats.rs"]
+mod observations;
 #[path = "network_profiles.rs"]
 mod profiles;
+#[path = "network_publications.rs"]
+mod publications;
 #[path = "network_tick.rs"]
 mod scheduler;
 use scheduler::filter_live;
@@ -28,6 +34,11 @@ pub struct Relay {
     pub retry_at: u64,
     pub failures: u32,
     pub received: u64,
+    pub duplicates: u64,
+    pub bytes_in: u64,
+    pub bytes_out: u64,
+    pub connected_since: Option<u64>,
+    pub last_error: Option<String>,
     pub useful: u64,
     pub sent: u64,
     pub max_reqs: usize,
@@ -79,47 +90,6 @@ pub struct Network {
     pub(super) reported: BTreeMap<String, String>,
 }
 impl Network {
-    pub fn configure(&mut self, urls: Vec<String>, now: u64) {
-        self.relay_order = urls
-            .iter()
-            .filter_map(|u| normalize_relay_url(u))
-            .take(8)
-            .collect();
-        let urls: BTreeSet<_> = urls
-            .iter()
-            .filter_map(|u| normalize_relay_url(u))
-            .take(8)
-            .collect();
-        let removed: Vec<_> = self
-            .relays
-            .keys()
-            .filter(|u| !urls.contains(*u))
-            .cloned()
-            .collect();
-        for r in removed {
-            self.effects.push(Effect::Disconnect(r.clone()));
-            self.relays.remove(&r);
-        }
-        for url in urls {
-            self.known
-                .entry(url.clone())
-                .or_insert(super::wire::RelayConfig {
-                    url: url.clone(),
-                    read: true,
-                    write: true,
-                    search: true,
-                });
-            if !self.relays.contains_key(&url) {
-                self.effects.push(Effect::Inspect(url.clone()));
-            }
-            self.relays.entry(url).or_insert(Relay {
-                retry_at: now,
-                max_reqs: 4,
-                max_limit: 200,
-                ..Default::default()
-            });
-        }
-    }
     pub fn plan(&mut self, wants: Vec<(String, NostrFilter, Query)>, now: u64) {
         self.reported
             .retain(|sub, _| wants.iter().any(|(id, _, _)| id == sub));
@@ -231,20 +201,9 @@ impl Network {
     fn send(&mut self, relay: &str, value: Value) {
         if let Some(r) = self.relays.get_mut(relay) {
             r.sent += 1;
+            r.bytes_out += value.to_string().len() as u64;
         }
         self.effects
             .push(Effect::Send(relay.into(), value.to_string()));
-    }
-    pub fn drain_effects(&mut self) -> Vec<Effect> {
-        std::mem::take(&mut self.effects)
-    }
-    pub fn drain_output(&mut self) -> Vec<Output> {
-        std::mem::take(&mut self.output)
-    }
-    pub fn stats(&self) -> Value {
-        json!(self.relays.iter().map(|(url,r)|json!({"url":url,"online":r.online,
-        "lastRx":r.last_rx,"received":r.received,"useful":r.useful,"sent":r.sent,"failures":r.failures,
-        "nip11":r.nip11,"maxReqs":r.max_reqs,"latencyMs":r.latency_ms,
-        "activeReqs":self.requests.values().filter(|q|q.relay==*url && q.sent).count()})).collect::<Vec<_>>())
     }
 }

@@ -58,6 +58,7 @@ impl Engine {
                 .iter()
                 .filter(|r| r.read || r.write || r.search)
                 .map(|r| r.url.clone())
+                .chain(self.discovery_relays.iter().cloned())
                 .collect(),
             now,
         );
@@ -87,28 +88,25 @@ impl Engine {
     /// The verified owner's NIP-65 list replaces bootstrap read/write usage.
     /// Bound: eight entries, matching configure_relays; invalid URLs are ignored.
     pub fn account_relays(&self, account: &str) -> Option<(String, Vec<RelayConfig>)> {
-        let event = self.store.replaceable(account, 10002)?;
-        let entries = event
-            .tags
-            .iter()
-            .filter_map(|t| {
-                if t.first()?.as_str() != "r" {
-                    return None;
-                }
-                let url = strict_relay(t.get(1)?)?;
-                let mode = t.get(2).map(String::as_str);
-                if !matches!(mode, None | Some("read" | "write")) {
-                    return None;
-                }
-                Some(RelayConfig {
-                    url,
-                    read: mode != Some("write"),
-                    write: mode != Some("read"),
-                    search: false,
-                })
+        let Some(event) = self.store.replaceable(account, 10002) else {
+            return super::discovery::legacy_relays(&self.store, account);
+        };
+        let entries = super::discovery::merge_relays(event.tags.iter().filter_map(|t| {
+            if t.first()?.as_str() != "r" {
+                return None;
+            }
+            let url = strict_relay(t.get(1)?)?;
+            let mode = t.get(2).map(String::as_str);
+            if !matches!(mode, None | Some("read" | "write")) {
+                return None;
+            }
+            Some(RelayConfig {
+                url,
+                read: mode != Some("write"),
+                write: mode != Some("read"),
+                search: false,
             })
-            .take(8)
-            .collect();
+        }));
         Some((event.id.clone(), entries))
     }
     pub fn relay_rows(&self) -> Vec<Value> {

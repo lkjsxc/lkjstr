@@ -99,16 +99,27 @@ async fn run(
     mime: &str,
     bytes: &[u8],
 ) -> Result<serde_json::Value, &'static str> {
+    host.borrow().accounts.require_signer(account)?;
     if !(mime.starts_with("image/") || mime.starts_with("video/") || mime.starts_with("audio/")) {
         return Err("unsupported");
     }
+    for _ in 0..150 {
+        if host.borrow().stopped {
+            return Err("offline");
+        }
+        if host.borrow().engine.upload_servers_ready(account) {
+            break;
+        }
+        crate::browser::promise::pause(100)
+            .await
+            .map_err(|_| "internal")?;
+    }
+    if !host.borrow().engine.upload_servers_ready(account) {
+        return Err("offline");
+    }
     let servers = {
         let h = host.borrow();
-        h.engine
-            .store
-            .replaceable(account, 10063)
-            .map(|e| lkjstr_protocol::tags::tag_values(&e, "server"))
-            .unwrap_or_default()
+        h.engine.upload_servers(account)
     };
     if servers.is_empty() {
         return Err("not-found");

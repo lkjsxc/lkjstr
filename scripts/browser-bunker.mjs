@@ -31,6 +31,14 @@ export async function fakeBunker() {
   };
   return {
     pubkey, route, calls,
+    async fixture(kind,tags,created_at) {
+      let result;
+      chain=chain.then(async()=>{
+        child.stdin.write(`${JSON.stringify({fixture:{pubkey,kind,tags,created_at,content:''}})}\n`);
+        result=JSON.parse((await lines.next()).value);
+      });
+      await chain;return result;
+    },
     down() { online = false; for (const socket of sockets) socket.close(); },
     up() { online = true; },
     refuse(value) { refused = value; },

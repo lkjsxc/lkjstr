@@ -80,3 +80,16 @@ A rapid rejected-send/reload currently fails draft persistence; its frontend
 handoff remains a release blocker. Pagination regressions also run against the
 pre-review scheduler in ignored tmp/ evidence, proving they detect the old bugs.
 Docker remains excluded by the worktree-only write rule.
+
+## Owner feedback checks (2026-11-15)
+
+All four quiet gates pass: check:repo, test:quiet, rust-wasm:quiet and verify:quiet.
+Conformance passes 134/134 checks with no page errors, including discovery for
+NIP-07, NIP-46 and restored local signers, immediate server-list-aware upload,
+client tags, default Blossom/NIP-96 and 5000 relay-paged rows with timestamp ties.
+Twelve native regressions cover discovery, bounds, tags, upload selection, stats,
+retained windows and history refill/preemption. Frontend check, build and smoke
+also pass with the additive protocol/stub mirror. Reports are under ignored tmp/.
+The release and conformance builds run sequentially because they share temporary
+Worker assets. Docker is excluded by the worktree-only write restriction.
+No commit, CI change, production access, deployment or existing-service restart.

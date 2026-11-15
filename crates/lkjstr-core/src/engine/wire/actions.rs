@@ -89,6 +89,7 @@ pub enum Publish {
 #[serde(rename_all = "camelCase")]
 pub struct Draft {
     pub text: String,
+    pub long_form: Option<LongForm>,
     pub reply_to: Option<String>,
     pub quote: Option<String>,
     pub media: Option<Vec<Uploaded>>,
@@ -130,4 +131,10 @@ impl std::fmt::Debug for Action {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str("Action [redacted]")
     }
+}
+
+#[derive(Debug, Deserialize)]
+pub struct LongForm {
+    pub identifier: String,
+    pub title: Option<String>,
 }
