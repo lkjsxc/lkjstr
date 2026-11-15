@@ -30,7 +30,7 @@ const env = () =>
   }) as unknown as ViewEnv;
 
 it('dated rows keep only the clock through author/count patches; undated rows keep the date', () => {
-  const note = { ...row(), at: Date.now() - 2 * 86_400_000 };
+  const note = { ...row(), at: Date.now() - 2 * 86_400_000, repostedBy: undefined };
   const list = document.createElement('div');
   document.body.append(list);
   let separated = true;

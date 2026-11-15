@@ -1,7 +1,7 @@
 // A note, drawn from the engine's view model exactly as it arrives. A press on a person opens their profile, on
 // the text or the time the note's thread, on a quoted card the quoted note: the same everywhere.
 import type { NoteRow } from '../engine/protocol.ts';
-import { clockOf, fullTime, noteTime } from '../shared/format.ts';
+import { fullTime, noteTime } from '../shared/format.ts';
 import { type Child, h } from '../shared/h.ts';
 import { getLang, t } from '../shared/i18n.ts';
 import { icon } from '../shared/icons.ts';
@@ -13,8 +13,12 @@ import { quoteCard } from './note-quote.ts';
 import { displayName, faceButton, how, nameButton, plainName, segments } from './parts.ts';
 import type { ViewEnv } from './registry.ts';
 
-const timeOf = (at: number, env: ViewEnv): string =>
-  noteTime(at, Date.now(), { relative: env.settings.get().relativeTime, lang: getLang() });
+const timeOf = (row: NoteRow, env: ViewEnv, dated: boolean): string => {
+  const relative = env.settings.get().relativeTime;
+  // Absolute dates compare with the divider's local day; relative ages use the current time.
+  const now = dated && !relative ? (row.repostedBy?.at ?? row.at) : Date.now();
+  return noteTime(row.at, now, { relative, lang: getLang() });
+};
 
 /** Long text folds by whole lines; the button appears only when something is actually cut off. */
 function fold(text: HTMLElement): void {
@@ -57,7 +61,7 @@ function head(row: NoteRow, env: ViewEnv, dated: boolean): HTMLElement {
     h(
       'time',
       { title: fullTime(row.at) },
-      row.pending ? t('note.sending') : dated ? clockOf(row.at) : timeOf(row.at, env),
+      row.pending ? t('note.sending') : timeOf(row, env, dated),
     ),
     // Where the tile is too narrow for a bookmark button, a set bookmark is this mark instead.
     h(

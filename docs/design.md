@@ -99,7 +99,7 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
 - A person whose name has not arrived is shown by a short npub, never by
   hex. When the name comes only the header line and the face are drawn
   again, so text, folds and loaded pictures stay. Tab titles follow.
-- Rows under day separators say `HH:mm` only. Elsewhere older rows include the full date; every time tooltip has the full date and time. Relative time is a setting, off by default.
+- Absolute times under day separators say `HH:mm` when the note and divider share a local day; cross-day reposts retain the original date. Elsewhere older rows include the full date; every time tooltip has the full date and time. Relative time applies in every feed and is off by default.
 - Above the header, in `--faint`: who reposted, or what is replied to.
 - Text, then media (one picture keeps its ratio up to the media height; two
   to four share a grid), then quoted notes as cards. Long notes fold by whole
@@ -187,7 +187,7 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
 - Stats is numbers and quiet marks, no prose: five figures, then a sortable
   row per relay, trouble first; three publication columns group accepted/planned,
   pending/failed and exclusions by own/inbox/capacity limits; absent is a dash.
-  Route words, followed-author coverage and weights are sortable columns. Never-connected relays and all-zero compound cells show one dash. Heads and cells name every compound part in localized tooltips.
+  Route words, followed-author coverage and weights are sortable columns. Never-connected traffic and all-zero compound cells show one dash; nonzero publication counts show even before a connection. Heads and cells name every compound part in localized tooltips.
   Narrow tiles show Relay, Received and Answer; tapping a row unfolds the other labelled values, one row at a time, retained per tab. Relay names elide inside the host and keep the tail. No horizontal scrolling.
   A second table shows request purposes, weights, counts and completion marks; narrow tiles show Purpose and Relay, with the request id and other values in retained unfolded lines.
 - Docs is a tab with a tree of groups and pages: what lkjstr is, release

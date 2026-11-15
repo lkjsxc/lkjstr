@@ -192,7 +192,7 @@ export function mountStats(el: HTMLElement, env: ViewEnv): () => void {
         const counts = PUBLISH[key].map((field) => r[field]);
         put(
           value,
-          never || counts.every((n) => !n)
+          counts.every((n) => !n)
             ? NONE
             : counts.map((n) => (n === undefined ? NONE : num(n))).join(' / '),
         );
