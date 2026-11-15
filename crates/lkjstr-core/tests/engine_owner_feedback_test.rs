@@ -30,9 +30,13 @@ fn discovery_is_independent_of_views_and_retains_indexers() {
         0,
     );
     e.network.connected("wss://index.test/", 1);
-    assert!(frames(&mut e).iter().any(|f| f[0] == "REQ"
-        && f[2]["authors"] == json!([account])
-        && f[2]["kinds"] == json!([3, 10002, 10063])));
+    assert!(frames(&mut e).iter().any(|f| {
+        f[0] == "REQ"
+            && f[2]["authors"] == json!([account])
+            && f[2]["kinds"]
+                .as_array()
+                .is_some_and(|kinds| kinds.len() == 1)
+    }));
     e.configure_relays(
         vec![wire::RelayConfig {
             url: "wss://owner.test/".into(),

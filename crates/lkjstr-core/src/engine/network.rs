@@ -158,6 +158,7 @@ impl Network {
                 self.next += 1;
                 let id = format!("e{}", self.next);
                 retained.insert(id.clone());
+                let live = filter_live(&filter) || members.contains("~account-discovery");
                 self.requests.insert(
                     id,
                     Request {
@@ -172,7 +173,7 @@ impl Network {
                         sent_at: 0,
                         last_rx: now,
                         complete: false,
-                        live: filter_live(&filter),
+                        live,
                         asked: false,
                         ready_at: now,
                         received: BTreeSet::new(),

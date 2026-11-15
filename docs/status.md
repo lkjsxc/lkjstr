@@ -10,7 +10,9 @@ engine plumbing, startup and build/test/release scripts.
 
 Account discovery follows active signers independently of account views, retains
 indexer/hint lookups after NIP-65 adoption, follows updates and falls back to
-kind 3 relay JSON. Authored events default to the lkjstr client tag; clientTag
+kind 3 relay JSON. Separate per-kind requests handle max_limit=1; settled
+discovery yields to feeds and unfinished discovery on single-slot relays.
+Authored events default to the lkjstr client tag; clientTag
 can disable it. Blossom defaults respect kind 10063; NIP-96 remains a fallback.
 Additive stats, retained windows and cached rowAtTime lookup are implemented.
 Bounds, counter meanings, conformance and limitations: [owner-feedback.md](owner-feedback.md).

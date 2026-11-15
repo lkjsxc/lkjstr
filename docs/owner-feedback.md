@@ -9,7 +9,7 @@ Engine changes for the five owner feedback items and their practical bounds.
 The live gap was in discovery, not only adoption. Account lists were requested
 only by account-bearing views, missing kinds stopped being requested once cached,
 and adopting an owner list removed the bootstrap sockets. Active accounts now
-hold a bounded live lookup for kinds 3, 10002 and 10063 on bootstrap/indexer,
+hold three bounded live lookups, one each for kinds 3, 10002 and 10063, on bootstrap/indexer,
 imported nprofile hints and owner relays. The same host path covers local keys,
 NIP-07 and NIP-46, including restored accounts. Hiding every attached page
 releases the
@@ -18,6 +18,10 @@ no feed window to discover its list. Changing accounts releases old wants.
 At most eight bootstrap URLs, eight imported hints and eight owner/search URLs
 are retained. Discovery-only routes cannot publish. Verified kind 10002 wins,
 including an explicit empty list; otherwise valid kind 3 JSON content is used.
+Each lookup requests one result so max_limit=1 cannot hide an older list kind.
+On single-slot relays, unfinished discovery can interrupt settled discovery;
+feeds take priority and can interrupt settled discovery too. Paused requests
+resume when slots become available, retaining independent per-kind cursors.
 Kind 3 relay JSON remains editable as a public follow list.
 Newer lists replace usage without turning indexers into account write relays.
 

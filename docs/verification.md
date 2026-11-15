@@ -93,3 +93,13 @@ also pass with the additive protocol/stub mirror. Reports are under ignored tmp/
 The release and conformance builds run sequentially because they share temporary
 Worker assets. Docker is excluded by the worktree-only write restriction.
 No commit, CI change, production access, deployment or existing-service restart.
+
+## Discovery relay-limit review (2026-11-15)
+
+Both review findings are fixed. Three native regressions cover discovery yielding
+to a feed and resuming after close, all three kinds with max_limit=1 or 2 and a
+single slot without views, independent reconnect cursors, and settled discovery
+resumption without subscription cycling. The four quiet gates pass with four
+build jobs and test threads; caches remain in ignored tmp/.
+The loopback Worker conformance gate and delayed profile probe also pass.
+Docker was not run because its storage writes are outside this worktree.

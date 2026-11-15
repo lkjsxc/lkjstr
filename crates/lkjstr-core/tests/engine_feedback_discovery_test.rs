@@ -3,7 +3,6 @@ mod engine_review_support;
 use engine_review_support::{event, frames};
 use lkjstr_core::engine::{Engine, accounts::Accounts, wire::RelayConfig};
 use lkjstr_protocol::{ProfilePointer, encode_nprofile};
-use serde_json::json;
 #[test]
 fn imported_hints_are_bounded_and_discovery_does_not_enable_publishing() {
     let owner = event(1, 1, "owner", vec![]).pubkey;
@@ -41,11 +40,12 @@ fn imported_hints_are_bounded_and_discovery_does_not_enable_publishing() {
         1,
     );
     e.network.connected("wss://hint.test/", 1);
-    assert!(
-        frames(&mut e)
-            .iter()
-            .any(|f| f[0] == "REQ" && f[2]["kinds"] == json!([3, 10002, 10063]))
-    );
+    assert!(frames(&mut e).iter().any(|f| {
+        f[0] == "REQ"
+            && f[2]["kinds"]
+                .as_array()
+                .is_some_and(|kinds| kinds.len() == 1)
+    }));
     e.discover_account(
         Some("a".repeat(64)),
         vec!["wss://next-hint.test/".into()],

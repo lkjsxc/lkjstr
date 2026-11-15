@@ -1,4 +1,4 @@
-//! Active-account discovery: eight bootstrap, eight hints and eight owner routes.
+//! Three requests per route: eight bootstrap, eight hints and eight owner routes.
 use super::{
     Engine,
     protocol::{Query, Source},
@@ -59,21 +59,23 @@ impl Engine {
         self.network
             .relays
             .keys()
-            .map(|relay| {
-                (
-                    "~account-discovery".into(),
-                    NostrFilter {
-                        authors: Some(vec![account.clone()]),
-                        kinds: Some(vec![3, 10002, 10063]),
-                        limit: Some(3),
-                        ..Default::default()
-                    },
-                    Query {
-                        source: Source::Relay,
-                        target: Some(relay.clone()),
-                        ..Default::default()
-                    },
-                )
+            .flat_map(|relay| {
+                [3, 10002, 10063].map(|kind| {
+                    (
+                        "~account-discovery".into(),
+                        NostrFilter {
+                            authors: Some(vec![account.clone()]),
+                            kinds: Some(vec![kind]),
+                            limit: Some(1),
+                            ..Default::default()
+                        },
+                        Query {
+                            source: Source::Relay,
+                            target: Some(relay.clone()),
+                            ..Default::default()
+                        },
+                    )
+                })
             })
             .collect()
     }

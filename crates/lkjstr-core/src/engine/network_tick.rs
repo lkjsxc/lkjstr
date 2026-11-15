@@ -61,9 +61,12 @@ impl Network {
         }
         let mut ids: Vec<_> = self.requests.keys().cloned().collect();
         ids.sort_by_key(|id| {
-            let f = &self.requests[id].filter;
+            let r = &self.requests[id];
+            let f = &r.filter;
             let priority = if profile(f) {
                 0
+            } else if r.members.contains("~account-discovery") {
+                3 + u8::from(r.page_eose)
             } else if f.kinds.as_deref() == Some(&[1, 6, 7, 9735]) {
                 2
             } else {
@@ -88,7 +91,8 @@ impl Network {
             let count = counts.entry(r.relay.clone()).or_default();
             if *count >= max {
                 if profile(&r.filter) || !counts_filter(&r.filter) {
-                    // Names may interrupt feeds; feeds may interrupt settled counts.
+                    // Names may interrupt feeds; pending work may interrupt settled
+                    // discovery. Discovery tails never interrupt other live work.
                     // Interrupted requests retain their page coverage and resume later.
                     let victim = self
                         .requests
@@ -97,7 +101,13 @@ impl Network {
                             q.relay == r.relay
                                 && q.sent
                                 && !profile(&q.filter)
-                                && (profile(&r.filter) || (counts_filter(&q.filter) && q.eose))
+                                && (profile(&r.filter)
+                                    || (q.eose
+                                        && ((!r.members.contains("~account-discovery")
+                                            && counts_filter(&q.filter))
+                                            || (q.members.contains("~account-discovery")
+                                                && (!r.members.contains("~account-discovery")
+                                                    || !r.page_eose)))))
                         })
                         .map(|(id, _)| id.clone());
                     if let Some(victim) = victim {
