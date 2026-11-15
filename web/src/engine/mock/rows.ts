@@ -118,6 +118,19 @@ export function profileRow(w: World, p: Person, me: string): ProfileRow {
     ),
   };
 }
+/** The header of someone whose profile has not arrived: nothing is known, so no count is given. */
+export const pendingProfile = (author: Author): ProfileRow => ({
+  kind: 'profile',
+  key: `profile:${author.pubkey}`,
+  author,
+  about: [],
+  partial: true,
+  followed: false,
+  followsYou: false,
+  self: false,
+  muted: false,
+  relays: [],
+});
 const segmentAbout = (text: string): ProfileRow['about'] => [{ k: 'text', text }];
 
 export function personRow(w: World, p: Person, me: string): PersonRow {

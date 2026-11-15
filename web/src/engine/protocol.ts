@@ -11,7 +11,9 @@
 // after it has loaded; the interface sends `configure` and `hint` first and may send anything else before `ready`
 // (the engine queues it). Unknown tags are ignored by both sides, so either side can be ahead by one version.
 
-export const PROTOCOL_VERSION = 1;
+/** 2: `account.key` exists. An engine that reports 1 cannot hand a key back, so the interface does not offer to
+ * create an account on it. */
+export const PROTOCOL_VERSION = 2;
 
 /** Chosen by the interface, unique among its open subscriptions. */
 export type SubId = string;
@@ -93,7 +95,8 @@ export type Emoji = { readonly code: string; readonly url: string };
 export type Author = {
   readonly pubkey: Pubkey;
   readonly npub: string;
-  /** Display name, never empty (the engine falls back to a short npub). May contain `:code:` of `emoji`. */
+  /** Display name. May contain `:code:` of `emoji`. Until the profile is known it is empty, the pubkey or the npub:
+   * the interface then shows a short npub form in its place. */
   readonly name: string;
   readonly emoji?: readonly Emoji[];
   /** https or data URL, or absent: the interface draws a flat circle in a colour from the pubkey. */
@@ -212,9 +215,10 @@ export type ProfileRow = {
   readonly website?: string;
   /** Lightning address, shown as text. */
   readonly lud16?: string;
-  readonly following: number;
-  readonly followers: number;
-  readonly notes: number;
+  /** Absent: not known yet. The interface then shows no number (as it does for a partial 0). */
+  readonly following?: number;
+  readonly followers?: number;
+  readonly notes?: number;
   /** Counts are lower bounds (see `Counts.partial`). */
   readonly partial: boolean;
   /** The reader follows them / they follow the reader / this is the reader. */
@@ -443,6 +447,9 @@ export type Action =
   // Accounts. Keys never cross to the interface except through `account.add` (typed by the reader).
   | { readonly a: 'account.add'; readonly how: 'extension' | 'create' }
   | { readonly a: 'account.add'; readonly how: 'key'; readonly key: string } // nsec, npub or bunker address
+  /** The secret key of a `local` account as `nsec1…`, in the result's `key`: asked for only when the reader presses
+   * "Back up key" (and once right after `create`). Any other signer fails with `unsupported`. Since version 2. */
+  | { readonly a: 'account.key'; readonly pubkey: Pubkey }
   | { readonly a: 'account.use'; readonly pubkey: Pubkey }
   | { readonly a: 'account.remove'; readonly pubkey: Pubkey };
 
@@ -499,7 +506,7 @@ export type EngineConfig = {
   /** Fetch link and media metadata ahead of the viewport. */
   readonly prefetch: boolean;
   /** The mock only: arrivals on a timer, or a still world for screenshots and tests. */
-  readonly mock?: { readonly live: boolean };
+  readonly mock?: { readonly live: boolean; readonly accounts?: 'none' };
 };
 
 // ───────────────────────────────────────── messages ─────────────────────────────────────────
@@ -569,7 +576,7 @@ export type FromEngine =
   /** Per-relay delivery of a publish, sent as answers come in (the whole list each time). */
   | { readonly t: 'delivery'; readonly req: ReqId; readonly relays: readonly Delivery[] }
   /** The end of an action. `delivery`: the final per-relay list of a publish. `uploaded`: of an upload.
-   * `id`: of a published note. */
+   * `id`: of a published note. `key`: of `account.key`. */
   | {
       readonly t: 'result';
       readonly req: ReqId;
@@ -578,6 +585,8 @@ export type FromEngine =
       readonly delivery?: readonly Delivery[];
       readonly uploaded?: Uploaded;
       readonly id?: string;
+      /** Of `account.key`: the `nsec1…`. The interface shows it masked, never stores or logs it. */
+      readonly key?: string;
     }
   /** The account signs with a browser extension (NIP-07 exists only on the main thread): sign this unsigned
    * event (JSON text) and answer with `signed`. */

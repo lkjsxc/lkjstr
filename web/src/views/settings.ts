@@ -4,9 +4,11 @@
 import { h } from '../shared/h.ts';
 import { both, t } from '../shared/i18n.ts';
 import { SETTINGS_SCHEMA, type Settings } from '../shared/settings.ts';
+import { loadViewState, saveViewState } from '../shared/view-state.ts';
 import type { ViewEnv } from './registry.ts';
 import { type Entry, fieldEntry, frame, searchText } from './settings-entry.ts';
 import { listEntries } from './settings-lists.ts';
+import { relayEntry } from './settings-relays.ts';
 
 const MODIFIED = '@modified';
 
@@ -25,9 +27,11 @@ function actionEntry(name: 'set.resetLayouts', run: () => void): Entry {
 
 export function mountSettings(el: HTMLElement, env: ViewEnv): () => void {
   const lists = listEntries(env);
+  const relays = relayEntry(env);
   const entries = [
     ...SETTINGS_SCHEMA.map((f) => fieldEntry(f, env.settings)),
     ...lists.entries,
+    relays.entry,
     actionEntry('set.resetLayouts', env.resetLayouts),
   ];
   const groups = [...new Set(entries.map((e) => e.group))].map((name) => ({
@@ -81,8 +85,18 @@ export function mountSettings(el: HTMLElement, env: ViewEnv): () => void {
   );
   sync(env.settings.get());
   const off = env.settings.subscribe(sync);
+  // Opened for one entry (the relay list, from the Relays tab): it is brought to the top, once.
+  const state = loadViewState<{ at?: string }>(env.instance);
+  const target = entries.find((e) => e.node.dataset.entry === state.at)?.node;
+  if (state.at) saveViewState(env.instance, {});
+  if (target)
+    requestAnimationFrame(() => {
+      target.scrollIntoView({ block: 'start' });
+      target.querySelector<HTMLElement>('[tabindex], input')?.focus({ preventScroll: true });
+    });
   return () => {
     off();
     lists.dispose();
+    relays.dispose();
   };
 }

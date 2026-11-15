@@ -1,5 +1,7 @@
 /* Feeds, the filter bar, the composer. */
 .feed { position: relative; }
+/* A tile wider than a page: the list keeps a reading measure in the middle of it. */
+.feed > .fslot, .feed > .list, .feed > .fstate { max-width: 720px; margin-inline: auto; }
 .fslot { position: sticky; top: 0; z-index: 3; }
 .view:focus { outline: none; }
 .fbar { padding: 6px 8px; border-bottom: 1px solid var(--line); background: var(--bg); }
@@ -20,7 +22,13 @@
 .cctx { display: flex; align-items: center; gap: 6px; min-width: 0; padding: 4px 8px; border-left: 2px solid var(--accent); background: var(--wash); font-size: 12.5px; }
 .cctx .x { margin-left: auto; flex: none; }
 .cbar { display: flex; align-items: center; gap: 8px; min-width: 0; padding-top: 6px; border-top: 1px solid var(--line); }
-.cwho { display: flex; align-items: center; gap: 6px; flex: 1; min-width: 0; color: var(--muted); font-size: 12.5px; }
+.cwho { display: flex; align-items: center; gap: 6px; flex: 0 1 auto; min-width: 0; margin-left: -4px; padding: 3px 8px 3px 4px; border-radius: 6px; color: var(--muted); font-size: 12.5px; text-align: left; }
+.cwho:hover { background: var(--hover); color: var(--fg); }
+.cwho .badge { margin-left: 2px; }
+.cbar > .grow { min-width: 0; }
+.cbar > .btn, .cbar > .icon { flex: none; }
+.cbar .icon:disabled { opacity: 0.4; cursor: default; }
+.fstate > .btn { margin-top: 4px; }
 .cbar .icon { display: grid; place-items: center; width: 28px; height: 28px; flex: none; }
 .thumbs { display: flex; flex-wrap: wrap; gap: 6px; }
 .thumbs:empty { display: none; }

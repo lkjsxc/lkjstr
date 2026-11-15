@@ -2,15 +2,17 @@
 // at once; the engine answers from its worker when it is ready.
 import { createEngine } from './engine/client.ts';
 import { createTransport } from './engine/startup.ts';
+import { rememberedFace, rememberFace } from './shared/face.ts';
 import { resolveLang, setLang } from './shared/i18n.ts';
 import { pressedAt, watchPairs } from './shared/keys.ts';
 import { spacesKey } from './shared/layout-store.ts';
 import { createSettings } from './shared/settings.ts';
 import { kv } from './shared/storage.ts';
 import { createTopBar } from './ui/topbar.ts';
+import { backupPending } from './views/account-key.ts';
 import { createWmController, type Wm } from './wm/controller.ts';
 import { createHost } from './wm/host.ts';
-import { FAMILY } from './wm/presets.ts';
+import { FAMILY, familyOf } from './wm/presets.ts';
 import { parseActive } from './wm/spaces.ts';
 import { createSpacesBar } from './wm/spaces-bar.ts';
 import { createWmStore } from './wm/store.ts';
@@ -27,13 +29,19 @@ const configure = (): void =>
     language,
     heuristics: true,
     prefetch: true,
-    mock: kv.get('mock') as { live: boolean } | undefined,
+    mock: kv.get('mock') as { live: boolean; accounts?: 'none' } | undefined,
   });
 configure();
-// The last account is remembered so the first lists are asked for as that person, before the engine has spoken.
+// The last account is remembered (its key, and its face and kind of signer) so the first frame already shows who
+// is reading and asks for the first lists as that person, before the engine has spoken.
 const cached = kv.get('account');
-if (typeof cached === 'string') engine.accounts.set({ accounts: [], active: cached });
-engine.accounts.subscribe((a) => (a.active ? kv.set('account', a.active) : kv.remove('account')));
+if (typeof cached === 'string')
+  engine.accounts.set({ accounts: rememberedFace(cached), active: cached });
+engine.accounts.subscribe((a) => {
+  if (a.active) kv.set('account', a.active);
+  else kv.remove('account');
+  rememberFace(a.accounts.find((x) => x.author.pubkey === a.active));
+});
 
 const host = createHost();
 host.look(settings.get());
@@ -41,13 +49,16 @@ const store = createWmStore();
 let ctl: Wm | undefined;
 let shown = 0; // the workspace `ctl` shows
 let picked: number | undefined; // this browser tab's workspace, once it chose one
+let incoming: (() => void) | undefined; // opens the tab of an incoming link (until the engine has spoken)
+let family = ''; // the layout family `ctl` shows: the reader's own, or the visitor's while signed out
 const active = (): number => picked ?? parseActive(store.get(spacesKey(FAMILY)));
 const env = { engine, settings, layer: host.layer, resetLayouts: () => store.reset() };
 
 function update(): void {
   const n = active();
-  if (ctl && shown !== n) ctl.dispose(), (ctl = undefined);
-  if (!ctl) ctl = createWmController(env, host, store.space(FAMILY, (shown = n)));
+  const f = familyOf(Boolean(engine.me()));
+  if (ctl && (shown !== n || family !== f)) ctl.dispose(), (ctl = undefined);
+  if (!ctl) ctl = createWmController(env, host, store.space((family = f), (shown = n)), f);
   bar.show(n);
 }
 const pick = (n: number): void => {
@@ -62,9 +73,21 @@ const top = createTopBar(host.bar, {
   settings,
   spaces: bar.el,
   layer: host.layer,
-  open: (kind, state) => ctl?.open(kind, state),
+  open: (kind, state) => (kind === 'account' ? ctl?.go(kind) : ctl?.open(kind, state)),
 });
 update();
+// Signing in brings the reader's own layout, signing out the visitor's. A key that still has to be saved keeps
+// its tab through the change.
+engine.accounts.subscribe(() => {
+  const arrive = incoming; // the engine's first word: a link that came in goes where the reader ends up
+  incoming = undefined;
+  if (familyOf(Boolean(engine.me())) === family) return;
+  // The visitor's layout is left as it was read in: the tab that signed in has done its work.
+  if (engine.me()) ctl?.drop('account');
+  update();
+  if (backupPending()) ctl?.open('account');
+  arrive?.();
+});
 
 settings.subscribe((s) => {
   host.look(s);
@@ -92,6 +115,6 @@ window.addEventListener(
 
 // Incoming links (/n/<note>, /p/<npub>) open as a tab; the address bar then returns to "/" and stays there.
 const link = /^\/(n|p)\/([a-z0-9]+)\/?$/.exec(location.pathname);
-if (link) ctl?.open(link[1] === 'p' ? 'profile' : 'thread', { ref: link[2] });
+if (link) (incoming = () => ctl?.open(link[1] === 'p' ? 'profile' : 'thread', { ref: link[2] }))();
 if (location.pathname !== '/' || location.search || location.hash)
   history.replaceState(null, '', '/');

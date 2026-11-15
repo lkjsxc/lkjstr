@@ -9,6 +9,7 @@ import { h } from '../shared/h.ts';
 import { type Key, t } from '../shared/i18n.ts';
 import { icon } from '../shared/icons.ts';
 import { loadViewState, saveViewState } from '../shared/view-state.ts';
+import { ability } from './can.ts';
 import { type BarState, mountFeedBar, typesQuery } from './feed-bar.ts';
 import { createRowList } from './feed-draw.ts';
 import { mountFeedKeys } from './feed-keys.ts';
@@ -34,12 +35,19 @@ type State = BarState & {
 const CHILD = new Set(['thread', 'profile', 'hashtag', 'following', 'followers']);
 const FILTERED = new Set(['home', 'global', 'hashtag', 'bookmarks', 'search', 'profile']);
 const DATED = new Set(['home', 'global', 'hashtag', 'bookmarks', 'search', 'profile']);
+/** Lists that belong to an account: signed out they have nothing to ask for, and say how to get one. */
+const OWN = new Set(['home', 'notifications', 'bookmarks']);
 
 export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => void {
   const state: State = loadViewState<State>(env.instance);
   const save = (): void => saveViewState(env.instance, state);
   const list = h('div', { class: 'list' });
   const status = h('div', { class: 'fstate muted' });
+  const signIn = h(
+    'button',
+    { class: 'btn primary', onclick: () => env.open('account') },
+    t('bar.signedOut'),
+  );
   const pill = h('button', { class: 'fresh', hidden: true });
   const barSlot = h('div');
   const tail = h('div', { class: 'ftail' });
@@ -52,6 +60,7 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
   let waiting = false;
   let sstate: SubState | undefined;
   let account = env.engine.me();
+  let can = ability(env.engine);
   let jump = false; // the next rows are the head of the list: show them from the top
   const keeper = createKeeper({
     el,
@@ -108,7 +117,8 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
     if (rows[0] !== focus) keeper.set({ key: focus.key, off: 0 });
   };
   const showState = (): void => {
-    const empty = rows.length === 0;
+    // A profile's header alone is not content: the line below it says whether notes are still being asked for.
+    const empty = rows.every((r) => r.kind === 'profile');
     const phase = sstate?.phase ?? 'cache';
     const key: Key | null = !empty
       ? atBottom && rows.length > 8
@@ -121,7 +131,9 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
           : phase === 'failed'
             ? 'feed.failed'
             : 'feed.empty';
-    status.textContent = key ? t(key) : '';
+    // Signed out, a list of one's own is not "empty": the one thing to say is the way in.
+    if (empty && !account && OWN.has(kind)) status.replaceChildren(signIn);
+    else status.textContent = key ? t(key) : '';
     status.title = sstate?.lastArrival
       ? t('feed.lastArrival', { time: fullTime(sstate.lastArrival) })
       : '';
@@ -150,14 +162,17 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
 
   const title = (): void => {
     const profile = rows.find((r) => r.kind === 'profile');
+    const focus = rows.find((r) => r.kind === 'note' && r.thread?.role === 'focus');
     const next =
       profile?.kind === 'profile'
         ? plainName(profile.author)
-        : kind === 'hashtag'
-          ? `#${state.tag ?? ''}`
-          : kind === 'search' && state.text
-            ? state.text
-            : state.title;
+        : focus?.kind === 'note'
+          ? plainName(focus.author)
+          : kind === 'hashtag'
+            ? `#${state.tag ?? ''}`
+            : kind === 'search' && state.text
+              ? state.text
+              : state.title;
     if (!next) return;
     if (next !== state.title) (state.title = next), save();
     env.setTitle(next);
@@ -188,6 +203,7 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
       patch(ops) {
         rows = applyOps(rows, ops);
         sync();
+        title(); // a name that arrives late renames the tab in place
       },
       fresh(count) {
         pill.hidden = count === 0;
@@ -242,7 +258,11 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
     if (on) seat(), keeper.put(), follow();
   });
   const offAccounts = env.engine.accounts.subscribe((a) => {
-    if ((a.active ?? '') !== account) (account = a.active ?? ''), open();
+    const now = ability(env.engine);
+    if ((a.active ?? '') !== account)
+      (account = a.active ?? ''), (can = now), drawn.clear(), open();
+    // The same reader, now known to be read-only (or no longer): the action rows are drawn again.
+    else if (now !== can) (can = now), drawn.clear(), sync();
   });
   const offHeld = onHeld(() => void (rows.length && sync()));
   const offSettings = env.settings.subscribe(() => (drawn.clear(), sync()));

@@ -6,10 +6,11 @@ import { countText } from '../shared/format.ts';
 import { h } from '../shared/h.ts';
 import { getLang, type Key, t } from '../shared/i18n.ts';
 import { type IconName, icon } from '../shared/icons.ts';
-import { openMenu } from '../wm/menus.ts';
+import { type MenuItem, openMenu } from '../wm/menus.ts';
+import { ability, able } from './can.ts';
 import { openEmojiPicker } from './emoji-picker.ts';
 import { type HeldWhat, hold, unhold } from './held.ts';
-import { copy, emojiImg, plainName, toast } from './parts.ts';
+import { copy, emojiImg, nameText, plainName, toast } from './parts.ts';
 import type { ViewEnv } from './registry.ts';
 
 const DEFAULT_REACTION = '❤️';
@@ -21,16 +22,16 @@ const failed = (env: ViewEnv, r: ActResult): void => {
 };
 /** Sends an action as the active account; says so when it could not be done. */
 export async function act(env: ViewEnv, make: (as: string) => Action): Promise<boolean> {
+  if (!able(env)) return false;
   const as = env.engine.me();
-  if (!as) return (toast(env.layer, t('error.signed-out')), false);
   const r = await env.engine.act(make(as));
   failed(env, r);
   return r.ok;
 }
 /** A like or a repost: shown at once, sent when its Undo is gone (`held.ts`), so Undo means it was never sent. */
 function later(env: ViewEnv, row: NoteRow, what: HeldWhat, said: string): void {
+  if (!able(env)) return;
   const as = env.engine.me();
-  if (!as) return toast(env.layer, t('error.signed-out'));
   hold(
     row.id,
     as,
@@ -88,25 +89,31 @@ export function reactionChips(row: NoteRow, env: ViewEnv): HTMLElement | null {
 export function actionRow(row: NoteRow, env: ViewEnv): HTMLElement {
   const lang = getLang();
   const n = (v: number): string => (v ? countText(v, row.counts.partial, lang) : '');
+  // Signed out or read-only: what would publish is drawn off and says why; the counts stay readable.
+  const can = ability(env.engine);
+  const off = can !== 'ok';
   const button = (
     name: IconName,
     label: Key,
     count: string,
     on: boolean,
     run: (el: HTMLElement) => void,
+    writes = true,
   ): HTMLElement => {
+    const dead = off && writes;
     const el: HTMLElement = h(
       'button',
       {
-        class: on ? `act a-${name} on` : `act a-${name}`,
-        title: t(label),
+        class: `act a-${name}${on ? ' on' : ''}${dead ? ' off' : ''}`,
+        title: dead ? `${t(label)}: ${t(`error.${can}`)}` : t(label),
         'aria-label': t(label),
         'aria-pressed': on,
+        'aria-disabled': dead ? true : null,
       },
       icon(name),
       h('span', null, count),
     );
-    el.addEventListener('click', (e) => (e.stopPropagation(), run(el)));
+    el.addEventListener('click', (e) => (e.stopPropagation(), dead ? void able(env) : run(el)));
     return el;
   };
   const mine = row.reactions.find((r) => r.mine);
@@ -155,50 +162,56 @@ export function actionRow(row: NoteRow, env: ViewEnv): HTMLElement {
         { label: t('act.quote'), run: () => env.open('compose', quote) },
       ]),
     ),
-    button('smile', 'emoji.pick', '', false, (el) =>
-      openEmojiPicker(env, el, (p) => react(env, row, p.emoji, p.url, true)),
-    ),
+    // Pure actions with no count have nothing to show a reader who cannot act.
+    off
+      ? null
+      : button('smile', 'emoji.pick', '', false, (el) =>
+          openEmojiPicker(env, el, (p) => react(env, row, p.emoji, p.url, true)),
+        ),
     button('heart', 'act.react', n(row.counts.reactions), Boolean(mine), () =>
       react(env, row, mine?.emoji ?? DEFAULT_REACTION, mine?.url, !mine),
     ),
     zap,
-    mark,
-    button('more', 'act.more', '', false, (el) =>
-      openMenu(env.layer, el, [
-        ...(folded(mark) ? [{ label: t(markLabel), run: () => void markRun() }] : []),
-        ...(folded(zap) ? [{ label: t('act.zap'), run: zapRun }] : []),
-        { label: t('menu.copyText'), run: () => void copy(env, fullText(row)) },
-        {
-          label: t('menu.copyLink'),
-          run: () => void copy(env, `${location.origin}/n/${row.bech32}`),
-        },
-        { label: t('menu.copyId'), run: () => void copy(env, row.bech32) },
-        {
-          label: t('menu.mutePerson', { name: plainName(row.author) }),
-          run: () =>
-            void act(env, (as) => ({
-              a: 'mute',
-              as,
-              target: { k: 'person', pubkey: row.author.pubkey },
-              on: true,
-            })),
-        },
-        {
-          label: t('menu.muteThread'),
-          run: () =>
-            void act(env, (as) => ({
-              a: 'mute',
-              as,
-              target: { k: 'thread', id: row.id },
-              on: true,
-            })),
-        },
-        ...(row.mine.own
-          ? [{ label: t('menu.delete'), danger: true, run: publish({ k: 'delete', id: row.id }) }]
-          : []),
-      ]),
-    ),
+    off ? null : mark,
+    button('more', 'act.more', '', false, (el) => openMenu(env.layer, el, moreItems()), false),
   );
+  function moreItems(): MenuItem[] {
+    return [
+      ...(folded(mark) && !off ? [{ label: t(markLabel), run: () => void markRun() }] : []),
+      ...(folded(zap) && !off ? [{ label: t('act.zap'), run: zapRun }] : []),
+      { label: t('menu.copyText'), run: () => void copy(env, fullText(row)) },
+      {
+        label: t('menu.copyLink'),
+        run: () => void copy(env, `${location.origin}/n/${row.bech32}`),
+      },
+      { label: t('menu.copyId'), run: () => void copy(env, row.bech32) },
+      {
+        label: t('menu.mutePerson', { name: plainName(row.author) }),
+        disabled: off,
+        run: () =>
+          void act(env, (as) => ({
+            a: 'mute',
+            as,
+            target: { k: 'person', pubkey: row.author.pubkey },
+            on: true,
+          })),
+      },
+      {
+        label: t('menu.muteThread'),
+        disabled: off,
+        run: () =>
+          void act(env, (as) => ({
+            a: 'mute',
+            as,
+            target: { k: 'thread', id: row.id },
+            on: true,
+          })),
+      },
+      ...(row.mine.own && !off
+        ? [{ label: t('menu.delete'), danger: true, run: publish({ k: 'delete', id: row.id }) }]
+        : []),
+    ];
+  }
 }
 
 const fullText = (row: NoteRow): string =>
@@ -211,7 +224,7 @@ const fullText = (row: NoteRow): string =>
           : s.k === 'hashtag'
             ? `#${s.tag}`
             : s.k === 'mention'
-              ? `@${s.name}`
+              ? `@${nameText(s.name)}`
               : s.k === 'emoji'
                 ? `:${s.code}:`
                 : s.text,

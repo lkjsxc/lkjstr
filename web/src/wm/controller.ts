@@ -22,11 +22,15 @@ import { mountWmKeys } from './wm-keys.ts';
 export type Wm = {
   /** Opens a tab in the tile last touched (a link from outside any tab: the top bar, an address). */
   open(kind: string, state?: object): void;
+  /** Shows the tab of this kind that is already open somewhere, or opens one (the way to the accounts). */
+  go(kind: string): void;
+  /** Closes every tab of this kind (the sign-in tab has done its work once someone is signed in). */
+  drop(kind: string): void;
   dispose(): void;
 };
 
-export function createWmController(env: BaseEnv, host: Host, at: Space): Wm {
-  const preset = (): L.LayoutNode => presetOf(at.index);
+export function createWmController(env: BaseEnv, host: Host, at: Space, family = FAMILY): Wm {
+  const preset = (): L.LayoutNode => presetOf(at.index, undefined, family);
   const known = { has: (tab: string): boolean => kindOf(tab) === NEW_TAB || Boolean(viewOf(tab)) };
   /** A stored layout as it can be drawn (`undefined`: nothing stored, so the preset). */
   const load = (value: unknown): L.LayoutNode | null => {
@@ -40,7 +44,7 @@ export function createWmController(env: BaseEnv, host: Host, at: Space): Wm {
   /** For a tab opened beside its reader: the tab that was in front there and what had the keyboard. */
   const back = new Map<string, { view: string; el?: HTMLElement }>(); // bound: one per such open tab
 
-  const closed = createClosed(`${FAMILY}${at.index}`);
+  const closed = createClosed(`${family}${at.index}`);
   const retire = (view: string): void => {
     const p = L.paneOfView(root, view);
     const state = own.retire(view);
@@ -123,7 +127,7 @@ export function createWmController(env: BaseEnv, host: Host, at: Space): Wm {
   });
   const own = createOwnViews(
     env,
-    `${FAMILY}${at.index}`,
+    `${family}${at.index}`,
     launcher,
     (tab, title) => {
       const span = rendered?.el.querySelector(`.tab[data-view="${tab}"] > span`);
@@ -260,6 +264,15 @@ export function createWmController(env: BaseEnv, host: Host, at: Space): Wm {
 
   return {
     open: (kind, state) => openFrom('')(kind, state),
+    drop: (kind) =>
+      L.views(root)
+        .filter((v) => kindOf(v) === kind)
+        .forEach(close),
+    go(kind) {
+      const there = L.views(root).find((v) => kindOf(v) === kind);
+      if (there) show(there);
+      else openFrom('')(kind);
+    },
     dispose() {
       disposed = true;
       offStore();

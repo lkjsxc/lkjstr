@@ -1,8 +1,9 @@
 // Which rows a query shows, in order. The mock materialises whole lists; the real engine pages its store.
 import type { Query, Row } from '../protocol.ts';
+import { stranger } from './accounts.ts';
 import { finite } from './lists.ts';
 import { byPubkey, byRef, FOLLOWERS, PEOPLE } from './people.ts';
-import { noteRow, personRow, profileRow, type RowOpts } from './rows.ts';
+import { noteRow, pendingProfile, personRow, profileRow, type RowOpts } from './rows.ts';
 import type { MNote, World } from './world.ts';
 
 /** One row of a subscription's list: built when it is sent, so it always shows the current state. */
@@ -87,6 +88,8 @@ export const entry = (w: World, n: MNote, o: RowOpts): Entry => ({
 const fixed = (row: Row): Entry => ({ key: row.key, row: () => row });
 
 export function select(w: World, q: Query, me: string): Entry[] {
+  // Signed out, what belongs to an account is empty, as it is in the real engine.
+  if (!me && ['home', 'notifications', 'bookmarks', 'mutes', 'emoji'].includes(q.source)) return [];
   const rows = finite(w, q);
   if (rows) return rows.map(fixed);
   if (q.source === 'thread') return thread(w, q, me);
@@ -108,9 +111,12 @@ export function select(w: World, q: Query, me: string): Entry[] {
   const notes = w.notes.filter((n) => matches(w, q, n, me)).map((n) => entry(w, n, opts));
   if (q.source === 'profile') {
     const p = byPubkey(q.pubkey ?? '') ?? byRef(q.ref ?? '');
-    return p
-      ? [{ key: `profile:${p.author.pubkey}`, row: () => profileRow(w, p, me) }, ...notes]
-      : [];
+    if (p)
+      return [{ key: `profile:${p.author.pubkey}`, row: () => profileRow(w, p, me) }, ...notes];
+    // A key nobody here knows: the header as it is before any metadata has arrived.
+    const named = q.pubkey ?? q.ref ?? '';
+    const unknown = /^([0-9a-f]{64}|npub1[a-z0-9]{20,})$/.test(named) ? stranger(named) : undefined;
+    return unknown ? [fixed(pendingProfile(unknown))] : [];
   }
   if (q.source === 'search') {
     const words = (q.text ?? '').toLowerCase().split(/\s+/).filter(Boolean);

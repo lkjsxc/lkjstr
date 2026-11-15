@@ -343,6 +343,7 @@ async function run(browser: Browser): Promise<void> {
   await link.context().close();
   await reading(browser, still);
   await pages(browser, still);
+  await accounts(browser);
   await place(browser, still);
   await keyboard(browser, still);
 }
@@ -826,7 +827,7 @@ async function pages(browser: Browser, still: Record<string, unknown>): Promise<
   fact('PageUp goes to the picture before the video', (await count(page, '.mstage img')) === 1);
   await page.keyboard.press('Escape');
 
-  // Relays: honest states, switches that keep the keyboard, a removal that can be taken back.
+  // Relays shows state and edits nothing; the list is edited in Settings, one press away.
   const menu = async (label: string): Promise<void> => {
     await page.locator('.acct').click();
     await page.locator('.menu button', { hasText: label }).click();
@@ -834,25 +835,45 @@ async function pages(browser: Browser, still: Record<string, unknown>): Promise<
   await menu('Relays');
   const rv = '.view[data-kind="relays"]';
   await page.locator(`${rv} .rrow`).first().waitFor();
-  const mine = (): Promise<number> => count(page, `${rv} .rrow:has(.rtog)`);
   fact(
     'relays: the list, the others in use, the rest folded',
-    (await mine()) === 4 && (await count(page, `${rv} .rfold:not([open])`)) === 1,
-    await mine(),
+    (await count(page, `${rv} .rrow:has(.ruse)`)) === 4 &&
+      (await count(page, `${rv} .rfold:not([open])`)) === 1,
+    await count(page, `${rv} .rrow:has(.ruse)`),
   );
-  const texts = await page.locator(`${rv} .rrow:has(.rtog) .rsub`).allInnerTexts();
+  const texts = await page.locator(`${rv} .rrow:has(.ruse) .rsub`).allInnerTexts();
   fact(
     'relays: each says its state, an error in its own words',
     texts.some((x) => /^Connected · 42 ms/.test(x)) &&
       texts.some((x) => x.includes('connection refused')),
     texts,
   );
-  const slow = page.locator(`${rv} .rrow`, { hasText: 'slow.example.org' });
+  fact(
+    'relays: the tab only shows; what a relay is used for is words, not switches',
+    (await count(page, `${rv} input, ${rv} .rtog, ${rv} .x, ${rv} form`)) === 0 &&
+      (await page.locator(`${rv} .ruse`).first().innerText()) === 'Read · Write',
+  );
+  await page.locator('.pane:has(.view[data-kind="relays"]) [title="Tile menu"]').click();
+  await page.locator('.menu button', { hasText: 'Edit the list in Settings' }).click();
+  const rs = '.view[data-kind="settings"]:visible .sitem[data-entry="set.relayList"]';
+  await page.locator(`${rs} .rrow`).first().waitFor();
+  const mine = (): Promise<number> => count(page, `${rs} .rrow`);
+  fact(
+    'relays: Settings opens on the relay list, in view',
+    (await mine()) === 4 &&
+      (await page.locator(rs).evaluate((e) => {
+        const view = e.closest('.view')?.getBoundingClientRect();
+        const box = e.getBoundingClientRect();
+        return view !== undefined && box.top >= view.top - 1 && box.top < view.bottom - 80;
+      })),
+    await mine(),
+  );
+  const slow = page.locator(`${rs} .rrow`, { hasText: 'slow.example.org' });
   await slow.locator('[data-f="write"]').click();
   await page.waitForFunction(
     () =>
       document
-        .querySelector('.rrow[data-key="wss://slow.example.org"] [data-f="write"]')
+        .querySelector('.sitem .rrow[data-key="wss://slow.example.org"] [data-f="write"]')
         ?.getAttribute('aria-pressed') === 'true',
   );
   fact(
@@ -865,40 +886,35 @@ async function pages(browser: Browser, still: Record<string, unknown>): Promise<
     ),
   );
   await page
-    .locator(`${rv} .rrow`, { hasText: 'nos.example.net' })
+    .locator(`${rs} .rrow`, { hasText: 'nos.example.net' })
     .locator('[data-f="remove"]')
     .click();
   await page.locator('.toast.undo').waitFor();
   await page.waitForFunction(
-    () => document.querySelectorAll('.view[data-kind="relays"] .rrow:has(.rtog)').length === 3,
+    () => document.querySelectorAll('.sitem[data-entry="set.relayList"] .rrow').length === 3,
   );
   fact(
     'relays: after a removal the keyboard is on the next row',
     await page.evaluate(() => document.activeElement?.closest('.rrow') !== null),
   );
-  fact(
-    'relays: the removed relay waits in the folded list',
-    (await page.locator(`${rv} .rfold summary`).innerText()).includes('4'),
-  );
   await page.locator('.toast.undo button').click();
   await page.waitForFunction(
-    () => document.querySelectorAll('.view[data-kind="relays"] .rrow:has(.rtog)').length === 4,
+    () => document.querySelectorAll('.sitem[data-entry="set.relayList"] .rrow').length === 4,
   );
   fact(
     'relays: undo puts it back where it was',
-    (await page.locator(`${rv} .rrow .rhost`).nth(1).innerText()) === 'nos.example.net',
+    (await page.locator(`${rs} .rrow .rhost`).nth(1).innerText()) === 'nos.example.net',
   );
-  await page.locator(`${rv} .addrow input`).fill('not a relay');
+  await page.locator(`${rs} .addrow input`).fill('not a relay');
   await page.keyboard.press('Enter');
   fact(
     'relays: a wrong address is refused and kept for fixing',
-    (await count(page, `${rv} .addrow input[aria-invalid]`)) === 1,
+    (await count(page, `${rs} .addrow input[aria-invalid]`)) === 1,
   );
-  await page.locator(`${rv} .addrow input`).fill('relay.new.example');
+  await page.locator(`${rs} .addrow input`).fill('relay.new.example');
   await page.keyboard.press('Enter');
-  const added = page.locator(`${rv} .rrow`, { hasText: 'relay.new.example' });
-  await added.locator('.rsub', { hasText: 'Connecting' }).waitFor();
-  await added.locator('.rsub', { hasText: 'Connected' }).waitFor();
+  await page.locator(`${rs} .rrow.s-connecting`, { hasText: 'relay.new.example' }).waitFor();
+  await page.locator(`${rs} .rrow.s-connected`, { hasText: 'relay.new.example' }).waitFor();
   fact(
     'relays: an added relay connects in view, the field ready for the next',
     await page.evaluate(
@@ -907,6 +923,7 @@ async function pages(browser: Browser, still: Record<string, unknown>): Promise<
         (document.activeElement as HTMLInputElement).value === '',
     ),
   );
+  await page.locator('.tab.active[data-view^="settings"] > .x').click();
 
   await menu('Shortcuts');
   const sv = '.view[data-kind="shortcuts"]';
@@ -925,7 +942,7 @@ async function pages(browser: Browser, still: Record<string, unknown>): Promise<
   fact(
     'about: version, engine, source, licence',
     /lkjstr \d+\.\d+\.\d+/.test(about) &&
-      about.includes('mock, protocol 1') &&
+      about.includes('mock, protocol 2') &&
       (await count(page, '.view[data-kind="about"] a[href="https://github.com/lkjsxc/lkjstr"]')) ===
         1 &&
       about.includes('Apache License 2.0'),
@@ -940,7 +957,7 @@ async function pages(browser: Browser, still: Record<string, unknown>): Promise<
   await menu('Settings');
   const set = '.view[data-kind="settings"]';
   await page.locator(`${set} .srow`).first().waitFor();
-  const srows = (): Promise<number> => count(page, `${set} .srow`);
+  const srows = (): Promise<number> => count(page, `${set} .srow:not(.rrow)`);
   fact(
     'settings: muted people, words, hashtags and the media servers',
     (await srows()) === 5,
@@ -953,7 +970,7 @@ async function pages(browser: Browser, still: Record<string, unknown>): Promise<
   );
   await page.locator(`${set} .srow`, { hasText: 'airdrop' }).locator('.x').click();
   await page.waitForFunction(
-    () => document.querySelectorAll('.view[data-kind="settings"] .srow').length === 4,
+    () => document.querySelectorAll('.view[data-kind="settings"] .srow:not(.rrow)').length === 4,
   );
   fact(
     'settings: an emptied list says so',
@@ -961,16 +978,16 @@ async function pages(browser: Browser, still: Record<string, unknown>): Promise<
   );
   await page.locator('.toast.undo button').click();
   await page.waitForFunction(
-    () => document.querySelectorAll('.view[data-kind="settings"] .srow').length === 5,
+    () => document.querySelectorAll('.view[data-kind="settings"] .srow:not(.rrow)').length === 5,
   );
   await page.locator(`${set} .ssearch input`).fill('servers');
   await page.locator(`${set} .srow`, { hasText: 'media.example.jp' }).locator('.x').click();
   await page.waitForFunction(
-    () => document.querySelectorAll('.view[data-kind="settings"] .srow').length === 4,
+    () => document.querySelectorAll('.view[data-kind="settings"] .srow:not(.rrow)').length === 4,
   );
   await page.locator('.toast.undo button').click();
   await page.waitForFunction(
-    () => document.querySelectorAll('.view[data-kind="settings"] .srow').length === 5,
+    () => document.querySelectorAll('.view[data-kind="settings"] .srow:not(.rrow)').length === 5,
   );
   fact(
     'settings: a media server comes back first, as it was',
@@ -1057,6 +1074,204 @@ async function pages(browser: Browser, still: Record<string, unknown>): Promise<
   );
   if (shot) await phone.screenshot({ path: shot.replace(/\.png$/, '-acts-390.png') });
   await ctx.close();
+}
+
+/** Accounts: a first visit, every way in with its failure, the key of a created account, read-only, switching,
+ * removing, signed out again; and a person whose name has not arrived. */
+async function accounts(browser: Browser): Promise<void> {
+  const page = await open(browser, '/', { mock: { live: false, accounts: 'none' } });
+  const av = '.view[data-kind="account"]:visible';
+  const text = (sel: string): Promise<string> => page.locator(sel).first().innerText();
+  fact(
+    'first visit: one tile of notes, nothing empty, the way in on the bar',
+    (await count(page, '.pane')) === 1 &&
+      (await count(page, '.tab')) === 1 &&
+      (await count(page, '.tab[data-view="global"]')) === 1 &&
+      (await count(page, '.fstate:not(:empty)')) === 0 &&
+      (await text('.acct.out')) === 'Sign in' &&
+      (await page.locator('.bar .icon').isHidden()),
+  );
+  fact(
+    'first visit: what would publish is drawn off, counts stay',
+    (await count(page, '.note .act.a-reply.off')) > 0 &&
+      (await count(page, '.note .act.a-smile')) === 0 &&
+      (await count(page, '.note .act.a-more:not(.off)')) > 0,
+  );
+  await page.locator('.note .act.a-heart').first().click({ force: true });
+  fact(
+    'a visitor who presses like is told how to sign in',
+    (await text('.toast.undo')).startsWith('Sign in to do this') &&
+      (await text('.toast.undo button')) === 'Sign in',
+  );
+  // A list that belongs to an account, opened signed out, offers the way in instead of "nothing here".
+  await page.keyboard.press('g');
+  await page.keyboard.press('h');
+  await page.locator('.view[data-kind="home"] .fstate .btn').click();
+  await page.locator(`${av} [data-f="extension"]`).waitFor();
+  fact(
+    'a list of one’s own, signed out, leads to sign-in',
+    (await count(page, `${av} .arow`)) === 0,
+  );
+  fact(
+    'the tab starts with its content',
+    (await count(page, `${av} h1, ${av} h2, ${av} h3`)) === 0,
+  );
+
+  // Every way in fails honestly, where it was pressed, with the way forward.
+  await page.locator(`${av} [data-f="extension"]`).click();
+  await page.locator(`${av} .asaid.error`).waitFor();
+  fact(
+    'no extension: said in words, with what to do',
+    (await text(`${av} .asaid.error`)).startsWith('No signer extension was found.'),
+  );
+  const key = page.locator(`${av} input[type="password"]`);
+  await key.fill('hunter2 is not a key');
+  await key.press('Enter');
+  await page.locator(`${av} .asaid.error`, { hasText: 'not an nsec' }).waitFor();
+  fact(
+    'a wrong key: refused, the field emptied, the text nowhere on the page',
+    (await key.inputValue()) === '' &&
+      !(await page.locator('body').innerText()).includes('hunter2') &&
+      (await count(page, `${av} .asaid.error`)) === 1,
+  );
+  await key.fill('bunker://00ffee00ffee?relay=wss://relay.example.jp&secret=refuse');
+  await key.press('Enter');
+  await page.locator(`${av} .asaid.error`, { hasText: 'remote signer' }).waitFor();
+  await page.evaluate(() => {
+    (window as { nostr?: unknown }).nostr = { getPublicKey: () => Promise.reject(new Error('no')) };
+  });
+  await page.locator(`${av} [data-f="extension"]`).click();
+  await page.locator(`${av} .asaid.error`, { hasText: 'extension refused' }).waitFor();
+  fact('every refusal has its own words', true);
+
+  // A created account opens on its key, in the reader's own layout, and the key goes nowhere else.
+  await page.locator(`${av} [data-f="create"]`).click();
+  await page.locator(`${av} .kbox .kfield`).waitFor();
+  await page.waitForFunction(
+    () => document.querySelector<HTMLInputElement>('.kfield')?.value.startsWith('nsec1') === true,
+  );
+  const secret = await page.locator(`${av} .kfield`).inputValue();
+  const leaks = (): Promise<boolean> =>
+    page.evaluate(
+      (k) =>
+        document.body.innerText.includes(k) ||
+        Object.keys(localStorage).some((x) => (localStorage.getItem(x) ?? '').includes(k)) ||
+        location.href.includes(k),
+      secret,
+    );
+  fact(
+    'a created account: the ordinary layout arrives, and the key is shown, covered',
+    (await count(page, '.pane')) === 4 &&
+      (await page.locator(`${av} .kfield`).getAttribute('type')) === 'password' &&
+      (await text(`${av} .kbox .btn.primary`)) === 'I saved it' &&
+      !(await leaks()),
+  );
+  fact(
+    'someone without a profile is named by a short npub, never by hex',
+    /^npub1.{5}…/.test(await text(`${av} .arow.on b`)) &&
+      !/[0-9a-f]{64}/.test(await page.locator('body').innerText()),
+    await text(`${av} .arow.on b`),
+  );
+  await page.locator(`${av} [data-f="show"]`).click();
+  fact(
+    'Show uncovers it; nothing is stored',
+    (await page.locator(`${av} .kfield`).getAttribute('type')) === 'text' && !(await leaks()),
+  );
+  await page.locator(`${av} [data-f="done"]`).click();
+  fact(
+    'saved: the box is gone and Back up key offers it again',
+    (await count(page, `${av} .kbox`)) === 0 &&
+      (await count(page, `${av} [data-f="backup"]`)) === 1,
+  );
+
+  // A read-only account is plain at the composer and on every action before anything is pressed.
+  await key.fill(`npub1${'q'.repeat(58)}`);
+  await key.press('Enter');
+  await page.locator('.acct .ro').waitFor();
+  await page.locator('.view[data-kind="compose"] .cwho .badge').waitFor();
+  fact(
+    'read-only: the composer says so and cannot post; actions are off',
+    (await text('.view[data-kind="compose"] .cwho .badge')) === 'Read-only' &&
+      (await page.locator('.view[data-kind="compose"] .btn.primary:visible').isDisabled()) &&
+      (await count(page, '.note .act.a-reply:not(.off)')) === 0 &&
+      (await count(page, `${av} .arow`)) === 2,
+  );
+  // Switching: a press on the other account; the composer follows.
+  await page.locator(`${av} .arow:not(.on) [data-f="use"]`).click();
+  await page.waitForFunction(() => !document.querySelector('.acct .ro'));
+  fact(
+    'switching: the pressed account is in use and can post',
+    (await count(page, '.view[data-kind="compose"] .cwho .badge')) === 0 &&
+      (await count(page, '.note .act.off')) === 0 &&
+      (await page.evaluate(
+        () => (document.activeElement as HTMLElement | null)?.dataset.f === 'use',
+      )),
+  );
+  // Removing: a key asks first, a public key goes at once and can be taken back.
+  await page.locator(`${av} .arow.on [data-f="remove"]`).click();
+  fact(
+    'removing an account with a key asks first',
+    (await count(page, `${av} .aask`)) === 1 && (await count(page, `${av} .arow`)) === 2,
+  );
+  await page.locator(`${av} [data-f="cancel"]`).click();
+  await page.locator(`${av} .arow:not(.on) [data-f="remove"]`).click();
+  await page.waitForFunction(() => document.querySelectorAll('.arow').length === 1);
+  await page.locator('.toast.undo', { hasText: 'Removed' }).locator('button').click();
+  await page.waitForFunction(() => document.querySelectorAll('.arow').length === 2);
+  fact('a read-only account comes back with Undo', true);
+  await page.locator(`${av} .arow:not(.on) [data-f="use"]`).click();
+  await page.locator('.acct .ro').waitFor();
+  for (const _ of [1, 2]) {
+    const n = await count(page, '.arow');
+    const row = page.locator(`${av} .arow`).first();
+    await row.locator('.ahead [data-f="remove"]').click();
+    if (await row.locator('.aask').count()) await row.locator('.aask [data-f="remove"]').click();
+    await page.waitForFunction((was) => document.querySelectorAll('.arow').length < was, n);
+  }
+  await page.locator('.acct.out').waitFor();
+  fact(
+    'signed out again: the visitor’s layout, nothing remembered',
+    (await count(page, '.pane')) === 1 &&
+      (await count(page, '.tab[data-view^="account"]')) === 0 &&
+      (await page.evaluate(() => localStorage.getItem('lkjstr:account'))) === null &&
+      (await page.evaluate(() => localStorage.getItem('lkjstr:account:face'))) === null,
+  );
+  await page.context().close();
+
+  // Signed in from the first frame of a reload: no "Sign in" flashes before the engine has spoken.
+  const back = await open(browser, '/', { mock: { live: false } });
+  await back.locator('.acct .av img').waitFor();
+  await back.addInitScript(() => {
+    new MutationObserver(() => {
+      if (document.querySelector('.acct.out')) document.documentElement.dataset.flashed = '1';
+    }).observe(document, { childList: true, subtree: true });
+  });
+  await back.reload();
+  await back.locator('.view[data-kind="home"] .note').first().waitFor();
+  fact(
+    'a reload starts as the reader: their face and layout from the first frame',
+    (await back.evaluate(() => document.documentElement.dataset.flashed)) === undefined,
+  );
+  // A person whose metadata has not arrived: short npub in the header and on the tab, no count that is not known.
+  await back.keyboard.press('Alt+Shift+N');
+  await back.keyboard.type(`npub1${'x'.repeat(58)}`);
+  await back.keyboard.press('Enter');
+  await back.locator('.profile.pending').waitFor();
+  const pending = await back.evaluate(() => ({
+    name: document.querySelector('.pname')?.textContent ?? '',
+    tab: document.querySelector('.tab.active[data-view^="profile"] > span')?.textContent ?? '',
+    stats: document.querySelector('.pstats')?.textContent ?? '',
+    wide: (document.querySelector('.npub')?.getBoundingClientRect().height ?? 99) < 24,
+  }));
+  fact(
+    'a profile without metadata: short npub, one line, labels without numbers',
+    /^npub1.{5}…/.test(pending.name) &&
+      pending.tab === pending.name &&
+      !/\d/.test(pending.stats) &&
+      pending.wide,
+    pending,
+  );
+  await back.context().close();
 }
 
 if (!existsSync(`${here}../dist/index.html`)) throw new Error('build first: pnpm build');

@@ -59,3 +59,46 @@
   .rfold > summary { padding: 12px 0; }
   .toast.undo .lnk { padding: 8px 4px; margin: -8px -4px; }
 }
+/* Relays shows state; what each listed relay is used for is said, not switched. */
+.ruse { flex: none; color: var(--faint); font-size: 12px; white-space: nowrap; }
+.srow.rrow { min-height: 38px; padding: 0; }
+.srow > .rhost { flex: 1; min-width: 0; }
+.sitem > .actions > .lnk { font-size: 12.5px; }
+/* Accounts: who is on this device, then the ways in. One column, no wider than a form should be. */
+.alist, .aadd { max-width: 520px; }
+.alist { margin-bottom: 16px; border-top: 1px solid var(--line); }
+.alist[hidden] { display: none; }
+.arow { padding: 5px 0; border-bottom: 1px solid var(--line); }
+.ahead { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.amain { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; padding: 4px 8px 4px 4px; border-radius: 6px; text-align: left; }
+.amain:hover { background: var(--hover); }
+.amain[aria-current] { cursor: default; }
+.amain[aria-current]:hover { background: none; }
+.amain > .i { width: 18px; height: 18px; color: var(--accent); }
+.awho { display: flex; flex-direction: column; flex: 1; min-width: 0; line-height: 1.4; }
+.awho > .muted { font-size: 12.5px; }
+.awho .badge { margin-left: 0; }
+.abtns { display: flex; flex: none; gap: 6px; }
+.aask { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; padding: 6px 4px 4px; color: var(--danger); font-size: 12.5px; }
+.btn.danger { border-color: var(--danger); color: var(--danger); }
+.btn.off { opacity: 0.5; }
+.badge.warn { background: none; box-shadow: inset 0 0 0 1px var(--danger); color: var(--danger); }
+.kbox { padding: 6px 4px 4px; }
+.kwarn { margin-bottom: 6px; font-size: 12.5px; }
+.krow { display: flex; flex-wrap: wrap; gap: 6px; }
+.kfield { flex: 1 1 200px; min-width: 0; height: 28px; box-sizing: border-box; font: 12px / 1 ui-monospace, "SF Mono", "Cascadia Mono", "Noto Sans Mono", monospace; }
+.aadd { display: grid; gap: 10px; }
+.away { display: grid; gap: 4px; min-width: 0; }
+.away[hidden] { display: none; }
+.aadd .addrow { max-width: none; }
+.aadd .addrow input, .aadd .btn { height: 32px; box-sizing: border-box; }
+.btn.wide { width: 100%; text-align: center; }
+.asaid { font-size: 12.5px; }
+.asaid:empty { display: none; }
+@container (max-width: 400px) {
+  .ahead { flex-wrap: wrap; }
+  .ahead > .abtns { margin-left: calc(var(--avatar, 36px) + 14px); }
+}
+@media (pointer: coarse) {
+  .aadd .addrow input, .aadd .btn, .abtns .btn, .krow .btn, .kfield { height: 40px; }
+}

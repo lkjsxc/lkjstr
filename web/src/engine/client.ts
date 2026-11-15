@@ -63,7 +63,7 @@ export type Engine = {
   dispose(): void;
 };
 
-type Nip07 = { signEvent(event: unknown): Promise<unknown> };
+type Nip07 = { signEvent(event: unknown): Promise<unknown>; getPublicKey?(): Promise<unknown> };
 const IDLE_MS = 180_000;
 
 export function createEngine(transport: Transport): Engine {
@@ -120,6 +120,17 @@ export function createEngine(transport: Transport): Engine {
     }
   };
 
+  /** The real engine's transport answers this itself; the mock asks through here. */
+  const publicKey = async (req: string): Promise<void> => {
+    const ext = (window as { nostr?: Nip07 }).nostr;
+    if (!ext?.getPublicKey) return transport.post({ t: 'publicKey', req, error: 'signer-missing' });
+    try {
+      transport.post({ t: 'publicKey', req, pubkey: String(await ext.getPublicKey()) });
+    } catch {
+      transport.post({ t: 'publicKey', req, error: 'signer-refused' });
+    }
+  };
+
   transport.listen((msg) => {
     if (msg.t === 'rows') subs.get(msg.sub)?.rows(msg.rows, msg.atTop, msg.atBottom);
     else if (msg.t === 'patch') subs.get(msg.sub)?.patch(msg.ops);
@@ -135,6 +146,7 @@ export function createEngine(transport: Transport): Engine {
       status.set({ connected: msg.connected, wanted: msg.wanted, offline: msg.offline });
     else if (msg.t === 'ready') info.set({ engine: msg.engine, version: msg.version });
     else if (msg.t === 'sign') void sign(msg);
+    else if (msg.t === 'getPublicKey') void publicKey(msg.req);
   });
 
   return {

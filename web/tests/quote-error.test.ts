@@ -3,6 +3,7 @@ import { noteRow } from '../src/engine/mock/rows.ts';
 import { createWorld } from '../src/engine/mock/world.ts';
 import { setLang } from '../src/shared/i18n.ts';
 import { createSettings } from '../src/shared/settings.ts';
+import { createSignal } from '../src/shared/signal.ts';
 import { renderNote } from '../src/views/note.ts';
 import type { ViewEnv } from '../src/views/registry.ts';
 
@@ -16,10 +17,13 @@ it('renders quote lookup failures in the reader’s language', () => {
     ...noteRow(world, note, { me: '' }),
     quotes: [{ state: 'error' as const, id: 'failed-lookup' }],
   };
-  const env = { settings: createSettings() } as ViewEnv;
+  const env = {
+    settings: createSettings(),
+    engine: { accounts: createSignal({ accounts: [] }) },
+  } as unknown as ViewEnv;
   for (const [lang, text] of [
-    ['en', 'The quoted note could not be loaded.'],
-    ['ja', '引用されたノートを読み込めませんでした。'],
+    ['en', 'No relay answered for the quoted note.'],
+    ['ja', '引用されたノートは、どのリレーからも応答がありませんでした。'],
   ] as const) {
     setLang(lang);
     const el = renderNote(row, env);

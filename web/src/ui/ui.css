@@ -1,17 +1,32 @@
 /* The frame and the window manager. The WM rules are ytenrich's (src/ui/ui.css there), with lkjstr's tokens:
    indigo is the colour of action, vermilion (--seal) the colour of news, and nothing else is coloured. */
-:root { --paper: #f4f3ee; --bg: #fdfcf9; --raised: #ffffff; --line: #e2e0d8; --fg: #1c1c1a; --muted: #55544f; --faint: #706f69; --accent: #27598c; --wash: #e3ebf3; --seal: #d2432c; --danger: #9c3a23; --ok: #3d7350; --hover: rgba(0, 0, 0, 0.055); --sep: #cfcdc4; color-scheme: light; }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --paper: #14161a; --bg: #1a1d21; --raised: #21252a; --line: #2a2f35; --fg: #e7e5df; --muted: #a9a8a2; --faint: #8c8b85; --accent: #8fb4e3; --wash: #1f2c3b; --seal: #ec6a4f; --danger: #e08a6d; --ok: #86c097; --hover: rgba(255, 255, 255, 0.075); --sep: #3a4048; color-scheme: dark; } }
-:root[data-theme="dark"] { --paper: #14161a; --bg: #1a1d21; --raised: #21252a; --line: #2a2f35; --fg: #e7e5df; --muted: #a9a8a2; --faint: #8c8b85; --accent: #8fb4e3; --wash: #1f2c3b; --seal: #ec6a4f; --danger: #e08a6d; --ok: #86c097; --hover: rgba(255, 255, 255, 0.075); --sep: #3a4048; color-scheme: dark; }
+:root { --paper: #f4f3ee; --bg: #fdfcf9; --raised: #ffffff; --line: #e2e0d8; --fg: #1c1c1a; --muted: #55544f; --faint: #706f69; --accent: #27598c; --wash: #e3ebf3; --seal: #d2432c; --danger: #9c3a23; --ok: #3d7350; --hover: rgba(0, 0, 0, 0.055); --sep: #cfcdc4; --hold: #eae8e0; color-scheme: light; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --paper: #14161a; --bg: #1a1d21; --raised: #21252a; --line: #2a2f35; --fg: #e7e5df; --muted: #a9a8a2; --faint: #8c8b85; --accent: #8fb4e3; --wash: #1f2c3b; --seal: #ec6a4f; --danger: #e08a6d; --ok: #86c097; --hover: rgba(255, 255, 255, 0.075); --sep: #3a4048; --hold: #262a30; color-scheme: dark; } }
+:root[data-theme="dark"] { --paper: #14161a; --bg: #1a1d21; --raised: #21252a; --line: #2a2f35; --fg: #e7e5df; --muted: #a9a8a2; --faint: #8c8b85; --accent: #8fb4e3; --wash: #1f2c3b; --seal: #ec6a4f; --danger: #e08a6d; --ok: #86c097; --hover: rgba(255, 255, 255, 0.075); --sep: #3a4048; --hold: #262a30; color-scheme: dark; }
 html, body { height: 100%; margin: 0; overflow: hidden; background: var(--paper); }
 body { color: var(--fg); font: 13.5px / 1.45 system-ui, -apple-system, "Segoe UI", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans CJK JP", "Noto Sans JP", "Yu Gothic UI", Meiryo, sans-serif; -webkit-text-size-adjust: 100%; }
 .app { display: flex; flex-direction: column; height: 100dvh; }
 .bar { flex: 0 0 38px; display: flex; align-items: center; gap: 6px; min-width: 0; padding: 0 8px; border-bottom: 1px solid var(--line); zoom: var(--scale, 1); }
 .brand { padding: 0 4px; font-weight: 650; letter-spacing: -0.01em; user-select: none; }
+.bar > .brand { flex: none; height: 28px; padding: 0 6px; border-radius: 6px; }
+.bar > .brand:hover { background: var(--hover); }
 .grow { flex: 1; }
 .bar .icon { display: grid; place-items: center; width: 28px; height: 28px; }
 .acct { display: grid; place-items: center; min-width: 28px; height: 28px; padding: 0; border-radius: 50%; color: var(--accent); }
+.acct { position: relative; flex: none; }
 .acct:hover { box-shadow: 0 0 0 2px var(--hover); }
+/* Signed out, the account is the way in: one button that says so, on one line at any width. */
+.acct.out { height: 26px; padding: 0 11px; border-radius: 6px; background: var(--accent); color: var(--bg); font-weight: 600; white-space: nowrap; }
+.acct.out:hover { box-shadow: none; filter: brightness(1.08); }
+/* A read-only account: a ring on the face, wherever the face is the one that would post. */
+.acct .ro { position: absolute; right: -3px; bottom: -3px; width: 8px; height: 8px; border: 2px solid var(--paper); border-radius: 50%; background: var(--danger); }
+/* A phone: the nine chips and the account both fit, so the name gives its place. */
+@media (max-width: 480px) {
+  .bar { gap: 4px; padding: 0 6px; }
+  .bar > .brand { display: none; }
+  lkjstr-spaces { margin: 0 2px 0 0; gap: 1px; }
+  lkjstr-spaces button { flex-basis: 25px; width: 25px; }
+}
 .relays { font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .stage { position: relative; flex: 1; min-height: 0; }
 .i { width: 16px; height: 16px; flex: none; }

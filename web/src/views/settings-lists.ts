@@ -1,5 +1,5 @@
-// The lists of Settings: who and what is muted, where uploads go, and the way to the relay list (which lives in
-// the Relays tab, once). Every removal shows at once and can be taken back.
+// The lists of Settings: who and what is muted, where uploads go, the reader's relays (`settings-relays.ts`) and
+// the way to the accounts. Every removal shows at once and can be taken back.
 import type { MuteRow, MuteTarget, Row, ServerRow } from '../engine/protocol.ts';
 import { hostOf, serverAddress } from '../shared/address.ts';
 import { h } from '../shared/h.ts';
@@ -7,12 +7,12 @@ import { both, type Key, t } from '../shared/i18n.ts';
 import type { Disposer } from '../shared/signal.ts';
 import { type Keyed, reconcile, watchList } from './lists.ts';
 import { act } from './note-actions.ts';
-import { avatar, nameButton, toast } from './parts.ts';
+import { avatar, nameButton, plainName, toast } from './parts.ts';
 import type { ViewEnv } from './registry.ts';
 import { type Entry, frame, searchText } from './settings-entry.ts';
 
-type ListName = `set.mute.${MuteTarget['k']}` | 'set.servers' | 'set.relayList';
-const entryOf = (name: ListName, ...body: (HTMLElement | null)[]): Entry => {
+type ListName = `set.mute.${MuteTarget['k']}` | 'set.servers' | 'set.relayList' | 'set.accounts';
+export const entryOf = (name: ListName, ...body: (HTMLElement | null)[]): Entry => {
   const [group = '', title = ''] = t(name).split(': ');
   const node = frame(
     group,
@@ -21,11 +21,15 @@ const entryOf = (name: ListName, ...body: (HTMLElement | null)[]): Entry => {
     h('div', { class: 'muted' }, t(`${name}.d`)),
     ...body.filter((b) => b !== null),
   );
+  node.dataset.entry = name;
   return { group, text: searchText(both(name), both(`${name}.d`)), node, sync: () => false };
 };
 
 /** A list with its empty line. `draw` shows the rows; nothing is said until the engine has answered. */
-function listBox<R extends { readonly key: string }>(empty: Key, render: (row: R) => HTMLElement) {
+export function listBox<R extends { readonly key: string }>(
+  empty: Key,
+  render: (row: R) => HTMLElement,
+) {
   const list = h('div', { class: 'slist' });
   const none = h('div', { class: 'muted snone' });
   const cache: Keyed = new Map(); // bound: the rows of this list
@@ -37,7 +41,7 @@ function listBox<R extends { readonly key: string }>(empty: Key, render: (row: R
     },
   };
 }
-const removeButton = (what: string, run: () => void): HTMLElement => {
+export const removeButton = (what: string, run: () => void): HTMLElement => {
   const label = t('list.remove', { what });
   return h(
     'button',
@@ -46,7 +50,11 @@ const removeButton = (what: string, run: () => void): HTMLElement => {
   );
 };
 /** One field and a button; `add` returns whether the text was taken (the field then empties and keeps the keyboard). */
-function addForm(placeholder: string, label: string, add: (text: string) => boolean): HTMLElement {
+export function addForm(
+  placeholder: string,
+  label: string,
+  add: (text: string) => boolean,
+): HTMLElement {
   const input = h('input', {
     type: 'text',
     placeholder,
@@ -79,7 +87,9 @@ const PROTOCOLS: Partial<Record<ServerRow['protocol'], string>> = {
 };
 const muteName = (r: MuteRow): string =>
   r.target.k === 'person'
-    ? (r.author?.name ?? r.target.pubkey.slice(0, 12))
+    ? r.author
+      ? plainName(r.author)
+      : r.target.pubkey.slice(0, 12)
     : r.target.k === 'word'
       ? r.target.word
       : r.target.k === 'hashtag'
@@ -102,7 +112,7 @@ export function listEntries(env: ViewEnv): { entries: Entry[]; dispose: Disposer
           ? h(
               'button',
               { class: 'lnk clip', onclick: () => env.open('thread', { id: target.id }) },
-              r.author ? `${r.author.name}: ${muteName(r)}` : muteName(r),
+              r.author ? `${plainName(r.author)}: ${muteName(r)}` : muteName(r),
             )
           : h('span', { class: 'clip' }, muteName(r));
     return h('div', { class: 'srow' }, what, removeButton(muteName(r), drop));
@@ -173,15 +183,15 @@ export function listEntries(env: ViewEnv): { entries: Entry[]; dispose: Disposer
   ];
   return {
     entries: [
-      ...mutes.map((m) => entryOf(`set.mute.${m.k}`, m.box.el, forms[m.k] ?? null)),
       entryOf(
-        'set.relayList',
+        'set.accounts',
         h(
           'div',
           { class: 'actions' },
-          h('button', { class: 'btn', onclick: () => env.open('relays') }, t('view.relays')),
+          h('button', { class: 'btn', onclick: () => env.open('account') }, t('view.account')),
         ),
       ),
+      ...mutes.map((m) => entryOf(`set.mute.${m.k}`, m.box.el, forms[m.k] ?? null)),
       entryOf('set.servers', serverBox.el, serverForm),
     ],
     dispose: () => offs.forEach((off) => off()),

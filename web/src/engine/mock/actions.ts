@@ -1,7 +1,7 @@
 // What the mock does with the reader's actions, and what happens in its world on its own.
 
 import { serverAddress } from '../../shared/address.ts';
-import type { Action, Delivery, Failure, FromEngine, Uploaded } from '../protocol.ts';
+import type { Action, Delivery, Failure, FromEngine, ToEngine, Uploaded } from '../protocol.ts';
 import type { Core } from './engine.ts';
 import { FILLER } from './fixtures-notes.ts';
 import { byHandle, byPubkey, SELF } from './people.ts';
@@ -73,8 +73,10 @@ export function createActions(core: Core) {
 
   function run(req: string, a: Action): void {
     const me = core.me();
-    if (a.a !== 'account.add' && a.a !== 'account.use' && a.a !== 'account.remove' && !me)
-      return fail(req, 'signed-out');
+    if (!a.a.startsWith('account.') && !me) return fail(req, 'signed-out');
+    const signer = core.who.list().find((x) => x.author.pubkey === me)?.signer;
+    if (!a.a.startsWith('account.') && a.a !== 'seen' && signer === 'none')
+      return fail(req, 'read-only');
     switch (a.a) {
       case 'publish': {
         const w = a.what;
@@ -181,20 +183,34 @@ export function createActions(core: Core) {
         core.accounts();
         return done(req);
       case 'account.use':
-        core.setActive(a.pubkey);
-        core.accounts();
-        core.resync(undefined, true);
-        return done(req);
+        return signedIn(req, core.who.use(a.pubkey));
       case 'account.remove':
-        core.setActive(undefined);
-        core.accounts();
-        return done(req);
+        return signedIn(req, core.who.remove(a.pubkey));
       case 'account.add':
-        return a.how === 'extension'
-          ? fail(req, 'signer-missing')
-          : fail(req, 'unsupported', 'the mock world has two fixed accounts');
+        // The extension lives on the main thread: the interface is asked for its key, as the real engine asks.
+        if (a.how === 'extension') return void (asked.add(req), post({ t: 'getPublicKey', req }));
+        return later(a.how === 'key' && a.key.startsWith('bunker') ? 700 : 120, () =>
+          signedIn(req, core.who.add(a)),
+        );
+      case 'account.key': {
+        const key = core.who.key(a.pubkey);
+        return key ? done(req, { key }) : fail(req, 'unsupported');
+      }
     }
   }
+  const asked = new Set<string>(); // bound: `account.add` by extension still waiting for its key
+  /** The end of anything that changes who is signed in: every list is the new reader's. */
+  const signedIn = (req: string, error: Failure['code'] | null): void => {
+    if (error) return fail(req, error);
+    core.accounts();
+    core.resync(undefined, true);
+    done(req);
+  };
+  const publicKey = (m: Extract<ToEngine, { t: 'publicKey' }>): void => {
+    if (!asked.delete(m.req)) return;
+    if (!m.pubkey) return fail(m.req, m.error ?? 'signer-missing');
+    signedIn(m.req, core.who.extension(m.pubkey));
+  };
 
   let beat = 0;
   /** One beat of the mock world's own life: a note arrives, a count grows, a partial count settles. */
@@ -214,5 +230,5 @@ export function createActions(core: Core) {
     core.arrived(world.arrive(byHandle(by), text, core.now(), { partial: true }));
   }
 
-  return { run, tick };
+  return { run, tick, publicKey };
 }

@@ -4,6 +4,7 @@ import { countText, dayOf, fullTime, noteTime } from '../shared/format.ts';
 import { h } from '../shared/h.ts';
 import { getLang, type Key, t } from '../shared/i18n.ts';
 import { icon } from '../shared/icons.ts';
+import { ability } from './can.ts';
 import { renderNote } from './note.ts';
 import { act } from './note-actions.ts';
 import {
@@ -15,14 +16,19 @@ import {
   nameButton,
   plainName,
   segments,
+  unnamed,
 } from './parts.ts';
 import type { ViewEnv } from './registry.ts';
 
 function followButton(env: ViewEnv, pubkey: string, followed: boolean): HTMLElement {
+  // Signed out or read-only, the button is drawn off; a press says why (`act`).
+  const can = ability(env.engine);
   return h(
     'button',
     {
-      class: followed ? 'btn' : 'btn primary',
+      class: can !== 'ok' ? 'btn off' : followed ? 'btn' : 'btn primary',
+      'aria-disabled': can !== 'ok' ? true : null,
+      title: can !== 'ok' ? t(`error.${can}`) : null,
       onclick: (e) => (
         e.stopPropagation(), void act(env, (as) => ({ a: 'follow', as, pubkey, on: !followed }))
       ),
@@ -35,8 +41,14 @@ function followButton(env: ViewEnv, pubkey: string, followed: boolean): HTMLElem
 export function renderProfile(row: ProfileRow, env: ViewEnv): HTMLElement {
   const a = row.author;
   const lang = getLang();
-  const stat = (kind: string | null, n: number, label: Key): HTMLElement => {
-    const inner = [h('b', null, countText(n, row.partial, lang)), ' ', t(label)];
+  // A count is shown once it is known. Absent, or a lower bound of nothing ("0+"), is not a count: the label
+  // stands alone (it still opens the list) and the number takes its place when it arrives.
+  const stat = (kind: string | null, n: number | undefined, label: Key): HTMLElement | null => {
+    const known = typeof n === 'number' && !(n === 0 && row.partial);
+    if (!known && !kind) return null;
+    const inner = known
+      ? [h('b', null, countText(n, row.partial, lang)), ' ', t(label)]
+      : [t(label)];
     return kind
       ? h(
           'button',
@@ -56,7 +68,7 @@ export function renderProfile(row: ProfileRow, env: ViewEnv): HTMLElement {
   const known = row.knownFollowers;
   return h(
     'section',
-    { class: 'profile' },
+    { class: unnamed(a) ? 'profile pending' : 'profile' },
     h('div', {
       class: 'banner',
       style: row.banner ? `background-image:url("${row.banner}")` : null,
@@ -86,11 +98,13 @@ export function renderProfile(row: ProfileRow, env: ViewEnv): HTMLElement {
           a.nip05,
         )
       : null,
-    h(
-      'button',
-      { class: 'npub', title: t('profile.copyNpub'), onclick: () => void copy(env, a.npub) },
-      a.npub,
-    ),
+    a.npub
+      ? h(
+          'button',
+          { class: 'npub', title: t('profile.copyNpub'), onclick: () => void copy(env, a.npub) },
+          a.npub,
+        )
+      : null,
     row.muted ? h('div', { class: 'muted' }, t('profile.muted')) : null,
     h('div', { class: 'about' }, segments(row.about, env)),
     h(

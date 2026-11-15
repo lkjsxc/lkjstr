@@ -10,8 +10,8 @@ import {
   type Query,
   type ToEngine,
 } from '../protocol.ts';
+import { createAccounts } from './accounts.ts';
 import { createActions } from './actions.ts';
-import { SECOND, SELF } from './people.ts';
 import { type Entry, entry, matches, select } from './query.ts';
 import { relays } from './relays.ts';
 import { createWorld, type MNote } from './world.ts';
@@ -35,10 +35,10 @@ function createCore(post: (msg: FromEngine) => void, now: () => number) {
   const world = createWorld(now());
   const subs = new Map<string, Sub>(); // bound: the interface's open subscriptions
   const timers = new Set<ReturnType<typeof setTimeout>>(); // bound: pending mock delays
-  let active: string | undefined = SELF.author.pubkey;
+  const who = createAccounts();
   let unread = 3;
   let flushing = false;
-  const me = (): string => active ?? '';
+  const me = (): string => who.active() ?? '';
   const later = (ms: number, fn: () => void): void => {
     const t = setTimeout(() => (timers.delete(t), fn()), ms);
     timers.add(t);
@@ -57,12 +57,8 @@ function createCore(post: (msg: FromEngine) => void, now: () => number) {
   };
   const inWindow = (s: Sub, i: number): boolean => s.windowed && i >= s.start && i < s.end;
   const accounts = (): void => {
-    const list: Account[] = [SELF, SECOND].map((p) => ({
-      author: p.author,
-      signer: p === SELF ? 'local' : 'extension',
-      unread: p === SELF ? unread : 0,
-    }));
-    post({ t: 'accounts', accounts: list, active });
+    const list: Account[] = who.list().map((a, i) => ({ ...a, unread: i === 0 ? unread : 0 }));
+    post({ t: 'accounts', accounts: list, active: who.active() });
   };
 
   return {
@@ -73,7 +69,7 @@ function createCore(post: (msg: FromEngine) => void, now: () => number) {
     later,
     me,
     accounts,
-    setActive: (pk: string | undefined) => void (active = pk),
+    who,
     setUnread: (n: number) => void (unread = n),
     /** The connection summary, from the relay rows as they are now. */
     status(): void {
@@ -162,17 +158,23 @@ export function createMockEngine(post: (msg: FromEngine) => void, now = Date.now
   const act = createActions(core);
   let config: EngineConfig = { language: 'en', heuristics: true, prefetch: true };
   let liveTimer: ReturnType<typeof setInterval> | undefined;
+  let started = false;
   const live = (): void => {
     clearInterval(liveTimer);
     if (config.mock?.live === false) return;
     liveTimer = setInterval(() => act.tick(), 2600);
   };
-  later(0, () => {
+  /** Says ready and who is signed in: at the first `configure` (which may ask for a first visit with nobody
+   * signed in), or by itself a moment later for an interface that never configures. */
+  const start = (): void => {
+    if (started) return;
+    started = true;
     post({ t: 'ready', version: PROTOCOL_VERSION, engine: 'mock' });
     core.accounts();
     core.status();
     live();
-  });
+  };
+  later(40, start);
 
   return {
     handle(msg) {
@@ -185,10 +187,13 @@ export function createMockEngine(post: (msg: FromEngine) => void, now = Date.now
         world.state.relays = [...msg.relays];
         core.resync((q) => q.source === 'relays', true);
         core.status();
-      } else if (msg.t === 'publicKey') {
-        // Only the real engine initiates signer discovery. No pending request in the mock.
-      } else if (msg.t === 'configure') (config = msg.config), live();
-      else if (msg.t === 'open') {
+      } else if (msg.t === 'publicKey') act.publicKey(msg);
+      else if (msg.t === 'configure') {
+        config = msg.config;
+        if (!started && config.mock?.accounts === 'none') core.who.clear();
+        if (started) live();
+        else start();
+      } else if (msg.t === 'open') {
         const s: Sub = {
           id: msg.sub,
           query: msg.query,
@@ -201,17 +206,21 @@ export function createMockEngine(post: (msg: FromEngine) => void, now = Date.now
           ops: [],
         };
         subs.set(s.id, s);
-        const done = ![
-          'home',
-          'global',
-          'hashtag',
-          'search',
-          'profile',
-          'thread',
-          'list',
-          'relay',
-          'notifications',
-        ].includes(msg.query.source);
+        const nobody =
+          !core.me() && ['home', 'notifications', 'bookmarks'].includes(msg.query.source);
+        const done =
+          nobody ||
+          ![
+            'home',
+            'global',
+            'hashtag',
+            'search',
+            'profile',
+            'thread',
+            'list',
+            'relay',
+            'notifications',
+          ].includes(msg.query.source);
         post({
           t: 'state',
           sub: s.id,

@@ -10,6 +10,7 @@
 .npub { display: block; max-width: 100%; padding: 0; overflow: hidden; color: var(--muted); font: 12px / 1.6 ui-monospace, "SF Mono", "Cascadia Mono", "Noto Sans Mono", monospace; text-align: left; text-decoration: underline; text-decoration-color: var(--sep); text-overflow: ellipsis; text-underline-offset: 3px; white-space: nowrap; }
 .npub:hover { color: var(--fg); text-decoration-color: currentColor; }
 .about { margin: 8px 0 6px; white-space: pre-wrap; }
+.about:empty, .pmeta:empty { display: none; }
 .pmeta { display: flex; flex-wrap: wrap; gap: 2px 14px; font-size: 12.5px; }
 .pmeta span { display: inline-flex; align-items: center; gap: 4px; }
 .pmeta .i { width: 13px; height: 13px; }

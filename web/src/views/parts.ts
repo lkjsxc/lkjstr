@@ -11,6 +11,18 @@ export const how = (e: MouseEvent): { split?: boolean; background?: boolean } =>
   background: e.button === 1,
 });
 
+/** A name the engine has not learned yet arrives empty, as the pubkey or as the whole npub. None of those is a
+ * name: the person is shown by a short npub until the profile comes, and the real name then takes its place. */
+const RAW = /^(?:[0-9a-f]{64}|npub1[a-z0-9]{40,})$/;
+export const unnamed = (a: Author): boolean => !a.name.trim() || RAW.test(a.name.trim());
+const brief = (key: string): string =>
+  key.length > 18 ? `${key.slice(0, key.startsWith('npub1') ? 10 : 8)}…${key.slice(-4)}` : key;
+export const shortNpub = (a: Author): string => brief(a.npub || a.pubkey);
+/** A name that came alone (a mention): shortened when it is a key. */
+export const nameText = (name: string): string =>
+  RAW.test(name.trim()) ? brief(name.trim()) : name;
+const nameOf = (a: Author): string => (unnamed(a) ? shortNpub(a) : a.name);
+
 /** A circle: the picture, or a flat colour from the pubkey with the first letter of the name. */
 export function avatar(a: Author, cls = 'av'): HTMLElement {
   const hue = Number.parseInt(a.pubkey.slice(0, 4), 16) % 360;
@@ -29,7 +41,7 @@ export function avatar(a: Author, cls = 'av'): HTMLElement {
     });
     img.addEventListener('error', () => img.remove()); // the flat circle stays, same size
     el.append(img);
-  } else el.append([...a.name.replace(/:[a-z0-9_]+:/g, '').trim()][0] ?? '');
+  } else if (!unnamed(a)) el.append([...a.name.replace(/:[a-z0-9_]+:/g, '').trim()][0] ?? '');
   return el;
 }
 
@@ -45,10 +57,12 @@ export function withEmoji(text: string, emoji: readonly Emoji[] = []): Child[] {
 export const emojiImg = (code: string, url: string): HTMLElement =>
   h('img', { class: 'emo', src: url, alt: code, title: code, draggable: false });
 
-export const displayName = (a: Author): Child[] => withEmoji(a.name, a.emoji);
+export const displayName = (a: Author): Child[] => withEmoji(nameOf(a), a.emoji);
 /** The name as plain text (tab titles, tooltips). */
 export const plainName = (a: Author): string =>
-  a.name.replace(/\s*:[a-z0-9_]+:/g, '').trim() || a.npub.slice(0, 12);
+  nameOf(a)
+    .replace(/\s*:[a-z0-9_]+:/g, '')
+    .trim() || shortNpub(a);
 
 /** A person's name as a button that opens their profile. */
 export function nameButton(a: Author, env: ViewEnv, cls = 'name'): HTMLElement {
@@ -86,8 +100,8 @@ export function segments(list: readonly Segment[], env: ViewEnv): Child[] {
     if (s.k === 'mention')
       return h(
         'button',
-        { class: 'lnk', onclick: open('profile', { pubkey: s.pubkey, title: s.name }) },
-        `@${s.name.replace(/\s*:[a-z0-9_]+:/g, '')}`,
+        { class: 'lnk', onclick: open('profile', { pubkey: s.pubkey, title: nameText(s.name) }) },
+        `@${nameText(s.name).replace(/\s*:[a-z0-9_]+:/g, '')}`,
       );
     if (s.k === 'hashtag')
       return h('button', { class: 'lnk', onclick: open('hashtag', { tag: s.tag }) }, `#${s.tag}`);
@@ -97,13 +111,16 @@ export function segments(list: readonly Segment[], env: ViewEnv): Child[] {
 }
 
 /** A quiet message that goes away by itself (after a copy, for an error). With `undo` it stays longer and carries
- * a button that takes the action back; up to three of those wait together, so quick removals stay undoable. */
-export function toast(layer: HTMLElement, text: string, undo?: () => void): void {
+ * a button that takes the action back (or, named by `label`, leads on); up to three of those wait together, so
+ * quick removals stay undoable. */
+export function toast(layer: HTMLElement, text: string, undo?: () => void, label?: string): void {
   let box = layer.querySelector<HTMLElement>('.toasts');
   if (!box) layer.append((box = h('div', { class: 'toasts' })));
   const el: HTMLElement = h('div', { class: undo ? 'toast undo' : 'toast', role: 'status' }, text);
   if (undo) {
-    el.append(h('button', { class: 'lnk', onclick: () => (el.remove(), undo()) }, t('undo')));
+    el.append(
+      h('button', { class: 'lnk', onclick: () => (el.remove(), undo()) }, label ?? t('undo')),
+    );
     const waiting = box.querySelectorAll('.toast.undo');
     if (waiting.length >= 3) waiting[0]?.remove();
   } else box.querySelector('.toast:not(.undo)')?.remove();

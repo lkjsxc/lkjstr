@@ -6,8 +6,9 @@ import { type Key, t } from '../shared/i18n.ts';
 import { icon } from '../shared/icons.ts';
 import { keyCaps, pressed } from '../shared/keys.ts';
 import { loadViewState, saveViewState } from '../shared/view-state.ts';
+import { ability } from './can.ts';
+import { createWho } from './compose-who.ts';
 import { openEmojiPicker } from './emoji-picker.ts';
-import { avatar, displayName } from './parts.ts';
 import type { ViewEnv } from './registry.ts';
 
 type Ref = { name: string; text: string };
@@ -36,7 +37,6 @@ export function mountCompose(el: HTMLElement, env: ViewEnv): () => void {
     'aria-label': t('view.compose'),
   });
   area.value = state.text ?? '';
-  const who = h('div', { class: 'cwho' });
   const thumbs = h('div', { class: 'thumbs' });
   const result = h('div', { class: 'cresult', role: 'status' });
   const file = h('input', {
@@ -116,21 +116,13 @@ export function mountCompose(el: HTMLElement, env: ViewEnv): () => void {
     );
 
   const ready = (): void => {
-    const signedIn = Boolean(env.engine.me());
+    const can = ability(env.engine);
     const busy = items.some((i) => !i.done);
+    post.hidden = can === 'signed-out';
+    post.title = can === 'read-only' ? t('error.read-only') : (keyCaps('send')[0] ?? '');
+    attach.disabled = can !== 'ok';
     post.disabled =
-      sending || busy || !signedIn || (!area.value.trim() && !items.length && !state.quote);
-  };
-  const drawWho = (): void => {
-    const a = env.engine.accounts.get();
-    const me = a.accounts.find((x) => x.author.pubkey === a.active);
-    replaceChildren(
-      who,
-      me
-        ? [avatar(me.author, 'av sm'), h('span', { class: 'clip' }, displayName(me.author))]
-        : h('span', { class: 'muted' }, t('error.signed-out')),
-    );
-    ready();
+      sending || busy || can !== 'ok' || (!area.value.trim() && !items.length && !state.quote);
   };
 
   async function upload(f: File): Promise<void> {
@@ -275,22 +267,31 @@ export function mountCompose(el: HTMLElement, env: ViewEnv): () => void {
   file.addEventListener('change', () => (add(file.files), (file.value = '')));
   post.addEventListener('click', () => void send());
 
+  const who = createWho(env, ready);
   el.classList.add('compose');
   el.replaceChildren(
     head,
     area,
     thumbs,
-    h('div', { class: 'cbar' }, who, emoji, attach, file, post),
+    h(
+      'div',
+      { class: 'cbar' },
+      who.el,
+      h('span', { class: 'grow' }),
+      emoji,
+      attach,
+      file,
+      post,
+      who.signIn,
+    ),
     result,
   );
   drawHead();
-  drawWho();
-  const off = env.engine.accounts.subscribe(drawWho);
   if (state.replyTo || state.quote) requestAnimationFrame(() => area.focus());
   return () => {
     clearTimeout(timer);
     state.text = area.value;
     save();
-    off();
+    who.dispose();
   };
 }

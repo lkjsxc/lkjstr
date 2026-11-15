@@ -4,6 +4,7 @@ import type { Key } from '../shared/i18n.ts';
 import type { SettingsStore } from '../shared/settings.ts';
 import type { Disposer, Signal } from '../shared/signal.ts';
 import type { MenuItem } from '../wm/menus.ts';
+import { mountAccount } from './account.ts';
 import { mountCompose } from './compose.ts';
 import { mountFeed } from './feed.ts';
 import { mountMedia } from './media.ts';
@@ -85,6 +86,15 @@ export const VIEWS: readonly ViewDef[] = [
     launch: true,
     aliases: 'post write new note 書く',
     mount: mountCompose,
+  },
+  {
+    id: 'account',
+    title: 'view.account',
+    hint: 'view.account.hint',
+    launch: true,
+    aliases:
+      'sign in login log in signin nsec npub key bunker extension ログイン サインイン 鍵 切り替え',
+    mount: mountAccount,
   },
   {
     id: 'settings',

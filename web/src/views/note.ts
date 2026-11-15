@@ -1,68 +1,17 @@
 // A note, drawn from the engine's view model exactly as it arrives. A press on a person opens their profile, on
 // the text or the time the note's thread, on a quoted card the quoted note: the same everywhere.
-import type { Media, NoteRow, Quote } from '../engine/protocol.ts';
+import type { NoteRow, Quote } from '../engine/protocol.ts';
 import { fullTime, noteTime } from '../shared/format.ts';
 import { type Child, h } from '../shared/h.ts';
 import { getLang, t } from '../shared/i18n.ts';
 import { icon } from '../shared/icons.ts';
 import { actionRow, reactionChips } from './note-actions.ts';
+import { mediaGrid } from './note-media.ts';
 import { avatar, displayName, how, nameButton, plainName, segments } from './parts.ts';
 import type { ViewEnv } from './registry.ts';
 
 const timeOf = (at: number, env: ViewEnv): string =>
   noteTime(at, Date.now(), { relative: env.settings.get().relativeTime, lang: getLang() });
-
-/** Pictures in boxes whose shape is known before they load, so nothing below ever moves. A press opens the media
- * tab beside the note (the address is still a real link: a middle click opens the file itself). */
-export function mediaGrid(
-  media: readonly Media[],
-  env: ViewEnv,
-  title: string,
-): HTMLElement | null {
-  if (!media.length) return null;
-  const one = media.length === 1;
-  const cell = (m: Media, index: number): HTMLElement => {
-    const ratio = one && m.w && m.h ? `${m.w} / ${m.h}` : one ? '16 / 9' : '1 / 1';
-    const style = `aspect-ratio:${ratio};background:${m.color ?? 'var(--raised)'}`;
-    if (m.type === 'audio')
-      return h(
-        'div',
-        { class: 'mbox audio' },
-        h('audio', { src: m.url, controls: true, preload: 'none' }),
-      );
-    const box: HTMLElement = h('a', {
-      class: 'mbox',
-      href: m.url,
-      target: '_blank',
-      rel: 'noopener noreferrer',
-      style,
-      title: m.alt ?? '',
-      'aria-label': m.alt || t('media.view'),
-    });
-    box.addEventListener('click', (e) => {
-      e.stopPropagation();
-      if (e.ctrlKey || e.metaKey) return; // the browser's own "open in a new tab"
-      e.preventDefault();
-      env.open('media', { media, index, title }, { beside: true, split: e.shiftKey, from: box });
-    });
-    if (m.type === 'image')
-      box.append(
-        h('img', { src: m.thumb ?? m.url, alt: m.alt ?? '', loading: 'lazy', decoding: 'async' }),
-      );
-    else
-      box.append(
-        h('video', { src: m.url, preload: 'metadata', muted: true, playsinline: true }),
-        h('span', { class: 'mplay' }, icon('play')),
-      );
-    return box;
-  };
-  return h(
-    'div',
-    { class: `media n${Math.min(media.length, 4)}` },
-    media.slice(0, 4).map(cell),
-    media.length > 4 ? h('span', { class: 'mmore' }, `+${media.length - 4}`) : null,
-  );
-}
 
 function quoteCard(q: Quote, env: ViewEnv): HTMLElement {
   if (q.state !== 'ok') return h('div', { class: 'quote muted' }, t(`quote.${q.state}`));
@@ -102,6 +51,46 @@ function fold(text: HTMLElement): void {
   text.after(more);
 }
 
+const drawnBy = new WeakMap<HTMLElement, string>(); // the author each drawn note shows
+/** Who wrote it, at the left: a press opens the person. */
+function face(row: NoteRow, env: ViewEnv): HTMLElement {
+  const name = plainName(row.author);
+  const el = h('button', { class: 'avb', title: name, 'aria-label': name }, avatar(row.author));
+  el.addEventListener('click', (e) => {
+    e.stopPropagation();
+    env.open('profile', { pubkey: row.author.pubkey, title: name }, how(e));
+  });
+  return el;
+}
+/** The line over the text: name, NIP-05, time. One line of fixed height, whatever is known of the author. */
+function head(row: NoteRow, env: ViewEnv): HTMLElement {
+  const a = row.author;
+  return h(
+    'div',
+    { class: 'nhead' },
+    nameButton(a, env),
+    a.nip05
+      ? h(
+          'span',
+          {
+            class: a.verified ? 'nip ok' : 'nip',
+            title: a.verified ? t('nip05.ok') : t('nip05.unchecked'),
+          },
+          a.verified ? icon('check') : null,
+          a.nip05,
+        )
+      : null,
+    a.bot ? h('span', { class: 'badge' }, t('note.bot')) : null,
+    h('time', { title: fullTime(row.at) }, row.pending ? t('note.sending') : timeOf(row.at, env)),
+    // Where the tile is too narrow for a bookmark button, a set bookmark is this mark instead.
+    h(
+      'span',
+      { class: 'bmark', title: t('note.bookmarked'), hidden: !row.mine.bookmarked },
+      icon('bookmark'),
+    ),
+  );
+}
+
 export function renderNote(row: NoteRow, env: ViewEnv): HTMLElement {
   if (row.hidden) {
     const el = h(
@@ -127,10 +116,6 @@ export function renderNote(row: NoteRow, env: ViewEnv): HTMLElement {
   const openThread = (e: MouseEvent): void => {
     if (String(getSelection())) return; // selecting text is not a press
     env.open('thread', { id: row.id, title: plainName(row.author) }, how(e));
-  };
-  const person = (e: MouseEvent): void => {
-    e.stopPropagation();
-    env.open('profile', { pubkey: row.author.pubkey, title: plainName(row.author) }, how(e));
   };
   const context: Child[] = [];
   if (row.repostedBy) {
@@ -187,12 +172,6 @@ export function renderNote(row: NoteRow, env: ViewEnv): HTMLElement {
       fold(text);
     });
   }
-  const av = h(
-    'button',
-    { class: 'avb', title: plainName(row.author), 'aria-label': plainName(row.author) },
-    avatar(row.author),
-  );
-  av.addEventListener('click', person);
   const thread = row.thread;
   const el = h(
     'article',
@@ -204,44 +183,18 @@ export function renderNote(row: NoteRow, env: ViewEnv): HTMLElement {
     h(
       'div',
       { class: 'nrow' },
-      av,
+      face(row, env),
       h(
         'div',
         { class: 'nmain' },
-        h(
-          'div',
-          { class: 'nhead' },
-          nameButton(row.author, env),
-          row.author.nip05
-            ? h(
-                'span',
-                {
-                  class: row.author.verified ? 'nip ok' : 'nip',
-                  title: row.author.verified ? t('nip05.ok') : t('nip05.unchecked'),
-                },
-                row.author.verified ? icon('check') : null,
-                row.author.nip05,
-              )
-            : null,
-          row.author.bot ? h('span', { class: 'badge' }, t('note.bot')) : null,
-          h(
-            'time',
-            { title: fullTime(row.at) },
-            row.pending ? t('note.sending') : timeOf(row.at, env),
-          ),
-          // Where the tile is too narrow for a bookmark button, a set bookmark is this mark instead.
-          h(
-            'span',
-            { class: 'bmark', title: t('note.bookmarked'), hidden: !row.mine.bookmarked },
-            icon('bookmark'),
-          ),
-        ),
+        head(row, env),
         body,
         actionRow(row, env),
         reactionChips(row, env),
       ),
     ),
   );
+  drawnBy.set(el, JSON.stringify(row.author));
   const plain = (e: Event): boolean =>
     !(e.target as Element).closest('button, a, input, textarea, video, audio, .quote');
   el.addEventListener('click', (e) => void (plain(e) && openThread(e)));
@@ -251,15 +204,26 @@ export function renderNote(row: NoteRow, env: ViewEnv): HTMLElement {
   return el;
 }
 
-/** The body of a note without what changes all the time (counts, reactions, the reader's own marks). */
+/** The body of a note without what changes all the time (counts, reactions, the reader's own marks) and without
+ * its author, whose name and picture arrive after the note does. */
 export const bodySig = (row: NoteRow): string =>
-  JSON.stringify({ ...row, counts: 0, reactions: 0, mine: 0 });
-/** Redraws only the chips and the action row of a drawn note: the text stays as the reader left it (unfolded,
- * uncovered) and nothing moves under the pointer. */
+  JSON.stringify({ ...row, author: 0, pending: 0, counts: 0, reactions: 0, mine: 0 });
+/** Redraws only the author's line and face, the chips and the action row of a drawn note: the text stays as the
+ * reader left it (unfolded, uncovered), pictures are not loaded again and nothing moves under the pointer. */
 export function patchNote(el: HTMLElement, row: NoteRow, env: ViewEnv): void {
   const main = el.querySelector(':scope > .nrow > .nmain');
   if (!main) return;
-  main.querySelector(':scope > .nhead > .bmark')?.toggleAttribute('hidden', !row.mine.bookmarked);
+  el.classList.toggle('pending', row.pending === true);
+  const was = main.querySelector<HTMLElement>(':scope > .nhead');
+  const name = was?.querySelector('.name');
+  const keep = name !== null && name === document.activeElement;
+  was?.replaceWith(head(row, env));
+  if (keep)
+    main.querySelector<HTMLElement>(':scope > .nhead > .name')?.focus({ preventScroll: true });
+  if (JSON.stringify(row.author) !== drawnBy.get(el)) {
+    drawnBy.set(el, JSON.stringify(row.author));
+    el.querySelector(':scope > .nrow > .avb')?.replaceWith(face(row, env));
+  }
   // The button that was pressed is drawn again: the keyboard stays on its successor.
   const held = document.activeElement?.closest('.acts, .chips')?.parentElement === main;
   const mark = held ? heldMark(document.activeElement) : '';
