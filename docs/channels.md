@@ -35,7 +35,8 @@ The frontend protocol and mock remain unchanged.
 Events use the existing 16000 regular / 4000 replaceable memory caps and
 20000-event physical retention. Channel metadata is derived from that store,
 without a separate unbounded cache. List projection uses at most 6000 creations;
-metadata/message discovery targets at most 1000 channel ids in 120-id batches.
+metadata/message discovery targets at most 1000 channel ids in 120-id batches,
+reserving capacity for the explicitly opened channel.
 Metadata and messages use separate requests, each limited to 200 events, so
 newer messages cannot displace metadata. Notification repost filters include
 both kind 6 and generic kind 16 reposts. Pending visible-count lookups can
@@ -43,7 +44,8 @@ interrupt settled channel work so extra metadata requests cannot starve them.
 Discovery of channel lists and messages follows visible views and releases on
 hide/close. Identical filters share requests. Finite reference lookups can
 interrupt settled live subscriptions and release their slots at EOSE.
-Competing channel work rotates with a one-second cooldown on constrained relays.
+Channel work and ordinary live feeds rotate with a one-second cooldown on
+constrained relays, so neither can monopolize a single subscription slot.
 Completed page coverage and response progress survive these interruptions.
 Existing inclusive timestamp paging avoids gaps at ordinary timestamp ties;
 a full page consisting entirely of one timestamp remains honestly unexhausted.
@@ -80,3 +82,8 @@ All publications go to the loopback fixture. Worker conformance separately
 checks early join without a view and the disabled client tag on kind 42.
 No interface wording, style or layout
 changes are required; the reply smoke selects the existing Reply button.
+
+Channel list loading and failures follow subscription phases, including with an
+empty cache. The composer retains up to 20 complete pending/failed channel drafts
+with the posting account, uploaded media and emoji metadata in tab storage.
+Retry and discard act on those drafts independently of the current input.

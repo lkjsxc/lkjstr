@@ -3,7 +3,7 @@
 // channel as a tab in the same tile. A joined channel says how much is unread; another offers to be joined.
 import type { Subscription } from '../engine/client.ts';
 import { applyOps } from '../engine/ops.ts';
-import type { ChannelRow, Row } from '../engine/protocol.ts';
+import type { ChannelRow, Row, SubState } from '../engine/protocol.ts';
 import { noteTime } from '../shared/format.ts';
 import { h } from '../shared/h.ts';
 import { getLang, t } from '../shared/i18n.ts';
@@ -20,7 +20,7 @@ export function mountChannels(el: HTMLElement, env: ViewEnv): () => void {
   const state = loadViewState<{ text?: string }>(env.instance);
   let sub: Subscription | undefined;
   let rows: readonly Row[] = [];
-  let loaded = false;
+  let phase: SubState['phase'] = 'cache';
   let account = env.engine.me();
   let can = ability(env.engine);
   const goTo = (c: ChannelRow, e?: MouseEvent): void =>
@@ -74,18 +74,26 @@ export function mountChannels(el: HTMLElement, env: ViewEnv): () => void {
     const lines: Line[] = [...all];
     if (first > 0) lines.splice(first, 0, { kind: 'rule', key: 'rule' });
     reconcile(list, cache, lines, render);
-    status.textContent = !loaded ? t('feed.loading') : all.length ? '' : t('channels.none');
+    status.textContent =
+      phase === 'failed'
+        ? t('feed.failed')
+        : all.length
+          ? ''
+          : phase === 'cache'
+            ? t('feed.loading')
+            : t('channels.none');
   };
   const open = (): void => {
     sub?.close();
     rows = [];
-    loaded = false;
+    phase = 'cache';
     draw();
     const text = state.text?.trim() || undefined;
     sub = env.engine.open(
       { source: 'channels', account: account || undefined, text },
       {
-        rows: (r) => ((rows = r), (loaded = true), draw()),
+        rows: (r) => ((rows = r), draw()),
+        state: (s) => ((phase = s.phase), draw()),
         patch: (ops) => ((rows = applyOps(rows, ops)), draw()),
       },
     );

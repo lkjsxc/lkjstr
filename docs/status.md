@@ -2,17 +2,17 @@
 
 ## Purpose
 
-Current engine cutover, verified behavior and unfinished variants; web/ owns the UI.
+Current engine behavior and unfinished variants.
 
 ## Protocol 4 channels (2026-11-15)
 
-The Worker now advertises protocol 4. NIP-28 creation, creator-only metadata,
-channel messages, NIP-51 joined lists, device unread marks and channel actions use
-the existing store, signer, shared relay scheduler and timestamp paging.
-Channel messages stay out of ordinary feeds and retain context in bookmarks,
-threads and notifications. Early edits wait for the joined list; Stats and client-tag settings use the real engine.
-Separate metadata requests protect busy-channel updates; repost notification
-filters accept kinds 6 and 16. Native and UI checks: [channels.md](channels.md).
+Protocol 4 channels use the existing store, signer, scheduler and paging for
+creator-only metadata, messages, joined lists and unread marks. Channel messages
+stay out of ordinary feeds. Early edits wait for the joined list; Stats and
+client-tag settings use the real engine. Opened targets retain discovery capacity.
+Channel work rotates alongside feeds. The UI tracks discovery phases and retains
+full failed drafts for retry. Separate metadata requests protect busy channels;
+repost filters accept kinds 6 and 16. Native and UI checks: [channels.md](channels.md).
 
 ## Protocol 3 integration (2026-11-15)
 

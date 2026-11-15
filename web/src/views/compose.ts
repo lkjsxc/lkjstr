@@ -1,5 +1,4 @@
-// The composer: a tab like any other. The draft is saved as it is typed and survives a reload. Pictures arrive by
-// paste, drop or the button and show their progress. Below it, the result of the latest post only.
+// The composer saves typed drafts and retains failed channel messages for retry.
 import type { Delivery, Draft, Emoji, Uploaded } from '../engine/protocol.ts';
 import { h, replaceChildren } from '../shared/h.ts';
 import { type Key, t } from '../shared/i18n.ts';
@@ -7,6 +6,7 @@ import { icon } from '../shared/icons.ts';
 import { keyCaps, pressed } from '../shared/keys.ts';
 import { loadViewState, saveViewState } from '../shared/view-state.ts';
 import { ability, failureText } from './can.ts';
+import { type ChannelDraft, createChannelOutbox } from './compose-outbox.ts';
 import { createWho } from './compose-who.ts';
 import { openEmojiPicker } from './emoji-picker.ts';
 import type { ViewEnv } from './registry.ts';
@@ -14,6 +14,7 @@ import type { ViewEnv } from './registry.ts';
 type Ref = { name: string; text: string };
 type State = {
   text?: string;
+  outbox?: ChannelDraft[];
   replyTo?: string;
   replyOf?: Ref;
   quote?: string;
@@ -30,7 +31,6 @@ export function mountCompose(el: HTMLElement, env: ViewEnv, channel?: string): (
   const save = (): void => saveViewState(env.instance, state);
   let items: Item[] = []; // bound: the files of one draft
   let sending = false;
-
   const area = h('textarea', {
     class: 'ctext',
     rows: channel ? 2 : 4,
@@ -123,8 +123,24 @@ export function mountCompose(el: HTMLElement, env: ViewEnv, channel?: string): (
     post.title = can === 'read-only' ? t('error.read-only') : (keyCaps('send')[0] ?? '');
     attach.disabled = can !== 'ok';
     post.disabled =
-      sending || busy || can !== 'ok' || (!area.value.trim() && !items.length && !state.quote);
+      sending ||
+      !!outbox?.full() ||
+      busy ||
+      can !== 'ok' ||
+      (!area.value.trim() && !items.length && !state.quote);
   };
+
+  const outbox = channel
+    ? createChannelOutbox(
+        env,
+        (state.outbox ??= []),
+        () => {
+          save();
+          ready();
+        },
+        (relays, final) => showDelivery(relays, final),
+      )
+    : undefined;
 
   async function upload(f: File): Promise<void> {
     const bar = h('i');
@@ -216,10 +232,14 @@ export function mountCompose(el: HTMLElement, env: ViewEnv, channel?: string): (
       thumbs.replaceChildren();
       drawHead();
     };
-    // A chat does not wait for the relays before the next line: the field is free at once, and what could not
-    // be sent comes back into it.
-    if (channel) clear();
-    else sending = true;
+    // Retain the entire draft before freeing the input for the next message.
+    if (outbox) {
+      outbox.publish(draft);
+      clear();
+      ready();
+      return;
+    }
+    sending = true;
     ready();
     const r = await env.engine.act(
       { a: 'publish', as: env.engine.me(), what: { k: 'note', draft } },
@@ -228,8 +248,7 @@ export function mountCompose(el: HTMLElement, env: ViewEnv, channel?: string): (
     sending = false;
     if (r.ok) showDelivery(r.delivery ?? [], true);
     else replaceChildren(result, h('div', { class: 'error' }, failureText(r.error)));
-    if (r.ok && !channel) clear();
-    if (!r.ok && channel && !area.value) (area.value = state.text = text), save();
+    if (r.ok) clear();
     ready();
   }
 
@@ -268,6 +287,7 @@ export function mountCompose(el: HTMLElement, env: ViewEnv, channel?: string): (
       who.signIn,
     ),
     result,
+    ...(outbox ? [outbox.el] : []),
   );
   drawHead();
   if (state.replyTo || state.quote) requestAnimationFrame(() => area.focus());

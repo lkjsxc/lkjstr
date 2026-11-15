@@ -79,3 +79,73 @@ fn joined_list_and_multiple_channels_rotate_on_one_slot_and_release_on_close() {
             .any(|e| matches!(e,Effect::Disconnect(url) if url==relay))
     );
 }
+
+#[test]
+fn channel_and_global_work_both_resume_on_one_slot() {
+    let relay = "wss://local.test/";
+    for channel_kind in [40, 41, 42] {
+        let mut n = Network::default();
+        n.configure(vec![relay.into()], 0);
+        n.relay_information(relay, r#"{"limitation":{"max_subscriptions":1}}"#);
+        let global = NostrFilter {
+            kinds: Some(vec![1, 6]),
+            limit: Some(200),
+            ..Default::default()
+        };
+        let feed = ("global".into(), global, Query::default());
+        n.plan(vec![feed.clone()], 0);
+        n.connected(relay, 1);
+        let mut global_id = String::new();
+        for effect in n.drain_effects() {
+            if let Effect::Send(_, text) = effect {
+                let f: Value = serde_json::from_str(&text).expect("frame");
+                if f[0] == "REQ" {
+                    global_id = f[1].as_str().expect("id").into();
+                    n.message(relay, &json!(["EOSE", global_id]).to_string(), 10);
+                }
+            }
+        }
+        assert!(!global_id.is_empty());
+        n.plan(
+            vec![
+                feed,
+                (
+                    "channel".into(),
+                    NostrFilter {
+                        kinds: Some(vec![channel_kind]),
+                        limit: Some(200),
+                        ..Default::default()
+                    },
+                    Query {
+                        source: Source::Channels,
+                        ..Default::default()
+                    },
+                ),
+            ],
+            100,
+        );
+        let mut channel_served = false;
+        let mut global_resumed = false;
+        for now in (100..=5000).step_by(100) {
+            n.tick(now);
+            let mut active = 0;
+            for effect in n.drain_effects() {
+                if let Effect::Send(_, text) = effect {
+                    let f: Value = serde_json::from_str(&text).expect("frame");
+                    if f[0] == "REQ" {
+                        active += 1;
+                        if f[1] == global_id {
+                            global_resumed |= channel_served;
+                        } else {
+                            channel_served = true;
+                        }
+                        n.message(relay, &json!(["EOSE", f[1]]).to_string(), now);
+                    }
+                }
+            }
+            assert!(active <= 1, "one slot per tick");
+        }
+        assert!(channel_served, "kind {channel_kind} must progress");
+        assert!(global_resumed, "global must resume after channel work");
+    }
+}

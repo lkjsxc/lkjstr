@@ -159,7 +159,8 @@ text, still reaches 4.5:1 on `--bg`. The theme follows the device or Settings.
   row shows a vermilion unread count, another offers Join.
 - A channel is a feed, newest first. Its head and the composer under it are
   the first row and scroll away: the newest end of a chat is its top here.
-  The field is free at once. Elsewhere a message says `# name` above it.
+  The field is free at once. Pending and failed messages stay below it, with
+  Retry and discard for failures, preserving attachments across reload. Elsewhere a message says `# name` above it.
 - What the engine cannot serve (protocol below 3; channels: 4) is not drawn.
 - Loading, empty, failed and end-of-list are one quiet centred line.
 

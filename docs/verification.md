@@ -134,3 +134,14 @@ list navigation, posting, Thread replies, edits, join/leave, client-tag Settings
 and Stats. Early create/join waits for the owner-list lookup instead of racing
 it; failed lookups expire without overwriting an unknown list. All four quiet
 gates, expanded conformance and the delayed profile probe pass after that fix.
+
+## Channel branch review (2026-11-15)
+
+All four findings are fixed. Native regressions cover channel/Global progress
+and resumption on one-slot relays, and target reservation at 1000 discovery ids.
+UI regressions cover discovery loading/failure/empty phases, complete failed-draft
+retry across remount and account switches, and bounded pending/failed drafts.
+All four quiet gates, real UI smoke and Worker conformance pass; the delayed
+profile probe passes without page errors. Frontend check, build, mock smoke and
+composer/channel screenshots pass. Docker remains excluded by the worktree-only
+write rule. Changes remain uncommitted; no CI or existing services were changed.

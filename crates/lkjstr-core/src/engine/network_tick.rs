@@ -108,6 +108,9 @@ impl Network {
                                         && ((r.filter.ids.is_some() && q.live)
                                             || ((channel_work(&r.filter)
                                                 || counts_filter(&r.filter))
+                                                && (channel_work(&q.filter) || q.live))
+                                            || (r.live
+                                                && !r.members.contains("~account-discovery")
                                                 && channel_work(&q.filter))
                                             || (!r.members.contains("~account-discovery")
                                                 && counts_filter(&q.filter))
@@ -118,11 +121,14 @@ impl Network {
                         .map(|(id, _)| id.clone());
                     if let Some(victim) = victim {
                         let relay = r.relay.clone();
-                        let rotate = channel_work(&r.filter) && filter_live(&r.filter);
+                        let rotate = channel_work(&r.filter) || r.live;
                         if let Some(q) = self.requests.get_mut(&victim) {
                             q.sent = false;
                             q.eose = false;
-                            if rotate && channel_work(&q.filter) {
+                            if rotate
+                                && !q.members.contains("~account-discovery")
+                                && (channel_work(&q.filter) || q.live)
+                            {
                                 q.ready_at = now + 1000;
                             }
                         }
@@ -187,7 +193,7 @@ fn counts_filter(f: &NostrFilter) -> bool {
     )
 }
 
-// A bounded cooldown rotates settled channel work on single-slot relays.
+// A bounded cooldown rotates channel work alongside ordinary live feeds.
 fn channel_work(f: &NostrFilter) -> bool {
     f.kinds
         .as_ref()
