@@ -191,10 +191,10 @@ comparison and omitted designs: [outbox.md](outbox.md), tmp/outbox-report.md.
 Docker is excluded by the worktree-only rule; no CI, production, deployment or
 existing-service change occurred. These records predate the current merge.
 
-## Current conflict resolution (2026-11-15)
+## Harness merge verification (2026-11-15)
 
-Both histories and read orchestration are retained. A regression proves the fix
-for deferred redraw detaching Clear before click. Frontend check/build/mock
-smoke (302), four quiet gates, real smoke (201), conformance (216), focused
-shots and delayed-profile probe (230.6 ms) pass. Logs: tmp/merge-*.log. Git staging
-is blocked by outside-worktree metadata; the merge remains uncommitted.
+Harness merge 63fecba9 keeps both histories and read orchestration. Scrolling,
+windowing, time rails and smoke.ts/shots.ts/smoke-real.mjs match main.
+The stricter deferred-filter-focus repair and its regression remain.
+Frontend check/build/mock smoke (302), four quiet gates and real smoke (207 with LKJSTR_SHOTS=1) pass.
+Conformance (216) and the delayed-profile probe pass. No page errors. Logs: tmp/final-merge-*.log.
