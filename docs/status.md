@@ -66,10 +66,10 @@ Visible windows batch up to 6000 authors per view, including nested quotes,
 reply context and repost actors. Profile batches share relay work, prefer
 note-delivering read relays, fall back after completion and release on hiding.
 Cached names render immediately while metadata refreshes. Visible profiles
-can preempt occupied relay slots; interrupted feeds resume after lookup.
-Interrupted pages replay their original filters until EOSE. Completed page
-coverage and cursors survive live resumption, so profile lookup cannot falsely
-exhaust history. Four native regressions cover interruption and pagination.
+can preempt occupied relay slots; completed focused feeds wait for lookup replies.
+Unfinished focused pages keep priority and replay their filters until EOSE.
+Completed coverage and cursors survive live resumption without exhausting history.
+Native regressions cover delayed hydration, interruption and pagination.
 Six native regressions cover routing, batching, context, refresh and release.
 The delayed loopback probe uses 240 ms responses and congested slots: baseline
 note-to-named-row 1893.7 ms; revised 232.5 ms. engine-check includes this probe.
@@ -160,8 +160,8 @@ through a deadline and reports success on first acceptance. Missing recipient
 lists are looked up; bounded persisted receipts route deletes after reload.
 All saved accounts refresh profile/follow/relay/mute/server records independently
 of cache. Read routes retain page evidence; Stats aggregates publication history
-once. Route cursors, durable cooldowns, focus, weights and request purposes ship.
-Two-cover and weighted retention remain deferred: [outbox.md](outbox.md).
+once. Routing and scheduling lazily share account weights within each plan;
+Authorless routes skip graphs. Two-cover and weighted retention: [outbox.md](outbox.md).
 
 ## Verification
 

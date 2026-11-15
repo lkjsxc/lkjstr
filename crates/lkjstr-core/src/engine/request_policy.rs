@@ -1,21 +1,12 @@
 //! Explicit work order. A shared request takes its most urgent member's purpose.
 use super::*;
 impl Network {
-    pub(super) fn request_policy(
+    pub(super) fn request_policy<'a>(
         &mut self,
-        queries: &BTreeMap<String, Query>,
+        queries: &BTreeMap<String, &'a Query>,
         store: &crate::store::Store,
-        private: &crate::engine::settings::PrivateLists,
+        weights: &mut crate::engine::weights::PlanWeights<'a>,
     ) {
-        let policies: BTreeMap<_, _> = queries
-            .values()
-            .map(|q| {
-                (
-                    q.account.as_deref(),
-                    crate::engine::weights::Weights::new(store, private, q.account.as_deref()),
-                )
-            })
-            .collect();
         for r in self.requests.values_mut() {
             let mut choice = (4, "prefetch", 0);
             for member in &r.members {
@@ -73,25 +64,7 @@ impl Network {
                     (4, "prefetch")
                 };
                 let weight = q
-                    .map(|q| {
-                        let weights = &policies[&q.account.as_deref()];
-                        r.filter
-                            .authors
-                            .iter()
-                            .flatten()
-                            .map(|p| weights.person(p))
-                            .chain(
-                                r.filter
-                                    .ids
-                                    .iter()
-                                    .flatten()
-                                    .chain(r.filter.tags.get("e").into_iter().flatten())
-                                    .filter_map(|id| store.get(id))
-                                    .map(|e| weights.event(&e)),
-                            )
-                            .max()
-                            .unwrap_or(1)
-                    })
+                    .map(|q| weights.request(q.account.as_deref(), &r.filter))
                     .unwrap_or(1);
                 if priority < choice.0 || (priority == choice.0 && weight > choice.2) {
                     choice = (priority, purpose, weight);

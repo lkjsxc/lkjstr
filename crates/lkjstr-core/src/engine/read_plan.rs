@@ -74,12 +74,12 @@ pub fn weight(
 }
 
 impl super::Network {
-    pub(in crate::engine) fn read_routes(
+    pub(in crate::engine) fn read_routes<'a>(
         &self,
         f: &lkjstr_protocol::NostrFilter,
-        q: &crate::engine::protocol::Query,
+        q: &'a crate::engine::protocol::Query,
         store: &crate::store::Store,
-        private: &crate::engine::settings::PrivateLists,
+        weights: &mut crate::engine::weights::PlanWeights<'a>,
         now: u64,
     ) -> Vec<String> {
         use crate::engine::protocol::Source;
@@ -135,8 +135,13 @@ impl super::Network {
             .take(limit)
             .map(|c| c.url.clone())
             .collect();
-        let weights = crate::engine::weights::Weights::new(store, private, q.account.as_deref());
-        for url in select_weighted(&candidates, limit, |p| weights.person(p)) {
+        let selected = if candidates.iter().any(|c| !c.authors.is_empty()) {
+            let policy = weights.get(q.account.as_deref());
+            select_weighted(&candidates, limit, |p| policy.person(p))
+        } else {
+            select(&candidates, limit)
+        };
+        for url in selected {
             if routes.len() < limit && !routes.contains(&url) {
                 routes.push(url);
             }
@@ -144,3 +149,7 @@ impl super::Network {
         routes
     }
 }
+
+#[cfg(test)]
+#[path = "read_plan_test.rs"]
+mod tests;

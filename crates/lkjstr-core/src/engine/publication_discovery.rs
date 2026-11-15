@@ -58,7 +58,7 @@ impl Engine {
                     &filter,
                     &Query::default(),
                     &self.store,
-                    &self.private_lists,
+                    &mut super::weights::PlanWeights::new(&self.store, &self.private_lists),
                     now,
                 );
                 if routes.is_empty() {

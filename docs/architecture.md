@@ -42,8 +42,9 @@ fills missing inbox lists under the same deadline. Network owns retries and earl
 success, plus bounded Stats receipts and a durable deletion-route ledger.
 read_plan.rs ranks configured routes by coverage and measured quality without
 changing chronological feeds. Route-local cursors separate logical pages from
-wire envelopes. Account weights and request purposes are pure core policy. Device-account refresh uses
-independent per-kind requests. Bounds, scorecards and deferred work are in
+wire envelopes. Routing and scheduling share lazy account weights per plan;
+authorless routes skip graph construction. Device refresh uses per-kind requests.
+Bounds, scorecards and deferred work are in
 [orchestration.md](orchestration.md) and [outbox.md](outbox.md).
 
 ## Bounds and storage

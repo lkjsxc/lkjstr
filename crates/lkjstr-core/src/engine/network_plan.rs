@@ -31,19 +31,18 @@ impl Network {
                 }
             }
         }
-        let queries = wants
-            .iter()
-            .map(|(sub, _, q)| (sub.clone(), q.clone()))
-            .collect();
+        let queries = wants.iter().map(|(sub, _, q)| (sub.clone(), q)).collect();
+        let mut weights = crate::engine::weights::PlanWeights::new(store, private);
         let mut desired = Desired::new();
-        for (sub, f, q) in wants {
+        for (sub, f, q) in &wants {
             let routes: Vec<String> = if q.source == Source::Relay {
                 q.target
-                    .into_iter()
-                    .filter(|r| self.relays.contains_key(r))
+                    .iter()
+                    .filter(|r| self.relays.contains_key(*r))
+                    .cloned()
                     .collect()
             } else {
-                self.read_routes(&f, &q, store, private, now)
+                self.read_routes(f, q, store, &mut weights, now)
             };
             let mut routes = routes;
             routes.extend(
@@ -56,7 +55,7 @@ impl Network {
             routes.sort();
             routes.dedup();
             for r in routes {
-                let key = (r, filter_to_value(&f).to_string());
+                let key = (r, filter_to_value(f).to_string());
                 let entry = desired.entry(key).or_insert((f.clone(), BTreeSet::new()));
                 entry.1.insert(sub.clone());
             }
@@ -122,7 +121,7 @@ impl Network {
                 self.close_group(&r.relay, &r.wire_id);
             }
         }
-        self.request_policy(&queries, store, private);
+        self.request_policy(&queries, store, &mut weights);
         self.tick(now);
     }
     pub(super) fn send(&mut self, relay: &str, value: Value) {

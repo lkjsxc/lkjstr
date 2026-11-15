@@ -66,11 +66,14 @@ No services, deployments, production systems or CI workflows were changed.
 
 ## Current record
 
-Engine polish adds native tests for profile routing/batching/context, count
-states and Global filtering, plus the delayed loopback profile check and a
-mock count regression. Results and handoff decisions are in engine-polish.md.
-Historical integration measurements remain in integration-release.md and
-engine-performance.md; old Leptos browser results do not verify this product.
+Read-orchestration review fixes focused-tail hydration starvation and unused
+account-graph reconstruction. Four new native regressions cover delayed replies,
+unfinished focus, lazy policies, reuse, account isolation and refreshed follows.
+The original scheduler and an eager-weight mutation fail the new regressions.
+All four quiet gates and loopback Worker conformance/profile checks pass with
+four-job limits and worktree caches. Logs: tmp/review-*.log. Docker is excluded
+by the worktree-only write rule. Changes remain uncommitted. Historical polish
+and integration results remain in engine-polish.md and integration-release.md.
 
 The integration gate record is in integration-release.md. The real smoke covers
 creation/backup, visitor relay persistence, injected extension rejection and
