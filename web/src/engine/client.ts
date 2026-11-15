@@ -15,6 +15,7 @@ import type {
   Query,
   Row,
   SubState,
+  Timeline,
   ToEngine,
 } from './protocol.ts';
 
@@ -36,6 +37,7 @@ export type SubHandlers = {
   rows(rows: readonly Row[], atTop: boolean, atBottom: boolean): void;
   patch(ops: readonly PatchOp[]): void;
   fresh?(count: number): void;
+  timeline?(timeline: Timeline): void;
   state?(state: SubState): void;
 };
 export type Subscription = {
@@ -138,6 +140,7 @@ export function createEngine(transport: Transport): Engine {
 
   transport.listen((msg) => {
     if (msg.t === 'rows') subs.get(msg.sub)?.rows(msg.rows, msg.atTop, msg.atBottom);
+    else if (msg.t === 'timeline') subs.get(msg.sub)?.timeline?.(msg.timeline);
     else if (msg.t === 'patch') subs.get(msg.sub)?.patch(msg.ops);
     else if (msg.t === 'fresh') subs.get(msg.sub)?.fresh?.(msg.count);
     else if (msg.t === 'state') subs.get(msg.sub)?.state?.(msg.state);

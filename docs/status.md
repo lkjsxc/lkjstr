@@ -91,12 +91,12 @@ two duplicates. Ten examples and owner decisions: [engine-polish.md](engine-poli
 
 ## Engine contract (2026-11-14)
 
-The engine mirrors the fetched frontend's protocol.ts and mock action/message
-inventory. docs/protocol-additions.patch adds accepted public-key discovery,
-separate relay configuration, heartbeat/detach/reconnect and quote errors.
-The real Worker conformance gate derives validators from that TypeScript file;
-it drives every current mock message kind, every action name and every source.
-Shape conformance does not establish completeness of every semantic variant.
+The engine mirrors frontend protocol.ts, currently protocol 5, including
+cache-wide [time rails](time-rail.md), month counts and ordinal window seeks.
+Earlier additions include key discovery, relay configuration, heartbeat,
+detach/reconnect and quote errors. The Worker conformance gate derives its
+validators from that contract and drives each current mock message, action
+and source. Shape conformance does not establish every semantic variant.
 
 Implemented:
 

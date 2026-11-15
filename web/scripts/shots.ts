@@ -8,7 +8,6 @@ import { chromium, type Page } from 'playwright-core';
 
 const here = new URL('..', import.meta.url).pathname;
 const out = `${here}../tmp/screens`;
-const port = 18800 + Math.floor(Math.random() * 100);
 const chrome =
   process.env.LKJSTR_CHROME ??
   `${process.env.HOME}/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome`;
@@ -25,10 +24,12 @@ const SIZES = [
 ] as const;
 
 mkdirSync(out, { recursive: true });
-const server = spawn(process.execPath, [`${here}scripts/serve.ts`, `--port=${port}`], {
+const server = spawn(process.execPath, [`${here}scripts/serve.ts`, '--port=0'], {
   stdio: 'pipe',
 });
-await new Promise((r) => server.stdout?.once('data', r));
+const base = await new Promise<string>((r) =>
+  server.stdout?.once('data', (d) => r(String(d).trim())),
+);
 const browser = await chromium.launch({ executablePath: chrome, args: ['--no-sandbox'] });
 try {
   for (const [width, height] of SIZES)
@@ -53,7 +54,7 @@ try {
           await ctx.addInitScript((m) => localStorage.setItem('lkjstr:mock', m), mock);
           const page = await ctx.newPage();
           try {
-            await page.goto(`http://127.0.0.1:${port}${path}`);
+            await page.goto(`${base}${path}`);
             await page.waitForSelector('.note');
             await act(page);
             await page.waitForTimeout(350); // pictures and fonts

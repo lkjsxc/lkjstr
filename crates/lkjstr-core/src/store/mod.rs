@@ -51,6 +51,7 @@ pub struct Store {
     cap: usize,
     replaceable_cap: usize,
     revision: u64,
+    evictions: u64,
     payload_bytes: usize,
     byte_cap: usize,
 }
@@ -78,6 +79,7 @@ impl Store {
             cap,
             replaceable_cap,
             revision: 0,
+            evictions: 0,
             payload_bytes: 0,
             byte_cap: 64 * 1024 * 1024,
         }
@@ -86,6 +88,11 @@ impl Store {
     /// Increases on every visible change; views re-query when it moves.
     pub fn revision(&self) -> u64 {
         self.revision
+    }
+
+    /// Retention losses can leave additional persisted history outside this store.
+    pub fn evictions(&self) -> u64 {
+        self.evictions
     }
 
     pub fn len(&self) -> usize {
