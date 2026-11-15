@@ -12,6 +12,14 @@ pub struct Chip {
     pub own: Option<String>,
 }
 
+pub fn label(content: &str) -> &str {
+    match content {
+        "+" | "" | "❤" => "❤️",
+        "-" => "👎",
+        other => other,
+    }
+}
+
 pub fn chips(events: &[Event], me: Option<&str>) -> Vec<Chip> {
     let mut groups = BTreeMap::new();
     for event in events.iter().filter(|e| e.kind == 7) {

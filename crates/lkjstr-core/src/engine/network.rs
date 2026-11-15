@@ -7,6 +7,8 @@ use std::collections::{BTreeMap, BTreeSet};
 mod configuration;
 #[path = "network_lifecycle.rs"]
 mod lifecycle;
+#[path = "network_lists.rs"]
+mod lists;
 #[path = "network_messages.rs"]
 mod messages;
 #[path = "network_stats.rs"]
@@ -114,6 +116,7 @@ impl Network {
                 }
             }
         }
+        let live_lists = lists::views(&wants);
         let mut desired = Desired::new();
         for (sub, f, q) in wants {
             let routes: Vec<String> = if q.source == Source::Relay {
@@ -160,19 +163,25 @@ impl Network {
         self.stabilize_profiles(&mut desired);
         let mut retained = BTreeSet::new();
         for ((relay, _key), (filter, members)) in desired {
+            let live = lists::live(&filter, &members, &live_lists);
             let existing = self
                 .requests
                 .iter_mut()
                 .find(|(_, r)| r.relay == relay && r.filter == filter);
             if let Some((id, r)) = existing {
+                let close = r.watch_list(live, now);
+                let relay = r.relay.clone();
+                let id = id.clone();
                 r.refresh_profile(&members, now);
                 r.members = members;
                 retained.insert(id.clone());
+                if close {
+                    self.send(&relay, json!(["CLOSE", id]));
+                }
             } else {
                 self.next += 1;
                 let id = format!("e{}", self.next);
                 retained.insert(id.clone());
-                let live = filter_live(&filter) || members.contains("~account-discovery");
                 self.requests.insert(
                     id,
                     Request {

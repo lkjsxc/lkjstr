@@ -1,8 +1,12 @@
 // What the New tab page offers: every view that can start empty, and for typed text a search, a hashtag, or the
 // note or person a pasted Nostr address names. Matching uses both languages whatever the interface language.
+
 import { both, t } from '../shared/i18n.ts';
+import { knownPeople } from '../shared/people.ts';
 import { DOC_PAGES, docSearch } from '../views/docs.ts';
-import { offered, VIEWS, viewOf } from '../views/registry.ts';
+import { plainName } from '../views/parts.ts';
+import { offered, serves, VIEWS, viewOf } from '../views/registry.ts';
+import { homeTitle } from '../views/their-home.ts';
 import type { Choice } from './launcher.ts';
 
 const REF = /^(npub1|nprofile1|note1|nevent1)[a-z0-9]+$/;
@@ -29,13 +33,26 @@ export const CHOICES = {
     })),
   ],
   typed(text: string): Choice[] {
+    const theirs = (ref: string, name: string) =>
+      choice('their-home', { ref, title: homeTitle(name) }, homeTitle(name));
     if (REF.test(text)) {
       const kind = text.startsWith('np') ? 'profile' : 'thread';
-      return [choice(kind, { ref: text }, t('launcher.open', { what: `${text.slice(0, 14)}…` }))];
+      return [
+        choice(kind, { ref: text }, t('launcher.open', { what: `${text.slice(0, 14)}…` })),
+        ...(kind === 'profile' && serves(5) ? [theirs(text, `${text.slice(0, 10)}…`)] : []),
+      ];
     }
     const tag = text.replace(/^#/, '');
     const one = !/\s/.test(tag);
     return [
+      ...(serves(5) ? knownPeople() : [])
+        .filter((a) =>
+          [a.name, a.nip05 ?? ''].some((s) =>
+            s.normalize('NFKC').toLowerCase().startsWith(text.normalize('NFKC').toLowerCase()),
+          ),
+        )
+        .slice(0, 6)
+        .map((a) => theirs(a.npub, plainName(a))),
       ...(text.startsWith('#') && one ? [choice('hashtag', { tag }, `#${tag}`)] : []),
       choice('search', { text }, t('launcher.search', { text })),
       ...(!text.startsWith('#') && one ? [choice('hashtag', { tag }, `#${tag}`)] : []),

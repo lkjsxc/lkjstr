@@ -170,10 +170,9 @@ Docker Compose remains excluded by the explicit worktree-only write rule:
 image/container storage is outside this worktree. No commit, deployment,
 production access, CI edit or existing-service restart is performed.
 
-The branch-review fixes add five native regression tests for first-list guards,
-cache eviction, search routing, signer replacement and decrypted mute policy.
-The earlier branch-review run passed all four quiet gates and 53 local browser
-checks using the then-fetched contract. Report: tmp/engine-harness/report.json.
+Branch-review tests cover list guards, eviction, routing, signer replacement
+and decrypted mute policy. The earlier run passed four quiet gates and 53
+browser checks; see tmp/engine-harness/report.json.
 
 ## One product
 
@@ -181,20 +180,20 @@ web/ is the only interface. crates/lkjstr-engine-worker owns the Worker and
 its browser effects; the root Cargo.toml is a virtual workspace. The Leptos
 UI/runtime, root HTML entry, exclusive styles/icons and browser drivers are
 removed. Shared static icons and the loopback relay helper remain in use.
-Root build and quiet release gates build web/ with the real engine. No Trunk
-installation is needed. Docker configuration follows that build but cannot
-be run in this environment. Historical UI results do not verify this product.
+Root build and quiet release gates build web/ with the real engine. No Trunk installation is needed. Docker remains excluded here.
 
-Review regressions cover nonnegative numeric counts, filtered-window refill,
-anchorless history fetches, and refused, timed-out or truncated profile lookups.
+Review regressions cover counts, window refill, history and failed profiles.
 
 ## Signer conformance follow-up (2026-11-15)
 
-The harness now exercises account.key backup, external-signer refusal and
-missing accounts; backup payloads are redacted before failure diagnostics.
-Real-engine signer checks inject NIP-07 before load and exercise rejection and
-real 60-second deadlines for discovery/signing, with navigation and draft checks.
-A shared loopback NIP-46 fixture checks optional/required connect tokens, signing,
-reload credential reuse, refusal, disappearance during signing and recovery.
-Remote RPC failures retain signer-refused versus signer-missing; losing all RPC
-sockets now fails immediately and releases sockets instead of waiting a minute.
+Local backup, NIP-07 rejection/deadlines and NIP-46 connect tokens, reload,
+refusal, outage and recovery have loopback conformance coverage. Key payloads
+are redacted. Lost RPC sockets fail immediately and release their resources.
+
+## Owner wishes (2026-11-15)
+
+Protocol 5 adds another account's Home, local mention suggestions, explicit
+profile requests and selected mention expansion. Account faces carry full
+metadata. Reactions normalize likes and dislike; notification fresh/unread
+counts use grouped visible rows and persist timestamp ties. The frontend keeps
+focused fields and frees composers before signing. Details: [wishes.md](wishes.md).

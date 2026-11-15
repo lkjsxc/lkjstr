@@ -41,7 +41,8 @@ export const idOf = (n: number): string => {
   }).join('');
 };
 
-const TOKEN = /(https?:\/\/[^\s]+)|#([\p{L}\p{N}_]+)|@([a-z][a-z-]*)|:([a-z0-9_]+):/gu;
+const TOKEN =
+  /((?:nostr:)?(?:npub1|nprofile1)[a-z0-9]+)|(https?:\/\/[^\s]+)|#([\p{L}\p{N}_]+)|@([a-z][a-z-]*)|:([a-z0-9_]+):/gu;
 const linkText = (url: string): string => {
   const u = new URL(url);
   const path = u.pathname === '/' ? '' : u.pathname;
@@ -53,12 +54,16 @@ export function segment(text: string): Segment[] {
   let last = 0;
   const push = (s: string): void => void (s && out.push({ k: 'text', text: s }));
   for (const m of text.matchAll(TOKEN)) {
-    const [whole, url, tag, handle, code] = m;
-    const person = handle ? PEOPLE.find((p) => p.handle === handle) : undefined;
+    const [whole, ref, url, tag, handle, code] = m;
+    const person = ref
+      ? PEOPLE.find((p) => p.author.npub === ref.replace(/^nostr:/, ''))
+      : handle
+        ? PEOPLE.find((p) => p.handle === handle)
+        : undefined;
     let seg: Segment | undefined;
-    if (url) seg = { k: 'link', url, text: linkText(url) };
+    if (person) seg = { k: 'mention', pubkey: person.author.pubkey, name: person.author.name };
+    else if (url) seg = { k: 'link', url, text: linkText(url) };
     else if (tag) seg = { k: 'hashtag', tag };
-    else if (person) seg = { k: 'mention', pubkey: person.author.pubkey, name: person.author.name };
     else if (code && EMOJI[code]) seg = { k: 'emoji', code, url: EMOJI[code] };
     if (!seg) continue;
     push(text.slice(last, m.index));
@@ -99,6 +104,9 @@ const OWN: readonly NoteSpec[] = [
     tag: 'tiles',
     text: 'タイル型のクライアント、スレッドを隣に開いたまま読めるのが思ったより快適です。',
     reactions: [
+      ['+', 2],
+      ['', 1],
+      ['-', 1],
       ['❤️', 7],
       [':otsu:', 2],
     ],
@@ -198,6 +206,7 @@ export function createWorld(now: number) {
   for (const [i, n] of notes.entries()) n.partial = i < 40 && i % 4 === 1;
 
   const state = {
+    notificationSeen: base - 60 * MIN,
     following: new Set(FOLLOWING),
     bookmarks: new Set(
       [tags.get('nip11'), tags.get('river'), tags.get('lint')].filter(Boolean) as string[],

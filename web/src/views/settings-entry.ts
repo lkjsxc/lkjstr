@@ -33,9 +33,13 @@ function control(f: SettingField, save: (v: unknown) => void): Control {
       max: f.max,
       step,
       onchange: () => {
+        if (!input.value.trim()) return;
         const n = Number((Math.round(Number(input.value) / step) * step).toFixed(4));
         if (n >= f.min && n <= f.max) save(n);
       },
+    });
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.isComposing) input.dispatchEvent(new Event('change'));
     });
     return { input, set: (v) => void (input.value = step < 1 ? Number(v).toFixed(2) : String(v)) };
   }

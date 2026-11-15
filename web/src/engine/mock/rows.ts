@@ -1,4 +1,6 @@
 // View models of the mock world: the rows exactly as the real engine will hand them over.
+
+import { groupReactions } from '../../shared/reactions.ts';
 import type { Author, NoteRow, PersonRow, ProfileRow, Quote, Reaction } from '../protocol.ts';
 import { banner } from './art.ts';
 import { EMOJI, FOLLOWERS, type Person, SELF } from './people.ts';
@@ -7,12 +9,14 @@ import type { MNote, World } from './world.ts';
 const firstLine = (text: string): string => (text.split('\n')[0] ?? '').slice(0, 120);
 
 export function reactionsOf(n: MNote): Reaction[] {
-  return [...n.reactions].map(([emoji, r]) => ({
-    emoji,
-    url: emoji.startsWith(':') ? EMOJI[emoji.slice(1, -1)] : undefined,
-    count: r.count,
-    mine: r.mine,
-  }));
+  return groupReactions(
+    [...n.reactions].map(([emoji, r]) => ({
+      emoji,
+      url: emoji.startsWith(':') ? EMOJI[emoji.slice(1, -1)] : undefined,
+      count: r.count,
+      mine: r.mine,
+    })),
+  );
 }
 
 function quoteOf(w: World, id: string): Quote {

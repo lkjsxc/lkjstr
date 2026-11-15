@@ -1,5 +1,6 @@
 // The interface's side of the protocol: subscriptions with their handlers, actions as promises, and the hints the
 // engine cannot see for itself. One client per page; the engine behind it is a Worker (real or mock).
+import { learnPerson, learnRows, onPerson } from '../shared/people.ts';
 import { createSignal, type Signal } from '../shared/signal.ts';
 import type {
   Account,
@@ -136,17 +137,44 @@ export function createEngine(transport: Transport): Engine {
     }
   };
 
+  const offPeople = onPerson((author) => {
+    const value = accounts.get();
+    if (
+      !value.accounts.some(
+        (a) =>
+          a.author.pubkey === author.pubkey && JSON.stringify(a.author) !== JSON.stringify(author),
+      )
+    )
+      return;
+    accounts.set({
+      ...value,
+      accounts: value.accounts.map((a) =>
+        a.author.pubkey === author.pubkey ? { ...a, author } : a,
+      ),
+    });
+  });
   transport.listen((msg) => {
-    if (msg.t === 'rows') subs.get(msg.sub)?.rows(msg.rows, msg.atTop, msg.atBottom);
-    else if (msg.t === 'patch') subs.get(msg.sub)?.patch(msg.ops);
-    else if (msg.t === 'fresh') subs.get(msg.sub)?.fresh?.(msg.count);
+    if (msg.t === 'rows') {
+      learnRows(msg.rows);
+      subs.get(msg.sub)?.rows(msg.rows, msg.atTop, msg.atBottom);
+    } else if (msg.t === 'patch') {
+      for (const op of msg.ops) {
+        if (op.op === 'update') learnRows([op.row]);
+        else if (op.op === 'insert') learnRows(op.rows);
+      }
+      subs.get(msg.sub)?.patch(msg.ops);
+    } else if (msg.t === 'fresh') subs.get(msg.sub)?.fresh?.(msg.count);
     else if (msg.t === 'state') subs.get(msg.sub)?.state?.(msg.state);
     else if (msg.t === 'progress') pending.get(msg.req)?.watch?.progress?.(msg.sent, msg.total);
     else if (msg.t === 'delivery') pending.get(msg.req)?.watch?.delivery?.(msg.relays);
     else if (msg.t === 'result') {
       pending.get(msg.req)?.done(msg);
       pending.delete(msg.req);
-    } else if (msg.t === 'accounts') accounts.set({ accounts: msg.accounts, active: msg.active });
+    } else if (msg.t === 'accounts')
+      accounts.set({
+        accounts: msg.accounts.map((a) => ({ ...a, author: learnPerson(a.author) })),
+        active: msg.active,
+      });
     else if (msg.t === 'status')
       status.set({ connected: msg.connected, wanted: msg.wanted, offline: msg.offline });
     else if (msg.t === 'ready') info.set({ engine: msg.engine, version: msg.version });
@@ -209,6 +237,7 @@ export function createEngine(transport: Transport): Engine {
       window.removeEventListener('pointerdown', active, true);
       window.removeEventListener('keydown', active, true);
       clearTimeout(idleTimer);
+      offPeople();
       transport.close();
     },
   };

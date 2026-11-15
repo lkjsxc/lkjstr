@@ -8,6 +8,7 @@ fn paged(v: &View) -> bool {
         Source::Channel
             | Source::Global
             | Source::Home
+            | Source::TheirHome
             | Source::Profile
             | Source::Search
             | Source::Hashtag
@@ -19,7 +20,9 @@ pub(super) fn notification_filter(
     store: &Store,
     q: &super::Query,
 ) -> Option<lkjstr_protocol::NostrFilter> {
-    if q.filters.notifications != Some(true) || !matches!(q.source, Source::Home | Source::Global) {
+    if q.filters.notifications != Some(true)
+        || !matches!(q.source, Source::Home | Source::Global | Source::TheirHome)
+    {
         return None;
     }
     let mut news = q.clone();

@@ -67,7 +67,28 @@ fn requests(
     if query::signed_out(q) {
         return vec![];
     }
+    if q.source == Source::People {
+        let authors = super::rich::authors(store, q).unwrap_or_default();
+        return if authors.is_empty() {
+            vec![]
+        } else {
+            vec![NostrFilter {
+                kinds: Some(vec![0]),
+                authors: Some(authors.into_iter().take(32).collect()),
+                limit: Some(32),
+                ..Default::default()
+            }]
+        };
+    }
     let mut result = vec![query::filter(store, q)];
+    if q.source == Source::TheirHome {
+        result.push(NostrFilter {
+            kinds: Some(vec![3]),
+            authors: q.target.clone().map(|p| vec![p]),
+            limit: Some(1),
+            ..Default::default()
+        });
+    }
     result.extend(super::channels::wants(store, q));
     result.extend(v.history.clone());
     if let Some(f) = super::history::notification_filter(store, q) {

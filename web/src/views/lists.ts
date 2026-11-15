@@ -66,12 +66,20 @@ export function reconcile<R extends { readonly key: string }>(
     seen.add(row.key);
     const sig = JSON.stringify(row);
     let c = cache.get(row.key);
-    if (!c || c.sig !== sig) {
+    if (
+      (!c || c.sig !== sig) &&
+      !(c && active && c.node.contains(active) && active.matches('input, textarea, select'))
+    ) {
+      const faces = c ? [...c.node.querySelectorAll<HTMLElement>('[data-face]')] : [];
       c = { sig, node: render(row) };
+      for (const face of c.node.querySelectorAll<HTMLElement>('[data-face]')) {
+        const old = faces.find((old) => old.dataset.face === face.dataset.face);
+        if (old) face.replaceWith(old);
+      }
       c.node.dataset.key = row.key;
       cache.set(row.key, c);
     }
-    want.push(c.node);
+    if (c) want.push(c.node);
   }
   for (const key of [...cache.keys()]) if (!seen.has(key)) cache.delete(key);
   want.forEach((node, i) => {

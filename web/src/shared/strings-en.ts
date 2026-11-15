@@ -1,5 +1,18 @@
 // English. The keys of this table are the keys of every language.
 export const en = {
+  'compose.uploadWait': 'Wait for the attachments to finish uploading.',
+  'mute.person': 'Person',
+  'mute.thread': 'Thread',
+  'compose.saveFailed':
+    'The draft could not be saved on this device. Free some space and try again.',
+  'mention.lookup': 'Look up {name}',
+  'home.theirs': "{name}'s Home",
+  'home.openTheirs': 'Their Home',
+  'home.unsupported': 'This engine cannot show another person’s Home yet.',
+  'view.their-home': 'Their Home',
+  'view.their-home.hint': 'Notes from the people this account follows',
+  'compose.edit': 'Edit',
+  'compose.editWhenEmpty': 'Keep current draft below and edit this one',
   'tab.close': 'Close tab',
   'tab.closeMore': 'Click {n} more to close',
   'tab.new': 'New tab',

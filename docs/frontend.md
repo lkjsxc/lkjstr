@@ -84,6 +84,8 @@ Seams worth knowing inside `src/views/`:
   `ChannelRow`, `NoteRow.channel`, `Draft.channel` and the actions
   `channel.join`, `channel.save`, `channel.seen`. Nothing about channels is
   drawn for an engine that reports less.
+- Protocol 5 adds `their-home`, the bounded local `people` directory, selected
+  mention ranges and kind-0 picture revisions; see [wishes.md](wishes.md).
 - `hint` (visible subscriptions, page hidden, idle, network quality) and
   `configure` (engine-side settings; the interface owns their storage).
 

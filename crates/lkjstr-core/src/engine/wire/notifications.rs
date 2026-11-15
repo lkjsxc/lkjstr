@@ -48,7 +48,7 @@ pub(super) fn notifications(q: &Query, e: &Engine) -> Vec<Value> {
                 "notification:{kind}:{}:{}",
                 target.as_deref().unwrap_or(""),
                 if kind == "reaction" {
-                    event.content.as_str()
+                    crate::reactions::label(&event.content)
                 } else {
                     ""
                 }
@@ -57,6 +57,11 @@ pub(super) fn notifications(q: &Query, e: &Engine) -> Vec<Value> {
             event.id.clone()
         };
         let at = event.created_at.saturating_mul(1000);
+        let unread = at > seen
+            || (at == seen
+                && e.notification_ties
+                    .get(account)
+                    .is_some_and(|ids| !ids.contains(&event.id)));
         let actor = note::author(&rows::author(&e.store, &event.pubkey));
         if let Some(row) = groups.iter_mut().find(|r| r["key"] == group) {
             let Some(actors) = row["actors"].as_array_mut() else {
@@ -69,12 +74,12 @@ pub(super) fn notifications(q: &Query, e: &Engine) -> Vec<Value> {
                     row["others"] = json!(row["others"].as_u64().unwrap_or(0) + 1);
                 }
             }
-            if at > seen {
+            if unread {
                 row["unread"] = json!(true);
             }
             continue;
         }
-        let mut row = json!({"kind":"notification","key":group,"type":kind,"actors":[actor],"others":0,"at":at,"unread":at>seen});
+        let mut row = json!({"kind":"notification","key":group,"type":kind,"actors":[actor],"others":0,"at":at,"unread":unread});
         if matches!(event.kind, 1 | 42) {
             row["note"] = note::note(
                 &rows::row_with_lists(&e.store, &event, Some(account), 0, &e.private_lists),
@@ -83,8 +88,11 @@ pub(super) fn notifications(q: &Query, e: &Engine) -> Vec<Value> {
             );
         }
         if event.kind == 7 {
-            let mut emoji = json!({"emoji":event.content});
-            if let Some(custom) = p::custom_emojis(&event).first() {
+            let mut emoji = json!({"emoji":crate::reactions::label(&event.content)});
+            if let Some(custom) = p::custom_emojis(&event)
+                .into_iter()
+                .find(|emoji| event.content == format!(":{}:", emoji.shortcode))
+            {
                 emoji["url"] = json!(custom.url);
             }
             row["emoji"] = emoji;
@@ -106,4 +114,43 @@ pub(super) fn notifications(q: &Query, e: &Engine) -> Vec<Value> {
         groups.push(row);
     }
     groups
+}
+
+/// Timestamp ties are remembered so a new event in the same second remains unread.
+pub fn notification_watermark(
+    engine: &crate::engine::Engine,
+    account: &str,
+) -> (u64, std::collections::BTreeSet<String>) {
+    let query = crate::engine::protocol::Query {
+        source: crate::engine::protocol::Source::Notifications,
+        account: Some(account.into()),
+        ..Default::default()
+    };
+    let events = crate::engine::query::events(&engine.store, &query)
+        .into_iter()
+        .filter(|event| {
+            event.pubkey != account
+                && crate::engine::query::hidden_with_lists(
+                    &engine.store,
+                    &query,
+                    event,
+                    &engine.private_lists,
+                )
+                .is_none()
+        })
+        .collect::<Vec<_>>();
+    let at = events
+        .iter()
+        .map(|e| e.created_at.saturating_mul(1000))
+        .max()
+        .unwrap_or(0);
+    (
+        at,
+        events
+            .iter()
+            .filter(|e| e.created_at.saturating_mul(1000) == at)
+            .take(6000)
+            .map(|e| e.id.clone())
+            .collect(),
+    )
 }

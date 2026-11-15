@@ -20,9 +20,9 @@ doubt, do what ytenrich does.
 - Nothing moves under the reader. Media boxes have their shape before they
   load, counts have fixed slots, a redraw keeps the row on screen where it was.
 - Shadows only under what floats: menus, pickers, tab search, toasts.
+- A field that has the keyboard is never rewritten or replaced by a redraw; half-typed text stays as typed.
 
 ## Colour
-
 Two colours carry meaning and nothing else is coloured: indigo (`--accent`)
 is action and selection, vermilion (`--seal`) is news (unread, the new-notes
 pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest
@@ -42,7 +42,6 @@ text, still reaches 4.5:1 on `--bg`. The theme follows the device or Settings.
 | `--seal` | `#d2432c` | `#ec6a4f` | Unread bar, new-notes pill |
 
 ## Type
-
 - One system sans stack with the Japanese families named. No web fonts.
 - Interface 13.5px / 1.45. Note text 15px / 1.6 (a setting); the focused note
   of a thread is 1.5px larger. Headers and context lines 12.5 to 13.5px.
@@ -51,7 +50,6 @@ text, still reaches 4.5:1 on `--bg`. The theme follows the device or Settings.
   Japanese (`word-break: auto-phrase`), never inside a word.
 
 ## The frame
-
 - Top bar, 38px: name, nine workspace chips, new note, account. The name is
   a menu (Settings, Relays, Stats, Docs). The relay count is a setting, off.
 - Signed in, the account is the active account's face (remembered on the
@@ -79,7 +77,6 @@ text, still reaches 4.5:1 on `--bg`. The theme follows the device or Settings.
 - A list fills its tile. Only media, single form controls and prose pages keep a measure of their own.
 
 ## Signed out, and accounts
-
 - A visitor's layout is their own but starts from the same arrangement, with
   Global and the Accounts tab in front (a reader: Home and Notifications).
   No welcome page, no prose. Signing in shows the reader's own layout and
@@ -125,10 +122,10 @@ text, still reaches 4.5:1 on `--bg`. The theme follows the device or Settings.
   box's height when it arrives, so nothing below moves. A file that cannot
   be had leaves its box with the host's name; a custom emoji, its code.
 - Action row in `--faint` at rest: reply, repost (menu: repost, quote),
-  reaction, zap in four equal slots with their counts, then pick an emoji,
-  bookmark, more as squares. Under 440px of tile the bookmark folds into the
+  reaction, zap in four equal slots with their counts, then pick an emoji, bookmark and more on the same rhythm, at least 44px apart where the row has 400px. Under 440px of tile the bookmark folds into the
   menu (a set one shows as a mark by the time); under 330px the zap too.
   Reaction chips sit under the row.
+- A `+` or empty reaction is a like: drawn and counted as the heart. `-` is 👎.
 - On is indigo. Keyboard selection is a wash with an indigo bar at the
   left; unread is a vermilion bar at the left.
 
@@ -160,15 +157,19 @@ text, still reaches 4.5:1 on `--bg`. The theme follows the device or Settings.
 - A channel is a feed, newest first. Its head and the composer under it are
   the first row and scroll away: the newest end of a chat is its top here.
   The field is free at once. Pending and failed messages stay below it, with
-  Retry and discard for failures, preserving attachments across reload. Elsewhere a message says `# name` above it.
+  Retry, Edit and discard for failures, preserving attachments across reload. Elsewhere a message says `# name` above it.
 - What the engine cannot serve (protocol below 3; channels: 4) is not drawn.
 - Loading, empty, failed and end-of-list are one quiet centred line.
+
+- A profile offers its owner's Home: the notes of the people they follow, as a tab of its own.
 
 ## Writing and acting
 
 - The composer is the Post tab: text at note size, who is posting (a button
   that switches accounts), emoji, media, Post. A primary button that cannot
-  act yet is neutral. Only the most recent result is shown below.
+  act yet is neutral. Sending and failed drafts stay below the field.
+- Pressing Post empties the field and leaves the caret in it at once, whatever the signer; what is being sent is shown below, and a failure keeps its text.
+- `@` and letters offer people under the caret: follows first; Enter takes one.
 - Every wrong click can be taken back. A like or a repost is drawn at once
   and sent only when its Undo toast (8 seconds) has gone, or when the page is
   hidden or closed. Removing a bookmark, a mute or a relay offers Undo too.

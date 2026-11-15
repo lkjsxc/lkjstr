@@ -48,7 +48,7 @@ impl Session {
                 if self.queries.get(&sub).is_some_and(|q| {
                     q.notifications == Some(true) || matches!(
                         q.source.as_str(),
-                        "channels" | "channel" | "thread" | "profile" | "followers" | "following" | "mutes" | "list" | "notifications" | "bookmarks" | "relays" | "media-servers" | "emoji"
+                        "people" | "channels" | "channel" | "thread" | "profile" | "followers" | "following" | "mutes" | "list" | "notifications" | "bookmarks" | "relays" | "media-servers" | "emoji"
                     )
                 }) {
                     let next = self.source_rows(&sub, engine);
@@ -75,7 +75,7 @@ impl Session {
                 }
             }
             p::Output::Fresh { sub, count } => {
-                let count = if self.queries.get(&sub).is_some_and(|q| q.notifications == Some(true)) {
+                let count = if self.queries.get(&sub).is_some_and(|q| q.notifications == Some(true) || q.source == "notifications") {
                     self.source_fresh(&sub, engine)
                 } else { count };
                 let ops = self.settled_quote_patch(&sub,engine);
@@ -181,7 +181,8 @@ impl Session {
             q.notifications == Some(true)
                 || matches!(
                     q.source.as_str(),
-                    "channels"
+                    "people"
+                        | "channels"
                         | "channel"
                         | "thread"
                         | "profile"

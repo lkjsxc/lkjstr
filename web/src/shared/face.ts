@@ -9,8 +9,8 @@ const text = (v: unknown, max: number): string | undefined =>
 
 export function rememberFace(me: Account | undefined): void {
   if (!me) return kv.remove(KEY);
-  const { pubkey, npub, name, picture, emoji } = me.author;
-  kv.set(KEY, { author: { pubkey, npub, name, picture, emoji }, signer: me.signer });
+  const { pubkey, npub, name, picture, emoji, profileId } = me.author;
+  kv.set(KEY, { author: { pubkey, npub, name, picture, emoji, profileId }, signer: me.signer });
 }
 
 /** The remembered account when it is `pubkey`'s (as a one-account list), otherwise nothing. */
@@ -24,6 +24,7 @@ export function rememberedFace(pubkey: string): Account[] {
     {
       author: {
         pubkey,
+        profileId: text(a.profileId, 64),
         npub: text(a.npub, 80) ?? '',
         name: text(a.name, 200) ?? '',
         picture: picture && /^(https:|data:image\/)/.test(picture) ? picture : undefined,
@@ -32,4 +33,24 @@ export function rememberedFace(pubkey: string): Account[] {
       unread: 0,
     },
   ];
+}
+
+export function rememberAccounts(accounts: readonly Account[]): void {
+  kv.set('account:faces', accounts.slice(0, 32));
+}
+export function rememberedAccounts(pubkey: string): Account[] {
+  const values = kv.get('account:faces');
+  if (!Array.isArray(values)) return rememberedFace(pubkey);
+  const result = values
+    .slice(0, 32)
+    .filter(
+      (a): a is Account =>
+        a &&
+        typeof a === 'object' &&
+        typeof a.author?.pubkey === 'string' &&
+        typeof a.author?.name === 'string' &&
+        typeof a.author?.npub === 'string' &&
+        ['local', 'extension', 'remote', 'none'].includes(a.signer),
+    );
+  return result.some((a) => a.author.pubkey === pubkey) ? result : rememberedFace(pubkey);
 }

@@ -58,7 +58,14 @@ impl Session {
                     Anchor::Top(_) => None,
                     Anchor::Key { key } => Some(key),
                 };
-                let before = if retain_above { 6000 } else { before.min(800) };
+                let mut before = if retain_above { 6000 } else { before.min(800) };
+                if self
+                    .queries
+                    .get(&sub)
+                    .is_some_and(|q| q.source == "notifications" || q.notifications == Some(true))
+                {
+                    before = self.notification_before(&sub, engine, anchor.as_deref(), before);
+                }
                 self.windows
                     .insert(sub.clone(), (anchor.clone(), before, after.min(800)));
                 vec![p::Input::Window {

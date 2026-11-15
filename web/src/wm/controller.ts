@@ -219,6 +219,7 @@ export function createWmController(env: BaseEnv, host: Host, at: Space, family =
     if (next && !disposed && JSON.stringify(next) !== JSON.stringify(root)) set(next, false);
   });
   const finder: TabFinder = {
+    engine: env.engine,
     anchor: () => rendered?.panes.get(cur()?.id ?? '')?.querySelector('.strip') ?? host.root,
     tabs: () =>
       L.views(root)

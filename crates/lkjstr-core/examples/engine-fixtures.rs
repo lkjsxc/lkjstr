@@ -42,9 +42,27 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         "{}",
         json!({"note":note,"events":[metadata,follows,mutes,bookmarks]})
     );
+    let mut actors = std::collections::BTreeMap::new();
     for line in io::stdin().lock().lines() {
         let line = line?;
         let value: serde_json::Value = serde_json::from_str(&line)?;
+        if value["fixtureActor"] == true {
+            let actor = generate_secret_key();
+            let event = finalize_event(
+                &EventTemplate {
+                    pubkey: None,
+                    created_at: 1700000000,
+                    kind: 0,
+                    tags: vec![],
+                    content: r#"{"name":"wish-actor"}"#.into(),
+                },
+                &actor,
+            )
+            .map_err(|_| "actor fixture")?;
+            actors.insert(event.pubkey.clone(), actor);
+            println!("{}", serde_json::to_string(&event)?);
+            continue;
+        }
         if let Some(count) = value["fixtureRows"].as_u64() {
             let events = (0..count.min(6000))
                 .map(|i| {
@@ -65,6 +83,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             continue;
         }
         let unsigned: UnsignedNostrEvent = serde_json::from_value(value)?;
+        let actor = actors.get(&unsigned.pubkey).unwrap_or(&key);
         let signed = finalize_event(
             &EventTemplate {
                 pubkey: Some(unsigned.pubkey),
@@ -73,7 +92,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 content: unsigned.content,
                 tags: unsigned.tags,
             },
-            &key,
+            actor,
         )
         .map_err(|_| "fixture signing failed")?;
         println!("{}", serde_json::to_string(&signed)?);

@@ -128,7 +128,7 @@ function createCore(post: (msg: FromEngine) => void, now: () => number) {
         for (const e of shown) if (!index.has(e.key)) push(s, { op: 'remove', key: e.key });
         const kept = shown.filter((e) => index.has(e.key));
         const last = kept[kept.length - 1];
-        if (s.start > 0) s.start = kept[0] ? (index.get(kept[0].key) ?? 0) : 0;
+        if (!s.live) s.start = kept[0] ? (index.get(kept[0].key) ?? 0) : 0;
         s.end =
           wasBottom || !last
             ? Math.min(next.length, s.start + 200)
@@ -139,6 +139,8 @@ function createCore(post: (msg: FromEngine) => void, now: () => number) {
           const after = i + 1 < s.end ? next[i + 1] : undefined;
           push(s, { op: 'insert', before: after?.key ?? null, rows: [e.row()] });
         }
+        s.fresh = s.live ? 0 : s.start;
+        post({ t: 'fresh', sub: s.id, count: s.fresh });
         if (!refresh) continue;
         for (const old of kept) {
           const e = next[index.get(old.key) ?? -1]; // the new entry: a finite list's rows are made afresh

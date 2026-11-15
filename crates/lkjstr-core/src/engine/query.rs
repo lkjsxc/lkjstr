@@ -23,6 +23,13 @@ pub fn filter(store: &Store, q: &Query) -> NostrFilter {
             f.kinds = Some(vec![42]);
             f.tags.insert("e".into(), vec![target]);
         }
+        Source::People => {
+            f.kinds = Some(vec![0]);
+            f.limit = Some(32);
+        }
+        Source::TheirHome => {
+            f.authors = Some(store.follows(&target).unwrap_or_default());
+        }
         Source::Home => {
             let mut authors = q
                 .account
@@ -107,7 +114,7 @@ pub fn events(store: &Store, q: &Query) -> Vec<Event> {
     if signed_out(q) {
         return vec![];
     }
-    if q.source == Source::Channels {
+    if matches!(q.source, Source::Channels | Source::People) {
         return vec![];
     }
     if q.source == Source::Thread {
@@ -182,7 +189,9 @@ pub fn events(store: &Store, q: &Query) -> Vec<Event> {
     if q.source == Source::Channel {
         events.truncate(6000);
     }
-    if q.filters.notifications == Some(true) && matches!(q.source, Source::Home | Source::Global) {
+    if q.filters.notifications == Some(true)
+        && matches!(q.source, Source::Home | Source::Global | Source::TheirHome)
+    {
         let mut news = q.clone();
         news.source = Source::Notifications;
         news.filters.notifications = None;
@@ -204,6 +213,7 @@ pub fn events(store: &Store, q: &Query) -> Vec<Event> {
                         && matches!(
                             q.source,
                             Source::Home
+                                | Source::TheirHome
                                 | Source::Global
                                 | Source::Relay
                                 | Source::Hashtag

@@ -18,7 +18,12 @@
  * 4: channels (NIP-28): the sources `channels` and `channel`, `ChannelRow`, `NoteRow.channel`, `Draft.channel` and
  * the actions `channel.join`, `channel.save`, `channel.seen`. The interface draws no channel control for an engine
  * that reports less. */
-export const PROTOCOL_VERSION = 4;
+/** 5: `their-home` uses `pubkey`/`ref` as the follow-list owner, independent of the acting account.
+ * `people` returns at most six prefix matches from the device, follows first, then participants of `id`'s
+ * thread. `authors` instead requests those profiles (at most 32); `ref` explicitly resolves a person.
+ * Author.profileId identifies kind 0 for image retry. Draft.mentions holds selected UTF-16 text ranges;
+ * the engine validates their labels, expands them to nostr:npub and derives p tags. */
+export const PROTOCOL_VERSION = 5;
 
 /** Chosen by the interface, unique among its open subscriptions. */
 export type SubId = string;
@@ -36,6 +41,8 @@ export type Millis = number;
 // ───────────────────────────────────────── queries ─────────────────────────────────────────
 
 export type Source =
+  | 'their-home' // notes of the people `pubkey`/`ref` follows, usable signed out
+  | 'people' // local mention suggestions or explicit profile requests (since 5)
   | 'home' // notes of the people the account follows
   | 'global' // notes from the account's read relays
   | 'profile' // one `ProfileRow` first, then that person's notes (so the header scrolls away with them)
@@ -122,6 +129,7 @@ export type Emoji = { readonly code: string; readonly url: string };
 
 export type Author = {
   readonly pubkey: Pubkey;
+  readonly profileId?: string;
   readonly npub: string;
   /** Display name. May contain `:code:` of `emoji`. Until the profile is known it is empty, the pubkey or the npub:
    * the interface then shows a short npub form in its place. */
@@ -441,7 +449,14 @@ export type Uploaded = {
   readonly alt?: string;
 };
 
+export type Mention = {
+  readonly start: number;
+  readonly end: number;
+  readonly pubkey: Pubkey;
+  readonly label: string;
+};
 export type Draft = {
+  readonly mentions?: readonly Mention[];
   readonly text: string;
   // engine-added 2026-11-15: 2
   readonly longForm?: { readonly identifier: string; readonly title?: string };

@@ -1,11 +1,15 @@
 // The composer saves typed drafts and retains failed channel messages for retry.
-import type { Delivery, Draft, Emoji, Uploaded } from '../engine/protocol.ts';
+import type { Delivery, Draft, Emoji, Mention, Uploaded } from '../engine/protocol.ts';
 import { h, replaceChildren } from '../shared/h.ts';
 import { type Key, t } from '../shared/i18n.ts';
 import { icon } from '../shared/icons.ts';
 import { keyCaps, pressed } from '../shared/keys.ts';
+import { kv } from '../shared/storage.ts';
 import { loadViewState, saveViewState } from '../shared/view-state.ts';
-import { ability, failureText } from './can.ts';
+import { openMenu } from '../wm/menus.ts';
+import { ability } from './can.ts';
+import { createComposeMedia } from './compose-media.ts';
+import { createMentions } from './compose-mentions.ts';
 import { type ChannelDraft, createChannelOutbox } from './compose-outbox.ts';
 import { createWho } from './compose-who.ts';
 import { openEmojiPicker } from './emoji-picker.ts';
@@ -22,15 +26,15 @@ type State = {
   title?: string;
   /** Custom emoji put into the text with the picker. */
   emoji?: Emoji[];
+  media?: Uploaded[];
+  mentions?: Mention[];
 };
-type Item = { name: string; el: HTMLElement; done?: Uploaded };
 
 /** `channel`: the composer of a channel tab; what it sends is a message in that channel. */
 export function mountCompose(el: HTMLElement, env: ViewEnv, channel?: string): () => void {
   const state: State = loadViewState<State>(env.instance);
   const save = (): void => saveViewState(env.instance, state);
-  let items: Item[] = []; // bound: the files of one draft
-  let sending = false;
+
   const area = h('textarea', {
     class: 'ctext',
     rows: channel ? 2 : 4,
@@ -38,6 +42,10 @@ export function mountCompose(el: HTMLElement, env: ViewEnv, channel?: string): (
     'aria-label': t('view.compose'),
   });
   area.value = state.text ?? '';
+  const mentions = createMentions(area, env, state, () => {
+    state.text = area.value;
+    save();
+  });
   const thumbs = h('div', { class: 'thumbs' });
   const result = h('div', { class: 'cresult', role: 'status' });
   const file = h('input', {
@@ -118,86 +126,78 @@ export function mountCompose(el: HTMLElement, env: ViewEnv, channel?: string): (
 
   const ready = (): void => {
     const can = ability(env.engine);
-    const busy = items.some((i) => !i.done);
+    const busy = media.busy();
     post.hidden = can === 'signed-out';
     post.title = can === 'read-only' ? t('error.read-only') : (keyCaps('send')[0] ?? '');
     attach.disabled = can !== 'ok';
     post.disabled =
-      sending ||
       !!outbox?.full() ||
       busy ||
       can !== 'ok' ||
-      (!area.value.trim() && !items.length && !state.quote);
+      (!area.value.trim() && !media.count() && !state.quote);
   };
 
-  const outbox = channel
-    ? createChannelOutbox(
-        env,
-        (state.outbox ??= []),
-        () => {
-          save();
-          ready();
-        },
-        (relays, final) => showDelivery(relays, final),
-      )
-    : undefined;
-
-  async function upload(f: File): Promise<void> {
-    const bar = h('i');
-    const item: Item = {
-      name: f.name,
-      el: h(
-        'div',
-        { class: 'thumb' },
-        h('span', { class: 'clip' }, f.name),
-        h('span', { class: 'prog' }, bar),
-      ),
-    };
-    const remove = h(
-      'button',
-      { class: 'x', title: t('compose.drop'), 'aria-label': t('compose.drop') },
-      '×',
-    );
-    remove.addEventListener('click', () => {
-      items = items.filter((i) => i !== item);
-      item.el.remove();
-      ready();
-    });
-    item.el.append(remove);
-    items.push(item);
-    thumbs.append(item.el);
-    ready();
-    const bytes = await f.arrayBuffer();
-    const r = await env.engine.act(
-      {
-        a: 'upload',
-        as: env.engine.me(),
-        name: f.name,
-        mime: f.type || 'application/octet-stream',
-        bytes,
-      },
-      {
-        progress: (sent, total) =>
-          void (bar.style.width = `${Math.round((sent / Math.max(total, 1)) * 100)}%`),
-      },
-    );
-    if (r.ok && r.uploaded) {
-      item.done = r.uploaded;
-      item.el.classList.add('done');
-      if (r.uploaded.type === 'image')
-        item.el.prepend(h('img', { src: r.uploaded.url, alt: f.name }));
-    } else {
-      item.el.classList.add('failed');
-      item.el.append(h('span', { class: 'error' }, failureText(r.error)));
-      items = items.filter((i) => i !== item); // it stays visible until removed, but is not part of the post
+  const restore = (draft: Draft): boolean => {
+    if (media.busy()) {
+      result.textContent = t('compose.uploadWait');
+      return false;
     }
+    if (area.value || media.count()) {
+      openMenu(env.layer, post, [
+        {
+          label: t('compose.editWhenEmpty'),
+          run: () => {
+            if (
+              !outbox.retain({
+                text: area.value,
+                media: media.uploaded(),
+                mentions: state.mentions,
+                replyTo: state.replyTo,
+                quote: state.quote,
+                channel,
+                emoji: state.emoji,
+              })
+            ) {
+              result.textContent = t('compose.saveFailed');
+              return;
+            }
+            area.value = '';
+            media.clear();
+            restore(draft);
+            outbox.removeDraft(draft);
+          },
+        },
+      ]);
+      return false;
+    }
+    const next = {
+      ...state,
+      text: draft.text,
+      replyTo: draft.replyTo,
+      quote: draft.quote,
+      emoji: [...(draft.emoji ?? [])],
+      mentions: [...(draft.mentions ?? [])],
+      media: [...(draft.media ?? [])],
+    };
+    if (!kv.persist(`view:${env.instance}`, next)) {
+      result.textContent = t('compose.saveFailed');
+      return false;
+    }
+    Object.assign(state, next);
+    area.value = draft.text;
+    mentions.reset();
+    media.restore(draft.media ?? []);
+    save();
+    drawHead();
     ready();
-  }
-  const add = (files: FileList | undefined | null): void => {
-    for (const f of files ?? []) void upload(f);
+    area.focus({ preventScroll: true });
+    return true;
   };
+  const outbox = createChannelOutbox(env, state.outbox ?? [], ready, showDelivery, restore);
+  state.outbox = undefined;
+  const media = createComposeMedia(thumbs, env, state, save, ready);
 
-  const showDelivery = (relays: readonly Delivery[], final: boolean): void => {
+  function showDelivery(relays: readonly Delivery[], final: boolean): void {
     const ok = relays.filter((r) => r.state === 'ok').length;
     const failed = relays.filter((r) => r.state === 'failed' || r.state === 'timeout');
     replaceChildren(
@@ -211,45 +211,37 @@ export function mountCompose(el: HTMLElement, env: ViewEnv, channel?: string): (
         h('div', { class: 'muted' }, `${r.url.replace(/^wss:\/\//, '')}: ${r.message ?? r.state}`),
       ),
     );
-  };
+  }
   async function send(): Promise<void> {
     ready();
     if (post.disabled) return;
     const text = area.value;
     const draft: Draft = {
       text,
+      mentions: state.mentions,
       channel,
       replyTo: state.replyTo,
       quote: state.quote,
-      media: items.flatMap((i) => (i.done ? [i.done] : [])),
+      media: media.uploaded(),
       emoji: (state.emoji ?? []).filter((e) => text.includes(`:${e.code}:`)),
     };
     const clear = (): void => {
       area.value = state.text = '';
-      state.replyTo = state.replyOf = state.quote = state.quoteOf = state.emoji = undefined;
+      state.mentions = [];
+      mentions.reset();
+      state.quote = state.quoteOf = state.emoji = undefined;
       save();
-      items = [];
-      thumbs.replaceChildren();
+      media.clear();
       drawHead();
     };
-    // Retain the entire draft before freeing the input for the next message.
-    if (outbox) {
-      outbox.publish(draft);
-      clear();
-      ready();
+    result.replaceChildren();
+    if (!outbox.publish(draft)) {
+      result.textContent = t('compose.saveFailed');
       return;
     }
-    sending = true;
+    clear();
     ready();
-    const r = await env.engine.act(
-      { a: 'publish', as: env.engine.me(), what: { k: 'note', draft } },
-      { delivery: (relays) => showDelivery(relays, false) },
-    );
-    sending = false;
-    if (r.ok) showDelivery(r.delivery ?? [], true);
-    else replaceChildren(result, h('div', { class: 'error' }, failureText(r.error)));
-    if (r.ok) clear();
-    ready();
+    area.focus({ preventScroll: true });
   }
 
   // Saved on every keystroke (one small stored key): a reload a moment after typing must not lose the last words.
@@ -258,22 +250,23 @@ export function mountCompose(el: HTMLElement, env: ViewEnv, channel?: string): (
     if (pressed(e, 'send')) e.preventDefault(), void send();
   });
   area.addEventListener('paste', (e) => {
-    if (e.clipboardData?.files.length) e.preventDefault(), add(e.clipboardData.files);
+    if (e.clipboardData?.files.length) e.preventDefault(), media.add(e.clipboardData.files);
   });
   el.addEventListener('dragover', (e) => (e.preventDefault(), el.classList.add('drop-on')));
   el.addEventListener('dragleave', () => el.classList.remove('drop-on'));
   el.addEventListener(
     'drop',
-    (e) => (e.preventDefault(), el.classList.remove('drop-on'), add(e.dataTransfer?.files)),
+    (e) => (e.preventDefault(), el.classList.remove('drop-on'), media.add(e.dataTransfer?.files)),
   );
-  file.addEventListener('change', () => (add(file.files), (file.value = '')));
+  file.addEventListener('change', () => (media.add(file.files), (file.value = '')));
   post.addEventListener('click', () => void send());
 
   const who = createWho(env, ready);
   el.classList.add('compose');
   el.replaceChildren(
     head,
-    area,
+    mentions.el,
+    mentions.preview,
     thumbs,
     h(
       'div',
@@ -287,13 +280,16 @@ export function mountCompose(el: HTMLElement, env: ViewEnv, channel?: string): (
       who.signIn,
     ),
     result,
-    ...(outbox ? [outbox.el] : []),
+    outbox.el,
   );
   drawHead();
+  outbox.draw();
   if (state.replyTo || state.quote) requestAnimationFrame(() => area.focus());
   return () => {
     state.text = area.value;
     save();
     who.dispose();
+    outbox.dispose();
+    mentions.dispose();
   };
 }

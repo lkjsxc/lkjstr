@@ -2,11 +2,12 @@
 // the mock build in ../dist. Prints one line per failed fact, then "ok smoke" (or exits 1).
 // LKJSTR_CHROME=<path> picks the browser; --shot=<file> also writes one screenshot of the first page.
 import { type ChildProcess, spawn } from 'node:child_process';
-import { existsSync, mkdirSync } from 'node:fs';
+import { appendFileSync, existsSync, mkdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { type Browser, chromium, type Page } from 'playwright-core';
 import { dayOf } from '../src/shared/format.ts';
 import { KEYS } from '../src/shared/keys.ts';
+import { wishes } from './smoke-wishes.mjs';
 
 const here = new URL('..', import.meta.url).pathname;
 process.env.TMPDIR ??= resolve(here, '../tmp/temp');
@@ -21,6 +22,7 @@ const chrome =
 const shot = process.argv.find((a) => a.startsWith('--shot='))?.slice(7);
 const failures: string[] = [];
 const fact = (name: string, ok: boolean, detail: unknown = ''): void => {
+  appendFileSync(`${here}../tmp/smoke-facts.log`, `${ok ? 'ok' : 'FAIL'} ${name}\n`);
   if (!ok) failures.push(`${name}: ${JSON.stringify(detail)}`);
 };
 
@@ -29,6 +31,7 @@ async function isolatedContext(
   options: Parameters<Browser['newContext']>[0] = {},
 ) {
   const context = await browser.newContext(options);
+  context.setDefaultTimeout(20000);
   await context.route('**/*', (route) =>
     route.request().url().startsWith(base)
       ? route.continue()
@@ -1379,7 +1382,7 @@ async function pages(browser: Browser, still: Record<string, unknown>): Promise<
   fact(
     'about: version, engine, source, licence',
     /lkjstr \d+\.\d+\.\d+/.test(about) &&
-      about.includes('mock, protocol 4') &&
+      about.includes('mock, protocol 5') &&
       (await count(page, `${sv} a[href="https://github.com/lkjsxc/lkjstr"]`)) === 1 &&
       about.includes('Apache License 2.0'),
     about,
@@ -1683,6 +1686,15 @@ async function accounts(browser: Browser): Promise<void> {
         () => (document.activeElement as HTMLElement | null)?.dataset.f === 'use',
       )),
   );
+  fact(
+    'wish-7 switching keeps bar, Accounts and posting faces together',
+    await page.evaluate(() => {
+      const faces = ['.acct', '.arow.on', '.view[data-kind="compose"] .cwho'].map(
+        (s) => document.querySelector<HTMLElement>(`${s} [data-face]`)?.dataset.face,
+      );
+      return !!faces[0] && faces.every((face) => face === faces[0]);
+    }),
+  );
   // Removing: a key asks first, a public key goes at once and can be taken back.
   await page.locator(`${av} .arow.on [data-f="remove"]`).click();
   fact(
@@ -1871,9 +1883,13 @@ async function rooms(browser: Browser, still: Record<string, unknown>): Promise<
 }
 
 if (!existsSync(`${here}../dist/index.html`)) throw new Error('build first: pnpm build');
-const server: ChildProcess = spawn(process.execPath, [`${here}scripts/serve.ts`, '--port=0'], {
-  stdio: 'pipe',
-});
+const server: ChildProcess = spawn(
+  process.execPath,
+  [`${here}scripts/serve.ts`, '--port=0', '--test-relay=ws://127.0.0.1:1'],
+  {
+    stdio: 'pipe',
+  },
+);
 base = await new Promise<string>((done, fail) => {
   const timer = setTimeout(() => fail(new Error('local server startup timeout')), 10_000);
   server.once('exit', (code) => {
@@ -1888,6 +1904,7 @@ base = await new Promise<string>((done, fail) => {
 let browser: Browser | undefined;
 try {
   browser = await chromium.launch({ executablePath: chrome, args: ['--no-sandbox'] });
+  await wishes({ browser, base, check: fact });
   await run(browser);
 } catch (e) {
   const at = /smoke\.ts:(\d+)/.exec((e as Error).stack ?? '')?.[1] ?? '?';

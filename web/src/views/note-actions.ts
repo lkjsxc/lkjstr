@@ -6,6 +6,7 @@ import { countText } from '../shared/format.ts';
 import { h } from '../shared/h.ts';
 import { getLang, type Key, t } from '../shared/i18n.ts';
 import { type IconName, icon } from '../shared/icons.ts';
+import { groupReactions } from '../shared/reactions.ts';
 import { type MenuItem, openMenu } from '../wm/menus.ts';
 import { ability, able } from './can.ts';
 import { openEmojiPicker } from './emoji-picker.ts';
@@ -69,7 +70,7 @@ export function reactionChips(row: NoteRow, env: ViewEnv): HTMLElement | null {
   return h(
     'div',
     { class: 'chips' },
-    row.reactions.map((r) =>
+    groupReactions(row.reactions).map((r) =>
       h(
         'button',
         {
@@ -116,7 +117,8 @@ export function actionRow(row: NoteRow, env: ViewEnv): HTMLElement {
     el.addEventListener('click', (e) => (e.stopPropagation(), dead ? void able(env) : run(el)));
     return el;
   };
-  const mine = row.reactions.find((r) => r.mine);
+  const likes = groupReactions(row.reactions).find((r) => r.emoji === DEFAULT_REACTION && !r.url);
+  const mine = likes?.mine ? likes : undefined;
   const quote = { quote: row.id, quoteOf: { name: plainName(row.author), text: excerpt(row) } };
   const publish = (what: Extract<Action, { a: 'publish' }>['what']) => () =>
     void act(env, (as) => ({ a: 'publish', as, what }));
@@ -162,7 +164,7 @@ export function actionRow(row: NoteRow, env: ViewEnv): HTMLElement {
         { label: t('act.quote'), run: () => env.open('compose', quote) },
       ]),
     ),
-    button('heart', 'act.react', n(row.counts.reactions), Boolean(mine), () =>
+    button('heart', 'act.react', n(likes?.count ?? 0), Boolean(mine), () =>
       react(env, row, mine?.emoji ?? DEFAULT_REACTION, mine?.url, !mine),
     ),
     zap,

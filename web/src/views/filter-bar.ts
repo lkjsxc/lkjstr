@@ -1,8 +1,4 @@
-// The filter of a feed: part of the tab and saved with it. A row of ▶ and one query field; ▶ opens the rest:
-// replies, reposts, media, a period from one day to another, the people to keep, and on a timeline whether
-// notifications flow into it. The query is words, "a phrase", -word, from:name and has:image|video|link. While
-// the row narrows anything it carries its own way back. An engine older than protocol 3 gets the words only,
-// and the controls it cannot serve are not drawn.
+// Saved feed filters. Active fields retain their literal text and native selection.
 import type { Query } from '../engine/protocol.ts';
 import { h } from '../shared/h.ts';
 import { type Key, t } from '../shared/i18n.ts';
@@ -103,13 +99,19 @@ export const filterNarrows = (f: Filter): boolean => filterActive(f) || Boolean(
 export function filterBar(
   f: Filter,
   placeholder: Key,
-  change: (next: Filter, typing: boolean) => void,
+  onChange: (next: Filter, typing: boolean) => void,
   /** Escape in an empty field. */
   leave: () => void,
   /** Takes every narrowing back: offered in the row while there is one. */
   clear: (() => void) | undefined,
   opts: FilterOpts,
-): HTMLElement {
+): HTMLElement & { dispose(): void } {
+  const change = (next: Filter, typed: boolean): void => {
+    f = next;
+    drawPeople();
+    if (reset) reset.hidden = !filterNarrows(next);
+    onChange(next, typed);
+  };
   const line = (label: Key, ...body: (HTMLElement | null)[]): HTMLElement =>
     h('div', { class: 'prow' }, h('span', { class: 'muted' }, t(label)), ...body);
   const seg = <T>(
@@ -141,8 +143,8 @@ export function filterBar(
     [false, 'filter.hide'],
   ] as const;
   // Days are typed and shown as yyyy/mm/dd, as every date here is; a day that is not one is marked and ignored.
-  const day = (key: 'start' | 'end', label: Key): HTMLElement =>
-    h('input', {
+  const day = (key: 'start' | 'end', label: Key): HTMLElement => {
+    const field = h('input', {
       type: 'text',
       inputmode: 'numeric',
       size: 10,
@@ -150,16 +152,28 @@ export function filterBar(
       placeholder: 'yyyy/mm/dd',
       'aria-label': t(label),
       title: t(label),
-      onchange: (e) => {
-        const field = e.target as HTMLInputElement;
-        const m = /^(\d{4})[/\-.](\d{1,2})[/\-.](\d{1,2})$/.exec(field.value.trim());
-        const next = m ? `${m[1]}-${m[2]?.padStart(2, '0')}-${m[3]?.padStart(2, '0')}` : undefined;
-        if (field.value.trim() && dayStart(next) === undefined)
-          return field.setAttribute('aria-invalid', 'true');
-        change({ ...f, [key]: next }, false);
-      },
     });
-  const people = f.people ?? [];
+    const apply = (): void => {
+      if (reset && field.value) reset.hidden = false;
+      const m = /^(\d{4})[/\-.](\d{1,2})[/\-.](\d{1,2})$/.exec(field.value.trim());
+      const next = m ? `${m[1]}-${m[2]?.padStart(2, '0')}-${m[3]?.padStart(2, '0')}` : undefined;
+      const invalid = !!field.value.trim() && dayStart(next) === undefined;
+      if (invalid) return field.setAttribute('aria-invalid', 'true');
+      field.removeAttribute('aria-invalid');
+      if (f[key] !== next) change({ ...f, [key]: next }, true);
+    };
+    field.addEventListener('input', (e) => {
+      if (!(e as InputEvent).isComposing) apply();
+    });
+    field.addEventListener('blur', apply);
+    field.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.isComposing) {
+        e.preventDefault();
+        apply();
+      }
+    });
+    return field;
+  };
   const person = h('input', {
     type: 'text',
     class: 'padd',
@@ -170,9 +184,37 @@ export function filterBar(
       const name = person.value.trim().replace(/^@/, '');
       if (ev.key !== 'Enter' || ev.isComposing || ev.keyCode === 229 || !name) return;
       ev.preventDefault();
-      change({ ...f, people: [...new Set([...people, name])] }, false);
+      person.value = '';
+      change({ ...f, people: [...new Set([...(f.people ?? []), name])] }, false);
     },
   });
+  person.addEventListener('input', () => {
+    if (reset && person.value) reset.hidden = false;
+  });
+  person.addEventListener('blur', () => {
+    const name = person.value.trim().replace(/^@/, '');
+    if (!name) return;
+    person.value = '';
+    change({ ...f, people: [...new Set([...(f.people ?? []), name])] }, false);
+  });
+  const personChips = h('span', { class: 'person-chips' });
+  const drawPeople = (): void => {
+    personChips.replaceChildren(
+      ...(f.people ?? []).map((name) =>
+        h(
+          'button',
+          {
+            class: 'chip on',
+            title: t('list.remove', { what: name }),
+            onclick: () =>
+              change({ ...f, people: (f.people ?? []).filter((x) => x !== name) }, false),
+          },
+          `${name} ×`,
+        ),
+      ),
+    );
+  };
+  drawPeople();
   const panel = h(
     'div',
     { class: 'rpanel', hidden: !f.open },
@@ -198,27 +240,7 @@ export function filterBar(
         day('end', 'filter.end'),
       ),
     ),
-    opts.rich
-      ? line(
-          'filter.people',
-          h(
-            'div',
-            { class: 'ppeople' },
-            people.map((name) =>
-              h(
-                'button',
-                {
-                  class: 'chip on',
-                  title: t('list.remove', { what: name }),
-                  onclick: () => change({ ...f, people: people.filter((x) => x !== name) }, false),
-                },
-                `${name} ×`,
-              ),
-            ),
-            person,
-          ),
-        )
-      : null,
+    opts.rich ? line('filter.people', h('div', { class: 'ppeople' }, personChips, person)) : null,
     opts.rich && opts.news
       ? seg('filter.news', onOff, f.news === true, (v) => ({ ...f, news: v || undefined }))
       : null,
@@ -255,8 +277,17 @@ export function filterBar(
     clearTimeout(timer);
     timer = setTimeout(() => change({ ...f, text: input.value }, true), 250);
   });
+  input.addEventListener('blur', () => {
+    clearTimeout(timer);
+    change({ ...f, text: input.value }, true);
+  });
   input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.isComposing) {
+      clearTimeout(timer);
+      change({ ...f, text: input.value }, true);
+    }
     if (pressed(e, 'filterLeave') && !input.value) e.preventDefault(), leave();
   });
-  return h('div', { class: 'fbar' }, h('div', { class: 'rbar' }, toggle, input, reset), panel);
+  const bar = h('div', { class: 'fbar' }, h('div', { class: 'rbar' }, toggle, input, reset), panel);
+  return Object.assign(bar, { dispose: () => clearTimeout(timer) });
 }

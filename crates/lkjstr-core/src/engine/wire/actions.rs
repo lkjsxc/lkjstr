@@ -89,7 +89,7 @@ pub enum Action {
 #[serde(tag = "k", rename_all = "camelCase")]
 pub enum Publish {
     Note {
-        draft: Draft,
+        draft: Box<Draft>,
     },
     Repost {
         id: String,
@@ -107,7 +107,16 @@ pub enum Publish {
 }
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct Mention {
+    pub start: usize,
+    pub end: usize,
+    pub pubkey: String,
+    pub label: String,
+}
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Draft {
+    pub mentions: Option<Vec<Mention>>,
     pub text: String,
     pub channel: Option<String>,
     pub long_form: Option<LongForm>,

@@ -35,6 +35,18 @@ export const kv = {
       memory.set(key, raw); // quota: this session only
     }
   },
+  persist(key: string, value: unknown): boolean {
+    try {
+      const s = backend();
+      if (!s) return false;
+      const raw = JSON.stringify(value);
+      s.setItem(PREFIX + key, raw);
+      memory.delete(key);
+      return true;
+    } catch {
+      return false;
+    }
+  },
   remove(key: string): void {
     backend()?.removeItem(PREFIX + key);
     memory.delete(key);

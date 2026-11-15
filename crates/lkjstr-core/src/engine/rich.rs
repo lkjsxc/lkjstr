@@ -76,7 +76,11 @@ pub(super) fn anchored(e: &NostrEvent, key: &str, q: &Query) -> bool {
             .last()
             .cloned()
             .unwrap_or_default();
-        let content = if e.kind == 7 { e.content.as_str() } else { "" };
+        let content = if e.kind == 7 {
+            crate::reactions::label(&e.content)
+        } else {
+            ""
+        };
         return key == format!("notification:{kind}:{target}:{content}");
     }
     false

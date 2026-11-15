@@ -55,6 +55,7 @@ export function createTopBar(
       { ...pages('account')[0], sep: true } as MenuItem,
     ]);
   });
+  let faceSig = '';
   const render = (): void => {
     const a = o.engine.accounts.get();
     const me = a.accounts.find((x) => x.author.pubkey === a.active);
@@ -67,11 +68,14 @@ export function createTopBar(
     account.className = face ? 'acct' : 'acct out';
     account.title = me ? plainName(me.author) : t(face ? 'bar.account' : 'bar.signedOut');
     account.setAttribute('aria-label', t(face ? 'bar.account' : 'bar.signedOut'));
-    replaceChildren(
-      account,
-      face ? avatar(face, 'av sm') : t('bar.signedOut'),
-      me?.signer === 'none' ? h('span', { class: 'ro', title: t('error.read-only') }) : null,
-    );
+    const nextFace = JSON.stringify([face?.pubkey, !!face, me?.signer === 'none']);
+    if (nextFace !== faceSig)
+      replaceChildren(
+        account,
+        face ? avatar(face, 'av sm') : t('bar.signedOut'),
+        me?.signer === 'none' ? h('span', { class: 'ro', title: t('error.read-only') }) : null,
+      );
+    faceSig = nextFace;
     compose.hidden = !a.active; // a visitor cannot post: the bar offers the way in instead
     compose.title = t('view.compose');
     compose.setAttribute('aria-label', t('view.compose'));

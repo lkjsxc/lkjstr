@@ -10,6 +10,7 @@ pub fn author(store: &Store, pubkey: &str) -> Author {
     let p = store.profile(pubkey);
     Author {
         pubkey: pubkey.into(),
+        profile_id: store.replaceable(pubkey, 0).map(|e| e.id.clone()),
         name: p.as_ref().and_then(|p| p.label()).unwrap_or(pubkey).into(),
         picture: p
             .as_ref()
@@ -113,10 +114,11 @@ pub fn row_with_lists(
             .into_iter()
             .find(|v| e.content == format!(":{}:", v.shortcode))
             .map(|v| v.url);
+        let content = crate::reactions::label(&e.content).to_owned();
         let r = reactions
-            .entry((e.content.clone(), url.clone()))
+            .entry((content.clone(), url.clone()))
             .or_insert(Reaction {
-                content: e.content.clone(),
+                content,
                 url,
                 count: 0,
                 mine: false,

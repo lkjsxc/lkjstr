@@ -58,6 +58,8 @@ pub struct Query {
 #[serde(rename_all = "camelCase")]
 pub enum Source {
     Home,
+    TheirHome,
+    People,
     #[default]
     Global,
     Profile,

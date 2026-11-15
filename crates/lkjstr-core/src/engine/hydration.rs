@@ -65,8 +65,10 @@ pub(super) fn authors(
     for e in window {
         visit(store, e, 0, &mut out);
     }
-    if matches!(view.query.source, Source::Profile | Source::Following)
-        && let Some(target) = &view.query.target
+    if matches!(
+        view.query.source,
+        Source::Profile | Source::Following | Source::TheirHome
+    ) && let Some(target) = &view.query.target
     {
         out.entry(target.clone()).or_default();
     }

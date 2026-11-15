@@ -5,6 +5,9 @@ use serde::{Deserialize, Serialize};
 pub struct Accounts {
     #[serde(default)]
     pub seen: std::collections::BTreeMap<String, u64>,
+    // At most 6000 equal-timestamp event ids per device account (32 accounts).
+    #[serde(default)]
+    pub notification_ties: std::collections::BTreeMap<String, std::collections::BTreeSet<String>>,
     pub entries: Vec<Account>,
     pub active: Option<String>,
 }
@@ -139,6 +142,7 @@ impl Accounts {
             return Err("not-found");
         }
         self.seen.remove(key);
+        self.notification_ties.remove(key);
         let prefix = format!("channel:{key}:");
         self.seen.retain(|k, _| !k.starts_with(&prefix));
         self.entries.retain(|a| a.pubkey != key);

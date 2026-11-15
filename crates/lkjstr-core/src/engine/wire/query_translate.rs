@@ -6,6 +6,8 @@ impl Query {
             "channels" => p::Source::Channels,
             "channel" => p::Source::Channel,
             "home" => p::Source::Home,
+            "their-home" => p::Source::TheirHome,
+            "people" => p::Source::People,
             "global" => p::Source::Global,
             "profile" => p::Source::Profile,
             "thread" => p::Source::Thread,
@@ -33,7 +35,9 @@ impl Query {
         if target.is_none()
             && let Some(reference) = &self.reference
         {
-            if let Some((id, _)) = crate::engine::channels::reference(reference) {
+            if self.source == "people" {
+                target = Some(reference.clone());
+            } else if let Some((id, _)) = crate::engine::channels::reference(reference) {
                 target = Some(id);
             } else {
                 target = Some(
@@ -93,7 +97,14 @@ impl Query {
                 phrases: self.phrases.clone(),
                 exclude: self.exclude.clone(),
                 has: self.has.clone(),
-                from: self.from.clone(),
+                from: if self.source == "people" {
+                    self.reference
+                        .clone()
+                        .map(|r| vec![r])
+                        .or(self.from.clone())
+                } else {
+                    self.from.clone()
+                },
                 notifications: self.notifications,
                 show: self.show.clone(),
             },

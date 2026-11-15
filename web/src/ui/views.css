@@ -93,7 +93,7 @@
 /* A finger needs 40px: the controls of notes, bars, menus and the picker grow; a mouse keeps the dense ones. */
 @media (pointer: coarse) {
   .act { gap: 3px; flex-basis: 40px; height: 40px; padding: 0 5px; }
-  .act.a-more, .act.a-bookmark, .act.a-smile { flex-basis: 40px; justify-content: center; }
+  .act.a-more, .act.a-bookmark, .act.a-smile { flex-basis: 40px; min-width: 40px; }
   .acts { margin-left: -5px; }
   .rchip { height: 34px; padding: 0 11px; border-radius: 17px; }
   .chips { gap: 6px; }
@@ -109,3 +109,14 @@
   .rtoggle { flex-basis: 40px; }
   .seg-ctl .chip { padding: 9px 12px; }
 }
+/* Mention choices stay in the composer's tile, under the current caret line. */
+.cinput { position: relative; flex: 1 1 96px; min-height: 96px; min-width: 0; }
+.cinput > .ctext { display: block; height: 100%; max-height: none; }
+.mention-menu { position: absolute; z-index: 6; box-sizing: border-box; width: min(300px, 100%); overflow-y: auto; border: 1px solid var(--line); border-radius: 6px; padding: 4px; background: var(--raised); box-shadow: 0 4px 16px #0004; }
+.mention-menu > button { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 40px; padding: 4px 8px; text-align: left; border-radius: 4px; }
+.mention-menu > button.on, .mention-menu > button:hover { background: var(--wash); }
+.mention-menu b, .mention-menu small { display: block; }
+.mention-preview { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12.5px; }
+.mention-preview:empty { display: none; }
+
+.person-chips { display: contents; }

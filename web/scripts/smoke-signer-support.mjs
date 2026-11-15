@@ -84,6 +84,21 @@ const code = (page, expected) =>
 
 export { accounts, code, compose, launch, setup };
 
+export async function signerFace(page, label, check) {
+  await page.waitForFunction(() => {
+    const top = document.querySelector('.acct [data-face]');
+    const posting = document.querySelector('.view[data-kind="compose"] .cwho [data-face]');
+    const account = document.querySelector('.arow.on [data-face]');
+    return (
+      top &&
+      posting &&
+      top.dataset.face === posting.dataset.face &&
+      (!account || account.dataset.face === top.dataset.face)
+    );
+  });
+  check(`wish-7 ${label} draws the active account face in the bar and composer`);
+}
+
 export async function writeReport(checks, errors, fake) {
   await mkdir('tmp/smoke-real', { recursive: true });
   await writeFile(

@@ -2,6 +2,7 @@
 import type { Author, Emoji, Segment } from '../engine/protocol.ts';
 import { type Child, h } from '../shared/h.ts';
 import { t } from '../shared/i18n.ts';
+import { knownPerson, onPerson } from '../shared/people.ts';
 import { UNDO_MS } from './held.ts';
 import type { ViewEnv } from './registry.ts';
 
@@ -24,24 +25,36 @@ export const nameText = (name: string): string =>
 const nameOf = (a: Author): string => (unnamed(a) ? shortNpub(a) : a.name);
 
 /** A circle: the picture, or a flat colour from the pubkey with the first letter of the name. */
+const faceState = new WeakMap<HTMLElement, string>();
+function drawFace(el: HTMLElement, a: Author): void {
+  const sig = JSON.stringify([a.picture, a.profileId, a.name]);
+  if (faceState.get(el) === sig) return;
+  faceState.set(el, sig);
+  el.replaceChildren(
+    h(
+      'span',
+      { class: 'faceletter' },
+      unnamed(a) ? '' : ([...a.name.replace(/:[a-z0-9_]+:/g, '').trim()][0] ?? ''),
+    ),
+  );
+  if (!a.picture) return;
+  const img = h('img', { src: a.picture, alt: '', decoding: 'async', draggable: false });
+  img.addEventListener('error', () => img.remove());
+  el.append(img);
+}
+onPerson((author) => {
+  for (const el of document.querySelectorAll<HTMLElement>('[data-face]'))
+    if (el.dataset.face === author.pubkey) drawFace(el, author);
+});
 export function avatar(a: Author, cls = 'av'): HTMLElement {
   const hue = Number.parseInt(a.pubkey.slice(0, 4), 16) % 360;
   const el = h('span', {
     class: cls,
     style: `background:hsl(${hue} 35% 55%)`,
     'aria-hidden': 'true',
+    'data-face': a.pubkey,
   });
-  if (a.picture) {
-    const img = h('img', {
-      src: a.picture,
-      alt: '',
-      loading: 'lazy',
-      decoding: 'async',
-      draggable: false,
-    });
-    img.addEventListener('error', () => img.remove()); // the flat circle stays, same size
-    el.append(img);
-  } else if (!unnamed(a)) el.append([...a.name.replace(/:[a-z0-9_]+:/g, '').trim()][0] ?? '');
+  drawFace(el, knownPerson(a.pubkey) ?? a);
   return el;
 }
 

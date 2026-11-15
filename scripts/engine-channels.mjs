@@ -1,6 +1,6 @@
 // NIP-28 acceptance against a fresh loopback route; no public relay traffic.
 export async function channels({page,send,wait,check,note,signer,lines,fake,origin,act,kinds,bunker}) {
-  check('ready advertises channels protocol 4',await page.evaluate(()=>window.messages.some(m=>m.t==='ready'&&m.version===4)));
+  check('ready advertises channels protocol 4',await page.evaluate(()=>window.messages.some(m=>m.t==='ready'&&m.version>=4)));
   const route=`${origin.replace('http:','ws:')}/channels`;
   check('channel fixture selects its loopback owner relay',(await act({a:'relays.save',as:note.pubkey,relays:[{url:route,read:true,write:true}]},true)).ok);
   await page.evaluate(()=>{

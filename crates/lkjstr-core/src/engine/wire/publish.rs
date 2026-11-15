@@ -3,7 +3,7 @@ use crate::engine::{Engine, protocol as p};
 pub(super) fn publish(what: P, engine: &Engine, account: &str) -> Result<p::Action, &'static str> {
     let (kind, content, target, tags) = match what {
         P::Note { draft } => {
-            let mut text = draft.text;
+            let mut text = super::mentions::expand(&draft.text, draft.mentions.unwrap_or_default());
             let mut tags = vec![];
             if let Some(form) = &draft.long_form {
                 tags.push(vec!["d".into(), form.identifier.clone()]);
@@ -97,12 +97,12 @@ pub(super) fn publish(what: P, engine: &Engine, account: &str) -> Result<p::Acti
             ("reaction", emoji, Some(id), tags)
         }
         P::Delete { id, of, emoji } => {
-            let id = if matches!(of.as_deref(), Some("reaction" | "repost")) {
+            let mut ids = if matches!(of.as_deref(), Some("reaction" | "repost")) {
                 engine
                     .store
                     .referencing(&id)
                     .into_iter()
-                    .find(|e| {
+                    .filter(|e| {
                         e.pubkey == account
                             && e.kind
                                 == if of.as_deref() == Some("reaction") {
@@ -112,14 +112,24 @@ pub(super) fn publish(what: P, engine: &Engine, account: &str) -> Result<p::Acti
                                 } else {
                                     6
                                 }
-                            && emoji.as_ref().is_none_or(|v| *v == e.content)
+                            && emoji.as_ref().is_none_or(|v| {
+                                crate::reactions::label(v) == crate::reactions::label(&e.content)
+                            })
                     })
                     .map(|e| e.id.clone())
-                    .ok_or("not-found")?
+                    .collect::<Vec<_>>()
             } else {
-                id
+                vec![id]
             };
-            ("delete", String::new(), Some(id), vec![])
+            ids.sort();
+            ids.dedup();
+            let first = ids.pop().ok_or("not-found")?;
+            (
+                "delete",
+                String::new(),
+                Some(first),
+                ids.into_iter().map(|id| vec!["e".into(), id]).collect(),
+            )
         }
     };
     Ok(p::Action::Publish {

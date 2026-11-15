@@ -3,9 +3,11 @@ pub mod actions;
 mod channels;
 mod counts;
 mod feedback;
-mod note;
+mod mentions;
+pub mod note;
 mod notifications;
 mod output;
+mod people;
 mod publish;
 pub mod queries;
 mod query_translate;
@@ -169,7 +171,7 @@ pub struct Session {
 impl Session {
     pub fn ready(shared: bool) -> Output {
         Output::Ready {
-            version: 4,
+            version: 5,
             engine: if shared {
                 "rust-wasm-shared"
             } else {
@@ -193,3 +195,20 @@ impl std::fmt::Debug for Output {
         f.write_str("Output [redacted]")
     }
 }
+
+/// Account badges use the same visible, grouped rows as the notifications feed.
+pub fn unread_count(engine: &crate::engine::Engine, account: &str) -> usize {
+    notifications::notifications(
+        &Query {
+            source: "notifications".into(),
+            account: Some(account.into()),
+            ..Default::default()
+        },
+        engine,
+    )
+    .iter()
+    .filter(|row| row["unread"] == true)
+    .count()
+}
+
+pub use notifications::notification_watermark;

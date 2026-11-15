@@ -1,7 +1,16 @@
 // What the mock does with the reader's actions, and what happens in its world on its own.
 
 import { serverAddress } from '../../shared/address.ts';
-import type { Action, Delivery, Failure, FromEngine, ToEngine, Uploaded } from '../protocol.ts';
+import { reactionLabel } from '../../shared/reactions.ts';
+import type {
+  Action,
+  Delivery,
+  Draft,
+  Failure,
+  FromEngine,
+  ToEngine,
+  Uploaded,
+} from '../protocol.ts';
 import { channelAct, channelTouched, chatter } from './channels.ts';
 import type { Core } from './engine.ts';
 import { FILLER } from './fixtures-notes.ts';
@@ -83,7 +92,7 @@ export function createActions(core: Core) {
         const w = a.what;
         const self = byPubkey(me) ?? SELF;
         if (w.k === 'note') {
-          const text = w.draft.text.trim();
+          const text = expandMentions(w.draft).trim();
           if (/\bairdrop\b/i.test(text))
             return later(600, () => fail(req, 'rejected', 'blocked: spam filter'));
           const n = world.arrive(self, text, core.now(), {
@@ -115,7 +124,11 @@ export function createActions(core: Core) {
         } else if (w.of === 'repost') n.mineReposted = false;
         else if (w.of === 'reaction') {
           for (const [emoji, r] of n.reactions) {
-            if (!r.mine || (w.emoji && w.emoji !== emoji)) continue;
+            if (
+              !r.mine ||
+              (w.emoji !== undefined && reactionLabel(w.emoji) !== reactionLabel(emoji))
+            )
+              continue;
             if (r.count <= 1) n.reactions.delete(emoji);
             else n.reactions.set(emoji, { count: r.count - 1, mine: false });
           }
@@ -131,7 +144,16 @@ export function createActions(core: Core) {
         if (a.on) world.state.following.add(a.pubkey);
         else world.state.following.delete(a.pubkey);
         core.resync(
-          (q) => ['profile', 'followers', 'following', 'search'].includes(q.source),
+          (q) =>
+            [
+              'home',
+              'their-home',
+              'people',
+              'profile',
+              'followers',
+              'following',
+              'search',
+            ].includes(q.source),
           true,
         );
         return deliver(req);
@@ -191,6 +213,8 @@ export function createActions(core: Core) {
           deliver: (x) => deliver(req, x),
         });
       case 'seen':
+        world.state.notificationSeen = core.now();
+        core.resync((q) => q.source === 'notifications', true);
         core.setUnread(0);
         core.accounts();
         return done(req);
@@ -240,8 +264,20 @@ export function createActions(core: Core) {
     if (beat % 4 === 2) chatter(core, beat);
     if (beat % 3 !== 0) return;
     const [by, text] = FILLER[(beat * 5) % FILLER.length] ?? ['aoi', ''];
-    core.arrived(world.arrive(byHandle(by), text, core.now(), { partial: true }));
+    const own = world.notes.find((n) => n.by.author.pubkey === core.me() && !n.channel);
+    core.arrived(world.arrive(byHandle(by), text, core.now(), { partial: true, re: own?.id }));
+    core.resync((q) => q.source === 'notifications', true);
   }
 
   return { run, tick, publicKey };
+}
+
+function expandMentions(draft: Draft): string {
+  let text = draft.text;
+  for (const mention of [...(draft.mentions ?? [])].sort((a, b) => b.start - a.start)) {
+    const author = byPubkey(mention.pubkey)?.author;
+    if (author && text.slice(mention.start, mention.end) === mention.label)
+      text = `${text.slice(0, mention.start)}nostr:${author.npub}${text.slice(mention.end)}`;
+  }
+  return text;
 }

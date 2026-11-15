@@ -64,6 +64,21 @@ export function matches(w: World, q: Query, n: MNote, me: string): boolean {
   if (q.from?.length && !q.from.some((x) => named(n.by, x))) return false;
   const follows = w.state.following.has(pk) || pk === me;
   switch (q.source) {
+    case 'their-home': {
+      const of = q.pubkey ?? byRef(q.ref ?? '')?.author.pubkey ?? '';
+      const follows =
+        of === me
+          ? w.state.following
+          : new Set(
+              PEOPLE.filter(
+                (p, i) => p.author.pubkey !== of && (i + of.charCodeAt(2)) % 2 === 0,
+              ).map((p) => p.author.pubkey),
+            );
+      return (
+        follows.has(pk) ||
+        (q.reposts !== false && n.reposts.some((r) => follows.has(r.by.author.pubkey)))
+      );
+    }
     case 'home':
       return (
         follows ||
@@ -128,6 +143,28 @@ const fixed = (row: Row): Entry => ({ key: row.key, row: () => row });
 export function select(w: World, q: Query, me: string): Entry[] {
   // Signed out, what belongs to an account is empty, as it is in the real engine.
   if (!me && ['home', 'notifications', 'bookmarks', 'mutes', 'emoji'].includes(q.source)) return [];
+  if (q.source === 'people') {
+    const norm = (s: string) => s.normalize('NFKC').toLowerCase();
+    const needle = norm(q.text ?? '');
+    const thread = w.notes
+      .filter((n) => n.id === q.id || n.re === q.id)
+      .map((n) => n.by.author.pubkey);
+    return PEOPLE.filter((p) =>
+      q.authors
+        ? q.authors.includes(p.author.pubkey)
+        : q.ref
+          ? byRef(q.ref.replace(/^nostr:/, '')) === p
+          : !!needle &&
+            [p.author.name, p.handle, p.author.nip05 ?? ''].some((v) => norm(v).startsWith(needle)),
+    )
+      .sort((a, b) => {
+        const rank = (p: Person) =>
+          w.state.following.has(p.author.pubkey) ? 0 : thread.includes(p.author.pubkey) ? 1 : 2;
+        return rank(a) - rank(b) || norm(a.author.name).localeCompare(norm(b.author.name));
+      })
+      .slice(0, q.authors ? 32 : 6)
+      .map((p) => fixed(personRow(w, p, me)));
+  }
   const rows = finite(w, q);
   if (rows) return rows.map(fixed);
   if (q.source === 'thread') return thread(w, q, me);
@@ -149,7 +186,11 @@ export function select(w: World, q: Query, me: string): Entry[] {
   const opts: RowOpts = { me, reposts: q.reposts };
   const kept = w.notes.filter((n) => matches(w, q, n, me));
   const notes = kept.map((n) => entry(w, n, opts));
-  if (q.notifications && me && (q.source === 'home' || q.source === 'global')) {
+  if (
+    q.notifications &&
+    me &&
+    (q.source === 'home' || q.source === 'global' || q.source === 'their-home')
+  ) {
     // Notifications flow in at their own time; one whose note is already in the list is left out.
     const ids = new Set(kept.map((n) => n.id));
     const news = notifications(w, { source: 'notifications', account: me })

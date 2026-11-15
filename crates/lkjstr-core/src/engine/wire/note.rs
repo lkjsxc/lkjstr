@@ -3,7 +3,7 @@ use crate::{
     store::Store,
 };
 use serde_json::{Value, json};
-pub(super) fn author(a: &Author) -> Value {
+pub fn author(a: &Author) -> Value {
     let npub = lkjstr_protocol::encode_npub(&a.pubkey).unwrap_or_else(|_| a.pubkey.clone());
     let emoji = a
         .name_segments
@@ -16,6 +16,9 @@ pub(super) fn author(a: &Author) -> Value {
         })
         .collect::<Vec<_>>();
     let mut value = json!({"pubkey":a.pubkey,"npub":npub,"name":a.name,"verified":a.nip05_verified,"emoji":emoji});
+    if let Some(id) = &a.profile_id {
+        value["profileId"] = json!(id);
+    }
     if let Some(p) = &a.picture {
         value["picture"] = json!(p);
     }
@@ -34,7 +37,12 @@ fn parts(row: &Row) -> (Vec<Value>, Vec<Value>, Vec<Value>) {
             Segment::Link { url } => segments.push(json!({"k":"link","url":url,"text":url})),
             Segment::Hashtag { tag } => segments.push(json!({"k":"hashtag","tag":tag})),
             Segment::Mention { author: a } => {
-                segments.push(json!({"k":"mention","pubkey":a.pubkey,"name":a.name}))
+                let name = if a.name == a.pubkey {
+                    lkjstr_protocol::encode_npub(&a.pubkey).unwrap_or_default()
+                } else {
+                    a.name.clone()
+                };
+                segments.push(json!({"k":"mention","pubkey":a.pubkey,"name":name}))
             }
             Segment::Emoji { code, url } => {
                 segments.push(json!({"k":"emoji","code":code,"url":url}))

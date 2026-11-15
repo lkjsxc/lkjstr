@@ -64,15 +64,19 @@ export function addForm(
     spellcheck: 'false',
     oninput: () => input.removeAttribute('aria-invalid'),
   });
+  const commit = (): void => {
+    if (!input.value.trim()) return;
+    if (add(input.value.trim())) input.value = '';
+    else input.setAttribute('aria-invalid', 'true');
+  };
+  input.addEventListener('blur', commit);
   return h(
     'form',
     {
       class: 'addrow',
       onsubmit: (e) => {
         e.preventDefault();
-        if (!input.value.trim()) return;
-        if (add(input.value.trim())) input.value = '';
-        else input.setAttribute('aria-invalid', 'true');
+        commit();
       },
     },
     input,
@@ -96,12 +100,12 @@ const muteName = (r: MuteRow): string =>
   r.target.k === 'person'
     ? r.author
       ? plainName(r.author)
-      : r.target.pubkey.slice(0, 12)
+      : t('mute.person')
     : r.target.k === 'word'
       ? r.target.word
       : r.target.k === 'hashtag'
         ? `#${r.target.tag}`
-        : (r.excerpt ?? r.target.id.slice(0, 12));
+        : (r.excerpt ?? t('mute.thread'));
 
 export function listEntries(env: ViewEnv): { entries: Entry[]; dispose: Disposer } {
   const mute = (target: MuteTarget, on: boolean): void =>

@@ -2,6 +2,19 @@
 import type { en } from './strings-en.ts';
 
 export const ja: Record<keyof typeof en, string> = {
+  'compose.uploadWait': '添付ファイルのアップロードが終わるまでお待ちください。',
+  'mute.person': 'ユーザー',
+  'mute.thread': 'スレッド',
+  'compose.saveFailed':
+    'この端末に下書きを保存できません。空き容量を増やしてからもう一度お試しください。',
+  'mention.lookup': '{name}を探す',
+  'home.theirs': '{name}のホーム',
+  'home.openTheirs': 'この人のホーム',
+  'home.unsupported': 'このエンジンはまだ他の人のホームを表示できません。',
+  'view.their-home': 'この人のホーム',
+  'view.their-home.hint': 'この人がフォローしている人の投稿',
+  'compose.edit': '編集',
+  'compose.editWhenEmpty': '今の下書きを残してこちらを編集',
   'tab.close': 'タブを閉じる',
   'tab.closeMore': 'あと{n}回押すと閉じます',
   'tab.new': '新しいタブ',

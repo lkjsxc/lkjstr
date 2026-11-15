@@ -56,6 +56,14 @@ export function createRowList(list: HTMLElement, env: ViewEnv, dated: boolean): 
         const sig = JSON.stringify(row);
         const had = nodes.get(row.key);
         if (
+          row.kind === 'notification' &&
+          had &&
+          had.body === JSON.stringify({ ...row, unread: undefined })
+        ) {
+          had.el.classList.toggle('unread', row.unread);
+          had.sig = sig;
+        }
+        if (
           row.kind === 'note' &&
           !row.hidden &&
           had &&
@@ -68,6 +76,8 @@ export function createRowList(list: HTMLElement, env: ViewEnv, dated: boolean): 
         put(row.key, sig, () => render(row));
         const now = nodes.get(row.key);
         if (now && row.kind === 'note') now.body = bodySig(row);
+        if (now && row.kind === 'notification')
+          now.body = JSON.stringify({ ...row, unread: undefined });
       }
       let cursor = list.firstChild;
       for (const node of want) {

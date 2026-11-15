@@ -91,7 +91,7 @@ it('retains a complete failed channel draft while the next message is typed and 
     },
   });
   await vi.waitFor(() =>
-    expect(loadViewState<{ outbox: unknown[] }>(x.env.instance).outbox).toEqual([]),
+    expect(loadViewState<{ drafts: unknown[] }>(`${x.env.instance}:outbox`).drafts).toEqual([]),
   );
   expect(x.el.querySelector('textarea')?.value).toBe('next message');
   off();
@@ -116,7 +116,7 @@ it('bounds pending and failed channel drafts without discarding them to make roo
   finishes[5]!({ t: 'result', req: 'failed', ok: false, error: { code: 'rejected' } });
   await vi.waitFor(() => expect(x.el.textContent).toContain('Refused'));
   expect(post.disabled).toBe(true);
-  expect(loadViewState<{ outbox: unknown[] }>(x.env.instance).outbox).toHaveLength(20);
+  expect(loadViewState<{ drafts: unknown[] }>(`${x.env.instance}:outbox`).drafts).toHaveLength(20);
   // Discard is a labeled action, distinct from an attachment's remove cross.
   const discard = [...x.el.querySelectorAll('button')].find(
     (b) => b.textContent === 'Remove' && !b.disabled,
@@ -125,6 +125,6 @@ it('bounds pending and failed channel drafts without discarding them to make roo
   discard!.click();
   expect(post.disabled).toBe(false);
   expect(area.value).toBe('next message');
-  expect(loadViewState<{ outbox: unknown[] }>(x.env.instance).outbox).toHaveLength(19);
+  expect(loadViewState<{ drafts: unknown[] }>(`${x.env.instance}:outbox`).drafts).toHaveLength(19);
   off();
 });

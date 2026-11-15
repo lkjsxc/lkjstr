@@ -69,6 +69,11 @@ const feed = (id: string, launch = true, aliases = ''): ViewDef => ({
 
 export const VIEWS: readonly ViewDef[] = [
   feed('home', true, 'timeline tl タイムライン フォロー'),
+  {
+    ...feed('their-home', false),
+    since: 5,
+    mount: gated(5, 'home.unsupported', (el, env) => mountFeed(el, env, 'their-home')),
+  },
   feed('global', true, 'public firehose 全体'),
   feed('notifications', true, 'mentions replies 返信 メンション'),
   feed('bookmarks', true, 'saved 保存'),
@@ -153,6 +158,7 @@ export const VIEWS: readonly ViewDef[] = [
 /** What the engine said it speaks (0 until it has): a view it cannot serve is not offered anywhere. */
 let served = 0;
 export const setServed = (version: number): void => void (served = version);
+export const serves = (since: number): boolean => served >= since;
 export const offered = (v: ViewDef): boolean => v.launch && (v.since ?? 0) <= served;
 
 /** Tab ids are `<view id>` or `<view id>~<n>`: every view can be open several times. */

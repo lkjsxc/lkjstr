@@ -84,6 +84,7 @@ impl Engine {
                         | Source::Profile
                         | Source::Followers
                         | Source::Following
+                        | Source::People
                         | Source::Mutes
                         | Source::List
                         | Source::Notifications

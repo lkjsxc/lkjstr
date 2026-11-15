@@ -18,6 +18,7 @@ pub(super) fn load(host: &Rc<RefCell<Host>>) {
                         h.accounts = serde_json::from_str(&saved).unwrap_or_default();
                     }
                     h.engine.seen = h.accounts.seen.clone();
+                    h.engine.notification_ties = h.accounts.notification_ties.clone();
                     h.loaded = true;
                     for id in h.sessions.keys().copied().collect::<Vec<_>>() {
                         accounts::ready(&h, id, matches!(h.scope, Sink::Shared { .. }));

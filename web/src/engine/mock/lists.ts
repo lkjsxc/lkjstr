@@ -96,10 +96,34 @@ export function notifications(w: World, q: Query): NotificationRow[] {
   ];
   const muted = (pk: string): boolean =>
     w.state.mutes.some((m) => m.k === 'person' && m.pubkey === pk);
+  for (const n of w.notes.slice(0, 200)) {
+    const parent = n.re ? w.byId.get(n.re) : undefined;
+    if (
+      !parent ||
+      parent.by.author.pubkey !== q.account ||
+      n.by.author.pubkey === q.account ||
+      n.at <= w.base
+    )
+      continue;
+    rows.unshift({
+      type: 'reply',
+      actors: [n.by.author],
+      others: 0,
+      at: n.at,
+      note: noteRow(w, n, { me: q.account ?? '' }),
+      unread: true,
+    });
+  }
   return rows
+    .sort((a, b) => b.at - a.at)
     .filter((r) => !q.types?.length || q.types.includes(r.type))
     .filter((r) => !r.actors.every((x) => muted(x.pubkey)))
-    .map((r, i) => ({ ...r, kind: 'notification', key: `n:${r.type}:${r.at}:${i}` }));
+    .map((r) => ({
+      ...r,
+      unread: r.at > w.state.notificationSeen,
+      kind: 'notification',
+      key: `n:${r.type}:${r.at}`,
+    }));
 }
 
 export function finite(w: World, q: Query): Row[] | undefined {

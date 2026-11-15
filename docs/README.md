@@ -35,3 +35,5 @@ Engine (`crates/`):
   historical.
 
 - [Owner engine feedback](owner-feedback.md): relay discovery, tags, media, stats and continuity.
+
+- [wishes.md](wishes.md): owner wishes, protocol 5 and verification boundaries.

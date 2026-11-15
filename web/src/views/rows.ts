@@ -4,6 +4,8 @@ import { countText, dayOf, fullTime, noteTime } from '../shared/format.ts';
 import { h } from '../shared/h.ts';
 import { getLang, type Key, t } from '../shared/i18n.ts';
 import { icon } from '../shared/icons.ts';
+import { reactionLabel } from '../shared/reactions.ts';
+import { openMenu } from '../wm/menus.ts';
 import { ability } from './can.ts';
 import { renderNote } from './note.ts';
 import { act } from './note-actions.ts';
@@ -20,6 +22,7 @@ import {
   unnamed,
 } from './parts.ts';
 import type { ViewEnv } from './registry.ts';
+import { openTheirHome, theirHomeButton } from './their-home.ts';
 
 function followButton(env: ViewEnv, pubkey: string, followed: boolean): HTMLElement {
   // Signed out or read-only, the button is drawn off; a press says why (`act`).
@@ -83,6 +86,20 @@ export function renderProfile(row: ProfileRow, env: ViewEnv): HTMLElement {
         { class: 'pbtns' },
         row.followsYou ? h('span', { class: 'badge' }, t('profile.followsYou')) : null,
         row.self ? null : followButton(env, a.pubkey, row.followed),
+        (env.engine.info.get()?.version ?? 0) >= 5
+          ? h(
+              'button',
+              {
+                class: 'icon',
+                'aria-label': t('act.more'),
+                onclick: (e) =>
+                  openMenu(env.layer, e.currentTarget as HTMLElement, [
+                    { label: t('home.openTheirs'), run: () => openTheirHome(env, a) },
+                  ]),
+              },
+              icon('more'),
+            )
+          : null,
       ),
     ),
     h(
@@ -127,6 +144,7 @@ export function renderProfile(row: ProfileRow, env: ViewEnv): HTMLElement {
       stat('following', row.following, 'profile.following'),
       stat('followers', row.followers, 'profile.followers'),
       stat(null, row.notes, 'profile.notes'),
+      theirHomeButton(env, a),
     ),
     known
       ? h(
@@ -186,9 +204,9 @@ export function renderNotification(row: NotificationRow, env: ViewEnv): HTMLElem
   const rest = row.others + Math.max(0, row.actors.length - 2);
   const mark =
     row.type === 'reaction' && row.emoji
-      ? row.emoji.url
+      ? row.emoji.url && row.emoji.emoji.startsWith(':')
         ? emojiImg(row.emoji.emoji, row.emoji.url)
-        : row.emoji.emoji
+        : reactionLabel(row.emoji.emoji)
       : icon(row.type === 'repost' ? 'repost' : row.type === 'zap' ? 'zap' : 'user');
   const target = row.target;
   const first = row.actors[0];

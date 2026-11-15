@@ -1,7 +1,7 @@
 // NIP-07 rejection/deadlines and NIP-46 sessions through the shipped UI.
 import { writeFile } from 'node:fs/promises';
 import { remote } from './smoke-bunker.mjs';
-import { accounts, code, compose, launch, setup } from './smoke-signer-support.mjs';
+import { accounts, code, compose, launch, setup, signerFace } from './smoke-signer-support.mjs';
 
 async function failure(options, mode) {
   const { check, fake } = options;
@@ -14,8 +14,17 @@ async function failure(options, mode) {
     if (mode.endsWith('sign')) {
       await page.locator('.acct:not(.out)').waitFor();
       await launch(page, 'Post', 'compose');
+      await signerFace(page, `NIP-07 ${mode} sign-in`, check);
       await page.locator(`${compose} textarea`).fill(draft);
       await page.locator(compose).getByRole('button', { name: 'Post', exact: true }).click();
+      check(
+        `wish-3 NIP-07 ${mode} frees the input before signing`,
+        (await page.locator(`${compose} textarea`).inputValue()) === '' &&
+          (await page
+            .locator(`${compose} textarea`)
+            .evaluate((el) => el === document.activeElement)),
+      );
+      await page.locator(`${compose} textarea`).fill('next note while signer waits');
       await page.waitForFunction(() => window.signerCalls.signEvent === 1);
     } else await page.waitForFunction(() => window.signerCalls.getPublicKey === 1);
     // A pending extension promise must not lock navigation or ordinary input.
@@ -29,7 +38,9 @@ async function failure(options, mode) {
       await page.locator('.pane.cur .tab[data-view^="compose"]').last().click();
       check(
         `NIP-07 ${mode} preserves draft and permits retry`,
-        (await page.locator(`${compose} textarea`).inputValue()) === draft &&
+        (await page.locator(`${compose} .outbox`).innerText()).includes(draft) &&
+          (await page.locator(`${compose} textarea`).inputValue()) ===
+            'next note while signer waits' &&
           (await page
             .locator(compose)
             .getByRole('button', { name: 'Post', exact: true })
@@ -39,9 +50,10 @@ async function failure(options, mode) {
         // Deterministically reload inside the 300 ms draft debounce window.
         await page.clock.install();
         await page.clock.pauseAt(new Date());
-        draft += ' latest edit';
+        draft = 'next note while signer waits latest edit';
         await page.locator(`${compose} textarea`).fill(draft);
       }
+      if (mode !== 'reject-sign') draft = 'next note while signer waits';
       const saved = await page.evaluate(
         (draft) =>
           Object.entries(localStorage).some(
@@ -52,6 +64,7 @@ async function failure(options, mode) {
       await page.reload();
       if (mode === 'reject-sign') await page.clock.resume();
       await page.locator(`${compose} textarea`).waitFor();
+      await signerFace(page, `NIP-07 ${mode} reload`, check);
       await writeFile(
         `tmp/signer-${mode}.json`,
         JSON.stringify({
@@ -61,7 +74,8 @@ async function failure(options, mode) {
       );
       check(
         `NIP-07 ${mode} preserves draft across reload`,
-        (await page.locator(`${compose} textarea`).inputValue()) === draft,
+        (await page.locator(`${compose} textarea`).inputValue()) === draft &&
+          (await page.locator(`${compose} .outbox`).innerText()).includes('keep draft'),
       );
     } else
       check(`NIP-07 ${mode} creates no account`, (await page.locator('.acct.out').count()) === 1);

@@ -2,14 +2,20 @@
 // the reader asked for a new one each time. Tab search: one key opens a small field over the current tile. It filters the tabs that are open in this
 // workspace and, under them, everything a new tab could be (the same choices as the New tab page). The arrows walk
 // the list, Enter goes to the first or the chosen one: an open tab comes to the front, a kind opens beside it.
+
+import type { Engine, Subscription } from '../engine/client.ts';
+import type { Author } from '../engine/protocol.ts';
 import { h, replaceChildren } from '../shared/h.ts';
 import { both, t } from '../shared/i18n.ts';
+import { plainName } from '../views/parts.ts';
 import { kindOf, viewOf } from '../views/registry.ts';
+import { homeTitle } from '../views/their-home.ts';
 import { CHOICES } from './choices.ts';
 import { type Choice, matchesWords } from './launcher.ts';
 import { openPopover } from './menus.ts';
 
 export type TabFinder = {
+  readonly engine?: Engine;
   /** The tile the field opens over. */
   anchor(): HTMLElement;
   /** Every open tab of the workspace with its title, in tile order; `here`: in the current tile. */
@@ -57,13 +63,26 @@ export function openTabSearch(layer: HTMLElement, api: TabFinder): void {
   const list = h('div', { class: 'tlist', role: 'listbox' });
   let hits: Hit[] = [];
   let at = 0;
+  let people: Subscription | undefined;
+  let matches: readonly Author[] = [];
   const pick = (hit: Hit | undefined): void => {
     if (!hit) return;
     close();
     hit.go();
   };
   const draw = (): void => {
-    hits = tabHits(api, field.value);
+    const ordinary = tabHits(api, field.value);
+    const homes: Hit[] = matches.map((author) => ({
+      title: homeTitle(plainName(author)),
+      hint: author.nip05 ?? t('view.their-home'),
+      open: false,
+      go: () =>
+        api.open('their-home', { pubkey: author.pubkey, title: homeTitle(plainName(author)) }),
+    }));
+    hits = [
+      ...ordinary,
+      ...homes.filter((hit) => !ordinary.some((old) => old.title === hit.title)),
+    ];
     at = Math.min(at, Math.max(0, hits.length - 1));
     replaceChildren(
       list,
@@ -92,7 +111,27 @@ export function openTabSearch(layer: HTMLElement, api: TabFinder): void {
     type: 'search',
     placeholder: t('tabs.search'),
     'aria-label': t('tabs.search'),
-    oninput: () => ((at = 0), draw()),
+    oninput: () => {
+      at = 0;
+      matches = [];
+      draw();
+      people?.close();
+      people = undefined;
+      const text = field.value.trim();
+      if (!text || (api.engine?.info.get()?.version ?? 0) < 5) return;
+      people = api.engine?.open(
+        { source: 'people', text, account: api.engine.me() || undefined },
+        {
+          rows: (rows) => {
+            matches = rows.filter((row) => row.kind === 'person').map((row) => row.author);
+            draw();
+          },
+          patch: () => people?.window('top', 0, 6),
+        },
+      );
+      people?.window('top', 0, 6);
+      people?.visible(true);
+    },
     onkeydown: (e) => {
       const ev = e as KeyboardEvent;
       if (ev.isComposing || ev.keyCode === 229) return; // Enter that confirms Japanese input is not a choice
@@ -103,7 +142,10 @@ export function openTabSearch(layer: HTMLElement, api: TabFinder): void {
     },
   });
   const el = h('div', { class: 'tsearch' }, field, list);
-  const close = openPopover(layer, api.anchor(), el, { panel: true });
+  const close = openPopover(layer, api.anchor(), el, {
+    panel: true,
+    closed: () => people?.close(),
+  });
   draw();
   field.focus({ preventScroll: true });
 }

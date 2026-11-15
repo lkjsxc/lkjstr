@@ -1,11 +1,14 @@
 // lkjstr: the page. It starts from what is saved on this device (settings, layouts, the last account) and draws
 // at once; the engine answers from its worker when it is ready.
+
+import { watchAccountProfiles } from './engine/account-profiles.ts';
 import { createEngine } from './engine/client.ts';
 import { createTransport } from './engine/startup.ts';
-import { rememberedFace, rememberFace } from './shared/face.ts';
+import { rememberAccounts, rememberedAccounts, rememberFace } from './shared/face.ts';
 import { resolveLang, setLang } from './shared/i18n.ts';
 import { pressedAt, watchPairs } from './shared/keys.ts';
 import { spacesKey } from './shared/layout-store.ts';
+import { learnPerson } from './shared/people.ts';
 import { createSettings } from './shared/settings.ts';
 import { kv } from './shared/storage.ts';
 import { createTopBar } from './ui/topbar.ts';
@@ -39,10 +42,15 @@ engine.info.subscribe((i) => setServed(i?.version ?? 0));
 // is reading and asks for the first lists as that person, before the engine has spoken.
 const cached = kv.get('account');
 if (typeof cached === 'string')
-  engine.accounts.set({ accounts: rememberedFace(cached), active: cached });
+  engine.accounts.set({
+    accounts: rememberedAccounts(cached).map((a) => ({ ...a, author: learnPerson(a.author) })),
+    active: cached,
+  });
+watchAccountProfiles(engine);
 engine.accounts.subscribe((a) => {
   if (a.active) kv.set('account', a.active);
   else kv.remove('account');
+  rememberAccounts(a.accounts);
   rememberFace(a.accounts.find((x) => x.author.pubkey === a.active));
 });
 

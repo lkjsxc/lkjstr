@@ -5,6 +5,22 @@ impl Session {
     pub(super) fn source_rows(&self, sub: &str, e: &Engine) -> Vec<Value> {
         self.project_source(sub, e, true)
     }
+    pub(super) fn notification_before(
+        &self,
+        sub: &str,
+        e: &Engine,
+        anchor: Option<&str>,
+        before: usize,
+    ) -> usize {
+        let Some(anchor) = anchor else {
+            return 0;
+        };
+        self.project_source(sub, e, false)
+            .iter()
+            .position(|r| r["key"].as_str() == Some(anchor))
+            .map(|at| before.min(at))
+            .unwrap_or(0)
+    }
     pub(super) fn source_fresh(&self, sub: &str, e: &Engine) -> usize {
         let Some((Some(anchor), before, _)) = self.windows.get(sub) else {
             return 0;
@@ -43,6 +59,7 @@ impl Session {
             .unwrap_or("");
         let thread = (q.source == "thread").then(|| super::thread::positions(store, target));
         let mut out=match q.source.as_str() {
+            "people"=>super::people::people(e,q),
             "channels"=>super::channels::list(e,q),
             "following"=>store.follows(target).unwrap_or_default().iter().map(|p|person(e,p,q.account.as_deref())).collect(),
             "followers"=>store.feed(&crate::store::Query{kinds:vec![3],mention:Some(target.into()),limit:6000,..Default::default()})
@@ -53,7 +70,7 @@ impl Session {
             }).collect()).unwrap_or_default(),
             "relays"=>e.relay_rows(),
             "diagnostics"=>{
-                let facts=json!({"events":store.len(),"eventPayloadBytes":store.payload_bytes(),"verified":e.verified,"rejected":e.rejected,"dropped":e.dropped,"persistenceQueue":e.pending.len(),"timings":e.metrics,"relayStatistics":e.network.stats(),"protocol":4});
+                let facts=json!({"events":store.len(),"eventPayloadBytes":store.payload_bytes(),"verified":e.verified,"rejected":e.rejected,"dropped":e.dropped,"persistenceQueue":e.pending.len(),"timings":e.metrics,"relayStatistics":e.network.stats(),"protocol":5});
                 facts.as_object().map(|m|m.iter().map(|(k,v)|json!({"kind":"info","key":k,"label":k,"value":v.to_string()})).collect()).unwrap_or_default()
             }
             "media-servers"=>q.account.as_deref().map(|a|e.upload_servers(a).into_iter().map(|url|json!({"kind":"server","key":url,"url":url,"protocol":e.servers.get(&url).map(|v|v.0.as_str()).unwrap_or(if crate::engine::feedback::BLOSSOM_SERVERS.contains(&url.as_str()) {"blossom"}else{"unknown"}),"ok":e.servers.get(&url).is_some_and(|v|v.1)})).collect()).unwrap_or_default(),
@@ -86,7 +103,9 @@ impl Session {
                     }).collect()
             }).unwrap_or_default(),
         };
-        if q.notifications == Some(true) && matches!(q.source.as_str(), "home" | "global") {
+        if q.notifications == Some(true)
+            && matches!(q.source.as_str(), "home" | "global" | "their-home")
+        {
             // Render ordinary timeline notes, then insert the identical notification rows.
             let mut plain = q.clone();
             plain.notifications = None;
@@ -153,7 +172,7 @@ impl Session {
         out
     }
 }
-fn person(e: &Engine, p: &str, account: Option<&str>) -> Value {
+pub(super) fn person(e: &Engine, p: &str, account: Option<&str>) -> Value {
     let store = &e.store;
     json!({"kind":"person","key":p,"author":super::note::author(&rows::author(store,p)),
         "about":store.profile(p).map(|p|p.about.lines().next().unwrap_or("").chars().take(160).collect::<String>()).unwrap_or_default(),

@@ -85,7 +85,7 @@ pub(super) fn status(host: &Rc<RefCell<Host>>) {
 fn send_accounts(h: &Host, id: u64) {
     let accounts=h.accounts.entries.iter().map(|a|{
         let author=lkjstr_core::engine::rows::author(&h.engine.store,&a.pubkey);
-        serde_json::json!({"author":{"pubkey":author.pubkey,"npub":lkjstr_protocol::encode_npub(&author.pubkey).unwrap_or_default(),"name":author.name},"signer":a.signer,"unread":lkjstr_core::engine::query::events(&h.engine.store,&lkjstr_core::engine::protocol::Query {source:lkjstr_core::engine::protocol::Source::Notifications,account:Some(a.pubkey.clone()),..Default::default()}).iter().filter(|e|e.pubkey!=a.pubkey && e.created_at.saturating_mul(1000)>h.accounts.seen.get(&a.pubkey).copied().unwrap_or(0)).count()})
+        serde_json::json!({"author":lkjstr_core::engine::wire::note::author(&author),"signer":a.signer,"unread":lkjstr_core::engine::wire::unread_count(&h.engine,&a.pubkey)})
     }).collect();
     h.scope.direct(
         id,
@@ -103,11 +103,18 @@ pub(super) fn pump_accounts(host: &Rc<RefCell<Host>>) {
         }
         h.account_busy = true;
         let task = h.account_tasks.remove(0);
-        (task, h.accounts.clone(), h.db.clone())
+        let watermark = if let A::Seen { account } = &task.2 {
+            Some(lkjstr_core::engine::wire::notification_watermark(
+                &h.engine, account,
+            ))
+        } else {
+            None
+        };
+        (task, h.accounts.clone(), h.db.clone(), watermark)
     };
     let weak = Rc::downgrade(host);
     wasm_bindgen_futures::spawn_local(async move {
-        let ((id, req, action), mut next, db) = task;
+        let ((id, req, action), mut next, db, watermark) = task;
         let result = match action {
             A::AccountAdd { how, key } => {
                 if how == "key" && key.as_deref().is_some_and(|v| v.starts_with("bunker://")) {
@@ -144,7 +151,9 @@ pub(super) fn pump_accounts(host: &Rc<RefCell<Host>>) {
             A::AccountRemove { pubkey } => next.remove(&pubkey),
             A::Seen { account } => {
                 if next.entries.iter().any(|a| a.pubkey == account) {
-                    next.seen.insert(account, now());
+                    let (at, ties) = watermark.unwrap_or_default();
+                    next.seen.insert(account.clone(), at);
+                    next.notification_ties.insert(account, ties);
                     Ok(())
                 } else {
                     Err("signed-out")
@@ -187,6 +196,7 @@ pub(super) fn pump_accounts(host: &Rc<RefCell<Host>>) {
                 Ok(()) => {
                     h.accounts = next;
                     h.engine.seen = h.accounts.seen.clone();
+                    h.engine.notification_ties = h.accounts.notification_ties.clone();
                     h.account_revision = u64::MAX;
                     h.engine.invalidate();
                     for id in h.sessions.keys() {

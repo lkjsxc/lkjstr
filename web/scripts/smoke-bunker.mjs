@@ -1,6 +1,6 @@
 // Real NIP-46 accounts with a loopback encrypted bunker.
 import { openKeyField } from './smoke-seed.mjs';
-import { accounts, code, compose, launch, setup } from './smoke-signer-support.mjs';
+import { accounts, code, compose, launch, setup, signerFace } from './smoke-signer-support.mjs';
 
 async function post(page, text) {
   await page.locator(`${compose} textarea`).fill(text);
@@ -31,6 +31,7 @@ async function remote(options, secret) {
     const connects = bunker.calls.filter((c) => c.method === 'connect' && c.authorized).length;
     check(`NIP-46 connects ${secret ? 'with' : 'without'} secret`);
     await launch(page, 'Post', 'compose');
+    await signerFace(page, `NIP-46 ${secret} sign-in`, check);
     const text = `bunker ${secret} before reload`;
     await post(page, text);
     await page.waitForFunction(() =>
@@ -44,6 +45,7 @@ async function remote(options, secret) {
     await page.reload();
     await page.locator('.acct:not(.out)').waitFor();
     await page.locator(`${compose} textarea`).waitFor();
+    await signerFace(page, `NIP-46 ${secret} reload`, check);
     const reloaded = `bunker ${secret} after reload`;
     await post(page, reloaded);
     await page.waitForFunction(() =>
@@ -67,7 +69,8 @@ async function remote(options, secret) {
     await code(page, 'signer-refused');
     check(
       `NIP-46 refusal preserves draft ${secret}`,
-      (await page.locator(`${compose} textarea`).inputValue()) === refused &&
+      (await page.locator(`${compose} .outbox`).innerText()).includes(refused) &&
+        (await page.locator(`${compose} textarea`).inputValue()) === '' &&
         !fake.published.some((e) => e.content === refused),
     );
     bunker.refuse(false);
@@ -79,6 +82,12 @@ async function remote(options, secret) {
     await post(page, 'keep bunker outage draft');
     for (let n = 0; n < 100 && !bunker.waiting(); n++) await page.waitForTimeout(20);
     check(`NIP-46 signs in flight before outage ${secret}`, bunker.waiting() > 0);
+    check(
+      `wish-3 NIP-46 frees the input while signing ${secret}`,
+      (await page.locator(`${compose} textarea`).inputValue()) === '' &&
+        (await page.locator(`${compose} textarea`).evaluate((el) => el === document.activeElement)),
+    );
+    await page.locator(`${compose} textarea`).fill('next remote note');
     bunker.down();
     bunker.hold(false);
     await launch(page, 'Search', 'search');
@@ -91,7 +100,8 @@ async function remote(options, secret) {
     await page.locator('.pane.cur .tab[data-view^="compose"]').last().click();
     check(
       `NIP-46 outage preserves draft ${secret}`,
-      (await page.locator(`${compose} textarea`).inputValue()) === 'keep bunker outage draft',
+      (await page.locator(`${compose} .outbox`).innerText()).includes('keep bunker outage draft') &&
+        (await page.locator(`${compose} textarea`).inputValue()) === 'next remote note',
     );
     bunker.up();
     await post(page, 'keep bunker outage draft');

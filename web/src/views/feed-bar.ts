@@ -30,7 +30,7 @@ export const typesQuery = (only: readonly string[] = []): NotificationType[] | u
   return types.length ? types : undefined;
 };
 
-const BARRED = new Set(['home', 'global', 'hashtag', 'bookmarks', 'search']);
+const BARRED = new Set(['their-home', 'home', 'global', 'hashtag', 'bookmarks', 'search']);
 
 export function mountFeedBar(o: {
   kind: string;
@@ -42,17 +42,33 @@ export function mountFeedBar(o: {
   reopen(): void;
 }): () => void {
   const { kind, el, slot, state, env } = o;
+  let current: (HTMLElement & { dispose?: () => void }) | null = null;
   /** Replaces the bar; what is being read stays where it is, and the keyboard stays on the control it was on. */
   const put = (bar: HTMLElement | null): void => {
     const controls = (): HTMLElement[] => [...slot.querySelectorAll<HTMLElement>('button, input')];
     const held = controls().indexOf(document.activeElement as HTMLElement);
     const was = slot.offsetHeight;
+    current?.dispose?.();
+    current = bar;
     slot.replaceChildren(...(bar ? [bar] : []));
     const now = slot.offsetHeight;
     if (now !== was && el.scrollTop > 0) el.scrollTop += now - was;
     if (held >= 0) controls()[held]?.focus({ preventScroll: true });
   };
 
+  let deferred = false;
+  let redrawTimer: ReturnType<typeof setTimeout> | undefined;
+  const drafts = new Map<string, string>(); // bound: fields of one filter bar
+  const keepDrafts = (): void => {
+    for (const field of slot.querySelectorAll<HTMLInputElement>('input'))
+      drafts.set(field.getAttribute('aria-label') ?? '', field.value);
+  };
+  const release = (): void => {
+    clearTimeout(redrawTimer);
+    if (deferred) redrawTimer = setTimeout(() => draw(), 0);
+  };
+  slot.addEventListener('focusout', release);
+  slot.addEventListener('click', release);
   const wanted = (): boolean => env.settings.get().showFilters;
   let was = wanted();
   /** Draws the row again when the setting that shows it changes. */
@@ -100,6 +116,16 @@ export function mountFeedBar(o: {
   const filter = (): Filter => ({ ...state.filter, ...(search ? { text: state.text } : {}) });
   const input = (): HTMLInputElement | null => slot.querySelector('input');
   const draw = (): void => {
+    if (
+      slot.querySelector('button:active') ||
+      (slot.contains(document.activeElement) &&
+        document.activeElement?.matches('input, textarea, select'))
+    ) {
+      deferred = true;
+      return;
+    }
+    deferred = false;
+    keepDrafts();
     const f = filter();
     if (!search && !wanted() && !f.shown && !filterNarrows(f)) return put(null);
     put(
@@ -107,12 +133,13 @@ export function mountFeedBar(o: {
         f,
         search ? 'filter.search' : 'filter.query',
         (next, typed) => {
+          const previous = filter();
           if (search) state.text = next.text;
           state.filter = search ? { ...next, text: undefined } : next;
           o.save();
           const full = rich(env.engine);
           const narrowed =
-            JSON.stringify(filterQuery(next, full)) !== JSON.stringify(filterQuery(f, full));
+            JSON.stringify(filterQuery(next, full)) !== JSON.stringify(filterQuery(previous, full));
           if (!typed) draw();
           if (narrowed || typed) o.reopen();
         },
@@ -120,10 +147,15 @@ export function mountFeedBar(o: {
         search ? undefined : clear,
         {
           rich: rich(env.engine),
-          news: (kind === 'home' || kind === 'global') && !!env.engine.me(),
+          news:
+            (kind === 'home' || kind === 'global' || kind === 'their-home') && !!env.engine.me(),
         },
       ),
     );
+    for (const field of slot.querySelectorAll<HTMLInputElement>('input')) {
+      const raw = drafts.get(field.getAttribute('aria-label') ?? '');
+      if (raw !== undefined) field.value = raw;
+    }
   };
   /** Puts the keyboard in the row's field, bringing the row and the top of the list in, or leaves the field (a
    * row that the setting hides goes away again unless it narrows the feed). */
@@ -136,6 +168,8 @@ export function mountFeedBar(o: {
   };
   const clear = (): void => {
     state.filter = {};
+    drafts.clear();
+    slot.replaceChildren();
     o.save();
     draw();
     o.reopen();
@@ -161,5 +195,14 @@ export function mountFeedBar(o: {
     if (filterNarrows(filter())) o.reopen();
   });
   const offWho = env.engine.accounts.subscribe(draw);
-  return () => (off(), offInfo(), offWho(), window.removeEventListener('keydown', key));
+  return () => (
+    clearTimeout(redrawTimer),
+    current?.dispose?.(),
+    off(),
+    offInfo(),
+    offWho(),
+    slot.removeEventListener('focusout', release),
+    slot.removeEventListener('click', release),
+    window.removeEventListener('keydown', key)
+  );
 }

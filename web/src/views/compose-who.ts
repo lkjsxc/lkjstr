@@ -2,6 +2,7 @@
 // read-only account says so here, before anything is typed; signed out, the bar offers Sign in where Post would be.
 import { h, replaceChildren } from '../shared/h.ts';
 import { t } from '../shared/i18n.ts';
+import { learnPerson } from '../shared/people.ts';
 import { openMenu } from '../wm/menus.ts';
 import { ability } from './can.ts';
 import { avatar, displayName, plainName } from './parts.ts';
@@ -32,6 +33,7 @@ export function createWho(env: ViewEnv, changed: () => void): Who {
       { label: t('view.account'), run: () => env.open('account') },
     ]);
   });
+  let signature = '';
   const draw = (): void => {
     const a = env.engine.accounts.get();
     const me = a.accounts.find((x) => x.author.pubkey === a.active);
@@ -39,13 +41,21 @@ export function createWho(env: ViewEnv, changed: () => void): Who {
     el.hidden = can === 'signed-out';
     signIn.hidden = !el.hidden;
     el.title = t('compose.as', { name: me ? plainName(me.author) : '' });
-    replaceChildren(
-      el,
-      me
-        ? [avatar(me.author, 'av sm'), h('span', { class: 'clip' }, displayName(me.author))]
-        : null,
-      can === 'read-only' ? h('span', { class: 'badge warn' }, t('account.signer.none')) : null,
-    );
+    if (me) learnPerson(me.author);
+    const next = JSON.stringify([me?.author.pubkey, can]);
+    if (next !== signature)
+      replaceChildren(
+        el,
+        me
+          ? [avatar(me.author, 'av sm'), h('span', { class: 'clip' }, displayName(me.author))]
+          : null,
+        can === 'read-only' ? h('span', { class: 'badge warn' }, t('account.signer.none')) : null,
+      );
+    if (me && next === signature) {
+      const name = el.querySelector('.clip');
+      if (name) replaceChildren(name, displayName(me.author));
+    }
+    signature = next;
     changed();
   };
   const off = env.engine.accounts.subscribe(draw);
