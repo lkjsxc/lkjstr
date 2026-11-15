@@ -3,6 +3,8 @@ pub mod accounts;
 pub mod bench;
 pub mod clients;
 mod commands;
+pub mod discovery;
+pub mod feedback;
 pub mod global;
 mod history;
 mod hydration;
@@ -45,6 +47,10 @@ struct Signing {
     deadline: u64,
 }
 pub struct Engine {
+    pub client_tag: bool,
+    pub discovery_paused: bool,
+    pub discovery_account: Option<String>,
+    pub discovery_relays: Vec<String>,
     pub servers: BTreeMap<String, (String, bool)>,
     pub private_lists: BTreeMap<String, Vec<Vec<String>>>,
     pub seen: BTreeMap<String, u64>,
@@ -71,6 +77,10 @@ impl Default for Engine {
 impl Engine {
     pub fn new() -> Self {
         Self {
+            client_tag: true,
+            discovery_paused: false,
+            discovery_account: None,
+            discovery_relays: vec![],
             servers: BTreeMap::new(),
             private_lists: BTreeMap::new(),
             seen: BTreeMap::new(),
@@ -92,6 +102,9 @@ impl Engine {
     }
     pub fn enqueue(&mut self, relay: String, event: NostrEvent) {
         if self.store.get(&event.id).is_some() || self.queue.iter().any(|(_, e)| *e == event) {
+            if let Some(r) = self.network.relays.get_mut(&relay) {
+                r.duplicates += 1;
+            }
             return;
         }
         let bytes = crate::store::event_payload_bytes(&event);

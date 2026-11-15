@@ -39,3 +39,20 @@ pub async fn bounded(
 fn reject_timer_failure(reject: &js_sys::Function) -> Result<JsValue, JsValue> {
     reject.call1(&JsValue::NULL, &"timer unavailable".into())
 }
+
+/// Cancellable worker delay; the timer is released after settlement.
+pub async fn pause(ms: u32) -> Result<(), JsValue> {
+    let mut timer = None;
+    let work = Promise::new(&mut |resolve, reject| {
+        timer = Timer::after(ms, move || {
+            let _ = resolve.call0(&JsValue::NULL);
+        })
+        .ok();
+        if timer.is_none() {
+            let _ = reject_timer_failure(&reject);
+        }
+    });
+    let result = JsFuture::from(work).await.map(|_| ());
+    drop(timer);
+    result
+}

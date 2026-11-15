@@ -3,6 +3,7 @@ impl Network {
     pub fn connected(&mut self, relay: &str, now: u64) {
         if let Some(r) = self.relays.get_mut(relay) {
             r.online = true;
+            r.connected_since = Some(now);
             r.connecting = false;
             r.last_rx = now;
         }
@@ -13,6 +14,8 @@ impl Network {
         if let Some(r) = self.relays.get_mut(relay) {
             r.online = false;
             r.connecting = false;
+            r.connected_since = None;
+            r.last_error = Some("connection-lost".into());
             r.failures = r.failures.saturating_add(1);
             r.retry_at = now + 1000 * (1u64 << r.failures.min(6)) + (r.received % 997);
         }

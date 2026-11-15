@@ -403,6 +403,9 @@ export type Uploaded = {
 
 export type Draft = {
   readonly text: string;
+  // engine-added 2026-11-15: 2
+  readonly longForm?: { readonly identifier: string; readonly title?: string };
+  // end engine-added
   /** Answer to this note (event id). */
   readonly replyTo?: string;
   /** Quotes this note: the engine appends the reference and the tags. */
@@ -519,6 +522,10 @@ export type Hint = {
 
 /** Engine-side settings. The interface stores settings and sends the whole object whenever one changes. */
 export type EngineConfig = {
+  // engine-added 2026-11-15: 2
+  /** Include the lkjstr client tag on authored events (default true). */
+  readonly clientTag?: boolean;
+  // end engine-added
   /** Interface language, for the engine's language heuristics. */
   readonly language: string;
   /** Hide notes the engine judges to be repeated or spam (shown as one quiet line each). */
@@ -532,6 +539,12 @@ export type EngineConfig = {
 // ───────────────────────────────────────── messages ─────────────────────────────────────────
 
 export type ToEngine =
+  // engine-added 2026-11-15: 4
+  | { readonly t: 'stats'; readonly req: ReqId }
+  // end engine-added
+  // engine-added 2026-11-15: 5
+  | { readonly t: 'rowAtTime'; readonly req: ReqId; readonly sub: SubId; readonly at: Millis }
+  // end engine-added
   | { readonly t: 'configure'; readonly config: EngineConfig }
   /** Replaces bootstrap relay usage; at most eight. Independent of EngineConfig. */
   | {
@@ -559,12 +572,59 @@ export type ToEngine =
       readonly anchor: Anchor;
       readonly before: number;
       readonly after: number;
+      // engine-added 2026-11-15: 5
+      /** Retain up to 6000 cached rows above the anchor while extending below. */
+      readonly retainAbove?: boolean;
+      // end engine-added
     }
   | { readonly t: 'act'; readonly req: ReqId; readonly action: Action }
   /** Answer to `sign`: the signed event as JSON text, or why not. */
   | { readonly t: 'signed'; readonly req: ReqId; readonly event?: string; readonly error?: string };
 
+// engine-added 2026-11-15: 4
+export type EngineStats = {
+  readonly relays: readonly {
+    readonly url: string;
+    readonly state: string;
+    readonly connectedSince: Millis | null;
+    readonly eventsReceived: number;
+    readonly duplicatesDropped: number;
+    readonly openSubscriptions: number;
+    readonly bytesIn: number;
+    readonly bytesOut: number;
+    readonly lastError: string | null;
+    readonly latencyMs: number | null;
+  }[];
+  readonly totals: {
+    readonly eventsStored: number;
+    readonly cacheBytes: number;
+    readonly subscriptions: number;
+    /** Rows available at open; network counts accepted events this session. */
+    readonly servedFromCache: number;
+    readonly servedFromNetwork: number;
+  };
+  readonly orchestration: {
+    readonly relaysCoveringFollowSet: number;
+    /** Currently shared request memberships saved by coalescing. */
+    readonly requestsCoalesced: number;
+  };
+};
+// end engine-added
 export type FromEngine =
+  // engine-added 2026-11-15: 4
+  | { readonly t: 'stats'; readonly req: ReqId; readonly stats: EngineStats }
+  // end engine-added
+  // engine-added 2026-11-15: 5
+  /** First matching cached row at or before at; absent key means no cached match. */
+  | {
+      readonly t: 'rowAtTime';
+      readonly req: ReqId;
+      readonly sub: SubId;
+      readonly key?: RowKey;
+      readonly at?: Millis;
+      readonly cached: boolean;
+    }
+  // end engine-added
   | { readonly t: 'heartbeat' } // acknowledgement; transport detects worker loss
   | { readonly t: 'getPublicKey'; readonly req: ReqId }
   /** Transport reconnects and reopens visible queries/windows; actions are not replayed. */

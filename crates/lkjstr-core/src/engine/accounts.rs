@@ -12,6 +12,8 @@ pub struct Accounts {
 pub struct Account {
     pub pubkey: String,
     pub signer: String,
+    #[serde(default)]
+    pub relay_hints: Vec<String>,
     secret: Option<String>,
     #[serde(default)]
     remote: Option<p::remote::Remote>,
@@ -38,9 +40,20 @@ impl Accounts {
                     Some(secret),
                 ),
                 Some(p::NostrEntity::Npub(key)) => (key, "none", None),
+                Some(p::NostrEntity::Nprofile(profile)) => (profile.pubkey, "none", None),
                 _ => return Err("rejected"),
             },
             _ => return Err("unsupported"),
+        };
+        let relay_hints = match key.and_then(p::decode_nip19) {
+            Some(p::NostrEntity::Nprofile(profile)) => profile
+                .relays
+                .into_iter()
+                .flatten()
+                .filter_map(|u| super::settings::strict_relay(&u))
+                .take(8)
+                .collect(),
+            _ => vec![],
         };
         if !self.entries.iter().any(|a| a.pubkey == pubkey) && self.entries.len() >= 32 {
             return Err("too-large");
@@ -51,11 +64,15 @@ impl Accounts {
                 old.secret = secret;
                 old.remote = None;
             }
+            if !relay_hints.is_empty() {
+                old.relay_hints = relay_hints;
+            }
         } else {
             self.entries.push(Account {
                 pubkey: pubkey.clone(),
                 signer: signer.into(),
                 secret,
+                relay_hints,
                 remote: None,
             });
         }
@@ -104,6 +121,7 @@ impl Accounts {
             pubkey: pubkey.clone(),
             signer: "remote".into(),
             secret: None,
+            relay_hints: vec![],
             remote: Some(session),
         });
         self.active = Some(pubkey);
@@ -126,6 +144,18 @@ impl Accounts {
             self.active = self.entries.first().map(|a| a.pubkey.clone());
         }
         Ok(())
+    }
+    pub fn require_signer(&self, pubkey: &str) -> Result<(), &'static str> {
+        let account = self
+            .entries
+            .iter()
+            .find(|a| a.pubkey == pubkey)
+            .ok_or("signed-out")?;
+        match account.signer.as_str() {
+            "none" => Err("read-only"),
+            "local" | "extension" | "remote" => Ok(()),
+            _ => Err("unsupported"),
+        }
     }
     pub fn sign(
         &self,

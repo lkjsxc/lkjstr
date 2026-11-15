@@ -63,6 +63,25 @@ impl Host {
         self.apply_relay_owner(true);
     }
     pub(super) fn apply_relay_owner(&mut self, force: bool) {
+        let at = self.time();
+        self.engine.discover_account(
+            self.accounts
+                .active
+                .clone()
+                .filter(|_| !self.sessions.is_empty()),
+            self.bootstrap_relays
+                .iter()
+                .map(|r| r.url.clone())
+                .chain(
+                    self.accounts
+                        .entries
+                        .iter()
+                        .filter(|a| Some(&a.pubkey) == self.accounts.active.as_ref())
+                        .flat_map(|a| a.relay_hints.iter().cloned()),
+                )
+                .collect(),
+            at,
+        );
         let learned = self.accounts.active.as_ref().and_then(|account| {
             self.engine
                 .account_relays(account)

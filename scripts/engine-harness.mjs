@@ -1,8 +1,9 @@
 // Headless protocol harness. All traffic is loopback or intercepted fake relays.
 import { createHash } from 'node:crypto';
-import { assertCoverage, mockMessageKinds } from './engine-contract.mjs';
+import { assertCoverage, mockMessageKinds, validateReplies } from './engine-contract.mjs';
 import { fallback } from './engine-fallback.mjs';
 import { coldStart } from './engine-cold-start.mjs';
+import { ownerRelays, localDiscovery, continuity } from './engine-feedback.mjs';
 import { conformance } from './engine-conformance.mjs';
 import { createServer } from 'node:http';
 import { readFile, writeFile, readdir, mkdir } from 'node:fs/promises';
@@ -39,11 +40,22 @@ const base = `${process.env.HOME}/.cache/ms-playwright`;
 const binary = process.env.LKJSTR_CHROME ?? `${base}/${(await readdir(base)).filter((s)=>s.startsWith('chromium-')).sort().pop()}/chrome-linux64/chrome`;
 const browser = await chromium.launch({executablePath:binary,args:['--no-sandbox']});
 const context = await browser.newContext();
+const history=[], historyRequests=[];
+const historyRelay=fakeRelay({request(ws,sub,filters){
+  for(const f of filters){
+    if(historyRequests.length<1000)historyRequests.push({kinds:f.kinds,until:f.until,since:f.since,limit:f.limit});
+    const events=history.filter(e=>(!f.kinds||f.kinds.includes(e.kind))&&(!f.authors||f.authors.includes(e.pubkey))&&(!f.until||e.created_at<=f.until)&&(!f.since||e.created_at>=f.since)&&!f['#e'])
+      .sort((a,b)=>b.created_at-a.created_at||b.id.localeCompare(a.id)).slice(0,f.limit??200);
+    for(const e of events)ws.send(JSON.stringify(['EVENT',sub,e]));
+    if(events.length)ws.send(JSON.stringify(['EVENT',sub,events[0]]));
+  }
+  ws.send(JSON.stringify(['EOSE',sub]));return true;
+}});
 const fake = fakeRelay(), errors = [], checks = {};
 const bunker=await fakeBunker();
 const bunkerKey=bunker.pubkey;
 const wsServer=new bundle.wsServer({server});
-wsServer.on('connection',(ws,req)=>{if(req.url==='/bunker'){return bunker.route(ws);}fake.route({send:(text)=>ws.send(text),onMessage:(fn)=>ws.on('message',fn),onClose:(fn)=>ws.on('close',fn)});});
+wsServer.on('connection',(ws,req)=>{if(req.url==='/bunker'){return bunker.route(ws);}const target=req.url==='/continuity'?historyRelay:fake;target.route({send:(text)=>ws.send(text),onMessage:(fn)=>ws.on('message',fn),onClose:(fn)=>ws.on('close',fn)});});
 await context.route('**/*', (r) => {
   if(r.request().url().startsWith('https://nip96.engine.test/')) {
     if(r.request().url().endsWith('/upload'))return r.fulfill({status:404,body:''});
@@ -53,17 +65,18 @@ await context.route('**/*', (r) => {
     const hash=createHash('sha256').update(Buffer.from([1,2,3,4])).digest('hex');
     return r.fulfill({status:201,contentType:'application/json',body:JSON.stringify({status:'success',nip94_event:{tags:[['url',`https://nip96.engine.test/${hash}.png`],['ox',hash],['m','image/png']]}})});
   }
-  if(r.request().url()==='https://media.engine.test/upload') {
+  if(['https://media.engine.test/upload','https://blossom.primal.net/upload'].includes(r.request().url())) {
     const hash=createHash('sha256').update(r.request().postDataBuffer()).digest('hex');
-    return r.fulfill({status:201,contentType:'application/json',headers:{'access-control-allow-origin':'*'},body:JSON.stringify({url:`https://media.engine.test/${hash}.png`,sha256:hash,type:'image/png',size:4})});
+    return r.fulfill({status:201,contentType:'application/json',headers:{'access-control-allow-origin':'*'},body:JSON.stringify({url:`${new URL(r.request().url()).origin}/${hash}.png`,sha256:hash,type:'image/png',size:4})});
   }
   return r.request().url().startsWith(origin) ? r.continue() : r.abort();
 });
+let continuityPage;
 const page = await context.newPage();page.on('pageerror',(e)=>errors.push(String(e)));
 const sentKinds=new Set();
 const send = (message) => {sentKinds.add(message.t); return page.evaluate((m)=>window.worker.postMessage(m),message);};
 const wait = (predicate, arg) => page.waitForFunction(predicate,arg,{timeout:15000});
-const check = (name,ok) => { checks[name]=ok?'ok':'FAIL'; if (!ok) throw new Error(name); };
+const check = (name,ok) => { checks[name]=ok?'ok':'FAIL'; console.log(`${ok?'ok':'FAIL'} ${name}`); if (!ok) throw new Error(name); };
 async function start() {
   await page.evaluate(() => {
     window.messages=[];window.worker=new Worker('/worker.js',{type:'module'});
@@ -144,7 +157,26 @@ try {
   const result=await page.evaluate(()=>window.messages.find((m)=>m.t==='result'&&m.req==='publish'));
   check('NIP-07 bridge verifies and publishes with per-relay delivery',result.ok&&result.delivery[0]?.state==='ok'&&fake.published.some((e)=>e.id===signed.id));
   fake.setReading(true);
-  await conformance({page,send,wait,check,note,signer,lines,origin,bunkerKey});
+  await ownerRelays({page,send,wait,check,note,signer,lines,fake,origin});
+  await conformance({page,send,wait,check,note,signer,lines,origin,bunkerKey,bunker,fake});
+  await localDiscovery({page,send,wait,check,start,origin});
+  const isolated=await browser.newContext();
+  await isolated.route('**/*',r=>r.request().url().startsWith(origin)?r.continue():r.abort());
+  continuityPage=await isolated.newPage();
+  await continuityPage.goto(origin);
+  await continuityPage.evaluate(()=>{
+    window.messages=[];window.worker=new Worker('/worker.js',{type:'module'});
+    window.worker.onmessage=e=>window.messages.push(e.data);
+  });
+  await continuityPage.waitForFunction(()=>window.messages.some(m=>m.t==='ready'));
+  const cpage=continuityPage;
+  await continuity({page:cpage,
+    send:msg=>{sentKinds.add(msg.t);return cpage.evaluate(m=>window.worker.postMessage(m),msg);},
+    wait:(predicate,arg)=>cpage.waitForFunction(predicate,arg,{timeout:15000}),
+    check,note,signer,lines,origin,history});
+  validateReplies(await cpage.evaluate(()=>window.messages));
+  await isolated.close();continuityPage=undefined;
+  validateReplies(await page.evaluate(()=>window.messages));
   signer.stdin.end();
   await send({t:'detach'});
   await page.evaluate(()=>window.worker.terminate());
@@ -180,7 +212,7 @@ try {
   assertCoverage(sentKinds,mockMessageKinds,'mock message');
   check('all message kinds handled by the current mock were driven',true);
   check('no page errors',errors.length===0);
-} catch(e) { checks.failure=String(e); checks.debug=await page.evaluate(()=>window.messages.map(m=>m.key?{...m,key:'[redacted]'}:m)).catch(()=>[]); checks.relay={opened:fake.opened(),connections:fake.connections()}; }
+} catch(e) { checks.failure=String(e); checks.shared=await Promise.all(context.pages().map(p=>p.evaluate(()=>window.sharedMessages?.filter(m=>m.t==='state').slice(-12)))); checks.history=historyRequests; await send({t:'open',sub:'failure-diagnostics',query:{source:'diagnostics'}}); await page.waitForTimeout(100); checks.continuity=await (continuityPage??page).evaluate(()=>({progress:window.continuityProgress,n:window.continuityRows?.length,unique:new Set(window.continuityRows?.map(r=>r.key)).size})); checks.debug=await page.evaluate(()=>window.messages.map(m=>m.key?{...m,key:'[redacted]'}:m)).catch(()=>[]); checks.relay={opened:fake.opened(),connections:fake.connections()}; }
 finally {
   await writeFile(join(out,'report.json'),JSON.stringify({checks,errors},null,2));
   await bunker.close();

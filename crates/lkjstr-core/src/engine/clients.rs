@@ -6,6 +6,7 @@ struct Client {
     subs: BTreeSet<String>,
     visible: BTreeSet<String>,
     last_seen: u64,
+    page_hidden: bool,
 }
 #[derive(Default)]
 pub struct Clients {
@@ -77,6 +78,7 @@ impl Clients {
                 idle,
                 save_data,
             } => {
+                c.page_hidden = page_hidden;
                 c.visible = if page_hidden {
                     BTreeSet::new()
                 } else {
@@ -92,7 +94,7 @@ impl Clients {
                         .values()
                         .flat_map(|c| c.visible.iter().cloned())
                         .collect(),
-                    page_hidden: false,
+                    page_hidden: self.clients.values().all(|c| c.page_hidden),
                     idle,
                     save_data,
                 }];

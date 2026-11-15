@@ -6,6 +6,17 @@ Current engine cutover, verified behavior and explicitly unfinished variants.
 The independent frontend owns visible UI in web/. Integration changes only
 engine plumbing, startup and build/test/release scripts.
 
+## Owner feedback (2026-11-15)
+
+Account discovery follows active signers independently of account views, retains
+indexer/hint lookups after NIP-65 adoption, follows updates and falls back to
+kind 3 relay JSON. Separate per-kind requests handle max_limit=1; settled
+discovery yields to feeds and unfinished discovery on single-slot relays.
+Authored events default to the lkjstr client tag; clientTag
+can disable it. Blossom defaults respect kind 10063; NIP-96 remains a fallback.
+Additive stats, retained windows and cached rowAtTime lookup are implemented.
+Bounds, counter meanings, conformance and limitations: [owner-feedback.md](owner-feedback.md).
+
 ## Frontend integration (2026-11-15)
 
 Release candidate, gates and UI gaps: [integration-release.md](integration-release.md).

@@ -42,6 +42,8 @@ pub struct Hint {
 pub struct Config {
     #[serde(default)]
     pub language: String,
+    #[serde(default, rename = "clientTag")]
+    pub client_tag: Option<bool>,
     #[serde(default, rename = "signedOutGlobalFilter")]
     pub signed_out_global_filter: Option<bool>,
     #[serde(default)]

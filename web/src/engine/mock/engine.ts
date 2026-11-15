@@ -14,6 +14,7 @@ import { createAccounts } from './accounts.ts';
 import { createActions } from './actions.ts';
 import { type Entry, entry, matches, select } from './query.ts';
 import { relays } from './relays.ts';
+import { mockStats } from './stats.ts';
 import { createWorld, type MNote } from './world.ts';
 
 const PATCH_MS = 80;
@@ -63,6 +64,7 @@ function createCore(post: (msg: FromEngine) => void, now: () => number) {
 
   return {
     world,
+    clientTag: true,
     subs,
     post,
     now,
@@ -178,7 +180,21 @@ export function createMockEngine(post: (msg: FromEngine) => void, now = Date.now
 
   return {
     handle(msg) {
-      if (msg.t === 'heartbeat') post({ t: 'heartbeat' });
+      if (msg.t === 'stats') post({ t: 'stats', req: msg.req, stats: mockStats(core) });
+      else if (msg.t === 'rowAtTime') {
+        const row = subs
+          .get(msg.sub)
+          ?.entries.map((e) => e.row())
+          .find((r) => 'at' in r && r.at <= msg.at);
+        post({
+          t: 'rowAtTime',
+          req: msg.req,
+          sub: msg.sub,
+          key: row?.key,
+          at: row && 'at' in row ? row.at : undefined,
+          cached: true,
+        });
+      } else if (msg.t === 'heartbeat') post({ t: 'heartbeat' });
       else if (msg.t === 'detach') {
         clearInterval(liveTimer);
         core.dispose();
@@ -190,6 +206,7 @@ export function createMockEngine(post: (msg: FromEngine) => void, now = Date.now
       } else if (msg.t === 'publicKey') act.publicKey(msg);
       else if (msg.t === 'configure') {
         config = msg.config;
+        core.clientTag = config.clientTag !== false;
         if (!started && config.mock?.accounts === 'none') core.who.clear();
         if (started) live();
         else start();
@@ -252,7 +269,7 @@ export function createMockEngine(post: (msg: FromEngine) => void, now = Date.now
             : s.entries.findIndex((e) => e.key === (msg.anchor as { key: string }).key);
         const at = Math.max(0, found);
         s.live = msg.anchor === 'top' || found < 0;
-        s.start = Math.max(0, at - msg.before);
+        s.start = Math.max(0, at - (msg.retainAbove ? 6000 : msg.before));
         s.end = Math.min(s.entries.length, at + msg.after);
         s.windowed = true;
         s.ops = [];

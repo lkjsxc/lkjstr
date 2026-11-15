@@ -69,18 +69,14 @@ impl Engine {
 }
 
 impl Engine {
-    /// Empty filtered windows have no frontend anchor to request more history.
+    /// Refill incomplete windows after EOSE, including inclusive timestamp overlap.
     pub(super) fn refill_history(&mut self, now: u64) {
-        if !self.signed_out_global_filter {
-            return;
-        }
         let subs: Vec<_> = self
             .views
             .iter()
             .filter(|(_, v)| {
                 v.visible
-                    && v.query.account.is_none()
-                    && v.query.source == Source::Global
+                    && paged(v)
                     && !exhausted(&self.network, &self.store, v)
                     && self.network.page_finished(
                         v.history
@@ -90,11 +86,26 @@ impl Engine {
             })
             .filter_map(|(sub, v)| {
                 let events = query::events(&self.store, &v.query);
-                let (raw, held) = windows::selection(&self.store, &self.network, v, true, &events);
-                (raw.end == events.len()
+                let (raw, held) = windows::selection(
+                    &self.store,
+                    &self.network,
+                    v,
+                    self.signed_out_global_filter,
+                    &events,
+                );
+                let at = v
+                    .anchor
+                    .as_ref()
+                    .and_then(|id| events.iter().position(|e| e.id == *id))
+                    .unwrap_or(0);
+                let needed = at.saturating_add(v.after).saturating_add(1).min(6000);
+                let filtered = self.signed_out_global_filter
+                    && v.query.account.is_none()
+                    && v.query.source == Source::Global
                     && held.iter().filter(|h| h.is_none()).count()
-                        < windows::range(v, &events).len())
-                .then(|| sub.clone())
+                        < windows::range(v, &events).len();
+                (raw.end == events.len() && (events.len() < needed || filtered))
+                    .then(|| sub.clone())
             })
             .collect();
         let mut changed = false;

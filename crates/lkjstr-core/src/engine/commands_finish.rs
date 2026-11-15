@@ -15,6 +15,9 @@ impl Engine {
         if let Some(previous) = previous {
             if !value
                 && !previous.content.is_empty()
+                && !(previous.kind == 3
+                    && serde_json::from_str::<serde_json::Value>(&previous.content)
+                        .is_ok_and(|v| v.is_object()))
                 && !previous
                     .tags
                     .iter()

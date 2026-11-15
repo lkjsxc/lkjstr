@@ -90,6 +90,7 @@ export function createActions(core: Core) {
             quote: w.draft.quote,
             cw: w.draft.cw,
             pending: true,
+            client: core.clientTag ? 'lkjstr' : undefined,
             media: (w.draft.media ?? []).map((m) => ({
               type: m.type,
               url: m.url,

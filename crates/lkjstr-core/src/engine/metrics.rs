@@ -6,6 +6,7 @@ pub struct Metrics {
     pub last_tick_ms: f64,
     pub max_tick_ms: f64,
     pub ticks: u64,
+    pub served_from_cache: u64,
     pub verify_queue_peak: usize,
     pub last_commit_ms: f64,
     pub commits: u64,

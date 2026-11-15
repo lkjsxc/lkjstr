@@ -4,10 +4,13 @@ impl Engine {
     pub fn input(&mut self, input: Input, now: u64) {
         match input {
             Input::Open { sub, query } => {
+                self.discovery_paused = false;
                 if self.views.len() >= 128 && !self.views.contains_key(&sub) {
                     self.error(Some(sub), "subscription-limit");
                     return;
                 }
+                self.metrics.served_from_cache +=
+                    super::query::events(&self.store, &query).len().min(50) as u64;
                 self.views.insert(
                     sub.clone(),
                     View {
@@ -38,7 +41,7 @@ impl Engine {
             } => {
                 if let Some(v) = self.views.get_mut(&sub) {
                     v.anchor = anchor;
-                    v.before = before.min(100);
+                    v.before = before.min(6000);
                     v.after = after.min(200);
                     self.advance_history(&sub);
                     self.replan(now);
@@ -61,6 +64,7 @@ impl Engine {
                 page_hidden,
                 ..
             } => {
+                self.discovery_paused = page_hidden;
                 for (id, v) in &mut self.views {
                     v.visible = !page_hidden && visible_subs.contains(id);
                 }

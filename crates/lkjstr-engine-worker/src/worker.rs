@@ -168,9 +168,12 @@ fn pump(host: &Rc<RefCell<Host>>) {
                                     let at = h.time();
                                     h.engine.network.connected(&relay, at)
                                 }
-                                SocketEvent::Closed(_) => {
+                                SocketEvent::Closed(reason) => {
                                     let at = h.time();
-                                    h.engine.network.disconnected(&relay, at)
+                                    h.engine.network.disconnected(&relay, at);
+                                    if let Some(r) = h.engine.network.relays.get_mut(&relay) {
+                                        r.last_error = Some(reason.chars().take(512).collect());
+                                    }
                                 }
                                 SocketEvent::Message(text) => {
                                     let at = h.time();

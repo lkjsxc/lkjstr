@@ -38,7 +38,29 @@ impl Host {
             }
             return;
         }
+        if let W::Configure { config } = &input {
+            self.engine.client_tag = config.client_tag.unwrap_or(true);
+        }
         match input {
+            W::Stats { req } => {
+                self.scope.direct(
+                    id,
+                    &lkjstr_core::engine::wire::Output::Stats {
+                        req,
+                        stats: self.engine.stats(),
+                    },
+                );
+                return;
+            }
+            W::RowAtTime { req, sub, at } => {
+                if let Some(session) = self.sessions.get(&id) {
+                    self.scope.direct(
+                        id,
+                        &session.borrow().row_at_time(req, sub, at, &self.engine),
+                    );
+                }
+                return;
+            }
             W::Signed {
                 ref req, ref event, ..
             } if self.upload_auth.contains_key(&(id, req.clone())) => {
@@ -214,17 +236,6 @@ impl Host {
                 }
             }
             _ => {}
-        }
-    }
-}
-#[cfg(feature = "harness")]
-#[wasm_bindgen]
-impl WorkerHandle {
-    pub fn set_test_relays(&mut self, urls: JsValue) {
-        if let Ok(relays) = serde_wasm_bindgen::from_value::<Vec<String>>(urls) {
-            let mut h = self.host.borrow_mut();
-            let at = h.time();
-            h.engine.input(Input::Configure { relays }, at);
         }
     }
 }
