@@ -1,6 +1,5 @@
 /* Stats: five figures, then a row per relay. Numbers are tabular and right-aligned; marks are words; bars are grey. */
 .statsv:focus { outline: none; }
-.statsv > * { max-width: 920px; }
 .sfigs { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); margin-bottom: 14px; border-bottom: 1px solid var(--line); }
 .sfig { min-width: 0; padding: 2px 14px 10px 0; }
 .slabel { color: var(--faint); font-size: 12.5px; }

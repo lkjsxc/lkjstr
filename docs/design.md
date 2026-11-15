@@ -76,7 +76,7 @@ text, still reaches 4.5:1 on `--bg`. The theme follows the device or Settings.
 - The default layout, also what "Reset layout" gives: Global and Home at
   the left; at the right Post over Accounts, Notifications, Settings. One
   tile under 760px. Views respond to their tile (container queries).
-- A list in a tile wider than a page keeps a 720px measure in its middle.
+- A list fills its tile. Only media, single form controls and prose pages keep a measure of their own.
 
 ## Signed out, and accounts
 

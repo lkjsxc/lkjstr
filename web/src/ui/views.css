@@ -1,7 +1,5 @@
 /* Feeds, the filter bar, the composer. */
 .feed { position: relative; }
-/* A tile wider than a page: the list keeps a reading measure in the middle of it. */
-.feed > .fslot, .feed > .fpin, .feed > .list, .feed > .fstate { max-width: 720px; margin-inline: auto; }
 /* The filter row is the first row of the content and scrolls away with it. Only the new-notes pill is pinned. */
 .fpin { position: sticky; top: 0; z-index: 3; height: 0; }
 .view:focus { outline: none; }

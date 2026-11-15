@@ -218,19 +218,23 @@ try {
   await channelScenarios({ page, launch, check, fake });
   if (shots) {
     // Signed in, the ordinary layout as it starts, in Japanese (the language is put back afterwards).
-    await page.evaluate(() => {
-      for (const key of Object.keys(localStorage))
-        if (/^lkjstr:(layout|view):main/.test(key)) localStorage.removeItem(key);
-      localStorage.setItem('lkjstr:settings', '{"language":"ja"}');
-    });
+    // Use the reader's reset: deleting storage bypasses the live WM store, whose
+    // pending save can restore the old layout on pagehide with Home behind Post.
+    await page.locator('.pane.cur .strip').getByTitle('Tile menu', { exact: true }).click();
+    await page.locator('.menu button').getByText('Reset layout', { exact: true }).click();
+    await page.locator('.view[data-kind="home"] .note').first().waitFor();
+    check('Reset layout brings Home forward with real notes after Channels and Stats');
+    await page.evaluate(() => localStorage.setItem('lkjstr:settings', '{"language":"ja"}'));
     await page.reload();
     await page.locator('.view[data-kind="home"] .note').first().waitFor();
     await page.waitForTimeout(1200);
+    check('reset Home survives reload in Japanese', (await page.locator('.pane').count()) === 3);
     await shot(page, 'slice-signedin-1440-ja.png');
     await page.evaluate(() => localStorage.removeItem('lkjstr:settings'));
     await page.reload();
     await page.locator('.view[data-kind="home"] .note').first().waitFor();
   }
+  if (shots) check('reset Home survives another reload in English');
   await launch('Settings', 'settings');
   await page.getByLabel('Theme', { exact: true }).selectOption('dark');
   await page.reload();
@@ -280,12 +284,12 @@ try {
   );
   await page.reload();
   await page.getByLabel('Relay address', { exact: true }).waitFor();
-  check(
-    'signed-out relay edit survives reload',
-    (await page
-      .locator(`[data-entry="set.relayList"] .rhost[title^="${relayUrl}/visitor"]`)
-      .count()) === 1,
+  // The form mounts before the engine returns its persisted relay rows.
+  const visitorRelay = page.locator(
+    `[data-entry="set.relayList"] .rhost[title^="${relayUrl}/visitor"]`,
   );
+  await visitorRelay.waitFor();
+  check('signed-out relay edit survives reload', (await visitorRelay.count()) === 1);
   check('no page errors', errors.length === 0);
 } catch (error) {
   checks.failure = String(error);

@@ -67,7 +67,8 @@ try {
         const launch = (word: string, kind: string) => async (page: Page) => {
           await page.keyboard.press('Alt+Shift+N');
           await page.keyboard.type(word);
-          await page.locator('.ncard > b').getByText(word, { exact: true }).click();
+          // View choices precede Docs pages that can share their title (Relays).
+          await page.locator('.ncard > b').getByText(word, { exact: true }).first().click();
           await page.waitForSelector(`.view[data-kind="${kind}"] > *`);
         };
         await scene('home', '/', async () => undefined);
