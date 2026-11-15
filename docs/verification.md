@@ -175,12 +175,8 @@ width and 160px height, horizontal overflow, available text measure and inactive
 close visibility. The tab suite exercises closing, focus order, duplicate views,
 pinning, rapid closing, Escape drag cancellation, arrow keys and 40px resizing.
 
-Keyboard review covers named controls on each view, palette navigation, tab
-focus and closing, detail navigation, workspace shortcuts and Alt+Enter zoom.
-Settings is also captured at 200 percent with reduced motion. Full modal focus
-trapping, palette arrow selection, long-press menus, complete touch targets and
-screen-reader testing with a real assistive-technology session remain open.
-The 56px tab/44px touch-target conflict is in [design-review.md](design-review.md).
+Keyboard and narrow-screen results are historical; assistive-technology and
+complete touch testing remain open. See design-review.md for conflicts.
 
 The address suite checks root/default behavior, ignored old hashes, focused
 public paths, titles, replace/push history, layout-preserving deep links,
@@ -191,10 +187,14 @@ Docker Compose verification cannot run under the explicit instruction to write
 only inside this worktree: it writes image and container data to daemon storage.
 No service was stopped/restarted, no commit made, and no deployment performed.
 
-## Layout/navigation review (2026-11-14)
+## Worker engine (2026-11-14)
 
-Native `navigation_review_test` covers public-identity reloads, full-distance
-history with exhaustion, and atomic bank imports in both move directions.
-All 129 browser smoke checks pass, including relay/reply reload state, two-page
-moves and `history.go(-2)`/`history.go(2)`. All four quiet gates pass.
-Docker remains excluded by the worktree-only write rule.
+All 39 native engine tests and three protocol/storage/upload tests pass.
+53 headless checks pass; the optional physical-row benchmark adds one check.
+The freshly fetched TypeScript contract validates every reply. Scenarios cover
+all mock message/action names and sources, uploads, accounts and leader loss.
+Reports: tmp/engine-harness/{report,cold-start}.json. The 100000-row cold start
+measured ready 40.2 ms, first rows 61.0 ms, and 2000 verified rows 2001.5 ms.
+verify:quiet passes fmt, native/WASM clippy, workspace tests and release build.
+Jobs/threads are capped; caches stay in the worktree. Docker is excluded because
+its storage is outside the worktree. Packaging and limits: engine-package.md.

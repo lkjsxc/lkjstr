@@ -19,6 +19,10 @@ Engine and the earlier Leptos interface (`crates/`):
 - [architecture.md](architecture.md): crates, runtime, orchestration, storage.
 - [verification.md](verification.md): gates, browser checks and their results.
 - [decisions.md](decisions.md): durable decisions and why.
+- [engine.md](engine.md): the engine Worker and how it serves the protocol.
+- [engine-package.md](engine-package.md): building the Worker assets for `web/`.
+- [engine-performance.md](engine-performance.md): measurements.
+- [engine-proposals.md](engine-proposals.md): protocol proposals and their outcome.
 - [parity.md](parity.md): audited client capability inventory.
 - [details.md](details.md): observed frictions and fixes.
 - [workspace.md](workspace.md): the Leptos workspace; superseded by

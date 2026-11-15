@@ -43,5 +43,11 @@ impl Store {
                 self.remove(&id);
             }
         }
+        while self.payload_bytes > self.byte_cap {
+            let Some((_, id)) = self.by_time.first().cloned() else {
+                break;
+            };
+            self.remove(&id);
+        }
     }
 }

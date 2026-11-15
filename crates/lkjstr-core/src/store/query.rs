@@ -30,13 +30,7 @@ impl Store {
                 None => return Vec::new(),
             },
             None => match &query.authors {
-                Some(authors) if authors.len() == 1 => {
-                    let author = authors.iter().next().map(String::as_str).unwrap_or("");
-                    match self.by_author.get(author) {
-                        Some(set) => Box::new(set.iter().rev()),
-                        None => return Vec::new(),
-                    }
-                }
+                Some(authors) => Box::new(self.author_feed(authors)),
                 _ => Box::new(self.by_time.iter().rev()),
             },
         };
@@ -84,6 +78,11 @@ impl Store {
                 continue;
             }
             if let Some(event) = self.get(&id).filter(|event| event.kind == 1) {
+                queue.extend(
+                    [reply_parent(&event), reply_root(&event)]
+                        .into_iter()
+                        .flatten(),
+                );
                 out.push(event);
             }
             for child in self.by_tag_e.get(&id).into_iter().flatten() {

@@ -21,6 +21,14 @@ fn push(items: &mut Vec<String>, item: String, cap: usize) {
 /// Profiles/references for 60 rows; deletion watches for all 600 renderable rows.
 /// At most 120 missing targets, 120 people, 12 hints per want and 720 watches.
 pub fn collect(rows: &[Event], store: &Store) -> Prefetch {
+    collect_bounded(rows, store, 60)
+}
+
+/// Engine windows contain at most 301 rows; output retains the same 120-target cap.
+pub fn collect_window(rows: &[Event], store: &Store) -> Prefetch {
+    collect_bounded(rows, store, 301)
+}
+fn collect_bounded(rows: &[Event], store: &Store, hydration_rows: usize) -> Prefetch {
     let mut out = Prefetch::default();
     for event in rows.iter().take(600) {
         push(&mut out.deletions, event.id.clone(), 720);
@@ -33,7 +41,7 @@ pub fn collect(rows: &[Event], store: &Store) -> Prefetch {
             }
         }
     }
-    for event in rows.iter().take(60) {
+    for event in rows.iter().take(hydration_rows) {
         for key in
             std::iter::once(event.pubkey.clone()).chain(tag_values(event, "p").into_iter().take(3))
         {

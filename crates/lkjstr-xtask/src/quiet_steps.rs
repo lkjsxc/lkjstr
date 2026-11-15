@@ -31,6 +31,8 @@ pub fn rust_steps() -> Vec<Step> {
         "clippy",
         "-p",
         "lkjstr-web",
+        "-p",
+        "lkjstr-engine",
         "--target",
         "wasm32-unknown-unknown",
         "--",

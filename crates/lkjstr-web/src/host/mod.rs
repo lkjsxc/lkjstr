@@ -2,7 +2,6 @@
 //! in lkjstr-core.
 
 pub mod idb;
-mod idb_commit;
 pub mod nip07;
 pub mod promise;
 pub mod socket;

@@ -59,6 +59,10 @@ with Trunk into the same `dist/`; do not run them over a frontend build you
 mean to publish. State and gates: [docs/status.md](docs/status.md) and
 [docs/verification.md](docs/verification.md).
 
+The new Rust/WASM Worker engine is in `crates/lkjstr-engine`; its protocol,
+SharedWorker entry, test harness and current limits are in
+[docs/engine.md](docs/engine.md). The Leptos app remains during frontend cutover.
+
 ## Repository map
 
 - `web/`: the frontend (`src/`, `scripts/`, `tests/`).

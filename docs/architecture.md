@@ -10,6 +10,7 @@ How lkjstr is put together, for anyone changing it.
 | --- | --- | --- |
 | `lkjstr-nips` | Pure Nostr codecs, cryptography and policy | none |
 | `lkjstr-protocol` | Nostr kernel: events, signing, NIP-19, filters, messages | none |
+| `lkjstr-engine` | Worker host, sockets, IndexedDB, timers | yes, no DOM |
 | `lkjstr-core` | Layout, workspace, store, planner, scoring, timelines, content | none |
 | `lkjstr-web` (root package) | Leptos UI, runtime, host adapters | yes |
 | `lkjstr-xtask` | Repository checks and quiet gates | none |
@@ -24,6 +25,9 @@ plan reconciliation, queue eligibility, authentication retries and lookup
 states; `actions` guards publication inputs and verifies external signer responses; `pagination` tracks raw pages.
 `lkjstr-web` holds effects only: sockets, IndexedDB, timers, NIP-07 and rendering. JavaScript is
 limited to what Trunk and wasm-bindgen generate to load the module.
+
+The new Worker boundary and message flow are in [engine.md](engine.md).
+The flow below describes the retained Leptos application during cutover.
 
 ## Data flow
 

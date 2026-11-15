@@ -9,7 +9,10 @@ pub fn content_derived_tags(
     base_tags: &[NostrTag],
 ) -> Vec<NostrTag> {
     let mut tags = base_tags.to_vec();
-    for tag in mention_tags(content) {
+    for tag in hashtag_tags(content)
+        .into_iter()
+        .chain(mention_tags(content))
+    {
         append_unique(&mut tags, tag);
     }
     for tag in emoji_tags(content, emojis) {
@@ -123,4 +126,14 @@ fn is_word_boundary(bytes: &[u8], index: usize) -> bool {
 
 fn is_ascii_word(byte: u8) -> bool {
     byte.is_ascii_alphanumeric() || byte == b'_'
+}
+
+fn hashtag_tags(content: &str) -> Vec<NostrTag> {
+    content
+        .split_whitespace()
+        .filter_map(|word| word.strip_prefix('#'))
+        .map(|tag| tag.trim_end_matches(|c: char| !c.is_alphanumeric() && c != '_'))
+        .filter(|tag| !tag.is_empty())
+        .map(|tag| vec!["t".into(), tag.to_lowercase()])
+        .collect()
 }
