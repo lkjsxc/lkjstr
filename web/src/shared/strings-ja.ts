@@ -238,8 +238,6 @@ export const ja: Record<keyof typeof en, string> = {
   'relays.invalid': 'リレーのアドレスではありません',
   'relays.already': 'すでにリストにあります',
   'relays.none': 'リストが空です。リレーを追加するまで、読むことも投稿することもできません。',
-  'relays.others': 'ほかに使用中',
-  'relays.unused': '使っていないリレー（{n}）',
   'list.add': '追加',
   'list.remove': '{what} を外す',
   'list.already': 'すでにリストにあります',

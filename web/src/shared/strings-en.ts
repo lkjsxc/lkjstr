@@ -236,8 +236,6 @@ export const en = {
   'relays.invalid': 'That is not a relay address',
   'relays.already': 'Already on your list',
   'relays.none': 'Your list is empty. Nothing can be read or posted until a relay is added.',
-  'relays.others': 'Also in use',
-  'relays.unused': 'Not in use ({n})',
   'list.add': 'Add',
   'list.remove': 'Remove {what}',
   'list.already': 'Already on the list',

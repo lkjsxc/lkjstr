@@ -1052,10 +1052,12 @@ async function pages(browser: Browser, still: Record<string, unknown>): Promise<
   const rv = '.view[data-kind="relays"]';
   await page.locator(`${rv} .rrow`).first().waitFor();
   fact(
-    'relays: the list, the others in use, the rest folded',
+    'relays: one flat list, the reader’s own first, nothing folded away',
     (await count(page, `${rv} .rrow:has(.ruse)`)) === 4 &&
-      (await count(page, `${rv} .rfold:not([open])`)) === 1,
-    await count(page, `${rv} .rrow:has(.ruse)`),
+      (await count(page, `${rv} .rrow`)) > 4 &&
+      (await count(page, `${rv} details, ${rv} h3`)) === 0 &&
+      (await count(page, `${rv} .rlist`)) === 1,
+    [await count(page, `${rv} .rrow:has(.ruse)`), await count(page, `${rv} .rrow`)],
   );
   const texts = await page.locator(`${rv} .rrow:has(.ruse) .rsub`).allInnerTexts();
   fact(
