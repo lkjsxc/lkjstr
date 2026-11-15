@@ -10,6 +10,7 @@ import { resolve, join, extname } from 'node:path';
 import { chromium } from 'playwright-core';
 import bundle from 'playwright-core/lib/utilsBundle';
 import { fakeRelay } from './browser-relay.mjs';
+import { fakeBunker } from './browser-bunker.mjs';
 import { spawn } from 'node:child_process';
 import { createInterface } from 'node:readline';
 const root = resolve('tmp/engine-pkg'), out = resolve('tmp/engine-harness');
@@ -39,25 +40,10 @@ const binary = process.env.LKJSTR_CHROME ?? `${base}/${(await readdir(base)).fil
 const browser = await chromium.launch({executablePath:binary,args:['--no-sandbox']});
 const context = await browser.newContext();
 const fake = fakeRelay(), errors = [], checks = {};
-const bunker=spawn('cargo',['run','-q','-p','lkjstr-core','--example','engine-bunker'],{stdio:['pipe','pipe','pipe']});
-bunker.stderr.resume();
-const bunkerLines=createInterface({input:bunker.stdout})[Symbol.asyncIterator]();
-const bunkerKey=JSON.parse((await bunkerLines.next()).value).pubkey;
-let rpcChain=Promise.resolve();
-function bunkerRoute(ws) {
-  let sub;
-  ws.on('message',raw=>{
-    const msg=JSON.parse(String(raw));
-    if(msg[0]==='REQ')sub=msg[1];
-    if(msg[0]==='EVENT') rpcChain=rpcChain.then(async()=>{
-      bunker.stdin.write(`${JSON.stringify(msg[1])}\n`);
-      const event=JSON.parse((await bunkerLines.next()).value);
-      if(ws.readyState===1)ws.send(JSON.stringify(['EVENT',sub,event]));
-    });
-  });
-}
+const bunker=await fakeBunker();
+const bunkerKey=bunker.pubkey;
 const wsServer=new bundle.wsServer({server});
-wsServer.on('connection',(ws,req)=>{if(req.url==='/bunker'){return bunkerRoute(ws);}fake.route({send:(text)=>ws.send(text),onMessage:(fn)=>ws.on('message',fn),onClose:(fn)=>ws.on('close',fn)});});
+wsServer.on('connection',(ws,req)=>{if(req.url==='/bunker'){return bunker.route(ws);}fake.route({send:(text)=>ws.send(text),onMessage:(fn)=>ws.on('message',fn),onClose:(fn)=>ws.on('close',fn)});});
 await context.route('**/*', (r) => {
   if(r.request().url().startsWith('https://nip96.engine.test/')) {
     if(r.request().url().endsWith('/upload'))return r.fulfill({status:404,body:''});
@@ -194,10 +180,10 @@ try {
   assertCoverage(sentKinds,mockMessageKinds,'mock message');
   check('all message kinds handled by the current mock were driven',true);
   check('no page errors',errors.length===0);
-} catch(e) { checks.failure=String(e); checks.debug=await page.evaluate(()=>window.messages).catch(()=>[]); checks.relay={opened:fake.opened(),connections:fake.connections()}; }
+} catch(e) { checks.failure=String(e); checks.debug=await page.evaluate(()=>window.messages.map(m=>m.key?{...m,key:'[redacted]'}:m)).catch(()=>[]); checks.relay={opened:fake.opened(),connections:fake.connections()}; }
 finally {
   await writeFile(join(out,'report.json'),JSON.stringify({checks,errors},null,2));
-  bunker.stdin.end();
+  await bunker.close();
   await browser.close();wsServer.close();await new Promise((ok)=>server.close(ok));
 }
 console.log(JSON.stringify({checks,errors}));

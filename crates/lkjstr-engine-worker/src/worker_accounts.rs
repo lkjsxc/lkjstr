@@ -131,7 +131,7 @@ pub(super) fn pump_accounts(host: &Rc<RefCell<Host>>) {
                                     Err(code) => Err(code),
                                 }
                             } else {
-                                Err("signer-refused")
+                                Err(connect.err().unwrap_or("signer-refused"))
                             }
                         }
                         None => Err("rejected"),

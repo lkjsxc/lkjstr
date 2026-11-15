@@ -27,27 +27,59 @@ note count requests batch 120 IDs with 200-event pages and release with views.
 Empty/failed/timed-out/truncated responses and count-only updates have tests.
 Observed untrusted zap receipts keep counts partial pending trust validation.
 
-Visitor relays.save accepts an empty account and validates the complete list.
-The existing startup adapter persists confirmed edits under the visitor key.
-Settings still blocks the action before it reaches the Worker. The real smoke
-attempts the interface edit and requires it to survive reload; this requirement
-remains a release blocker, without bypassing the interface in the test.
+Visitor relay editing and persistence now pass through Settings, including a
+reload, on main eb722771. The earlier account-only frontend guard is fixed.
+
+## Signer follow-up
+
+The browser conformance harness now exercises account.key. Explicit local
+backup returns nsec; extension backup is unsupported and missing accounts return
+not-found. Secrets are validated in memory and erased from failure diagnostics.
+
+The real-engine smoke injects window.nostr before load. Discovery and signing
+rejection return signer-refused; nonresponse reaches the real 60-second deadline
+and returns protocol code signer-missing. Navigation/input stay usable and a
+failed send retains its draft and retry control. The ordinary extension path
+still signs in, posts, reacts and signs out through the interface.
+
+The encrypted loopback bunker covers connect without a token, required-token
+refusal/success, signing, reload without reconnect authorization, signer refusal,
+disappearance during an outstanding signing request, and retry after recovery.
+Reload keeps the same device public key. Account removal is confirmed
+through the interface and survives reload. No bunker URL, token or device
+credential is written to interface storage or diagnostics.
+
+Remote RPC errors previously collapsed to a generic signing refusal, including
+an unavailable bunker. The Worker now preserves signer-missing/signer-refused,
+and rejects promptly once all RPC sockets close. All sockets are still released
+on success, refusal and timeout; one failed relay cannot cancel another live one.
+
+Six native pagination tests pass with the review fixes and fail against all five
+scheduler files from fc3cf32a's parent. They prove original-filter replay before
+EOSE, historical coverage/cursor retention after short live resumption, continued
+scrolling into history, and repeated disconnect/reconnect. Mutation was confined
+to this worktree and all five files were restored byte-for-byte. Evidence:
+tmp/preemption-regression.json, preemption-old.log and preemption-current.log.
 
 ## For the frontend
 
-Allow bootstrap relay edits in settings-relays.ts without the account-only
-note-actions.act guard. Send relays.save with as set to the empty string while
-signed out. Engine support and confirmed-edit persistence are present.
+- Flush the current composer text before reload/pagehide, or save it immediately
+  on input. A rapid NIP-07 rejection followed by reload can beat the 300 ms
+  debounced save and lose the draft. The real smoke retains this failing check;
+  the text remains intact before reload, and the timeout/reload variant passes.
+  See web/src/views/compose.ts and tmp/signer-reject-sign.json (booleans only).
 
 ## Verification
 
-All four root gates pass: check:repo, test:quiet, rust-wasm:quiet, verify:quiet.
-Frontend check, build and smoke pass. smoke:real has 30 passing checks, no page
-errors, and fails at the signed-out relay edit. Its reload assertion cannot run.
-The blocked edit is a product failure, not a network failure; the gate is intact.
-Reports and individual gate logs are in ignored tmp/.
-The real build is packaged at tmp/lkjstr-dist.tar.gz for review, not release.
+check:repo, test:quiet, rust-wasm:quiet, verify:quiet and web check pass.
+engine-check passes all 57 conformance checks and its delayed-profile probe.
+smoke:real passes 71/72 checks with no page errors; only the deterministic
+rejected-send/reload draft check fails. The page clock pauses inside the 300 ms
+save window while Worker timeouts use real time. Results are recorded in
+tmp/gates.json and tmp/gate-*.log.
+The real-engine and conformance reports are tmp/smoke-real/report.json and
+tmp/engine-harness/report.json. The draft persistence failure is kept as a release
+blocker; engine-only changes cannot repair the frontend debounce policy.
+All runs use fresh browser data, fresh loopback ports and intercepted HTTP.
 Docker, deployment, production access and public-relay tests are excluded.
-
-Candidate: 760252 bytes; SHA-256:
-38d59d49bf5e4cb311ea14061782133030d3f95476325d39d881d2d3e551a486
+No commits, CI edits, existing-service restarts or reader-visible edits were made.

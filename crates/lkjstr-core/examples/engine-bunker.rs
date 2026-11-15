@@ -8,7 +8,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let key = SecretKey::from_bytes(*secret.as_bytes())?;
     println!("{}", json!({"pubkey":key.public_key()}));
     for line in io::stdin().lock().lines() {
-        let event: p::NostrEvent = serde_json::from_str(&line?)?;
+        let input: Value = serde_json::from_str(&line?)?;
+        let event: p::NostrEvent = serde_json::from_value(input["event"].clone())?;
         if !matches!(p::verify_event(&event), p::VerificationResult::Ok(_)) {
             return Err("invalid RPC event".into());
         }
@@ -17,7 +18,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .map_err(|_| "invalid peer")?;
         let conversation = nip44::conversation_key(&key, &peer)?;
         let request: Value = serde_json::from_str(&nip44::decrypt(&event.content, &conversation)?)?;
-        let result = match request["method"].as_str() {
+        let method = request["method"].as_str().ok_or("missing method")?;
+        let authorized = (method != "connect"
+            || !input["require_secret"].as_bool().unwrap_or(false)
+            || request["params"][1] == "fixture-authorization")
+            && !(method == "sign_event" && input["refuse_sign"].as_bool().unwrap_or(false));
+        let result = match Some(method) {
             Some("connect") => "ack".to_owned(),
             Some("get_public_key") => key.public_key(),
             Some("sign_event") => {
@@ -32,7 +38,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         };
         let nonce = p::generate_secret_key();
         let content = nip44::encrypt(
-            &json!({"id":request["id"],"result":result}).to_string(),
+            &if authorized {
+                json!({"id":request["id"],"result":result})
+            } else {
+                json!({"id":request["id"],"error":"not authorized"})
+            }
+            .to_string(),
             &conversation,
             nonce.as_bytes(),
         )?;
@@ -47,7 +58,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             &p::bytes_to_hex(secret.as_bytes()),
         )
         .map_err(|_| "signing failed")?;
-        println!("{}", serde_json::to_string(&response)?);
+        println!(
+            "{}",
+            json!({"event":response,"method":method,"authorized":authorized})
+        );
     }
     Ok(())
 }

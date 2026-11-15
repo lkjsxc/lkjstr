@@ -142,8 +142,8 @@ production access, CI edit or existing-service restart is performed.
 
 The branch-review fixes add five native regression tests for first-list guards,
 cache eviction, search routing, signer replacement and decrypted mute policy.
-All four quiet gates pass; the rebuilt Worker passes 53 local browser checks
-using the existing fetched contract. Report: tmp/engine-harness/report.json.
+The earlier branch-review run passed all four quiet gates and 53 local browser
+checks using the then-fetched contract. Report: tmp/engine-harness/report.json.
 
 ## One product
 
@@ -157,3 +157,22 @@ be run in this environment. Historical UI results do not verify this product.
 
 Review regressions cover nonnegative numeric counts, filtered-window refill,
 anchorless history fetches, and refused, timed-out or truncated profile lookups.
+
+## Signer conformance follow-up (2026-11-15)
+
+The harness now exercises account.key backup, external-signer refusal and
+missing accounts; backup payloads are redacted before failure diagnostics.
+Real-engine signer checks inject NIP-07 before load and exercise rejection and
+real 60-second deadlines for discovery/signing, with navigation and draft checks.
+A shared loopback NIP-46 fixture checks optional/required connect tokens, signing,
+reload credential reuse, refusal, disappearance during signing and recovery.
+Remote RPC failures retain signer-refused versus signer-missing; losing all RPC
+sockets now fails immediately and releases sockets instead of waiting a minute.
+
+Six pagination regressions pass with the review fixes restored and fail against
+fc3cf32a's parent, including disconnect/reconnect as well as profile preemption.
+Evidence is in tmp/preemption-regression.json and the adjacent test logs.
+The fast-rejection/reload check exposes a frontend draft-save race; see
+integration-release.md. All four root gates and web check pass; conformance is
+57/57 and real smoke is 71/72, failing only the deterministic draft reload check.
+No views, styles, strings or frontend policy were edited.

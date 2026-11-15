@@ -64,6 +64,13 @@ export async function conformance({page,send,wait,check,note,signer,lines,origin
   check('local account creation commits',(await act({a:'account.add',how:'create'})).ok);
   const accounts=(await messages()).filter((m)=>m.t==='accounts').at(-1);
   const local=accounts.accounts.find((a)=>a.signer==='local').author.pubkey;
+  const backup=await act({a:'account.key',pubkey:local});
+  check('explicit local backup returns nsec',backup.ok && /^nsec1/.test(backup.key));
+  // Validate in memory, then erase the secret before any failure diagnostics.
+  validateReplies([backup]);
+  await page.evaluate(()=>{for(const m of window.messages)if(m.key)m.key='[redacted]';});
+  check('external account backup is unsupported',(await act({a:'account.key',pubkey:note.pubkey})).error?.code==='unsupported');
+  check('missing account backup is not found',(await act({a:'account.key',pubkey:'0'.repeat(64)})).error?.code==='not-found');
   check('account switching commits',(await act({a:'account.use',pubkey:local})).ok);
   check('seen commits a read watermark',(await act({a:'seen',as:local})).ok);
   check('local signing needs no main-thread signer',(await act({a:'publish',as:local,what:{k:'note',draft:{text:'local signing fixture'}}})).ok);

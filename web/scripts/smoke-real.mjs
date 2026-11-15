@@ -1,13 +1,17 @@
 // End-to-end app check. Serve the release with its production CSP; workers can
 // reach only the loopback fixture relay. Public HTTP is blocked in all contexts.
 import { spawn } from 'node:child_process';
-import { randomBytes } from 'node:crypto';
+import { appendFileSync } from 'node:fs';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import { createInterface } from 'node:readline';
 import { chromium } from 'playwright-core';
 import bundle from 'playwright-core/lib/utilsBundle';
+import { fakeBunker } from '../../scripts/browser-bunker.mjs';
 import { fakeRelay } from '../../scripts/browser-relay.mjs';
+import { writeReport } from './smoke-signer-support.mjs';
+import { signerScenarios } from './smoke-signers.mjs';
+import { accounts, installExtension, npub, visitorChecks } from './smoke-visitors.mjs';
 
 const root = new URL('../../', import.meta.url).pathname;
 process.chdir(root);
@@ -23,12 +27,15 @@ signer.stderr.resume();
 const lines = createInterface({ input: signer.stdout })[Symbol.asyncIterator]();
 const fixture = JSON.parse((await lines.next()).value);
 const fake = fakeRelay();
+const bunker = await fakeBunker();
 for (const event of [fixture.note, ...fixture.events]) fake.add(event);
 let signing = Promise.resolve();
 const relay = createServer();
 const ws = new bundle.wsServer({ server: relay });
 const activePaths = new Map(); // bound by the engine's eight relay connections
 ws.on('connection', (socket, req) => {
+  if (req.url === '/bunker' || req.url === '/bunker-secret')
+    return bunker.route(socket, req.url === '/bunker-secret');
   activePaths.set(socket, req.url);
   socket.on('close', () => activePaths.delete(socket));
   fake.route({
@@ -52,38 +59,9 @@ const errors = [],
   checks = {};
 const check = (name, ok = true) => {
   checks[name] = ok ? 'ok' : 'FAIL';
+  appendFileSync('tmp/smoke-real-progress.log', `${checks[name]} ${name}\n`);
   if (!ok) throw new Error(name);
 };
-// The npub of a public key nobody here has metadata for (the curve's generator point: nobody's account).
-const CH = 'qpzry9x8gf2tvdw0s3jn54khce6mua7l';
-const polymod = (values) => {
-  let c = 1;
-  for (const v of values) {
-    const top = c >>> 25;
-    c = ((c & 0x1ffffff) << 5) ^ v;
-    [0x3b6a57b2, 0x26508e6d, 0x1ea119fa, 0x3d4233dd, 0x2a1462b3].forEach((g, i) => {
-      if ((top >>> i) & 1) c ^= g;
-    });
-  }
-  return c;
-};
-const bech32 = (hrp, hex) => {
-  const data = [];
-  let acc = 0;
-  let bits = 0;
-  for (const byte of hex.match(/../g).map((h) => Number.parseInt(h, 16))) {
-    acc = ((acc << 8) | byte) & 0xfff;
-    bits += 8;
-    while (bits >= 5) data.push((acc >>> (bits -= 5)) & 31);
-  }
-  if (bits) data.push((acc << (5 - bits)) & 31);
-  const codes = [...hrp].map((c) => c.charCodeAt(0));
-  const expanded = [...codes.map((c) => c >>> 5), 0, ...codes.map((c) => c & 31)];
-  const mod = polymod([...expanded, ...data, 0, 0, 0, 0, 0, 0]) ^ 1;
-  const sum = Array.from({ length: 6 }, (_, i) => (mod >>> (5 * (5 - i))) & 31);
-  return `${hrp}1${[...data, ...sum].map((i) => CH[i]).join('')}`;
-};
-const npub = bech32('npub', '79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798');
 let browser, page;
 try {
   const base = await new Promise((done, fail) => {
@@ -100,55 +78,31 @@ try {
   await ctx.route('**/*', (route) =>
     route.request().url().startsWith(`${base}/`) ? route.continue() : route.abort(),
   );
-  await ctx.exposeFunction('fixtureSign', (event) => {
+  const fixtureSign = (event) => {
     const task = signing.then(async () => {
       signer.stdin.write(`${JSON.stringify(event)}\n`);
       return JSON.parse((await lines.next()).value);
     });
     signing = task.then(() => undefined);
     return task;
-  });
-  await ctx.addInitScript(
-    ({ relayUrl, pubkey }) => {
-      if (location.protocol !== 'http:') return;
-      if (!localStorage.getItem(`lkjstr:relays:${pubkey}`))
-        localStorage.setItem(
-          `lkjstr:relays:${pubkey}`,
-          JSON.stringify([{ url: relayUrl, read: true, write: true, search: true }]),
-        );
-      if (!localStorage.getItem('lkjstr:relays:'))
-        localStorage.setItem(
-          'lkjstr:relays:',
-          JSON.stringify([{ url: relayUrl, read: true, write: true, search: true }]),
-        );
-      globalThis.nostr = {
-        getPublicKey: async () => pubkey,
-        signEvent: (event) => globalThis.fixtureSign(event),
-      };
-    },
-    { relayUrl, pubkey: fixture.note.pubkey },
-  );
-  ctx.on('page', (page) => page.on('pageerror', (error) => errors.push(String(error))));
+  };
+  await ctx.exposeFunction('fixtureSign', fixtureSign);
+  await installExtension(ctx, relayUrl, fixture.note.pubkey, errors);
   // LKJSTR_SHOTS=1 also writes the review captures of this run to tmp/screens/.
   const shots = process.env.LKJSTR_SHOTS === '1';
   const shot = (p, name) => p.screenshot({ path: `tmp/screens/${name}` });
-  /** A fresh visitor in a context of their own: no account, the loopback relay only. */
-  const visit = async (options, path = '') => {
-    const fresh = await browser.newContext(options);
-    await fresh.route('**/*', (route) =>
-      route.request().url().startsWith(`${base}/`) ? route.continue() : route.abort(),
-    );
-    await fresh.addInitScript((relayUrl) => {
-      localStorage.setItem(
-        'lkjstr:relays:',
-        JSON.stringify([{ url: relayUrl, read: true, write: true, search: true }]),
-      );
-    }, relayUrl);
-    const p = await fresh.newPage();
-    p.on('pageerror', (error) => errors.push(String(error)));
-    await p.goto(base + path);
-    return p;
-  };
+  await signerScenarios({
+    browser,
+    base,
+    relayUrl,
+    pubkey: fixture.note.pubkey,
+    sign: fixtureSign,
+    errors,
+    check,
+    fake,
+    bunker,
+  });
+  const publicationsBeforeApp = fake.published.length;
   page = await ctx.newPage();
   const launch = async (word, kind) => {
     await page.locator('.pane.cur .strip').getByTitle('New tab', { exact: true }).click();
@@ -159,166 +113,7 @@ try {
   await page.goto(base);
   await page.locator('.view[data-kind="global"] .note').first().waitFor();
   check('global renders verified fixture notes');
-  // A first visit, signed out: one tile of readable notes, nothing empty, the way in one press away.
-  const firstRun = await page.evaluate(() => ({
-    panes: document.querySelectorAll('.pane').length,
-    tabs: [...document.querySelectorAll('.tab')].map((t) => t.getAttribute('data-view')),
-    empty: [...document.querySelectorAll('.fstate')].map((e) => e.textContent).join(''),
-    signIn: document.querySelector('.acct.out')?.textContent,
-    oneLine: (document.querySelector('.acct.out')?.getBoundingClientRect().height ?? 99) < 30,
-    off: document.querySelectorAll('.act.off').length > 0,
-    hex: /[0-9a-f]{64}/.test(document.body.innerText),
-  }));
-  check(
-    'signed-out first run is readable, with no empty tile',
-    firstRun.panes === 1 &&
-      firstRun.tabs.join() === 'global' &&
-      firstRun.empty === '' &&
-      firstRun.signIn === 'Sign in' &&
-      firstRun.oneLine &&
-      firstRun.off &&
-      !firstRun.hex,
-  );
-  // Sign in through the interface: the Accounts tab, the browser extension (the fixture signer).
-  await page.locator('.acct.out').click();
-  const accounts = '.view[data-kind="account"]:visible';
-  await page.locator(`${accounts} [data-f="extension"]`).waitFor();
-  check(
-    'sign-in offers the extension and a key field that never echoes; no account is created without a way to its key',
-    (await page.locator(`${accounts} input`).getAttribute('type')) === 'password' &&
-      (await page.locator(`${accounts} [data-f="create"]`).isVisible()),
-  );
-  // The same surface on a phone, dark, in Japanese: the bar fits on one line and nothing is clipped.
-  const phone = await visit({
-    viewport: { width: 390, height: 844 },
-    locale: 'ja-JP',
-    colorScheme: 'dark',
-  });
-  await phone.locator('.view[data-kind="global"] .note').first().waitFor();
-  await phone.locator('.acct.out').click();
-  await phone.locator('.view[data-kind="account"] [data-f="extension"]').waitFor();
-  const bar = await phone.evaluate(() => {
-    const chips = [...document.querySelectorAll('lkjstr-spaces button')];
-    const strip = document.querySelector('lkjstr-spaces').getBoundingClientRect();
-    return {
-      chips: chips.filter((c) => {
-        const b = c.getBoundingClientRect();
-        return b.left >= strip.left - 1 && b.right <= strip.right + 1;
-      }).length,
-      faded: document.querySelector('lkjstr-spaces').className,
-      signIn: document.querySelector('.acct.out').getBoundingClientRect().height,
-      wide: document.documentElement.scrollWidth - innerWidth,
-    };
-  });
-  check(
-    'phone top bar: nine workspaces whole, Sign in on one line',
-    bar.chips === 9 && !bar.faded.includes('more') && bar.signIn < 30 && bar.wide <= 0,
-  );
-  if (shots) {
-    await phone.waitForTimeout(300);
-    await shot(phone, 'slice-signin-390-dark-ja.png');
-  }
-  await phone.context().close();
-  // A person nobody has metadata for: a short npub for a name, no hex anywhere, no count that is not known.
-  const stranger = await visit(
-    { viewport: { width: 1440, height: 900 }, locale: 'en-US', colorScheme: 'dark' },
-    `/p/${npub}`,
-  );
-  await stranger.locator('.profile').waitFor();
-  await stranger.waitForTimeout(800);
-  const pending = await stranger.evaluate(() => ({
-    name: document.querySelector('.pname').textContent,
-    lines: Math.round(
-      document.querySelector('.pname').getBoundingClientRect().height /
-        Number.parseFloat(getComputedStyle(document.querySelector('.pname')).lineHeight),
-    ),
-    tab: document.querySelector('.tab.active > span').textContent,
-    stats: document.querySelector('.pstats').textContent,
-    hex: /[0-9a-f]{64}/.test(document.body.innerText),
-  }));
-  check(
-    'a profile without metadata shows a short npub and no unknown count',
-    /^npub1.{5}…/.test(pending.name) &&
-      pending.lines === 1 &&
-      pending.tab === pending.name &&
-      !pending.stats.includes('+') &&
-      !pending.hex,
-  );
-  if (shots) await shot(stranger, 'slice-profile-pending-1440-dark.png');
-  await stranger.context().close();
-  const created = await visit({ viewport: { width: 1024, height: 768 }, locale: 'en-US' });
-  await created.locator('.acct.out').click();
-  await created.locator(`${accounts} [data-f="create"]`).click();
-  const keyField = created.locator('.kfield');
-  await created.waitForFunction(() => document.querySelector('.kfield')?.value.startsWith('nsec1'));
-  const newKey = await keyField.inputValue();
-  check(
-    'new account opens its masked backup key',
-    (await keyField.getAttribute('type')) === 'password',
-  );
-  await created.locator('.kbox [data-f="show"]').click();
-  check(
-    'explicit backup can reveal the generated key',
-    (await keyField.getAttribute('type')) === 'text',
-  );
-  check(
-    'backup key is absent from interface storage',
-    await created.evaluate(
-      (key) => !Object.values(localStorage).some((v) => v.includes(key)),
-      newKey,
-    ),
-  );
-  await created.locator('.kbox [data-f="done"]').click();
-  await created.locator(`${accounts} [data-f="backup"]`).click();
-  await created.waitForFunction(() => document.querySelector('.kfield')?.value.startsWith('nsec1'));
-  check(
-    'Back up key returns the same local secret',
-    (await created.locator('.kfield').inputValue()) === newKey,
-  );
-  await created.locator('.kbox [data-f="done"]').click();
-  await created.context().close();
-  // A key typed by hand: a throwaway made here, used against the loopback relay only and removed again. It is
-  // held in this process and in the engine, and must be nowhere the interface could leave it.
-  const throwaway = bech32('nsec', randomBytes(32).toString('hex'));
-  const keyed = await visit({ viewport: { width: 1024, height: 768 }, locale: 'en-US' });
-  await keyed.locator('.acct.out').click();
-  await keyed.locator(`${accounts} input`).fill(throwaway);
-  await keyed.locator(`${accounts} input`).press('Enter');
-  await keyed.locator('.acct:not(.out)').waitFor();
-  await keyed.locator('.acct').click();
-  await keyed.locator('.menu button', { hasText: 'Accounts' }).click();
-  await keyed.locator(`${accounts} .arow.on`).waitFor();
-  const kept = await keyed.evaluate(
-    (k) => ({
-      stored: Object.keys(localStorage).some((x) => (localStorage.getItem(x) ?? '').includes(k)),
-      shown: document.body.innerText.includes(k) || document.documentElement.outerHTML.includes(k),
-      address: location.href.includes(k),
-      field: document.querySelector('.view[data-kind="account"] input[type="password"]').value,
-      signer: document.querySelector('.arow.on .asigner')?.textContent,
-      canPost: document.querySelectorAll('.note .act.off').length === 0,
-      backup: document.querySelectorAll('[data-f="backup"]').length,
-    }),
-    throwaway,
-  );
-  check(
-    'a typed key signs in and is kept nowhere by the interface',
-    !kept.stored &&
-      !kept.shown &&
-      !kept.address &&
-      kept.field === '' &&
-      kept.signer === 'Key on this device' &&
-      kept.canPost &&
-      kept.backup === 1,
-  );
-  await keyed.locator(`${accounts} .arow.on [data-f="remove"]`).click();
-  check(
-    'removing an account with a key asks first',
-    (await keyed.locator(`${accounts} .aask`).count()) === 1 &&
-      (await keyed.locator(`${accounts} .arow`).count()) === 1,
-  );
-  await keyed.locator(`${accounts} .aask [data-f="remove"]`).click();
-  await keyed.locator('.acct.out').waitFor();
-  await keyed.context().close();
+  await visitorChecks({ page, browser, base, relayUrl, errors, shots, shot, check });
   await page.locator(`${accounts} input`).fill('not a key');
   await page.locator(`${accounts} input`).press('Enter');
   await page.locator(`${accounts} .asaid.error`).waitFor();
@@ -361,7 +156,7 @@ try {
   await page.locator('.toast', { hasText: 'read-only' }).waitFor();
   check(
     'a press on a read-only action says why and publishes nothing',
-    fake.published.length === 0,
+    fake.published.length === publicationsBeforeApp,
   );
   // Switch back from the top bar, then remove the read-only account (it goes at once, with an Undo).
   await page.locator('.acct').click();
@@ -484,23 +279,11 @@ try {
   checks.failure = String(error);
   if (page) await writeFile('tmp/smoke-real-dom.txt', await page.locator('body').innerText());
 } finally {
-  await mkdir('tmp/smoke-real', { recursive: true });
-  await writeFile(
-    'tmp/smoke-real/report.json',
-    JSON.stringify(
-      {
-        checks,
-        errors,
-        publications: fake.published.map((e) => ({ id: e.id, kind: e.kind })),
-        searches: fake.searches,
-      },
-      null,
-      2,
-    ),
-  );
+  await writeReport(checks, errors, fake);
   await browser?.close();
   server.kill();
   signer.stdin.end();
+  await bunker.close();
   ws.close();
   await new Promise((done) => relay.close(done));
 }

@@ -72,9 +72,11 @@ mock count regression. Results and handoff decisions are in engine-polish.md.
 Historical integration measurements remain in integration-release.md and
 engine-performance.md; old Leptos browser results do not verify this product.
 
-The integration gate record is in integration-release.md. The real smoke now
-requires creation and explicit backup through Accounts, plus signed-out relay
-editing and persistence through Settings. The Settings account guard currently
-blocks that last action; the requirement is retained as a failing release gate.
-Native regressions cover secret redaction and exact/lower-bound counts,
-including count-only completion updates. Docker remains excluded.
+The integration gate record is in integration-release.md. The real smoke covers
+creation/backup, visitor relay persistence, injected extension rejection and
+60-second deadlines, and encrypted bunker connect/sign/reload/outage/recovery.
+Signer scenarios record result codes without retaining action or key payloads.
+A rapid rejected-send/reload currently fails draft persistence; its frontend
+handoff remains a release blocker. Pagination regressions also run against the
+pre-review scheduler in ignored tmp/ evidence, proving they detect the old bugs.
+Docker remains excluded by the worktree-only write rule.

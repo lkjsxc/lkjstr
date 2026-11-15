@@ -5,7 +5,10 @@ use super::{
 };
 use lkjstr_protocol::{RelayMessage, remote::Remote};
 use serde_json::json;
-use std::{cell::RefCell, rc::Rc};
+use std::{
+    cell::{Cell, RefCell},
+    rc::Rc,
+};
 use wasm_bindgen::JsValue;
 type SocketSlot = Rc<RefCell<Option<Socket>>>;
 pub async fn rpc(
@@ -20,9 +23,12 @@ pub async fn rpc(
     let slots: Rc<RefCell<Vec<SocketSlot>>> = Rc::default();
     let request=json!(["REQ",id,{"kinds":[24133],"authors":[remote.peer],"#p":[remote.client().ok_or("internal")?],"since":event.created_at.saturating_sub(60)}]).to_string();
     let publication = json!(["EVENT", event]).to_string();
+    let remaining = Rc::new(Cell::new(remote.relays.len()));
     let done = js_sys::Promise::new(&mut |resolve, reject| {
         for url in &remote.relays {
             let session = remote.clone();
+            let remaining = remaining.clone();
+            let closed = Cell::new(false);
             let id = id.clone();
             let resolve = resolve.clone();
             let reject = reject.clone();
@@ -30,6 +36,8 @@ pub async fn rpc(
             let socket_slot = slot.clone();
             let request = request.clone();
             let publication = publication.clone();
+            let failed = remaining.clone();
+            let fail = reject.clone();
             let result = Socket::connect(url, move |event| match event {
                 SocketEvent::Open => {
                     if let Some(s) = socket_slot.borrow().as_ref() {
@@ -55,11 +63,23 @@ pub async fn rpc(
                         }
                     }
                 }
-                _ => {}
+                SocketEvent::Closed(_) => {
+                    if !closed.replace(true) {
+                        remaining.set(remaining.get().saturating_sub(1));
+                        if remaining.get() == 0 {
+                            let _ = reject.call1(&JsValue::NULL, &"signer-missing".into());
+                        }
+                    }
+                }
             });
             if let Ok(socket) = result {
                 *slot.borrow_mut() = Some(socket);
                 slots.borrow_mut().push(slot);
+            } else {
+                failed.set(failed.get().saturating_sub(1));
+                if failed.get() == 0 {
+                    let _ = fail.call1(&JsValue::NULL, &"signer-missing".into());
+                }
             }
         }
     });
@@ -68,7 +88,13 @@ pub async fn rpc(
         slot.borrow_mut().take();
     }
     result
-        .map_err(|_| "signer-missing")?
+        .map_err(|e| {
+            if e.as_string().as_deref() == Some("signer-refused") {
+                "signer-refused"
+            } else {
+                "signer-missing"
+            }
+        })?
         .as_string()
         .ok_or("signer-refused")
 }

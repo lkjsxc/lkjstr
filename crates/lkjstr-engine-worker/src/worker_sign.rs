@@ -13,16 +13,20 @@ pub(super) fn process(host: &Rc<RefCell<Host>>, o: &Output) -> bool {
                     vec![serde_json::to_string(&event).unwrap_or_default()],
                 )
                 .await;
-                let signed = raw
-                    .ok()
-                    .and_then(|s| lkjstr_protocol::parse_nostr_event_json(&s, None).ok());
+                let signed = raw.and_then(|s| {
+                    lkjstr_protocol::parse_nostr_event_json(&s, None).map_err(|_| "signer-refused")
+                });
                 let mut h = host.borrow_mut();
                 if !h.stopped {
                     let at = h.time();
+                    if let Err(code) = signed {
+                        h.engine.refuse_sign(req, code);
+                        return;
+                    }
                     h.engine.input(
                         lkjstr_core::engine::protocol::Input::Signed {
                             req,
-                            event: signed,
+                            event: signed.ok(),
                             error: None,
                         },
                         at,

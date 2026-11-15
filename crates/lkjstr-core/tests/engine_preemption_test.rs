@@ -172,3 +172,42 @@ fn scrolling_after_preemption_still_requests_older_notes() {
         assert!(requests(&mut e.network).iter().any(|f| f[2]["until"] == 80));
     }
 }
+
+#[test]
+fn disconnected_unfinished_head_replays_filters_instead_of_live_tail() {
+    let (mut n, filter, head) = setup(None);
+    note(&mut n, &head, 100);
+    n.disconnected(RELAY, 30);
+    n.connected(RELAY, 110);
+    let replay = requests(&mut n).remove(0);
+    assert_eq!(replay[2], head[2]);
+    assert!(!n.page_finished(&filter));
+    for at in [100, 90, 80] {
+        note(&mut n, &replay, at);
+    }
+    eose(&mut n, &replay, 120);
+    assert!(!n.page_exhausted(&filter));
+    assert_eq!(n.page_cursor(&filter), Some(80));
+}
+
+#[test]
+fn repeated_live_reconnections_preserve_historical_coverage_and_cursor() {
+    let (mut n, filter, head) = setup(None);
+    for at in [100, 90, 80] {
+        note(&mut n, &head, at);
+    }
+    eose(&mut n, &head, 25);
+    for (now, at) in [(200, 101), (400, 102)] {
+        n.disconnected(RELAY, now);
+        assert!(n.page_finished(&filter));
+        n.connected(RELAY, now + 110);
+        let replay = requests(&mut n).remove(0);
+        assert_eq!(replay[2]["since"], at - 3);
+        // A short live response is not evidence that historical notes ran out.
+        note(&mut n, &replay, at);
+        eose(&mut n, &replay, now + 120);
+        assert!(n.page_finished(&filter));
+        assert!(!n.page_exhausted(&filter));
+        assert_eq!(n.page_cursor(&filter), Some(80));
+    }
+}
