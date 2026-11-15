@@ -19,12 +19,13 @@ import { ja } from '../src/shared/strings-ja.ts';
 import { withRecent } from '../src/views/emoji-picker.ts';
 import { typesQuery } from '../src/views/feed-bar.ts';
 import { reconcile } from '../src/views/lists.ts';
-import { freshTab, kindOf, VIEWS } from '../src/views/registry.ts';
+import { freshTab, kindOf, setServed, VIEWS } from '../src/views/registry.ts';
 import { matchesWords } from '../src/wm/launcher.ts';
 import * as L from '../src/wm/layout.ts';
 import { parseLayout } from '../src/wm/layout-parse.ts';
 import { homePreset, presetOf } from '../src/wm/presets.ts';
 import { insertAt, zoneAt } from '../src/wm/tab-drag.ts';
+import { tabHits } from '../src/wm/tab-search.ts';
 
 const shape = (n: L.LayoutNode): unknown =>
   n.type === 'pane' ? n.tabs.join('|') : { [n.dir]: n.children.map(shape) };
@@ -268,4 +269,21 @@ describe('formats', () => {
       textSize: 19,
     });
   });
+});
+
+it('tab search chooses the exact view name ahead of another view description', () => {
+  setServed(4);
+  let opened = '';
+  const hits = tabHits(
+    {
+      tabs: () => [],
+      show: () => undefined,
+      open: (kind) => {
+        opened = kind;
+      },
+    },
+    'Relays',
+  );
+  hits[0]?.go();
+  expect(opened).toBe('relays');
 });

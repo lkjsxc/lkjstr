@@ -9,6 +9,8 @@ import { chromium } from 'playwright-core';
 import bundle from 'playwright-core/lib/utilsBundle';
 import { fakeBunker } from '../../scripts/browser-bunker.mjs';
 import { fakeRelay } from '../../scripts/browser-relay.mjs';
+import { auditFixtures } from './audit-fixtures.mjs';
+import { auditOwner } from './audit-owner.mjs';
 import { channelScenarios } from './smoke-channels.mjs';
 import { openKeyField, seedLayouts } from './smoke-seed.mjs';
 import { writeReport } from './smoke-signer-support.mjs';
@@ -216,6 +218,18 @@ try {
     fake.published.some((e) => e.kind === 7),
   );
   await channelScenarios({ page, launch, check, fake });
+  await auditFixtures({ fake, sign: fixtureSign, owner: fixture.note.pubkey, note: fixture.note });
+  await auditOwner({
+    browser,
+    base,
+    real: true,
+    pubkey: fixture.note.pubkey,
+    check,
+    prepare: async (context) => {
+      await context.exposeFunction('fixtureSign', fixtureSign);
+      await installExtension(context, relayUrl, fixture.note.pubkey, errors);
+    },
+  });
   if (shots) {
     // Signed in, the ordinary layout as it starts, in Japanese (the language is put back afterwards).
     // Use the reader's reset: deleting storage bypasses the live WM store, whose

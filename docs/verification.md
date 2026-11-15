@@ -145,3 +145,20 @@ All four quiet gates, real UI smoke and Worker conformance pass; the delayed
 profile probe passes without page errors. Frontend check, build, mock smoke and
 composer/channel screenshots pass. Docker remains excluded by the worktree-only
 write rule. Changes remain uncommitted; no CI or existing services were changed.
+
+## Owner returning-profile audit (2026-11-15)
+
+The owner audit adds shared mock/real browser checks and numbered dark captures
+at 1440 and 390, historical-bundle upgrades on the same origin and storage,
+and a real-engine regression that keeps the first rows after reading past 800.
+Post failure/retry checks now inspect retained drafts while the input is free.
+A remount test guards the next draft against a late publication result.
+See [owner-audit.md](owner-audit.md) for scope, commands and unresolved gaps.
+Final run evidence and verdicts are recorded under ignored tmp/.
+
+Owner audit final: frontend check, build, shots and 432-check mock smoke pass.
+All four quiet gates pass; Worker conformance passes 211 checks without page
+errors. Two consecutive real UI smokes pass 166 checks each with no page errors.
+Historical UI upgrades pass 28 checks; actual historical WASM/IndexedDB/cache
+upgrades pass 34, including saved periods and retained Shortcuts page identity.
+Public Channels discovery and Stats fetch purposes remain open; see owner-audit.md.

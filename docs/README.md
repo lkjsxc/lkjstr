@@ -35,3 +35,5 @@ Engine (`crates/`):
   historical.
 
 - [Owner engine feedback](owner-feedback.md): relay discovery, tags, media, stats and continuity.
+
+- [owner-audit.md](owner-audit.md): returning profiles and owner complaint verification.

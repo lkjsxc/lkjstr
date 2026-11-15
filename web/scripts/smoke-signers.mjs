@@ -29,16 +29,17 @@ async function failure(options, mode) {
       await page.locator('.pane.cur .tab[data-view^="compose"]').last().click();
       check(
         `NIP-07 ${mode} preserves draft and permits retry`,
-        (await page.locator(`${compose} textarea`).inputValue()) === draft &&
+        (await page.locator(`${compose} .cdraft`).innerText()).includes(draft) &&
           (await page
             .locator(compose)
-            .getByRole('button', { name: 'Post', exact: true })
+            .getByRole('button', { name: 'Retry', exact: true })
             .isEnabled()),
       );
       if (mode === 'reject-sign') {
         // Deterministically reload inside the 300 ms draft debounce window.
-        await page.clock.install();
-        await page.clock.pauseAt(new Date());
+        const clockStart = new Date('2026-11-15T12:00:00Z');
+        await page.clock.install({ time: clockStart });
+        await page.clock.pauseAt(new Date(clockStart.getTime() + 1000));
         draft += ' latest edit';
         await page.locator(`${compose} textarea`).fill(draft);
       }
@@ -56,12 +57,16 @@ async function failure(options, mode) {
         `tmp/signer-${mode}.json`,
         JSON.stringify({
           saved,
-          restored: (await page.locator(`${compose} textarea`).inputValue()) === draft,
+          restored:
+            (await page.locator(compose).innerText()).includes(draft) ||
+            (await page.locator(compose).innerText()).includes(draft) ||
+            (await page.locator(`${compose} textarea`).inputValue()) === draft,
         }),
       );
       check(
         `NIP-07 ${mode} preserves draft across reload`,
-        (await page.locator(`${compose} textarea`).inputValue()) === draft,
+        (await page.locator(compose).innerText()).includes(draft) ||
+          (await page.locator(`${compose} textarea`).inputValue()) === draft,
       );
     } else
       check(`NIP-07 ${mode} creates no account`, (await page.locator('.acct.out').count()) === 1);

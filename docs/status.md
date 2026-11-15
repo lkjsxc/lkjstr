@@ -163,15 +163,15 @@ not established by the finite conformance suite.
 
 ## Verification
 
-The latest gate counts, artifact sizes and cold-start measurements are recorded
-in engine-package.md, engine-performance.md and verification.md. Browser runs
+Gate counts and cold-start measurements are in engine-package.md,
+engine-performance.md and verification.md. The current browser audit, its
+repairs and open public-engine gaps are in [owner-audit.md](owner-audit.md). Browser runs
 use fresh ports/data, loopback WebSockets and intercepted HTTP only.
 Docker Compose remains excluded by the explicit worktree-only write rule:
 image/container storage is outside this worktree. No commit, deployment,
 production access, CI edit or existing-service restart is performed.
-
-The branch-review fixes add five native regression tests for first-list guards,
-cache eviction, search routing, signer replacement and decrypted mute policy.
+Branch-review regressions cover first-list guards, cache eviction, search
+routing, signer replacement and decrypted mute policy.
 The earlier branch-review run passed all four quiet gates and 53 local browser
 checks using the then-fetched contract. Report: tmp/engine-harness/report.json.
 
