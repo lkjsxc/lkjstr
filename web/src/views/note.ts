@@ -7,7 +7,7 @@ import { getLang, t } from '../shared/i18n.ts';
 import { icon } from '../shared/icons.ts';
 import { actionRow, reactionChips } from './note-actions.ts';
 import { mediaGrid } from './note-media.ts';
-import { avatar, displayName, how, nameButton, plainName, segments } from './parts.ts';
+import { displayName, faceButton, how, nameButton, plainName, segments } from './parts.ts';
 import type { ViewEnv } from './registry.ts';
 
 const timeOf = (at: number, env: ViewEnv): string =>
@@ -21,7 +21,7 @@ function quoteCard(q: Quote, env: ViewEnv): HTMLElement {
     h(
       'div',
       { class: 'qhead' },
-      avatar(q.author, 'av sm'),
+      faceButton(q.author, env, 'av sm'),
       nameButton(q.author, env),
       h('time', { title: fullTime(q.at) }, timeOf(q.at, env)),
     ),
@@ -52,16 +52,6 @@ function fold(text: HTMLElement): void {
 }
 
 const drawnBy = new WeakMap<HTMLElement, string>(); // the author each drawn note shows
-/** Who wrote it, at the left: a press opens the person. */
-function face(row: NoteRow, env: ViewEnv): HTMLElement {
-  const name = plainName(row.author);
-  const el = h('button', { class: 'avb', title: name, 'aria-label': name }, avatar(row.author));
-  el.addEventListener('click', (e) => {
-    e.stopPropagation();
-    env.open('profile', { pubkey: row.author.pubkey, title: name }, how(e));
-  });
-  return el;
-}
 /** The line over the text: name, NIP-05, time. One line of fixed height, whatever is known of the author. */
 function head(row: NoteRow, env: ViewEnv): HTMLElement {
   const a = row.author;
@@ -183,7 +173,7 @@ export function renderNote(row: NoteRow, env: ViewEnv): HTMLElement {
     h(
       'div',
       { class: 'nrow' },
-      face(row, env),
+      faceButton(row.author, env),
       h(
         'div',
         { class: 'nmain' },
@@ -222,7 +212,7 @@ export function patchNote(el: HTMLElement, row: NoteRow, env: ViewEnv): void {
     main.querySelector<HTMLElement>(':scope > .nhead > .name')?.focus({ preventScroll: true });
   if (JSON.stringify(row.author) !== drawnBy.get(el)) {
     drawnBy.set(el, JSON.stringify(row.author));
-    el.querySelector(':scope > .nrow > .avb')?.replaceWith(face(row, env));
+    el.querySelector(':scope > .nrow > .avb')?.replaceWith(faceButton(row.author, env));
   }
   // The button that was pressed is drawn again: the keyboard stays on its successor.
   const held = document.activeElement?.closest('.acts, .chips')?.parentElement === main;

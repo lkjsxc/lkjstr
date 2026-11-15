@@ -839,6 +839,29 @@ async function reading(browser: Browser, still: Record<string, unknown>): Promis
   await page.reload();
   await page.locator(`${notes} .ntype.on`).waitFor();
   fact('the toggle is remembered', (await count(page, `${notes} .ntype.on`)) === 1);
+  // A notification answers a press anywhere, as a note does; a face opens the person, as a name does.
+  const npane = `.pane:has(.tab[data-view="notifications"])`;
+  const news = page.locator(`${notes} .notif`).first();
+  const nbox = await news.boundingBox();
+  await page.mouse.click(
+    (nbox?.x ?? 0) + (nbox?.width ?? 0) - 6,
+    (nbox?.y ?? 0) + (nbox?.height ?? 0) - 4,
+  );
+  await page.locator(`${npane} .tab.active[data-view^="thread"]`).waitFor();
+  fact('a press on a notification’s margin opens its note', true);
+  await page.keyboard.press('Escape');
+  await page.locator(`${notes} .notif .avb`).first().click();
+  await page.locator(`${npane} .tab.active[data-view^="profile"]`).waitFor();
+  fact('a face in a notification opens the person', true);
+  const order = await page
+    .locator(`${feed} .note .acts`)
+    .first()
+    .evaluate((el) => [...el.children].map((c) => c.className.match(/a-(\w+)/)?.[1]).join(' '));
+  fact(
+    'actions: reply, repost, reaction, then the rest',
+    order.startsWith('reply repost heart smile zap'),
+    order,
+  );
   await page.context().close();
 
   // A phone: one tile, so the media tab opens in it; a finger gets 40px.

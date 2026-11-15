@@ -12,6 +12,7 @@ import {
   copy,
   displayName,
   emojiImg,
+  faceButton,
   how,
   nameButton,
   plainName,
@@ -131,7 +132,7 @@ export function renderProfile(row: ProfileRow, env: ViewEnv): HTMLElement {
       ? h(
           'div',
           { class: 'known muted' },
-          known.actors.map((k) => avatar(k, 'av xs')),
+          known.actors.map((k) => faceButton(k, env, 'av xs')),
           h(
             'span',
             null,
@@ -150,7 +151,7 @@ export function renderPerson(row: PersonRow, env: ViewEnv): HTMLElement {
   const el = h(
     'div',
     { class: 'person' },
-    avatar(row.author),
+    faceButton(row.author, env),
     h(
       'div',
       { class: 'pmain' },
@@ -171,7 +172,8 @@ export function renderPerson(row: PersonRow, env: ViewEnv): HTMLElement {
   return el;
 }
 
-/** "A and B reacted to your note": each person opens their profile, the excerpt opens the reader's note. */
+/** "A and B reacted to your note": each person opens their profile; a press anywhere else opens what the news
+ * is about, as on a note: the reader's note, or for a follow the person who followed. */
 export function renderNotification(row: NotificationRow, env: ViewEnv): HTMLElement {
   if (row.note && (row.type === 'mention' || row.type === 'reply')) {
     const el = renderNote(row.note, env);
@@ -189,7 +191,14 @@ export function renderNotification(row: NotificationRow, env: ViewEnv): HTMLElem
         : row.emoji.emoji
       : icon(row.type === 'repost' ? 'repost' : row.type === 'zap' ? 'zap' : 'user');
   const target = row.target;
-  return h(
+  const first = row.actors[0];
+  const go = (e: MouseEvent): void => {
+    if (String(getSelection())) return; // selecting text is not a press
+    if (target) env.open('thread', { id: target.id }, how(e));
+    else if (first) env.open('profile', { pubkey: first.pubkey, title: plainName(first) }, how(e));
+  };
+  const plain = (e: Event): boolean => !(e.target as Element).closest('button, a');
+  const el = h(
     'div',
     { class: row.unread ? 'notif unread' : 'notif' },
     h('span', { class: `nmark k-${row.type}` }, mark),
@@ -199,7 +208,7 @@ export function renderNotification(row: NotificationRow, env: ViewEnv): HTMLElem
       h(
         'div',
         { class: 'nfaces' },
-        row.actors.slice(0, 6).map((a) => avatar(a, 'av sm')),
+        row.actors.slice(0, 6).map((a) => faceButton(a, env, 'av sm')),
         h(
           'time',
           { title: fullTime(row.at) },
@@ -229,4 +238,8 @@ export function renderNotification(row: NotificationRow, env: ViewEnv): HTMLElem
         : null,
     ),
   );
+  el.addEventListener('click', (e) => void (plain(e) && go(e)));
+  el.addEventListener('mousedown', (e) => void (e.button === 1 && plain(e) && e.preventDefault()));
+  el.addEventListener('auxclick', (e) => void (e.button === 1 && plain(e) && go(e)));
+  return el;
 }

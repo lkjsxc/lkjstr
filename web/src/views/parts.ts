@@ -80,6 +80,19 @@ export function nameButton(a: Author, env: ViewEnv, cls = 'name'): HTMLElement {
   return el;
 }
 
+/** A person's face as a button that opens their profile, as the name does. */
+export function faceButton(a: Author, env: ViewEnv, cls = 'av'): HTMLElement {
+  const name = plainName(a);
+  const el = h('button', { class: 'avb', title: name, 'aria-label': name }, avatar(a, cls));
+  const go = (e: MouseEvent): void => {
+    e.stopPropagation();
+    env.open('profile', { pubkey: a.pubkey, title: name }, how(e));
+  };
+  el.addEventListener('click', go);
+  el.addEventListener('auxclick', (e) => void (e.button === 1 && go(e)));
+  return el;
+}
+
 /** Note text. Links say where they go; mentions and hashtags open tabs. */
 export function segments(list: readonly Segment[], env: ViewEnv): Child[] {
   return list.map((s) => {
