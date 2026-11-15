@@ -13,6 +13,7 @@ import type { ViewEnv } from './registry.ts';
 
 type Ref = { name: string; text: string };
 type State = {
+  outboxOwner?: string;
   text?: string;
   outbox?: ChannelDraft[];
   replyTo?: string;
@@ -29,6 +30,8 @@ type Item = { name: string; el: HTMLElement; done?: Uploaded };
 export function mountCompose(el: HTMLElement, env: ViewEnv, channel?: string): () => void {
   const state: State = loadViewState<State>(env.instance);
   const save = (): void => saveViewState(env.instance, state);
+  const owner = (state.outboxOwner ??= crypto.randomUUID());
+  save();
   let items: Item[] = []; // bound: the files of one draft
   const area = h('textarea', {
     class: 'ctext',
@@ -130,6 +133,7 @@ export function mountCompose(el: HTMLElement, env: ViewEnv, channel?: string): (
 
   const outbox = createChannelOutbox(
     env,
+    owner,
     (state.outbox ??= []),
     () => {
       save();

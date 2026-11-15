@@ -3,7 +3,7 @@ import type { ActResult, SubHandlers } from '../src/engine/client.ts';
 import { setLang } from '../src/shared/i18n.ts';
 import { createSettings } from '../src/shared/settings.ts';
 import { createSignal } from '../src/shared/signal.ts';
-import { loadViewState, saveViewState } from '../src/shared/view-state.ts';
+import { dropViewState, loadViewState, saveViewState } from '../src/shared/view-state.ts';
 import { mountChannels } from '../src/views/channels.ts';
 import { mountCompose } from '../src/views/compose.ts';
 import type { ViewEnv } from '../src/views/registry.ts';
@@ -160,3 +160,54 @@ it('settles a publication across remount without overwriting the next ordinary d
   expect(next.value).toBe('next draft');
   off();
 });
+
+it.each([undefined, 'old-room'])(
+  'isolates a fresh composer reusing an in-flight tab ID (%s), mounted or disposed',
+  async (oldChannel) => {
+    setLang('en');
+    const x = setup();
+    const finishes: ((r: ActResult) => void)[] = [];
+    const deliveries: ((relays: unknown[]) => void)[] = [];
+    x.act.mockImplementation(
+      (_, handlers) =>
+        new Promise<ActResult>((resolve) => {
+          finishes.push(resolve);
+          deliveries.push(handlers.delivery);
+        }),
+    );
+    let off = mountCompose(x.el, x.env, oldChannel);
+    const send = (text: string) => {
+      const area = x.el.querySelector('textarea')!;
+      area.value = text;
+      area.dispatchEvent(new Event('input'));
+      (x.el.querySelector('.primary') as HTMLButtonElement).click();
+    };
+    send('old message');
+    const oldOwner = loadViewState<{ outboxOwner: string }>(x.env.instance).outboxOwner;
+    off();
+    // own.retire/fresh drops both the parent tab and its embedded composer's saved state.
+    dropViewState(x.env.instance);
+    off = mountCompose(x.el, x.env, oldChannel ? 'different-room' : undefined);
+    expect(loadViewState<{ outboxOwner: string }>(x.env.instance).outboxOwner).not.toBe(oldOwner);
+    expect(x.el.querySelector('.cdraft')).toBeNull();
+    deliveries[0]!([{ url: 'wss://old.test', state: 'ok' }]);
+    expect(x.el.querySelector('[role="status"]')?.textContent).toBe('');
+    send('new message');
+    if (oldChannel) off(); // Also protect the new saved outbox while it is unmounted.
+    finishes[0]!({ t: 'result', req: 'old', ok: false, error: { code: 'rejected' } });
+    await vi.waitFor(() => {
+      const saved = loadViewState<{ outbox: { draft: { text: string } }[] }>(x.env.instance);
+      expect(saved.outbox?.map((item) => item.draft.text)).toEqual(['new message']);
+    });
+    if (!oldChannel) {
+      expect(x.el.textContent).not.toContain('old message');
+      expect(x.el.textContent).not.toContain('Refused');
+      off();
+    }
+    off = mountCompose(x.el, x.env, oldChannel ? 'different-room' : undefined);
+    expect(x.el.querySelector('.cdraft')?.textContent).toContain('Sending');
+    finishes[1]!({ t: 'result', req: 'new', ok: true });
+    await vi.waitFor(() => expect(x.el.querySelector('.cdraft')).toBeNull());
+    off();
+  },
+);

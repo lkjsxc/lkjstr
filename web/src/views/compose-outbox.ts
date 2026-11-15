@@ -22,26 +22,28 @@ type Sending = {
 const active = new Map<string, Sending>();
 export function createChannelOutbox(
   env: ViewEnv,
+  owner: string,
   initial: ChannelDraft[],
   changed: () => void,
   delivery: (relays: readonly Delivery[], final: boolean, error?: Failure) => void,
 ) {
   const el = h('div');
-  const pending = active.get(env.instance) ?? {
+  const pending = active.get(owner) ?? {
     drafts: initial,
     busy: new Set<ChannelDraft>(),
     errors: new Map<ChannelDraft, Failure | undefined>(),
     watchers: new Set<Watch>(),
   };
-  active.set(env.instance, pending);
+  active.set(owner, pending);
   const { drafts, busy, errors, watchers } = pending;
   const release = (): void => {
-    if (!watchers.size && !busy.size) active.delete(env.instance);
+    if (!watchers.size && !busy.size) active.delete(owner);
   };
   const notify = (): void => {
     if (!watchers.size) {
-      const saved = loadViewState(env.instance);
-      if (Object.keys(saved).length) saveViewState(env.instance, { ...saved, outbox: drafts });
+      const saved = loadViewState<{ outboxOwner: string }>(env.instance);
+      // Tab IDs can be reused after permanent closure; only this composer's state is ours.
+      if (saved.outboxOwner === owner) saveViewState(env.instance, { ...saved, outbox: drafts });
     }
     for (const w of watchers) {
       w.changed();

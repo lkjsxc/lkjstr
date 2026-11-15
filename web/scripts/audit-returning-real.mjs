@@ -7,6 +7,7 @@ import { createInterface } from 'node:readline';
 import { chromium } from 'playwright-core';
 import bundle from 'playwright-core/lib/utilsBundle';
 import { fakeRelay } from '../../scripts/browser-relay.mjs';
+import { auditCsp, historicalCacheHit } from './audit-browser.ts';
 import { installExtension } from './smoke-visitors.mjs';
 
 const root = new URL('../../', import.meta.url).pathname;
@@ -72,6 +73,7 @@ const server = createServer((req, res) => {
     }[file.split('.').at(-1)] || 'application/octet-stream';
   res.writeHead(200, {
     'Content-Type': type,
+    'Content-Security-Policy': auditCsp(url),
     'Cache-Control': file.endsWith('index.html')
       ? 'no-cache'
       : 'public, max-age=31536000, immutable',
@@ -100,9 +102,6 @@ try {
         locale: 'en-US',
         colorScheme: 'dark',
       });
-      await ctx.route('**/*', (r) =>
-        r.request().url().startsWith(`${base}/`) ? r.continue() : r.abort(),
-      );
       await ctx.exposeFunction('fixtureSign', sign);
       await installExtension(ctx, url, fixture.note.pubkey, errors);
       const page = await ctx.newPage();
@@ -149,6 +148,7 @@ try {
         const before = await page.evaluate(() =>
           JSON.parse(localStorage.getItem('lkjstr:layout:main')),
         );
+        check(`${name} historical HTTP cache hit`, await historicalCacheHit(page));
         dist = 'dist';
         await page.reload();
         await page.locator('.view[data-kind="settings"]:visible').waitFor();
@@ -206,9 +206,6 @@ try {
           locale: 'en-US',
           storageState: original,
         });
-        await plain.route('**/*', (r) =>
-          r.request().url().startsWith(`${base}/`) ? r.continue() : r.abort(),
-        );
         await installExtension(plain, url, fixture.note.pubkey, errors);
         const p = await plain.newPage();
         await p.goto(base);

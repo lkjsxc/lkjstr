@@ -53,10 +53,12 @@ export async function auditExtra({ page, find, fact, view, real, width }) {
   await find('Channels', 'channels');
   const channels = view('channels');
   await channels.locator('.chan').first().waitFor();
-  const name = await channels.locator('.chan .name').first().innerText();
+  const name = real
+    ? 'Owner audit channel'
+    : await channels.locator('.chan .name').first().innerText();
   await channels.locator('input[type="search"]').fill(name);
-  await page.waitForTimeout(300);
-  await channels.locator('.chan').first().click();
+  await page.waitForTimeout(300); // Let the input's 250 ms debounce apply the search.
+  await channels.locator('.chan').filter({ hasText: name }).first().click();
   await view('channel').locator('.note').first().waitFor();
   const room = view('channel');
   const text = `local owner audit channel message ${width}`;

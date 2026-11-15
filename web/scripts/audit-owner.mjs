@@ -1,7 +1,8 @@
 // Shared owner-facing browser checks, run by both mock and real-engine smokes.
 
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { SELF } from '../src/engine/mock/people.ts';
+import { rebaseStorageState } from './audit-browser.ts';
 import { auditExtra } from './audit-owner-extra.mjs';
 import { auditReading } from './audit-owner-reading.mjs';
 import { bech32 } from './smoke-visitors.mjs';
@@ -18,11 +19,17 @@ export async function auditOwner({
 }) {
   const results = {};
   for (const width of [1440, 390]) {
+    const storageState = returning
+      ? rebaseStorageState(
+          JSON.parse(await readFile(`${root}tmp/history/${returning}/state-${width}.json`, 'utf8')),
+          base,
+        )
+      : undefined;
     const ctx = await browser.newContext({
       viewport: { width, height: 900 },
       locale: 'en-US',
       colorScheme: 'dark',
-      ...(returning ? { storageState: `${root}tmp/history/${returning}/state-${width}.json` } : {}),
+      storageState,
     });
     await ctx.route('**/*', (r) =>
       r.request().url().startsWith(`${base}/`) ? r.continue() : r.abort(),
@@ -73,6 +80,19 @@ export async function auditOwner({
     };
     try {
       await page.goto(base);
+      if (storageState) {
+        const settings = storageState.origins[0].localStorage.find(
+          ({ name }) => name === 'lkjstr:settings',
+        );
+        await fact(
+          6,
+          'returning-settings-loaded',
+          !!settings &&
+            (await page.evaluate(
+              () => JSON.parse(localStorage.getItem('lkjstr:settings')).textSize,
+            )) === JSON.parse(settings.value).textSize,
+        );
+      }
       if (returning) await find('Global', 'global');
       await view('global').locator('.note').first().waitFor();
       await fact(

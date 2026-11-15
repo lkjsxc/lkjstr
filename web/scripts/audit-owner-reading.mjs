@@ -123,6 +123,7 @@ export async function auditReading({ page, find, fact, view, peopleToken, messag
   await find('Notifications', 'notifications');
   const news = view('notifications');
   await news.locator('.ntypes').waitFor();
+  await news.locator('.notif').first().waitFor();
   await fact(
     2,
     'notification-inside',
@@ -148,7 +149,8 @@ export async function auditReading({ page, find, fact, view, peopleToken, messag
   const notice = news.locator('.notif').first();
   if (await notice.count()) {
     const b = await notice.boundingBox();
-    await notice.click({ position: { x: b.width - 5, y: b.height - 4 } });
+    // Keep the blank-margin press clear of the tile divider's extended pointer target.
+    await notice.click({ position: { x: 8, y: b.height - 4 } });
     await fact(25, 'notification-margin', await view('thread').isVisible());
   } else await fact(25, 'notification-margin', false);
 }

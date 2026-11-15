@@ -5,6 +5,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import { chromium } from 'playwright-core';
 import { SELF } from '../src/engine/mock/people.ts';
+import { auditCsp, historicalCacheHit } from './audit-browser.ts';
 
 let dist = 'dist';
 const types = { js: 'text/javascript', css: 'text/css', html: 'text/html', svg: 'image/svg+xml' };
@@ -14,6 +15,7 @@ const server = createServer((req, res) => {
   if (path.includes('..') || !existsSync(file)) return res.writeHead(404).end();
   res.writeHead(200, {
     'Content-Type': types[file.split('.').at(-1)] || 'application/octet-stream',
+    'Content-Security-Policy': auditCsp(),
     'Cache-Control': file.endsWith('index.html')
       ? 'no-cache'
       : 'public, max-age=31536000, immutable',
@@ -38,9 +40,6 @@ try {
         locale: 'en-US',
         colorScheme: 'dark',
       });
-      await ctx.route('**/*', (r) =>
-        r.request().url().startsWith(`${base}/`) ? r.continue() : r.abort(),
-      );
       await ctx.addInitScript((pubkey) => {
         if (!localStorage.getItem('lkjstr:mock'))
           localStorage.setItem('lkjstr:mock', '{"live":false,"accounts":"none"}');
@@ -90,6 +89,7 @@ try {
         const before = await page.evaluate(() =>
           JSON.parse(localStorage.getItem('lkjstr:layout:main')),
         );
+        check('historical-http-cache-hit', await historicalCacheHit(page));
         dist = 'dist';
         await page.reload();
         await page.locator('.view[data-kind="settings"]:visible').waitFor();

@@ -28,6 +28,8 @@ No production changes, CI edits, commits or deployments are part of this job.
   used only for channels. The field clears synchronously and delivery remains
   visible. Failed drafts preserve attachments, author and retry controls.
   Pending operations survive remount without overwriting the next draft.
+  A persisted composer identity separates remounts from freshly opened tabs
+  that reuse an ID; old delivery callbacks cannot write into the new composer.
 - Account and Settings lists fill the tile; sign-in and add-entry controls
   keep their own measure.
 - Screenshot servers bind a free port instead of choosing a random fixed port.
@@ -44,11 +46,29 @@ Build historical bundles with git archive into tmp/history/<revision>, using
 worktree dependencies, then run node web/scripts/audit-returning.mjs against
 the current mock build. It writes the four returning browser states there.
 Subsequent mock smokes also exercise the full audit over those saved states.
+Saved origins are rebased onto each fresh smoke port, with a settings check
+to confirm the returning profile loaded. Upgrade servers enforce loopback
+isolation through CSP instead of Playwright routing, leaving HTTP caching
+enabled. Each upgrade requires Chromium to report a historical script cache
+hit before switching bundles. A browser regression also verifies blocked
+off-origin requests and rejects pass-through routing as cache-hit evidence.
+Run it with node --test web/scripts/audit-browser.test.ts; pnpm check covers
+storage rebasing and composer ownership without requiring a browser.
+Notification scroll checks wait for fixture rows before testing their layout.
+Their blank-margin press stays clear of the tile divider's pointer target.
+Real channel search targets the named loopback fixture, since an early row
+can still show a shortened address while its metadata is being discovered.
 Historical assets, browser state, JSON evidence and gate logs stay in tmp/.
 The real-engine upgrade check additionally builds each historical WASM package
 and runs node web/scripts/audit-returning-real.mjs against the current real
 build. Those upgrades retain the actual old IndexedDB and HTTP cache, verify
 Home after two reloads, and publish nothing.
+
+Review verification passes: frontend check, mock smoke (436 checks), real
+build and smoke (163 checks), historical mock and real upgrades (32 and 38
+checks), the standalone browser cache regression, and check:repo. Native Rust
+suites were not rerun; no engine source changed. Docker remains excluded by
+the worktree-only write rule.
 
 ## Known incomplete work
 
