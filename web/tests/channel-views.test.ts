@@ -1,5 +1,6 @@
 import { afterEach, expect, it, vi } from 'vitest';
 import type { ActResult, SubHandlers } from '../src/engine/client.ts';
+import type { ChannelRow } from '../src/engine/protocol.ts';
 import { setLang } from '../src/shared/i18n.ts';
 import { createSettings } from '../src/shared/settings.ts';
 import { createSignal } from '../src/shared/signal.ts';
@@ -15,22 +16,80 @@ function setup() {
     instance: 'channel-test',
     settings: createSettings(),
     visible: createSignal(true),
+    open: vi.fn(),
     engine: {
       me: () => 'author',
       accounts: createSignal({ active: 'author', accounts: [] }),
       act,
-      open: (_: unknown, h: SubHandlers) => {
+      open: vi.fn((_: unknown, h: SubHandlers) => {
         handlers = h;
         return { window() {}, visible() {}, close() {} };
-      },
+      }),
     },
   } as unknown as ViewEnv;
   const el = document.createElement('div');
   return { env, el, act, handlers: () => handlers };
 }
 afterEach(() => {
+  vi.useRealTimers();
   localStorage.clear();
   setLang('en');
+});
+
+it('saves channel search drafts immediately but Enter only opens results for the applied query', () => {
+  vi.useFakeTimers();
+  const x = setup();
+  const row = (id: string): ChannelRow => ({
+    kind: 'channel',
+    key: id,
+    id,
+    bech32: id,
+    name: id,
+    about: '',
+    joined: true,
+    own: false,
+    unread: 0,
+  });
+  saveViewState(x.env.instance, { text: 'old' });
+  const off = mountChannels(x.el, x.env);
+  x.handlers().rows([row('old-room')], true, true);
+  const input = x.el.querySelector('input')!;
+  const enter = (isComposing = false) =>
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', isComposing }));
+  input.value = 'new';
+  input.dispatchEvent(new Event('input'));
+  expect(loadViewState(x.env.instance)).toMatchObject({ text: 'new' });
+  vi.advanceTimersByTime(249);
+  enter();
+  expect(x.env.open).not.toHaveBeenCalled();
+  vi.advanceTimersByTime(1);
+  expect(x.env.engine.open).toHaveBeenLastCalledWith(
+    expect.objectContaining({ text: 'new' }),
+    expect.anything(),
+  );
+  enter(); // New query has not delivered its rows yet.
+  expect(x.env.open).not.toHaveBeenCalled();
+  x.handlers().rows([row('new-room')], true, true);
+  enter(true);
+  expect(x.env.open).not.toHaveBeenCalled();
+  enter();
+  expect(x.env.open).toHaveBeenLastCalledWith(
+    'channel',
+    { id: 'new-room', title: 'new-room' },
+    undefined,
+  );
+  input.value = 'unfinished';
+  input.dispatchEvent(new Event('input'));
+  off();
+  vi.advanceTimersByTime(250);
+  expect(x.env.engine.open).toHaveBeenCalledTimes(2);
+  const offAgain = mountChannels(x.el, x.env);
+  expect(x.el.querySelector('input')?.value).toBe('unfinished');
+  expect(x.env.engine.open).toHaveBeenLastCalledWith(
+    expect.objectContaining({ text: 'unfinished' }),
+    expect.anything(),
+  );
+  offAgain();
 });
 
 it('keeps empty cached channel rows pending until discovery settles and exposes failures', () => {

@@ -36,6 +36,7 @@ impl Session {
                 self.delivered
                     .get(sub)?
                     .iter()
+                    .map(|row| row.get("note").unwrap_or(row))
                     .filter(|r| ids.iter().any(|id| r["id"] == *id))
                     .flat_map(preview::links)
                     .find(|url| engine.previews.unasked(url))

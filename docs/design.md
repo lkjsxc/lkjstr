@@ -161,8 +161,8 @@ text, still reaches 4.5:1 on `--bg`. The theme follows the device or Settings.
 - A profile lists by kind in tabs under its header: posts, replies,
   reposts, reactions, media. A press anywhere on a notification opens it.
 - The Channels tab (NIP-28): joined ones first, a rule, the others by
-  latest message; one field narrows by name or takes an address; a joined
-  row shows a vermilion unread count, another offers Join.
+  latest message; a name/address field saves drafts at once. Enter waits for matching
+  results. Joined rows show a vermilion unread count; others offer Join.
 - A channel is a feed, newest first. Its head and the composer under it are
   the first row and scroll away: the newest end of a chat is its top here.
   The field is free at once. Pending and failed messages stay below it, with
@@ -190,6 +190,7 @@ text, still reaches 4.5:1 on `--bg`. The theme follows the device or Settings.
 - Docs is a tab with a tree of groups and pages: what lkjstr is, release
   and licence, keys and safety, relays, filters, shortcuts, the privacy
   policy, the terms. A page names its tab and is found by name in tab search.
+  Selecting another page opens it at the top; restoring a tab keeps its position.
 ## Language, and checking the look
 Every visible string comes from the two tables in `web/src/shared/`.
 Japanese is written as Japanese, with no space before particles after a

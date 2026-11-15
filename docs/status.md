@@ -16,9 +16,8 @@ repost filters accept kinds 6 and 16. Native and UI checks: [channels.md](channe
 
 ## Protocol 3 integration (2026-11-15)
 
-Protocol 3 added rich note filters including all-word
-text, exact phrases, exclusions, image/video/link requirements, author unions,
-known-profile names and bounded verified NIP-05 query lookups. Millisecond date
+Protocol 3 added all-word text, phrases, exclusions, media/link filters, author
+unions, known-profile names and bounded verified NIP-05 query lookups. Millisecond date
 bounds round inward to Nostr seconds. Inclusive end dates follow local calendar
 days across daylight-saving changes. Hide-reposts checks wrappers before resolving
 target content. Home/Global can mix notification rows;
@@ -191,10 +190,11 @@ Remote RPC failures retain signer-refused versus signer-missing; losing all RPC
 sockets now fails immediately and releases sockets instead of waiting a minute.
 ## Reader state and optional previews (2026-11-15)
 
-Protocol 5 adds bounded per-note link previews and near-note hints. The Worker
-probes health once and runs HTTP after other work, with one request in flight.
-The optional Rust lkjstr-preview binary fetches public page metadata; static
-hosting remains usable without it. No hosting changes have been performed.
-Reader reveals and unfolds are stored with each tab, independently of rows;
-period fields accept common calendar and relative forms, and tab search finds
-other workspaces. Passing gates and browser coverage are in verification.md.
+Protocol 5 adds bounded per-note link previews and near-note hints, including
+nested notification notes. The Worker probes health once; one HTTP request
+runs after other work. The optional Rust lkjstr-preview binary fetches public
+page metadata; static hosting works without it. No hosting changes were made.
+Reader reveals and unfolds persist per tab. Channel drafts save immediately;
+Enter opens only applied results. Scroll hydration restores each scroller once
+and respects page resets. Period fields accept common calendar/relative forms;
+tab search spans workspaces. Gates and browser coverage: verification.md.

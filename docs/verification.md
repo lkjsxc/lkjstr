@@ -160,3 +160,17 @@ The card/tab-search matrix has 56 captures at 1440/390 in both themes/languages.
 No commit, CI edit, existing-service restart, production access or deployment
 was performed. Docker is excluded by the worktree-only write restriction.
 The service deployment handoff and state audit are in ignored tmp/ reports.
+
+## Notes branch review (2026-11-15)
+
+All three findings are fixed. UI regressions cover immediate channel draft
+saving, Enter during debounce, pending results, composition and remount.
+Native checks cover near-note preview requests and settled cards for replies
+and mentions in Notifications and mixed Home/Global feeds. Scroll tests cover
+page resets before scroll events, delayed/replaced scrollers, independent axes
+and tab reattachment. Chromium checks the Docs reset in mock and real smoke.
+The regressions reproduced the pre-fix failures.
+Frontend check, build, mock/real smoke and the four quiet root gates pass.
+Channel/notification screenshots pass at 1440 light/en and 390 dark/ja.
+Changes are uncommitted; caches and artifacts stay in ignored tmp/.
+Docker is excluded because it would write outside this worktree.

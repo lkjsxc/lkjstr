@@ -31,6 +31,26 @@ export async function prepareViewChecks(page: Page, check: Check): Promise<() =>
   }
   await go('Docs');
   await front('docs').getByText('Privacy policy', { exact: true }).click();
+  const reset = await front('docs').evaluate(async (el) => {
+    // A short tile keeps both pages scrollable, so clamping cannot hide a failed reset.
+    const height = el.style.height;
+    el.style.height = '240px';
+    el.querySelector<HTMLButtonElement>('[data-page="shortcuts"]')!.click();
+    const frame = () => new Promise<void>((done) => requestAnimationFrame(() => done()));
+    await frame();
+    el.scrollTop = 180;
+    await frame();
+    await frame(); // Let the real scroll event save the previous page's offset.
+    const before = el.scrollTop;
+    el.querySelector<HTMLButtonElement>('[data-page="privacy"]')!.click();
+    await frame();
+    await frame(); // Mutation and resize observers must not undo go()'s reset.
+    const after = el.scrollTop;
+    const scrollable = el.scrollHeight > el.clientHeight;
+    el.style.height = height;
+    return before >= 100 && after === 0 && scrollable;
+  });
+  check('view state: selecting another Docs page resets to the top', reset);
   await front('docs').locator('.dgroup').first().locator('summary').click();
   const docsTab = await page.locator('.pane.cur .tab.active').getAttribute('data-view');
   await go('Stats');

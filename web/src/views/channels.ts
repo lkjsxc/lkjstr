@@ -20,6 +20,7 @@ export function mountChannels(el: HTMLElement, env: ViewEnv): () => void {
   const state = loadViewState<{ text?: string }>(env.instance);
   let sub: Subscription | undefined;
   let rows: readonly Row[] = [];
+  let appliedText = '';
   let phase: SubState['phase'] = 'cache';
   let account = env.engine.me();
   let can = ability(env.engine);
@@ -88,7 +89,8 @@ export function mountChannels(el: HTMLElement, env: ViewEnv): () => void {
     rows = [];
     phase = 'cache';
     draw();
-    const text = state.text?.trim() || undefined;
+    appliedText = state.text ?? '';
+    const text = appliedText.trim() || undefined;
     sub = env.engine.open(
       { source: 'channels', account: account || undefined, text },
       {
@@ -118,7 +120,7 @@ export function mountChannels(el: HTMLElement, env: ViewEnv): () => void {
   });
   find.addEventListener('keydown', (e) => {
     const first = rows.find((r): r is ChannelRow => r.kind === 'channel');
-    if (e.key === 'Enter' && !e.isComposing && first && state.text === find.value) goTo(first);
+    if (e.key === 'Enter' && !e.isComposing && first && appliedText === find.value) goTo(first);
   });
   const formSlot = h('div');
   const create = h('button', { class: 'btn', 'data-f': 'create' }, t('channel.create'));

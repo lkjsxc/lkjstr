@@ -92,6 +92,10 @@ export function createOwnViews(
           loadViewState<{ scroll: Record<string, number | { top: number; left: number }> }>(
             instance(tab),
           ).scroll ?? {};
+        // Hydrate each scroll axis once; later mutations must respect deliberate position changes.
+        // Weak entries also allow replacement child scrollers to restore their saved position.
+        const restoredTop = new WeakSet<HTMLElement>();
+        const restoredLeft = new WeakSet<HTMLElement>();
         const restore = (): void => {
           for (const [selector, position] of Object.entries(scroll)) {
             if (selector === 'self' && el.matches('.feed:not(.chans)')) continue;
@@ -99,8 +103,14 @@ export function createOwnViews(
             if (node) {
               const top = typeof position === 'number' ? position : position.top;
               const left = typeof position === 'number' ? 0 : position.left;
-              if (node.scrollHeight > node.clientHeight) node.scrollTop = top;
-              if (node.scrollWidth > node.clientWidth) node.scrollLeft = left;
+              if (!restoredTop.has(node) && node.scrollHeight > node.clientHeight) {
+                restoredTop.add(node);
+                node.scrollTop = top;
+              }
+              if (!restoredLeft.has(node) && node.scrollWidth > node.clientWidth) {
+                restoredLeft.add(node);
+                node.scrollLeft = left;
+              }
             }
           }
         };
@@ -122,6 +132,8 @@ export function createOwnViews(
                 : '';
           if (!selector || !el.isConnected || !visible.get()) return;
           if (selector === 'self' && el.matches('.feed:not(.chans)')) return;
+          restoredTop.add(target);
+          restoredLeft.add(target);
           scroll[selector] = { top: target.scrollTop, left: target.scrollLeft };
           saveViewSlice(instance(tab), 'scroll', scroll);
         };
