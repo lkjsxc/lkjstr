@@ -73,7 +73,6 @@ export function notifications(w: World, q: Query): NotificationRow[] {
       target: own('tiles'),
       unread: false,
     },
-    { type: 'follow', actors: [a('priya'), a('hiroshi')], others: 0, at: at(190), unread: false },
     {
       type: 'reaction',
       actors: [a('lena')],
@@ -92,7 +91,6 @@ export function notifications(w: World, q: Query): NotificationRow[] {
       target: own('quiet'),
       unread: false,
     },
-    { type: 'follow', actors: [a('marco')], others: 0, at: at(1900), unread: false },
   ];
   const muted = (pk: string): boolean =>
     w.state.mutes.some((m) => m.k === 'person' && m.pubkey === pk);

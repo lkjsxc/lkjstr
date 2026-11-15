@@ -20,7 +20,6 @@ pub(super) fn notifications(q: &Query, e: &Engine) -> Vec<Value> {
         }
         let parent = p::reply_parent(&event);
         let kind = match event.kind {
-            3 => "follow",
             6 | 16 => "repost",
             7 => "reaction",
             9735 => "zap",

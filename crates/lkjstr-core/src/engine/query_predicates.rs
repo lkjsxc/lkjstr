@@ -56,7 +56,6 @@ pub(super) fn matches_extra(e: &NostrEvent, q: &Query) -> bool {
                 "reposts" => matches!(e.kind, 6 | 16),
                 "reactions" => e.kind == 7,
                 "zaps" => e.kind == 9735,
-                "follows" => e.kind == 3,
                 _ => false,
             })
         }))

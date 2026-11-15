@@ -156,6 +156,7 @@ text, still reaches 4.5:1 on `--bg`. The theme follows the device or Settings.
   period of two days, people to keep, notifications flowing in; own Clear. An unchanged query keeps results and reading position.
 - A profile lists by kind in tabs under its header: posts, replies,
   reposts, reactions, media. A press anywhere on a notification opens it.
+  Notification toggles cover reactions, replies/mentions, reposts and zaps.
 - The Channels tab (NIP-28): joined ones first, a rule, the others by
   latest message; one field narrows by name or takes an address; a joined
   row shows a vermilion unread count, another offers Join.

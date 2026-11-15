@@ -251,6 +251,8 @@ describe('formats', () => {
   });
   it('notification toggles: nothing picked is everything; replies bring mentions', () => {
     expect(typesQuery([])).toBeUndefined();
+    expect(typesQuery(['follow'])).toBeUndefined();
+    expect(typesQuery(['follow', 'reaction'])).toEqual(['reaction']);
     expect(typesQuery(['reply', 'zap'])).toEqual(['reply', 'mention', 'zap']);
   });
   it('emoji are found in both languages, and the latest used comes first, once', () => {

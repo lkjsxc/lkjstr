@@ -22,7 +22,6 @@ const TYPES: readonly (readonly [string, IconName, Key, readonly NotificationTyp
   ['reply', 'reply', 'ntype.reply', ['reply', 'mention']],
   ['repost', 'repost', 'ntype.repost', ['repost']],
   ['zap', 'zap', 'ntype.zap', ['zap']],
-  ['follow', 'user', 'ntype.follow', ['follow']],
 ];
 /** The notification types a pick stands for (nothing picked: no narrowing). Pure, tested. */
 export const typesQuery = (only: readonly string[] = []): NotificationType[] | undefined => {

@@ -136,6 +136,9 @@ export async function auditReading({ page, find, fact, view, peopleToken, messag
       return bar && getComputedStyle(bar).position !== 'fixed' && e.contains(bar);
     }),
   );
+  // Keep the scroll check meaningful with the shorter notification fixture list.
+  const viewport = page.viewportSize();
+  if (viewport) await page.setViewportSize({ ...viewport, height: Math.min(viewport.height, 480) });
   await news.evaluate((e) => {
     e.scrollTop = 500;
   });
@@ -150,6 +153,7 @@ export async function auditReading({ page, find, fact, view, peopleToken, messag
   await news.evaluate((e) => {
     e.scrollTop = 0;
   });
+  if (viewport) await page.setViewportSize(viewport);
   const notice = news.locator('.notif').first();
   if (await notice.count()) {
     const b = await notice.boundingBox();

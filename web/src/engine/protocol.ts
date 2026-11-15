@@ -65,7 +65,7 @@ export type Source =
   | 'channels' // channel rows: the channels on the reader's list first (in the list's order), then the others known
   | 'channel'; // one `ChannelRow` first, then the channel's messages as note rows, newest first
 
-export type NotificationType = 'mention' | 'reply' | 'repost' | 'reaction' | 'zap' | 'follow';
+export type NotificationType = 'mention' | 'reply' | 'repost' | 'reaction' | 'zap';
 
 /** What a subscription shows. Fields that do not apply to a source are ignored. */
 export type Query = {

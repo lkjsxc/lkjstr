@@ -266,7 +266,7 @@ describe('mock engine', () => {
     const types = new Set(
       (last('rows')?.rows ?? []).map((r) => (r.kind === 'notification' ? r.type : '')),
     );
-    expect([...types].sort()).toEqual(['follow', 'mention', 'reaction', 'reply', 'repost', 'zap']);
+    expect([...types].sort()).toEqual(['mention', 'reaction', 'reply', 'repost', 'zap']);
     engine.handle({ t: 'open', sub: 'z', query: { source: 'notifications', types: ['zap'] } });
     engine.handle({ t: 'window', sub: 'z', anchor: 'top', before: 0, after: 100 });
     expect(last('rows')?.rows.every((r) => r.kind === 'notification' && r.type === 'zap')).toBe(

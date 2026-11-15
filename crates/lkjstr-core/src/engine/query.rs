@@ -52,7 +52,7 @@ pub fn filter(store: &Store, q: &Query) -> NostrFilter {
             f.tags.insert("e".into(), vec![target]);
         }
         Source::Notifications => {
-            f.kinds = Some(vec![1, 42, 3, 6, 16, 7, 9735]);
+            f.kinds = Some(vec![1, 42, 6, 16, 7, 9735]);
             f.tags
                 .insert("p".into(), q.account.clone().into_iter().collect());
         }

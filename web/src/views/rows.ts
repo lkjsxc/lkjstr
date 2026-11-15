@@ -191,7 +191,7 @@ export function renderPerson(row: PersonRow, env: ViewEnv): HTMLElement {
 }
 
 /** "A and B reacted to your note": each person opens their profile; a press anywhere else opens what the news
- * is about, as on a note: the reader's note, or for a follow the person who followed. */
+ * is about, as on a note. */
 export function renderNotification(row: NotificationRow, env: ViewEnv): HTMLElement {
   if (row.note && (row.type === 'mention' || row.type === 'reply')) {
     const el = renderNote(row.note, env);

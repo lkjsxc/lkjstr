@@ -152,8 +152,8 @@ Some variants of implemented mock messages remain incomplete:
   invalid responses fail explicitly. Other media protocols are unsupported.
 - open/notifications: trusted LNURL-provider discovery for zap receipts is not
   integrated. Cached zap rows are lower-confidence receipt data; full trust
-  validation is not claimed. Follow notifications reflect retained kind-3 events,
-  not an unbounded historical follow/unfollow ledger.
+  validation is not claimed. Notifications exclude kind-3 contact lists, including
+  cached lists restored on load; notification relay filters omit kind 3.
 
 Publishing now plans 12 author outboxes plus eight inbox/context routes, retries
 through a deadline and reports success on first acceptance. Missing recipient

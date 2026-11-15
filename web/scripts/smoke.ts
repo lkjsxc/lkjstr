@@ -1084,7 +1084,7 @@ async function reading(browser: Browser, still: Record<string, unknown>): Promis
   await page.keyboard.press('Escape');
 
   const notes = '.view[data-kind="notifications"]';
-  fact('five notification toggles', (await count(page, `${notes} .ntype`)) === 5);
+  fact('four notification toggles', (await count(page, `${notes} .ntype`)) === 4);
   await page.locator(`${notes} .ntype`).nth(3).click();
   await page.waitForTimeout(300);
   fact(
