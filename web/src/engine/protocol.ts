@@ -12,8 +12,10 @@
 // (the engine queues it). Unknown tags are ignored by both sides, so either side can be ahead by one version.
 
 /** 2: `account.key` exists. An engine that reports 1 cannot hand a key back, so the interface does not offer to
- * create an account on it. */
-export const PROTOCOL_VERSION = 2;
+ * create an account on it.
+ * 3: the query fields `phrases`, `exclude`, `has`, `from`, `notifications` and `show`. The interface draws their
+ * controls only for an engine that reports 3 or more, and sends an older one the plain words in `text`. */
+export const PROTOCOL_VERSION = 3;
 
 /** Chosen by the interface, unique among its open subscriptions. */
 export type SubId = string;
@@ -82,6 +84,24 @@ export type Query = {
   readonly language?: readonly string[];
   /** Words every note must contain (any case). For `search` this is the search itself. */
   readonly text?: string;
+  // Since version 3.
+  /** Exact phrases every note must contain (any case), spaces included. */
+  readonly phrases?: readonly string[];
+  /** Words or phrases: a note that contains any of them (any case) is left out. */
+  readonly exclude?: readonly string[];
+  /** Only notes that carry every one of these: a picture, a video, a link in the text. */
+  readonly has?: readonly ('image' | 'video' | 'link')[];
+  /** Only notes by these people, each as the reader typed it: an npub or nprofile, a NIP-05 name, or a display
+   * name. The engine resolves them (a display name against the profiles it knows, exact match first); one that
+   * resolves to nobody matches nothing. With `authors`, the union of both. */
+  readonly from?: readonly string[];
+  /** `home`, `global`: the account's notifications flow into the list at their own time, as `NotificationRow`s
+   * (the same rows the `notifications` source gives; one whose note is already in the list is left out). */
+  readonly notifications?: boolean;
+  /** `profile`: which of the person's events follow the header. `posts`: their notes that answer nobody;
+   * `replies`: their replies; `reposts`: the notes they reposted (as repost rows); `reactions`: the notes they
+   * reacted to, newest reaction first; `media`: their notes with a picture or a video. Absent: notes and replies. */
+  readonly show?: 'posts' | 'replies' | 'reposts' | 'reactions' | 'media';
 };
 
 /** Where a window sits. `top` follows the head of the list: new rows are inserted as they arrive. A key holds

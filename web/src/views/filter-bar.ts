@@ -1,34 +1,99 @@
-// The filter of a feed: part of the tab and saved with it. A row of ▶ and a text field (as in ytenrich's lists);
-// ▶ opens the rest: replies, reposts, media, period. While it narrows anything the row carries its own way back.
+// The filter of a feed: part of the tab and saved with it. A row of ▶ and one query field; ▶ opens the rest:
+// replies, reposts, media, a period from one day to another, the people to keep, and on a timeline whether
+// notifications flow into it. The query is words, "a phrase", -word, from:name and has:image|video|link. While
+// the row narrows anything it carries its own way back. An engine older than protocol 3 gets the words only,
+// and the controls it cannot serve are not drawn.
 import type { Query } from '../engine/protocol.ts';
 import { h } from '../shared/h.ts';
 import { type Key, t } from '../shared/i18n.ts';
 import { pressed } from '../shared/keys.ts';
 
 export type Filter = {
+  /** The query as typed. */
   text?: string;
   replies?: boolean;
   reposts?: boolean;
   media?: 'only' | 'none';
-  range?: 'day' | 'week';
+  /** The period: local days as `yyyy-mm-dd`, both included. */
+  start?: string;
+  end?: string;
+  /** Only these people, each as typed (a name, an npub, a NIP-05 name). */
+  people?: string[];
+  /** Notifications flow into the timeline. */
+  news?: boolean;
   open?: boolean;
-  /** The reader asked for the bar. */
+  /** The reader asked for the row while the setting hides it. */
   shown?: boolean;
+};
+export type FilterOpts = {
+  /** The engine understands the whole query, the people and the notifications (protocol 3). */
+  readonly rich: boolean;
+  /** A timeline of the reader's own account: notifications can flow into it. */
+  readonly news: boolean;
+};
+type Has = 'image' | 'video' | 'link';
+export type Parsed = {
+  words: string[];
+  phrases: string[];
+  exclude: string[];
+  from: string[];
+  has: Has[];
+};
+
+/** A typed query in its parts. Pure, tested. */
+export function parseQuery(text: string): Parsed {
+  const out: Parsed = { words: [], phrases: [], exclude: [], from: [], has: [] };
+  for (const m of text.matchAll(/(-?)(from:|has:)?(?:"([^"]*)"|(\S+))/gi)) {
+    const value = (m[3] ?? m[4] ?? '').trim();
+    const op = (m[2] ?? '').toLowerCase();
+    if (!value) continue;
+    if (m[1]) out.exclude.push(`${op}${value}`);
+    else if (op === 'from:') out.from.push(value.replace(/^@/, ''));
+    else if (op === 'has:' && /^(image|video|link)$/i.test(value))
+      out.has.push(value.toLowerCase() as Has);
+    else if (op) out.words.push(`${op}${value}`);
+    else if (m[3] !== undefined) out.phrases.push(value);
+    else out.words.push(value);
+  }
+  return out;
+}
+/** The first instant of a local day `yyyy-mm-dd` (undefined: not a day of the calendar). */
+const dayStart = (day: string | undefined): number | undefined => {
+  const m = /^(\d{4})-(\d\d)-(\d\d)$/.exec(day ?? '');
+  if (!m) return undefined;
+  const d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+  return d.getMonth() === Number(m[2]) - 1 && d.getDate() === Number(m[3])
+    ? d.getTime()
+    : undefined;
 };
 
 /** The query fields a filter stands for. Pure, tested. */
-export function filterQuery(f: Filter, now: number): Partial<Query> {
+export function filterQuery(f: Filter, rich = true): Partial<Query> {
   const out: { -readonly [K in keyof Query]?: Query[K] } = {};
-  if (f.text?.trim()) out.text = f.text.trim();
+  const raw = f.text?.trim() ?? '';
+  const p = parseQuery(rich ? raw : '');
+  if (!rich && raw) out.text = raw;
+  if (p.words.length) out.text = p.words.join(' ');
+  if (p.phrases.length) out.phrases = p.phrases;
+  if (p.exclude.length) out.exclude = p.exclude;
+  if (p.has.length) out.has = [...new Set(p.has)];
+  const from = [...p.from, ...(rich ? (f.people ?? []) : [])];
+  if (from.length) out.from = [...new Set(from)];
   if (f.replies === false) out.replies = false;
   if (f.reposts === false) out.reposts = false;
   if (f.media) out.media = f.media;
-  if (f.range) out.since = now - (f.range === 'day' ? 1 : 7) * 86_400_000;
+  const since = dayStart(f.start);
+  const until = dayStart(f.end);
+  if (since !== undefined) out.since = since;
+  if (until !== undefined) out.until = until + 86_400_000 - 1;
+  if (rich && f.news) out.notifications = true;
   return out;
 }
 export const filterActive = (f: Filter): boolean =>
-  f.replies === false || f.reposts === false || Boolean(f.media) || Boolean(f.range);
-/** Whether the feed is narrowed at all: then the bar is in view whether it was asked for or not. */
+  f.replies === false ||
+  f.reposts === false ||
+  Boolean(f.media || f.start || f.end || f.news || f.people?.length);
+/** Whether the feed is changed at all: then the row is in view whether it was asked for or not. */
 export const filterNarrows = (f: Filter): boolean => filterActive(f) || Boolean(f.text?.trim());
 
 export function filterBar(
@@ -38,18 +103,19 @@ export function filterBar(
   /** Escape in an empty field. */
   leave: () => void,
   /** Takes every narrowing back: offered in the row while there is one. */
-  clear?: () => void,
+  clear: (() => void) | undefined,
+  opts: FilterOpts,
 ): HTMLElement {
+  const line = (label: Key, ...body: (HTMLElement | null)[]): HTMLElement =>
+    h('div', { class: 'prow' }, h('span', { class: 'muted' }, t(label)), ...body);
   const seg = <T>(
     label: Key,
     options: readonly (readonly [T, Key])[],
     value: T,
     set: (v: T) => Filter,
   ): HTMLElement =>
-    h(
-      'div',
-      { class: 'prow' },
-      h('span', { class: 'muted' }, t(label)),
+    line(
+      label,
       h(
         'div',
         { class: 'seg-ctl' },
@@ -66,27 +132,48 @@ export function filterBar(
         ),
       ),
     );
+  const onOff = [
+    [true, 'filter.show'],
+    [false, 'filter.hide'],
+  ] as const;
+  // Days are typed and shown as yyyy/mm/dd, as every date here is; a day that is not one is marked and ignored.
+  const day = (key: 'start' | 'end', label: Key): HTMLElement =>
+    h('input', {
+      type: 'text',
+      inputmode: 'numeric',
+      size: 10,
+      value: (f[key] ?? '').replaceAll('-', '/'),
+      placeholder: 'yyyy/mm/dd',
+      'aria-label': t(label),
+      title: t(label),
+      onchange: (e) => {
+        const field = e.target as HTMLInputElement;
+        const m = /^(\d{4})[/\-.](\d{1,2})[/\-.](\d{1,2})$/.exec(field.value.trim());
+        const next = m ? `${m[1]}-${m[2]?.padStart(2, '0')}-${m[3]?.padStart(2, '0')}` : undefined;
+        if (field.value.trim() && dayStart(next) === undefined)
+          return field.setAttribute('aria-invalid', 'true');
+        change({ ...f, [key]: next }, false);
+      },
+    });
+  const people = f.people ?? [];
+  const person = h('input', {
+    type: 'text',
+    class: 'padd',
+    placeholder: t('filter.person'),
+    'aria-label': t('filter.person'),
+    onkeydown: (e) => {
+      const ev = e as KeyboardEvent;
+      const name = person.value.trim().replace(/^@/, '');
+      if (ev.key !== 'Enter' || ev.isComposing || ev.keyCode === 229 || !name) return;
+      ev.preventDefault();
+      change({ ...f, people: [...new Set([...people, name])] }, false);
+    },
+  });
   const panel = h(
     'div',
     { class: 'rpanel', hidden: !f.open },
-    seg(
-      'filter.replies',
-      [
-        [true, 'filter.show'],
-        [false, 'filter.hide'],
-      ] as const,
-      f.replies !== false,
-      (v) => ({ ...f, replies: v }),
-    ),
-    seg(
-      'filter.reposts',
-      [
-        [true, 'filter.show'],
-        [false, 'filter.hide'],
-      ] as const,
-      f.reposts !== false,
-      (v) => ({ ...f, reposts: v }),
-    ),
+    seg('filter.replies', onOff, f.replies !== false, (v) => ({ ...f, replies: v })),
+    seg('filter.reposts', onOff, f.reposts !== false, (v) => ({ ...f, reposts: v })),
     seg(
       'filter.media',
       [
@@ -97,16 +184,48 @@ export function filterBar(
       f.media,
       (v) => ({ ...f, media: v }),
     ),
-    seg(
+    line(
       'filter.range',
-      [
-        [undefined, 'filter.any'],
-        ['day', 'filter.day'],
-        ['week', 'filter.week'],
-      ] as const,
-      f.range,
-      (v) => ({ ...f, range: v }),
+      h(
+        'div',
+        { class: 'pdays' },
+        day('start', 'filter.start'),
+        h('span', { class: 'muted', 'aria-hidden': 'true' }, '–'),
+        day('end', 'filter.end'),
+      ),
     ),
+    opts.rich
+      ? line(
+          'filter.people',
+          h(
+            'div',
+            { class: 'ppeople' },
+            people.map((name) =>
+              h(
+                'button',
+                {
+                  class: 'chip on',
+                  title: t('list.remove', { what: name }),
+                  onclick: () => change({ ...f, people: people.filter((x) => x !== name) }, false),
+                },
+                `${name} ×`,
+              ),
+            ),
+            person,
+          ),
+        )
+      : null,
+    opts.rich && opts.news
+      ? seg(
+          'filter.news',
+          [
+            [false, 'filter.hide'],
+            [true, 'filter.show'],
+          ] as const,
+          f.news === true,
+          (v) => ({ ...f, news: v || undefined }),
+        )
+      : null,
   );
   const toggle = h(
     'button',
@@ -124,6 +243,7 @@ export function filterBar(
     value: f.text ?? '',
     placeholder: t(placeholder),
     'aria-label': t(placeholder),
+    title: opts.rich ? t('filter.syntax') : null,
   });
   const reset = clear
     ? h(

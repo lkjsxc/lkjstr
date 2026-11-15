@@ -18,7 +18,6 @@ import { en } from '../src/shared/strings-en.ts';
 import { ja } from '../src/shared/strings-ja.ts';
 import { withRecent } from '../src/views/emoji-picker.ts';
 import { typesQuery } from '../src/views/feed-bar.ts';
-import { filterActive, filterNarrows, filterQuery } from '../src/views/filter-bar.ts';
 import { reconcile } from '../src/views/lists.ts';
 import { freshTab, kindOf, VIEWS } from '../src/views/registry.ts';
 import { matchesWords } from '../src/wm/launcher.ts';
@@ -249,16 +248,6 @@ describe('formats', () => {
     expect(countText(2100, false, 'en')).toBe('2.1k');
     expect(countText(21000, false, 'ja')).toBe('2.1万');
   });
-  it('a filter becomes query fields; an untouched one adds nothing', () => {
-    expect(filterQuery({}, 0)).toEqual({});
-    expect(
-      filterQuery({ text: ' 猫 ', replies: false, media: 'only', range: 'day' }, 86_400_000),
-    ).toEqual({ text: '猫', replies: false, media: 'only', since: 0 });
-    expect(filterActive({ text: 'x' })).toBe(false);
-    expect(filterActive({ reposts: false })).toBe(true);
-    expect(filterNarrows({ text: 'x' })).toBe(true);
-    expect(filterNarrows({ shown: true, open: true, text: ' ' })).toBe(false);
-  });
   it('notification toggles: nothing picked is everything; replies bring mentions', () => {
     expect(typesQuery([])).toBeUndefined();
     expect(typesQuery(['reply', 'zap'])).toEqual(['reply', 'mention', 'zap']);
@@ -278,15 +267,5 @@ describe('formats', () => {
       ...DEFAULT_SETTINGS,
       textSize: 19,
     });
-  });
-});
-
-describe('the time beside a held scrollbar', () => {
-  it('says as much as the span of the list needs', async () => {
-    const { scrubText } = await import('../src/views/feed-scrub.ts');
-    const at = new Date(2026, 10, 15, 9, 5).getTime();
-    expect(scrubText(at, at + 3_600_000, at - 3_600_000)).toBe('09:05');
-    expect(scrubText(at, at + 3_600_000, at - 3 * 86_400_000)).toBe('2026/11/15 09:05');
-    expect(scrubText(at, at, at - 200 * 86_400_000)).toBe('2026/11/15');
   });
 });

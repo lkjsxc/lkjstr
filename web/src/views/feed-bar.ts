@@ -6,6 +6,7 @@ import { h } from '../shared/h.ts';
 import { type Key, t } from '../shared/i18n.ts';
 import { type IconName, icon } from '../shared/icons.ts';
 import { pressed, typing } from '../shared/keys.ts';
+import { rich } from './can.ts';
 import { type Filter, filterBar, filterNarrows, filterQuery } from './filter-bar.ts';
 import type { ViewEnv } from './registry.ts';
 
@@ -104,18 +105,23 @@ export function mountFeedBar(o: {
     put(
       filterBar(
         f,
-        search ? 'filter.search' : 'filter.contains',
+        search ? 'filter.search' : 'filter.query',
         (next, typed) => {
           if (search) state.text = next.text;
           state.filter = search ? { ...next, text: undefined } : next;
           o.save();
+          const full = rich(env.engine);
           const narrowed =
-            JSON.stringify(filterQuery(next, 0)) !== JSON.stringify(filterQuery(f, 0));
+            JSON.stringify(filterQuery(next, full)) !== JSON.stringify(filterQuery(f, full));
           if (!typed) draw();
           if (narrowed || typed) o.reopen();
         },
         () => show(false),
         search ? undefined : clear,
+        {
+          rich: rich(env.engine),
+          news: (kind === 'home' || kind === 'global') && !!env.engine.me(),
+        },
       ),
     );
   };
@@ -146,5 +152,14 @@ export function mountFeedBar(o: {
   draw();
   if (search && !state.text) input()?.focus({ preventScroll: true });
   const off = follow(draw);
-  return () => (off(), window.removeEventListener('keydown', key));
+  // The engine says what it understands after the first rows were asked for: a filter is then asked again in full.
+  let full = rich(env.engine);
+  const offInfo = env.engine.info.subscribe(() => {
+    if (full === rich(env.engine)) return;
+    full = !full;
+    draw();
+    if (filterNarrows(filter())) o.reopen();
+  });
+  const offWho = env.engine.accounts.subscribe(draw);
+  return () => (off(), offInfo(), offWho(), window.removeEventListener('keydown', key));
 }

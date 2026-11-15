@@ -1,8 +1,8 @@
 // Which rows a query shows, in order. The mock materialises whole lists; the real engine pages its store.
 import type { Query, Row } from '../protocol.ts';
 import { stranger } from './accounts.ts';
-import { finite } from './lists.ts';
-import { byPubkey, byRef, FOLLOWERS, PEOPLE } from './people.ts';
+import { finite, notifications } from './lists.ts';
+import { byPubkey, byRef, FOLLOWERS, PEOPLE, type Person } from './people.ts';
 import { noteRow, pendingProfile, personRow, profileRow, type RowOpts } from './rows.ts';
 import type { MNote, World } from './world.ts';
 
@@ -13,6 +13,32 @@ const LISTS: Record<string, readonly string[]> = {
   photographers: ['aoi', 'marco', 'ichiro', 'mio'],
 };
 const hay = (n: MNote): string => `${n.text} ${n.by.author.name}`.toLowerCase();
+
+/** Whether `typed` (a name, a handle, an npub, a NIP-05 name) names this person. */
+const named = (p: Person, typed: string): boolean => {
+  const x = typed.toLowerCase();
+  const a = p.author;
+  return (
+    a.npub === x ||
+    p.handle === x ||
+    a.name.toLowerCase().includes(x) ||
+    (a.nip05 ?? '').toLowerCase().startsWith(x)
+  );
+};
+/** A profile's list by kind. Who reacted to what is not part of the mock world: the reader's own reactions are
+ * real, another person's are a fixed made-up slice. */
+function ofProfile(q: Query, n: MNote, who: string | undefined, me: string): boolean {
+  const pk = n.by.author.pubkey;
+  if (q.show === 'reposts') return n.reposts.some((r) => r.by.author.pubkey === who);
+  if (q.show === 'reactions')
+    return who === me
+      ? [...n.reactions.values()].some((r) => r.mine)
+      : pk !== who && Number.parseInt(n.id.slice(0, 4), 16) % 5 === 0;
+  if (pk !== who) return false;
+  if (q.show === 'posts') return !n.re;
+  if (q.show === 'replies') return Boolean(n.re);
+  return q.show === 'media' ? n.media.length > 0 : true;
+}
 
 /** Whether a note belongs to a note query (thread aside). */
 export function matches(w: World, q: Query, n: MNote, me: string): boolean {
@@ -25,7 +51,14 @@ export function matches(w: World, q: Query, n: MNote, me: string): boolean {
   if (q.media === 'none' && n.media.length) return false;
   if (q.replies === false && n.re) return false;
   const words = (q.text ?? '').toLowerCase().split(/\s+/).filter(Boolean);
-  if (!words.every((x) => hay(n).includes(x))) return false;
+  const text = hay(n);
+  if (!words.every((x) => text.includes(x))) return false;
+  if (q.phrases?.some((x) => !text.includes(x.toLowerCase()))) return false;
+  if (q.exclude?.some((x) => text.includes(x.toLowerCase()))) return false;
+  const lacks = (k: 'image' | 'video' | 'link'): boolean =>
+    k === 'link' ? !n.segments.some((s) => s.k === 'link') : !n.media.some((m) => m.type === k);
+  if (q.has?.some(lacks)) return false;
+  if (q.from?.length && !q.from.some((x) => named(n.by, x))) return false;
   const follows = w.state.following.has(pk) || pk === me;
   switch (q.source) {
     case 'home':
@@ -37,13 +70,13 @@ export function matches(w: World, q: Query, n: MNote, me: string): boolean {
     case 'relay':
       return true;
     case 'profile':
-      return pk === (q.pubkey ?? byRef(q.ref ?? '')?.author.pubkey);
+      return ofProfile(q, n, q.pubkey ?? byRef(q.ref ?? '')?.author.pubkey, me);
     case 'hashtag':
       return n.segments.some(
         (s) => s.k === 'hashtag' && s.tag.toLowerCase() === q.tag?.toLowerCase(),
       );
     case 'search':
-      return words.length > 0;
+      return words.length > 0 || Boolean(q.phrases?.length || q.from?.length || q.has?.length);
     case 'bookmarks':
       return w.state.bookmarks.has(n.id);
     case 'list':
@@ -108,7 +141,22 @@ export function select(w: World, q: Query, me: string): Entry[] {
     return people.map((p) => ({ key: p.author.pubkey, row: () => personRow(w, p, me) }));
   }
   const opts: RowOpts = { me, reposts: q.reposts };
-  const notes = w.notes.filter((n) => matches(w, q, n, me)).map((n) => entry(w, n, opts));
+  const kept = w.notes.filter((n) => matches(w, q, n, me));
+  const notes = kept.map((n) => entry(w, n, opts));
+  if (q.notifications && me && (q.source === 'home' || q.source === 'global')) {
+    // Notifications flow in at their own time; one whose note is already in the list is left out.
+    const ids = new Set(kept.map((n) => n.id));
+    const news = notifications(w, { source: 'notifications', account: me })
+      .filter((r) => !r.note || !ids.has(r.note.id))
+      .sort((a, b) => b.at - a.at);
+    const out: Entry[] = [];
+    let i = 0;
+    kept.forEach((n, at) => {
+      for (; i < news.length && (news[i]?.at ?? 0) >= n.at; i++) out.push(fixed(news[i] as Row));
+      out.push(notes[at] as Entry);
+    });
+    return [...out, ...news.slice(i).map(fixed)];
+  }
   if (q.source === 'profile') {
     const p = byPubkey(q.pubkey ?? '') ?? byRef(q.ref ?? '');
     if (p)

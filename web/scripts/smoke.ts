@@ -396,6 +396,7 @@ async function run(browser: Browser): Promise<void> {
   await keyboard(browser, still);
   await defaults(browser, still);
   await scrolling(still);
+  await filtering(browser, still);
 }
 
 const FEED = '.view[data-kind="home"]';
@@ -503,6 +504,110 @@ async function scrolling(still: Record<string, unknown>): Promise<void> {
     [before, after],
   );
   await bars.close();
+}
+
+/** The filter's query, period, people and notifications; the kinds of a profile. */
+async function filtering(browser: Browser, still: Record<string, unknown>): Promise<void> {
+  const page = await open(browser, '/', { ...still, fresh: true });
+  const feed = '.view[data-kind="home"]';
+  const field = page.locator(`${feed} .rbar input`);
+  const settle = async (): Promise<void> => {
+    await page.waitForTimeout(450);
+  };
+  const authors = (): Promise<string[]> =>
+    page.locator(`${feed} .list > .note .nhead .name`).allInnerTexts();
+  const all = await count(page, `${feed} .list > .note`);
+  await field.fill('from:"Sam Rivera"');
+  await settle();
+  const sam = await authors();
+  fact(
+    'from: keeps one person’s notes',
+    sam.length > 0 && sam.every((x) => x.includes('Sam Rivera')),
+    sam,
+  );
+  await field.fill('has:image -霧');
+  await settle();
+  const pics = await page
+    .locator(`${feed} .list > .note`)
+    .evaluateAll((notes) =>
+      notes.map((n) => [
+        n.querySelector('.mbox img, .mgrid img, .media img') !== null,
+        n.textContent?.includes('霧'),
+      ]),
+    );
+  fact(
+    'has:image and -word narrow together',
+    pics.length > 0 && pics.length < all && pics.every(([img, fog]) => img && !fog),
+    pics.length,
+  );
+  await page.locator(`${feed} .rclear`).click();
+  await settle();
+  await page.locator(`${feed} .rtoggle`).click();
+  const days = page.locator(`${feed} .pdays input`);
+  fact(
+    'the period is two days, written yyyy/mm/dd',
+    (await days.count()) === 2 && (await days.first().getAttribute('placeholder')) === 'yyyy/mm/dd',
+  );
+  await days.nth(1).fill('2001/01/01');
+  await days.nth(1).press('Enter');
+  await settle();
+  fact(
+    'a period that ends before anything shows nothing',
+    (await count(page, `${feed} .list > .note`)) === 0,
+  );
+  await page.locator(`${feed} .rclear`).click();
+  await settle();
+  await page.locator(`${feed} .rtoggle`).click();
+  await page.locator(`${feed} .padd`).fill('aoi');
+  await page.locator(`${feed} .padd`).press('Enter');
+  await settle();
+  const kept = await authors();
+  fact(
+    'a person on the list narrows the feed to them and stays as a chip',
+    kept.length > 0 &&
+      new Set(kept).size === 1 &&
+      (await count(page, `${feed} .ppeople .chip`)) === 1,
+    [...new Set(kept)],
+  );
+  await page.locator(`${feed} .ppeople .chip`).click();
+  await settle();
+  await page.locator(`${feed} .prow`).last().locator('.chip').last().click();
+  await page.locator(`${feed} .list > .notif`).first().waitFor();
+  fact(
+    'notifications flow into the timeline when asked',
+    (await count(page, `${feed} .list > .notif`)) > 0,
+  );
+  await page.locator(`${feed} .rclear`).click();
+  await settle();
+  fact('and leave again', (await count(page, `${feed} .list > .notif`)) === 0);
+
+  // A profile lists by kind, in tabs under its header.
+  await page.locator(`${feed} .note .avb`).first().click();
+  const prof = '.pane.cur .view[data-kind="profile"]';
+  await page.locator(`${prof} .pkinds`).waitFor();
+  const kinds = await page.locator(`${prof} .pkind`).allInnerTexts();
+  fact(
+    'a profile’s kinds: posts, replies, reposts, reactions, media',
+    kinds.join() === 'Posts,Replies,Reposts,Reactions,Media',
+    kinds,
+  );
+  fact(
+    'posts first, and none of them answers anybody',
+    (await count(page, `${prof} .list > .note .ctx .i-reply`)) === 0,
+  );
+  await page.locator(`${prof} .pkind`).nth(4).click();
+  await page.waitForTimeout(300);
+  const media = await page
+    .locator(`${prof} .list > .note`)
+    .evaluateAll((notes) =>
+      notes.map((n) => n.querySelector('.content img, .content video, .mbox') !== null),
+    );
+  fact(
+    'media: every note carries a picture or a video',
+    media.every(Boolean) && (await page.locator(`${prof} .pkind.on`).innerText()) === 'Media',
+    media,
+  );
+  await page.context().close();
 }
 
 /** The layout of a device that holds nothing yet, for a reader and a visitor, and what "Reset layout" gives. */
@@ -993,7 +1098,7 @@ async function reading(browser: Browser, still: Record<string, unknown>): Promis
     .evaluate((el) => [...el.children].map((c) => c.className.match(/a-(\w+)/)?.[1]).join(' '));
   fact(
     'actions: reply, repost, reaction, then the rest',
-    order.startsWith('reply repost heart smile zap'),
+    order.startsWith('reply repost heart zap smile'),
     order,
   );
   await page.context().close();
@@ -1248,7 +1353,7 @@ async function pages(browser: Browser, still: Record<string, unknown>): Promise<
   fact(
     'about: version, engine, source, licence',
     /lkjstr \d+\.\d+\.\d+/.test(about) &&
-      about.includes('mock, protocol 2') &&
+      about.includes('mock, protocol 3') &&
       (await count(page, '.view[data-kind="about"] a[href="https://github.com/lkjsxc/lkjstr"]')) ===
         1 &&
       about.includes('Apache License 2.0'),

@@ -9,7 +9,7 @@ import { h } from '../shared/h.ts';
 import { type Key, t } from '../shared/i18n.ts';
 import { icon } from '../shared/icons.ts';
 import { loadViewState, saveViewState } from '../shared/view-state.ts';
-import { ability } from './can.ts';
+import { ability, rich } from './can.ts';
 import { type BarState, mountFeedBar, typesQuery } from './feed-bar.ts';
 import { createRowList } from './feed-draw.ts';
 import { mountFeedKeys } from './feed-keys.ts';
@@ -18,6 +18,7 @@ import { mountScrub } from './feed-scrub.ts';
 import { filterQuery } from './filter-bar.ts';
 import { onHeld } from './held.ts';
 import { plainName } from './parts.ts';
+import { mountProfileKinds } from './profile-kinds.ts';
 import type { ViewEnv } from './registry.ts';
 
 const PAGE = 60; // rows asked for beyond what is on screen
@@ -32,6 +33,8 @@ type State = BarState & {
   id?: string;
   ref?: string;
   tag?: string;
+  /** A profile: which of the person's events are listed. */
+  show?: string;
   /** Where the reader is, so the tab comes back to the same note after anything: a reload, another tile. */
   pos?: Place;
 };
@@ -83,14 +86,15 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
     id: state.id,
     ref: state.ref,
     tag: state.tag,
-    ...(kind === 'search' ? { text: state.text ?? '' } : {}),
+    ...(kind === 'search' ? { text: '' } : {}),
     ...(kind === 'notifications' ? { types: typesQuery(state.only) } : {}),
     ...(FILTERED.has(kind)
       ? filterQuery(
           { ...state.filter, ...(kind === 'search' ? { text: state.text } : {}) },
-          Date.now(),
+          rich(env.engine),
         )
       : {}),
+    ...kinds?.query(),
   });
   const request = (anchor: Anchor, before: number, after: number): void => {
     waiting = true;
@@ -101,6 +105,7 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
   const sync = (): void => {
     const settle = keeper.hold();
     drawn.draw(rows);
+    kinds?.seat(rows[0]?.kind === 'profile' ? drawn.node(rows[0].key) : undefined);
     showState();
     seat();
     settle();
@@ -258,6 +263,8 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
     reopen: () => (open(), title()),
   });
 
+  const kinds =
+    kind === 'profile' ? mountProfileKinds({ env, state, save, reopen: () => open() }) : undefined;
   if (state.title) env.setTitle(state.title);
   open(true);
   const offVisible = env.visible.subscribe((on) => {
@@ -280,6 +287,7 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
     offSettings();
     offHeld();
     bar();
+    kinds?.dispose();
     scrub();
     keys.dispose();
     keeper.dispose();
