@@ -99,7 +99,7 @@ function createCore(post: (msg: FromEngine) => void, now: () => number) {
             s.end++, push(s, { op: 'insert', before: null, rows: [e.row()] });
           continue;
         }
-        const at = s.query.source === 'profile' ? 1 : 0;
+        const at = s.query.source === 'profile' || s.query.source === 'channel' ? 1 : 0;
         const e = entry(world, n, { me: me(), reposts: s.query.reposts });
         const first = s.entries[at]?.key ?? null;
         s.entries.splice(at, 0, e);
@@ -237,6 +237,7 @@ export function createMockEngine(post: (msg: FromEngine) => void, now = Date.now
             'list',
             'relay',
             'notifications',
+            'channel',
           ].includes(msg.query.source);
         post({
           t: 'state',

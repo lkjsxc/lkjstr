@@ -2,6 +2,7 @@
 
 import { serverAddress } from '../../shared/address.ts';
 import type { Action, Delivery, Failure, FromEngine, ToEngine, Uploaded } from '../protocol.ts';
+import { channelAct, channelTouched, chatter } from './channels.ts';
 import type { Core } from './engine.ts';
 import { FILLER } from './fixtures-notes.ts';
 import { byHandle, byPubkey, SELF } from './people.ts';
@@ -87,6 +88,7 @@ export function createActions(core: Core) {
             return later(600, () => fail(req, 'rejected', 'blocked: spam filter'));
           const n = world.arrive(self, text, core.now(), {
             re: w.draft.replyTo,
+            channel: w.draft.channel ?? world.byId.get(w.draft.replyTo ?? '')?.channel,
             quote: w.draft.quote,
             cw: w.draft.cw,
             pending: true,
@@ -101,6 +103,7 @@ export function createActions(core: Core) {
           });
           core.arrived(n);
           if (n.re) core.changed(n.re);
+          if (n.channel) channelTouched(core, n.channel);
           return deliver(req, { id: n.id }, () => ((n.pending = false), core.changed(n.id)));
         }
         const n = world.byId.get(w.id);
@@ -179,6 +182,14 @@ export function createActions(core: Core) {
       }
       case 'profile.save':
         return deliver(req);
+      case 'channel.join':
+      case 'channel.save':
+      case 'channel.seen':
+        return channelAct(core, a, {
+          done: (x) => done(req, x),
+          fail: (code, message) => fail(req, code, message),
+          deliver: (x) => deliver(req, x),
+        });
       case 'seen':
         core.setUnread(0);
         core.accounts();
@@ -226,6 +237,7 @@ export function createActions(core: Core) {
       liked.reactions.set('❤️', { ...r, count: r.count + 1 });
       core.changed(liked.id);
     }
+    if (beat % 4 === 2) chatter(core, beat);
     if (beat % 3 !== 0) return;
     const [by, text] = FILLER[(beat * 5) % FILLER.length] ?? ['aoi', ''];
     core.arrived(world.arrive(byHandle(by), text, core.now(), { partial: true }));

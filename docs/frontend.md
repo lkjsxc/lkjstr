@@ -76,6 +76,10 @@ Seams worth knowing inside `src/views/`:
 - Protocol 3 adds the query fields `phrases`, `exclude`, `has`, `from`,
   `notifications` and `show`. The interface draws their controls only for an
   engine that reports 3 (`views/can.ts`: `rich`).
+- Protocol 4 adds channels (NIP-28): the sources `channels` and `channel`,
+  `ChannelRow`, `NoteRow.channel`, `Draft.channel` and the actions
+  `channel.join`, `channel.save`, `channel.seen`. Nothing about channels is
+  drawn for an engine that reports less.
 - `hint` (visible subscriptions, page hidden, idle, network quality) and
   `configure` (engine-side settings; the interface owns their storage).
 

@@ -1,6 +1,8 @@
 // The state of the mock world: notes, who reposted and reacted, the reader's follows, bookmarks and mutes.
 import type { Media, MuteTarget, Segment } from '../protocol.ts';
-import { hueColor, photo } from './art.ts';
+import { avatar, hueColor, photo } from './art.ts';
+import type { MChannel } from './channels.ts';
+import { CHANNEL_FILLER, CHANNEL_NOTES, CHANNELS } from './fixtures-channels.ts';
 import { toneUrl, VIDEO, VIDEO_URL } from './fixtures-media.ts';
 import { FILLER, type MediaSpec, NOTES, type NoteSpec } from './fixtures-notes.ts';
 import { byHandle, EMOJI, FOLLOWING, PEOPLE, type Person } from './people.ts';
@@ -25,6 +27,8 @@ export type MNote = {
   readonly hidden?: string;
   readonly client?: string;
   pending?: boolean;
+  /** A channel message (kind 42): the channel's id. */
+  readonly channel?: string;
 };
 
 const MIN = 60_000;
@@ -177,6 +181,19 @@ export function createWorld(now: number) {
     if (i % 3 === 0) n.reactions.set('❤️', { count: 1 + (i % 12), mine: false });
     if (i % 17 === 0) n.media.push(media([1600, 900, (i * 23) % 360], false));
   }
+  // Channels: ids from 9000, their messages from 9100, older generated chat in the first one from 9300.
+  const channelId = new Map(CHANNELS.map((c, i) => [c.key, idOf(9000 + i)]));
+  for (const [i, [, , , , tag]] of CHANNEL_NOTES.entries()) if (tag) tags.set(tag, idOf(9100 + i));
+  for (const [i, [key, by, ago, text, , re]] of CHANNEL_NOTES.entries())
+    add({
+      ...make({ by, ago, text, re }, idOf(9100 + i), base - ago * MIN),
+      channel: channelId.get(key),
+    });
+  for (let i = 0; i < 90; i++) {
+    const [by, text] = CHANNEL_FILLER[(i * 3) % CHANNEL_FILLER.length] ?? ['taro', ''];
+    const at = base - (200 + i * 47 + ((i * 13) % 11)) * MIN;
+    add({ ...make({ by, ago: 0, text }, idOf(9300 + i), at), channel: idOf(9000) });
+  }
   notes.sort((a, b) => b.at - a.at);
   for (const [i, n] of notes.entries()) n.partial = i < 40 && i % 4 === 1;
 
@@ -192,6 +209,23 @@ export function createWorld(now: number) {
     ] as MuteTarget[],
     servers: ['https://media.example.jp', 'https://blossom.example.net'],
     relays: initialRelays(),
+    channels: CHANNELS.map(
+      (c, i): MChannel => ({
+        id: idOf(9000 + i),
+        name: c.name,
+        about: c.about,
+        picture: c.hue === undefined ? undefined : avatar(c.hue, i),
+        by: c.name ? byHandle(c.by) : undefined,
+      }),
+    ),
+    /** The reader's list of channels, in its order. */
+    joined: CHANNELS.flatMap((c, i) => (c.joined ? [idOf(9000 + i)] : [])),
+    /** When the reader last saw each channel. Bound: the channels. */
+    seen: new Map(
+      CHANNELS.flatMap((c, i) =>
+        c.seenAgo === undefined ? [] : [[idOf(9000 + i), base - c.seenAgo * MIN] as const],
+      ),
+    ),
     /** How relays the reader added answered. Bound: the relays added in one session. */
     met: new Map<string, 'connected' | 'failed'>(),
   };

@@ -80,12 +80,15 @@ export function noteRow(w: World, n: MNote, o: RowOpts): NoteRow {
     thread: o.thread,
     client: n.client,
     pending: n.pending,
+    channel: n.channel
+      ? { id: n.channel, name: w.state.channels.find((c) => c.id === n.channel)?.name ?? '' }
+      : undefined,
   };
 }
 
 export function profileRow(w: World, p: Person, me: string): ProfileRow {
   const pk = p.author.pubkey;
-  const mine = w.notes.filter((n) => n.by === p);
+  const mine = w.notes.filter((n) => n.by === p && !n.channel);
   const known = [...w.state.following]
     .filter((f) => f !== pk && (f.charCodeAt(3) + pk.charCodeAt(5)) % 3 === 0)
     .map((f) => w.notes.find((n) => n.by.author.pubkey === f)?.by.author)

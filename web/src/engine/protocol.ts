@@ -14,8 +14,11 @@
 /** 2: `account.key` exists. An engine that reports 1 cannot hand a key back, so the interface does not offer to
  * create an account on it.
  * 3: the query fields `phrases`, `exclude`, `has`, `from`, `notifications` and `show`. The interface draws their
- * controls only for an engine that reports 3 or more, and sends an older one the plain words in `text`. */
-export const PROTOCOL_VERSION = 3;
+ * controls only for an engine that reports 3 or more, and sends an older one the plain words in `text`.
+ * 4: channels (NIP-28): the sources `channels` and `channel`, `ChannelRow`, `NoteRow.channel`, `Draft.channel` and
+ * the actions `channel.join`, `channel.save`, `channel.seen`. The interface draws no channel control for an engine
+ * that reports less. */
+export const PROTOCOL_VERSION = 4;
 
 /** Chosen by the interface, unique among its open subscriptions. */
 export type SubId = string;
@@ -49,7 +52,10 @@ export type Source =
   | 'relays' // relay rows: every relay the engine knows, those in use first
   | 'media-servers' // server rows: where uploads go
   | 'emoji' // emoji rows: the account's custom emoji (NIP-30), for the picker
-  | 'diagnostics'; // info rows about the engine itself
+  | 'diagnostics' // info rows about the engine itself
+  // Since version 4 (NIP-28 public chat).
+  | 'channels' // channel rows: the channels on the reader's list first (in the list's order), then the others known
+  | 'channel'; // one `ChannelRow` first, then the channel's messages as note rows, newest first
 
 export type NotificationType = 'mention' | 'reply' | 'repost' | 'reaction' | 'zap' | 'follow';
 
@@ -60,7 +66,7 @@ export type Query = {
   readonly account?: Pubkey;
   /** `profile`, `followers`, `following`: whose. */
   readonly pubkey?: Pubkey;
-  /** `thread`: the focused note (event id, hex). */
+  /** `thread`: the focused note (event id, hex). `channel`: the channel (id of its creation event, kind 40). */
   readonly id?: string;
   /** In place of `pubkey` or `id`: a reference as a person typed it or as an address carried it (npub, nprofile,
    * note, nevent, naddr, or a NIP-05 name). The engine resolves it; the interface never decodes one. */
@@ -82,7 +88,9 @@ export type Query = {
   readonly reposts?: boolean;
   /** BCP 47 primary tags; only notes the engine judges to be in one of them. */
   readonly language?: readonly string[];
-  /** Words every note must contain (any case). For `search` this is the search itself. */
+  /** Words every note must contain (any case). For `search` this is the search itself. For `channels`: words the
+   * channel's name or about text must contain; a reference to a channel (its nevent, note or 64 hex id) gives
+   * that channel alone, fetched when it is not known yet. */
   readonly text?: string;
   // Since version 3.
   /** Exact phrases every note must contain (any case), spaces included. */
@@ -222,6 +230,10 @@ export type NoteRow = {
   readonly thread?: { readonly role: 'ancestor' | 'focus' | 'reply'; readonly depth: number };
   /** The client that wrote it, when tagged. */
   readonly client?: string;
+  /** Since version 4. The note is a channel message (kind 42): which channel, and its name ('' until known).
+   * Present in every source; inside the channel's own list the interface does not repeat it. `replyTo` is set
+   * only when the message answers another message, never for the channel itself. */
+  readonly channel?: { readonly id: string; readonly name: string };
   /** Not confirmed by any relay yet (the reader's own note, just sent). */
   readonly pending?: boolean;
 };
@@ -356,7 +368,35 @@ export type InfoRow = {
   readonly value: string;
 };
 
+/** A public chat channel (NIP-28). Since version 4. */
+export type ChannelRow = {
+  readonly kind: 'channel';
+  readonly key: RowKey;
+  /** Event id (hex) of the channel's creation event (kind 40): what a `channel` query and the channel actions
+   * name. */
+  readonly id: string;
+  /** `nevent1…` of the creation event, with relay hints: for copying and for handing the channel to someone. */
+  readonly bech32: string;
+  /** The latest metadata: kind 41 by the creator, else the creation event. `name` is '' until it is known: the
+   * interface then shows a short form of `bech32`. */
+  readonly name: string;
+  readonly about: string;
+  readonly picture?: string;
+  /** Who created it. Absent until the creation event is known. */
+  readonly creator?: Author;
+  /** On the reader's list of channels (NIP-51 kind 10005). */
+  readonly joined: boolean;
+  /** The reader created it: `channel.save` with its `id` is offered. */
+  readonly own: boolean;
+  /** The newest message the engine knows: when, by whom, its first line. Absent: none known (yet). */
+  readonly last?: { readonly at: Millis; readonly author: Author; readonly excerpt: string };
+  /** Messages by others that arrived after the reader last saw the channel (`channel.seen`). Counted for joined
+   * channels only (0 otherwise) and capped at 99, which the interface draws as "99+". */
+  readonly unread: number;
+};
+
 export type Row =
+  | ChannelRow
   | NoteRow
   | ProfileRow
   | PersonRow
@@ -406,6 +446,10 @@ export type Draft = {
   // engine-added 2026-11-15: 2
   readonly longForm?: { readonly identifier: string; readonly title?: string };
   // end engine-added
+  /** Since version 4: a message in this channel (kind 42; the channel's id). With `replyTo`: an answer to that
+   * message inside the channel. A draft whose `replyTo` is a channel message is published into that message's
+   * channel even without this field (a reply written from a thread or a notification). */
+  readonly channel?: string;
   /** Answer to this note (event id). */
   readonly replyTo?: string;
   /** Quotes this note: the engine appends the reference and the tags. */
@@ -440,6 +484,13 @@ export type ProfileEdit = {
   readonly lud16?: string;
 };
 
+/** The metadata of a channel as the reader edits it (NIP-28 kind 40 and 41 content). */
+export type ChannelEdit = {
+  readonly name: string;
+  readonly about: string;
+  readonly picture?: string;
+};
+
 export type RelayEntry = { readonly url: string; readonly read: boolean; readonly write: boolean };
 
 /** Everything the reader can do. Every action acts as `as` and is answered by exactly one `result`. */
@@ -467,6 +518,22 @@ export type Action =
   | { readonly a: 'servers.save'; readonly as: Pubkey; readonly servers: readonly string[] }
   /** Marks notifications read up to now. */
   | { readonly a: 'seen'; readonly as: Pubkey }
+  // Channels (NIP-28), since version 4.
+  /** Puts a channel on the reader's list (NIP-51 kind 10005, at its end) or takes it off. Every channel row is
+   * patched at once, before a relay has confirmed the list. */
+  | { readonly a: 'channel.join'; readonly as: Pubkey; readonly id: string; readonly on: boolean }
+  /** Without `id`: creates a channel (kind 40) and puts it on the reader's list; the result's `id` is the new
+   * channel. With `id`: replaces the metadata of the reader's own channel (kind 41); for someone else's channel it
+   * fails with `rejected`. An empty `name` fails with `rejected`. */
+  | {
+      readonly a: 'channel.save';
+      readonly as: Pubkey;
+      readonly id?: string;
+      readonly channel: ChannelEdit;
+    }
+  /** The reader has seen this channel up to now: its `unread` becomes 0 in every channel row. Kept on the device;
+   * nothing is published. */
+  | { readonly a: 'channel.seen'; readonly as: Pubkey; readonly id: string }
   // Accounts. Keys never cross to the interface except through `account.add` (typed by the reader).
   | { readonly a: 'account.add'; readonly how: 'extension' | 'create' }
   | { readonly a: 'account.add'; readonly how: 'key'; readonly key: string } // nsec, npub or bunker address
@@ -656,7 +723,7 @@ export type FromEngine =
   /** Per-relay delivery of a publish, sent as answers come in (the whole list each time). */
   | { readonly t: 'delivery'; readonly req: ReqId; readonly relays: readonly Delivery[] }
   /** The end of an action. `delivery`: the final per-relay list of a publish. `uploaded`: of an upload.
-   * `id`: of a published note. `key`: of `account.key`. */
+   * `id`: of a published note, or of a channel created by `channel.save`. `key`: of `account.key`. */
   | {
       readonly t: 'result';
       readonly req: ReqId;

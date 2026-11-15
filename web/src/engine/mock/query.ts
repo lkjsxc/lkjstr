@@ -1,6 +1,7 @@
 // Which rows a query shows, in order. The mock materialises whole lists; the real engine pages its store.
 import type { Query, Row } from '../protocol.ts';
 import { stranger } from './accounts.ts';
+import { channelHeader, channelList, channelOf } from './channels.ts';
 import { finite, notifications } from './lists.ts';
 import { byPubkey, byRef, FOLLOWERS, PEOPLE, type Person } from './people.ts';
 import { noteRow, pendingProfile, personRow, profileRow, type RowOpts } from './rows.ts';
@@ -43,6 +44,8 @@ function ofProfile(q: Query, n: MNote, who: string | undefined, me: string): boo
 /** Whether a note belongs to a note query (thread aside). */
 export function matches(w: World, q: Query, n: MNote, me: string): boolean {
   const pk = n.by.author.pubkey;
+  // A channel message (kind 42) is no note of the timelines: it shows in its channel, and among bookmarks.
+  if (Boolean(n.channel) !== (q.source === 'channel') && q.source !== 'bookmarks') return false;
   if (w.isMuted(n) && q.source !== 'profile') return false;
   if (q.authors?.length && !q.authors.includes(pk)) return false;
   if (q.since !== undefined && n.at < q.since) return false;
@@ -79,6 +82,8 @@ export function matches(w: World, q: Query, n: MNote, me: string): boolean {
       return words.length > 0 || Boolean(q.phrases?.length || q.from?.length || q.has?.length);
     case 'bookmarks':
       return w.state.bookmarks.has(n.id);
+    case 'channel':
+      return n.channel === channelOf(w, q)?.id;
     case 'list':
       return (LISTS[q.tag ?? ''] ?? []).includes(n.by.handle);
     default:
@@ -126,6 +131,7 @@ export function select(w: World, q: Query, me: string): Entry[] {
   const rows = finite(w, q);
   if (rows) return rows.map(fixed);
   if (q.source === 'thread') return thread(w, q, me);
+  if (q.source === 'channels') return channelList(w, q, me);
   if (q.source === 'followers' || q.source === 'following') {
     const of = q.pubkey ?? me;
     const set = q.source === 'following' ? w.state.following : FOLLOWERS;
@@ -156,6 +162,10 @@ export function select(w: World, q: Query, me: string): Entry[] {
       out.push(notes[at] as Entry);
     });
     return [...out, ...news.slice(i).map(fixed)];
+  }
+  if (q.source === 'channel') {
+    const c = channelOf(w, q);
+    return c ? [channelHeader(w, c, me), ...notes] : [];
   }
   if (q.source === 'profile') {
     const p = byPubkey(q.pubkey ?? '') ?? byRef(q.ref ?? '');
