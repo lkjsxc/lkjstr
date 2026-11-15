@@ -51,10 +51,8 @@ docker compose --progress quiet -f docker-compose.yml run --rm verify
 
 The Dockerfile builds the same real product. Docker is excluded by the worktree-only write rule; no services, deploys, production or CI changes occur.
 
-Merge f61e5f4f keeps upload/read orchestration, main's scrolling/time rails, both browser suites and stricter filter-focus/signer reload checks. Frontend
-check/build, four quiet gates, mock smoke (302), uploads (128), real smoke (386 with LKJSTR_SHOTS=1) and conformance (229) pass; no page errors. The 240 ms
-profile probe measures 233.7 ms. Four jobs/threads, worktree caches. Evidence: tmp/merge-current-*.log and tmp/merge-current-audit.txt. Earlier records
-predate this committed merge. No commit, CI edit, Docker, production, deploy or existing-service changes occurred.
+Earlier merge f61e5f4f passed quiet, frontend, smoke (302 mock, 128 uploads, 386 real), conformance (229) and the 240 ms probe (233.7 ms).
+Evidence: tmp/merge-current-*.log and tmp/merge-current-audit.txt. No CI, Docker, production, deployment or existing-service changes.
 
 ## Earlier integration and review
 
@@ -196,5 +194,7 @@ service work.
 
 ## Current wishes/main reconciliation (2026-11-15)
 
-Wishes/follow watches/drafts and main's orchestration/uploads/reader state are combined; gates/files: tmp/current-merge-resolution.md.
-Uncommitted. The normal index is outside the write boundary; resolved staging/objects: tmp/resolved-merge-env.sh.
+Harness merge e292516a keeps wishes/follow watches/drafts and main's orchestration/uploads/reader/time rail. Both suites remain.
+Signer reload requires the failed post and exact next draft for rejected and stalled signing. Four quiet gates and frontend check/build/smoke pass
+(417 mock, 128 uploads), as does real smoke (534, LKJSTR_SHOTS=1, no page errors). Logs: tmp/merge-green-*.log. Desktop/phone rails reviewed.
+No Docker, CI edits, commits, production, deploys or existing-service changes.

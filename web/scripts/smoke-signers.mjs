@@ -72,8 +72,7 @@ async function failure(options, mode) {
           .locator(compose)
           .getByRole('button', { name: 'Retry', exact: true })
           .isEnabled()) &&
-        (mode !== 'reject-sign' ||
-          (await page.locator(`${compose} textarea`).inputValue()) === draft);
+        (await page.locator(`${compose} textarea`).inputValue()) === draft;
       await writeFile(
         `tmp/signer-${mode}.json`,
         JSON.stringify({
