@@ -7,6 +7,7 @@ import type {
   Anchor,
   Delivery,
   EngineConfig,
+  EngineStats,
   FromEngine,
   Hint,
   PatchOp,
@@ -59,17 +60,21 @@ export type Engine = {
   me(): Pubkey;
   open(query: Query, handlers: SubHandlers): Subscription;
   act(action: Action, watch?: ActWatch): Promise<ActResult>;
+  /** What the engine measured about itself, now. Undefined: this engine did not answer (it keeps no statistics). */
+  stats(): Promise<EngineStats | undefined>;
   configure(config: EngineConfig): void;
   dispose(): void;
 };
 
 type Nip07 = { signEvent(event: unknown): Promise<unknown>; getPublicKey?(): Promise<unknown> };
 const IDLE_MS = 180_000;
+const STATS_MS = 4000;
 
 export function createEngine(transport: Transport): Engine {
   const subs = new Map<string, SubHandlers>(); // bound: open subscriptions (one per mounted list)
   const pending = new Map<string, { done(r: ActResult): void; watch?: ActWatch }>(); // bound: actions in flight
   const visible = new Set<string>(); // bound: as `subs`
+  const asked = new Map<string, (s: EngineStats | undefined) => void>(); // bound: `stats` requests in flight
   const accounts = createSignal<Accounts>({ accounts: [] });
   const status = createSignal({ connected: 0, wanted: 0, offline: false });
   const info = createSignal<{ engine: string; version: number } | null>(null);
@@ -145,6 +150,7 @@ export function createEngine(transport: Transport): Engine {
     else if (msg.t === 'status')
       status.set({ connected: msg.connected, wanted: msg.wanted, offline: msg.offline });
     else if (msg.t === 'ready') info.set({ engine: msg.engine, version: msg.version });
+    else if (msg.t === 'stats') asked.get(msg.req)?.(msg.stats);
     else if (msg.t === 'sign') void sign(msg);
     else if (msg.t === 'getPublicKey') void publicKey(msg.req);
   });
@@ -183,6 +189,18 @@ export function createEngine(transport: Transport): Engine {
           { t: 'act', req, action },
           action.a === 'upload' ? [action.bytes] : undefined,
         );
+      });
+    },
+    stats() {
+      const req = `q${++serial}`;
+      return new Promise((done) => {
+        const end = (s: EngineStats | undefined): void => {
+          clearTimeout(timer);
+          if (asked.delete(req)) done(s);
+        };
+        const timer = setTimeout(end, STATS_MS, undefined);
+        asked.set(req, end);
+        transport.post({ t: 'stats', req });
       });
     },
     configure: (config) => transport.post({ t: 'configure', config }),

@@ -74,6 +74,9 @@ export function mountRelays(el: HTMLElement, env: ViewEnv): () => void {
   el.classList.add('pad', 'relaysv');
   el.tabIndex = -1;
   el.replaceChildren(none, list);
-  env.menu(() => [{ label: t('relays.edit'), run: edit }]);
+  env.menu(() => [
+    { label: t('relays.edit'), run: edit },
+    { label: t('view.stats'), run: () => env.open('stats') },
+  ]);
   return watchList(env, 'relays', draw);
 }

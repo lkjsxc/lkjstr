@@ -1,0 +1,39 @@
+/* Stats: five figures, then a row per relay. Numbers are tabular and right-aligned; marks are words; bars are grey. */
+.statsv:focus { outline: none; }
+.statsv > * { max-width: 920px; }
+.sfigs { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); margin-bottom: 14px; border-bottom: 1px solid var(--line); }
+.sfig { min-width: 0; padding: 2px 14px 10px 0; }
+.slabel { color: var(--faint); font-size: 12.5px; }
+.sval { font-size: 24px; font-weight: 600; line-height: 1.35; font-variant-numeric: tabular-nums; }
+.ssub { min-height: 1.45em; font-size: 12.5px; font-variant-numeric: tabular-nums; }
+.sfig.bad > .ssub { color: var(--danger); }
+.sbar { height: 3px; max-width: 120px; margin: 1px 0 5px; border-radius: 2px; background: var(--line); overflow: hidden; }
+.sbar > span { display: block; height: 100%; background: var(--faint); transition: width 0.3s; }
+.statsv > .fstate { padding: 6px 0; text-align: left; }
+.stab { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.stab th { padding: 0 0 4px 14px; border-bottom: 1px solid var(--sep); color: var(--faint); font-size: 12.5px; font-weight: 400; text-align: right; white-space: nowrap; }
+.stab th > button { padding: 2px 0; color: inherit; }
+.stab th > button:hover { color: var(--fg); }
+.stab th[aria-sort="descending"] > button, .stab th[aria-sort="ascending"] > button { color: var(--fg); font-weight: 600; }
+.stab th[aria-sort="descending"] > button::after { content: " ↓"; }
+.stab th[aria-sort="ascending"] > button::after { content: " ↑"; }
+.stab td { padding: 7px 0 7px 14px; border-bottom: 1px solid var(--line); text-align: right; vertical-align: top; white-space: nowrap; }
+.stab .c-health { width: 99%; max-width: 0; padding-left: 2px; text-align: left; }
+.stab .c-data, .stab .c-since { color: var(--muted); }
+.shost { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.stab .s-connected .rdot { background: var(--ok); }
+.stab :is(.s-connecting, .s-waiting) .rdot { background: none; box-shadow: inset 0 0 0 2px var(--ok); }
+.stab :is(.s-failed, .m-failing) .rdot { background: var(--danger); box-shadow: none; }
+.stab .s-idle .rdot { background: none; box-shadow: inset 0 0 0 2px var(--faint); }
+.smark { flex: none; padding: 0 6px; border: 1px solid var(--line); border-radius: 9px; color: var(--muted); font-size: 11.5px; line-height: 16px; }
+.stab .nil { color: var(--faint); }
+.smark:empty, .stab .rsub:empty { display: none; }
+.m-failing .smark { border-color: var(--danger); color: var(--danger); }
+.stab .rsub { margin-left: 16px; white-space: normal; }
+.stab td > .sbar { width: 56px; margin: 3px 0 0 auto; }
+.statsv.off > .sfigs { opacity: 0.5; }
+@container (max-width: 640px) { .stab :is(.c-data, .c-since) { display: none; } }
+@container (max-width: 440px) {
+  .stab :is(.c-dup, .c-subs) { display: none; }
+  .sfigs { grid-template-columns: 1fr 1fr; }
+}

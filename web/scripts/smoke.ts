@@ -397,6 +397,7 @@ async function run(browser: Browser): Promise<void> {
   await defaults(browser, still);
   await scrolling(still);
   await filtering(browser, still);
+  await rooms(browser, still);
 }
 
 const FEED = '.view[data-kind="home"]';
@@ -1747,6 +1748,49 @@ async function accounts(browser: Browser): Promise<void> {
     pending,
   );
   await back.context().close();
+}
+
+/** The Stats tab and the channels. */
+async function rooms(browser: Browser, still: Record<string, unknown>): Promise<void> {
+  const page = await open(browser, '/', still);
+  const launch = async (word: string, kind: string): Promise<void> => {
+    await page.keyboard.press('Alt+Shift+N');
+    await page.keyboard.type(word);
+    await page.locator('.ncard > b').getByText(word, { exact: true }).click();
+    await page.waitForSelector(`.view[data-kind="${kind}"] > *`);
+  };
+  await launch('Stats', 'stats');
+  const sv = '.view[data-kind="stats"]';
+  await page.locator(`${sv} .stab tbody tr`).first().waitFor();
+  const figures = await page.locator(`${sv} .sval`).allInnerTexts();
+  const hosts = (): Promise<string[]> => page.locator(`${sv} .rhost`).allInnerTexts();
+  fact(
+    'stats: five figures, and the relays in trouble first, each with its mark',
+    figures.length === 5 &&
+      /^\d+\/\d+$/.test(figures[0] ?? '') &&
+      /^\d+%$/.test(figures[2] ?? '') &&
+      (await hosts())[0] === 'down.example.net' &&
+      (await page.locator(`${sv} tr.m-failing .smark`).first().innerText()) === 'failing' &&
+      (await page.locator(`${sv} tr.m-slow .rhost`).innerText()) === 'slow.example.org',
+    [figures, await hosts()],
+  );
+  const firstRow = await page.locator(`${sv} .stab tbody tr`).first().elementHandle();
+  await page.locator(`${sv} th.c-latency button`).click();
+  fact(
+    'stats: a column sorts by what it holds, a missing figure last',
+    (await hosts())[0] === 'slow.example.org' &&
+      (await page.locator(`${sv} th.c-latency`).getAttribute('aria-sort')) === 'descending' &&
+      (await page.locator(`${sv} .stab tbody tr`).last().locator('.c-latency').innerText()) === '—',
+    await hosts(),
+  );
+  await page.waitForTimeout(2300);
+  fact(
+    'stats: a new answer keeps the rows it already drew',
+    await page.evaluate(
+      (tr) => tr?.isConnected === true && tr.parentElement?.children.length === 9,
+      firstRow,
+    ),
+  );
 }
 
 if (!existsSync(`${here}../dist/index.html`)) throw new Error('build first: pnpm build');

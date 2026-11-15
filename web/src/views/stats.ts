@@ -1,0 +1,265 @@
+// The Stats tab: how the engine is doing, in numbers and small marks, with no prose. Five figures answer at a
+// glance (are the relays there, do they cover the people followed, how much came from the device, what was saved,
+// how much is kept), then one row per relay, sortable, the ones in trouble first. It asks the engine every two
+// seconds while it is in front and changes only the text that changed, so nothing flickers. A figure the engine
+// did not give is a dash, and an engine that keeps no statistics is said to keep none.
+import type { EngineStats } from '../engine/protocol.ts';
+import { hostOf } from '../shared/address.ts';
+import { clockOf, dayOf } from '../shared/format.ts';
+import { h } from '../shared/h.ts';
+import { getLang, type Key, t } from '../shared/i18n.ts';
+import { loadViewState, saveViewState } from '../shared/view-state.ts';
+import type { ViewEnv } from './registry.ts';
+
+type Relay = EngineStats['relays'][number];
+export type Mark = 'failing' | 'silent' | 'slow';
+type SortKey = 'health' | 'events' | 'dup' | 'latency' | 'subs' | 'data';
+type Sort = { by: SortKey; up: boolean };
+const EVERY_MS = 2000;
+const SLOW_MS = 1000;
+const NONE = '—';
+
+/** What is wrong with a relay, if anything: it cannot be reached, it is connected and asked but sends nothing,
+ * or it answers slowly. Pure, tested. */
+export function relayMark(r: Relay): Mark | undefined {
+  if (r.state === 'failed' || r.state === 'waiting') return 'failing';
+  if (r.state !== 'connected') return undefined;
+  if (r.openSubscriptions > 0 && r.eventsReceived === 0) return 'silent';
+  return r.latencyMs !== null && r.latencyMs >= SLOW_MS ? 'slow' : undefined;
+}
+const num = (n: number): string => n.toLocaleString(getLang() === 'ja' ? 'ja-JP' : 'en-US');
+/** A size in decimal units, one digit after the point below 100. */
+export function bytesText(n: number): string {
+  const units = ['B', 'kB', 'MB', 'GB'];
+  let v = n;
+  let u = 0;
+  while (v >= 1000 && u < units.length - 1) (v /= 1000), u++;
+  return `${u === 0 || v >= 100 ? Math.round(v) : Math.round(v * 10) / 10} ${units[u]}`;
+}
+const RANK: Record<Mark, number> = { failing: 0, silent: 1, slow: 2 };
+const VALUE: Record<SortKey, (r: Relay) => number | null> = {
+  health: (r) => -(RANK[relayMark(r) ?? 'slow'] + (relayMark(r) ? 0 : 1)),
+  events: (r) => r.eventsReceived,
+  dup: (r) => r.duplicatesDropped,
+  latency: (r) => r.latencyMs,
+  subs: (r) => r.openSubscriptions,
+  data: (r) => r.bytesIn + r.bytesOut,
+};
+/** The relays in the order asked for: largest first (`up`: smallest first), a missing figure always last, ties
+ * by what was received and then by name, so rows do not swap places between two answers. Pure, tested. */
+export function sortRelays(relays: readonly Relay[], sort: Sort): Relay[] {
+  const value = VALUE[sort.by];
+  return [...relays].sort((a, b) => {
+    const [x, y] = [value(a), value(b)];
+    if (x === null || y === null) return x === y ? a.url.localeCompare(b.url) : x === null ? 1 : -1;
+    const d = sort.up ? x - y : y - x;
+    return d || b.eventsReceived - a.eventsReceived || a.url.localeCompare(b.url);
+  });
+}
+
+/** Sets a text only when it differs, so an unchanged figure is not touched. */
+const put = (el: HTMLElement, text: string): void => {
+  if (el.textContent !== text) el.textContent = text;
+};
+/** A count in a row: a nought is there, but quiet. */
+const tally = (el: HTMLElement, n: number): void => {
+  put(el, num(n));
+  el.classList.toggle('nil', n === 0);
+};
+const COLUMNS: readonly (readonly [SortKey, Key])[] = [
+  ['health', 'stats.relay'],
+  ['events', 'stats.events'],
+  ['dup', 'stats.dup'],
+  ['latency', 'stats.latency'],
+  ['subs', 'stats.subs'],
+  ['data', 'stats.data'],
+];
+
+export function mountStats(el: HTMLElement, env: ViewEnv): () => void {
+  const saved = loadViewState<Sort>(env.instance);
+  const sort: Sort = {
+    by: COLUMNS.some(([k]) => k === saved.by) ? (saved.by as SortKey) : 'health',
+    up: saved.up === true,
+  };
+  let last: EngineStats | undefined;
+  const figure = (label: Key, extra?: HTMLElement) => {
+    const val = h('div', { class: 'sval' }, NONE);
+    const sub = h('div', { class: 'ssub muted' });
+    const node = h(
+      'div',
+      { class: 'sfig' },
+      h('div', { class: 'slabel' }, t(label)),
+      val,
+      extra,
+      sub,
+    );
+    return { node, val, sub };
+  };
+  const share = h('span');
+  const figs = {
+    up: figure('stats.connected'),
+    cover: figure('stats.covering'),
+    cache: figure('stats.cache', h('div', { class: 'sbar', 'aria-hidden': 'true' }, share)),
+    saved: figure('stats.dropped'),
+    stored: figure('stats.stored'),
+  };
+  const state = h('div', { class: 'fstate muted' }, t('feed.loading'));
+  const heads = COLUMNS.map(([key, label]) => {
+    const th = h(
+      'th',
+      { class: `c-${key}`, scope: 'col' },
+      h(
+        'button',
+        {
+          onclick: () => {
+            sort.up = sort.by === key ? !sort.up : false;
+            sort.by = key;
+            saveViewState(env.instance, sort);
+            if (last) draw(last);
+          },
+        },
+        t(label),
+      ),
+    );
+    return { key, th };
+  });
+  const since = h('th', { class: 'c-since', scope: 'col' }, t('stats.since'));
+  const body = h('tbody');
+  const table = h(
+    'table',
+    { class: 'stab', hidden: true },
+    h('thead', null, h('tr', null, ...heads.map((x) => x.th), since)),
+    body,
+  );
+  type Line = { tr: HTMLElement; set(r: Relay, most: number): void };
+  const lines = new Map<string, Line>(); // bound: the relays the engine reports
+  const line = (url: string): Line => {
+    const cell = (key: string, ...kids: HTMLElement[]): HTMLElement =>
+      h('td', { class: `c-${key}` }, ...kids);
+    const mark = h('span', { class: 'smark' });
+    const error = h('div', { class: 'rsub muted' });
+    const bar = h('span');
+    const [events, dup, latency, subs, data, at] = Array.from({ length: 6 }, () => h('span'));
+    const tr = h(
+      'tr',
+      null,
+      h(
+        'td',
+        { class: 'c-health' },
+        h(
+          'div',
+          { class: 'shost' },
+          h('span', { class: 'rdot', 'aria-hidden': 'true' }),
+          h('span', { class: 'rhost clip', title: url }, hostOf(url)),
+          mark,
+        ),
+        error,
+      ),
+      cell(
+        'events',
+        events as HTMLElement,
+        h('div', { class: 'sbar', 'aria-hidden': 'true' }, bar),
+      ),
+      cell('dup', dup as HTMLElement),
+      cell('latency', latency as HTMLElement),
+      cell('subs', subs as HTMLElement),
+      cell('data', data as HTMLElement),
+      cell('since', at as HTMLElement),
+    );
+    const set = (r: Relay, most: number): void => {
+      const m = relayMark(r);
+      const cls = `s-${r.state}${m ? ` m-${m}` : ''}`;
+      if (tr.className !== cls) tr.className = cls;
+      put(mark, m ? t(`stats.${m}`) : '');
+      put(error, r.lastError ?? '');
+      tally(events as HTMLElement, r.eventsReceived);
+      bar.style.width = `${most ? Math.round((r.eventsReceived / most) * 100) : 0}%`;
+      tally(dup as HTMLElement, r.duplicatesDropped);
+      put(latency as HTMLElement, r.latencyMs === null ? NONE : `${num(r.latencyMs)} ms`);
+      tally(subs as HTMLElement, r.openSubscriptions);
+      put(data as HTMLElement, `↓ ${bytesText(r.bytesIn)}  ↑ ${bytesText(r.bytesOut)}`);
+      (data as HTMLElement).classList.toggle('nil', r.bytesIn + r.bytesOut === 0);
+      const c = r.connectedSince;
+      const day = c !== null && dayOf(c) !== dayOf(Date.now()) ? `${dayOf(c)} ` : '';
+      put(at as HTMLElement, c === null ? NONE : `${day}${clockOf(c)}`);
+    };
+    return { tr, set };
+  };
+
+  function draw(s: EngineStats): void {
+    last = s;
+    state.hidden = true;
+    table.hidden = false;
+    const marks = s.relays.map(relayMark);
+    const count = (m: Mark): number => marks.filter((x) => x === m).length;
+    const online = s.relays.filter((r) => r.state === 'connected').length;
+    put(figs.up.val, `${num(online)}/${num(s.relays.length)}`);
+    put(
+      figs.up.sub,
+      (['failing', 'silent', 'slow'] as const)
+        .filter((m) => count(m))
+        .map((m) => `${t(`stats.${m}`)} ${count(m)}`)
+        .join(' · '),
+    );
+    figs.up.node.classList.toggle('bad', count('failing') > 0);
+    put(figs.cover.val, num(s.orchestration.relaysCoveringFollowSet));
+    put(figs.cover.sub, t('stats.subsOpen', { n: num(s.totals.subscriptions) }));
+    const { servedFromCache: cached, servedFromNetwork: net } = s.totals;
+    const part = cached + net ? Math.round((cached / (cached + net)) * 100) : undefined;
+    put(figs.cache.val, part === undefined ? NONE : `${part}%`);
+    share.style.width = `${part ?? 0}%`;
+    put(figs.cache.sub, t('stats.cacheOf', { cache: num(cached), net: num(net) }));
+    put(figs.saved.val, num(s.relays.reduce((n, r) => n + r.duplicatesDropped, 0)));
+    put(figs.saved.sub, t('stats.coalesced', { n: num(s.orchestration.requestsCoalesced) }));
+    put(figs.stored.val, num(s.totals.eventsStored));
+    put(figs.stored.sub, bytesText(s.totals.cacheBytes));
+    for (const { key, th } of heads)
+      th.setAttribute('aria-sort', key !== sort.by ? 'none' : sort.up ? 'ascending' : 'descending');
+    const most = Math.max(0, ...s.relays.map((r) => r.eventsReceived));
+    const want = sortRelays(s.relays, sort).map((r) => {
+      const l = lines.get(r.url) ?? line(r.url);
+      lines.set(r.url, l);
+      l.set(r, most);
+      return l.tr;
+    });
+    for (const [url, l] of lines) if (!want.includes(l.tr)) l.tr.remove(), lines.delete(url);
+    want.forEach((tr, i) => {
+      if (body.children[i] !== tr) body.insertBefore(tr, body.children[i] ?? null);
+    });
+  }
+
+  let timer: ReturnType<typeof setInterval> | undefined;
+  let gone = false;
+  const ask = async (): Promise<void> => {
+    const s = await env.engine.stats();
+    if (gone) return;
+    if (s) return draw(s);
+    // No answer: what is on screen is no longer current, and is not left standing as if it were.
+    table.hidden = true;
+    state.hidden = false;
+    put(state, t('stats.none'));
+    el.classList.add('off');
+  };
+  const watch = (on: boolean): void => {
+    clearInterval(timer);
+    timer = undefined;
+    if (!on) return;
+    void ask();
+    timer = setInterval(() => void ask(), EVERY_MS);
+  };
+  el.classList.add('pad', 'statsv');
+  el.tabIndex = -1;
+  el.replaceChildren(
+    h('div', { class: 'sfigs' }, ...Object.values(figs).map((f) => f.node)),
+    state,
+    table,
+  );
+  env.menu(() => [{ label: t('view.relays'), run: () => env.open('relays') }]);
+  const off = env.visible.subscribe(watch);
+  watch(env.visible.get());
+  return () => {
+    gone = true;
+    off();
+    clearInterval(timer);
+  };
+}

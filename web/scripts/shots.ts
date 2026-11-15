@@ -102,6 +102,7 @@ try {
         });
         await scene('settings', '/', launch(lang === 'ja' ? '設定' : 'Settings', 'settings'));
         await scene('relays', '/', launch(lang === 'ja' ? 'リレー' : 'Relays', 'relays'));
+        await scene('stats', '/', launch(lang === 'ja' ? '統計' : 'Stats', 'stats'));
         await scene('accounts', '/', launch(lang === 'ja' ? 'アカウント' : 'Accounts', 'account'));
         const guest = '{"live":false,"accounts":"none"}';
         await scene('firstrun', '/', async () => undefined, guest);

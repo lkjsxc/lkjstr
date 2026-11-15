@@ -11,6 +11,7 @@ import { mountFeed } from './feed.ts';
 import { mountMedia } from './media.ts';
 import { mountRelays } from './relays.ts';
 import { mountSettings } from './settings.ts';
+import { mountStats } from './stats.ts';
 
 export type OpenOpts = {
   readonly split?: boolean;
@@ -111,6 +112,14 @@ export const VIEWS: readonly ViewDef[] = [
     launch: true,
     aliases: 'servers connections network nip65 接続 サーバー',
     mount: mountRelays,
+  },
+  {
+    id: 'stats',
+    title: 'view.stats',
+    hint: 'view.stats.hint',
+    launch: true,
+    aliases: 'statistics metrics numbers health cache network 状態 数字 キャッシュ',
+    mount: mountStats,
   },
   {
     id: 'docs',
