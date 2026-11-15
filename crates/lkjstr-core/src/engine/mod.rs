@@ -71,6 +71,8 @@ pub struct Engine {
     pub seen: BTreeMap<String, u64>,
     pub metrics: metrics::Metrics,
     pub store: Store,
+    /// False when persisted history extends beyond the hydrated store: no partial time rail.
+    pub cached_history_complete: bool,
     pub signed_out_global_filter: bool,
     pub pending: crate::persistence::PendingEvents,
     pub network: Network,
@@ -104,6 +106,7 @@ impl Engine {
             seen: BTreeMap::new(),
             metrics: Default::default(),
             store: Store::with_caps(16000, 4000),
+            cached_history_complete: true,
             signed_out_global_filter: true,
             pending: Default::default(),
             network: Network::default(),

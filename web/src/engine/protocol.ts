@@ -18,7 +18,7 @@
  * 4: channels (NIP-28): the sources `channels` and `channel`, `ChannelRow`, `NoteRow.channel`, `Draft.channel` and
  * the actions `channel.join`, `channel.save`, `channel.seen`. The interface draws no channel control for an engine
  * that reports less. */
-export const PROTOCOL_VERSION = 4;
+export const PROTOCOL_VERSION = 5;
 
 /** Chosen by the interface, unique among its open subscriptions. */
 export type SubId = string;
@@ -114,7 +114,10 @@ export type Query = {
 
 /** Where a window sits. `top` follows the head of the list: new rows are inserted as they arrive. A key holds
  * the list still around that row: rows that arrive above are only counted (`fresh`). */
-export type Anchor = 'top' | { readonly key: RowKey };
+export type Anchor =
+  | 'top'
+  | { readonly key: RowKey }
+  | { readonly month: Millis; readonly offset: number; readonly returnKey?: RowKey };
 
 // ───────────────────────────────────────── view models ─────────────────────────────────────────
 
@@ -698,7 +701,23 @@ export type EngineStats = {
   };
 };
 // end engine-added
+/** Protocol 5: exact cached note counts, UTC month starts, newest first. No relay estimates.
+ * Positions name ordinals within those months, independent of the loaded window. */
+export type Timeline = {
+  readonly anchor?: RowKey;
+  readonly newest: Millis;
+  readonly oldest: Millis;
+  readonly months: readonly { readonly at: Millis; readonly count: number }[];
+  readonly positions: readonly {
+    readonly key: RowKey;
+    readonly month: Millis;
+    readonly offset: number;
+  }[];
+  readonly supported: boolean;
+  readonly older: boolean;
+};
 export type FromEngine =
+  | { readonly t: 'timeline'; readonly sub: SubId; readonly timeline: Timeline }
   // engine-added 2026-11-15: 4
   | { readonly t: 'stats'; readonly req: ReqId; readonly stats: EngineStats }
   // end engine-added

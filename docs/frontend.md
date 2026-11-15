@@ -84,6 +84,9 @@ Seams worth knowing inside `src/views/`:
   `ChannelRow`, `NoteRow.channel`, `Draft.channel` and the actions
   `channel.join`, `channel.save`, `channel.seen`. Nothing about channels is
   drawn for an engine that reports less.
+- Protocol 5 adds exact cached month counts and per-window ordinals (`timeline`),
+  plus month/ordinal anchors on the existing `window` input. Supported lists
+  use the [time rail](time-rail.md); unsupported sources retain native scrolling.
 - `hint` (visible subscriptions, page hidden, idle, network quality) and
   `configure` (engine-side settings; the interface owns their storage).
 

@@ -145,8 +145,13 @@ text, still reaches 4.5:1 on `--bg`. The theme follows the device or Settings.
   the notes. The npub copies on click. A count is shown once it is known;
   until then the label stands alone and still opens the list.
 - A list keeps what was read (up to 800 rows): nothing vanishes above and
-  the scrollbar keeps its span. It is 14px to catch, with a slim thumb that
-  widens under the pointer; held, it says the time of the row at the top.
+  the scrollbar keeps its span. A list in time order has a time rail
+  instead: it spans every note known for the list, a busy month longer than
+  a quiet one without crowding it out and empty time taking no room, dots
+  where months begin, numbers where years begin, a line for where you are;
+  pressed or dragged it goes to that time and says it, and leaves a tick to
+  come back by. Other views keep a 14px scrollbar with a slim thumb that
+  widens under the pointer.
 - Filters are saved with the tab. The filter row (like the notification
   toggles and the settings search) is the first row of the content: it
   scrolls away, never floats; shown by default, a setting. One query field

@@ -9,6 +9,7 @@ Index of lkjstr's documentation. Start with [status.md](status.md).
 Frontend (`web/`):
 
 - [design.md](design.md): the look and the interaction rules, as built.
+- [time-rail.md](time-rail.md): cache-wide month scale, native fallbacks and verification.
 - [frontend.md](frontend.md): structure of `web/`, the engine boundary, gates.
 - [integration-release.md](integration-release.md): real-engine release candidate and UI gaps.
 - [hosting-needs.md](hosting-needs.md): what the static host must serve.

@@ -13,9 +13,10 @@ export function workerTransport(options = {}) {
   const replay = () => {
     if (config) send(config);
     if (relays) send(relays);
-    for (const { open, window } of subs.values()) {
-      send(open);
-      if (window) send(window);
+    for (const state of subs.values()) {
+      send(state.open);
+      state.seekPending = state.window?.anchor?.month !== undefined;
+      if (state.window && !state.seekPending) send(state.window);
     }
     if (hint) send(hint);
   };
@@ -48,6 +49,13 @@ export function workerTransport(options = {}) {
     if (msg.t === 'ready') {
       replay();
       if(!started) {started=true;for(const [msg,transfer] of startup.splice(0))send(msg,transfer);}
+    }
+    if (msg.t === 'timeline') {
+      const state = subs.get(msg.sub);
+      if (state?.seekPending && msg.timeline.supported) {
+        state.seekPending = false;
+        send(state.window);
+      }
     }
     if (msg.t === 'result') pending.delete(msg.req);
     receive(msg);
