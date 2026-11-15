@@ -27,7 +27,7 @@ pub(super) fn matches_extra(e: &NostrEvent, q: &Query) -> bool {
             return false;
         }
     }
-    if q.source == Source::Notifications
+    !(q.source == Source::Notifications
         && f.types.as_ref().is_some_and(|types| {
             !types.iter().any(|t| match t.as_str() {
                 "all" => true,
@@ -39,9 +39,5 @@ pub(super) fn matches_extra(e: &NostrEvent, q: &Query) -> bool {
                 "follows" => e.kind == 3,
                 _ => false,
             })
-        })
-    {
-        return false;
-    }
-    true
+        }))
 }
