@@ -6,9 +6,9 @@ import type { Disposer, Signal } from '../shared/signal.ts';
 import type { MenuItem } from '../wm/menus.ts';
 import { mountAccount } from './account.ts';
 import { mountCompose } from './compose.ts';
+import { mountDocs } from './docs.ts';
 import { mountFeed } from './feed.ts';
 import { mountMedia } from './media.ts';
-import { mountAbout, mountShortcuts } from './pages.ts';
 import { mountRelays } from './relays.ts';
 import { mountSettings } from './settings.ts';
 
@@ -113,20 +113,13 @@ export const VIEWS: readonly ViewDef[] = [
     mount: mountRelays,
   },
   {
-    id: 'shortcuts',
-    title: 'view.shortcuts',
-    hint: 'view.shortcuts.hint',
+    id: 'docs',
+    title: 'view.docs',
+    hint: 'view.docs.hint',
     launch: true,
-    aliases: 'keys keyboard hotkeys help キー キーボード ヘルプ',
-    mount: mountShortcuts,
-  },
-  {
-    id: 'about',
-    title: 'view.about',
-    hint: 'view.about.hint',
-    launch: true,
-    aliases: 'version license licence source github privacy バージョン ライセンス',
-    mount: mountAbout,
+    // Its pages are found by their own names (`wm/choices.ts`).
+    aliases: 'help manual guide documentation ヘルプ 使い方 説明',
+    mount: mountDocs,
   },
 ];
 

@@ -261,11 +261,11 @@ export function createWmController(env: BaseEnv, host: Host, at: Space, family =
     newTab: () => void (cur() && ctx.onAdd(cur() as L.PaneNode)),
     close: () => void (cur() && close((cur() as L.PaneNode).active)),
     reopen,
-    go(kind) {
+    go(kind, state) {
       const p = cur();
       const there = p?.tabs.find((x) => kindOf(x) === kind);
       if (there) show(there);
-      else if (p) openFrom(p.active)(kind), show(cur()?.active ?? '');
+      else if (p) openFrom(p.active)(kind, state), show(cur()?.active ?? '');
     },
     compose,
     search: () => openTabSearch(host.layer, finder),

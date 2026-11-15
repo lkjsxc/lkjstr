@@ -103,3 +103,22 @@
 @media (pointer: coarse) {
   .aadd .addrow input, .aadd .btn, .abtns .btn, .krow .btn, .kfield { height: 40px; }
 }
+/* Docs: a tree beside the page it shows; under 520px of tile the tree sits on top. */
+.view.docs { display: grid; grid-template-columns: 200px minmax(0, 1fr); align-items: start; }
+.view.docs:focus { outline: none; }
+.dtree { position: sticky; top: 0; display: flex; flex-direction: column; gap: 6px; padding: 10px 6px 10px 8px; user-select: none; }
+.dgroup > summary { padding: 3px 6px; border-radius: 4px; color: var(--muted); font-size: 12.5px; font-weight: 600; cursor: pointer; }
+.dgroup > summary:hover { color: var(--fg); }
+.ditem { display: block; margin-left: 13px; padding: 4px 8px; width: calc(100% - 13px); border-left: 1px solid var(--line); border-radius: 0 4px 4px 0; color: var(--muted); text-align: left; }
+.ditem:hover { background: var(--hover); color: var(--fg); }
+.ditem.on { border-left-color: var(--accent); background: var(--wash); color: var(--fg); font-weight: 600; }
+.dpage { box-sizing: border-box; max-width: 660px; padding: 10px 18px 28px 12px; word-break: auto-phrase; }
+.dpage > p { margin: 0 0 10px; line-height: 1.7; white-space: pre-line; }
+.dpage > ul { margin: 0 0 10px; padding-left: 20px; line-height: 1.7; }
+.dpage > .sgroup:first-child { margin-top: 0; }
+.dpage > .sgroup { font-size: 14.5px; }
+@container (max-width: 520px) {
+  .view.docs { display: block; }
+  .dtree { position: static; padding: 8px 8px 6px; border-bottom: 1px solid var(--line); }
+  .dpage { padding: 10px 12px 24px; }
+}

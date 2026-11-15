@@ -1,4 +1,4 @@
-// The top bar: the name (a menu of the tabs about lkjstr itself), the workspace chips, and at the right the
+// The top bar: the name (a menu of the tabs about lkjstr itself: Settings, Relays, Docs), the workspace chips, and at the right the
 // composer and the account. Signed out, the account is one button that opens the sign-in tab; signed in, it is the
 // active account's face and a menu of what is the reader's own: their profile, the other accounts to switch to,
 // and the Accounts tab. Everything else is reached from the name. The relay count shows only when asked for.
@@ -23,11 +23,11 @@ export function createTopBar(
 ): TopBar {
   const relays = h('button', { class: 'relays muted', onclick: () => o.open('relays') });
   const account: HTMLElement = h('button', { class: 'acct' });
-  const pages = (...kinds: ('account' | 'settings' | 'relays' | 'shortcuts' | 'about')[]) =>
+  const pages = (...kinds: ('account' | 'settings' | 'relays' | 'docs')[]) =>
     kinds.map((kind) => ({ label: t(`view.${kind}`), run: () => o.open(kind) }));
   const brand: HTMLElement = h('button', { class: 'brand' }, 'lkjstr');
   brand.addEventListener('click', () =>
-    openMenu(o.layer, brand, pages('settings', 'relays', 'shortcuts', 'about')),
+    openMenu(o.layer, brand, pages('settings', 'relays', 'docs')),
   );
   account.addEventListener('click', () => {
     const a = o.engine.accounts.get();

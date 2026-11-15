@@ -13,8 +13,8 @@ export type WmKeyOps = {
   newTab(): void;
   close(): void;
   reopen(): void;
-  /** Shows a tab of this kind in the current tile: the one that is there, or a new one. */
-  go(kind: string): void;
+  /** Shows a tab of this kind in the current tile: the one that is there, or a new one (starting with `state`). */
+  go(kind: string, state?: object): void;
   /** The composer, with the keyboard in it. */
   compose(): void;
   /** The field that searches the open tabs and what a new one could be. */
@@ -36,7 +36,7 @@ export function mountWmKeys(ops: WmKeyOps): () => void {
     ['goBookmarks', () => ops.go('bookmarks')],
     ['compose', ops.compose],
     ['tabSearch', ops.search],
-    ['help', () => ops.go('shortcuts')],
+    ['help', () => ops.go('docs', { page: 'shortcuts' })],
   ];
   const key = (e: KeyboardEvent): void => {
     if (e.defaultPrevented || popoverOpen()) return;

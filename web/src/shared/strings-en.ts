@@ -214,10 +214,6 @@ export const en = {
   'filter.clear': 'Clear filter',
   'view.relays': 'Relays',
   'view.relays.hint': 'How each connection is doing',
-  'view.shortcuts': 'Shortcuts',
-  'view.shortcuts.hint': 'Every key that does something',
-  'view.about': 'About',
-  'view.about.hint': 'Version, source, licence',
   undo: 'Undo',
   'media.failed': 'This file cannot be played here.',
   'relay.connected': 'Connected',
@@ -283,8 +279,6 @@ export const en = {
   'about.engineWait': 'Starting…',
   'about.source': 'Source',
   'about.licence': 'Licence',
-  'about.privacy': 'Privacy',
-  'about.privacyLink': 'Privacy policy',
   'keys.window': 'Tabs and workspaces',
   'keys.feed': 'Feeds',
   'keys.compose': 'Posting',
@@ -394,4 +388,33 @@ export const en = {
   'set.accounts.d': 'Accounts are added, switched and removed in the Accounts tab.',
   'relays.edit': 'Edit the list in Settings',
   'relays.state': 'Connection state',
+  'view.docs': 'Docs',
+  'view.docs.hint': 'A guide to lkjstr',
+  'docs.g.about': 'About lkjstr',
+  'docs.g.use': 'Using it',
+  'docs.g.legal': 'Legal',
+  'docs.what': 'What lkjstr is',
+  'docs.about': 'Version and licence',
+  'docs.keys': 'Keys and safety',
+  'docs.relays': 'Relays',
+  'docs.filters': 'Filters',
+  'docs.shortcuts': 'Shortcuts',
+  'docs.privacy': 'Privacy policy',
+  'docs.terms': 'Terms',
+  'docs.what.b':
+    'lkjstr is a Nostr client that runs entirely in this browser. There is no lkjstr server and no account with us. Fetching, storing, signing and publishing all happen here, and the browser talks to relays directly.\n\n## Tiles and tabs\nThe window is divided into tiles, and each tile holds tabs. Home, Global, Notifications, Post, a profile, a thread: everything you open is a tab. Drag a tab to reorder it, to move it to another tile, or drop it on the edge of a tile to split. The numbers in the top bar are nine workspaces, each with a layout of its own.\n\n## Reading\nA press on a note opens its thread, and a press on a name or a face opens the profile, as a new tab in the same tile. Shift-click splits it beside, a middle click opens it behind. At the very top of a list new notes flow in by themselves; anywhere else your place is kept and only a count of what is new is shown.\n\n## Posting\nWrite in the Post tab. A reaction or a repost is not sent until its Undo has gone, so a wrong press can be taken back as if it never happened.',
+  'docs.keys.b':
+    'A Nostr account is its key. Whoever holds the secret key (nsec) is the account; a lost key cannot be restored by anyone and a leaked one cannot be revoked.\n\n## Ways to sign in\n- Browser extension (NIP-07): the key stays in the extension and lkjstr only asks it to sign. The safest way.\n- Remote signer (bunker://, NIP-46): the key stays in another signing app and never reaches lkjstr.\n- A new account, or an nsec: the key is stored in this browser. Save it with “Back up key” as soon as it is created.\n- An npub: read-only. You cannot post or react.\n\n## What lkjstr does\nA typed key is never shown, leaves the field the moment it is sent, and appears in no message. A secret key is shown only inside “Back up key”, and is covered again when you leave the page.\n\n## What to watch\nOn a shared computer avoid the ways that store a key, and remove the account when you are done. Clearing the browser’s data also removes the keys stored on this device.',
+  'docs.relays.b':
+    'Nostr has no central server: notes live on servers called relays. lkjstr follows your relay list (NIP-65), reading from your read relays and publishing to your write relays.\n\n## Your relays\nEdit the list in Settings under “Relays: Your relays”: switch reading and writing, add, remove. The list is published as your relay list.\n\n## Other relays\nNotes of the people you follow are also fetched from the relays they write to. The Relays tab lists every relay lkjstr knows, with its state, why it is used and how fast it answers.\n\n## Signed out\nGlobal is read from a starting set of relays. That list can be changed in Settings too, and is kept on this device.',
+  'docs.filters.b':
+    'The first row of a timeline and of Notifications narrows that list. A filter is saved with its tab, and the row scrolls away with the list. “/” puts the keyboard in its field. Whether the row is shown is the setting “Reading: Filter row”.',
+  'docs.filters.plain':
+    '## What it narrows\nOnly notes that contain every word typed are kept. ▶ opens the rest: showing replies and reposts, with or without media, and a period from one day to another.',
+  'docs.filters.rich':
+    '## The query\n- words: notes that contain every word\n- "a phrase": notes that contain it exactly\n- -word: notes that do not contain it\n- from:name: notes by that person (a name, an npub or a NIP-05 name)\n- has:image, has:video, has:link: notes with a picture, a video or a link\n\n## The rest\n▶ opens the rest: showing replies and reposts, with or without media, a period from one day to another, the people to keep, and whether notifications flow into the timeline.',
+  'docs.privacy.b':
+    'lkjstr has no server of its own. The host that serves this page receives no account, no key, and nothing you read or write. Settings, layouts, drafts and cached notes stay in this browser.\n\nTo read and post, your browser connects directly to the Nostr relays you choose and to the servers that hold media. Their operators can see your IP address and what you request or publish. Notes published to Nostr are public and may be impossible to take back.\n\nThere are no analytics, no advertising and no tracking cookies.',
+  'docs.terms.b':
+    'lkjstr is free software published under the Apache License 2.0. It is provided as it is, with no warranty of any kind.\n\n## Your responsibility\nYour keys and what you publish are your own responsibility. Notes published to Nostr are public and may be impossible to take back. Follow the law and the rules of the relays and media servers you use.\n\n## Third parties\nRelays, media servers and signing extensions or apps are provided by their own operators. lkjstr does not run them and is not responsible for what they hold or whether they are available.\n\n## Changes\nThis text may change as lkjstr is updated.',
 };

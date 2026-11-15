@@ -884,8 +884,8 @@ async function keyboard(browser: Browser, still: Record<string, unknown>): Promi
     await page.evaluate(() => document.activeElement?.matches('.view') === true),
   );
   await page.keyboard.press('Shift+?');
-  await page.waitForSelector('.pane.cur .view[data-kind="shortcuts"] kbd');
-  const caps = await page.locator('.view[data-kind="shortcuts"] kbd').allInnerTexts();
+  await page.waitForSelector('.pane.cur .view[data-kind="docs"] kbd');
+  const caps = await page.locator('.view[data-kind="docs"] kbd').allInnerTexts();
   fact(
     '? lists the keys, pairs and mouse gestures',
     ['G H', 'J', 'Alt+Shift+T', 'Middle click', 'Shift+Click'].every((x) => caps.includes(x)),
@@ -1336,33 +1336,70 @@ async function pages(browser: Browser, still: Record<string, unknown>): Promise<
   );
   await page.locator('.tab.active[data-view^="settings"] > .x').click();
 
-  await menu('Shortcuts');
-  const sv = '.view[data-kind="shortcuts"]';
+  // Docs: a tree about lkjstr; the shortcuts, the version facts and the policy are pages of it, each an ordinary tab.
+  await menu('Docs');
+  const sv = '.pane.cur .view[data-kind="docs"]';
+  await page.locator(`${sv} .dtree`).waitFor();
+  const tree = await page
+    .locator(`${sv} .dtree`)
+    .evaluate((nav) =>
+      [...nav.querySelectorAll('details')].map(
+        (d) =>
+          `${d.querySelector('summary')?.textContent}: ${[...d.querySelectorAll('.ditem')].map((b) => b.textContent).join(', ')}`,
+      ),
+    );
+  fact(
+    'docs: a tree of groups and pages',
+    tree.join(' | ') ===
+      'About lkjstr: What lkjstr is, Version and licence | Using it: Keys and safety, Relays, Filters, Shortcuts | Legal: Privacy policy, Terms',
+    tree,
+  );
+  fact(
+    'docs: opens on what lkjstr is, and the tab is named after the page',
+    (await page.locator(`${sv} .ditem.on`).innerText()) === 'What lkjstr is' &&
+      (await page.locator('.pane.cur .tab.active > span').innerText()) === 'What lkjstr is' &&
+      (await page.locator(`${sv} .dpage`).innerText()).includes('runs entirely in this browser'),
+  );
+  await page.locator(`${sv} .ditem`, { hasText: 'Shortcuts' }).click();
   const caps = await page.locator(`${sv} kbd`).allInnerTexts();
   fact(
     'shortcuts: the key table, as this device names the keys',
     (await count(page, `${sv} dt`)) === Object.keys(KEYS).length &&
       caps.includes('/') &&
+      caps.includes('X') &&
+      caps.includes('O') &&
       caps.includes('Alt+Shift+1 … 9') &&
       caps.includes('Ctrl+Enter') &&
       caps.includes('Space'),
     caps,
   );
-  await menu('About');
-  const about = await page.locator('.view[data-kind="about"]').innerText();
+  await page.locator(`${sv} .ditem`, { hasText: 'Version and licence' }).click();
+  const about = await page.locator(`${sv} .dpage`).innerText();
   fact(
     'about: version, engine, source, licence',
     /lkjstr \d+\.\d+\.\d+/.test(about) &&
       about.includes('mock, protocol 3') &&
-      (await count(page, '.view[data-kind="about"] a[href="https://github.com/lkjsxc/lkjstr"]')) ===
-        1 &&
+      (await count(page, `${sv} a[href="https://github.com/lkjsxc/lkjstr"]`)) === 1 &&
       about.includes('Apache License 2.0'),
     about,
   );
+  await page.locator(`${sv} .ditem`, { hasText: 'Privacy policy' }).click();
   fact(
-    'no heading repeats a tab title',
-    (await count(page, `${sv} h1, ${rv} h1, .view[data-kind="about"] h1`)) === 0,
+    'the privacy policy and the terms are pages of the tree',
+    (await page.locator(`${sv} .dpage`).innerText()).includes('no tracking cookies') &&
+      (await page.locator('.pane.cur .tab.active > span').innerText()) === 'Privacy policy',
   );
+  await page.locator(`${sv} .dgroup summary`).first().click();
+  fact(
+    'a group of the tree closes',
+    !(await page.locator(`${sv} .ditem`, { hasText: 'What lkjstr is' }).isVisible()),
+  );
+  fact('no heading repeats a tab title', (await count(page, `${sv} h1, ${rv} h1`)) === 0);
+  await page.keyboard.press('o');
+  await page.keyboard.type('terms');
+  await page.keyboard.press('Enter');
+  await page.locator('.pane.cur .tab.active > span', { hasText: 'Terms' }).waitFor();
+  fact('tab search goes to a docs page by its name', true);
 
   // Settings: the lists, each removal undoable.
   await menu('Settings');

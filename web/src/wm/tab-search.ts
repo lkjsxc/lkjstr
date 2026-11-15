@@ -43,8 +43,9 @@ export function tabHits(api: Pick<TabFinder, 'tabs' | 'show' | 'open'>, typed: s
   const tabs = api
     .tabs()
     .filter(({ tab, title }) => {
+      // An open tab is found by what it says on it, and by its kind in either language.
       const v = viewOf(tab);
-      const words = `${title} ${v ? both(v.title) : ''} ${v?.aliases ?? ''} ${tab}`.toLowerCase();
+      const words = `${title} ${v ? both(v.title) : ''} ${tab}`.toLowerCase();
       return matchesWords(words, text);
     })
     .map(({ tab, title }): Hit => ({ title, hint: '', open: true, go: () => api.show(tab) }));
