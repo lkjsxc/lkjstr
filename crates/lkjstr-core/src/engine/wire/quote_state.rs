@@ -3,6 +3,12 @@ use super::*;
 use crate::engine::Engine;
 use serde_json::Value;
 pub(super) fn settle(row: &mut Value, e: &Engine) {
+    super::counts::settle(row, e);
+    if row["kind"] == "profile"
+        && let Some(p) = row["author"]["pubkey"].as_str().map(str::to_owned)
+    {
+        super::counts::profile(row, e, &p);
+    }
     if let Some(quotes) = row.get_mut("quotes").and_then(Value::as_array_mut) {
         for quote in quotes {
             if quote["state"] == "loading"

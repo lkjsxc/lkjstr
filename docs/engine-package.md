@@ -16,7 +16,9 @@ pnpm package
 
 build:real runs scripts/engine-package.sh, then builds web/ with
 --engine=../tmp/engine-dist. The Rust toolchain, wasm-bindgen 0.2.122,
-Node 24 and pnpm 11 are required. Caches and build output stay in ignored
+Node 24 and pnpm 11 are required. The crate is lkjstr-engine-worker; its
+generated asset basename remains lkjstr_engine. Set LKJSTR_WASM_BINDGEN or
+put the matching CLI on PATH. Caches and build output stay in ignored
 worktree paths; Cargo jobs and test workers are capped at four.
 
 The package remains usable independently with sh scripts/engine-package.sh.
@@ -32,7 +34,8 @@ Successful relay saves persist in frontend storage. A verified active-account
 NIP-65 list replaces bootstrap read/write usage; bootstrap search usage remains.
 Replaying another tab's bootstrap cannot override that learned owner list.
 
-pnpm build and pnpm smoke still build the mock. pnpm package packs the current
+In web/, pnpm build and pnpm smoke build the mock. Root pnpm build builds the
+real product. In web/, pnpm package packs the current
 dist without rebuilding, so a real release cannot silently become a mock.
 The archive is tmp/lkjstr-dist.tar.gz; validate it with the host's unmodified
 release.py unpack function before handing it off. Nothing is deployed here.

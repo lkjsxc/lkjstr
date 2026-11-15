@@ -22,7 +22,7 @@ fn anchored_hydration_follows_displayed_authors_and_references() {
     e.store.insert(old.clone(), None);
     let mut newest = old.clone();
     for at in 2..=80 {
-        newest = event(at, 1, "head", vec![]);
+        newest = event(at, 1, &format!("head {at}"), vec![]);
         e.store.insert(newest.clone(), None);
     }
     open(&mut e, Query::default());
@@ -160,6 +160,7 @@ fn fresh_clears_on_return_to_head_and_when_preceding_rows_disappear() {
 #[test]
 fn advancing_cached_tail_fetches_until_pages_before_claiming_bottom() {
     let mut e = Engine::new();
+    e.signed_out_global_filter = false;
     e.input(
         Input::Configure {
             relays: vec![RELAY.into()],

@@ -18,4 +18,5 @@ The existing edge owns HTTPS. Do not add blanket COOP/COEP headers or a successf
 HTML fallback for missing JavaScript or WASM files.
 
 See [status](../../docs/status.md): this server still validates the old bridge
-layout and rejects Trunk's `dist/` until it is adapted.
+layout and rejects the current frontend dist/ until it is adapted. Product
+preview uses web/scripts/serve.ts.

@@ -10,12 +10,12 @@ A browser-only, local-first Nostr client with a tiled workspace. No
 server-side accounts, relay proxy or backend. Two parts:
 
 - **Frontend** in `web/`: TypeScript with no framework, built like ytenrich.
-  It draws and nothing else. Today it runs against a mock engine.
+  It draws and nothing else. build:real packages the real Worker engine.
 - **Engine** in `crates/`: Rust compiled to WebAssembly, running in a Worker.
   It owns relays, the event store, parsing, signing and publishing.
 
-`crates/lkjstr-web` is the earlier Leptos interface. The engine work still
-builds from it, so leave it in place; do not extend it as the interface.
+The Worker lives in crates/lkjstr-engine-worker. There is one interface in
+web/; no root application package, Leptos UI or Trunk build remains.
 
 ## Read order
 
@@ -50,7 +50,8 @@ Engine work:
 ## Engine rules
 
 - Decisions belong in `crates/lkjstr-core` with native tests; browser effects
-  belong in `crates/lkjstr-web`. Keep JavaScript to what Trunk generates.
+  belong in `crates/lkjstr-engine-worker`. JavaScript is limited to loading
+  and transport glue; product policy stays in Rust.
 - Protocol parsing and signing go through `lkjstr-protocol` (or `lkjstr-nips`
   once merged), never ad hoc in the UI.
 - No fake product data and no placeholder success. Loading, empty, failed and

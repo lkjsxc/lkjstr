@@ -23,12 +23,38 @@ Sibling branches are not projected as replies to the focus.
 Quote lookup errors now have English/Japanese failure text, with a rendering
 regression test. Two native thread regressions cover ancestors, nested replies,
 root-only replies, missing parents, filters, windows and public references.
-There is still no account-add control; the local end-to-end smoke sets up its
-fixture extension account through a second real transport port. It then drives
-existing controls.
+Accounts can be created/imported through the Accounts tab. Protocol 2 supports
+explicit local nsec backup; external signers and read-only accounts refuse it.
+Secret-bearing input/output debug representations are redacted.
 
 The conformance gate now uses this worktree's contract, without fetching a
 branch. See engine-package.md for commands and current verification artifacts.
+
+## Engine polish (2026-11-15)
+
+Visible windows batch up to 6000 authors per view, including nested quotes,
+reply context and repost actors. Profile batches share relay work, prefer
+note-delivering read relays, fall back after completion and release on hiding.
+Cached names render immediately while metadata refreshes. Visible profiles
+can preempt occupied relay slots; interrupted feeds resume after lookup.
+Six native regressions cover routing, batching, context, refresh and release.
+The delayed loopback probe uses 240 ms responses and congested slots: baseline
+note-to-named-row 1893.7 ms; revised 232.5 ms. engine-check includes this probe.
+
+Protocol 2 uses absent profile fields for unknown counts and the existing
+partial flag for lower bounds. Count requests are bounded and exact only after
+successful, untruncated, verified replies. No alternate estimate shape remains.
+Signed-out relays.save with an empty account is supported by the Worker and
+confirmed edits are saved by startup plumbing. The Settings action guard still
+blocks visitor edits before they reach the engine; the frontend must remove
+that guard specifically for bootstrap edits.
+
+Signed-out Global defaults to deterministic window filtering: three notes per
+author, ten-minute duplicate bursts and no-profile rows only after successful, untruncated lookups.
+Windows refill across withheld rows; empty windows advance history themselves.
+EngineConfig.signedOutGlobalFilter disables it; signed-in feeds are untouched.
+The manual read-only sample held 65/200 rows: 33 author cap, 30 no profile and
+two duplicates. Ten examples and owner decisions: [engine-polish.md](engine-polish.md).
 
 ## Engine contract (2026-11-14)
 
@@ -116,8 +142,15 @@ cache eviction, search routing, signer replacement and decrypted mute policy.
 All four quiet gates pass; the rebuilt Worker passes 53 local browser checks
 using the existing fetched contract. Report: tmp/engine-harness/report.json.
 
-## Retained application
+## One product
 
-The previous Leptos/Trunk app remains available. Historical UI/design results
-in verification.md do not verify the new independent frontend. This change
-contains engine, protocol, packaging and verification work only.
+web/ is the only interface. crates/lkjstr-engine-worker owns the Worker and
+its browser effects; the root Cargo.toml is a virtual workspace. The Leptos
+UI/runtime, root HTML entry, exclusive styles/icons and browser drivers are
+removed. Shared static icons and the loopback relay helper remain in use.
+Root build and quiet release gates build web/ with the real engine. No Trunk
+installation is needed. Docker configuration follows that build but cannot
+be run in this environment. Historical UI results do not verify this product.
+
+Review regressions cover nonnegative numeric counts, filtered-window refill,
+anchorless history fetches, and refused, timed-out or truncated profile lookups.

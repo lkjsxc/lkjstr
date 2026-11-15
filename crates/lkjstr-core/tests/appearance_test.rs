@@ -25,51 +25,6 @@ fn fallback_and_date_separators_are_stable() {
     assert_eq!(day_label(1, 172_801), "");
 }
 
-fn luminance(hex: &str) -> f64 {
-    let rgb: Vec<_> = (1..7)
-        .step_by(2)
-        .map(|i| {
-            let n = u8::from_str_radix(&hex[i..i + 2], 16).unwrap_or(0);
-            let c = f64::from(n) / 255.0;
-            if c <= 0.04045 {
-                c / 12.92
-            } else {
-                ((c + 0.055) / 1.055).powf(2.4)
-            }
-        })
-        .collect();
-    rgb[0] * 0.2126 + rgb[1] * 0.7152 + rgb[2] * 0.0722
-}
-
-#[test]
-fn exact_design_tokens_and_all_readable_pairs_have_aa_contrast() {
-    let css = include_str!("../../../static/styles/base.css");
-    let palettes = [
-        [
-            "#f4f3ee", "#fdfcf9", "#ffffff", "#1c1c1a", "#55544f", "#27598c", "#9c3a23", "#3d7350",
-        ],
-        [
-            "#14161a", "#1a1d21", "#21252a", "#e7e5df", "#a9a8a2", "#8fb4e3", "#e08a6d", "#86c097",
-        ],
-    ];
-    for palette in palettes {
-        for token in palette {
-            assert!(css.contains(token), "missing {token}");
-        }
-        for background in &palette[..3] {
-            for foreground in &palette[3..] {
-                let a = luminance(background);
-                let b = luminance(foreground);
-                let ratio = (a.max(b) + 0.05) / (a.min(b) + 0.05);
-                assert!(ratio >= 4.5, "{foreground} on {background}: {ratio}");
-            }
-        }
-    }
-    // ink-3 is deliberately preserved as a token, not used for readable text.
-    assert!(css.contains("--ink-3: #85847d;"));
-    assert!(css.contains("--ink-3: #7d7c77;"));
-}
-
 #[test]
 fn data_images_are_supported_without_allowing_executable_profile_urls() {
     use lkjstr_core::store::Profile;

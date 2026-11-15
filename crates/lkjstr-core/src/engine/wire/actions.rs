@@ -1,5 +1,5 @@
 use serde::Deserialize;
-#[derive(Debug, Deserialize)]
+#[derive(Deserialize)]
 #[serde(tag = "a", rename_all = "camelCase")]
 pub enum Action {
     Publish {
@@ -49,6 +49,8 @@ pub enum Action {
     },
     #[serde(rename = "account.add")]
     AccountAdd { how: String, key: Option<String> },
+    #[serde(rename = "account.key")]
+    AccountKey { pubkey: String },
     #[serde(rename = "account.use")]
     AccountUse { pubkey: String },
     #[serde(rename = "account.remove")]
@@ -122,4 +124,10 @@ pub enum MuteTarget {
     Word { word: String },
     Hashtag { tag: String },
     Thread { id: String },
+}
+
+impl std::fmt::Debug for Action {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("Action [redacted]")
+    }
 }

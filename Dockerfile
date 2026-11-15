@@ -1,21 +1,25 @@
-# Image-based gates. Nothing mounts the source tree.
+# One browser product: TypeScript interface plus the real Rust/WASM Worker.
+FROM node:24-bookworm AS node
 FROM rust:1-bookworm AS deps
+COPY --from=node /usr/local/ /usr/local/
 WORKDIR /app
 COPY rust-toolchain.toml ./
 RUN rustup show && rustup component add clippy rustfmt \
   && rustup target add wasm32-unknown-unknown
-RUN cargo install trunk --locked --version 0.21.14
+RUN npm install -g pnpm@11.1.2 \
+  && cargo install wasm-bindgen-cli --locked --version 0.2.122
 COPY . .
-ENV CARGO_BUILD_JOBS=4
+ENV CARGO_BUILD_JOBS=4 RUST_TEST_THREADS=4 \
+  LKJSTR_WASM_BINDGEN=/usr/local/cargo/bin/wasm-bindgen
+RUN pnpm install --frozen-lockfile --store-dir /app/tmp/pnpm-store \
+  && pnpm --dir web install --frozen-lockfile --store-dir /app/tmp/pnpm-store
 
-# Full gate: repo checks, fmt, clippy (native and wasm), tests, release build, dist check.
 FROM deps AS verify
 CMD ["cargo", "run", "-q", "-p", "lkjstr-xtask", "--", "quiet", "docker-verify"]
 
 FROM deps AS app-build
-RUN trunk build --release && cargo run -q -p lkjstr-xtask -- check-dist
+RUN pnpm build
 
-# Static preview of the built app (development only; no deployment target here).
 FROM busybox:1.36 AS app
 COPY --from=app-build /app/dist /www
 EXPOSE 8080

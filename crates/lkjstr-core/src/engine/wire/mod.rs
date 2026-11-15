@@ -1,5 +1,6 @@
 //! Mirrors web/next-20261114:web/src/engine/protocol.ts (authoritative).
 pub mod actions;
+mod counts;
 mod note;
 mod notifications;
 mod output;
@@ -54,7 +55,7 @@ pub enum Input {
         error: Option<String>,
     },
 }
-#[derive(Debug, Serialize)]
+#[derive(Serialize)]
 #[serde(tag = "t", rename_all = "camelCase")]
 pub enum Output {
     Heartbeat,
@@ -116,6 +117,8 @@ pub enum Output {
         id: Option<String>,
         #[serde(skip_serializing_if = "Option::is_none")]
         uploaded: Option<serde_json::Value>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        key: Option<String>,
     },
     Status {
         connected: usize,
@@ -140,7 +143,7 @@ pub struct Session {
 impl Session {
     pub fn ready(shared: bool) -> Output {
         Output::Ready {
-            version: 1,
+            version: 2,
             engine: if shared {
                 "rust-wasm-shared"
             } else {
@@ -157,4 +160,10 @@ pub struct RelayConfig {
     pub read: bool,
     pub write: bool,
     pub search: bool,
+}
+
+impl std::fmt::Debug for Output {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("Output [redacted]")
+    }
 }

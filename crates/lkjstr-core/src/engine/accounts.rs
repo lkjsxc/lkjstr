@@ -62,6 +62,18 @@ impl Accounts {
         self.active = Some(pubkey);
         Ok(())
     }
+    /// Only the explicit account.key request may call this export.
+    pub fn backup_key(&self, pubkey: &str) -> Result<String, &'static str> {
+        let a = self
+            .entries
+            .iter()
+            .find(|a| a.pubkey == pubkey)
+            .ok_or("not-found")?;
+        if a.signer != "local" {
+            return Err("unsupported");
+        }
+        lkjstr_protocol::encode_nsec(a.secret.as_deref().ok_or("internal")?).map_err(|_| "internal")
+    }
     pub fn private_entries(&self, event: &p::NostrEvent) -> Option<Vec<Vec<String>>> {
         let a = self.entries.iter().find(|a| a.pubkey == event.pubkey)?;
         let secret = p::parse_secret_key_hex(a.secret.as_deref()?)?;

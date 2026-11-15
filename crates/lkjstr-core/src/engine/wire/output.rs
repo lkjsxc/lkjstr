@@ -10,7 +10,8 @@ impl Session {
                 at_top,
                 at_bottom,
             } => {
-                let rows = self.rows(&sub, &items, engine);
+                let mut rows = self.rows(&sub, &items, engine);
+                for row in &mut rows { super::quote_state::settle(row, engine); }
                 self.delivered.insert(sub.clone(), rows.clone());
                 vec![Output::Rows {
                     sub,
@@ -70,7 +71,12 @@ impl Session {
                     vec![Output::Patch { sub, ops }]
                 }
             }
-            p::Output::Fresh { sub, count } => vec![Output::Fresh { sub, count }],
+            p::Output::Fresh { sub, count } => {
+                let ops = self.settled_quote_patch(&sub,engine);
+                let mut out = vec![Output::Fresh { sub:sub.clone(), count }];
+                if !ops.is_empty() { out.push(Output::Patch {sub,ops}); }
+                out
+            },
             p::Output::Sign { req, event } => vec![Output::Sign {
                 req,
                 pubkey: event.pubkey.clone(),
@@ -99,6 +105,7 @@ impl Session {
                     delivery: Some(delivery),
                     id,
                     uploaded: None,
+                    key: None,
                 }]
             }
             p::Output::Status {
@@ -155,6 +162,7 @@ impl Session {
             delivery: None,
             id: None,
             uploaded: None,
+            key: None,
         }
     }
     fn rows(&self, sub: &str, items: &[crate::engine::rows::Row], engine: &Engine) -> Vec<Value> {
@@ -180,7 +188,12 @@ impl Session {
         items
             .iter()
             .filter(|r| !r.own.muted)
-            .map(|r| super::note::note(r, &engine.store, q.and_then(|q| q.account.as_deref())))
+            .map(|r| {
+                let mut row =
+                    super::note::note(r, &engine.store, q.and_then(|q| q.account.as_deref()));
+                super::quote_state::settle(&mut row, engine);
+                row
+            })
             .collect()
     }
 }

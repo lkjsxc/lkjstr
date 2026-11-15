@@ -38,6 +38,9 @@ pub enum Input {
         #[serde(default, rename = "saveData")]
         save_data: bool,
     },
+    GlobalPolicy {
+        enabled: bool,
+    },
     Configure {
         relays: Vec<String>,
     },

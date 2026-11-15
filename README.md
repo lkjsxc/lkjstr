@@ -2,78 +2,68 @@
 
 ## Purpose
 
-lkjstr is a local-first Nostr client that lives in tiles. Timelines, threads,
-profiles, notifications, search, the composer, media, relays and settings are
-tabs you can split, stack, resize and move, with the keyboard or the pointer.
-It runs entirely in the browser; there is no lkjstr server.
+lkjstr is a browser-only, local-first Nostr client with a tiled workspace.
+Timelines, threads, profiles, notifications, search, composer, media, relays
+and settings run entirely in the browser. There is no lkjstr backend.
 
 ## Parts
 
-- `web/`: the interface. TypeScript with no framework, built like ytenrich.
-  It draws; it never parses an event or opens a socket.
-- `crates/`: the engine, Rust compiled to WebAssembly and run in a Worker:
-  relays, request planning, the event store, signatures, publishing. See
-  [crates/README.md](crates/README.md).
-- `web/src/engine/protocol.ts`: the messages between the two.
+- `web/`: the only interface, TypeScript without a framework. It draws and
+  never parses events, opens sockets or touches the event store.
+- `crates/lkjstr-engine-worker/`: Rust/WASM Worker and browser effects.
+- `crates/lkjstr-core/`: deterministic engine policy, store and native tests.
+- `crates/lkjstr-protocol/` and `crates/lkjstr-nips/`: codecs and cryptography.
+- `web/src/engine/protocol.ts`: the additive engine/interface contract.
+- `engine/`: Worker loading and transport glue.
+- `static/`: shared icons and manifest copied into the frontend build.
 
-The default development build uses the mock engine. `pnpm build:real` in
-`web/` builds the Rust engine and the interface together; see
-[engine-package.md](docs/engine-package.md) for release and local browser gates. `crates/lkjstr-web`, the earlier Leptos interface built by Trunk from
-the root `index.html`, stays in the tree while the engine is cut out of it.
+The root Cargo.toml is a virtual workspace. The former Leptos interface,
+root HTML entry and Trunk build have been removed.
 
-## Frontend: run, build, verify
+## Run and build
 
-Requirements: Node 24 and pnpm 11.
+Requirements: Node 24, pnpm 11, the Rust toolchain in rust-toolchain.toml,
+wasm32-unknown-unknown and wasm-bindgen-cli 0.2.122. Put wasm-bindgen on PATH
+or set LKJSTR_WASM_BINDGEN to its absolute path. No Trunk is needed.
 
 ```sh
-cd web
 pnpm install
-pnpm dev      # rebuilds ../dist on change
-pnpm serve    # http://127.0.0.1:8417, with the production headers
-pnpm check    # repo rules, tsc, biome, vitest: prints "ok check"
-pnpm build:real # the interface plus real Rust/WASM engine in ../dist
-pnpm smoke:real # loopback-only real app browser check
-pnpm package  # pack current dist to ../tmp/lkjstr-dist.tar.gz
-pnpm build    # the mock static site in ../dist: prints "ok build"
-pnpm smoke    # drives Chromium against the build: prints "ok smoke"
-pnpm shots    # screenshots of every view to ../tmp/screens
+pnpm --dir web install
+pnpm dev                    # frontend development with the mock engine
+pnpm build                  # web/ plus real Worker engine into dist/
+pnpm --dir web serve        # static preview with production headers
+pnpm --dir web smoke:real   # loopback real-engine browser check
+pnpm --dir web package      # current dist/ archive in tmp/
 ```
 
-`dist/` is a complete static site. What the host has to do with it (routing,
-content types, headers, caching) is in
-[docs/hosting-needs.md](docs/hosting-needs.md).
+The mock remains a development and test double for this same interface.
+`pnpm --dir web build` builds that variant; build:real builds the real engine.
+The static host requirements are in [hosting-needs.md](docs/hosting-needs.md).
 
-Details: [docs/frontend.md](docs/frontend.md) and
-[docs/design.md](docs/design.md).
+## Verification
 
-## Engine and the earlier interface
-
-Requirements: the Rust toolchain in `rust-toolchain.toml` (with the
-`wasm32-unknown-unknown` target) and Trunk 0.21.14. From the repository root:
+On shared hosts set CARGO_BUILD_JOBS=4 and RUST_TEST_THREADS=4. With restricted
+writes, put Cargo, browser and temporary caches under ignored tmp/.
 
 ```sh
 pnpm check:repo
 pnpm test:quiet
 pnpm rust-wasm:quiet
 pnpm verify:quiet
+sh scripts/engine-check.sh
+pnpm --dir web check
+pnpm --dir web build
+pnpm --dir web smoke
+pnpm --dir web build:real
+pnpm --dir web smoke:real
 ```
 
-`pnpm dev` and `pnpm build` at the root still build the Leptos interface
-with Trunk into the same `dist/`; do not run them over a frontend build you
-mean to publish. State and gates: [docs/status.md](docs/status.md) and
-[docs/verification.md](docs/verification.md).
+Root release gates build the sole frontend with the real engine. Automated
+browser checks use loopback relays and local data. Docker Compose verify is
+the final gate where Docker is available; it is not available in this session.
 
-The new Rust/WASM Worker engine is in `crates/lkjstr-engine`; its protocol,
-SharedWorker entry, test harness and current limits are in
-[docs/engine.md](docs/engine.md). The Leptos app remains during frontend cutover.
-
-## Repository map
-
-- `web/`: the frontend (`src/`, `scripts/`, `tests/`).
-- `crates/`: [protocol, core, web, host, xtask](crates/README.md).
-- `index.html`, `static/`, `Cargo.toml`: the Trunk entry, stylesheets and
-  icons of the earlier interface (the icons are also copied by `web/`).
-- `docs/`: [documentation index](docs/README.md).
+See [docs/README.md](docs/README.md), [status.md](docs/status.md),
+[verification.md](docs/verification.md) and [engine-polish.md](docs/engine-polish.md).
 
 ## License
 

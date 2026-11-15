@@ -3,19 +3,24 @@ use super::{Engine, protocol::Source, query};
 use lkjstr_protocol::{NostrFilter, tags::tag_values};
 impl Engine {
     pub(super) fn replan(&mut self, now: u64) {
-        let mut wants = Vec::new();
+        let mut wants = self.profile_wants();
         for (sub, v) in self.views.iter().filter(|(_, v)| v.visible) {
             if matches!(v.query.source, Source::Relays | Source::Diagnostics) {
                 continue;
             }
-            for f in requests(&self.store, v) {
+            for f in requests(&self.store, &self.network, v, self.signed_out_global_filter) {
                 wants.push((sub.clone(), f, v.query.clone()));
             }
         }
         self.network.plan(wants, now);
     }
 }
-fn requests(store: &crate::store::Store, v: &super::View) -> Vec<NostrFilter> {
+fn requests(
+    store: &crate::store::Store,
+    network: &super::network::Network,
+    v: &super::View,
+    enabled: bool,
+) -> Vec<NostrFilter> {
     let q = &v.query;
     if query::signed_out(q) {
         return vec![];
@@ -31,7 +36,6 @@ fn requests(store: &crate::store::Store, v: &super::View) -> Vec<NostrFilter> {
             ..Default::default()
         });
     }
-    let mut people = Vec::new();
     if let Some(account) = &q.account {
         let kinds: Vec<_> = [0, 3, 10000, 10003, 10002, 10030, 10063]
             .into_iter()
@@ -46,26 +50,43 @@ fn requests(store: &crate::store::Store, v: &super::View) -> Vec<NostrFilter> {
             });
         }
     }
-    if matches!(q.source, Source::Profile | Source::Following)
-        && let Some(target) = &q.target
-    {
-        people.push(target.clone());
-    }
     let events = query::events(store, q);
-    let range = super::windows::range(v, &events);
-    let prefetch = crate::prefetch::collect_window(&events[range], store);
-    people.extend(prefetch.people);
-    people.sort();
-    people.dedup();
-    people.truncate(120);
-    if !people.is_empty() {
+    let range = super::windows::selection(store, network, v, enabled, &events).0;
+    // Batch visible note counts; released with the view and bounded by its window.
+    for events in events[range.clone()].chunks(120) {
+        let mut f = NostrFilter {
+            kinds: Some(vec![1, 6, 7, 9735]),
+            limit: Some(200),
+            ..Default::default()
+        };
+        f.tags
+            .insert("e".into(), events.iter().map(|e| e.id.clone()).collect());
+        result.push(f);
+    }
+    if q.source == Source::Profile
+        && let Some(p) = &q.target
+    {
+        let mut followers = NostrFilter {
+            kinds: Some(vec![3]),
+            limit: Some(200),
+            ..Default::default()
+        };
+        followers.tags.insert("p".into(), vec![p.clone()]);
+        result.push(followers);
         result.push(NostrFilter {
-            authors: Some(people),
-            kinds: Some(vec![0, 10002]),
-            limit: Some(240),
+            authors: Some(vec![p.clone()]),
+            kinds: Some(vec![1]),
+            limit: Some(200),
+            ..Default::default()
+        });
+        result.push(NostrFilter {
+            authors: Some(vec![p.clone()]),
+            kinds: Some(vec![3]),
+            limit: Some(1),
             ..Default::default()
         });
     }
+    let prefetch = crate::prefetch::collect_window(&events[range], store);
     let mut ids = prefetch.notes;
     if q.source == Source::Bookmarks
         && let Some(list) = q

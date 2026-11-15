@@ -103,7 +103,7 @@ try {
   await wait(()=>window.messages.some(m=>m.t==='heartbeat'));
   check('heartbeat is acknowledged by the Worker',true);
   await send({t:'open',sub:'global',query:{source:'global'}});
-  await wait(()=>window.messages.some((m)=>m.t==='patch'&&m.sub==='global'));
+  await wait(id=>window.messages.some(m=>m.sub==='global'&&((m.t==='rows'&&m.rows.some(r=>r.id===id))||(m.t==='patch'&&m.ops.some(op=>op.row?.id===id||op.rows?.some(r=>r.id===id))))),note.id);
   check('verified fake-relay rows cross the Worker boundary',true);
   await send({t:'open',sub:'same',query:{source:'global'}});
   await wait(()=>window.messages.some((m)=>m.t==='rows'&&m.sub==='same'&&m.rows.length));

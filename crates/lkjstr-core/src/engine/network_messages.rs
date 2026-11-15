@@ -35,6 +35,7 @@ impl Network {
                     .get_mut(&subscription_id)
                     .filter(|r| r.relay == relay)
                 {
+                    self.profiles_changed = true;
                     r.eose = true;
                     r.last_rx = now;
                     if let Some(relay) = self.relays.get_mut(relay) {
@@ -62,6 +63,7 @@ impl Network {
                     .get_mut(&subscription_id)
                     .filter(|r| r.relay == relay)
                 {
+                    self.profiles_changed = true;
                     r.deadline = now;
                     r.complete = !message.starts_with("rate-limited:");
                     r.sent = false;
@@ -198,6 +200,7 @@ impl Network {
             .collect();
         for id in timed_out {
             if let Some(r) = self.requests.get_mut(&id) {
+                self.profiles_changed = true;
                 r.complete = !r.live;
                 r.ready_at = now + r.retry_delay;
                 r.retry_delay = (r.retry_delay * 2).min(30000);

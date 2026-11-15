@@ -186,7 +186,7 @@ try {
   check(
     'sign-in offers the extension and a key field that never echoes; no account is created without a way to its key',
     (await page.locator(`${accounts} input`).getAttribute('type')) === 'password' &&
-      (await page.locator(`${accounts} [data-f="create"]`).isHidden()),
+      (await page.locator(`${accounts} [data-f="create"]`).isVisible()),
   );
   // The same surface on a phone, dark, in Japanese: the bar fits on one line and nothing is clipped.
   const phone = await visit({
@@ -241,11 +241,42 @@ try {
     /^npub1.{5}…/.test(pending.name) &&
       pending.lines === 1 &&
       pending.tab === pending.name &&
-      !/\d/.test(pending.stats) &&
+      !pending.stats.includes('+') &&
       !pending.hex,
   );
   if (shots) await shot(stranger, 'slice-profile-pending-1440-dark.png');
   await stranger.context().close();
+  const created = await visit({ viewport: { width: 1024, height: 768 }, locale: 'en-US' });
+  await created.locator('.acct.out').click();
+  await created.locator(`${accounts} [data-f="create"]`).click();
+  const keyField = created.locator('.kfield');
+  await created.waitForFunction(() => document.querySelector('.kfield')?.value.startsWith('nsec1'));
+  const newKey = await keyField.inputValue();
+  check(
+    'new account opens its masked backup key',
+    (await keyField.getAttribute('type')) === 'password',
+  );
+  await created.locator('.kbox [data-f="show"]').click();
+  check(
+    'explicit backup can reveal the generated key',
+    (await keyField.getAttribute('type')) === 'text',
+  );
+  check(
+    'backup key is absent from interface storage',
+    await created.evaluate(
+      (key) => !Object.values(localStorage).some((v) => v.includes(key)),
+      newKey,
+    ),
+  );
+  await created.locator('.kbox [data-f="done"]').click();
+  await created.locator(`${accounts} [data-f="backup"]`).click();
+  await created.waitForFunction(() => document.querySelector('.kfield')?.value.startsWith('nsec1'));
+  check(
+    'Back up key returns the same local secret',
+    (await created.locator('.kfield').inputValue()) === newKey,
+  );
+  await created.locator('.kbox [data-f="done"]').click();
+  await created.context().close();
   // A key typed by hand: a throwaway made here, used against the loopback relay only and removed again. It is
   // held in this process and in the engine, and must be nowhere the interface could leave it.
   const throwaway = bech32('nsec', randomBytes(32).toString('hex'));
@@ -277,7 +308,7 @@ try {
       kept.field === '' &&
       kept.signer === 'Key on this device' &&
       kept.canPost &&
-      kept.backup === 0,
+      kept.backup === 1,
   );
   await keyed.locator(`${accounts} .arow.on [data-f="remove"]`).click();
   check(
@@ -425,6 +456,30 @@ try {
   await page.reload();
   await page.locator('.view[data-kind="global"] .note').first().waitFor();
   check('signed out survives a reload', await out(page));
+  await launch('Settings', 'settings');
+  const relayField = page.getByLabel('Relay address', { exact: true });
+  await relayField.fill(`${relayUrl}/visitor`);
+  await relayField.press('Enter');
+  // Must remain a real interface check: the signed-out guard currently blocks this request.
+  await page.waitForTimeout(500);
+  check(
+    'signed-out relay edit is saved',
+    await page.evaluate(
+      (url) =>
+        JSON.parse(localStorage.getItem('lkjstr:relays:') ?? '[]').some(
+          (r) => r.url.replace(/\/$/, '') === url,
+        ),
+      `${relayUrl}/visitor`,
+    ),
+  );
+  await page.reload();
+  await page.getByLabel('Relay address', { exact: true }).waitFor();
+  check(
+    'signed-out relay edit survives reload',
+    (await page
+      .locator(`[data-entry="set.relayList"] .rhost[title^="${relayUrl}/visitor"]`)
+      .count()) === 1,
+  );
   check('no page errors', errors.length === 0);
 } catch (error) {
   checks.failure = String(error);

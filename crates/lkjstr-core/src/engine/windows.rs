@@ -22,11 +22,20 @@ impl Engine {
             return;
         }
         let events = query::events(&self.store, &v.query);
-        let range = range(v, &events);
+        let (range, held) = selection(
+            &self.store,
+            &self.network,
+            v,
+            self.signed_out_global_filter,
+            &events,
+        );
         let (start, end) = (range.start, range.end);
-        let items: Vec<_> = events[start.min(end)..end]
+        let window = &events[start..end];
+        let items: Vec<_> = window
             .iter()
-            .map(|e| {
+            .zip(held)
+            .filter(|(_, reason)| reason.is_none())
+            .map(|(e, _)| {
                 let mut r = rows::row_with_lists(
                     &self.store,
                     e,
@@ -111,4 +120,28 @@ pub(super) fn range(v: &super::View, events: &[crate::store::Event]) -> std::ops
         .saturating_add(1)
         .min(events.len());
     at.saturating_sub(v.before).min(end)..end
+}
+
+/// Refill from raw rows so every retained anchor can reach older cached notes.
+/// Hydration and history use this same raw span, including withheld authors.
+pub(super) fn selection(
+    store: &crate::store::Store,
+    network: &super::network::Network,
+    v: &super::View,
+    enabled: bool,
+    events: &[crate::store::Event],
+) -> (std::ops::Range<usize>, Vec<Option<super::global::Held>>) {
+    let raw = range(v, events);
+    if enabled && v.query.account.is_none() && v.query.source == Source::Global {
+        let held = super::global::classify_window(
+            store,
+            &events[raw.start..],
+            |p| network.profile_absent(p),
+            raw.len(),
+        );
+        (raw.start..raw.start + held.len(), held)
+    } else {
+        let held = vec![None; raw.len()];
+        (raw, held)
+    }
 }

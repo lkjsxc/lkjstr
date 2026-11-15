@@ -135,3 +135,75 @@ impl Network {
             })
     }
 }
+
+impl Network {
+    /// Termination allows fallback, even when a lookup failed or was truncated.
+    pub fn profile_finished(&self, author: &str, relays: &[String]) -> bool {
+        if self.verifying {
+            return false;
+        }
+        let rs: Vec<_> = self
+            .requests
+            .values()
+            .filter(|r| {
+                (relays.is_empty() || relays.contains(&r.relay))
+                    && r.filter.kinds.as_deref() == Some(&[0])
+                    && r.filter
+                        .authors
+                        .as_ref()
+                        .is_some_and(|a| a.iter().any(|a| a == author))
+            })
+            .collect();
+        !rs.is_empty() && rs.iter().all(|r| r.asked && (r.eose || r.complete))
+    }
+}
+
+impl Network {
+    /// Only successful, untruncated profile lookups can establish absence.
+    pub fn profile_absent(&self, author: &str) -> bool {
+        self.profile_finished(author, &[])
+            && self
+                .requests
+                .values()
+                .filter(|r| {
+                    r.filter.kinds.as_deref() == Some(&[0])
+                        && r.filter
+                            .authors
+                            .as_ref()
+                            .is_some_and(|a| a.iter().any(|a| a == author))
+                })
+                .all(|r| r.eose && r.received.len() < r.page_limit)
+    }
+}
+
+impl Network {
+    pub fn count_complete(
+        &self,
+        filter: &lkjstr_protocol::NostrFilter,
+        store: &crate::store::Store,
+    ) -> bool {
+        let rs: Vec<_> = self
+            .requests
+            .values()
+            .filter(|r| {
+                let mut requested = filter.clone();
+                if requested.kinds.as_deref() == Some(&[1, 6, 7, 9735])
+                    && let (Some(ids), Some(batch)) =
+                        (requested.tags.get("e"), r.filter.tags.get("e"))
+                    && ids.iter().all(|id| batch.contains(id))
+                {
+                    requested.tags.insert("e".into(), batch.clone());
+                }
+                r.filter == requested
+            })
+            .collect();
+        !self.verifying
+            && !rs.is_empty()
+            && rs.iter().all(|r| {
+                r.asked
+                    && r.eose
+                    && r.received.len() < r.page_limit
+                    && r.received.iter().all(|id| store.get(id).is_some())
+            })
+    }
+}

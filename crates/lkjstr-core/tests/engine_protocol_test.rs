@@ -109,6 +109,7 @@ fn rows_are_finished_and_patches_are_batched() {
 #[test]
 fn anchored_window_holds_identity_and_new_items_emit_fresh() {
     let mut e = Engine::new();
+    e.signed_out_global_filter = false;
     let mut ids = vec![];
     for at in 1..=5 {
         let n = event(at, 1, "hello", vec![]);

@@ -36,7 +36,7 @@ function valid(s, v) {
 }
 const schema = shape(aliases.get('FromEngine'));
 export function validateReplies(messages) {
-  for (const msg of messages) if (!valid(schema, msg)) throw new Error(`protocol shape mismatch: ${msg.t ?? 'untagged'} ${JSON.stringify(msg).slice(0, 500)}`);
+  for (const msg of messages) if (!valid(schema, msg)) throw new Error('protocol shape mismatch (payload redacted)');
 }
 function tags(alias, key) {
   return shape(aliases.get(alias)).union.map((s) => s.object?.[key]?.shape.literal).filter(Boolean);

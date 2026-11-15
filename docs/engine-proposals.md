@@ -58,3 +58,9 @@ The measured 100000-event sparse-author workload improved from 3087.80 ms to
 are in engine-performance.md. This supports keeping filtering/indexing in Rust
 and sending bounded finished windows; it does not prove a cold 100000-row disk
 startup. Add disk compaction and that browser benchmark before claiming it.
+
+## Count contract resolution (2026-11-15)
+
+The frontend's protocol 2 remains authoritative. The proposed estimate objects
+were rejected during integration. Unknown profile fields are absent; known
+numbers use the existing partial flag. No alternate unknown representation.

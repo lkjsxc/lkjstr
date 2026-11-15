@@ -1,0 +1,75 @@
+//! Counts are exact only after successful, untruncated requests on every route.
+use crate::{
+    engine::{Engine, rows::Row},
+    store::Query,
+};
+use serde_json::{Value, json};
+pub(super) fn note(row: &Row) -> Value {
+    json!({"replies":row.counts.replies,"reposts":row.counts.reposts,
+        "reactions":row.counts.reactions,"zaps":0,"partial":true})
+}
+pub(super) fn settle(row: &mut Value, e: &Engine) {
+    if row["kind"] == "note" {
+        let id = row["id"].as_str().unwrap_or("");
+        let mut f = lkjstr_protocol::NostrFilter {
+            kinds: Some(vec![1, 6, 7, 9735]),
+            limit: Some(200),
+            ..Default::default()
+        };
+        f.tags.insert("e".into(), vec![id.into()]);
+        let untrusted_zaps = e
+            .store
+            .referencing(id)
+            .iter()
+            .any(|event| event.kind == 9735);
+        row["counts"]["partial"] = json!(untrusted_zaps || !e.network.count_complete(&f, &e.store));
+    }
+}
+pub(super) fn profile(result: &mut Value, e: &Engine, p: &str) {
+    if let Some(fields) = result.as_object_mut() {
+        for field in ["following", "followers", "notes"] {
+            fields.remove(field);
+        }
+    }
+    let follows = e.store.follows(p);
+    let following_known = follows.is_some() || e.network.list_loaded(&e.store, p, 3);
+    if following_known {
+        result["following"] = json!(follows.as_ref().map_or(0, Vec::len));
+    }
+    let mut partial = false;
+    for (field, kinds, authors, mention) in [
+        ("followers", vec![3], None, Some(p.to_owned())),
+        (
+            "notes",
+            vec![1],
+            Some([p.into()].into_iter().collect()),
+            None,
+        ),
+    ] {
+        let count = e
+            .store
+            .feed(&Query {
+                kinds: kinds.clone(),
+                authors: authors.clone(),
+                mention: mention.clone(),
+                limit: 6000,
+                ..Default::default()
+            })
+            .len();
+        let mut f = lkjstr_protocol::NostrFilter {
+            kinds: Some(kinds),
+            authors: authors.map(|a: std::collections::HashSet<String>| a.into_iter().collect()),
+            limit: Some(200),
+            ..Default::default()
+        };
+        if let Some(p) = mention {
+            f.tags.insert("p".into(), vec![p]);
+        }
+        let exact = e.network.count_complete(&f, &e.store);
+        if count > 0 || exact {
+            result[field] = json!(count);
+            partial |= !exact;
+        }
+    }
+    result["partial"] = json!(partial);
+}

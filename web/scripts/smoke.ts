@@ -14,8 +14,7 @@ process.env.XDG_CACHE_HOME ??= resolve(here, '../tmp/cache');
 process.env.XDG_CONFIG_HOME ??= resolve(here, '../tmp/config');
 process.env.XDG_DATA_HOME ??= resolve(here, '../tmp/data');
 mkdirSync(process.env.TMPDIR, { recursive: true });
-const port = 18400 + Math.floor(Math.random() * 400);
-const base = `http://127.0.0.1:${port}`;
+let base = '';
 const chrome =
   process.env.LKJSTR_CHROME ??
   `${process.env.HOME}/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome`;
@@ -25,6 +24,20 @@ const fact = (name: string, ok: boolean, detail: unknown = ''): void => {
   if (!ok) failures.push(`${name}: ${JSON.stringify(detail)}`);
 };
 
+async function isolatedContext(
+  browser: Browser,
+  options: Parameters<Browser['newContext']>[0] = {},
+) {
+  const context = await browser.newContext(options);
+  await context.route('**/*', (route) =>
+    route.request().url().startsWith(base)
+      ? route.continue()
+      : route.fulfill({ status: 204, body: '' }),
+  );
+  await context.routeWebSocket('**/*', (socket) => socket.close());
+  return context;
+}
+
 async function open(
   browser: Browser,
   path: string,
@@ -32,7 +45,7 @@ async function open(
   size = { width: 1440, height: 900 },
   locale = 'en-US',
 ): Promise<Page> {
-  const ctx = await browser.newContext({ viewport: size, locale, deviceScaleFactor: 1 });
+  const ctx = await isolatedContext(browser, { viewport: size, locale, deviceScaleFactor: 1 });
   await ctx.addInitScript((s) => {
     for (const [k, v] of Object.entries(s))
       if (!localStorage.getItem(`lkjstr:${k}`))
@@ -712,7 +725,7 @@ async function reading(browser: Browser, still: Record<string, unknown>): Promis
   await page.context().close();
 
   // A phone: one tile, so the media tab opens in it; a finger gets 40px.
-  const ctx = await browser.newContext({
+  const ctx = await isolatedContext(browser, {
     viewport: { width: 390, height: 844 },
     hasTouch: true,
     isMobile: true,
@@ -998,7 +1011,7 @@ async function pages(browser: Browser, still: Record<string, unknown>): Promise<
   await page.context().close();
 
   // A phone: the action row has room, by the tile's width; the bookmark is in the "…" menu.
-  const ctx = await browser.newContext({
+  const ctx = await isolatedContext(browser, {
     viewport: { width: 390, height: 844 },
     hasTouch: true,
     isMobile: true,
@@ -1276,12 +1289,20 @@ async function accounts(browser: Browser): Promise<void> {
 }
 
 if (!existsSync(`${here}../dist/index.html`)) throw new Error('build first: pnpm build');
-const server: ChildProcess = spawn(
-  process.execPath,
-  [`${here}scripts/serve.ts`, `--port=${port}`],
-  { stdio: 'pipe' },
-);
-await new Promise((r) => server.stdout?.once('data', r));
+const server: ChildProcess = spawn(process.execPath, [`${here}scripts/serve.ts`, '--port=0'], {
+  stdio: 'pipe',
+});
+base = await new Promise<string>((done, fail) => {
+  const timer = setTimeout(() => fail(new Error('local server startup timeout')), 10_000);
+  server.once('exit', (code) => {
+    clearTimeout(timer);
+    fail(new Error(`server exited ${code}`));
+  });
+  server.stdout?.once('data', (data) => {
+    clearTimeout(timer);
+    done(String(data).trim());
+  });
+});
 let browser: Browser | undefined;
 try {
   browser = await chromium.launch({ executablePath: chrome, args: ['--no-sandbox'] });

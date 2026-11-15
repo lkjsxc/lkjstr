@@ -24,7 +24,7 @@ impl Session {
             }).collect()).unwrap_or_default(),
             "relays"=>e.relay_rows(),
             "diagnostics"=>{
-                let facts=json!({"events":store.len(),"eventPayloadBytes":store.payload_bytes(),"verified":e.verified,"rejected":e.rejected,"dropped":e.dropped,"persistenceQueue":e.pending.len(),"timings":e.metrics,"relayStatistics":e.network.stats(),"protocol":1});
+                let facts=json!({"events":store.len(),"eventPayloadBytes":store.payload_bytes(),"verified":e.verified,"rejected":e.rejected,"dropped":e.dropped,"persistenceQueue":e.pending.len(),"timings":e.metrics,"relayStatistics":e.network.stats(),"protocol":2});
                 facts.as_object().map(|m|m.iter().map(|(k,v)|json!({"kind":"info","key":k,"label":k,"value":v.to_string()})).collect()).unwrap_or_default()
             }
             "media-servers"=>q.account.as_deref().and_then(|a|store.replaceable(a,10063)).map(|event| lkjstr_protocol::tags::tag_values(&event,"server").into_iter().map(|url|json!({"kind":"server","key":url,"url":url,"protocol":e.servers.get(&url).map(|v|v.0.as_str()).unwrap_or("unknown"),"ok":e.servers.get(&url).is_some_and(|v|v.1)})).collect()).unwrap_or_default(),
@@ -47,6 +47,7 @@ impl Session {
                         if let Some((role, depth)) = position {
                             value["thread"] = json!({"role":role,"depth":depth});
                         }
+                        super::quote_state::settle(&mut value,e);
                         Some(value)
                     }).collect()
             }).unwrap_or_default(),
@@ -93,28 +94,8 @@ fn profile(e: &Engine, p: &str, account: Option<&str>) -> Value {
     result["banner"] = json!(meta.banner);
     result["website"] = json!(meta.website);
     result["lud16"] = json!(meta.lud16);
-    result["following"] = json!(store.follows(p).map(|f| f.len()).unwrap_or(0));
-    result["followers"] = json!(
-        store
-            .feed(&crate::store::Query {
-                kinds: vec![3],
-                mention: Some(p.into()),
-                limit: 6000,
-                ..Default::default()
-            })
-            .len()
-    );
-    result["notes"] = json!(
-        store
-            .feed(&crate::store::Query {
-                kinds: vec![1],
-                authors: Some([p.into()].into_iter().collect()),
-                limit: 6000,
-                ..Default::default()
-            })
-            .len()
-    );
-    result["partial"] = json!(true);
+    super::counts::profile(&mut result, e, p);
+
     result["muted"] = json!(crate::engine::settings::list_has(
         store,
         &e.private_lists,

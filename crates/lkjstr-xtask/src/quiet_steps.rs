@@ -30,9 +30,7 @@ pub fn rust_steps() -> Vec<Step> {
     let wasm = [
         "clippy",
         "-p",
-        "lkjstr-web",
-        "-p",
-        "lkjstr-engine",
+        "lkjstr-engine-worker",
         "--target",
         "wasm32-unknown-unknown",
         "--",
@@ -47,14 +45,13 @@ pub fn rust_steps() -> Vec<Step> {
     ]
 }
 
-/// The browser artifact: Trunk builds `dist/` from `index.html`.
+/// Build the sole frontend together with the real Worker package.
 pub fn build_steps() -> Vec<Step> {
-    vec![Step {
-        name: "trunk build",
-        program: OsString::from("trunk"),
-        args: ["build", "--release"].iter().map(OsString::from).collect(),
-        clear_no_color: true,
-    }]
+    vec![step(
+        "real frontend build",
+        OsString::from("pnpm"),
+        &["--dir", "web", "build:real"],
+    )]
 }
 
 fn step(name: &'static str, program: OsString, args: &[&str]) -> Step {

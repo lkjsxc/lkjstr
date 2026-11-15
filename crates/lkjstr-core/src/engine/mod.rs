@@ -3,8 +3,11 @@ pub mod accounts;
 pub mod bench;
 pub mod clients;
 mod commands;
+pub mod global;
 mod history;
+mod hydration;
 mod identities;
+mod input;
 pub mod metrics;
 pub mod network;
 mod network_limits;
@@ -47,6 +50,7 @@ pub struct Engine {
     pub seen: BTreeMap<String, u64>,
     pub metrics: metrics::Metrics,
     pub store: Store,
+    pub signed_out_global_filter: bool,
     pub pending: crate::persistence::PendingEvents,
     pub network: Network,
     views: BTreeMap<String, View>,
@@ -72,6 +76,7 @@ impl Engine {
             seen: BTreeMap::new(),
             metrics: Default::default(),
             store: Store::with_caps(16000, 4000),
+            signed_out_global_filter: true,
             pending: Default::default(),
             network: Network::default(),
             views: BTreeMap::new(),
@@ -85,72 +90,6 @@ impl Engine {
             dropped: 0,
         }
     }
-    pub fn input(&mut self, input: Input, now: u64) {
-        match input {
-            Input::Open { sub, query } => {
-                if self.views.len() >= 128 && !self.views.contains_key(&sub) {
-                    self.error(Some(sub), "subscription-limit");
-                    return;
-                }
-                self.views.insert(
-                    sub.clone(),
-                    View {
-                        query,
-                        anchor: None,
-                        before: 0,
-                        after: 50,
-                        rows: vec![],
-                        visible: true,
-                        dirty: true,
-                        history: None,
-                        at_bottom: false,
-                        source_exhausted: false,
-                    },
-                );
-                self.render(&sub, true);
-                self.replan(now);
-            }
-            Input::Close { sub } => {
-                self.views.remove(&sub);
-                self.replan(now);
-            }
-            Input::Window {
-                sub,
-                anchor,
-                before,
-                after,
-            } => {
-                if let Some(v) = self.views.get_mut(&sub) {
-                    v.anchor = anchor;
-                    v.before = before.min(100);
-                    v.after = after.min(200);
-                    self.advance_history(&sub);
-                    self.replan(now);
-                    self.render(&sub, true);
-                }
-            }
-            Input::Configure { relays } => {
-                self.network.configure(relays, now);
-                self.replan(now);
-            }
-            Input::Hint {
-                visible_subs,
-                page_hidden,
-                ..
-            } => {
-                for (id, v) in &mut self.views {
-                    v.visible = !page_hidden && visible_subs.contains(id);
-                }
-                self.replan(now);
-            }
-            Input::Action {
-                req,
-                account,
-                action,
-            } => self.action(req, account, action, now),
-            Input::Signed { req, event, .. } => self.signed(req, event, now),
-        }
-    }
     pub fn enqueue(&mut self, relay: String, event: NostrEvent) {
         if self.store.get(&event.id).is_some() || self.queue.iter().any(|(_, e)| *e == event) {
             return;
@@ -161,13 +100,19 @@ impl Engine {
             return;
         }
         self.queue_bytes += bytes;
-        self.queue.push_back((relay, event));
+        // Profiles requested for visible authors precede bulk note verification.
+        if event.kind == 0 {
+            self.queue.push_front((relay, event));
+        } else {
+            self.queue.push_back((relay, event));
+        }
         self.network.verifying = true;
         self.metrics.verify_queue_peak = self.metrics.verify_queue_peak.max(self.queue.len());
     }
     /// Called away from socket callbacks. At most 32 verifications per slice.
     pub fn tick(&mut self, now: u64) {
         let revision = self.store.revision();
+        let was_verifying = self.network.verifying;
         for _ in 0..32 {
             let Some((relay, e)) = self.queue.pop_front() else {
                 break;
@@ -196,10 +141,18 @@ impl Engine {
             }
         }
         self.network.verifying = !self.queue.is_empty();
+        self.network.profiles_changed |= was_verifying && !self.network.verifying;
         if self.store.revision() != revision {
             self.replan(now);
         }
         self.network.tick(now);
+        if std::mem::take(&mut self.network.profiles_changed) {
+            self.replan(now);
+            for v in self.views.values_mut() {
+                v.dirty = true;
+            }
+        }
+        self.refill_history(now);
         for v in self.views.values_mut() {
             if v.source_exhausted != history::exhausted(&self.network, &self.store, v) {
                 v.dirty = true;
