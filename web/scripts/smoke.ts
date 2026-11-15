@@ -395,6 +395,7 @@ async function run(browser: Browser): Promise<void> {
   await place(browser, still);
   await keyboard(browser, still);
   await defaults(browser, still);
+  await scrolling(still);
 }
 
 const FEED = '.view[data-kind="home"]';
@@ -417,6 +418,93 @@ const same = (a: { key: string; off: number }, b: { key: string; off: number }):
 
 /** The reading position: the same note at the same height after a reload, another tab, another tile, another width,
  * a closed and reopened tab. */
+/** A list keeps what was read above; the scrollbar is easy to catch and says the time while it is held; a zoomed
+ * picture is moved by hand. */
+async function scrolling(still: Record<string, unknown>): Promise<void> {
+  // Headless Chromium hides scrollbars by default: this browser draws them, as a reader's does.
+  const bars = await chromium.launch({
+    executablePath: chrome,
+    args: ['--no-sandbox'],
+    ignoreDefaultArgs: ['--hide-scrollbars'],
+  });
+  const page = await open(bars, '/', still);
+  const feed = '.view[data-kind="global"]';
+  await page.locator('.tab[data-view="global"]').click();
+  await page.locator(`${feed} .note`).first().waitFor();
+  const firstKey = (): Promise<string | undefined> =>
+    page
+      .locator(`${feed} .list > .note`)
+      .first()
+      .evaluate((n) => (n as HTMLElement).dataset.key);
+  const head = await firstKey();
+  let most = 0;
+  for (let i = 0; i < 14; i++) {
+    await page.locator(feed).evaluate((el) => el.scrollTo(0, el.scrollHeight));
+    await page.waitForTimeout(160);
+    most = Math.max(most, await count(page, `${feed} .list > .note`));
+  }
+  const kept = await count(page, `${feed} .list > .note`);
+  fact(
+    'scrolling far down keeps every row above',
+    kept >= 150 && kept === most && (await firstKey()) === head,
+    [kept, most],
+  );
+  const bar = await page
+    .locator(feed)
+    .evaluate((el) => (el as HTMLElement).offsetWidth - el.clientWidth);
+  fact('the scrollbar is 14px to catch', bar === 14, bar);
+  const box = await page.locator(feed).boundingBox();
+  const x = (box?.x ?? 0) + (box?.width ?? 0) - 7;
+  await page.locator(feed).evaluate((el) => el.scrollTo(0, el.scrollHeight / 2));
+  await page.waitForTimeout(200);
+  const y = (box?.y ?? 0) + (box?.height ?? 0) / 2;
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.mouse.move(x, y - 60, { steps: 4 });
+  await page.waitForTimeout(150);
+  const said = await page.locator(`${feed} .scrub`).evaluate((el) => ({
+    shown: !(el as HTMLElement).hidden,
+    text: el.textContent ?? '',
+  }));
+  fact(
+    'a held scrollbar says the time of the row there',
+    Boolean(said.shown) &&
+      /^(\d{4}\/\d\d\/\d\d)?( ?\d\d:\d\d)?$/.test(said.text) &&
+      said.text !== '',
+    said,
+  );
+  await page.mouse.up();
+  await page.waitForTimeout(100);
+  fact(
+    'released, the label goes',
+    await page.locator(`${feed} .scrub`).evaluate((el) => (el as HTMLElement).hidden === true),
+  );
+
+  // A zoomed picture: the wheel zooms about the pointer, a drag moves it.
+  await page.locator(feed).evaluate((el) => el.scrollTo(0, 0));
+  const pic = page.locator(`${feed} .mbox`).first();
+  await pic.scrollIntoViewIfNeeded();
+  await pic.click();
+  await page.locator('.mstage img').waitFor();
+  const stage = await center(page, '.mstage');
+  await page.mouse.move(stage.x + 40, stage.y + 30);
+  await page.mouse.wheel(0, -900);
+  const at = (): Promise<string> =>
+    page.locator('.mstage img').evaluate((i) => (i as HTMLElement).style.transform);
+  const before = await at();
+  await page.mouse.down();
+  await page.mouse.move(stage.x - 80, stage.y - 40, { steps: 5 });
+  const during = await page.locator('.mstage').evaluate((el) => el.classList.contains('held'));
+  await page.mouse.up();
+  const after = await at();
+  fact(
+    'a zoomed picture is grabbed and moved, and keeps its zoom',
+    during && after !== before && after.split('scale')[1] === before.split('scale')[1],
+    [before, after],
+  );
+  await bars.close();
+}
+
 /** The layout of a device that holds nothing yet, for a reader and a visitor, and what "Reset layout" gives. */
 async function defaults(browser: Browser, still: Record<string, unknown>): Promise<void> {
   const tiles = (page: Page): Promise<string[]> =>

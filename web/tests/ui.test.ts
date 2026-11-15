@@ -280,3 +280,13 @@ describe('formats', () => {
     });
   });
 });
+
+describe('the time beside a held scrollbar', () => {
+  it('says as much as the span of the list needs', async () => {
+    const { scrubText } = await import('../src/views/feed-scrub.ts');
+    const at = new Date(2026, 10, 15, 9, 5).getTime();
+    expect(scrubText(at, at + 3_600_000, at - 3_600_000)).toBe('09:05');
+    expect(scrubText(at, at + 3_600_000, at - 3 * 86_400_000)).toBe('2026/11/15 09:05');
+    expect(scrubText(at, at, at - 200 * 86_400_000)).toBe('2026/11/15');
+  });
+});

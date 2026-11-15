@@ -1,5 +1,5 @@
-// A picture that can be looked at closely: wheel and pinch zoom about the pointer, drag to pan, double press for
-// fit or actual size. The picture never leaves the stage, and a stage that changes size keeps a fitted picture fitted.
+// A picture that can be looked at closely: wheel and pinch zoom about the pointer, drag to pan (the hand closes
+// while it holds the picture), a click with the mouse or a double tap for fit or actual size, about that point. The picture never leaves the stage, and a stage that changes size keeps a fitted picture fitted.
 export type Zoom = {
   /** Fits the picture, or shows it at its own size when it is fitted. */
   toggle(): void;
@@ -30,6 +30,7 @@ export function zoomable(
   const points = new Map<number, { x: number; y: number }>(); // bound: fingers on the stage
   let start: { x: number; y: number; moved: boolean } | undefined;
   let pinch = 0;
+  let mouse = false; // the last press was a mouse's
 
   const box = (): DOMRect => stage.getBoundingClientRect();
   const fitScale = (): number => {
@@ -89,6 +90,8 @@ export function zoomable(
     points.set(e.pointerId, p);
     start = points.size === 1 ? { ...p, moved: false } : undefined;
     pinch = spread().d;
+    stage.classList.add('held');
+    mouse = e.pointerType === 'mouse';
   };
   const move = (e: PointerEvent): void => {
     const was = points.get(e.pointerId);
@@ -110,8 +113,11 @@ export function zoomable(
     const p = points.get(e.pointerId);
     points.delete(e.pointerId);
     pinch = 0;
+    if (!points.size) stage.classList.remove('held');
     if (!p || !start || points.size) return;
     const dx = p.x - start.x;
+    // A press with the mouse that did not drag: closer, or back to the whole picture, about where it was pressed.
+    if (mouse && !start.moved && e.type === 'pointerup') toggle(p.x, p.y);
     if (
       fitted &&
       e.pointerType !== 'mouse' &&
@@ -122,9 +128,11 @@ export function zoomable(
     start = undefined;
   };
   const dbl = (e: MouseEvent): void => {
+    if (mouse) return; // the mouse already toggled on each press
     const p = local(e);
     toggle(p.x, p.y);
   };
+  const noDrag = (e: Event): void => e.preventDefault(); // the browser's own image drag would end the pan
   const loaded = (): void => {
     if (!nw || !nh) (nw = img.naturalWidth), (nh = img.naturalHeight);
     apply();
@@ -135,6 +143,7 @@ export function zoomable(
   stage.addEventListener('pointerup', up);
   stage.addEventListener('pointercancel', up);
   stage.addEventListener('dblclick', dbl);
+  stage.addEventListener('dragstart', noDrag);
   img.addEventListener('load', loaded);
   const sizes = new ResizeObserver(apply);
   sizes.observe(stage);
@@ -151,6 +160,7 @@ export function zoomable(
       stage.removeEventListener('pointerup', up);
       stage.removeEventListener('pointercancel', up);
       stage.removeEventListener('dblclick', dbl);
+      stage.removeEventListener('dragstart', noDrag);
       img.removeEventListener('load', loaded);
     },
   };
