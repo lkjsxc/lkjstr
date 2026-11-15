@@ -85,7 +85,11 @@ export function filterQuery(f: Filter, rich = true): Partial<Query> {
   const since = dayStart(f.start);
   const until = dayStart(f.end);
   if (since !== undefined) out.since = since;
-  if (until !== undefined) out.until = until + 86_400_000 - 1;
+  if (until !== undefined) {
+    const next = new Date(until);
+    next.setDate(next.getDate() + 1);
+    out.until = next.getTime() - 1;
+  }
   if (rich && f.news) out.notifications = true;
   return out;
 }

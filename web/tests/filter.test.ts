@@ -1,8 +1,26 @@
+import { execFileSync } from 'node:child_process';
 import { describe, expect, it } from 'vitest';
 import { scrubText } from '../src/views/feed-scrub.ts';
 import { filterActive, filterNarrows, filterQuery } from '../src/views/filter-bar.ts';
 
 describe('the filter of a feed', () => {
+  it.each([
+    ['2026-03-08', '2026-03-08T05:00:00.000Z', '2026-03-09T03:59:59.999Z'],
+    ['2026-11-01', '2026-11-01T04:00:00.000Z', '2026-11-02T04:59:59.999Z'],
+    ['2026-12-31', '2026-12-31T05:00:00.000Z', '2027-01-01T04:59:59.999Z'],
+  ])('includes the whole local day %s in New York', (day, since, until) => {
+    // A separate process makes the timezone independent of the host and other tests.
+    const script = `
+      import { filterQuery } from './src/views/filter-bar.ts';
+      console.log(JSON.stringify(filterQuery({ start: '${day}', end: '${day}' })));
+    `;
+    const result = execFileSync(process.execPath, ['--input-type=module', '-e', script], {
+      cwd: process.cwd(),
+      env: { ...process.env, TZ: 'America/New_York' },
+      encoding: 'utf8',
+    });
+    expect(JSON.parse(result)).toEqual({ since: Date.parse(since), until: Date.parse(until) });
+  });
   it('a filter becomes query fields; an untouched one adds nothing', () => {
     expect(filterQuery({})).toEqual({});
     expect(filterQuery({ text: ' 猫 ', replies: false, media: 'only' })).toEqual({

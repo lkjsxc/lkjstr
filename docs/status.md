@@ -2,16 +2,16 @@
 
 ## Purpose
 
-Current engine cutover, verified behavior and explicitly unfinished variants.
-The independent frontend owns visible UI in web/. Integration changes only
-engine plumbing, startup and build/test/release scripts.
+Current engine cutover, verified behavior and unfinished variants; web/ owns the UI.
 
 ## Protocol 3 integration (2026-11-15)
 
 The real Worker advertises protocol 3 at startup. Rich note filters include all-word
 text, exact phrases, exclusions, image/video/link requirements, author unions,
 known-profile names and bounded verified NIP-05 query lookups. Millisecond date
-bounds round inward to Nostr seconds. Home/Global can mix notification rows;
+bounds round inward to Nostr seconds. Inclusive end dates follow local calendar
+days across daylight-saving changes. Hide-reposts checks wrappers before resolving
+target content. Home/Global can mix notification rows;
 profile kinds project posts, replies, reposts (6/16), reactions and image/video
 notes. Ordinary windows accept 800 rows on either side; retainAbove remains
 bounded at 6000. Existing account discovery adopts verified NIP-65 relay lists.

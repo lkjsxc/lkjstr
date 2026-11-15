@@ -154,10 +154,11 @@ pub fn events(store: &Store, q: &Query) -> Vec<Event> {
                         matches_extra(&target, &shown)
                     })
             } else if e.kind == 6 && q.source != Source::Notifications {
-                tag_values(e, "e")
-                    .last()
-                    .and_then(|id| store.get(id))
-                    .is_none_or(|target| matches_note(store, q, &target))
+                q.filters.reposts != Some(false)
+                    && tag_values(e, "e")
+                        .last()
+                        .and_then(|id| store.get(id))
+                        .is_none_or(|target| matches_note(store, q, &target))
             } else {
                 matches_extra(e, q)
             }
