@@ -41,7 +41,11 @@ Seams worth knowing inside `src/views/`:
   thread, profile, people, notifications). It decides which window of rows to
   ask for. `feed-draw.ts` turns rows into nodes, `feed-place.ts` keeps the
   reading position as an anchor row plus offset, `feed-keys.ts` is the
-  keyboard, `feed-bar.ts` and `filter-bar.ts` are the filter.
+  keyboard, `feed-bar.ts` and `filter-bar.ts` are the filter row,
+  `feed-scrub.ts` the time beside a held scrollbar, `profile-kinds.ts` the
+  kinds of a profile. `docs.ts` is the Docs tab (its pages include the
+  shortcuts and the release facts of `pages.ts`); `wm/tab-search.ts` finds
+  a tab.
 - `note.ts` draws a note, `note-media.ts` its pictures, `note-actions.ts`
   its action row and menus, `held.ts` holds a like or repost back until its
   Undo has lapsed.
@@ -69,6 +73,9 @@ Seams worth knowing inside `src/views/`:
   `account.remove`, and since protocol 2 `account.key`, whose result carries
   the `nsec` of a local account for the "Back up key" box. The interface
   offers "Create a new account" only to an engine that reports 2 or more.
+- Protocol 3 adds the query fields `phrases`, `exclude`, `has`, `from`,
+  `notifications` and `show`. The interface draws their controls only for an
+  engine that reports 3 (`views/can.ts`: `rich`).
 - `hint` (visible subscriptions, page hidden, idle, network quality) and
   `configure` (engine-side settings; the interface owns their storage).
 
