@@ -7,7 +7,7 @@ impl Network {
             .filter(|(_, (f, _))| f.kinds.as_deref() == Some(&[0]))
             .map(|(key, _)| key.clone())
             .collect();
-        // At most 128 visible views x 4096 authors per configured relay.
+        // At most 128 visible views x 6000 authors per configured relay.
         let mut pending: BTreeMap<String, BTreeMap<String, BTreeSet<String>>> = BTreeMap::new();
         for key in keys {
             if let Some((filter, members)) = desired.remove(&key) {

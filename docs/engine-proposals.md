@@ -64,8 +64,9 @@ startup. Add disk compaction and that browser benchmark before claiming it.
 Additive fields applied to protocol.ts: Counts.estimates (replies, reposts,
 reactions, zaps), ProfileRow.countEstimates (following, followers, notes).
 Each uses CountEstimate: unknown with no value, or at-least/exact with value.
-Existing numeric fields remain numbers; -1 accompanies unknown estimates.
-No unqueried field claims zero. Consumers should draw from estimates when
+Existing numeric fields remain nonnegative numbers; zero accompanies unknown
+estimates until the frontend consumes estimates throughout.
+Unknown estimates make no exact-zero claim. Consumers should draw from estimates when
 present. partial remains for compatibility and is not a per-metric claim.
 The real engine reports retained positives as lower bounds and a known kind-3
 follow list as exact; zap totals remain unknown without provider validation.

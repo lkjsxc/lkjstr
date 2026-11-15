@@ -137,6 +137,7 @@ impl Network {
 }
 
 impl Network {
+    /// Termination allows fallback, even when a lookup failed or was truncated.
     pub fn profile_finished(&self, author: &str, relays: &[String]) -> bool {
         if self.verifying {
             return false;
@@ -154,5 +155,23 @@ impl Network {
             })
             .collect();
         !rs.is_empty() && rs.iter().all(|r| r.asked && (r.eose || r.complete))
+    }
+}
+
+impl Network {
+    /// Only successful, untruncated profile lookups can establish absence.
+    pub fn profile_absent(&self, author: &str) -> bool {
+        self.profile_finished(author, &[])
+            && self
+                .requests
+                .values()
+                .filter(|r| {
+                    r.filter.kinds.as_deref() == Some(&[0])
+                        && r.filter
+                            .authors
+                            .as_ref()
+                            .is_some_and(|a| a.iter().any(|a| a == author))
+                })
+                .all(|r| r.eose && r.received.len() < r.page_limit)
     }
 }

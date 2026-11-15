@@ -22,7 +22,7 @@ fn anchored_hydration_follows_displayed_authors_and_references() {
     e.store.insert(old.clone(), None);
     let mut newest = old.clone();
     for at in 2..=80 {
-        newest = event(at, 1, "head", vec![]);
+        newest = event(at, 1, &format!("head {at}"), vec![]);
         e.store.insert(newest.clone(), None);
     }
     open(&mut e, Query::default());

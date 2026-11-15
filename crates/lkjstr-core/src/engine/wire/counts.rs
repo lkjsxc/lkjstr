@@ -10,7 +10,8 @@ fn estimate(value: usize, exact: bool) -> (i64, Value) {
     } else if value > 0 {
         (value as i64, json!({"state":"at-least","value":value}))
     } else {
-        (-1, json!({"state":"unknown"}))
+        // Keep existing renderers and optimistic increments compatible.
+        (0, json!({"state":"unknown"}))
     }
 }
 pub(super) fn note(row: &Row) -> Value {

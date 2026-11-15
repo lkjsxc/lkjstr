@@ -152,6 +152,7 @@ impl Engine {
                 v.dirty = true;
             }
         }
+        self.refill_history(now);
         for v in self.views.values_mut() {
             if v.source_exhausted != history::exhausted(&self.network, &self.store, v) {
                 v.dirty = true;

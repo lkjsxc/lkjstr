@@ -14,7 +14,6 @@ import type { MNote, World } from './world.ts';
 
 const estimate = (value: number, partial: boolean): CountEstimate =>
   partial && value === 0 ? { state: 'unknown' } : { state: partial ? 'at-least' : 'exact', value };
-const legacy = (value: number, partial: boolean): number => (partial && value === 0 ? -1 : value);
 
 const firstLine = (text: string): string => (text.split('\n')[0] ?? '').slice(0, 120);
 
@@ -76,13 +75,10 @@ export function noteRow(w: World, n: MNote, o: RowOpts): NoteRow {
       : undefined,
     cw: n.cw,
     counts: {
-      replies: legacy(w.repliesTo(n.id).length, n.partial),
-      reposts: legacy(n.reposts.length + (n.mineReposted ? 1 : 0), n.partial),
-      reactions: legacy(
-        [...n.reactions.values()].reduce((s, r) => s + r.count, 0),
-        n.partial,
-      ),
-      zaps: legacy(n.zaps, n.partial),
+      replies: w.repliesTo(n.id).length,
+      reposts: n.reposts.length + (n.mineReposted ? 1 : 0),
+      reactions: [...n.reactions.values()].reduce((s, r) => s + r.count, 0),
+      zaps: n.zaps,
       estimates: {
         replies: estimate(w.repliesTo(n.id).length, n.partial),
         reposts: estimate(n.reposts.length + (n.mineReposted ? 1 : 0), n.partial),
@@ -129,7 +125,7 @@ export function profileRow(w: World, p: Person, me: string): ProfileRow {
     },
     following: 40 + ((p.hue * 7) % 400),
     followers: 120 + ((p.hue * 13) % 5000),
-    notes: legacy(mine.length, p.hue % 2 === 0),
+    notes: mine.length,
     partial: p.hue % 2 === 0,
     followed: w.state.following.has(pk),
     followsYou: FOLLOWERS.has(pk) && pk !== me,

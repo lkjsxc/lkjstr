@@ -43,11 +43,11 @@ pruning to 20000 after successful live writes. Memory retains at most 16000
 regular and 4000 replaceable events independently of physical disk retention.
 
 There are at most 128 views and 32 attached clients. Each visible view hydrates
-up to 4096 authors; shared profile requests chunk at 120 authors per relay.
+up to 6000 authors; shared profile requests chunk at 120 authors per relay.
 Per-relay limits and deadlines bound socket work. A visible profile request may
 pause another request, which resumes when a slot becomes available.
 
-Signed-out Global filtering is scoped to a raw window of at most 301 rows.
+Signed-out Global refills up to 301 retained rows from at most 6000 cached rows.
 Its deterministic policy and count semantics are in engine-polish.md. Signed-in
 feeds bypass that policy. Secret keys remain entirely inside Rust and storage,
 except for the explicit backup action. No diagnostics contain secret keys.

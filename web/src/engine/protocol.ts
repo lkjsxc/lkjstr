@@ -152,7 +152,7 @@ export type Reaction = {
   readonly mine: boolean;
 };
 
-/** Legacy numeric fields carry -1 for unknown when estimates are supplied. */
+/** Legacy numeric fields stay nonnegative; unknown estimates accompany zero. */
 export type CountEstimate =
   | { readonly state: 'unknown' }
   | { readonly state: 'at-least' | 'exact'; readonly value: number };

@@ -47,7 +47,7 @@ fn unqueried_counts_are_unknown_and_observations_are_lower_bounds() {
     e.store.insert(note.clone(), None);
     let first = rows(&mut e, json!({"source":"global"}));
     for field in ["replies", "reposts", "reactions", "zaps"] {
-        assert_eq!(first[0]["counts"][field], -1);
+        assert_eq!(first[0]["counts"][field], 0);
         assert_eq!(
             first[0]["counts"]["estimates"][field],
             json!({"state":"unknown"})
@@ -77,7 +77,7 @@ fn profile_empty_follow_list_is_exact_zero_but_missing_list_is_unknown() {
     let p = contact.pubkey.clone();
     let before = rows(&mut e, json!({"source":"profile","pubkey":p}));
     for field in ["following", "followers", "notes"] {
-        assert_eq!(before[0][field], -1);
+        assert_eq!(before[0][field], 0);
         assert_eq!(before[0]["countEstimates"][field]["state"], "unknown");
     }
     e.store.insert(contact, None);
@@ -87,5 +87,5 @@ fn profile_empty_follow_list_is_exact_zero_but_missing_list_is_unknown() {
         after[0]["countEstimates"]["following"],
         json!({"state":"exact","value":0})
     );
-    assert_eq!(after[0]["followers"], -1);
+    assert_eq!(after[0]["followers"], 0);
 }

@@ -1,4 +1,4 @@
-//! Visible-author hydration. At most 4096 authors per view, shared per relay.
+//! Visible-author hydration. At most 6000 authors per view, shared per relay.
 use super::{
     Engine, View,
     protocol::{Query, Source},
@@ -10,11 +10,16 @@ use crate::{
 use lkjstr_protocol::{NostrFilter, event_references, tags::tag_values};
 use std::collections::{BTreeMap, BTreeSet};
 
-pub(super) fn authors(store: &Store, view: &View) -> BTreeMap<String, BTreeSet<String>> {
+pub(super) fn authors(
+    store: &Store,
+    view: &View,
+    network: &super::network::Network,
+    enabled: bool,
+) -> BTreeMap<String, BTreeSet<String>> {
     fn visit(store: &Store, e: &Event, depth: usize, out: &mut BTreeMap<String, BTreeSet<String>>) {
         let relays: BTreeSet<_> = store.seen_on(&e.id).iter().cloned().collect();
         for key in std::iter::once(e.pubkey.clone()).chain(tag_values(e, "p").into_iter().take(3)) {
-            if out.len() < 4096 || out.contains_key(&key) {
+            if out.len() < 6000 || out.contains_key(&key) {
                 out.entry(key).or_default().extend(relays.clone());
             }
         }
@@ -25,7 +30,7 @@ pub(super) fn authors(store: &Store, view: &View) -> BTreeMap<String, BTreeSet<S
             .filter(|r| r.kind == 6)
             .take(3)
         {
-            if out.len() < 4096 || out.contains_key(&wrapper.pubkey) {
+            if out.len() < 6000 || out.contains_key(&wrapper.pubkey) {
                 out.entry(wrapper.pubkey.clone())
                     .or_default()
                     .extend(store.seen_on(&wrapper.id).iter().cloned());
@@ -50,7 +55,7 @@ pub(super) fn authors(store: &Store, view: &View) -> BTreeMap<String, BTreeSet<S
     }
     let events = super::query::events(store, &view.query);
     let mut out: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
-    let window = &events[super::windows::range(view, &events)];
+    let window = &events[super::windows::selection(store, network, view, enabled, &events).0];
     // Reserve every row author before bounded recursive context hydration.
     for e in window {
         out.entry(e.pubkey.clone())
@@ -70,7 +75,7 @@ pub(super) fn authors(store: &Store, view: &View) -> BTreeMap<String, BTreeSet<S
 
 impl Engine {
     pub(super) fn profile_wants(&self) -> Vec<(String, NostrFilter, Query)> {
-        // 128 visible views x 4096 authors; requests chunk at 120 per relay.
+        // 128 visible views x 6000 authors; requests chunk at 120 per relay.
         let mut batches: BTreeMap<String, BTreeMap<String, BTreeSet<String>>> = BTreeMap::new();
         let reads: Vec<_> = self
             .network
@@ -80,7 +85,12 @@ impl Engine {
             .cloned()
             .collect();
         for (sub, view) in self.views.iter().filter(|(_, v)| v.visible) {
-            for (author, seen) in authors(&self.store, view) {
+            for (author, seen) in authors(
+                &self.store,
+                view,
+                &self.network,
+                self.signed_out_global_filter,
+            ) {
                 let delivered: Vec<_> = seen
                     .into_iter()
                     .filter(|u| reads.contains(u))

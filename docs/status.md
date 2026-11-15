@@ -32,7 +32,7 @@ branch. See engine-package.md for commands and current verification artifacts.
 
 ## Engine polish (2026-11-15)
 
-Visible windows batch up to 4096 authors per view, including nested quotes,
+Visible windows batch up to 6000 authors per view, including nested quotes,
 reply context and repost actors. Profile batches share relay work, prefer
 note-delivering read relays, fall back after completion and release on hiding.
 Cached names render immediately while metadata refreshes. Visible profiles
@@ -42,14 +42,16 @@ The delayed loopback probe uses 240 ms responses and congested slots: baseline
 note-to-named-row 1893.7 ms; revised 232.5 ms. engine-check includes this probe.
 
 Counts carry optional per-metric estimates: unknown, at-least N or exact N.
-Unqueried numeric fields use -1; observed positive totals are lower bounds.
+Existing numeric fields stay nonnegative; unknown estimates accompany zero.
+Observed positive totals are lower bounds.
 A known empty follow list is exactly zero. Zap totals remain unknown until
 trusted receipt validation is integrated. The mock emits the same states.
 The frontend owner must consume estimates to draw unknown counts; no renderer
 or strings changed here. Native and mock tests cover these distinctions.
 
 Signed-out Global defaults to deterministic window filtering: three notes per
-author, ten-minute duplicate bursts and no-profile rows after lookup completion.
+author, ten-minute duplicate bursts and no-profile rows only after successful, untruncated lookups.
+Windows refill across withheld rows; empty windows advance history themselves.
 EngineConfig.signedOutGlobalFilter disables it; signed-in feeds are untouched.
 The manual read-only sample held 65/200 rows: 33 author cap, 30 no profile and
 two duplicates. Ten examples and owner decisions: [engine-polish.md](engine-polish.md).
@@ -149,3 +151,6 @@ removed. Shared static icons and the loopback relay helper remain in use.
 Root build and quiet release gates build web/ with the real engine. No Trunk
 installation is needed. Docker configuration follows that build but cannot
 be run in this environment. Historical UI results do not verify this product.
+
+Review regressions cover nonnegative numeric counts, filtered-window refill,
+anchorless history fetches, and refused, timed-out or truncated profile lookups.

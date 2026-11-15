@@ -8,14 +8,19 @@ impl Engine {
             if matches!(v.query.source, Source::Relays | Source::Diagnostics) {
                 continue;
             }
-            for f in requests(&self.store, v) {
+            for f in requests(&self.store, &self.network, v, self.signed_out_global_filter) {
                 wants.push((sub.clone(), f, v.query.clone()));
             }
         }
         self.network.plan(wants, now);
     }
 }
-fn requests(store: &crate::store::Store, v: &super::View) -> Vec<NostrFilter> {
+fn requests(
+    store: &crate::store::Store,
+    network: &super::network::Network,
+    v: &super::View,
+    enabled: bool,
+) -> Vec<NostrFilter> {
     let q = &v.query;
     if query::signed_out(q) {
         return vec![];
@@ -46,7 +51,7 @@ fn requests(store: &crate::store::Store, v: &super::View) -> Vec<NostrFilter> {
         }
     }
     let events = query::events(store, q);
-    let range = super::windows::range(v, &events);
+    let range = super::windows::selection(store, network, v, enabled, &events).0;
     let prefetch = crate::prefetch::collect_window(&events[range], store);
     let mut ids = prefetch.notes;
     if q.source == Source::Bookmarks

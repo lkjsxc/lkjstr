@@ -7,7 +7,7 @@ Record engine-only first-visitor improvements, measurements and owner handoff.
 ## Names and counts
 
 Visible authors (including quotes, replies and repost headers) share kind-0
-batches, up to 4096 authors per view and 120 per relay request. Delivering read
+batches, up to 6000 authors per view and 120 per relay request. Delivering read
 relays are tried first, then fallback reads. Cached names render immediately;
 requests remain for background refresh and release with hidden/closed views.
 In-flight batches remain stable during note arrival to preserve delayed replies.
@@ -19,7 +19,8 @@ the revised scheduler delivers names before that. The probe is in engine-check.
 
 Protocol additions: Counts.estimates and ProfileRow.countEstimates, using
 CountEstimate with unknown, at-least or exact states. Unknown has no value;
-the other states carry value. Existing numeric fields carry -1 when unknown.
+the other states carry value. Existing numeric fields stay nonnegative, using zero when unknown, so current
+rendering and optimistic actions remain compatible.
 Known kind-3 following totals can be exact zero. Retained positive counts are
 lower bounds; zap totals remain unknown until trusted validation is integrated.
 The mock produces all three states. The UI owner must render these estimates.
@@ -28,13 +29,16 @@ The mock produces all three states. The UI owner must render these estimates.
 
 EngineConfig.signedOutGlobalFilter is optional, default true. Only Global
 without an account is filtered. Signed-in feeds and other sources are unchanged.
-The policy works within a raw window of at most 301 rows, newest first, with
-three retained notes per author. Exact or near copies collapse within ten
+The policy refills up to 301 retained rows, scanning at most 6000 cached rows,
+newest first, with three retained notes per author. Exact or near copies collapse within ten
 minutes. Near copies need eight tokens, 40 characters and 90 percent token
 similarity after case/punctuation/URL/number normalization. Tokenization reads
 at most 4096 characters and 256 words per note. Profile absence only filters
-after the visible author lookup finishes. The raw window remains the hydration
+after every matching lookup succeeds with an untruncated EOSE response.
+Failed or truncated termination permits fallback but cannot prove absence. The raw window remains the hydration
 source, so held notes do not cancel lookups or restart a filtering loop.
+All window consumers share the refilled raw span. Underfilled windows advance
+relay history without needing a retained row as a frontend anchor.
 
 ## Manual public sample
 
