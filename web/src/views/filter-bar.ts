@@ -1,6 +1,5 @@
-// The filter of a feed: part of the tab and saved with it. A bar of ▶ and a text field (as in ytenrich's lists);
-// ▶ opens the rest: replies, reposts, media, period. The bar is out of the way until it is asked for (the tile's
-// menu, or "/"), and stays in view for as long as it narrows anything.
+// The filter of a feed: part of the tab and saved with it. A row of ▶ and a text field (as in ytenrich's lists);
+// ▶ opens the rest: replies, reposts, media, period. While it narrows anything the row carries its own way back.
 import type { Query } from '../engine/protocol.ts';
 import { h } from '../shared/h.ts';
 import { type Key, t } from '../shared/i18n.ts';
@@ -38,6 +37,8 @@ export function filterBar(
   change: (next: Filter, typing: boolean) => void,
   /** Escape in an empty field. */
   leave: () => void,
+  /** Takes every narrowing back: offered in the row while there is one. */
+  clear?: () => void,
 ): HTMLElement {
   const seg = <T>(
     label: Key,
@@ -124,13 +125,21 @@ export function filterBar(
     placeholder: t(placeholder),
     'aria-label': t(placeholder),
   });
+  const reset = clear
+    ? h(
+        'button',
+        { class: 'lnk rclear', hidden: !filterNarrows(f), onclick: clear },
+        t('filter.clear'),
+      )
+    : null;
   let timer: ReturnType<typeof setTimeout> | undefined;
   input.addEventListener('input', () => {
+    if (reset) reset.hidden = !filterNarrows({ ...f, text: input.value });
     clearTimeout(timer);
     timer = setTimeout(() => change({ ...f, text: input.value }, true), 250);
   });
   input.addEventListener('keydown', (e) => {
     if (pressed(e, 'filterLeave') && !input.value) e.preventDefault(), leave();
   });
-  return h('div', { class: 'fbar' }, h('div', { class: 'rbar' }, toggle, input), panel);
+  return h('div', { class: 'fbar' }, h('div', { class: 'rbar' }, toggle, input, reset), panel);
 }

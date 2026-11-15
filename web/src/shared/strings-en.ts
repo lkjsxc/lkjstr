@@ -153,6 +153,9 @@ export const en = {
   'set.foldLines.d': 'Lines of a note shown before it folds. 0 never folds.',
   'set.relativeTime': 'Reading: Relative time',
   'set.relativeTime.d': 'Show “3m” instead of the time of day.',
+  'set.showFilters': 'Reading: Filter row',
+  'set.showFilters.d':
+    'Puts the filter row at the top of timelines and notifications. Switched off, “/” still brings it and it stays while it narrows a list.',
   'set.showSensitive': 'Reading: Open content warnings',
   'set.showSensitive.d': 'Show notes with a content warning without asking.',
   'set.uiScale': 'Layout: UI scale',
@@ -195,7 +198,6 @@ export const en = {
   'ntype.repost': 'Reposts',
   'ntype.zap': 'Zaps',
   'ntype.follow': 'Follows',
-  'filter.hideBar': 'Hide filter',
   'filter.clear': 'Clear filter',
   'view.relays': 'Relays',
   'view.relays.hint': 'How each connection is doing',

@@ -15,6 +15,7 @@ export const DEFAULT_SETTINGS = {
   mediaHeight: 320, // px, the tallest a picture is drawn in a list
   foldLines: 12, // lines of a note shown before it folds (0 = never fold)
   relativeTime: false, // "3m" instead of the time of day
+  showFilters: true, // the filter row at the top of timelines and notifications
   showRelayCount: false, // connected relays in the top bar
   showSensitive: false, // content-warned notes open
 };
@@ -41,6 +42,7 @@ export const SETTINGS_SCHEMA: readonly SettingField[] = [
   field('mediaHeight', num(80, 1600, 10)),
   field('foldLines', num(0, 200)),
   field('relativeTime', BOOL),
+  field('showFilters', BOOL),
   field('showSensitive', BOOL),
   field('uiScale', num(0.5, 2, 0.05)),
   field('tabScale', num(0.8, 2, 0.05)),

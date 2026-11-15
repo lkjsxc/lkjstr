@@ -155,6 +155,9 @@ export const ja: Record<keyof typeof en, string> = {
   'set.foldLines.d': 'この行数を超えるノートを折りたたみます。0 で折りたたみません。',
   'set.relativeTime': '読む: 相対時刻',
   'set.relativeTime.d': '時刻の代わりに「3分前」のように表示します。',
+  'set.showFilters': '読む: 絞り込みの行',
+  'set.showFilters.d':
+    'タイムラインと通知のいちばん上に絞り込みの行を置きます。切っていても「/」で出せ、絞り込んでいる間は表示されます。',
   'set.showSensitive': '読む: 閲覧注意を開いておく',
   'set.showSensitive.d': '閲覧注意の付いたノートを、確認なしで表示します。',
   'set.uiScale': 'レイアウト: 全体の倍率',
@@ -197,7 +200,6 @@ export const ja: Record<keyof typeof en, string> = {
   'ntype.repost': 'リポスト',
   'ntype.zap': 'ザップ',
   'ntype.follow': 'フォロー',
-  'filter.hideBar': '絞り込みを隠す',
   'filter.clear': '絞り込みを解除',
   'view.relays': 'リレー',
   'view.relays.hint': 'それぞれの接続の状態',

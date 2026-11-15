@@ -1,11 +1,11 @@
-// What sits above a feed's rows, when anything does. Notifications: a row of quiet toggles, one per kind of news.
-// Other feeds: the filter bar, which stays away until it is asked for (the tile's "…" menu, or "/") and stays in
-// view while it narrows the feed. Showing or hiding it never moves what is being read.
+// The first row of a feed's content: it scrolls away with the rows and never floats over them. Notifications: a
+// row of quiet toggles, one per kind of news. Other feeds: the filter row. Whether the row is there is a setting
+// (on by default); switched off, it still comes for "/" and stays for as long as it narrows the feed.
 import type { NotificationType } from '../engine/protocol.ts';
 import { h } from '../shared/h.ts';
 import { type Key, t } from '../shared/i18n.ts';
 import { type IconName, icon } from '../shared/icons.ts';
-import { keyCaps, pressed, typing } from '../shared/keys.ts';
+import { pressed, typing } from '../shared/keys.ts';
 import { type Filter, filterBar, filterNarrows, filterQuery } from './filter-bar.ts';
 import type { ViewEnv } from './registry.ts';
 
@@ -52,9 +52,18 @@ export function mountFeedBar(o: {
     if (held >= 0) controls()[held]?.focus({ preventScroll: true });
   };
 
+  const wanted = (): boolean => env.settings.get().showFilters;
+  let was = wanted();
+  /** Draws the row again when the setting that shows it changes. */
+  const follow = (draw: () => void): (() => void) =>
+    env.settings.subscribe(() => {
+      if (was !== wanted()) (was = wanted()), draw();
+    });
+
   if (kind === 'notifications') {
     const draw = (): void => {
       const only = state.only ?? [];
+      if (!wanted() && !only.length) return put(null);
       const toggle = (id: string) => (): void => {
         state.only = only.includes(id) ? only.filter((x) => x !== id) : [...only, id];
         o.save();
@@ -82,7 +91,7 @@ export function mountFeedBar(o: {
       );
     };
     draw();
-    return () => undefined;
+    return follow(draw);
   }
   if (!BARRED.has(kind)) return () => undefined;
 
@@ -91,7 +100,7 @@ export function mountFeedBar(o: {
   const input = (): HTMLInputElement | null => slot.querySelector('input');
   const draw = (): void => {
     const f = filter();
-    if (!search && !f.shown && !filterNarrows(f)) return put(null);
+    if (!search && !wanted() && !f.shown && !filterNarrows(f)) return put(null);
     put(
       filterBar(
         f,
@@ -106,16 +115,18 @@ export function mountFeedBar(o: {
           if (narrowed || typed) o.reopen();
         },
         () => show(false),
+        search ? undefined : clear,
       ),
     );
   };
-  /** Brings the bar in with the keyboard in its field, or puts it away (a narrowing filter stays in view). */
+  /** Puts the keyboard in the row's field, bringing the row and the top of the list in, or leaves the field (a
+   * row that the setting hides goes away again unless it narrows the feed). */
   const show = (on: boolean): void => {
     state.filter = { ...state.filter, shown: on, open: on ? state.filter?.open : false };
     o.save();
     draw();
-    if (on) input()?.focus({ preventScroll: true });
-    else if (!input()) el.focus({ preventScroll: true });
+    if (on) input()?.focus();
+    else el.focus({ preventScroll: true });
   };
   const clear = (): void => {
     state.filter = {};
@@ -124,24 +135,16 @@ export function mountFeedBar(o: {
     o.reopen();
     el.focus({ preventScroll: true });
   };
-  if (!search)
-    env.menu(() => {
-      const f = filter();
-      if (filterNarrows(f)) return [{ label: t('filter.clear'), run: clear }];
-      return f.shown
-        ? [{ label: t('filter.hideBar'), run: () => show(false) }]
-        : [{ label: t('filter.title'), key: keyCaps('filter')[0], run: () => show(true) }];
-    });
   const key = (e: KeyboardEvent): void => {
     if (!pressed(e, 'filter') || typing(e)) return;
     if (!env.visible.get() || !el.closest('.pane.cur')) return;
     e.preventDefault();
-    if (input()) input()?.focus({ preventScroll: true });
-    else show(true);
+    show(true);
   };
   window.addEventListener('keydown', key);
   el.tabIndex = -1;
   draw();
   if (search && !state.text) input()?.focus({ preventScroll: true });
-  return () => window.removeEventListener('keydown', key);
+  const off = follow(draw);
+  return () => (off(), window.removeEventListener('keydown', key));
 }

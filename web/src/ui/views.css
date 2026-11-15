@@ -1,8 +1,9 @@
 /* Feeds, the filter bar, the composer. */
 .feed { position: relative; }
 /* A tile wider than a page: the list keeps a reading measure in the middle of it. */
-.feed > .fslot, .feed > .list, .feed > .fstate { max-width: 720px; margin-inline: auto; }
-.fslot { position: sticky; top: 0; z-index: 3; }
+.feed > .fslot, .feed > .fpin, .feed > .list, .feed > .fstate { max-width: 720px; margin-inline: auto; }
+/* The filter row is the first row of the content and scrolls away with it. Only the new-notes pill is pinned. */
+.fpin { position: sticky; top: 0; z-index: 3; height: 0; }
 .view:focus { outline: none; }
 .fbar { padding: 6px 8px; border-bottom: 1px solid var(--line); background: var(--bg); }
 .fbar .rbar { position: static; margin: 0; padding: 0; }
@@ -10,8 +11,10 @@
 .rtoggle, .rbar input { height: 28px; }
 .rtoggle { flex: 0 0 30px; font-size: 11px; }
 .rtoggle.set { color: var(--accent); border-color: var(--accent); }
+.rclear[hidden] { display: none; }
+.rclear { flex: none; align-self: center; padding: 0 4px; font-size: 12.5px; white-space: nowrap; }
 .prow > .muted:first-child { flex: 0 0 76px; }
-.fresh { position: absolute; top: calc(100% + 8px); left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 4px; width: max-content; height: 26px; padding: 0 12px; border-radius: 13px; background: var(--seal); color: #fff; font-size: 12.5px; font-weight: 600; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25); }
+.fresh { position: absolute; top: 8px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 4px; width: max-content; height: 26px; padding: 0 12px; border-radius: 13px; background: var(--seal); color: #fff; font-size: 12.5px; font-weight: 600; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25); }
 .fresh .i { width: 13px; height: 13px; }
 .fstate { padding: 14px 12px 28px; font-size: 12.5px; text-align: center; }
 .fstate:empty { display: none; }

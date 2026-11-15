@@ -618,30 +618,49 @@ async function keyboard(browser: Browser, still: Record<string, unknown>): Promi
   await page.context().close();
 }
 
-/** The filter bar that stays away, the media tab, the emoji picker, the notification toggles. */
+/** The filter row, the media tab, the emoji picker, the notification toggles. */
 async function reading(browser: Browser, still: Record<string, unknown>): Promise<void> {
   const page = await open(browser, '/', still);
   const home = '.pane:has(.tab.active[data-view="home"])';
   const feed = '.view[data-kind="home"]';
-  fact('no filter bar until asked', (await count(page, `${feed} .rbar`)) === 0);
+  // The filter row is the first row of the content: there by default, and it scrolls away with the notes.
+  fact('the filter row is there by default', (await count(page, `${feed} .rbar`)) === 1);
   await page.locator(`${home} .strip > .icon`).first().click();
-  const item = page.locator('.menu button').first();
-  fact('the tile menu offers the filter', (await item.innerText()).includes('Filter'));
+  fact(
+    'the tile menu has no filter switch',
+    !(await page.locator('.menu').innerText()).includes('ilter'),
+  );
   await page.keyboard.press('Escape');
+  await page.locator(feed).evaluate((el) => el.scrollTo(0, 600));
+  await page.waitForTimeout(150);
+  fact(
+    'the filter row scrolls away with the notes',
+    await page.locator(feed).evaluate((el) => {
+      const bar = el.querySelector('.rbar')?.getBoundingClientRect();
+      return Boolean(bar) && (bar?.bottom ?? 0) < el.getBoundingClientRect().top;
+    }),
+  );
   await page.keyboard.press('/');
   fact(
-    '"/" shows the filter with the keyboard in it',
-    await page.evaluate(() => document.activeElement?.matches('.rbar input') === true),
+    '"/" puts the keyboard in the filter and brings it into view',
+    await page.evaluate(() => {
+      const a = document.activeElement;
+      const view = a?.closest('.view');
+      return (
+        a?.matches('.rbar input') === true &&
+        a.getBoundingClientRect().top >= (view?.getBoundingClientRect().top ?? 0)
+      );
+    }),
   );
   await page.keyboard.type('zzzz');
   await page.waitForTimeout(400);
-  await page.keyboard.press('Escape');
-  await page.keyboard.press('Escape');
-  fact('a narrowing filter stays in view', (await count(page, `${feed} .rbar`)) === 1);
-  await page.locator(`${feed} .rbar input`).fill('');
-  await page.waitForTimeout(400);
-  await page.keyboard.press('Escape');
-  fact('Escape puts an empty filter away', (await count(page, `${feed} .rbar`)) === 0);
+  fact('a narrowing row offers its own way back', (await count(page, `${feed} .rclear`)) === 1);
+  await page.locator(`${feed} .rclear`).click();
+  await page.locator(`${feed} .note`).first().waitFor();
+  fact(
+    'clearing empties the field',
+    (await page.locator(`${feed} .rbar input`).inputValue()) === '',
+  );
   await page.locator(`${feed} .note`).first().waitFor();
   const times = await page
     .locator(`${feed} .note time`)
@@ -691,6 +710,7 @@ async function reading(browser: Browser, still: Record<string, unknown>): Promis
   await page.locator(feed).evaluate((e) => (e.scrollTop = 0));
   const note = page.locator(`${feed} .note`).nth(2);
   const smile = note.locator('.a-smile');
+  await note.scrollIntoViewIfNeeded();
   const y = (await smile.boundingBox())?.y;
   await smile.click();
   await page.locator('.epick').waitFor();

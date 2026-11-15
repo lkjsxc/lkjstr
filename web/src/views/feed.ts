@@ -49,7 +49,7 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
     t('bar.signedOut'),
   );
   const pill = h('button', { class: 'fresh', hidden: true });
-  const barSlot = h('div');
+  const barSlot = h('div', { class: 'fslot' });
   const tail = h('div', { class: 'ftail' });
   const drawn = createRowList(list, env, DATED.has(kind));
   let rows: Row[] = [];
@@ -234,13 +234,12 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
     closes: CHILD.has(kind),
     row: (key) => drawn.row(key),
     node: (key) => drawn.node(key),
-    cover: () => barSlot.offsetHeight,
     moved: () => (keeper.read(), follow()),
     top: toTop,
   });
 
   el.classList.add('feed');
-  el.replaceChildren(h('div', { class: 'fslot' }, barSlot, pill), list, status, tail);
+  el.replaceChildren(barSlot, h('div', { class: 'fpin' }, pill), list, status, tail);
   const bar = mountFeedBar({
     kind,
     el,
