@@ -3,6 +3,8 @@ use super::protocol::{Output, Query, Source};
 use lkjstr_protocol::{NostrEvent, NostrFilter, filter_to_value, normalize_relay_url};
 use serde_json::{Value, json};
 use std::collections::{BTreeMap, BTreeSet};
+#[path = "network_cancel.rs"]
+mod cancellation;
 #[path = "network_config.rs"]
 mod configuration;
 #[path = "network_lifecycle.rs"]
@@ -13,11 +15,15 @@ mod messages;
 mod observations;
 #[path = "network_profiles.rs"]
 mod profiles;
+#[path = "network_publication_history.rs"]
+mod publication_history;
 #[path = "network_publications.rs"]
 mod publications;
 #[path = "network_tick.rs"]
 mod scheduler;
 use scheduler::filter_live;
+#[path = "read_plan.rs"]
+pub mod read_plan;
 type Desired = BTreeMap<(String, String), (NostrFilter, BTreeSet<String>)>;
 #[derive(Debug, Clone)]
 pub enum Effect {
@@ -73,34 +79,46 @@ pub(super) struct Publication {
     pub event: NostrEvent,
     pub deadline: u64,
     pub deliveries: BTreeMap<String, String>,
-    pub sent: BTreeSet<String>,
+    pub sent: BTreeMap<String, u64>,
+    pub reported_success: bool,
+    pub recipients: Vec<String>,
+    pub inbox_routes: BTreeSet<String>,
+    pub discovery_pending: bool,
 }
 #[derive(Default)]
 pub struct Network {
     pub relays: BTreeMap<String, Relay>,
     pub relay_order: Vec<String>,
+    // At most 24 configured routes awaiting a free slot; retried each tick.
+    pub deferred_relays: BTreeSet<String>,
     pub known: BTreeMap<String, super::wire::RelayConfig>,
     pub(super) requests: BTreeMap<String, Request>,
     pub(super) effects: Vec<Effect>,
     pub(super) output: Vec<Output>,
     pub(super) publications: BTreeMap<String, Publication>,
+    // Last 32 plans (<= 2240 destinations each); no event bodies.
+    publication_history: std::collections::VecDeque<publication_history::Record>,
+    // At most 2048 authored events, <= 64 destinations each; persisted by Worker.
+    pub(super) publication_routes: BTreeMap<String, Vec<String>>,
+    // FIFO keys for the same 2048 route sets; persisted in this order.
+    pub(super) publication_route_order: std::collections::VecDeque<String>,
+    // Route URL payload is <= 4 MiB; encoded receipts remain below the 8 MiB boot cap.
+    pub(super) publication_route_bytes: usize,
+    pub publication_revision: u64,
     next: u64,
     pub(super) profiles_changed: bool,
     pub verifying: bool,
     pub(super) reported: BTreeMap<String, String>,
 }
 impl Network {
-    pub fn plan(&mut self, wants: Vec<(String, NostrFilter, Query)>, now: u64) {
+    pub fn plan(
+        &mut self,
+        wants: Vec<(String, NostrFilter, Query)>,
+        store: &crate::store::Store,
+        now: u64,
+    ) {
         self.reported
             .retain(|sub, _| wants.iter().any(|(id, _, _)| id == sub));
-        let mut ranked: Vec<_> = self.relays.iter().collect();
-        ranked.sort_by_key(|(url, r)| {
-            (
-                std::cmp::Reverse(r.useful.saturating_sub(r.failures as u64)),
-                *url,
-            )
-        });
-        let preferred: Vec<_> = ranked.into_iter().map(|(u, _)| u.clone()).collect();
         if self.relays.is_empty() {
             for (sub, _, _) in &wants {
                 if self.reported.get(sub).is_none_or(|s| s != "error") {
@@ -122,24 +140,7 @@ impl Network {
                     .filter(|r| self.relays.contains_key(r))
                     .collect()
             } else {
-                preferred
-                    .iter()
-                    .filter(|u| {
-                        self.known.get(*u).is_none_or(|r| {
-                            if q.source == Source::Search {
-                                r.search
-                            } else {
-                                r.read
-                            }
-                        })
-                    })
-                    .take(if matches!(q.source, Source::Channel | Source::Channels) {
-                        24
-                    } else {
-                        2
-                    })
-                    .cloned()
-                    .collect()
+                self.read_routes(&f, &q, store, now)
             };
             let mut routes = routes;
             routes.extend(
@@ -166,6 +167,7 @@ impl Network {
                 .find(|(_, r)| r.relay == relay && r.filter == filter);
             if let Some((id, r)) = existing {
                 r.refresh_profile(&members, now);
+                r.live |= members.contains("~account-discovery");
                 r.members = members;
                 retained.insert(id.clone());
             } else {
@@ -213,7 +215,7 @@ impl Network {
         }
         self.tick(now);
     }
-    fn send(&mut self, relay: &str, value: Value) {
+    pub(super) fn send(&mut self, relay: &str, value: Value) {
         if let Some(r) = self.relays.get_mut(relay) {
             r.sent += 1;
             r.bytes_out += value.to_string().len() as u64;

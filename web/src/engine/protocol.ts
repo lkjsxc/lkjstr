@@ -661,6 +661,27 @@ export type EngineStats = {
     readonly bytesOut: number;
     readonly lastError: string | null;
     readonly latencyMs: number | null;
+    /** Delivery counts across the last 32 publications; absent on older engines. */
+    readonly publishPlanned?: number;
+    readonly publishAccepted?: number;
+    readonly publishFailed?: number;
+    readonly publishOwnSkipped?: number;
+    readonly publishInboxSkipped?: number;
+    readonly publishCapacitySkipped?: number;
+    readonly publishPending?: number;
+  }[];
+  /** Last 32 publications in this engine session, including excluded destinations. */
+  readonly recentPublications?: readonly {
+    readonly id: string;
+    readonly kind: number;
+    readonly at: Millis;
+    readonly unresolvedRecipients?: number;
+    readonly deliveries: readonly {
+      readonly url: string;
+      readonly rule: 'own' | 'inbox' | 'reply' | 'delete';
+      readonly state: 'pending' | 'accepted' | 'rejected' | 'timeout' | 'skipped';
+      readonly reason?: 'own-cap' | 'person-cap' | 'inbox-cap' | 'capacity';
+    }[];
   }[];
   readonly totals: {
     readonly eventsStored: number;

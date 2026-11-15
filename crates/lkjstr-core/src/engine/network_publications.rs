@@ -2,9 +2,17 @@ use super::*;
 use crate::engine::protocol::Delivery;
 impl Network {
     pub fn pending_event(&self, id: &str) -> bool {
-        self.publications.contains_key(id)
+        self.publications
+            .get(id)
+            .is_some_and(|p| !p.reported_success)
     }
-    pub fn publish(&mut self, req: String, event: NostrEvent, now: u64) {
+    pub fn publish(
+        &mut self,
+        req: String,
+        event: NostrEvent,
+        mut routes: Vec<crate::engine::publication_plan::Destination>,
+        now: u64,
+    ) {
         if self.publications.len() >= 64 || self.publications.contains_key(&event.id) {
             self.output.push(Output::Error {
                 req: Some(req),
@@ -12,42 +20,108 @@ impl Network {
             });
             return;
         }
-        let deliveries = self
-            .relays
-            .keys()
-            .filter(|u| self.known.get(*u).is_none_or(|r| r.write))
-            .take(3)
-            .map(|r| (r.clone(), "pending".into()))
+        self.release_publication_relays();
+        for d in routes.iter_mut().filter(|d| d.state == "pending") {
+            if !self.relays.contains_key(&d.url) {
+                // Idle transient transports are released before accepting a new job.
+                if self.relays.len() >= 64 {
+                    d.state = "skipped".into();
+                    d.reason = Some("capacity".into());
+                    continue;
+                }
+                self.effects.push(Effect::Inspect(d.url.clone()));
+                self.relays.insert(
+                    d.url.clone(),
+                    Relay {
+                        retry_at: now,
+                        max_reqs: 4,
+                        max_limit: 200,
+                        ..Default::default()
+                    },
+                );
+            }
+        }
+        let deliveries: BTreeMap<String, String> = routes
+            .iter()
+            .filter(|d| d.state == "pending")
+            .map(|d| (d.url.clone(), "pending".into()))
             .collect();
+        self.output.push(Output::Delivery {
+            req: req.clone(),
+            deliveries: deliveries
+                .iter()
+                .map(|(relay, state)| Delivery {
+                    relay: relay.clone(),
+                    state: state.clone(),
+                    message: None,
+                })
+                .collect(),
+        });
+        let inbox_routes = routes
+            .iter()
+            .filter(|d| d.rule != "own" && d.state == "pending")
+            .map(|d| d.url.clone())
+            .collect();
+        self.remember_publication(&event, routes, now);
+        let recipients = crate::engine::publication_discovery::recipients(&event);
+        let discovery_pending = !recipients.is_empty();
         self.publications.insert(
             event.id.clone(),
             Publication {
                 req,
                 event,
-                deadline: now + 10000,
+                deadline: now.saturating_add(30000),
                 deliveries,
-                sent: BTreeSet::new(),
+                sent: BTreeMap::new(),
+                reported_success: false,
+                recipients,
+                inbox_routes,
+                discovery_pending,
             },
         );
-
-        self.send_pending();
         self.tick(now);
     }
-    pub(super) fn send_pending(&mut self) {
+    pub(super) fn send_pending(&mut self, now: u64) {
         let mut frames = Vec::new();
-        for p in self.publications.values_mut() {
+        for p in self.publications.values_mut().filter(|p| now < p.deadline) {
             for (relay, state) in &p.deliveries {
                 if state == "pending"
-                    && !p.sent.contains(relay)
+                    && p.sent
+                        .get(relay)
+                        .is_none_or(|at| now.saturating_sub(*at) >= 5000)
                     && self.relays.get(relay).is_some_and(|r| r.online)
                 {
-                    p.sent.insert(relay.clone());
+                    p.sent.insert(relay.clone(), now);
                     frames.push((relay.clone(), p.event.clone()));
                 }
             }
         }
         for (relay, event) in frames {
             self.send(&relay, json!(["EVENT", event]));
+        }
+    }
+    pub(super) fn release_publication_relays(&mut self) {
+        let idle: Vec<_> = self
+            .relays
+            .keys()
+            .filter(|url| {
+                !self.relay_order.contains(url)
+                    && !self.requests.values().any(|r| &r.relay == *url)
+                    && !self
+                        .publications
+                        .values()
+                        .any(|p| p.deliveries.get(*url).is_some_and(|s| s == "pending"))
+            })
+            .cloned()
+            .collect();
+        for url in idle {
+            if self
+                .relays
+                .remove(&url)
+                .is_some_and(|r| r.online || r.connecting)
+            {
+                self.effects.push(Effect::Disconnect(url));
+            }
         }
     }
     pub(super) fn settle(&mut self, now: u64) {
@@ -115,30 +189,42 @@ impl Network {
         let ids: Vec<_> = self
             .publications
             .iter()
-            .filter(|(_, p)| now >= p.deadline || p.deliveries.values().all(|s| s != "pending"))
+            .filter(|(_, p)| {
+                now >= p.deadline
+                    || (!p.discovery_pending && p.deliveries.values().all(|s| s != "pending"))
+            })
             .map(|(id, _)| id.clone())
             .collect();
         for id in ids {
             if let Some(p) = self.publications.remove(&id) {
-                self.output.push(Output::Result {
-                    req: p.req,
-                    id: Some(id),
-                    deliveries: p
-                        .deliveries
-                        .into_iter()
-                        .map(|(relay, state)| Delivery {
-                            relay,
-                            state: if state == "pending" {
-                                "timeout".into()
-                            } else {
-                                state
-                            },
-                            message: None,
-                        })
-                        .collect(),
-                    error: None,
+                let deliveries = p
+                    .deliveries
+                    .into_iter()
+                    .map(|(relay, state)| Delivery {
+                        relay,
+                        state: if state == "pending" {
+                            "timeout".into()
+                        } else {
+                            state
+                        },
+                        message: None,
+                    })
+                    .collect::<Vec<_>>();
+                self.update_publication(&id, &deliveries);
+                self.output.push(Output::Delivery {
+                    req: p.req.clone(),
+                    deliveries: deliveries.clone(),
                 });
+                if !p.reported_success {
+                    self.output.push(Output::Result {
+                        req: p.req,
+                        id: Some(id),
+                        error: deliveries.is_empty().then(|| "no-relays".into()),
+                        deliveries,
+                    });
+                }
             }
         }
+        self.release_publication_relays();
     }
 }

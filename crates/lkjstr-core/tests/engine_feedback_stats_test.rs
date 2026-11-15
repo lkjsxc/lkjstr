@@ -74,3 +74,25 @@ fn default_upload_selection_waits_for_the_owner_lookup() {
     assert!(e.upload_servers_ready(&owner));
     assert_eq!(e.upload_servers(&owner), vec!["https://chosen.test"]);
 }
+
+#[test]
+fn stats_retains_configured_relays_without_an_active_transport() {
+    let mut engine = Engine::new();
+    let url = "wss://unused.test/";
+    engine.network.known.insert(
+        url.into(),
+        lkjstr_core::engine::wire::RelayConfig {
+            url: url.into(),
+            read: false,
+            write: false,
+            search: false,
+        },
+    );
+    let stats = engine.stats();
+    let row = &stats["relays"][0];
+    assert_eq!(row["url"], url);
+    assert_eq!(row["state"], "idle");
+    assert_eq!(row["eventsReceived"], 0);
+    assert_eq!(row["publishAccepted"], 0);
+    assert_eq!(row["publishPending"], 0);
+}

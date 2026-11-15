@@ -19,6 +19,7 @@ Engine (`crates/`):
 - [channels.md](channels.md): NIP-28 sources, actions, bounds and verification.
 - [protocol3.md](protocol3.md): rich filters, notifications, profile kinds and gates.
 - [status.md](status.md): what works, what does not, next steps in order.
+- [orchestration.md](orchestration.md): publication routing, freshness, weights and limits.
 - [architecture.md](architecture.md): crates, runtime, orchestration, storage.
 - [verification.md](verification.md): gates, browser checks and their results.
 - [decisions.md](decisions.md): durable decisions and why.

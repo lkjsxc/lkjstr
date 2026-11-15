@@ -184,7 +184,8 @@ text, still reaches 4.5:1 on `--bg`. The theme follows the device or Settings.
   is edited in Settings only (the tile menu leads to that entry, and to
   Stats). Media servers offer a few choices with one press, Blossom first.
 - Stats is numbers and quiet marks, no prose: five figures, then a sortable
-  row per relay, trouble first; it refreshes in place; absent is a dash.
+  row per relay, trouble first; three publication columns group accepted/planned,
+  pending/failed and exclusions by own/inbox/capacity limits; absent is a dash.
 - Docs is a tab with a tree of groups and pages: what lkjstr is, release
   and licence, keys and safety, relays, filters, shortcuts, the privacy
   policy, the terms. A page names its tab and is found by name in tab search.

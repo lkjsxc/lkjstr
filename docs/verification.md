@@ -145,3 +145,19 @@ All four quiet gates, real UI smoke and Worker conformance pass; the delayed
 profile probe passes without page errors. Frontend check, build, mock smoke and
 composer/channel screenshots pass. Docker remains excluded by the worktree-only
 write rule. Changes remain uncommitted; no CI or existing services were changed.
+
+## Orchestration (2026-11-15)
+
+All four quiet gates pass after the publication, freshness and read-ranking
+changes. Frontend check, build and mock smoke pass. Stats screenshots pass at
+1440 dark English and 390 dark Japanese. Worker conformance passes 211/211
+checks with zero page errors; the delayed profile probe measures 229.1 ms at
+240 ms relay delay. The deterministic read and publication scorecards, public
+read-only observation, bounds and deferred design are in orchestration.md and
+ignored tmp/orchestration-report.md. Both completed real UI smokes pass 84/84
+checks with zero page errors. One interrupted combined-driver attempt (exit 143)
+was rerun standalone. Requested real Stats captures were saved and inspected at
+1440 and 390 pixels in a single-tile workspace.
+Docker is excluded by the worktree-only write restriction; changes remain
+uncommitted under the explicit no-commit instruction. No CI, production app,
+deployment or existing service was changed.

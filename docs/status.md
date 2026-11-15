@@ -136,8 +136,7 @@ Implemented:
 
 ## Mock answers not yet fully implemented
 
-No current top-level mock message or action name is entirely unhandled. These
-variants of messages the mock answers remain incomplete:
+Some variants of implemented mock messages remain incomplete:
 
 - open/list, open/mutes and open/bookmarks: extension/remote private-list
   decryption and encrypted-entry editing. A decrypt capability for NIP-07 is
@@ -156,22 +155,23 @@ variants of messages the mock answers remain incomplete:
   validation is not claimed. Follow notifications reflect retained kind-3 events,
   not an unbounded historical follow/unfollow ledger.
 
-Remaining scheduling work includes outbox-aware routing in the new scheduler,
-coalescing and adaptive hints. Language heuristics remain English/Japanese
-script detection. Repeated/suspension stress and complete privacy coverage are
-not established by the finite conformance suite.
+Publishing now plans 12 author outboxes plus eight inbox/context routes, retries
+through a deadline and reports success on first acceptance. Missing recipient
+lists are looked up; bounded persisted receipts route deletes after reload.
+All saved accounts refresh profile/follow/relay/mute/server records independently
+of cache. Configured reads use measured coverage/quality weights. Full outbox
+two-cover, persistent backoff, focus and information weights remain deferred.
+Exact bounds, measured costs and remaining design: [orchestration.md](orchestration.md).
 
 ## Verification
 
-The latest gate counts, artifact sizes and cold-start measurements are recorded
-in engine-package.md, engine-performance.md and verification.md. Browser runs
-use fresh ports/data, loopback WebSockets and intercepted HTTP only.
+Gate results: verification.md and engine-package.md. Browser runs use fresh
+ports/data, loopback WebSockets and intercepted HTTP only.
 Docker Compose remains excluded by the explicit worktree-only write rule:
 image/container storage is outside this worktree. No commit, deployment,
 production access, CI edit or existing-service restart is performed.
 
-The branch-review fixes add five native regression tests for first-list guards,
-cache eviction, search routing, signer replacement and decrypted mute policy.
+Branch review covers first-list guards, eviction, search, signers and mute policy.
 The earlier branch-review run passed all four quiet gates and 53 local browser
 checks using the then-fetched contract. Report: tmp/engine-harness/report.json.
 

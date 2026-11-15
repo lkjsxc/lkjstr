@@ -1,5 +1,5 @@
 // Drive the shipped channel and statistics views against the loopback relay only.
-export async function channelScenarios({ page, launch, check, fake }) {
+export async function channelScenarios({ page, launch, check, fake, shots, shot }) {
   const room = '.pane.cur .view[data-kind="channel"]:visible';
   const post = async (text) => {
     await page.locator(`${room} textarea`).fill(text);
@@ -88,4 +88,30 @@ export async function channelScenarios({ page, launch, check, fake }) {
       (await page.locator('.statsv .sval').last().innerText()) !== '—' &&
       (await page.locator('.statsv .c-events span').first().innerText()) !== '0',
   );
+  if (shots) {
+    // Capture the real Stats view in a single-tile workspace at both widths.
+    await page.locator('lkjstr-spaces button').nth(1).click();
+    await launch('Stats', 'stats');
+    await page.locator('.statsv .stab:visible tbody tr').first().waitFor();
+    const viewport = page.viewportSize();
+    const dark = await page.evaluate(() => matchMedia('(prefers-color-scheme: dark)').matches);
+    await page.emulateMedia({ colorScheme: 'dark' });
+    const theme = await page.evaluate(() => {
+      const old = document.documentElement.dataset.theme;
+      document.documentElement.dataset.theme = 'dark';
+      return old;
+    });
+    for (const width of [1440, 390]) {
+      await page.setViewportSize({ width, height: width === 390 ? 844 : 900 });
+      await page.locator('.statsv .stab:visible tbody tr').first().waitFor();
+      await shot(page, `orchestration-stats-${width}-dark.png`);
+    }
+    if (viewport) await page.setViewportSize(viewport);
+    await page.emulateMedia({ colorScheme: dark ? 'dark' : 'light' });
+    await page.evaluate((old) => {
+      if (old) document.documentElement.dataset.theme = old;
+      else delete document.documentElement.dataset.theme;
+    }, theme);
+    await page.locator('lkjstr-spaces button').first().click();
+  }
 }

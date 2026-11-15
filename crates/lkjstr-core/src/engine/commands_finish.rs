@@ -61,6 +61,7 @@ impl Engine {
             self.error(Some(req), "signer-timeout");
             return;
         }
+        let routes = self.publication_routes(&event);
         if event.kind == 10002 {
             let entries = event
                 .tags
@@ -77,25 +78,22 @@ impl Engine {
                 .collect();
             let _ = self.configure_relays(entries, now);
         }
+        if event.kind == 5 {
+            for id in lkjstr_protocol::tags::tag_values(&event, "e") {
+                self.network.cancel_publication(&id);
+            }
+        }
         self.store.insert(event.clone(), None);
         self.pending.push(event.clone(), true);
         for v in self.views.values_mut() {
             v.dirty = true;
         }
         self.replan(now);
-        if self.network.relays.is_empty() {
-            self.outgoing.push(Output::Result {
-                req,
-                id: Some(event.id),
-                deliveries: Vec::<Delivery>::new(),
-                error: Some("no-relays".into()),
-            });
-            return;
-        }
         if event.kind == 40 {
-            self.start_channel_create(req, event, now);
+            self.start_channel_create(req, event, routes, now);
         } else {
-            self.network.publish(req, event, now);
+            self.network.publish(req, event, routes, now);
         }
+        self.replan(now);
     }
 }

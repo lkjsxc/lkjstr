@@ -1,4 +1,4 @@
-//! Three requests per route: eight bootstrap, eight hints and eight owner routes.
+//! Five independent records per device account and route; at most 32 accounts.
 use super::{
     Engine,
     protocol::{Query, Source},
@@ -7,18 +7,31 @@ use super::{
 use crate::store::Store;
 use lkjstr_protocol::NostrFilter;
 impl Engine {
-    /// Switching/removing the account releases the previous discovery requests.
-    pub fn discover_account(&mut self, account: Option<String>, mut relays: Vec<String>, now: u64) {
+    /// A single-owner convenience entry point for native engine hosts.
+    pub fn discover_account(&mut self, account: Option<String>, relays: Vec<String>, now: u64) {
+        self.discover_accounts(account.into_iter().collect(), relays, now);
+    }
+    /// Cached records never suppress refresh. Removed accounts release their wants.
+    /// Up to 32 device accounts, 16 discovery hints and 24 configured routes.
+    pub fn discover_accounts(
+        &mut self,
+        mut accounts: Vec<String>,
+        mut relays: Vec<String>,
+        now: u64,
+    ) {
+        accounts.sort();
+        accounts.dedup();
+        accounts.truncate(32);
         relays.sort();
         relays.dedup();
         relays.truncate(16);
-        if self.discovery_account == account && self.discovery_relays == relays {
+        if self.discovery_accounts == accounts && self.discovery_relays == relays {
             return;
         }
-        if self.discovery_account != account {
+        if self.discovery_accounts != accounts {
             self.discovery_paused = false;
         }
-        self.discovery_account = account;
+        self.discovery_accounts = accounts;
         self.discovery_relays = relays;
         let urls = self
             .network
@@ -49,32 +62,55 @@ impl Engine {
         }
         self.replan(now);
     }
+    /// Explicit sign-in refreshes even completed or cursor-resumed requests.
+    pub fn refresh_account(&mut self, account: &str, now: u64) {
+        let ids: Vec<_> = self
+            .network
+            .requests
+            .iter()
+            .filter(|(_, r)| {
+                r.members.contains("~account-discovery")
+                    && r.filter
+                        .authors
+                        .as_ref()
+                        .is_some_and(|a| a.iter().any(|a| a == account))
+            })
+            .map(|(id, _)| id.clone())
+            .collect();
+        for id in ids {
+            if let Some(r) = self.network.requests.remove(&id)
+                && r.sent
+            {
+                self.network
+                    .send(&r.relay, serde_json::json!(["CLOSE", id]));
+            }
+        }
+        self.replan(now);
+    }
     pub(super) fn discovery_wants(&self) -> Vec<(String, NostrFilter, Query)> {
         if self.discovery_paused {
             return vec![];
         }
-        let Some(account) = &self.discovery_account else {
-            return vec![];
-        };
-        self.network
-            .relays
-            .keys()
-            .flat_map(|relay| {
-                [3, 10002, 10063].map(|kind| {
-                    (
-                        "~account-discovery".into(),
-                        NostrFilter {
-                            authors: Some(vec![account.clone()]),
-                            kinds: Some(vec![kind]),
-                            limit: Some(1),
-                            ..Default::default()
-                        },
-                        Query {
-                            source: Source::Relay,
-                            target: Some(relay.clone()),
-                            ..Default::default()
-                        },
-                    )
+        self.discovery_accounts
+            .iter()
+            .flat_map(|account| {
+                self.network.relay_order.iter().flat_map(move |relay| {
+                    [0, 3, 10000, 10002, 10063].map(|kind| {
+                        (
+                            "~account-discovery".into(),
+                            NostrFilter {
+                                authors: Some(vec![account.clone()]),
+                                kinds: Some(vec![kind]),
+                                limit: Some(1),
+                                ..Default::default()
+                            },
+                            Query {
+                                source: Source::Relay,
+                                target: Some(relay.clone()),
+                                ..Default::default()
+                            },
+                        )
+                    })
                 })
             })
             .collect()
@@ -97,7 +133,7 @@ pub(super) fn legacy_relays(store: &Store, account: &str) -> Option<(String, Vec
                 search: false,
             })
         })
-        .take(8)
+        .take(64)
         .collect::<Vec<_>>();
     (!entries.is_empty()).then(|| (event.id.clone(), entries))
 }
@@ -109,7 +145,7 @@ pub(super) fn merge_relays(entries: impl Iterator<Item = RelayConfig>) -> Vec<Re
         if let Some(old) = merged.iter_mut().find(|old| old.url == entry.url) {
             old.read |= entry.read;
             old.write |= entry.write;
-        } else if merged.len() < 8 {
+        } else if merged.len() < 64 {
             merged.push(entry);
         }
     }
