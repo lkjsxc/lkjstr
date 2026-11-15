@@ -2,7 +2,7 @@ use super::*;
 use crate::engine::{Engine, protocol as p};
 use serde_json::{Value, json};
 impl Session {
-    pub fn output(&mut self, out: p::Output, engine: &Engine) -> Vec<Output> {
+    pub(super) fn output_inner(&mut self, out: p::Output, engine: &Engine) -> Vec<Output> {
         match out {
             p::Output::Rows {
                 sub,

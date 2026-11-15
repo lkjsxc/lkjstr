@@ -10,7 +10,7 @@ import type { Disposer } from '../shared/signal.ts';
 import { failureText } from './can.ts';
 import { type Keyed, reconcile, watchList } from './lists.ts';
 import { act } from './note-actions.ts';
-import { avatar, nameButton, plainName, toast } from './parts.ts';
+import { faceButton, nameButton, plainName, toast } from './parts.ts';
 import type { ViewEnv } from './registry.ts';
 import { type Entry, frame, searchText } from './settings-entry.ts';
 
@@ -111,7 +111,7 @@ export function listEntries(env: ViewEnv): { entries: Entry[]; dispose: Disposer
     const { target } = r;
     const what =
       target.k === 'person' && r.author
-        ? [avatar(r.author, 'av sm'), nameButton(r.author, env)]
+        ? [faceButton(r.author, env, 'av sm'), nameButton(r.author, env)]
         : target.k === 'thread'
           ? h(
               'button',

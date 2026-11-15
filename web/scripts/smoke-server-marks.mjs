@@ -186,9 +186,15 @@ export async function serverMarkScenarios(options) {
         await shot.screenshot({ path: `tmp/shots/servers-${width}-dark.png` });
       }
       check('server marks agree in a second app page');
-      await shot.evaluate((layout) => localStorage.setItem('lkjstr:layout:main', layout), layout);
     } finally {
       await shot.close();
+      // Closing the capture flushes its layout; restore ours afterwards, including the live WM.
+      await page.evaluate((layout) => {
+        const key = 'lkjstr:layout:main';
+        localStorage.setItem(key, layout);
+        dispatchEvent(new StorageEvent('storage', { key, newValue: layout }));
+      }, layout);
+      await page.locator(`.tab[data-view="${postId}"]`).waitFor();
     }
   }
   media.set('blossom', 'ok');

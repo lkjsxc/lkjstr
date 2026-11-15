@@ -9,7 +9,7 @@ import { icon } from '../shared/icons.ts';
 import { mountAdd } from './account-add.ts';
 import { canKey, forget, isPending, keyBox, onPending } from './account-key.ts';
 import { type Keyed, reconcile } from './lists.ts';
-import { avatar, displayName, how, plainName, shortNpub, toast, unnamed } from './parts.ts';
+import { displayName, faceButton, how, plainName, shortNpub, toast, unnamed } from './parts.ts';
 import type { ViewEnv } from './registry.ts';
 
 type RowModel = {
@@ -73,7 +73,6 @@ export function mountAccount(el: HTMLElement, env: ViewEnv): () => void {
         title: a.active ? t('account.active') : t('account.use', { name }),
         onclick: () => void (a.active || act({ a: 'account.use', pubkey: a.key })),
       },
-      avatar(a.author),
       h(
         'span',
         { class: 'awho' },
@@ -162,7 +161,7 @@ export function mountAccount(el: HTMLElement, env: ViewEnv): () => void {
       h(
         'div',
         { class: 'ahead' },
-        main,
+        h('div', { class: 'aidentity' }, faceButton(a.author, env), main),
         a.asking ? null : h('span', { class: 'abtns' }, profile, backup, drop),
       ),
       confirm,

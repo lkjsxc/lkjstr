@@ -1,4 +1,4 @@
-// The composer saves typed drafts and retains failed channel messages for retry.
+// The composer saves drafts and retains failed posts and channel messages for retry.
 import type { Delivery, Draft, Emoji } from '../engine/protocol.ts';
 import { h, replaceChildren } from '../shared/h.ts';
 import { type Key, t } from '../shared/i18n.ts';
@@ -14,6 +14,7 @@ import type { ViewEnv } from './registry.ts';
 
 type Ref = { name: string; text: string };
 type State = {
+  outboxOwner?: string;
   text?: string;
   outbox?: ChannelDraft[];
   replyTo?: string;
@@ -29,7 +30,8 @@ type State = {
 export function mountCompose(el: HTMLElement, env: ViewEnv, channel?: string): () => void {
   const state: State = loadViewState<State>(env.instance);
   const save = (): void => saveViewState(env.instance, state);
-  let sending = false;
+  const owner = (state.outboxOwner ??= crypto.randomUUID());
+  save();
   const area = h('textarea', {
     class: 'ctext',
     rows: channel ? 2 : 4,
@@ -121,24 +123,27 @@ export function mountCompose(el: HTMLElement, env: ViewEnv, channel?: string): (
     post.title = can === 'read-only' ? t('error.read-only') : (keyCaps('send')[0] ?? '');
     attach.disabled = can !== 'ok';
     post.disabled =
-      sending ||
-      !!outbox?.full() ||
+      outbox.full() ||
       busy ||
       can !== 'ok' ||
       (!area.value.trim() && !attachments.media().length && !state.quote);
   };
 
-  const outbox = channel
-    ? createChannelOutbox(
-        env,
-        (state.outbox ??= []),
-        () => {
-          save();
-          ready();
-        },
-        (relays, final) => showDelivery(relays, final),
-      )
-    : undefined;
+  const outbox = createChannelOutbox(
+    env,
+    owner,
+    (state.outbox ??= []),
+    () => {
+      save();
+      ready();
+    },
+    (relays, final, error) =>
+      error
+        ? replaceChildren(result, h('div', { class: 'error' }, failureText(error)))
+        : showDelivery(relays, final),
+  );
+
+  state.outbox = outbox.drafts;
 
   const attachments = createAttachments(env, ready);
   const add = (files: FileList | undefined | null): void => attachments.add(files ?? []);
@@ -177,24 +182,11 @@ export function mountCompose(el: HTMLElement, env: ViewEnv, channel?: string): (
       attachments.clear();
       drawHead();
     };
-    // Retain the entire draft before freeing the input for the next message.
-    if (outbox) {
-      outbox.publish(draft);
-      clear();
-      ready();
-      return;
-    }
-    sending = true;
+    // Retain the entire draft before freeing the field, including ordinary posts and replies.
+    outbox.publish(draft);
+    clear();
     ready();
-    const r = await env.engine.act(
-      { a: 'publish', as: env.engine.me(), what: { k: 'note', draft } },
-      { delivery: (relays) => showDelivery(relays, false) },
-    );
-    sending = false;
-    if (r.ok) showDelivery(r.delivery ?? [], true);
-    else replaceChildren(result, h('div', { class: 'error' }, failureText(r.error)));
-    if (r.ok) clear();
-    ready();
+    area.focus({ preventScroll: true });
   }
 
   // Saved on every keystroke (one small stored key): a reload a moment after typing must not lose the last words.
@@ -232,7 +224,7 @@ export function mountCompose(el: HTMLElement, env: ViewEnv, channel?: string): (
       who.signIn,
     ),
     result,
-    ...(outbox ? [outbox.el] : []),
+    outbox.el,
   );
   drawHead();
   if (state.replyTo || state.quote) requestAnimationFrame(() => area.focus());
@@ -241,5 +233,6 @@ export function mountCompose(el: HTMLElement, env: ViewEnv, channel?: string): (
     save();
     who.dispose();
     attachments.dispose();
+    outbox.dispose();
   };
 }

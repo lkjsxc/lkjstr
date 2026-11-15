@@ -45,7 +45,7 @@ export const DOC_TREE: readonly { readonly title: Key; readonly pages: readonly 
   {
     title: 'docs.g.legal',
     pages: [
-      { id: 'privacy', ...text('docs.privacy', 'docs.privacy.b') },
+      { id: 'privacy', ...text('docs.privacy', 'docs.privacy.b', 'docs.previewPrivacy') },
       { id: 'terms', ...text('docs.terms', 'docs.terms.b') },
     ],
   },
@@ -75,7 +75,7 @@ export function prose(source: string): HTMLElement[] {
 }
 
 export function mountDocs(el: HTMLElement, env: ViewEnv): () => void {
-  const state = loadViewState<{ page?: string; shut?: string[] }>(env.instance);
+  const state = loadViewState<{ page?: string; shut?: string[]; title?: string }>(env.instance);
   const page = h('article', { class: 'dpage' });
   const tree = h('nav', { class: 'dtree' });
   let dispose: Disposer | undefined;
@@ -90,7 +90,9 @@ export function mountDocs(el: HTMLElement, env: ViewEnv): () => void {
     else page.append(...(p.body?.(env) ?? []).flatMap((key) => prose(t(key))));
     for (const b of tree.querySelectorAll<HTMLElement>('.ditem'))
       b.classList.toggle('on', b.dataset.page === p.id);
-    env.setTitle(t(p.title));
+    state.title = t(p.title);
+    saveViewState(env.instance, state);
+    env.setTitle(state.title);
   };
   const go = (id: string): void => {
     if (id === current().id) return;

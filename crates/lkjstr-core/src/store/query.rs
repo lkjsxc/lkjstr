@@ -22,6 +22,18 @@ pub struct Query {
 const MAX_THREAD: usize = 500;
 
 impl Store {
+    /// Indexed, tie-stable scan; exclusive cursor survives equal timestamps. At most `limit` clones.
+    pub fn scan(&self, before: Option<&(u64, String)>, limit: usize) -> Vec<Event> {
+        use std::ops::Bound::{Excluded, Unbounded};
+        let end = before.map_or(Unbounded, Excluded);
+        self.by_time
+            .range((Unbounded, end))
+            .rev()
+            .take(limit)
+            .filter_map(|(_, id)| self.events.get(id).cloned())
+            .collect()
+    }
+
     /// Newest-first events matching `query`.
     pub fn feed(&self, query: &Query) -> Vec<Event> {
         let source: Box<dyn Iterator<Item = &(u64, String)>> = match &query.mention {

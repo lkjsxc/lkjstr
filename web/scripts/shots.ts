@@ -29,7 +29,7 @@ const server = spawn(process.execPath, [`${here}scripts/serve.ts`, '--port=0'], 
 });
 const base = await new Promise<string>((done, fail) => {
   server.stdout?.once('data', (data) => done(String(data).trim()));
-  server.once('exit', () => fail(new Error('screenshot server exited')));
+  server.once('exit', (code) => fail(new Error(`server exited ${code}`)));
 });
 const browser = await chromium.launch({ executablePath: chrome, args: ['--no-sandbox'] });
 try {
@@ -60,6 +60,8 @@ try {
             await act(page);
             await page.waitForTimeout(350); // pictures and fonts
             await page.screenshot({ path: `${out}/${name}-${tag}.png` });
+            if (name === 'tabsearch' && lang === 'en')
+              await page.screenshot({ path: `${out}/${name}-${width}-${theme}.png` });
           } catch (e) {
             failed.push(`${name}-${tag}: ${String(e).split('\n')[0]}`);
           }
@@ -73,6 +75,29 @@ try {
           await page.locator('.ncard > b').getByText(word, { exact: true }).first().click();
           await page.waitForSelector(`.view[data-kind="${kind}"] > *`);
         };
+        for (const [name, url] of [
+          ['news', 'https://news.example/picture'],
+          ['plain', 'https://news.example/article'],
+          ['x', 'https://x.com/aoi/status/123'],
+          ['failed', 'https://unavailable.example/path'],
+          ['ja', 'https://news.example/japanese'],
+          ['two', 'https://news.example/picture'],
+        ]) {
+          await scene(`card-${name}`, '/', async (page) => {
+            const row = page
+              .locator(`.note:has(.link-card[href="${url}"])`)
+              .filter({
+                hasText: name === 'two' ? 'Two pages.' : name === 'news' ? 'A page with' : '',
+              })
+              .first();
+            await row.locator('.nhead time').click();
+            await page.locator('.th-focus .link-card').first().waitFor();
+          });
+        }
+        await scene('tabsearch', '/', async (page) => {
+          await page.locator('.bar [data-tab-search]').click();
+          await page.locator('.tsearch input').waitFor();
+        });
         await scene('home', '/', async () => undefined);
         await scene('profile', '/p/aoi', (page) =>
           page.waitForSelector('.profile').then(() => undefined),

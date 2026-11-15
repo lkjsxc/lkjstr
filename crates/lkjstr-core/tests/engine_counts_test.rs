@@ -103,7 +103,11 @@ fn exact_counts_require_all_routes_untruncated_verified_and_successful() {
         let mut store = Store::new(200);
         n.configure(vec![relay.into()], 0);
         n.relay_information(relay, r#"{"limitation":{"max_limit":1}}"#);
-        n.plan(vec![("counts".into(), filter.clone(), Query::default())], 0);
+        n.plan(
+            vec![("counts".into(), filter.clone(), Query::default())],
+            &lkjstr_core::store::Store::new(0),
+            0,
+        );
         n.connected(relay, 0);
         let frames: Vec<Value> = n
             .drain_effects()

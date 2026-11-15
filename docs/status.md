@@ -16,9 +16,8 @@ repost filters accept kinds 6 and 16. Native and UI checks: [channels.md](channe
 
 ## Protocol 3 integration (2026-11-15)
 
-Protocol 3 added rich note filters including all-word
-text, exact phrases, exclusions, image/video/link requirements, author unions,
-known-profile names and bounded verified NIP-05 query lookups. Millisecond date
+Protocol 3 added all-word text, phrases, exclusions, media/link filters, author
+unions, known-profile names and bounded verified NIP-05 query lookups. Millisecond date
 bounds round inward to Nostr seconds. Inclusive end dates follow local calendar
 days across daylight-saving changes. Hide-reposts checks wrappers before resolving
 target content. Home/Global can mix notification rows;
@@ -57,8 +56,7 @@ Accounts can be created/imported through the Accounts tab. Protocol 2 supports
 explicit local nsec backup; external signers and read-only accounts refuse it.
 Secret-bearing input/output debug representations are redacted.
 
-The conformance gate now uses this worktree's contract, without fetching a
-branch. See engine-package.md for commands and current verification artifacts.
+Conformance uses this worktree's contract; commands/artifacts: engine-package.md.
 
 ## Engine polish (2026-11-15)
 
@@ -71,8 +69,7 @@ Interrupted pages replay their original filters until EOSE. Completed page
 coverage and cursors survive live resumption, so profile lookup cannot falsely
 exhaust history. Four native regressions cover interruption and pagination.
 Six native regressions cover routing, batching, context, refresh and release.
-The delayed loopback probe uses 240 ms responses and congested slots: baseline
-note-to-named-row 1893.7 ms; revised 232.5 ms. engine-check includes this probe.
+The 240 ms congested-slot probe improves note-to-name from 1893.7 to 232.5 ms.
 
 Protocol 2 uses absent profile fields for unknown counts and the existing
 partial flag for lower bounds. Count requests are bounded and exact only after
@@ -91,12 +88,12 @@ two duplicates. Ten examples and owner decisions: [engine-polish.md](engine-poli
 
 ## Engine contract (2026-11-14)
 
-The engine mirrors the fetched frontend's protocol.ts and mock action/message
-inventory. docs/protocol-additions.patch adds accepted public-key discovery,
-separate relay configuration, heartbeat/detach/reconnect and quote errors.
-The real Worker conformance gate derives validators from that TypeScript file;
-it drives every current mock message kind, every action name and every source.
-Shape conformance does not establish completeness of every semantic variant.
+The engine mirrors frontend protocol.ts, currently protocol 5, including
+cache-wide [time rails](time-rail.md), month counts and ordinal window seeks;
+bounded generation snapshots progress during live ingestion and reject changed membership.
+Earlier additions include key discovery, relay configuration, heartbeat,
+detach/reconnect and quote errors. Conformance validators drive each mock message, action
+and source. Shape conformance does not establish every semantic variant.
 
 Implemented:
 
@@ -136,7 +133,6 @@ Implemented:
 - HTML-free package and frontend Transport adapter; see engine-package.md.
 
 ## Mock answers not yet fully implemented
-
 No top-level message/action is entirely unhandled. Incomplete variants:
 
 - open/list, open/mutes and open/bookmarks: extension/remote private-list
@@ -156,37 +152,30 @@ No top-level message/action is entirely unhandled. Incomplete variants:
   validation is not claimed. Follow notifications reflect retained kind-3 events,
   not an unbounded historical follow/unfollow ledger.
 
-Remaining scheduling work includes outbox-aware routing in the new scheduler,
-coalescing and adaptive hints. Language heuristics remain English/Japanese
-script detection. Repeated/suspension stress and complete privacy coverage are
-not established by the finite conformance suite.
+Publishing now plans 12 author outboxes plus eight inbox/context routes, retries
+through a deadline and reports success on first acceptance. Missing recipient
+lists are looked up; bounded persisted receipts route deletes after reload.
+All saved accounts refresh profile/follow/relay/mute/server records independently
+of cache. Read routes retain page evidence; Stats aggregates publication history
+once. Full outbox two-cover, persistent backoff, focus and weights remain deferred.
+Exact bounds, measured costs and remaining design: [orchestration.md](orchestration.md).
 
 ## Verification
 
-The latest gate counts, artifact sizes and cold-start measurements are recorded
-in engine-package.md, engine-performance.md and verification.md. Browser runs
-use fresh ports/data, loopback WebSockets and intercepted HTTP only.
+Gate counts and cold-start measurements: engine-package.md, engine-performance.md
+and verification.md. Audit repairs/open gaps: [owner-audit.md](owner-audit.md).
+Browser runs use fresh ports/data, loopback WebSockets and intercepted HTTP only.
 Docker Compose remains excluded by the explicit worktree-only write rule:
-image/container storage is outside this worktree. No commit, deployment,
-production access, CI edit or existing-service restart is performed.
-
-The branch-review fixes add five native regression tests for first-list guards,
-cache eviction, search routing, signer replacement and decrypted mute policy.
-The earlier branch-review run passed all four quiet gates and 53 local browser
-checks using the then-fetched contract. Report: tmp/engine-harness/report.json.
+image/container storage is outside this worktree. No commit, deployment, production access, CI edit or service restart is performed.
 
 ## One product
 
-web/ is the only interface. crates/lkjstr-engine-worker owns the Worker and
-its browser effects; the root Cargo.toml is a virtual workspace. The Leptos
-UI/runtime, root HTML entry, exclusive styles/icons and browser drivers are
-removed. Shared static icons and the loopback relay helper remain in use.
-Root build and quiet release gates build web/ with the real engine. No Trunk
-installation is needed. Docker configuration follows that build but cannot
-be run in this environment. Historical UI results do not verify this product.
-
-Review regressions cover nonnegative numeric counts, filtered-window refill,
-anchorless history fetches, and refused, timed-out or truncated profile lookups.
+web/ is the only interface; lkjstr-engine-worker owns browser effects.
+Cargo.toml is virtual. Leptos and its entry/styles/drivers are removed. Shared
+static icons and the loopback relay helper remain.
+Root build and quiet gates build web/ with the real engine, without Trunk.
+Docker follows that build but cannot run here. Historical UI results do not
+verify this product.
 
 ## Signer conformance follow-up (2026-11-15)
 
@@ -198,3 +187,14 @@ A shared loopback NIP-46 fixture checks optional/required connect tokens, signin
 reload credential reuse, refusal, disappearance during signing and recovery.
 Remote RPC failures retain signer-refused versus signer-missing; losing all RPC
 sockets now fails immediately and releases sockets instead of waiting a minute.
+
+## Reader state and optional previews (2026-11-15)
+
+Protocol 5 adds bounded per-note link previews and near-note hints, including
+nested notification notes. The Worker probes health once; one HTTP request
+runs after other work. The optional Rust lkjstr-preview binary fetches public
+page metadata; static hosting works without it. No hosting changes were made.
+Reader reveals and unfolds persist per tab. Channel drafts save immediately;
+Enter opens only applied results. Scroll hydration restores each scroller once
+and respects page resets. Period fields accept common calendar/relative forms;
+tab search spans workspaces. Gates and browser coverage: verification.md.

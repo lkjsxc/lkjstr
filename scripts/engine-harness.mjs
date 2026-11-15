@@ -6,6 +6,7 @@ import { coldStart } from './engine-cold-start.mjs';
 import { ownerRelays, localDiscovery, continuity } from './engine-feedback.mjs';
 import { conformance } from './engine-conformance.mjs';
 import { uploadReview } from './engine-upload-review.mjs';
+import { timeRail } from './engine-time-rail.mjs';
 import { rich } from './engine-rich.mjs';
 import { createServer } from 'node:http';
 import { readFile, writeFile, readdir, mkdir } from 'node:fs/promises';
@@ -111,6 +112,7 @@ try {
   all.forEach((e)=>fake.add(e));
   await send({t:'test.relays',relays:[origin.replace('http:','ws:')]});
   await send({t:'heartbeat'});
+  await send({t:'preview',sub:'global',ids:[]});
   await wait(()=>window.messages.some(m=>m.t==='heartbeat'));
   check('heartbeat is acknowledged by the Worker',true);
   await send({t:'open',sub:'global',query:{source:'global'}});
@@ -173,8 +175,9 @@ try {
   await conformance({page,send,wait,check,note,signer,lines,origin,bunkerKey,bunker,fake,channelFake});
   await uploadReview({page,send,wait,check,note,signer,lines});
   await rich({page,send,wait,check,note,signer,lines,fake});
+  await timeRail({page,send,wait,check,note,signer,lines,fake});
   validateReplies(await page.evaluate(()=>window.messages));
-  check('protocol 4 replies satisfy the frontend contract',true);
+  check('protocol 5 replies satisfy the frontend contract',true);
   await localDiscovery({page,send,wait,check,start,origin});
   const isolated=await browser.newContext();
   await isolated.route('**/*',r=>r.request().url().startsWith(origin)?r.continue():r.abort());

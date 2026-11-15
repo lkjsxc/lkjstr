@@ -58,7 +58,33 @@ pub fn run(clock: impl Fn() -> f64) -> Value {
         .map(|e| super::rows::row(&store, e, None, 0))
         .collect();
     let rows_50_ms = clock() - started;
-    json!({"stored":store.len(),"selected":selected,"index100kMs":index_ms,"query100Ms":query_100_ms,
+    let mut engine = super::Engine::new();
+    engine.signed_out_global_filter = false;
+    engine.store = store;
+    let mut session = super::wire::Session::default();
+    session.queries.insert(
+        "rail".into(),
+        super::wire::queries::Query {
+            source: "global".into(),
+            account: Some("benchmark".into()),
+            ..Default::default()
+        },
+    );
+    let mut rail_slices = 0;
+    let mut rail_max_ms = 0.0f64;
+    let mut rail_total_ms = 0.0;
+    loop {
+        let start = clock();
+        let outputs = session.timeline_tick(&engine, 1800000000000 + rail_slices * 25);
+        let elapsed = clock() - start;
+        rail_max_ms = rail_max_ms.max(elapsed);
+        rail_total_ms += elapsed;
+        rail_slices += 1;
+        if !outputs.is_empty() || rail_slices > 1000 {
+            break;
+        }
+    }
+    json!({"rail100kTotalMs":rail_total_ms,"rail100kMaxSliceMs":rail_max_ms,"railSlices":rail_slices,"stored":engine.store.len(),"selected":selected,"index100kMs":index_ms,"query100Ms":query_100_ms,
         "encode2000Ms":encode_2000_ms,"hydrate2000Ms":hydrate_2000_ms,"rows50Ms":rows_50_ms,
         "rows50Bytes":serde_json::to_vec(&rows).map(|v|v.len()).unwrap_or(0)})
 }

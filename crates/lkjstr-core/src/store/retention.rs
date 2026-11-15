@@ -41,6 +41,7 @@ impl Store {
                 .collect();
             for id in victims {
                 self.remove(&id);
+                self.evictions += 1;
             }
         }
         while self.payload_bytes > self.byte_cap {
@@ -48,6 +49,7 @@ impl Store {
                 break;
             };
             self.remove(&id);
+            self.evictions += 1;
         }
     }
 }

@@ -3,6 +3,7 @@
 // entries changed from their default.
 import { h } from '../shared/h.ts';
 import { both, t } from '../shared/i18n.ts';
+import { keepPublicDrafts } from '../shared/public-drafts.ts';
 import { SETTINGS_SCHEMA, type Settings } from '../shared/settings.ts';
 import { loadViewState, saveViewState } from '../shared/view-state.ts';
 import type { ViewEnv } from './registry.ts';
@@ -26,6 +27,7 @@ function actionEntry(name: 'set.resetLayouts', run: () => void): Entry {
 }
 
 export function mountSettings(el: HTMLElement, env: ViewEnv): () => void {
+  const state = loadViewState<{ at?: string; search?: string }>(env.instance);
   const lists = listEntries(env);
   const relays = relayEntry(env);
   const entries = [
@@ -43,6 +45,8 @@ export function mountSettings(el: HTMLElement, env: ViewEnv): () => void {
   let seat: ReturnType<typeof setTimeout> | undefined;
 
   const filter = (): void => {
+    state.search = search.value;
+    saveViewState(env.instance, state);
     const words = search.value.toLowerCase().split(/\s+/).filter(Boolean);
     let shown = 0;
     for (const e of entries) {
@@ -62,6 +66,7 @@ export function mountSettings(el: HTMLElement, env: ViewEnv): () => void {
   };
   const search = h('input', {
     type: 'search',
+    value: state.search ?? '',
     placeholder: t('settings.search'),
     'aria-label': t('settings.search'),
     oninput: filter,
@@ -84,12 +89,15 @@ export function mountSettings(el: HTMLElement, env: ViewEnv): () => void {
     h('div', { class: 'ssearch' }, search, h('div', { class: 'scount' }, count, modified)),
     ...groups.flatMap((g) => [g.head, ...g.entries.map((e) => e.node)]),
   );
+  const drafts = keepPublicDrafts(el, env.instance);
   sync(env.settings.get());
   const off = env.settings.subscribe(sync);
   // Opened for one entry (the relay list, from the Relays tab): it is brought to the top, once.
-  const state = loadViewState<{ at?: string }>(env.instance);
   const target = entries.find((e) => e.node.dataset.entry === state.at);
-  if (state.at) saveViewState(env.instance, {});
+  if (state.at) {
+    delete state.at;
+    saveViewState(env.instance, state);
+  }
   if (target) {
     // Its group's heading goes to the top, under the search box; once more when its rows have arrived.
     const head = groups.find((g) => g.name === target.group)?.head ?? target.node;
@@ -102,6 +110,7 @@ export function mountSettings(el: HTMLElement, env: ViewEnv): () => void {
   }
   return () => {
     clearTimeout(seat);
+    drafts();
     off();
     lists.dispose();
     relays.dispose();

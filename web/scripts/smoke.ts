@@ -2,11 +2,13 @@
 // the mock build in ../dist. Prints one line per failed fact, then "ok smoke" (or exits 1).
 // LKJSTR_CHROME=<path> picks the browser; --shot=<file> also writes one screenshot of the first page.
 import { type ChildProcess, spawn } from 'node:child_process';
-import { existsSync, mkdirSync } from 'node:fs';
+import { appendFileSync, existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { type Browser, chromium, type Page } from 'playwright-core';
 import { dayOf } from '../src/shared/format.ts';
 import { KEYS } from '../src/shared/keys.ts';
+import { notesChecks } from './smoke-notes.ts';
+import { railSmoke } from './smoke-time-rail.ts';
 
 const here = new URL('..', import.meta.url).pathname;
 process.env.TMPDIR ??= resolve(here, '../tmp/temp');
@@ -20,7 +22,14 @@ const chrome =
   `${process.env.HOME}/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome`;
 const shot = process.argv.find((a) => a.startsWith('--shot='))?.slice(7);
 const failures: string[] = [];
+let facts = 0;
+writeFileSync(resolve(here, '../tmp/audit-mock-progress.log'), '');
 const fact = (name: string, ok: boolean, detail: unknown = ''): void => {
+  facts++;
+  appendFileSync(
+    resolve(here, '../tmp/audit-mock-progress.log'),
+    `${ok ? 'ok' : 'FAIL'} ${name}\n`,
+  );
   if (!ok) failures.push(`${name}: ${JSON.stringify(detail)}`);
 };
 
@@ -79,7 +88,12 @@ async function open(
   const { fresh, ...rest } = given;
   const store = fresh
     ? rest
-    : { 'layout:main': arranged(size.width), 'layout:guest': tile('g', ['global']), ...rest };
+    : {
+        migration: 'owner-audit-1',
+        'layout:main': arranged(size.width),
+        'layout:guest': tile('g', ['global']),
+        ...rest,
+      };
   const ctx = await isolatedContext(browser, { viewport: size, locale, deviceScaleFactor: 1 });
   await ctx.addInitScript((s) => {
     for (const [k, v] of Object.entries(s))
@@ -103,6 +117,7 @@ const center = async (page: Page, sel: string): Promise<{ x: number; y: number }
 async function run(browser: Browser): Promise<void> {
   const still = { mock: { live: false } };
   const page = await open(browser, '/', still);
+  await railSmoke(page, fact, process.env.LKJSTR_SHOTS === '1');
   if (shot) mkdirSync(dirname(shot), { recursive: true }), await page.screenshot({ path: shot });
   const home = '.pane:has(.tab.active[data-view="home"])';
 
@@ -398,6 +413,12 @@ async function run(browser: Browser): Promise<void> {
   await scrolling(still);
   await filtering(browser, still);
   await rooms(browser, still);
+  const reader = await open(browser, '/', {
+    mock: { live: true },
+    'layout:main': tile('reader', ['global']),
+  });
+  await notesChecks(reader, fact);
+  await reader.context().close();
 }
 
 const FEED = '.view[data-kind="home"]';
@@ -454,7 +475,7 @@ async function scrolling(still: Record<string, unknown>): Promise<void> {
   const bar = await page
     .locator(feed)
     .evaluate((el) => (el as HTMLElement).offsetWidth - el.clientWidth);
-  fact('the scrollbar is 14px to catch', bar === 14, bar);
+  fact('time-ordered lists hide the native scrollbar', bar === 0, bar);
   const box = await page.locator(feed).boundingBox();
   const x = (box?.x ?? 0) + (box?.width ?? 0) - 7;
   await page.locator(feed).evaluate((el) => el.scrollTo(0, el.scrollHeight / 2));
@@ -464,7 +485,7 @@ async function scrolling(still: Record<string, unknown>): Promise<void> {
   await page.mouse.down();
   await page.mouse.move(x, y - 60, { steps: 4 });
   await page.waitForTimeout(150);
-  const said = await page.locator(`${feed} .scrub`).evaluate((el) => ({
+  const said = await page.locator(`${feed} .time-rail .scrub`).evaluate((el) => ({
     shown: !(el as HTMLElement).hidden,
     text: el.textContent ?? '',
   }));
@@ -479,7 +500,9 @@ async function scrolling(still: Record<string, unknown>): Promise<void> {
   await page.waitForTimeout(100);
   fact(
     'released, the label goes',
-    await page.locator(`${feed} .scrub`).evaluate((el) => (el as HTMLElement).hidden === true),
+    await page
+      .locator(`${feed} .time-rail .scrub`)
+      .evaluate((el) => (el as HTMLElement).hidden === true),
   );
 
   // A zoomed picture: the wheel zooms about the pointer, a drag moves it.
@@ -1379,7 +1402,7 @@ async function pages(browser: Browser, still: Record<string, unknown>): Promise<
   fact(
     'about: version, engine, source, licence',
     /lkjstr \d+\.\d+\.\d+/.test(about) &&
-      about.includes('mock, protocol 4') &&
+      about.includes('mock, protocol 5') &&
       (await count(page, `${sv} a[href="https://github.com/lkjsxc/lkjstr"]`)) === 1 &&
       about.includes('Apache License 2.0'),
     about,
@@ -1553,7 +1576,7 @@ async function accounts(browser: Browser): Promise<void> {
       (await count(page, '.tab[data-view="global"]')) === 1 &&
       (await count(page, '.fstate:not(:empty)')) === 0 &&
       (await text('.acct.out')) === 'Sign in' &&
-      (await page.locator('.bar .icon').isHidden()),
+      (await page.locator('.bar .icon:has(.i-pen)').isHidden()),
   );
   fact(
     'first visit: what would publish is drawn off, counts stay',
@@ -1889,6 +1912,13 @@ let browser: Browser | undefined;
 try {
   browser = await chromium.launch({ executablePath: chrome, args: ['--no-sandbox'] });
   await run(browser);
+  const auditModule = './audit-owner.mjs';
+  const { auditOwner } = await import(auditModule);
+  await auditOwner({ browser, base, check: fact });
+  for (const ref of ['af8c915e', 'dbd66e59']) {
+    if (existsSync(`../tmp/history/${ref}/state-1440.json`))
+      await auditOwner({ browser, base, check: fact, returning: ref });
+  }
 } catch (e) {
   const at = /smoke\.ts:(\d+)/.exec((e as Error).stack ?? '')?.[1] ?? '?';
   failures.push(`threw at line ${at}: ${(e as Error).message.split('\n')[0]}`);
@@ -1896,5 +1926,13 @@ try {
   await browser?.close();
   server.kill();
 }
+writeFileSync(
+  resolve(here, '../tmp/audit-smoke-count.json'),
+  JSON.stringify({ checks: facts, failures: failures.length }),
+);
+writeFileSync(
+  resolve(here, '../tmp/smoke-mock-report.json'),
+  JSON.stringify({ checks: facts, failures: failures.length }),
+);
 if (failures.length) console.log(failures.join('\n')), process.exit(1);
 console.log('ok smoke');

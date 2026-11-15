@@ -17,7 +17,11 @@ mod input;
 pub mod metrics;
 pub mod network;
 mod network_limits;
+pub mod preview;
 pub mod protocol;
+mod publication_discovery;
+pub mod publication_plan;
+mod publication_routes;
 pub mod query;
 mod query_hidden;
 mod query_predicates;
@@ -55,6 +59,7 @@ struct Signing {
     deadline: u64,
 }
 pub struct Engine {
+    pub previews: preview::Previews,
     pending_publications: usize,
     // At most 64 in-flight two-event creates; removed after both terminal outcomes.
     channel_creates: BTreeMap<String, channel_create::Creation>,
@@ -62,7 +67,7 @@ pub struct Engine {
     channel_pending: BTreeMap<String, channel_pending::Pending>,
     pub client_tag: bool,
     pub discovery_paused: bool,
-    pub discovery_account: Option<String>,
+    pub discovery_accounts: Vec<String>,
     pub discovery_relays: Vec<String>,
     pub servers: BTreeMap<String, feedback::ServerVerdict>,
     server_revision: u64,
@@ -70,6 +75,8 @@ pub struct Engine {
     pub seen: BTreeMap<String, u64>,
     pub metrics: metrics::Metrics,
     pub store: Store,
+    /// False when persisted history extends beyond the hydrated store: no partial time rail.
+    pub cached_history_complete: bool,
     pub signed_out_global_filter: bool,
     pub pending: crate::persistence::PendingEvents,
     pub network: Network,
@@ -91,12 +98,13 @@ impl Default for Engine {
 impl Engine {
     pub fn new() -> Self {
         Self {
+            previews: Default::default(),
             pending_publications: 0,
             channel_creates: BTreeMap::new(),
             channel_pending: BTreeMap::new(),
             client_tag: true,
             discovery_paused: false,
-            discovery_account: None,
+            discovery_accounts: vec![],
             discovery_relays: vec![],
             servers: BTreeMap::new(),
             server_revision: 0,
@@ -104,6 +112,7 @@ impl Engine {
             seen: BTreeMap::new(),
             metrics: Default::default(),
             store: Store::with_caps(16000, 4000),
+            cached_history_complete: true,
             signed_out_global_filter: true,
             pending: Default::default(),
             network: Network::default(),
@@ -180,6 +189,7 @@ impl Engine {
         self.resume_channel_actions(now);
         if self.network.publications.len() != self.pending_publications {
             self.pending_publications = self.network.publications.len();
+            self.replan(now);
             for v in self.views.values_mut() {
                 v.dirty = true;
             }

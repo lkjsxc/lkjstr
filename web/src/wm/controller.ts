@@ -1,5 +1,3 @@
-// WM controller for one workspace: layout state, persistence, rendering, view mounts (adapted from ytenrich's:
-// no native elements to project, so every tab is an own view).
 import { t } from '../shared/i18n.ts';
 import { keyCaps } from '../shared/keys.ts';
 import { kindOf, type OpenOpts, viewOf } from '../views/registry.ts';
@@ -21,21 +19,24 @@ import { goCompose, openTabSearch, type TabFinder } from './tab-search.ts';
 import { mountWmKeys } from './wm-keys.ts';
 
 export type Wm = {
-  /** Opens a tab in the tile last touched (a link from outside any tab: the top bar, an address). */
   open(kind: string, state?: object): void;
-  /** Shows the tab of this kind that is already open somewhere, or opens one (the way to the accounts). */
   go(kind: string): void;
-  /** A tab to write in, with the keyboard in it: the one that is open, unless the setting asks for a new one. */
   compose(): void;
-  /** Closes every tab of this kind (the sign-in tab has done its work once someone is signed in). */
   drop(kind: string): void;
+  search(): void;
+  show(tab: string): void;
   dispose(): void;
 };
 
-export function createWmController(env: BaseEnv, host: Host, at: Space, family = FAMILY): Wm {
+export function createWmController(
+  env: BaseEnv,
+  host: Host,
+  at: Space,
+  family = FAMILY,
+  other?: Pick<TabFinder, 'tabs' | 'show'>,
+): Wm {
   const preset = (): L.LayoutNode => presetOf(at.index, undefined, family);
   const known = { has: (tab: string): boolean => kindOf(tab) === NEW_TAB || Boolean(viewOf(tab)) };
-  /** A stored layout as it can be drawn (`undefined`: nothing stored, so the preset). */
   const load = (value: unknown): L.LayoutNode | null => {
     const saved = value === undefined ? preset() : parseLayout(value);
     return saved && L.retainViews(saved, known);
@@ -44,7 +45,6 @@ export function createWmController(env: BaseEnv, host: Host, at: Space, family =
   let rendered: Rendered | undefined;
   let disposed = false;
   let touched = ''; // the pane last pressed, focused or opened into
-  /** For a tab opened beside its reader: the tab that was in front there and what had the keyboard. */
   const back = new Map<string, { view: string; el?: HTMLElement }>(); // bound: one per such open tab
 
   const closed = createClosed(`${family}${at.index}`);
@@ -69,7 +69,6 @@ export function createWmController(env: BaseEnv, host: Host, at: Space, family =
   };
   const cur = (): L.PaneNode | undefined =>
     L.panes(root).find((x) => x.id === touched) ?? L.panes(root)[0];
-  /** Puts a tab in front with the keyboard in it. */
   const show = (tab: string): void => {
     const p = L.paneOfView(root, tab);
     if (!p) return;
@@ -79,12 +78,10 @@ export function createWmController(env: BaseEnv, host: Host, at: Space, family =
   };
   const used = (): Set<string> => new Set(L.views(root));
   const set = (next: L.LayoutNode | null, save = true): void => {
-    // The only tile left never disappears: it becomes a New tab page.
     root = next ?? L.pane([own.fresh(NEW_TAB, new Set())]);
     render();
     if (save) at.save(root);
   };
-  /** Closing the tab in front shows its right neighbour (the left one at the end), never a jump to the first. */
   const close = (view: string): void => {
     const p = L.paneOfView(root, view);
     const i = p?.tabs.indexOf(view) ?? -1;
@@ -92,7 +89,6 @@ export function createWmController(env: BaseEnv, host: Host, at: Space, family =
     const from = back.get(view);
     back.delete(view);
     retire(view);
-    // A tab opened from a note gives its place back to what was in front before it, and the keyboard to the reader.
     const prior = from && p?.tabs.includes(from.view) && p.active === view ? from.view : beside;
     const next = L.removeView(root, view);
     set(next && prior ? L.activate(next, prior) : next);
@@ -100,7 +96,6 @@ export function createWmController(env: BaseEnv, host: Host, at: Space, family =
     from.el.focus({ preventScroll: true });
     mark(from.el.closest('.pane')?.getAttribute('data-pane') ?? touched);
   };
-  /** A new tab right after `from` in its tile, in front (`split`: in a new tile beside; `background`: behind). */
   const openFrom =
     (from: string) =>
     (kind: string, state?: object, opts: OpenOpts = {}): void => {
@@ -122,7 +117,6 @@ export function createWmController(env: BaseEnv, host: Host, at: Space, family =
       set(opts.background ? L.activate(next, p.active) : next);
     };
 
-  /** The New tab page `tab` becomes the chosen view. */
   const launcher = (tab: string) => ({
     ...CHOICES,
     pick: (c: Choice) => set(L.replaceView(root, tab, own.fresh(c.kind, used(), c.state))),
@@ -182,7 +176,6 @@ export function createWmController(env: BaseEnv, host: Host, at: Space, family =
     },
   };
 
-  /** The tile keys go to (`.cur`): the one last pressed or focused. */
   const mark = (id: string): void => {
     const all = L.panes(root);
     touched = all.some((x) => x.id === id) ? id : (all[0]?.id ?? '');
@@ -191,7 +184,6 @@ export function createWmController(env: BaseEnv, host: Host, at: Space, family =
   function render(): void {
     if (disposed) return;
     own.stash();
-    // Rebuilding the tiles detaches every view for a moment: what had the keyboard gets it back.
     const focused = host.root.contains(document.activeElement)
       ? (document.activeElement as HTMLElement)
       : null;
@@ -213,25 +205,25 @@ export function createWmController(env: BaseEnv, host: Host, at: Space, family =
   host.root.addEventListener('pointerdown', onPress, true);
   host.root.addEventListener('focusin', onPress);
 
-  // Follow layout changes made elsewhere (a reset from Settings, an edit in another browser tab).
   const offStore = at.watch((value) => {
     const next = load(value);
     if (next && !disposed && JSON.stringify(next) !== JSON.stringify(root)) set(next, false);
   });
   const finder: TabFinder = {
     anchor: () => rendered?.panes.get(cur()?.id ?? '')?.querySelector('.strip') ?? host.root,
-    tabs: () =>
-      L.views(root)
+    tabs: () => [
+      ...L.views(root)
         .filter((v) => kindOf(v) !== NEW_TAB)
         .map((tab) => ({ tab, title: own.title(tab), here: cur()?.tabs.includes(tab) === true })),
-    show,
+      ...(other?.tabs() ?? []),
+    ],
+    show: (tab, workspace) => (workspace ? other?.show(tab, workspace) : show(tab)),
     open: (kind, state) => openFrom(cur()?.active ?? '')(kind, state),
     front: () => own.el(cur()?.active ?? ''),
   };
   const compose = (): void => goCompose(finder, env.settings.get().composeNew);
   const step = <T>(list: readonly T[], at: number, dir: number): T | undefined =>
     list[(at + dir + list.length) % list.length];
-  /** The tile before or after the current one (wrapping). */
   const beside = (dir: number): L.PaneNode | undefined => {
     const all = L.panes(root);
     return step(
@@ -271,6 +263,7 @@ export function createWmController(env: BaseEnv, host: Host, at: Space, family =
     search: () => openTabSearch(host.layer, finder),
   });
   render();
+  at.save(root);
 
   return {
     open: (kind, state) => openFrom('')(kind, state),
@@ -284,6 +277,8 @@ export function createWmController(env: BaseEnv, host: Host, at: Space, family =
       else openFrom('')(kind);
     },
     compose,
+    search: () => openTabSearch(host.layer, finder),
+    show,
     dispose() {
       disposed = true;
       offStore();

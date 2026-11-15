@@ -15,10 +15,11 @@
  * create an account on it.
  * 3: the query fields `phrases`, `exclude`, `has`, `from`, `notifications` and `show`. The interface draws their
  * controls only for an engine that reports 3 or more, and sends an older one the plain words in `text`.
+ * 5: optional link previews, engine configuration and the near-note hint.
  * 4: channels (NIP-28): the sources `channels` and `channel`, `ChannelRow`, `NoteRow.channel`, `Draft.channel` and
  * the actions `channel.join`, `channel.save`, `channel.seen`. The interface draws no channel control for an engine
  * that reports less. */
-export const PROTOCOL_VERSION = 4;
+export const PROTOCOL_VERSION = 5;
 
 /** Chosen by the interface, unique among its open subscriptions. */
 export type SubId = string;
@@ -114,7 +115,10 @@ export type Query = {
 
 /** Where a window sits. `top` follows the head of the list: new rows are inserted as they arrive. A key holds
  * the list still around that row: rows that arrive above are only counted (`fresh`). */
-export type Anchor = 'top' | { readonly key: RowKey };
+export type Anchor =
+  | 'top'
+  | { readonly key: RowKey }
+  | { readonly month: Millis; readonly offset: number; readonly returnKey?: RowKey };
 
 // ───────────────────────────────────────── view models ─────────────────────────────────────────
 
@@ -193,7 +197,18 @@ export type Counts = {
   readonly partial: boolean;
 };
 
+/** Since version 5. Absent previews means the service is unavailable. At most two, in link order. */
+export type LinkPreview = {
+  readonly source: string;
+  readonly url: string;
+  readonly siteName?: string;
+  readonly title?: string;
+  readonly description?: string;
+  readonly imageUrl?: string | null;
+  readonly kind: 'loading' | 'link' | 'page' | 'post';
+};
 export type NoteRow = {
+  readonly previews?: readonly LinkPreview[];
   readonly kind: 'note';
   readonly key: RowKey;
   /** Event id (hex) of the note itself: for a repost row, the reposted note. */
@@ -601,6 +616,8 @@ export type Hint = {
 
 /** Engine-side settings. The interface stores settings and sends the whole object whenever one changes. */
 export type EngineConfig = {
+  /** Since version 5. Default on; data saver always disables it. */
+  readonly linkPreviews?: boolean;
   // engine-added 2026-11-15: 2
   /** Include the lkjstr client tag on authored events (default true). */
   readonly clientTag?: boolean;
@@ -618,6 +635,8 @@ export type EngineConfig = {
 // ───────────────────────────────────────── messages ─────────────────────────────────────────
 
 export type ToEngine =
+  /** Since version 5. Near, uncovered note ids only, lowest priority; an empty list releases wants. */
+  | { readonly t: 'preview'; readonly sub: SubId; readonly ids: readonly string[] }
   // engine-added 2026-11-15: 4
   | { readonly t: 'stats'; readonly req: ReqId }
   // end engine-added
@@ -673,6 +692,27 @@ export type EngineStats = {
     readonly bytesOut: number;
     readonly lastError: string | null;
     readonly latencyMs: number | null;
+    /** Delivery counts across the last 32 publications; absent on older engines. */
+    readonly publishPlanned?: number;
+    readonly publishAccepted?: number;
+    readonly publishFailed?: number;
+    readonly publishOwnSkipped?: number;
+    readonly publishInboxSkipped?: number;
+    readonly publishCapacitySkipped?: number;
+    readonly publishPending?: number;
+  }[];
+  /** Last 32 publications in this engine session, including excluded destinations. */
+  readonly recentPublications?: readonly {
+    readonly id: string;
+    readonly kind: number;
+    readonly at: Millis;
+    readonly unresolvedRecipients?: number;
+    readonly deliveries: readonly {
+      readonly url: string;
+      readonly rule: 'own' | 'inbox' | 'reply' | 'delete';
+      readonly state: 'pending' | 'accepted' | 'rejected' | 'timeout' | 'skipped';
+      readonly reason?: 'own-cap' | 'person-cap' | 'inbox-cap' | 'capacity';
+    }[];
   }[];
   readonly totals: {
     readonly eventsStored: number;
@@ -689,7 +729,23 @@ export type EngineStats = {
   };
 };
 // end engine-added
+/** Protocol 5: exact cached note counts, UTC month starts, newest first. No relay estimates.
+ * Positions name ordinals within those months, independent of the loaded window. */
+export type Timeline = {
+  readonly anchor?: RowKey;
+  readonly newest: Millis;
+  readonly oldest: Millis;
+  readonly months: readonly { readonly at: Millis; readonly count: number }[];
+  readonly positions: readonly {
+    readonly key: RowKey;
+    readonly month: Millis;
+    readonly offset: number;
+  }[];
+  readonly supported: boolean;
+  readonly older: boolean;
+};
 export type FromEngine =
+  | { readonly t: 'timeline'; readonly sub: SubId; readonly timeline: Timeline }
   // engine-added 2026-11-15: 4
   | { readonly t: 'stats'; readonly req: ReqId; readonly stats: EngineStats }
   // end engine-added

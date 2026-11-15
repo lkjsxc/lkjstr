@@ -2,6 +2,9 @@
 use super::{Engine, wire::RelayConfig};
 use serde_json::{Value, json};
 pub fn strict_relay(url: &str) -> Option<String> {
+    if url.len() > 2048 {
+        return None;
+    }
     let u = url::Url::parse(url).ok()?;
     if !matches!(u.scheme(), "ws" | "wss")
         || u.host_str().is_none()
@@ -12,7 +15,7 @@ pub fn strict_relay(url: &str) -> Option<String> {
     {
         return None;
     }
-    lkjstr_protocol::normalize_relay_url(url)
+    lkjstr_protocol::normalize_relay_url(url).filter(|url| url.len() <= 2048)
 }
 pub fn valid_server(url: &str) -> bool {
     url::Url::parse(url).is_ok_and(|u| {
@@ -43,7 +46,7 @@ impl Engine {
         entries: Vec<RelayConfig>,
         now: u64,
     ) -> Result<(), &'static str> {
-        if entries.len() > 8 {
+        if entries.len() > 64 {
             return Err("invalid-relay");
         }
         let entries = entries
@@ -86,7 +89,7 @@ impl Engine {
         Ok(())
     }
     /// The verified owner's NIP-65 list replaces bootstrap read/write usage.
-    /// Bound: eight entries, matching configure_relays; invalid URLs are ignored.
+    /// Bound: 64 entries, matching configure_relays; invalid URLs are ignored.
     pub fn account_relays(&self, account: &str) -> Option<(String, Vec<RelayConfig>)> {
         let Some(event) = self.store.replaceable(account, 10002) else {
             return super::discovery::legacy_relays(&self.store, account);

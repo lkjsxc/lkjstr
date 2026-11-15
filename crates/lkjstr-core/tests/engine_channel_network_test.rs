@@ -146,6 +146,7 @@ fn channel_reference_lookup_preempts_and_releases_a_settled_live_slot() {
     };
     n.plan(
         vec![("channel".into(), feed.clone(), protocol::Query::default())],
+        &lkjstr_core::store::Store::new(0),
         0,
     );
     n.connected(RELAY, 1);
@@ -173,6 +174,7 @@ fn channel_reference_lookup_preempts_and_releases_a_settled_live_slot() {
                 protocol::Query::default(),
             ),
         ],
+        &lkjstr_core::store::Store::new(0),
         110,
     );
     let sent = n

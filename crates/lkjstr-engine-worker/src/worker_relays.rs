@@ -23,7 +23,7 @@ impl Host {
             })
             .collect::<Option<Vec<_>>>();
         match entries {
-            Some(entries) if entries.len() <= 8 => {
+            Some(entries) if entries.len() <= 64 => {
                 self.bootstrap(
                     entries
                         .into_iter()
@@ -44,7 +44,7 @@ impl Host {
         }
     }
     pub(super) fn bootstrap(&mut self, relays: Vec<RelayConfig>) {
-        if relays.len() > 8 {
+        if relays.len() > 64 {
             return;
         }
         let relays = relays
@@ -64,21 +64,26 @@ impl Host {
     }
     pub(super) fn apply_relay_owner(&mut self, force: bool) {
         let at = self.time();
-        self.engine.discover_account(
+        self.engine.discover_accounts(
             self.accounts
-                .active
-                .clone()
-                .filter(|_| !self.sessions.is_empty()),
+                .entries
+                .iter()
+                .filter(|_| !self.sessions.is_empty())
+                .map(|a| a.pubkey.clone())
+                .collect(),
             self.bootstrap_relays
                 .iter()
                 .map(|r| r.url.clone())
-                .chain(
-                    self.accounts
-                        .entries
-                        .iter()
-                        .filter(|a| Some(&a.pubkey) == self.accounts.active.as_ref())
-                        .flat_map(|a| a.relay_hints.iter().cloned()),
-                )
+                .chain(self.accounts.entries.iter().flat_map(|a| {
+                    a.relay_hints.iter().cloned().chain(
+                        self.engine
+                            .account_relays(&a.pubkey)
+                            .into_iter()
+                            .flat_map(|(_, relays)| relays.into_iter())
+                            .filter(|r| r.read || r.write)
+                            .map(|r| r.url),
+                    )
+                }))
                 .collect(),
             at,
         );
@@ -95,7 +100,7 @@ impl Host {
             for search in self.bootstrap_relays.iter().filter(|r| r.search) {
                 if let Some(entry) = entries.iter_mut().find(|r| r.url == search.url) {
                     entry.search = true;
-                } else if entries.len() < 8 {
+                } else if entries.len() < 64 {
                     entries.push(RelayConfig {
                         url: search.url.clone(),
                         read: false,

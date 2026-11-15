@@ -30,6 +30,8 @@ mod defaults;
 use defaults::initial_engine;
 #[path = "worker_accounts.rs"]
 mod accounts;
+#[path = "worker_preview.rs"]
+mod previews;
 #[path = "worker_relays.rs"]
 mod relay_config;
 #[path = "worker_sign.rs"]
@@ -37,6 +39,8 @@ mod signing;
 #[path = "worker_upload.rs"]
 mod uploads;
 struct Host {
+    preview_probed: bool,
+    preview_busy: bool,
     bootstrap_relays: Vec<lkjstr_core::engine::wire::RelayConfig>,
     relay_owner: Option<(String, String)>,
     account_revision: u64,
@@ -60,6 +64,7 @@ struct Host {
     timer: Option<Timer>,
     db: Option<web_sys::IdbDatabase>,
     next_persist: u64,
+    publication_persisted: u64,
     flushing: bool,
     stopped: bool,
     clock_offset: u64,
@@ -101,9 +106,12 @@ pub fn start() -> Result<WorkerHandle, JsValue> {
         timer: None,
         db: None,
         next_persist: 0,
+        publication_persisted: 0,
         flushing: false,
         stopped: false,
         clock_offset: 0,
+        preview_probed: false,
+        preview_busy: false,
         identity_inflight: 0,
         identity_attempts: BTreeMap::new(),
     }));
@@ -132,6 +140,11 @@ fn schedule(host: &Rc<RefCell<Host>>) {
                 let at = h.time();
                 let begin = crate::measure::now();
                 h.engine.tick(at);
+                for (id, session) in &h.sessions {
+                    for out in session.borrow_mut().timeline_tick(&h.engine, at) {
+                        h.scope.direct(*id, &out);
+                    }
+                }
                 let elapsed = crate::measure::now() - begin;
                 h.engine.metrics.tick(elapsed);
             }
@@ -216,6 +229,7 @@ fn pump(host: &Rc<RefCell<Host>>) {
     uploads::pump_uploads(host);
     uploads::checks::pump(host);
     shared::expire(host);
+    previews::pump_previews(host);
 }
 #[path = "worker_handle.rs"]
 mod handle;

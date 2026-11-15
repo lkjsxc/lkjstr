@@ -40,3 +40,68 @@ export async function finishAccounts({ page, other, relayUrl, check, launch }) {
   await visitorRelay.waitFor();
   check('signed-out relay edit survives reload', (await visitorRelay.count()) === 1);
 }
+
+export async function reviewSettings({
+  page,
+  ctx,
+  base,
+  fake,
+  activePaths,
+  check,
+  launch,
+  shots,
+  shot,
+}) {
+  if (shots) {
+    // Signed in, the ordinary layout as it starts, in Japanese (the language is put back afterwards).
+    // Use the reader's reset: deleting storage bypasses the live WM store, whose
+    // pending save can restore the old layout on pagehide with Home behind Post.
+    await page.locator('.pane.cur .strip').getByTitle('Tile menu', { exact: true }).click();
+    await page.locator('.menu button').getByText('Reset layout', { exact: true }).click();
+    await page.locator('.view[data-kind="home"] .note').first().waitFor();
+    check('Reset layout brings Home forward with real notes after Channels and Stats');
+    await page.evaluate(() => localStorage.setItem('lkjstr:settings', '{"language":"ja"}'));
+    await page.reload();
+    await page.locator('.view[data-kind="home"] .note').first().waitFor();
+    await page.waitForTimeout(1200);
+    check('reset Home survives reload in Japanese', (await page.locator('.pane').count()) === 3);
+    await shot(page, 'slice-signedin-1440-ja.png');
+    await page.evaluate(() => localStorage.removeItem('lkjstr:settings'));
+    await page.reload();
+    await page.locator('.view[data-kind="home"] .note').first().waitFor();
+  }
+  if (shots) check('reset Home survives another reload in English');
+  await launch('Settings', 'settings');
+  await page.getByLabel('Theme', { exact: true }).selectOption('dark');
+  await page.reload();
+  await page.waitForFunction(() => document.documentElement.dataset.theme === 'dark');
+  check('settings persist after reload');
+  const other = await ctx.newPage();
+  await other.goto(base);
+  await other.locator('.tab[data-view="global"]').click();
+  await other.locator('.view[data-kind="global"] .note').first().waitFor();
+  check('second app tab receives notes');
+  const sharedRoutes = () => fake.connections() === new Set(activePaths.values()).size;
+  for (let n = 0; n < 200 && !sharedRoutes(); n++) await page.waitForTimeout(25);
+  check('two app tabs share one socket per relay', sharedRoutes() && activePaths.size > 0);
+  check(
+    'learned owner relays survive reload and another tab bootstrap',
+    [...activePaths.values()].includes('/owner') &&
+      [...activePaths.values()].every((path) => path === '/owner' || path === '/'),
+  );
+  return other;
+}
+
+export async function seedRailArchive({ fake, sign, pubkey }) {
+  for (let i = 0; i < 100; i++) {
+    fake.add(
+      await sign({
+        pubkey,
+        kind: 1,
+        created_at: Math.floor(Date.UTC(2026 - Math.floor(i / 20), 10 - (i % 10), 15) / 1000),
+        content: `Rail archive fixture ${i}`,
+        tags: [],
+      }),
+    );
+  }
+}

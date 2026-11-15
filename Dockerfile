@@ -20,6 +20,19 @@ CMD ["cargo", "run", "-q", "-p", "lkjstr-xtask", "--", "quiet", "docker-verify"]
 FROM deps AS app-build
 RUN pnpm build
 
+# Optional same-origin preview service, separate from the static app image.
+FROM deps AS preview-build
+RUN cargo build --locked --release -p lkjstr-host --bin lkjstr-preview
+
+FROM debian:bookworm-slim AS preview
+COPY --from=preview-build /app/target/release/lkjstr-preview /usr/local/bin/lkjstr-preview
+COPY --from=preview-build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
+RUN mkdir -p /var/cache/lkjstr-preview && chown 65532:65532 /var/cache/lkjstr-preview
+USER 65532:65532
+ENV LKJSTR_PREVIEW_CACHE=/var/cache/lkjstr-preview
+# Keep host networking/loopback or use the documented unit at the edge.
+ENTRYPOINT ["/usr/local/bin/lkjstr-preview"]
+
 FROM busybox:1.36 AS app
 COPY --from=app-build /app/dist /www
 EXPOSE 8080

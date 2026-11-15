@@ -50,13 +50,12 @@ fn settled_discovery_yields_to_feed_and_resumes_after_close() {
             .iter()
             .any(|f| f[0] == "REQ" && f[2]["kinds"] == json!([1, 6]))
     );
-    // Unfinished discovery cannot displace the active feed, even after EOSE.
+    // The feed gets its first page; unfinished own records then get a turn.
     let feed = batch.iter().find(|f| f[0] == "REQ").expect("feed");
     eose(&mut e, feed, 202);
     e.network.tick(301);
-    assert!(!frames(&mut e).iter().any(|f| f[0] == "REQ"));
-    e.input(Input::Close { sub: "feed".into() }, 401);
     let resumed = req(&mut e);
+    e.input(Input::Close { sub: "feed".into() }, 401);
     assert_eq!(resumed[2]["authors"], discovery[2]["authors"]);
     assert_eq!(resumed[2]["limit"], 1);
 }
@@ -67,7 +66,7 @@ fn every_list_is_discovered_with_one_slot_and_one_result_without_views() {
         let mut e = setup(1, limit);
         frames(&mut e);
         let key = generate_secret_key();
-        let lists = [3, 10002, 10063].map(|kind| {
+        let lists = [0, 3, 10000, 10002, 10063].map(|kind| {
             finalize_event(
                 &EventTemplate {
                     pubkey: None,
@@ -82,7 +81,7 @@ fn every_list_is_discovered_with_one_slot_and_one_result_without_views() {
         });
         e.discover_account(Some(lists[0].pubkey.clone()), vec![], 101);
         let mut found = std::collections::BTreeSet::new();
-        for now in [201, 401, 601] {
+        for now in [201, 401, 601, 801, 1001] {
             e.network.tick(now);
             let request = req(&mut e);
             let kinds = request[2]["kinds"].as_array().expect("kinds");
@@ -113,15 +112,15 @@ fn every_list_is_discovered_with_one_slot_and_one_result_without_views() {
             );
         }
         // Independent reconnect cursors cannot skip the older list kinds.
-        e.network.relays.get_mut(RELAY).expect("relay").max_reqs = 3;
-        e.network.disconnected(RELAY, 800);
-        e.network.connected(RELAY, 901);
+        e.network.relays.get_mut(RELAY).expect("relay").max_reqs = 5;
+        e.network.disconnected(RELAY, 1200);
+        e.network.connected(RELAY, 1301);
         let mut replay = Vec::new();
-        for now in [901, 1001, 1101] {
+        for now in [1301, 1401, 1501, 1601, 1701] {
             e.network.tick(now);
             replay.extend(frames(&mut e).into_iter().filter(|f| f[0] == "REQ"));
         }
-        assert_eq!(replay.len(), 3);
+        assert_eq!(replay.len(), 5);
         for request in replay {
             let kind = request[2]["kinds"][0].as_u64().expect("kind");
             let list = lists.iter().find(|e| e.kind == kind).expect("list");
@@ -134,29 +133,29 @@ fn every_list_is_discovered_with_one_slot_and_one_result_without_views() {
 fn settled_discovery_resumes_without_cycling_after_feed_releases_slot() {
     let mut e = setup(1, 1);
     let mut ids = std::collections::BTreeSet::new();
-    for now in [101, 301, 501] {
+    for now in [101, 301, 501, 701, 901] {
         let request = req(&mut e);
         ids.insert(request[1].clone().to_string());
         eose(&mut e, &request, now);
-        if now < 501 {
+        if now < 901 {
             e.network.tick(now + 100);
         }
     }
-    e.network.tick(601);
+    e.network.tick(1001);
     assert!(!frames(&mut e).iter().any(|f| f[0] == "REQ"));
     e.input(
         Input::Open {
             sub: "feed".into(),
             query: Query::default(),
         },
-        701,
+        1101,
     );
     let feed = req(&mut e);
     assert_eq!(feed[2]["kinds"], json!([1, 6]));
-    e.input(Input::Close { sub: "feed".into() }, 801);
+    e.input(Input::Close { sub: "feed".into() }, 1201);
     let resumed = req(&mut e);
     assert!(ids.contains(&resumed[1].to_string()));
-    eose(&mut e, &resumed, 802);
-    e.network.tick(901);
+    eose(&mut e, &resumed, 1202);
+    e.network.tick(1301);
     assert!(!frames(&mut e).iter().any(|f| f[0] == "REQ"));
 }

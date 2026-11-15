@@ -3,6 +3,7 @@
 import type { ChannelEdit, ChannelRow } from '../engine/protocol.ts';
 import { h } from '../shared/h.ts';
 import { type Key, t } from '../shared/i18n.ts';
+import { loadViewState, saveViewSlice } from '../shared/view-state.ts';
 import { ability, failureText } from './can.ts';
 import { act } from './note-actions.ts';
 import { avatar } from './parts.ts';
@@ -45,13 +46,24 @@ export function channelForm(
   of: ChannelRow | undefined,
   done: (id?: string) => void,
 ): HTMLElement {
+  type Draft = { id?: string; open: boolean; name: string; about: string; picture?: string };
+  const saved = loadViewState<{ channelEdit: Draft }>(env.instance).channelEdit;
+  const draft = saved?.open && saved.id === of?.id ? saved : of;
+  const finish = (id?: string): void => {
+    saveViewSlice(env.instance, 'channelEdit', { open: false });
+    done(id);
+  };
   const field = (label: Key, value: string, attrs: Record<string, string | number> = {}) =>
     h('input', { type: 'text', value, placeholder: t(label), 'aria-label': t(label), ...attrs });
-  const name = field('channel.name', of?.name ?? '', { maxlength: 80, 'data-f': 'name' });
-  const about = field('channel.about', of?.about ?? '', { maxlength: 400 });
-  const picture = field('channel.picture', of?.picture?.startsWith('http') ? of.picture : '', {
-    inputmode: 'url',
-  });
+  const name = field('channel.name', draft?.name ?? '', { maxlength: 80, 'data-f': 'name' });
+  const about = field('channel.about', draft?.about ?? '', { maxlength: 400 });
+  const picture = field(
+    'channel.picture',
+    draft?.picture?.startsWith('http') ? draft.picture : '',
+    {
+      inputmode: 'url',
+    },
+  );
   const said = h('div', { class: 'asaid error', role: 'status' });
   const save = h('button', { class: 'btn primary', type: 'submit' }, t('channel.save'));
   const ready = (): void => void (save.disabled = !name.value.trim());
@@ -66,10 +78,20 @@ export function channelForm(
       'div',
       { class: 'actions' },
       save,
-      h('button', { class: 'btn', type: 'button', onclick: () => done() }, t('account.cancel')),
+      h('button', { class: 'btn', type: 'button', onclick: () => finish() }, t('account.cancel')),
     ),
     said,
   );
+  const keep = (): void =>
+    saveViewSlice(env.instance, 'channelEdit', {
+      id: of?.id,
+      open: true,
+      name: name.value,
+      about: about.value,
+      picture: picture.value,
+    });
+  form.addEventListener('input', keep);
+  keep();
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     if (!name.value.trim() || ability(env.engine) !== 'ok') return;
@@ -85,12 +107,12 @@ export function channelForm(
       id: of?.id,
       channel,
     });
-    if (r.ok) return done(r.id ?? of?.id);
+    if (r.ok) return finish(r.id ?? of?.id);
     said.textContent = failureText(r.error);
     ready();
   });
   form.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') e.stopPropagation(), done();
+    if (e.key === 'Escape') e.stopPropagation(), finish();
   });
   ready();
   requestAnimationFrame(() => name.focus({ preventScroll: true }));

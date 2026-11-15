@@ -147,7 +147,10 @@ export function select(w: World, q: Query, me: string): Entry[] {
     return people.map((p) => ({ key: p.author.pubkey, row: () => personRow(w, p, me) }));
   }
   const opts: RowOpts = { me, reposts: q.reposts };
-  const kept = w.notes.filter((n) => matches(w, q, n, me));
+  const time = (n: MNote): number => (q.reposts === false ? n.at : (n.reposts[0]?.at ?? n.at));
+  const kept = w.notes
+    .filter((n) => matches(w, q, n, me))
+    .sort((a, b) => time(b) - time(a) || b.id.localeCompare(a.id));
   const notes = kept.map((n) => entry(w, n, opts));
   if (q.notifications && me && (q.source === 'home' || q.source === 'global')) {
     // Notifications flow in at their own time; one whose note is already in the list is left out.

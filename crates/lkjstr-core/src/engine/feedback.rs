@@ -126,11 +126,31 @@ impl Engine {
             || self.network.list_loaded(&self.store, account, 10063)
     }
     pub fn stats(&self) -> Value {
-        let relays = self.network.relays.iter().map(|(url, r)| {
-            json!({"url":url,"state":if r.online {"connected"} else if r.connecting {"connecting"} else if r.failures>0 {"waiting"} else {"idle"},
+        let publication_stats = self.network.publication_stats();
+        let mut open_subscriptions = std::collections::BTreeMap::<&str, usize>::new();
+        for request in self.network.requests.values().filter(|q| q.sent) {
+            *open_subscriptions.entry(&request.relay).or_default() += 1;
+        }
+        let urls = self
+            .network
+            .relays
+            .keys()
+            .chain(self.network.known.keys())
+            .cloned()
+            .chain(publication_stats.keys().map(|url| (*url).to_owned()))
+            .collect::<std::collections::BTreeSet<_>>();
+        let idle = super::network::Relay::default();
+        let no_publications = Default::default();
+        let relays = urls.iter().map(|url| {
+            let r = self.network.relays.get(url).unwrap_or(&idle);
+            let mut row = json!({"url":url,"state":if r.online {"connected"} else if r.connecting {"connecting"} else if r.failures>0 {"waiting"} else {"idle"},
                 "connectedSince":r.connected_since,"eventsReceived":r.received,"duplicatesDropped":r.duplicates,
-                "openSubscriptions":self.network.requests.values().filter(|q|q.relay==*url && q.sent).count(),
-                "bytesIn":r.bytes_in,"bytesOut":r.bytes_out,"lastError":r.last_error,"latencyMs":r.latency_ms})
+                "openSubscriptions":open_subscriptions.get(url.as_str()).copied().unwrap_or(0),
+                "bytesIn":r.bytes_in,"bytesOut":r.bytes_out,"lastError":if self.network.deferred_relays.contains(url) {Some("capacity".to_owned())} else {r.last_error.clone()},"latencyMs":r.latency_ms});
+            if let (Some(row), Some(publication)) = (row.as_object_mut(), json!(publication_stats.get(url.as_str()).unwrap_or(&no_publications)).as_object()) {
+                row.extend(publication.clone());
+            }
+            row
         }).collect::<Vec<_>>();
         let network = self.network.relays.values().map(|r| r.useful).sum::<u64>();
         let subscriptions = self.network.requests.values().filter(|q| q.sent).count();
@@ -162,7 +182,7 @@ impl Engine {
             .map(|q| &q.relay)
             .collect::<std::collections::BTreeSet<_>>()
             .len();
-        json!({"relays":relays,"totals":{"eventsStored":self.store.len(),"cacheBytes":self.store.payload_bytes(),
+        json!({"recentPublications":self.network.recent_publications(),"relays":relays,"totals":{"eventsStored":self.store.len(),"cacheBytes":self.store.payload_bytes(),
             "subscriptions":subscriptions,"servedFromCache":self.metrics.served_from_cache,"servedFromNetwork":network},
             "orchestration":{"relaysCoveringFollowSet":covering,"requestsCoalesced":coalesced}})
     }

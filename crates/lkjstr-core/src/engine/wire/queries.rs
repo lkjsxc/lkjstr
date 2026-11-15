@@ -30,7 +30,15 @@ pub struct Query {
 #[serde(untagged)]
 pub enum Anchor {
     Top(String),
-    Key { key: String },
+    Key {
+        key: String,
+    },
+    Month {
+        month: u64,
+        offset: usize,
+        #[serde(rename = "returnKey")]
+        return_key: Option<String>,
+    },
 }
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -46,6 +54,8 @@ pub struct Hint {
 }
 #[derive(Debug, Clone, Deserialize, Default)]
 pub struct Config {
+    #[serde(default, rename = "linkPreviews")]
+    pub link_previews: Option<bool>,
     #[serde(default)]
     pub language: String,
     #[serde(default, rename = "clientTag")]

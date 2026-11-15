@@ -6,12 +6,14 @@ mod feedback;
 mod note;
 mod notifications;
 mod output;
+mod previews;
 mod publish;
 pub mod queries;
 mod query_translate;
 mod quote_state;
 mod sources;
 mod thread;
+mod timeline;
 mod translate;
 use actions::Action;
 use queries::{Anchor, Config, Hint, Query};
@@ -19,6 +21,10 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Deserialize)]
 #[serde(tag = "t", rename_all = "camelCase")]
 pub enum Input {
+    Preview {
+        sub: String,
+        ids: Vec<String>,
+    },
     Stats {
         req: String,
     },
@@ -71,6 +77,10 @@ pub enum Input {
 #[derive(Serialize)]
 #[serde(tag = "t", rename_all = "camelCase")]
 pub enum Output {
+    Timeline {
+        sub: String,
+        timeline: serde_json::Value,
+    },
     Stats {
         req: String,
         stats: serde_json::Value,
@@ -165,15 +175,23 @@ pub struct Failure {
 /// Adapter state is per transport client; the engine remains independent of pixels.
 #[derive(Default)]
 pub struct Session {
+    pub preview_near: std::collections::BTreeMap<String, Vec<String>>,
+    pub preview_visible: Vec<String>,
+    pub preview_save_data: bool,
+    pub preview_hidden: bool,
     pub queries: std::collections::BTreeMap<String, Query>,
     pub config: Config,
+    timelines: std::collections::BTreeMap<String, timeline::Index>,
+    timeline_turn: usize,
+    return_keys: std::collections::BTreeMap<String, String>,
+    timeline_visible: Option<std::collections::BTreeSet<String>>,
     pub(super) windows: std::collections::BTreeMap<String, (Option<String>, usize, usize)>,
     pub(super) delivered: std::collections::BTreeMap<String, Vec<serde_json::Value>>,
 }
 impl Session {
     pub fn ready(shared: bool) -> Output {
         Output::Ready {
-            version: 4,
+            version: 5,
             engine: if shared {
                 "rust-wasm-shared"
             } else {

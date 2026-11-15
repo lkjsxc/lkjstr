@@ -88,27 +88,46 @@ impl Network {
                 }
             }
             lkjstr_protocol::RelayMessage::Ok {
-                event_id, accepted, ..
+                event_id,
+                accepted,
+                message,
             } => {
                 if let Some(p) = self.publications.get_mut(&event_id)
-                    && p.deliveries.contains_key(relay)
+                    && p.deliveries.get(relay).is_some_and(|s| s == "pending")
+                    && p.sent.contains_key(relay)
+                    && now < p.deadline
                 {
-                    p.deliveries.insert(
-                        relay.into(),
-                        if accepted { "accepted" } else { "rejected" }.into(),
-                    );
+                    let retry = !accepted && message.starts_with("rate-limited:");
+                    if !retry {
+                        p.deliveries.insert(
+                            relay.into(),
+                            if accepted { "accepted" } else { "rejected" }.into(),
+                        );
+                    }
+                    let deliveries = p
+                        .deliveries
+                        .iter()
+                        .map(|(relay, state)| Delivery {
+                            relay: relay.clone(),
+                            state: state.clone(),
+                            message: None,
+                        })
+                        .collect::<Vec<_>>();
                     self.output.push(Output::Delivery {
                         req: p.req.clone(),
-                        deliveries: p
-                            .deliveries
-                            .iter()
-                            .map(|(relay, state)| Delivery {
-                                relay: relay.clone(),
-                                state: state.clone(),
-                                message: None,
-                            })
-                            .collect(),
+                        deliveries: deliveries.clone(),
                     });
+                    if accepted && !p.reported_success {
+                        p.reported_success = true;
+                        self.output.push(Output::Result {
+                            req: p.req.clone(),
+                            id: Some(event_id.clone()),
+                            deliveries: deliveries.clone(),
+                            error: None,
+                        });
+                    }
+                    self.profiles_changed = true;
+                    self.update_publication(&event_id, &deliveries);
                 }
             }
             _ => {}

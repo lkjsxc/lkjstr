@@ -6,6 +6,7 @@ import { rememberedFace, rememberFace } from './shared/face.ts';
 import { resolveLang, setLang } from './shared/i18n.ts';
 import { pressedAt, watchPairs } from './shared/keys.ts';
 import { spacesKey } from './shared/layout-store.ts';
+import { migrateStorage } from './shared/migrate.ts';
 import { createSettings } from './shared/settings.ts';
 import { kv } from './shared/storage.ts';
 import { createTopBar } from './ui/topbar.ts';
@@ -13,12 +14,14 @@ import { backupPending } from './views/account-key.ts';
 import { setServed } from './views/registry.ts';
 import { createWmController, type Wm } from './wm/controller.ts';
 import { createHost } from './wm/host.ts';
+import { otherTabs } from './wm/other-tabs.ts';
 import { FAMILY, familyOf } from './wm/presets.ts';
 import { parseActive } from './wm/spaces.ts';
 import { createSpacesBar } from './wm/spaces-bar.ts';
 import { createWmStore } from './wm/store.ts';
 
 watchPairs(window);
+migrateStorage();
 const settings = createSettings();
 let language = resolveLang(settings.get().language);
 setLang(language);
@@ -29,6 +32,7 @@ const configure = (): void =>
   engine.configure({
     language,
     clientTag: settings.get().clientTag,
+    linkPreviews: settings.get().linkPreviews,
     heuristics: true,
     prefetch: true,
     mock: kv.get('mock') as { live: boolean; accounts?: 'none' } | undefined,
@@ -61,7 +65,16 @@ function update(): void {
   const n = active();
   const f = familyOf(Boolean(engine.me()));
   if (ctl && (shown !== n || family !== f)) ctl.dispose(), (ctl = undefined);
-  if (!ctl) ctl = createWmController(env, host, store.space((family = f), (shown = n)), f);
+  if (!ctl)
+    ctl = createWmController(env, host, store.space((family = f), (shown = n)), f, {
+      tabs: () => otherTabs(store, family, shown),
+      show: (tab, workspace) => {
+        if (workspace) {
+          pick(workspace);
+          ctl?.show(tab);
+        }
+      },
+    });
   bar.show(n);
 }
 const pick = (n: number): void => {
@@ -75,6 +88,7 @@ const top = createTopBar(host.bar, {
   engine,
   settings,
   spaces: bar.el,
+  search: () => ctl?.search(),
   layer: host.layer,
   open: (kind, state) =>
     kind === 'account'
@@ -98,8 +112,10 @@ engine.accounts.subscribe(() => {
 });
 
 let tagged = settings.get().clientTag;
+let previews = settings.get().linkPreviews;
 settings.subscribe((s) => {
   host.look(s);
+  if (previews !== s.linkPreviews) (previews = s.linkPreviews), configure();
   if (s.clientTag !== tagged) (tagged = s.clientTag), configure();
   const next = resolveLang(s.language);
   if (next === language) return;

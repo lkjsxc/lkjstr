@@ -4,7 +4,7 @@
 import type { Media } from '../engine/protocol.ts';
 import { h } from '../shared/h.ts';
 import { pressed } from '../shared/keys.ts';
-import { kv } from '../shared/storage.ts';
+import { keepMediaPreferences } from '../shared/media-preferences.ts';
 
 export type Player = {
   readonly el: HTMLMediaElement;
@@ -23,7 +23,6 @@ export type PlayerOpts = {
   failed(): void;
 };
 
-const VOLUME = 'volume';
 const SEEK = 5;
 const REPORT_MS = 5000;
 
@@ -38,12 +37,9 @@ export function createPlayer(m: Media, o: PlayerOpts): Player {
     if (m.thumb) el.poster = m.thumb;
   }
   if (m.alt) el.setAttribute('aria-label', m.alt);
-  const saved = kv.get(VOLUME) as { volume?: unknown; muted?: unknown } | undefined;
-  if (typeof saved?.volume === 'number') el.volume = Math.min(1, Math.max(0, saved.volume));
-  el.muted = saved?.muted === true;
+  const prefs = keepMediaPreferences(el);
 
   let reported = 0;
-  let timer: ReturnType<typeof setTimeout> | undefined;
   let gone = false;
   const report = (): void => {
     if (gone) return;
@@ -61,10 +57,6 @@ export function createPlayer(m: Media, o: PlayerOpts): Player {
   on('seeked', report);
   on('ended', report);
   on('error', () => void (gone || o.failed()));
-  on('volumechange', () => {
-    clearTimeout(timer);
-    timer = setTimeout(() => kv.set(VOLUME, { volume: el.volume, muted: el.muted }), 300);
-  });
   if (o.start) void el.play().catch(() => undefined); // refused by the browser: the controls are there
 
   const seek = (by: number): void => {
@@ -96,8 +88,8 @@ export function createPlayer(m: Media, o: PlayerOpts): Player {
       else report();
     },
     dispose() {
+      prefs();
       gone = true; // a closed tab leaves no position behind
-      clearTimeout(timer);
       el.pause();
       el.removeAttribute('src'); // lets go of the file
       el.load();

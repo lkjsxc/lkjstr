@@ -10,11 +10,15 @@ import bundle from 'playwright-core/lib/utilsBundle';
 import { fakeBunker } from '../../scripts/browser-bunker.mjs';
 import { fakeMediaSet } from '../../scripts/browser-media.mjs';
 import { fakeRelay } from '../../scripts/browser-relay.mjs';
+import { auditFixtures } from './audit-fixtures.mjs';
+import { auditOwner } from './audit-owner.mjs';
 import { channelScenarios } from './smoke-channels.mjs';
-import { finishAccounts } from './smoke-real-finish.mjs';
+import { realReaderChecks } from './smoke-reader.mjs';
+import { finishAccounts, reviewSettings, seedRailArchive } from './smoke-real-finish.mjs';
 import { openKeyField, seedLayouts } from './smoke-seed.mjs';
 import { writeReport } from './smoke-signer-support.mjs';
 import { signerScenarios } from './smoke-signers.mjs';
+import { railSmoke } from './smoke-time-rail.ts';
 import { uploadScenarios } from './smoke-uploads.mjs';
 import { accounts, installExtension, npub, visitorChecks } from './smoke-visitors.mjs';
 
@@ -32,9 +36,14 @@ signer.stderr.resume();
 const lines = createInterface({ input: signer.stdout })[Symbol.asyncIterator]();
 const fixture = JSON.parse((await lines.next()).value);
 const fake = fakeRelay();
+// The archive/audit can fill one 1000-event store; reader arrivals get their own bounded fixture.
+const readerFake = fakeRelay();
 const bunker = await fakeBunker();
 const media = await fakeMediaSet();
-for (const event of [fixture.note, ...fixture.events]) fake.add(event);
+for (const event of [fixture.note, ...fixture.events]) {
+  fake.add(event);
+  readerFake.add(event);
+}
 let signing = Promise.resolve();
 const relay = createServer();
 const ws = new bundle.wsServer({ server: relay });
@@ -44,7 +53,7 @@ ws.on('connection', (socket, req) => {
     return bunker.route(socket, req.url === '/bunker-secret');
   activePaths.set(socket, req.url);
   socket.on('close', () => activePaths.delete(socket));
-  fake.route({
+  (req.url === '/reader' ? readerFake : fake).route({
     send: (text) => socket.send(text),
     onMessage: (fn) => socket.on('message', fn),
     onClose: (fn) => socket.on('close', fn),
@@ -61,6 +70,7 @@ const server = spawn(
   [
     'web/scripts/serve.ts',
     '--port=0',
+    '--test-previews',
     `--test-relay=${relayUrl}`,
     `--test-media=${Object.values(media.origins).join(',')}`,
   ],
@@ -103,7 +113,7 @@ try {
   // LKJSTR_SHOTS=1 also writes the review captures of this run to tmp/screens/.
   const shots = process.env.LKJSTR_SHOTS === '1';
   const shot = (p, name) => p.screenshot({ path: `tmp/screens/${name}` });
-  await signerScenarios({
+  const scenario = {
     browser,
     base,
     relayUrl,
@@ -113,20 +123,11 @@ try {
     check,
     fake,
     bunker,
-  });
-  await uploadScenarios({
-    browser,
-    base,
-    relayUrl,
-    pubkey: fixture.note.pubkey,
-    sign: fixtureSign,
-    errors,
-    check,
-    fake,
-    bunker,
-    media,
-  });
+  };
+  await signerScenarios(scenario);
+  await uploadScenarios({ ...scenario, media });
   const publicationsBeforeApp = fake.published.length;
+  await seedRailArchive({ fake, sign: fixtureSign, pubkey: fixture.note.pubkey });
   page = await ctx.newPage();
   const launch = async (word, kind) => {
     await page.locator('.pane.cur .strip').getByTitle('New tab', { exact: true }).click();
@@ -150,6 +151,7 @@ try {
   await page.locator(`${accounts} [data-f="extension"]`).click();
   await page.locator('.view[data-kind="home"] .note').first().waitFor();
   check('home renders signed-in notes');
+  await railSmoke(page, check, shots);
   check(
     'signing in brings the ordinary layout',
     (await page.locator('.pane').count()) === 4 &&
@@ -177,6 +179,12 @@ try {
   await page.locator(`${accounts} .arow`).nth(1).waitFor();
   await page.locator('.acct .ro').waitFor();
   await page.locator('.view[data-kind="compose"] .cwho .badge').first().waitFor();
+  // Account badges update before the replacement list windows arrive.
+  await page.waitForFunction(
+    () =>
+      document.querySelectorAll('.note .act.off').length > 0 &&
+      document.querySelectorAll('.note .act.a-reply:not(.off)').length === 0,
+  );
   check(
     'a read-only account says so at the composer and on every action',
     (await page.locator('.view[data-kind="compose"] .btn.primary:visible').first().isDisabled()) &&
@@ -236,45 +244,41 @@ try {
     'reaction reaches relay',
     fake.published.some((e) => e.kind === 7),
   );
-  await channelScenarios({ page, launch, check, fake });
-  if (shots) {
-    // Signed in, the ordinary layout as it starts, in Japanese (the language is put back afterwards).
-    // Use the reader's reset: deleting storage bypasses the live WM store, whose
-    // pending save can restore the old layout on pagehide with Home behind Post.
-    await page.locator('.pane.cur .strip').getByTitle('Tile menu', { exact: true }).click();
-    await page.locator('.menu button').getByText('Reset layout', { exact: true }).click();
-    await page.locator('.view[data-kind="home"] .note').first().waitFor();
-    check('Reset layout brings Home forward with real notes after Channels and Stats');
-    await page.evaluate(() => localStorage.setItem('lkjstr:settings', '{"language":"ja"}'));
-    await page.reload();
-    await page.locator('.view[data-kind="home"] .note').first().waitFor();
-    await page.waitForTimeout(1200);
-    check('reset Home survives reload in Japanese', (await page.locator('.pane').count()) === 3);
-    await shot(page, 'slice-signedin-1440-ja.png');
-    await page.evaluate(() => localStorage.removeItem('lkjstr:settings'));
-    await page.reload();
-    await page.locator('.view[data-kind="home"] .note').first().waitFor();
-  }
-  if (shots) check('reset Home survives another reload in English');
-  await launch('Settings', 'settings');
-  await page.getByLabel('Theme', { exact: true }).selectOption('dark');
-  await page.reload();
-  await page.waitForFunction(() => document.documentElement.dataset.theme === 'dark');
-  check('settings persist after reload');
-  const other = await ctx.newPage();
-  await other.goto(base);
-  await other.locator('.tab[data-view="global"]').click();
-  await other.locator('.view[data-kind="global"] .note').first().waitFor();
-  check('second app tab receives notes');
-  const sharedRoutes = () => fake.connections() === new Set(activePaths.values()).size;
-  for (let n = 0; n < 200 && !sharedRoutes(); n++) await page.waitForTimeout(25);
-  check('two app tabs share one socket per relay', sharedRoutes() && activePaths.size > 0);
-  check(
-    'learned owner relays survive reload and another tab bootstrap',
-    [...activePaths.values()].includes('/owner') &&
-      [...activePaths.values()].every((path) => path === '/owner' || path === '/'),
-  );
+  await channelScenarios({ page, launch, check, fake, shots, shot });
+  await auditFixtures({ fake, sign: fixtureSign, owner: fixture.note.pubkey, note: fixture.note });
+  await auditOwner({
+    browser,
+    base,
+    real: true,
+    pubkey: fixture.note.pubkey,
+    check,
+    prepare: async (context) => {
+      await context.exposeFunction('fixtureSign', fixtureSign);
+      await installExtension(context, relayUrl, fixture.note.pubkey, errors);
+    },
+  });
+  const other = await reviewSettings({
+    page,
+    ctx,
+    base,
+    fake,
+    activePaths,
+    check,
+    launch,
+    shots,
+    shot,
+  });
   await finishAccounts({ page, other, relayUrl, check, launch });
+  await realReaderChecks({
+    browser,
+    base,
+    relayUrl: `${relayUrl}/reader`,
+    fake: readerFake,
+    fixture,
+    fixtureSign,
+    check,
+    onReader: (reader) => (page = reader),
+  });
   check('no page errors', errors.length === 0);
 } catch (error) {
   checks.failure = String(error);

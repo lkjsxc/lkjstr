@@ -165,6 +165,7 @@ fn profile_absence_requires_successful_untruncated_results_on_all_routes() {
                 },
                 Query::default(),
             )],
+            &lkjstr_core::store::Store::new(0),
             0,
         );
         n.connected(relay, 0);
@@ -213,6 +214,7 @@ fn successful_primary_and_failed_fallback_cannot_prove_profile_absence() {
             },
             Query::default(),
         )],
+        &lkjstr_core::store::Store::new(0),
         0,
     );
     n.connected(routes[0], 0);
