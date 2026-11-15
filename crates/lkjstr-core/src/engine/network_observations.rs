@@ -67,7 +67,16 @@ impl Network {
         } else {
             "hint"
         };
-        json!({"readRule":rule,"followedCovered":covered,
+        let route = match known {
+            Some(r) if r.read && r.write => "both",
+            Some(r) if r.read => "reading",
+            Some(r) if r.write => "writing",
+            Some(r) if r.search => "search",
+            Some(_) => "own",
+            None if active => "reading",
+            None => "unused",
+        };
+        json!({"route":route,"readRule":rule,"followedCovered":covered,
             "weight":self.relays.get(url).map(|r| r.quality_weight(self.now))})
     }
     pub fn open_wires(&self) -> BTreeMap<&str, usize> {

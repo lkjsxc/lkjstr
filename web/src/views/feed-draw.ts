@@ -22,11 +22,16 @@ export type RowList = {
   dispose(): void;
 };
 
-export function createRowList(list: HTMLElement, env: ViewEnv, dated: boolean): RowList {
+export function createRowList(
+  list: HTMLElement,
+  env: ViewEnv,
+  dates: boolean | (() => boolean),
+): RowList {
+  let dated = typeof dates === 'function' ? dates() : dates;
   const nodes = new Map<string, { el: HTMLElement; sig: string; body?: string }>(); // bound: rows of the window plus day dividers
   let shown: readonly Row[] = [];
   const render = (row: Row): HTMLElement | null => {
-    if (row.kind === 'note') return renderNote(row, env);
+    if (row.kind === 'note') return renderNote(row, env, dated);
     if (row.kind === 'profile') return renderProfile(row, env);
     if (row.kind === 'person') return renderPerson(row, env);
     if (row.kind === 'notification') return renderNotification(row, env);
@@ -34,6 +39,7 @@ export function createRowList(list: HTMLElement, env: ViewEnv, dated: boolean): 
   };
   return {
     draw(rows) {
+      dated = typeof dates === 'function' ? dates() : dates;
       shown = rows.map((r) => (r.kind === 'note' ? withHeld(r) : r));
       const want: HTMLElement[] = [];
       const seen = new Set<string>();
@@ -61,7 +67,7 @@ export function createRowList(list: HTMLElement, env: ViewEnv, dated: boolean): 
           day = dayOf(at);
           put(`day:${day}`, day, () => h('div', { class: 'day' }, day));
         }
-        const sig = JSON.stringify(row);
+        const sig = `${dated}:${JSON.stringify(row)}`;
         const had = nodes.get(row.key);
         if (
           row.kind === 'notification' &&
@@ -78,7 +84,7 @@ export function createRowList(list: HTMLElement, env: ViewEnv, dated: boolean): 
           had.sig !== sig &&
           had.body === bodySig(row)
         ) {
-          patchNote(had.el, row, env);
+          patchNote(had.el, row, env, dated);
           had.sig = sig;
         }
         put(row.key, sig, () => render(row));

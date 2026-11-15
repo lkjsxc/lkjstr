@@ -193,27 +193,7 @@ impl Network {
         let rs: Vec<_> = self
             .requests
             .values()
-            .filter(|r| {
-                let mut requested = filter.clone();
-                if matches!(
-                    requested.kinds.as_deref(),
-                    Some([1, 6, 7, 9735] | [42, 16, 7, 9735])
-                ) && let (Some(ids), Some(batch)) =
-                    (requested.tags.get("e"), r.filter.tags.get("e"))
-                    && ids.iter().all(|id| batch.contains(id))
-                {
-                    requested.tags.insert("e".into(), batch.clone());
-                    if r.filter.kinds.as_ref().is_some_and(|ks| {
-                        requested
-                            .kinds
-                            .as_ref()
-                            .is_some_and(|want| want.iter().all(|k| ks.contains(k)))
-                    }) {
-                        requested.kinds = r.filter.kinds.clone();
-                    }
-                }
-                r.filter == requested
-            })
+            .filter(|r| count_filter_matches(filter, &r.filter))
             .collect();
         !self.verifying
             && !rs.is_empty()
@@ -224,4 +204,38 @@ impl Network {
                     && r.received.iter().all(|id| store.get(id).is_some())
             })
     }
+}
+
+impl Network {
+    /// A completed full page is evidence of a lower bound, unlike an unanswered request.
+    pub fn count_limited(&self, filter: &lkjstr_protocol::NostrFilter) -> bool {
+        self.requests.values().any(|r| {
+            count_filter_matches(filter, &r.filter)
+                && (r.page_eose || r.eose)
+                && r.received.len() >= r.page_limit
+        })
+    }
+}
+fn count_filter_matches(
+    filter: &lkjstr_protocol::NostrFilter,
+    actual: &lkjstr_protocol::NostrFilter,
+) -> bool {
+    let mut requested = filter.clone();
+    if matches!(
+        requested.kinds.as_deref(),
+        Some([1, 6, 7, 9735] | [42, 16, 7, 9735])
+    ) && let (Some(ids), Some(batch)) = (requested.tags.get("e"), actual.tags.get("e"))
+        && ids.iter().all(|id| batch.contains(id))
+    {
+        requested.tags.insert("e".into(), batch.clone());
+        if actual.kinds.as_ref().is_some_and(|ks| {
+            requested
+                .kinds
+                .as_ref()
+                .is_some_and(|want| want.iter().all(|k| ks.contains(k)))
+        }) {
+            requested.kinds = actual.kinds.clone();
+        }
+    }
+    *actual == requested
 }

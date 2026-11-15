@@ -1,22 +1,15 @@
 import type { EngineStats } from '../engine/protocol.ts';
-import { hostOf } from '../shared/address.ts';
 import { clockOf, dayOf } from '../shared/format.ts';
 import { h } from '../shared/h.ts';
 import { getLang, type Key, t } from '../shared/i18n.ts';
 import { loadViewState, saveViewState } from '../shared/view-state.ts';
 import type { ViewEnv } from './registry.ts';
-import {
-  ROUTING,
-  type RoutingKey,
-  requestTable,
-  routingCells,
-  routingValue,
-} from './stats-routing.ts';
+import { COLUMNS, PUBLISH, PUBLISH_KEYS, type SortKey } from './stats-columns.ts';
+import { compoundTitle, createStatsDetails, relayName } from './stats-details.ts';
+import { requestTable, routingCells, routingValue } from './stats-routing.ts';
 
 type Relay = EngineStats['relays'][number];
 export type Mark = 'failing' | 'silent' | 'slow';
-type PublishKey = 'publishAccepted' | 'publishPending' | 'publishOwnSkipped';
-type SortKey = 'health' | 'events' | 'dup' | 'latency' | 'subs' | 'data' | PublishKey | RoutingKey;
 type Sort = { by: SortKey; up: boolean };
 const EVERY_MS = 2000;
 const SLOW_MS = 1000;
@@ -68,24 +61,9 @@ const tally = (el: HTMLElement, n: number): void => {
   put(el, num(n));
   el.classList.toggle('nil', n === 0);
 };
-const PUBLISH = {
-  publishAccepted: ['publishAccepted', 'publishPlanned'],
-  publishPending: ['publishPending', 'publishFailed'],
-  publishOwnSkipped: ['publishOwnSkipped', 'publishInboxSkipped', 'publishCapacitySkipped'],
-} as const;
-const PUBLISH_KEYS = Object.keys(PUBLISH) as PublishKey[];
-const COLUMNS: readonly (readonly [SortKey, Key])[] = [
-  ['health', 'stats.relay'],
-  ...ROUTING.map((key) => [key, `stats.${key}`] as const),
-  ['events', 'stats.events'],
-  ['dup', 'stats.dup'],
-  ['latency', 'stats.latency'],
-  ['subs', 'stats.subs'],
-  ['data', 'stats.data'],
-  ...PUBLISH_KEYS.map((key) => [key, `stats.${key}`] as const),
-];
 
 export function mountStats(el: HTMLElement, env: ViewEnv): () => void {
+  const disclosure = createStatsDetails(env.instance, 'relayOpen');
   const saved = loadViewState<Sort>(env.instance);
   const sort: Sort = {
     by: COLUMNS.some(([k]) => k === saved.by) ? (saved.by as SortKey) : 'health',
@@ -117,15 +95,15 @@ export function mountStats(el: HTMLElement, env: ViewEnv): () => void {
   const heads = COLUMNS.map(([key, label]) => {
     const th = h(
       'th',
-      { class: `c-${key}`, scope: 'col', style: key === 'health' ? 'min-width:160px' : undefined },
+      { class: `c-${key}`, scope: 'col', title: compoundTitle(key) },
       h(
         'button',
         {
-          title: key === 'publishOwnSkipped' ? t('stats.publishLimits') : undefined,
+          title: compoundTitle(key),
           onclick: () => {
             sort.up = sort.by === key ? !sort.up : false;
             sort.by = key;
-            saveViewState(env.instance, sort);
+            saveViewState(env.instance, { ...loadViewState(env.instance), ...sort });
             if (last) draw(last);
           },
         },
@@ -135,19 +113,19 @@ export function mountStats(el: HTMLElement, env: ViewEnv): () => void {
     return { key, th };
   });
   const since = h('th', { class: 'c-since', scope: 'col' }, t('stats.since'));
-  const requests = requestTable();
+  const requests = requestTable(env.instance);
   const body = h('tbody');
   const table = h(
     'table',
-    { class: 'stab', hidden: true },
+    { class: 'stab relay-stats', hidden: true },
     h('thead', null, h('tr', null, ...heads.map((x) => x.th), since)),
     body,
   );
-  type Line = { tr: HTMLElement; set(r: Relay, most: number): void };
+  type Line = { tr: HTMLElement; detail: HTMLElement; set(r: Relay, most: number): void };
   const lines = new Map<string, Line>(); // bound: the relays the engine reports
   const line = (url: string): Line => {
     const cell = (key: string, ...kids: HTMLElement[]): HTMLElement =>
-      h('td', { class: `c-${key}` }, ...kids);
+      h('td', { class: `c-${key}`, title: compoundTitle(key) }, ...kids);
     const mark = h('span', { class: 'smark' });
     const error = h('div', { class: 'rsub muted' });
     const bar = h('span');
@@ -164,7 +142,7 @@ export function mountStats(el: HTMLElement, env: ViewEnv): () => void {
           'div',
           { class: 'shost' },
           h('span', { class: 'rdot', 'aria-hidden': 'true' }),
-          h('span', { class: 'rhost clip', title: url }, hostOf(url)),
+          relayName(url),
           mark,
         ),
         error,
@@ -182,25 +160,39 @@ export function mountStats(el: HTMLElement, env: ViewEnv): () => void {
       ...publishing.map(({ key, value }) => cell(key, value)),
       cell('since', at as HTMLElement),
     );
+    const details = disclosure.add(url, tr, [
+      ...COLUMNS.filter(([key]) => !['health', 'events', 'latency'].includes(key)),
+      ['since', 'stats.since'],
+    ]);
     const set = (r: Relay, most: number): void => {
+      const never = r.connectedSince === null && !r.eventsReceived && !r.bytesIn && !r.bytesOut;
       routing.update(r);
       const m = relayMark(r);
-      const cls = `s-${r.state}${m ? ` m-${m}` : ''}`;
+      const cls = `stats-toggle s-${r.state}${m ? ` m-${m}` : ''}`;
       if (tr.className !== cls) tr.className = cls;
       put(mark, m ? t(`stats.${m}`) : '');
       put(error, r.lastError === 'capacity' ? t('stats.capacity') : (r.lastError ?? ''));
       tally(events as HTMLElement, r.eventsReceived);
+      if (never) put(events as HTMLElement, NONE);
+      bar.parentElement!.hidden = !r.eventsReceived;
       bar.style.width = `${most ? Math.round((r.eventsReceived / most) * 100) : 0}%`;
       tally(dup as HTMLElement, r.duplicatesDropped);
-      put(latency as HTMLElement, r.latencyMs === null ? NONE : `${num(r.latencyMs)} ms`);
+      if (never) put(dup as HTMLElement, NONE);
+      put(latency as HTMLElement, never || r.latencyMs === null ? NONE : `${num(r.latencyMs)} ms`);
       tally(subs as HTMLElement, r.openSubscriptions);
-      put(data as HTMLElement, `↓ ${bytesText(r.bytesIn)}  ↑ ${bytesText(r.bytesOut)}`);
+      if (never) put(subs as HTMLElement, NONE);
+      put(
+        data as HTMLElement,
+        never || (!r.bytesIn && !r.bytesOut)
+          ? NONE
+          : `↓ ${bytesText(r.bytesIn)}  ↑ ${bytesText(r.bytesOut)}`,
+      );
       (data as HTMLElement).classList.toggle('nil', r.bytesIn + r.bytesOut === 0);
       for (const { key, value } of publishing) {
         const counts = PUBLISH[key].map((field) => r[field]);
         put(
           value,
-          counts.every((n) => n === undefined)
+          never || counts.every((n) => !n)
             ? NONE
             : counts.map((n) => (n === undefined ? NONE : num(n))).join(' / '),
         );
@@ -212,8 +204,9 @@ export function mountStats(el: HTMLElement, env: ViewEnv): () => void {
       const c = r.connectedSince;
       const day = c !== null && dayOf(c) !== dayOf(Date.now()) ? `${dayOf(c)} ` : '';
       put(at as HTMLElement, c === null ? NONE : `${day}${clockOf(c)}`);
+      details.update();
     };
-    return { tr, set };
+    return { tr, detail: details.detail, set };
   };
 
   function draw(s: EngineStats): void {
@@ -247,13 +240,15 @@ export function mountStats(el: HTMLElement, env: ViewEnv): () => void {
     for (const { key, th } of heads)
       th.setAttribute('aria-sort', key !== sort.by ? 'none' : sort.up ? 'ascending' : 'descending');
     const most = Math.max(0, ...s.relays.map((r) => r.eventsReceived));
-    const want = sortRelays(s.relays, sort).map((r) => {
+    const want = sortRelays(s.relays, sort).flatMap((r) => {
       const l = lines.get(r.url) ?? line(r.url);
       lines.set(r.url, l);
       l.set(r, most);
-      return l.tr;
+      return [l.tr, l.detail];
     });
-    for (const [url, l] of lines) if (!want.includes(l.tr)) l.tr.remove(), lines.delete(url);
+    for (const [url, l] of lines)
+      if (!want.includes(l.tr))
+        l.tr.remove(), l.detail.remove(), lines.delete(url), disclosure.remove(url);
     want.forEach((tr, i) => {
       if (body.children[i] !== tr) body.insertBefore(tr, body.children[i] ?? null);
     });
@@ -283,7 +278,7 @@ export function mountStats(el: HTMLElement, env: ViewEnv): () => void {
   el.replaceChildren(
     h('div', { class: 'sfigs' }, ...Object.values(figs).map((f) => f.node)),
     state,
-    h('div', { style: 'overflow-x:auto' }, table),
+    h('div', { class: 'stats-table' }, table),
     requests.node,
   );
   env.menu(() => [{ label: t('view.relays'), run: () => env.open('relays') }]);

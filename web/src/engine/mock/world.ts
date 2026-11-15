@@ -211,8 +211,21 @@ export function createWorld(now: number) {
     );
     add(make({ by: 'taro', ago: 0, text: `Archive fixture ${i}` }, idOf(9500 + i), at));
   }
+  // Old-day header regression: the name must fit beside an HH:mm time on a phone.
+  const historical = make(
+    { by: 'taro', ago: 0, text: 'Historical name fixture' },
+    idOf(9600),
+    Date.UTC(new Date(base).getUTCFullYear() - 8, 0, 15),
+  );
+  add({
+    ...historical,
+    by: {
+      ...historical.by,
+      author: { ...historical.by.author, name: 'AlexandriaRose', nip05: undefined },
+    },
+  });
   notes.sort((a, b) => b.at - a.at);
-  for (const [i, n] of notes.entries()) n.partial = i < 40 && i % 4 === 1;
+  // Fixture counts have no observed relay truncation.
 
   const state = {
     notificationSeen: base - 60 * MIN,

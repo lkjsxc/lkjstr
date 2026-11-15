@@ -49,3 +49,32 @@ fn near_wants_are_released_when_hidden_or_closed() {
         .unwrap_or_else(|_| unreachable!());
     assert!(session.preview_near.is_empty());
 }
+#[test]
+fn failed_and_untitled_previews_close_the_slot_until_the_failure_cache_expires() {
+    let mut previews = Previews::default();
+    previews.available = true;
+    let url = "https://example.com/story";
+    let row = json!({"segments":[{"k":"link","url":url},{"k":"link","url":url}]});
+    for answer in [
+        None,
+        Some(json!({"url":url,"kind":"page","title":"  "})),
+        Some(json!({"url":url,"kind":"link","title":"/story"})),
+    ] {
+        previews.tick(0);
+        assert!(previews.begin(url));
+        assert_eq!(previews.cards(&row).len(), 1);
+        previews.finish(url, answer);
+        assert!(previews.cards(&row).is_empty());
+        previews.tick(3_599_999);
+        assert!(!previews.unasked(url));
+        assert!(previews.cards(&row).is_empty());
+        previews.tick(3_600_000);
+        assert!(previews.unasked(url));
+    }
+    assert!(previews.begin(url));
+    previews.finish(
+        url,
+        Some(json!({"url":url,"kind":"page","title":"A title"})),
+    );
+    assert_eq!(previews.cards(&row).len(), 1);
+}

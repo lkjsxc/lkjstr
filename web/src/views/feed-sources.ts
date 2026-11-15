@@ -9,5 +9,10 @@ export const FILTERED = new Set([
   'search',
   'profile',
 ]);
-export const DATED = new Set([...FILTERED, 'channel']);
+export const DATED = new Set(
+  [...FILTERED].filter((kind) => !['search', 'bookmarks'].includes(kind)).concat('channel'),
+);
 export const OWN = new Set(['home', 'notifications', 'bookmarks']);
+
+export const hasDaySeparators = (kind: string, show?: string): boolean =>
+  DATED.has(kind) && !['reposts', 'reactions'].includes(show ?? '');

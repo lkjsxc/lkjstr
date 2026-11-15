@@ -251,12 +251,10 @@ export function createActions(core: Core) {
   };
 
   let beat = 0;
-  /** One beat of the mock world's own life: a note arrives, a count grows, a partial count settles. */
+  /** One beat of the mock world's own life: a note arrives and a count grows. */
   function tick(): void {
     beat++;
     const recent = world.notes.slice(0, 30);
-    const partial = recent.find((n) => n.partial);
-    if (partial) (partial.partial = false), core.changed(partial.id);
     const liked = recent[(beat * 7) % recent.length];
     if (liked && beat % 2 === 0) {
       const r = liked.reactions.get('❤️') ?? { count: 0, mine: false };
@@ -267,7 +265,7 @@ export function createActions(core: Core) {
     if (beat % 3 !== 0) return;
     const [by, text] = FILLER[(beat * 5) % FILLER.length] ?? ['aoi', ''];
     const own = world.notes.find((n) => n.by.author.pubkey === core.me() && !n.channel);
-    core.arrived(world.arrive(byHandle(by), text, core.now(), { partial: true, re: own?.id }));
+    core.arrived(world.arrive(byHandle(by), text, core.now(), { partial: false, re: own?.id }));
     core.resync((q) => q.source === 'notifications', true);
   }
 

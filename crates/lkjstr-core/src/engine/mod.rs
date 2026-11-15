@@ -154,6 +154,7 @@ impl Engine {
     }
     /// Called away from socket callbacks. At most 32 verifications per slice.
     pub fn tick(&mut self, now: u64) {
+        self.previews.tick(now);
         let revision = self.store.revision();
         let was_verifying = self.network.verifying;
         for _ in 0..32 {

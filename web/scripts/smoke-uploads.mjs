@@ -12,6 +12,7 @@ export async function uploadScenarios(options) {
         mode: 'upload',
         mediaOrigins: Object.values(media.origins),
       });
+      let phase = 'account setup';
       try {
         await page.locator('.acct.out').click();
         if (signer === 'local') await page.locator(`${accounts} [data-f="create"]`).click();
@@ -90,6 +91,7 @@ export async function uploadScenarios(options) {
             ...(options.quick ? [] : ['hang', 'body-hang']),
             ...(protocol === 'nip96' ? ['processing'] : []),
           ]) {
+            phase = `${protocol} ${mode}`;
             media.set(protocol, mode);
             const start = media.requests.length;
             await page.locator(`${compose} input[type=file]`).setInputFiles(file);
@@ -128,6 +130,7 @@ export async function uploadScenarios(options) {
                 .selectOption(mode === 'refuse' ? alternate : origin);
               media.set(protocol, 'ok');
               media.set(protocol === 'blossom' ? 'nip96' : 'blossom', 'ok');
+              phase += ' retry';
               await thumb.getByRole('button', { name: 'Retry', exact: true }).click();
               await thumb.locator('img').waitFor();
               check(`upload ${signer} ${protocol} ${mode} retry completes`);
@@ -228,7 +231,21 @@ export async function uploadScenarios(options) {
           check('upload Japanese retry retains the file');
         }
       } catch (error) {
-        console.error(`upload scenario ${signer}: ${String(error)}`);
+        console.error(`upload scenario ${signer} ${phase}: ${String(error)}`);
+        console.error(
+          `upload state: ${await page
+            .locator(`${compose} .thumb`)
+            .last()
+            .getAttribute('class')
+            .catch(() => 'absent')}`,
+        );
+        console.error(
+          `upload status: ${await page
+            .locator(`${compose} .thumb [role=status]`)
+            .last()
+            .textContent()
+            .catch(() => 'absent')}`,
+        );
         throw error;
       } finally {
         bunker.up();

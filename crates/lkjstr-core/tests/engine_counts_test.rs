@@ -41,7 +41,7 @@ fn rows(e: &mut Engine, query: Value) -> Vec<Value> {
         .collect()
 }
 #[test]
-fn unqueried_counts_are_unknown_and_observations_are_lower_bounds() {
+fn unqueried_and_arriving_counts_do_not_claim_a_relay_limit() {
     let mut e = Engine::new();
     let note = signed(1, vec![]);
     e.store.insert(note.clone(), None);
@@ -49,7 +49,7 @@ fn unqueried_counts_are_unknown_and_observations_are_lower_bounds() {
     for field in ["replies", "reposts", "reactions", "zaps"] {
         assert_eq!(first[0]["counts"][field], 0);
         assert!(first[0]["counts"].get("estimates").is_none());
-        assert_eq!(first[0]["counts"]["partial"], true);
+        assert_eq!(first[0]["counts"]["partial"], false);
     }
     for kind in [1, 6, 7] {
         e.store.insert(
@@ -63,7 +63,7 @@ fn unqueried_counts_are_unknown_and_observations_are_lower_bounds() {
     let result = rows(&mut e, json!({"source":"global","authors":[note.pubkey]}));
     for field in ["replies", "reposts", "reactions"] {
         assert_eq!(result[0]["counts"][field], 1);
-        assert_eq!(result[0]["counts"]["partial"], true);
+        assert_eq!(result[0]["counts"]["partial"], false);
     }
 }
 #[test]
@@ -119,6 +119,7 @@ fn exact_counts_require_all_routes_untruncated_verified_and_successful() {
             .collect();
         let id = frames.iter().find(|f| f[0] == "REQ").expect("request")[1].clone();
         assert!(!n.count_complete(&filter, &store));
+        assert!(!n.count_limited(&filter));
         if outcome == "truncated" {
             let event = signed(7, vec![vec!["e".into(), "a".repeat(64)]]);
             n.message(relay, &json!(["EVENT", id, event]).to_string(), 1);
@@ -142,16 +143,23 @@ fn exact_counts_require_all_routes_untruncated_verified_and_successful() {
             outcome == "empty",
             "{outcome}"
         );
+        assert_eq!(
+            n.count_limited(&filter),
+            outcome == "truncated",
+            "{outcome}"
+        );
         n.verifying = true;
         assert!(!n.count_complete(&filter, &store));
     }
 }
 #[test]
-fn finished_count_requests_patch_the_visible_note_without_new_events() {
+fn full_count_requests_patch_the_visible_note_with_a_lower_bound() {
     use lkjstr_core::engine::network::Effect;
     let mut e = Engine::new();
     let relay = "wss://counts.test/";
     e.network.configure(vec![relay.into()], 0);
+    e.network
+        .relay_information(relay, r#"{"limitation":{"max_limit":1}}"#);
     let note = signed(1, vec![]);
     e.store.insert(note.clone(), Some(relay));
     let mut s = Session::default();
@@ -168,10 +176,10 @@ fn finished_count_requests_patch_the_visible_note_without_new_events() {
         .flat_map(|o| s.output(o, &e))
         .collect();
     assert!(initial.iter().any(
-        |o| matches!(o,Output::Rows{rows,..} if rows.iter().any(|r|r["counts"]["partial"]==true))
+        |o| matches!(o,Output::Rows{rows,..} if rows.iter().any(|r|r["counts"]["partial"]==false))
     ));
     e.network.connected(relay, 1);
-    let mut exact = false;
+    let mut limited = false;
     for now in (100..2000).step_by(100) {
         let frames: Vec<Value> = e
             .network
@@ -183,19 +191,32 @@ fn finished_count_requests_patch_the_visible_note_without_new_events() {
             })
             .collect();
         for frame in frames.iter().filter(|f| f[0] == "REQ") {
+            if frame.as_array().expect("frame").iter().skip(2).any(|f| {
+                f["#e"]
+                    .as_array()
+                    .is_some_and(|ids| ids.contains(&json!(note.id)))
+            }) {
+                let reaction = signed(7, vec![vec!["e".into(), note.id.clone()]]);
+                e.network.message(
+                    relay,
+                    &json!(["EVENT", frame[1], reaction]).to_string(),
+                    now,
+                );
+                e.store.insert(reaction, None);
+            }
             e.network
                 .message(relay, &json!(["EOSE", frame[1]]).to_string(), now);
         }
         e.tick(now);
         for output in e.drain().into_iter().flat_map(|o| s.output(o, &e)) {
             if let Output::Patch { ops, .. } = output {
-                exact |= ops.iter().any(|o| {
+                limited |= ops.iter().any(|o| {
                     o["op"] == "update"
                         && o["row"]["id"] == note.id
-                        && o["row"]["counts"]["partial"] == false
+                        && o["row"]["counts"]["partial"] == true
                 });
             }
         }
     }
-    assert!(exact, "a count-only completion must update the row");
+    assert!(limited, "a count-only completion must update the row");
 }

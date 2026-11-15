@@ -100,8 +100,8 @@
 .th-reply { padding-left: calc(12px + min(var(--depth, 1), 4) * 14px); }
 .day { padding: 3px 12px; border-bottom: 1px solid var(--line); background: var(--paper); color: var(--faint); font-size: 12px; font-variant-numeric: tabular-nums; text-align: center; }
 
-/* Link cards share the quoted-note surface; no loading or failure changes their height. */
-.link-card { font-size: 13.5px; line-height: 1.4; display: flex; box-sizing: border-box; height: 88px; min-height: 88px; margin-top: 8px; overflow: hidden; border: 1px solid var(--line); border-radius: 8px; background: var(--raised); color: var(--fg); }
+/* Link cards share the quoted-note surface. Loading reserves 88px; failed slots close via the reading keeper. */
+.link-card { max-width: 560px; font-size: 13.5px; line-height: 1.4; display: flex; box-sizing: border-box; height: 88px; min-height: 88px; margin-top: 8px; overflow: hidden; border: 1px solid var(--line); border-radius: 8px; background: var(--raised); color: var(--fg); }
 .link-card:hover { text-decoration: none; border-color: var(--sep); }
 .link-card.loading { background: var(--hold); }
 .lcpicture { flex: 0 0 120px; width: 120px; height: 88px; object-fit: cover; }

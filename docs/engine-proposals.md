@@ -88,3 +88,9 @@ Additive frontend contract: ServerRow.checked distinguishes unknown from a fresh
 required-request verdict; error carries the same translated code as upload.
 servers.check retries required NIP-96 discovery or optional BUD-06. Optional
 failures stay unknown. Evidence is session-only and shared across subscribers.
+
+## Look corrections (2026-11-15)
+
+Frontend protocol 5 adds optional Stats relay `route` words (reading, writing, both, search, own, unused). The engine derives these from configured relay usage.
+Note `Counts.partial` now means an observed full relay page, not an unanswered request; the wire shape is unchanged. Preview failures and
+untitled answers project no cards until cache expiry.

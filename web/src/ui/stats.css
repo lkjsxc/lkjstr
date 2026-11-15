@@ -31,8 +31,35 @@
 .stab .rsub { margin-left: 16px; white-space: normal; }
 .stab td > .sbar { width: 56px; margin: 3px 0 0 auto; }
 .statsv.off > .sfigs { opacity: 0.5; }
-@container (max-width: 640px) { .stab :is(.c-data, .c-since) { display: none; } }
 @container (max-width: 440px) {
-  .stab :is(.c-dup, .c-subs) { display: none; }
   .sfigs { grid-template-columns: 1fr 1fr; }
+}
+/* Details replace secondary columns when the tile cannot hold the full table. */
+.stats-host { display: inline-flex; min-width: 0; max-width: 100%; vertical-align: bottom; }
+.stats-host-start { min-width: 1.4em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.stats-host-tail { flex: none; max-width: calc(100% - 1.4em); white-space: normal; overflow-wrap: anywhere; }
+.shost > .stats-host { flex: 1; }
+.stats-detail { display: none; }
+.stats-detail[hidden] { display: none; }
+.stats-detail dl { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: 5px 12px; margin: 0; text-align: left; white-space: normal; }
+.stats-detail dt { color: var(--faint); }
+.stats-detail dd { margin: 0; overflow-wrap: anywhere; }
+.request-stats :is(.c-relay, .c-priority) { text-align: left; }
+@container (max-width: 1280px) {
+  .relay-stats > thead > tr > :not(.c-health, .c-events, .c-latency), .relay-stats > tbody > .stats-toggle > :not(.c-health, .c-events, .c-latency),
+  .request-stats > thead > tr > :not(.c-priority, .c-relay), .request-stats > tbody > .stats-toggle > :not(.c-priority, .c-relay) { display: none; }
+  .stab { table-layout: fixed; }
+  .relay-stats .c-health { width: auto; }
+  .relay-stats :is(.c-events, .c-latency) { width: 68px; }
+  .request-stats .c-priority { width: 38%; }
+  .stats-detail:not([hidden]) { display: table-row; }
+  .stats-detail > td { padding: 9px 4px 12px 18px; }
+  .stats-toggle { cursor: pointer; }
+  .stats-toggle > td:first-child { position: relative; padding-right: 12px; }
+  .stats-toggle > td:first-child::after { content: ""; display: block; position: absolute; right: 2px; top: 13px; width: 5px; height: 5px; border-right: 1px solid var(--faint); border-bottom: 1px solid var(--faint); transform: rotate(-45deg); }
+  .stats-toggle[aria-expanded="true"] > td:first-child::after { transform: rotate(45deg); }
+  .stats-toggle[aria-expanded="true"] { background: var(--wash); }
+  .stats-toggle:focus-visible { outline: 1px solid var(--accent); outline-offset: -1px; }
+  .stab .rsub { overflow-wrap: anywhere; }
+  .smark { display: none; }
 }

@@ -70,7 +70,7 @@ Six native regressions cover routing, batching, context, refresh and release.
 The 240 ms congested-slot probe improves note-to-name from 1893.7 to 232.5 ms.
 
 Protocol 2 uses absent profile fields for unknown counts and the existing
-partial flag for lower bounds. Count requests are bounded and exact only after
+partial flag for observed relay-limit lower bounds on notes (pending requests have no suffix). Count requests are bounded and exact only after
 successful, untruncated, verified replies. No alternate estimate shape remains.
 Signed-out relays.save with an empty account is supported by the Worker and
 confirmed edits are saved by startup plumbing. The Settings action guard still
@@ -189,7 +189,8 @@ fresh outboxes stay isolated; hidden mention requests close. See [wishes.md](wis
 ## Reader state and optional previews (2026-11-15)
 
 Protocol 5 adds bounded per-note link previews and near-note hints, including
-nested notification notes. The Worker probes health once; one HTTP request
+nested notification notes. Failed or untitled previews leave no card and are cached for one hour (successful titles: one day); links are
+deduplicated. The Worker probes health once; one HTTP request
 runs after other work. The optional Rust lkjstr-preview binary fetches public
 page metadata; static hosting works without it. No hosting changes were made.
 Reader choices persist per tab; channel drafts save at once. Deferred filter

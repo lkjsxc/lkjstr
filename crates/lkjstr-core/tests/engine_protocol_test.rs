@@ -103,7 +103,7 @@ fn rows_are_finished_and_patches_are_batched() {
             ..
         }
     )));
-    assert!(item.counts.partial);
+    assert!(!item.counts.partial);
     assert!(!item.author.nip05_verified);
 }
 #[test]

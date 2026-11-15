@@ -202,7 +202,7 @@ export type Counts = {
   readonly reactions: number;
   /** Sum of zap receipts in sats. */
   readonly zaps: number;
-  /** The numbers are lower bounds: not every relay asked has answered. Drawn as "12+". */
+  /** A relay request reached its limit: the numbers are lower bounds, drawn as "12+". */
   readonly partial: boolean;
 };
 
@@ -726,6 +726,7 @@ export type EngineStats = {
     readonly state: string;
     readonly connectedSince: Millis | null;
     readonly readRule?: 'reader' | 'search' | 'hint' | 'unused';
+    readonly route?: 'reading' | 'writing' | 'both' | 'search' | 'own' | 'unused';
     readonly followedCovered?: number;
     readonly weight?: number | null;
     readonly eventsReceived: number;

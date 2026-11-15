@@ -6,8 +6,17 @@ pub struct Previews {
     pub available: bool,
     answers: BTreeMap<String, Option<Value>>,
     order: VecDeque<String>,
+    now: u64,
+    expires: BTreeMap<String, u64>,
 }
 impl Previews {
+    pub fn tick(&mut self, now: u64) {
+        self.now = now;
+        self.answers
+            .retain(|url, _| self.expires.get(url).is_none_or(|at| *at > now));
+        self.expires.retain(|_, at| *at > now);
+        self.order.retain(|url| self.answers.contains_key(url));
+    }
     pub fn begin(&mut self, url: &str) -> bool {
         if !self.available || self.answers.contains_key(url) {
             return false;
@@ -15,6 +24,7 @@ impl Previews {
         while self.order.len() >= 2048 {
             if let Some(key) = self.order.pop_front() {
                 self.answers.remove(&key);
+                self.expires.remove(&key);
             }
         }
         self.order.push_back(url.into());
@@ -23,6 +33,16 @@ impl Previews {
     }
     pub fn finish(&mut self, url: &str, answer: Option<Value>) {
         if let Some(v) = self.answers.get_mut(url) {
+            let answer = answer.filter(|a| {
+                a["kind"] != "link" && a["title"].as_str().is_some_and(|s| !s.trim().is_empty())
+            });
+            let ttl = if answer.is_some() {
+                86_400_000
+            } else {
+                3_600_000
+            };
+            self.expires
+                .insert(url.into(), self.now.saturating_add(ttl));
             *v = Some(answer.unwrap_or_else(|| json!({"url":url,"kind":"link"})));
         }
     }
@@ -32,15 +52,21 @@ impl Previews {
     pub fn cards(&self, row: &Value) -> Vec<Value> {
         links(row)
             .into_iter()
-            .map(|url| {
+            .filter_map(|url| {
                 let mut card = self
                     .answers
                     .get(&url)
                     .and_then(Option::as_ref)
                     .cloned()
                     .unwrap_or_else(|| json!({"url":url,"kind":"loading"}));
+                if card["kind"] != "loading"
+                    && (card["kind"] == "link"
+                        || !card["title"].as_str().is_some_and(|s| !s.trim().is_empty()))
+                {
+                    return None;
+                }
                 card["source"] = json!(url);
-                card
+                Some(card)
             })
             .collect()
     }

@@ -13,7 +13,7 @@ import { createFresh } from './feed-fresh.ts';
 import { mountFeedKeys } from './feed-keys.ts';
 import { createKeeper, type Place } from './feed-place.ts';
 import { mountScrub } from './feed-scrub.ts';
-import { CHILD, DATED, FILTERED, OWN } from './feed-sources.ts';
+import { CHILD, DATED, FILTERED, hasDaySeparators, OWN } from './feed-sources.ts';
 import { feedTitle } from './feed-title.ts';
 import { filterQuery } from './filter-bar.ts';
 import { onHeld } from './held.ts';
@@ -51,7 +51,7 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
   const pill = fresh.el;
   const barSlot = h('div', { class: 'fslot' });
   const tail = h('div', { class: 'ftail' });
-  const drawn = createRowList(list, env, DATED.has(kind));
+  const drawn = createRowList(list, env, () => hasDaySeparators(kind, state.show));
   let rows: Row[] = [];
   let sub: Subscription | undefined;
   const previews = createPreviewWants(el, () => sub);
