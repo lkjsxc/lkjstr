@@ -1,5 +1,6 @@
 // A picture that can be looked at closely: wheel and pinch zoom about the pointer, drag to pan (the hand closes
 // while it holds the picture), a click with the mouse or a double tap for fit or actual size, about that point. The picture never leaves the stage, and a stage that changes size keeps a fitted picture fitted.
+export type ZoomPosition = { s: number; x: number; y: number; fitted: boolean };
 export type Zoom = {
   /** Fits the picture, or shows it at its own size when it is fitted. */
   toggle(): void;
@@ -8,6 +9,7 @@ export type Zoom = {
 };
 export type ZoomEvents = {
   /** The scale changed (1 is the picture's own size). */
+  changed?(position: ZoomPosition): void;
   scale(scale: number, fitted: boolean): void;
   /** A sideways flick across a fitted picture: -1 back, 1 forward. */
   flick(dir: -1 | 1): void;
@@ -20,13 +22,14 @@ export function zoomable(
   img: HTMLImageElement,
   known: { w?: number; h?: number },
   on: ZoomEvents,
+  saved?: ZoomPosition,
 ): Zoom {
   let nw = known.w ?? 0;
   let nh = known.h ?? 0;
-  let s = 1;
-  let x = 0;
-  let y = 0;
-  let fitted = true;
+  let s = saved?.s ?? 1;
+  let x = saved?.x ?? 0;
+  let y = saved?.y ?? 0;
+  let fitted = saved?.fitted ?? true;
   const points = new Map<number, { x: number; y: number }>(); // bound: fingers on the stage
   let start: { x: number; y: number; moved: boolean } | undefined;
   let pinch = 0;
@@ -51,6 +54,7 @@ export function zoomable(
     img.style.visibility = 'visible';
     stage.classList.toggle('pan', !fitted && (w > b.width || hh > b.height));
     on.scale(s, fitted);
+    on.changed?.({ s, x, y, fitted });
   };
   /** Zooms to `next`, keeping the point of the picture under (`px`, `py`) where it is. */
   const zoomAt = (next: number, px: number, py: number): void => {

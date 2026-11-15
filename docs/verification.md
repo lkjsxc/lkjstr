@@ -16,9 +16,7 @@ Each root gate prints one ok line on success and a bounded tail on failure.
 | pnpm verify:quiet | repo checks plus the rust-wasm gate |
 | sh scripts/engine-check.sh | loopback Worker conformance and delayed profile probe |
 
-No Trunk installation or second interface is involved. The root Cargo.toml is
-a virtual workspace; crates/lkjstr-engine-worker builds the browser engine.
-Use CARGO_BUILD_JOBS=4 and RUST_TEST_THREADS=4 on shared hosts. Put caches in
+The virtual workspace builds crates/lkjstr-engine-worker. Use CARGO_BUILD_JOBS=4 and RUST_TEST_THREADS=4 on shared hosts. Put caches in
 ignored tmp/: CARGO_HOME, XDG_CACHE_HOME, XDG_CONFIG_HOME, XDG_DATA_HOME and
 TMPDIR. Set LKJSTR_WASM_BINDGEN to the matching wasm-bindgen-cli if needed.
 
@@ -31,7 +29,6 @@ compose/sign/publish, reactions, relay settings across reload and two tabs.
 All browser servers bind fresh loopback ports and use fresh local data.
 HTTP is intercepted, relays are loopback fixtures, and no checks publish to
 public relays. browser-relay.mjs remains a shared bounded fixture helper.
-The Leptos-only browser drivers and their CSS/string guards have been removed.
 
 The Worker harness validates replies against this worktree's protocol.ts and
 drives every mock message kind, action name and query source. It includes
@@ -60,52 +57,30 @@ docker compose --progress quiet -f docker-compose.yml build verify
 docker compose --progress quiet -f docker-compose.yml run --rm verify
 ```
 
-The Dockerfile builds the same real frontend and Worker with Node/pnpm and
-wasm-bindgen-cli. Docker is unavailable in this session and was not attempted.
-No services, deployments, production systems or CI workflows were changed.
+The Dockerfile builds the same real product. Docker is excluded by the
+worktree-only write rule; no services, deploys, production or CI changes occur.
 
-## Current record
+## Earlier integration and review
 
-Read-orchestration review fixes focused-tail hydration starvation and unused
-account-graph reconstruction. Four new native regressions cover delayed replies,
-unfinished focus, lazy policies, reuse, account isolation and refreshed follows.
-The original scheduler and an eager-weight mutation fail the new regressions.
-All four quiet gates and loopback Worker conformance/profile checks pass with
-four-job limits and worktree caches. Logs: tmp/review-*.log. Docker is excluded
-by the worktree-only write rule. Changes remain uncommitted. Historical polish
-and integration results remain in engine-polish.md and integration-release.md.
+Focused-tail hydration and lazy account-graph regressions fail the old scheduler
+and eager-weight mutation. Four quiet gates and loopback conformance/profile
+checks passed with four jobs/caches (tmp/review-*.log). Historical results:
+engine-polish.md and integration-release.md. Real smoke covers creation/backup,
+visitor relays, extension refusal/deadlines and bunker lifecycle. Signer reports
+retain codes only. Immediate saving fixes rejected-send/reload; both reload
+signer scenarios pass. Pagination also fails the pre-review scheduler.
 
-The integration gate record is in integration-release.md. The real smoke covers
-creation/backup, visitor relay persistence, injected extension rejection and
-60-second deadlines, and encrypted bunker connect/sign/reload/outage/recovery.
-Signer scenarios record result codes without retaining action or key payloads.
-The earlier rejected-send/reload failure is fixed by the merged frontend's
-immediate draft saving; both reload signer scenarios now pass. Pagination regressions also run against the
-pre-review scheduler in ignored tmp/ evidence, proving they detect the old bugs.
-Docker remains excluded by the worktree-only write rule.
+## Owner feedback and discovery review (2026-11-15)
 
-## Owner feedback checks (2026-11-15)
-
-All four quiet gates pass: check:repo, test:quiet, rust-wasm:quiet and verify:quiet.
-Conformance passes 134/134 checks with no page errors, including discovery for
-NIP-07, NIP-46 and restored local signers, immediate server-list-aware upload,
-client tags, default Blossom/NIP-96 and 5000 relay-paged rows with timestamp ties.
-Twelve native regressions cover discovery, bounds, tags, upload selection, stats,
-retained windows and history refill/preemption. Frontend check, build and smoke
-also pass with the additive protocol/stub mirror. Reports are under ignored tmp/.
-The release and conformance builds run sequentially because they share temporary
-Worker assets. Docker is excluded by the worktree-only write restriction.
-No commit, CI change, production access, deployment or existing-service restart.
-
-## Discovery relay-limit review (2026-11-15)
-
-Both review findings are fixed. Three native regressions cover discovery yielding
-to a feed and resuming after close, all three kinds with max_limit=1 or 2 and a
-single slot without views, independent reconnect cursors, and settled discovery
-resumption without subscription cycling. The four quiet gates pass with four
-build jobs and test threads; caches remain in ignored tmp/.
-The loopback Worker conformance gate and delayed profile probe also pass.
-Docker was not run because its storage writes are outside this worktree.
+All four quiet gates, frontend check/build/smoke, loopback conformance and the
+240 ms delayed profile probe pass. Conformance covers 134 checks for restored
+signers, server-aware uploads, client tags, Blossom/NIP-96 and 5000 paged rows
+with timestamp ties. Native regressions cover discovery, bounds, stats, retained
+windows, history refill/preemption, and single-slot yielding/resumption with
+per-kind max_limit=1 or 2 and independent reconnect cursors. Results and reports:
+engine-polish.md, owner-feedback.md and ignored tmp/. Builds use four jobs and
+worktree caches; release and conformance builds run sequentially. Docker is
+excluded by the worktree-only write rule. No commits, CI edits or service changes.
 
 ## Protocol 3 integration (2026-11-15)
 
@@ -149,52 +124,77 @@ profile probe passes without page errors. Frontend check, build, mock smoke and
 composer/channel screenshots pass. Docker remains excluded by the worktree-only
 write rule. Changes remain uncommitted; no CI or existing services were changed.
 
-## Orchestration (2026-11-15)
+## Notes, reader state, previews and branch review (2026-11-15)
 
-All four quiet gates pass after the publication, freshness and read-ranking
-changes. Frontend check, build and mock smoke pass. Stats screenshots pass at
-1440 dark English and 390 dark Japanese. Worker conformance passes 211/211
-checks with zero page errors; the delayed profile probe measures 229.1 ms at
-240 ms relay delay. The deterministic read and publication scorecards, public
-read-only observation, bounds and deferred design are in orchestration.md and
-ignored tmp/orchestration-report.md. Both completed real UI smokes pass 84/84
-checks with zero page errors. One interrupted combined-driver attempt (exit 143)
-was rerun standalone. Requested real Stats captures were saved and inspected at
-1440 and 390 pixels in a single-tile workspace.
-Docker is excluded by the worktree-only write restriction; changes remain
-uncommitted under the explicit no-commit instruction. No CI, production app,
-deployment or existing service was changed.
+Four quiet gates, frontend check/build/mock smoke, 211-check conformance and
+240 ms profile probe pass. Two real smokes pass 116 checks: live arrivals,
+reader choices, metadata/reload/reopen, profile/zoom/audio, Docs/Stats/Settings,
+dates and tab search. Off/data-saver and covered-note request checks pass.
+Native previews cover refusal, deadlines/redirects, charset, bounded cache,
+CORS, permission and one-attempt policy. Card/tab-search matrix: 56 captures,
+1440/390, both themes/languages; handoff: tmp/. Review fixes immediate channel
+drafts, Enter/debounce/pending results, composition/remount, nested previews
+and scroll hydration/reset. Regressions reproduce old failures; Chromium checks
+Docs reset. Mock/real gates and channel/notification shots pass. Worktree caches,
+no commit/CI/service/production/deploy; Docker is excluded by the write rule.
 
-## Orchestration branch review (2026-11-15)
+## Owner returning-profile audit (2026-11-15)
 
-Three native regressions preserve partial and completed page evidence across
-quality changes, allow new pages and configuration changes, and keep explicit
-hints from displacing ordinary routes. The pagination regression fails against
-the pre-fix selector. Two Stats regressions cover all publication states and cap
-reasons, idle relays, repeated URLs and 32 x 2240 distinct destinations.
-All four quiet gates pass with four build jobs/test threads and worktree caches.
-Worker conformance passes 211/211 checks with no page errors; the delayed profile
-probe also passes. Gate logs are under ignored tmp/review-*.log.
-Docker remains excluded by the worktree-only write rule. Changes are uncommitted;
-no CI files, production systems, deployments or existing services were changed.
+Shared mock/real checks cover dark 1440/390 views, same-origin/storage historical
+upgrades, real rows past 800, failed-draft retry while typing and remount safety.
+Scope/open gaps: [owner-audit.md](owner-audit.md). Frontend check/build/shots,
+432-check mock smoke, four quiet gates and 211-check conformance pass. Two real
+smokes pass 166 checks each without page errors. UI upgrades pass 28 checks;
+actual WASM/IndexedDB/cache upgrades pass 34, including periods and Shortcuts
+identity. Public Channels discovery and Stats fetch purposes remain open.
+
+## Main and owner audit integration (2026-11-15)
+
+Integration keeps scrolling/time rails, draft/migration/browser isolation repairs,
+mock reports and startup failure handling. Width allows two pixels by the rail.
+Frontend check/build, four quiet gates, 441-check mock smoke, 174-check real smoke
+with LKJSTR_SHOTS=1, 216-check conformance, delayed profile and desktop/phone
+captures pass without page errors. Logs: tmp/merge-*.log. Docker is excluded by
+the worktree-only rule; no CI workflows or existing services were changed.
+
+## Orchestration and branch review (2026-11-15)
+
+Four quiet gates, frontend check/build/mock smoke, 211-check conformance and
+240 ms delayed profile probe pass (229.1 ms). Two real smokes pass 84 checks;
+an interrupted driver was rerun. Stats captures: 1440 dark/en, 390 dark/ja and
+real Stats in one tile. Scorecards/bounds: orchestration.md and ignored
+tmp/orchestration-report.md. Three native regressions preserve partial/completed
+page evidence through quality changes, new pages/configuration and route
+stability; pagination fails the old selector. Two Stats regressions cover all
+states/caps, idle/repeated relays and 32 x 2240 destinations. Review gates pass
+with four jobs/threads and worktree caches (tmp/review-*.log). Docker is excluded
+by the worktree-only rule; no commit, CI, production, deploy or service changes.
+
+## Notes/main merge (2026-11-15)
+
+Four quiet gates, frontend check/build, mock (302) and real (207, with shots) smoke, shots and conformance (216) pass.
+Harness merge is committed. Review keeps both suites and main's time rail; strict protocol 5 conformance is restored. Logs: tmp/reconcile-*.log.
 
 ## Read orchestration follow-up (2026-11-15)
 
-All four quiet gates pass, as do frontend check, build and mock smoke. Worker
-conformance passes 216 checks with zero page errors; the delayed-profile probe
-measures 229.5 ms at 240 ms relay delay. Both real UI smokes pass 92 checks with
-zero page errors. Each uses fresh loopback ports and browser contexts.
+Four quiet gates, frontend check/build/mock smoke and 216-check conformance pass
+without page errors. The 240 ms delayed-profile probe measures 229.5 ms; two
+real smokes pass 92 checks each on fresh loopback ports and browser contexts.
+An initial failure exposed healthy connection deadlines saved as retry delays.
+Persistence now saves retry only for disconnected transports using engine time;
+healthy-reload/rollback regressions and shared ownership, fallback leadership,
+reload and three-hour idle checks pass. Fresh wire IDs reject late cancelled
+EOSE; resumption asserts filter identity and fresh envelopes.
+Mock Stats captures: 1440 dark/en and 390 dark/ja; real captures:
+outbox-stats-1440-dark and outbox-stats-390-dark. Scorecards, guarded public
+comparison and omitted designs: [outbox.md](outbox.md), tmp/outbox-report.md.
+Docker is excluded by the worktree-only rule; no CI, production, deployment or
+existing-service change occurred. These records predate the current merge.
 
-The first conformance attempt exposed healthy connection deadlines being saved
-as retry delays. Persistence now records retry only for disconnected transports,
-uses the engine clock, and has healthy-reload and rollback regressions. The rerun
-passes shared ownership, fallback leadership, reload and three-hour idle cases.
-Fresh wire IDs reject late EOSE after cancellation; resumption tests now assert
-filter identity and fresh envelopes instead of reusing subscription IDs.
+## Current conflict resolution (2026-11-15)
 
-Stats captures were inspected at 1440 dark English and 390 dark Japanese in the
-mock, plus real outbox-stats-1440-dark and outbox-stats-390-dark captures. Native
-scorecards, the guarded public comparison and explicit omitted designs are in
-[outbox.md](outbox.md) and ignored tmp/outbox-report.md. Docker is excluded by the
-worktree-only write rule. No CI, production app, deployment or existing service
-was changed.
+Both histories and read orchestration are retained. A regression proves the fix
+for deferred redraw detaching Clear before click. Frontend check/build/mock
+smoke (302), four quiet gates, real smoke (201), conformance (216), focused
+shots and delayed-profile probe (230.6 ms) pass. Logs: tmp/merge-*.log. Git staging
+is blocked by outside-worktree metadata; the merge remains uncommitted.

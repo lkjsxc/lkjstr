@@ -20,6 +20,7 @@ export function mountChannels(el: HTMLElement, env: ViewEnv): () => void {
   const state = loadViewState<{ text?: string }>(env.instance);
   let sub: Subscription | undefined;
   let rows: readonly Row[] = [];
+  let appliedText = '';
   let phase: SubState['phase'] = 'cache';
   let account = env.engine.me();
   let can = ability(env.engine);
@@ -88,7 +89,8 @@ export function mountChannels(el: HTMLElement, env: ViewEnv): () => void {
     rows = [];
     phase = 'cache';
     draw();
-    const text = state.text?.trim() || undefined;
+    appliedText = state.text ?? '';
+    const text = appliedText.trim() || undefined;
     sub = env.engine.open(
       { source: 'channels', account: account || undefined, text },
       {
@@ -110,15 +112,15 @@ export function mountChannels(el: HTMLElement, env: ViewEnv): () => void {
   let timer: ReturnType<typeof setTimeout> | undefined;
   find.addEventListener('input', () => {
     clearTimeout(timer);
+    state.text = find.value;
+    saveViewState(env.instance, state);
     timer = setTimeout(() => {
-      state.text = find.value;
-      saveViewState(env.instance, state);
       open();
     }, 250);
   });
   find.addEventListener('keydown', (e) => {
     const first = rows.find((r): r is ChannelRow => r.kind === 'channel');
-    if (e.key === 'Enter' && !e.isComposing && first && state.text === find.value) goTo(first);
+    if (e.key === 'Enter' && !e.isComposing && first && appliedText === find.value) goTo(first);
   });
   const formSlot = h('div');
   const create = h('button', { class: 'btn', 'data-f': 'create' }, t('channel.create'));
@@ -148,7 +150,9 @@ export function mountChannels(el: HTMLElement, env: ViewEnv): () => void {
     list,
     status,
   );
-  making(false);
+  making(
+    loadViewState<{ channelEdit: { open: boolean } }>(env.instance).channelEdit?.open === true,
+  );
   open();
   const offs = [
     env.engine.accounts.subscribe((a) => {

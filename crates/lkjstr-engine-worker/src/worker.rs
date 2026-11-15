@@ -30,6 +30,8 @@ mod defaults;
 use defaults::initial_engine;
 #[path = "worker_accounts.rs"]
 mod accounts;
+#[path = "worker_preview.rs"]
+mod previews;
 #[path = "worker_relays.rs"]
 mod relay_config;
 #[path = "worker_sign.rs"]
@@ -37,6 +39,8 @@ mod signing;
 #[path = "worker_upload.rs"]
 mod uploads;
 struct Host {
+    preview_probed: bool,
+    preview_busy: bool,
     bootstrap_relays: Vec<lkjstr_core::engine::wire::RelayConfig>,
     relay_owner: Option<(String, String)>,
     account_revision: u64,
@@ -106,6 +110,8 @@ pub fn start() -> Result<WorkerHandle, JsValue> {
         flushing: false,
         stopped: false,
         clock_offset: 0,
+        preview_probed: false,
+        preview_busy: false,
         identity_inflight: 0,
         identity_attempts: BTreeMap::new(),
     }));
@@ -222,6 +228,7 @@ fn pump(host: &Rc<RefCell<Host>>) {
     accounts::status(host);
     uploads::pump_uploads(host);
     shared::expire(host);
+    previews::pump_previews(host);
 }
 #[path = "worker_handle.rs"]
 mod handle;

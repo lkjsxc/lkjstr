@@ -6,6 +6,7 @@ mod feedback;
 mod note;
 mod notifications;
 mod output;
+mod previews;
 mod publish;
 pub mod queries;
 mod query_translate;
@@ -20,6 +21,10 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Deserialize)]
 #[serde(tag = "t", rename_all = "camelCase")]
 pub enum Input {
+    Preview {
+        sub: String,
+        ids: Vec<String>,
+    },
     Stats {
         req: String,
     },
@@ -166,6 +171,10 @@ pub struct Failure {
 /// Adapter state is per transport client; the engine remains independent of pixels.
 #[derive(Default)]
 pub struct Session {
+    pub preview_near: std::collections::BTreeMap<String, Vec<String>>,
+    pub preview_visible: Vec<String>,
+    pub preview_save_data: bool,
+    pub preview_hidden: bool,
     pub queries: std::collections::BTreeMap<String, Query>,
     pub config: Config,
     timelines: std::collections::BTreeMap<String, timeline::Index>,

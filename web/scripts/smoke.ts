@@ -2,11 +2,12 @@
 // the mock build in ../dist. Prints one line per failed fact, then "ok smoke" (or exits 1).
 // LKJSTR_CHROME=<path> picks the browser; --shot=<file> also writes one screenshot of the first page.
 import { type ChildProcess, spawn } from 'node:child_process';
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { appendFileSync, existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { type Browser, chromium, type Page } from 'playwright-core';
 import { dayOf } from '../src/shared/format.ts';
 import { KEYS } from '../src/shared/keys.ts';
+import { notesChecks } from './smoke-notes.ts';
 import { railSmoke } from './smoke-time-rail.ts';
 
 const here = new URL('..', import.meta.url).pathname;
@@ -22,8 +23,13 @@ const chrome =
 const shot = process.argv.find((a) => a.startsWith('--shot='))?.slice(7);
 const failures: string[] = [];
 let facts = 0;
+writeFileSync(resolve(here, '../tmp/audit-mock-progress.log'), '');
 const fact = (name: string, ok: boolean, detail: unknown = ''): void => {
   facts++;
+  appendFileSync(
+    resolve(here, '../tmp/audit-mock-progress.log'),
+    `${ok ? 'ok' : 'FAIL'} ${name}\n`,
+  );
   if (!ok) failures.push(`${name}: ${JSON.stringify(detail)}`);
 };
 
@@ -82,7 +88,12 @@ async function open(
   const { fresh, ...rest } = given;
   const store = fresh
     ? rest
-    : { 'layout:main': arranged(size.width), 'layout:guest': tile('g', ['global']), ...rest };
+    : {
+        migration: 'owner-audit-1',
+        'layout:main': arranged(size.width),
+        'layout:guest': tile('g', ['global']),
+        ...rest,
+      };
   const ctx = await isolatedContext(browser, { viewport: size, locale, deviceScaleFactor: 1 });
   await ctx.addInitScript((s) => {
     for (const [k, v] of Object.entries(s))
@@ -402,6 +413,12 @@ async function run(browser: Browser): Promise<void> {
   await scrolling(still);
   await filtering(browser, still);
   await rooms(browser, still);
+  const reader = await open(browser, '/', {
+    mock: { live: true },
+    'layout:main': tile('reader', ['global']),
+  });
+  await notesChecks(reader, fact);
+  await reader.context().close();
 }
 
 const FEED = '.view[data-kind="home"]';
@@ -1559,7 +1576,7 @@ async function accounts(browser: Browser): Promise<void> {
       (await count(page, '.tab[data-view="global"]')) === 1 &&
       (await count(page, '.fstate:not(:empty)')) === 0 &&
       (await text('.acct.out')) === 'Sign in' &&
-      (await page.locator('.bar .icon').isHidden()),
+      (await page.locator('.bar .icon:has(.i-pen)').isHidden()),
   );
   fact(
     'first visit: what would publish is drawn off, counts stay',
@@ -1895,6 +1912,13 @@ let browser: Browser | undefined;
 try {
   browser = await chromium.launch({ executablePath: chrome, args: ['--no-sandbox'] });
   await run(browser);
+  const auditModule = './audit-owner.mjs';
+  const { auditOwner } = await import(auditModule);
+  await auditOwner({ browser, base, check: fact });
+  for (const ref of ['af8c915e', 'dbd66e59']) {
+    if (existsSync(`../tmp/history/${ref}/state-1440.json`))
+      await auditOwner({ browser, base, check: fact, returning: ref });
+  }
 } catch (e) {
   const at = /smoke\.ts:(\d+)/.exec((e as Error).stack ?? '')?.[1] ?? '?';
   failures.push(`threw at line ${at}: ${(e as Error).message.split('\n')[0]}`);
@@ -1903,7 +1927,11 @@ try {
   server.kill();
 }
 writeFileSync(
-  `${here}../tmp/smoke-mock-report.json`,
+  resolve(here, '../tmp/audit-smoke-count.json'),
+  JSON.stringify({ checks: facts, failures: failures.length }),
+);
+writeFileSync(
+  resolve(here, '../tmp/smoke-mock-report.json'),
   JSON.stringify({ checks: facts, failures: failures.length }),
 );
 if (failures.length) console.log(failures.join('\n')), process.exit(1);

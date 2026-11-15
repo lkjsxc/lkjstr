@@ -16,12 +16,14 @@ import { mountScrub } from './feed-scrub.ts';
 import { feedTitle } from './feed-title.ts';
 import { filterQuery } from './filter-bar.ts';
 import { onHeld } from './held.ts';
+import { pauseNoteAudio } from './note-audio.ts';
+import { createPreviewWants } from './preview-wants.ts';
 import { mountProfileKinds } from './profile-kinds.ts';
 import type { ViewEnv } from './registry.ts';
 import { mountTimeRail } from './time-rail.ts';
 
-const PAGE = 60; // rows asked for beyond what is on screen
-const LIMIT = 800;
+const PAGE = 60; // Prefetch size.
+const LIMIT = 800; // Maximum retained rows.
 const NEAR_PX = 1400;
 type State = BarState & {
   title?: string;
@@ -31,12 +33,11 @@ type State = BarState & {
   tag?: string;
   show?: string;
   pos?: Place;
+  extent?: number;
 };
-/** Tabs opened from a note: Escape closes them once nothing is selected. */
 const CHILD = new Set(['thread', 'profile', 'hashtag', 'following', 'followers', 'channel']);
 const FILTERED = new Set(['home', 'global', 'hashtag', 'bookmarks', 'search', 'profile']);
 const DATED = new Set(['home', 'global', 'hashtag', 'bookmarks', 'search', 'profile', 'channel']);
-/** Lists that belong to an account: signed out they have nothing to ask for, and say how to get one. */
 const OWN = new Set(['home', 'notifications', 'bookmarks']);
 export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => void {
   const state: State = loadViewState<State>(env.instance);
@@ -54,6 +55,7 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
   const drawn = createRowList(list, env, DATED.has(kind));
   let rows: Row[] = [];
   let sub: Subscription | undefined;
+  const previews = createPreviewWants(el, () => sub);
   let atTop = true;
   let atBottom = false;
   let live = true;
@@ -92,6 +94,9 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
     const extra = Math.max(0, before + after - LIMIT);
     if (before > after) before -= extra;
     else after -= extra;
+    if (kind === 'thread' && before + after > (state.extent ?? PAGE)) {
+      (state.extent = Math.min(LIMIT, before + after)), save();
+    }
     waiting = true;
     sub?.window(anchor, before, after);
   };
@@ -103,10 +108,8 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
     seat();
     settle();
     keys.paint();
-    rail.sync();
+    previews.sync(), rail.sync();
   };
-  /** A thread opens on its focused note, the notes it answers above it: room is kept below so that the note can
-   * stand at the top of the tile however few replies follow. */
   let seated = kind !== 'thread' || Boolean(state.pos);
   const seat = (): void => {
     if (kind !== 'thread' || !env.visible.get()) return;
@@ -139,7 +142,6 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
       ? t('feed.lastArrival', { time: fullTime(sstate.lastArrival) })
       : '';
   };
-  /** Decides, from where the reader is, which window the engine should keep. */
   const follow = (): void => {
     if (waiting || rail.busy() || !sub || !env.visible.get()) return;
     const top = el.scrollTop;
@@ -167,7 +169,6 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
     if (next !== state.title) (state.title = next), save();
     env.setTitle(next);
   };
-  /** `keep`: the tab is coming back (a reload, a reopened tab), so it asks for the rows around its place. */
   const open = (keep = false): void => {
     sub?.close();
     rail.reset();
@@ -187,7 +188,6 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
         rail.window();
         if (jump) (jump = false), keeper.forget();
         sync();
-        // The place is a row that no longer exists (deleted, muted, a filter): the list starts over from its head.
         if (keeper.get() && !keeper.put()) keeper.forget();
         title();
         follow();
@@ -209,10 +209,9 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
     });
     sub.visible(env.visible.get());
     if (place) request({ key: place.key }, PAGE, PAGE);
-    else request('top', 0, PAGE);
+    else request('top', 0, Math.max(PAGE, state.extent ?? PAGE));
     sync();
   };
-  /** To the newest notes, wherever the window is. Nothing is shown in between: the scroll waits for the rows. */
   const toTop = (): void => {
     keys.clear();
     if (atTop) return (keeper.forget(), follow());
@@ -269,13 +268,13 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
   open(true);
   const offVisible = env.visible.subscribe((on) => {
     sub?.visible(on);
+    if (!on) pauseNoteAudio(list);
     if (on) seat(), keeper.put(), follow();
   });
   const offAccounts = env.engine.accounts.subscribe((a) => {
     const now = ability(env.engine);
     if ((a.active ?? '') !== account)
       (account = a.active ?? ''), (can = now), drawn.clear(), open();
-    // The same reader, now known to be read-only (or no longer): the action rows are drawn again.
     else if (now !== can) (can = now), drawn.clear(), sync();
   });
   const offHeld = onHeld(() => void (rows.length && sync()));
@@ -290,7 +289,7 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
     bar();
     kinds?.dispose();
     scrub();
-    rail.dispose();
+    previews.dispose(), drawn.dispose(), rail.dispose();
     keys.dispose();
     keeper.dispose();
     sub?.close();

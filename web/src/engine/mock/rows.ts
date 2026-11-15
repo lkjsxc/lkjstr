@@ -1,6 +1,7 @@
 // View models of the mock world: the rows exactly as the real engine will hand them over.
 import type { Author, NoteRow, PersonRow, ProfileRow, Quote, Reaction } from '../protocol.ts';
 import { banner } from './art.ts';
+import { previewFixtures } from './fixtures-previews.ts';
 import { EMOJI, FOLLOWERS, type Person, SELF } from './people.ts';
 import type { MNote, World } from './world.ts';
 
@@ -42,6 +43,7 @@ export function noteRow(w: World, n: MNote, o: RowOpts): NoteRow {
   const parent = n.re ? w.byId.get(n.re) : undefined;
   const shown = o.reposts === false || o.thread ? [] : n.reposts;
   return {
+    previews: w.linkPreviews ? previewFixtures(n.segments) : undefined,
     kind: 'note',
     key: n.id,
     id: n.id,

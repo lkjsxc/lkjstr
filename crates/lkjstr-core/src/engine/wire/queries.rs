@@ -55,6 +55,8 @@ pub struct Hint {
 }
 #[derive(Debug, Clone, Deserialize, Default)]
 pub struct Config {
+    #[serde(default, rename = "linkPreviews")]
+    pub link_previews: Option<bool>,
     #[serde(default)]
     pub language: String,
     #[serde(default, rename = "clientTag")]

@@ -156,8 +156,7 @@ function createCore(post: (msg: FromEngine) => void, now: () => number) {
     },
     dispose(): void {
       for (const t of timers) clearTimeout(t);
-      timers.clear();
-      subs.clear();
+      timers.clear(), subs.clear();
     },
   };
 }
@@ -207,9 +206,11 @@ export function createMockEngine(post: (msg: FromEngine) => void, now = Date.now
         world.state.relays = [...msg.relays];
         core.resync((q) => q.source === 'relays', true);
         core.status();
-      } else if (msg.t === 'publicKey') act.publicKey(msg);
+      } else if (msg.t === 'preview') /* fixtures already contain the answer */ return;
+      else if (msg.t === 'publicKey') act.publicKey(msg);
       else if (msg.t === 'configure') {
         config = msg.config;
+        world.linkPreviews = config.linkPreviews !== false;
         core.clientTag = config.clientTag !== false;
         if (!started && config.mock?.accounts === 'none') core.who.clear();
         if (started) live();

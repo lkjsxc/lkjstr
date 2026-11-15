@@ -15,7 +15,7 @@
 .pdays, .ppeople { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; min-width: 0; }
 .pdays input, .padd { box-sizing: border-box; height: 26px; padding: 0 6px; border-radius: 6px; font-size: 12.5px; font-variant-numeric: tabular-nums; }
 .pdays input { width: 104px; }
-.pdays input[aria-invalid] { border-color: var(--danger); }
+.pdays input[aria-invalid="true"] { border-color: var(--danger); }
 .padd { flex: 1 1 140px; min-width: 0; max-width: 220px; }
 .ppeople .chip.on { border-color: var(--accent); background: var(--wash); color: var(--fg); }
 /* A profile's kinds: quiet tabs under its header. */
@@ -109,6 +109,9 @@
   .rtoggle { flex-basis: 40px; }
   .seg-ctl .chip { padding: 9px 12px; }
 }
+
+.date-field { min-width: 0; max-width: 100%; }
+.date-hint { max-width: 270px; margin-top: 3px; font-size: 12.5px; line-height: 1.5; }
 /* Time rail: a quiet strip, with no track or border. Its width is reserved before counts arrive. */
 .feed.has-time-rail { padding-right: var(--rail-size, 16px); scrollbar-width: none; }
 .feed.has-time-rail::-webkit-scrollbar { display: none; width: 0; }

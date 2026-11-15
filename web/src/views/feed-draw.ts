@@ -5,7 +5,9 @@ import type { Row } from '../engine/protocol.ts';
 import { dayOf } from '../shared/format.ts';
 import { h } from '../shared/h.ts';
 import { withHeld } from './held.ts';
+import { disposeLinkCards } from './link-cards.ts';
 import { bodySig, fitNote, patchNote, renderNote } from './note.ts';
+import { disposeNoteAudio, reuseNoteAudio } from './note-audio.ts';
 import type { ViewEnv } from './registry.ts';
 import { renderNotification, renderPerson, renderProfile } from './rows.ts';
 
@@ -15,8 +17,9 @@ export type RowList = {
   node(key: string): HTMLElement | undefined;
   /** The row as drawn. */
   row(key: string): Row | undefined;
-  /** Forgets every node, so the next draw makes them all again (a setting changed how rows look). */
+  /** Makes the next draw rebuild every row, retaining native playback elements by address. */
   clear(): void;
+  dispose(): void;
 };
 
 export function createRowList(list: HTMLElement, env: ViewEnv, dated: boolean): RowList {
@@ -38,8 +41,13 @@ export function createRowList(list: HTMLElement, env: ViewEnv, dated: boolean): 
       const put = (key: string, sig: string, make: () => HTMLElement | null): void => {
         let n = nodes.get(key);
         if (!n || n.sig !== sig) {
+          if (n) disposeLinkCards(n.el);
           const made = make();
           if (!made) return;
+          if (n) {
+            reuseNoteAudio(n.el, made);
+            disposeNoteAudio(n.el);
+          }
           n = { el: made, sig };
           nodes.set(key, n);
           made.dataset.key = key;
@@ -79,11 +87,28 @@ export function createRowList(list: HTMLElement, env: ViewEnv, dated: boolean): 
         cursor.remove();
         cursor = next;
       }
-      for (const key of [...nodes.keys()]) if (!seen.has(key)) nodes.delete(key);
+      for (const [key, node] of nodes)
+        if (!seen.has(key)) {
+          disposeLinkCards(node.el);
+          disposeNoteAudio(node.el);
+          nodes.delete(key);
+        }
       for (const node of want) if (!node.dataset.fit) (node.dataset.fit = '1'), fitNote(node);
     },
     node: (key) => nodes.get(key)?.el,
     row: (key) => shown.find((r) => r.key === key),
-    clear: () => nodes.clear(),
+    clear: () => {
+      for (const node of nodes.values()) {
+        node.sig = '';
+        node.body = undefined;
+      }
+    },
+    dispose: () => {
+      for (const node of nodes.values()) {
+        disposeLinkCards(node.el);
+        disposeNoteAudio(node.el);
+      }
+      nodes.clear();
+    },
   };
 }

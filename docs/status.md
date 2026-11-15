@@ -10,15 +10,14 @@ Protocol 4 channels use the existing store, signer, scheduler and paging for
 creator-only metadata, messages, joined lists and unread marks. Channel messages
 stay out of ordinary feeds. Early edits wait for the joined list; Stats and
 client-tag settings use the real engine. Opened targets retain discovery capacity.
-Channel work rotates alongside feeds. The UI tracks discovery phases and retains
-full failed drafts for retry. Separate metadata requests protect busy channels;
-repost filters accept kinds 6 and 16. Native and UI checks: [channels.md](channels.md).
+Channel work rotates alongside feeds; the UI tracks discovery and full retry
+drafts. Separate metadata requests protect busy channels; reposts accept kinds
+6 and 16. Native and UI checks: [channels.md](channels.md).
 
 ## Protocol 3 integration (2026-11-15)
 
-Protocol 3 added rich note filters including all-word
-text, exact phrases, exclusions, image/video/link requirements, author unions,
-known-profile names and bounded verified NIP-05 query lookups. Millisecond date
+Protocol 3 added all-word text, phrases, exclusions, media/link filters, author
+unions, known-profile names and bounded verified NIP-05 query lookups. Millisecond date
 bounds round inward to Nostr seconds. Inclusive end dates follow local calendar
 days across daylight-saving changes. Hide-reposts checks wrappers before resolving
 target content. Home/Global can mix notification rows;
@@ -41,8 +40,7 @@ Bounds, counter meanings, conformance and limitations: [owner-feedback.md](owner
 
 Release candidate, gates and UI gaps: [integration-release.md](integration-release.md).
 
-The TypeScript app can build against the real SharedWorker adapter with
-pnpm build:real in web/. Its full engine graph has immutable hashed URLs.
+web/ pnpm build:real packages the real SharedWorker with immutable hashed URLs.
 The frontend owns saved/bootstrap relay choice; verified owner NIP-65 lists
 then take over. Search-only relays receive requests independently of ordinary read usage. Thread focus and decoded profile deep-link headers
 cross the wire correctly. Native integration regressions cover these
@@ -57,8 +55,7 @@ Accounts can be created/imported through the Accounts tab. Protocol 2 supports
 explicit local nsec backup; external signers and read-only accounts refuse it.
 Secret-bearing input/output debug representations are redacted.
 
-The conformance gate now uses this worktree's contract, without fetching a
-branch. See engine-package.md for commands and current verification artifacts.
+Conformance uses this worktree's contract; commands/artifacts: engine-package.md.
 
 ## Engine polish (2026-11-15)
 
@@ -71,8 +68,7 @@ Unfinished focused pages keep priority and replay their filters until EOSE.
 Completed coverage and cursors survive live resumption without exhausting history.
 Native regressions cover delayed hydration, interruption and pagination.
 Six native regressions cover routing, batching, context, refresh and release.
-The delayed loopback probe uses 240 ms responses and congested slots: baseline
-note-to-named-row 1893.7 ms; revised 232.5 ms. engine-check includes this probe.
+The 240 ms congested-slot probe improves note-to-name from 1893.7 to 232.5 ms.
 
 Protocol 2 uses absent profile fields for unknown counts and the existing
 partial flag for lower bounds. Count requests are bounded and exact only after
@@ -165,28 +161,21 @@ Authorless routes skip graphs. Two-cover and weighted retention: [outbox.md](out
 
 ## Verification
 
-Gate results: verification.md and engine-package.md. Browser runs use fresh
-ports/data, loopback WebSockets and intercepted HTTP only.
+Gate counts and cold-start measurements: engine-package.md, engine-performance.md
+and verification.md. Audit repairs/open gaps: [owner-audit.md](owner-audit.md).
+Browser runs use fresh ports/data, loopback WebSockets and intercepted HTTP only.
 Docker Compose remains excluded by the explicit worktree-only write rule:
-image/container storage is outside this worktree. No deployment,
+image/container storage is outside this worktree. No commit, deployment,
 production access, CI edit or existing-service restart is performed.
 
-Branch review covers first-list guards, eviction, search, signers and mute policy.
-The earlier branch-review run passed all four quiet gates and 53 local browser
-checks using the then-fetched contract. Report: tmp/engine-harness/report.json.
+Earlier branch review: first-list guards, eviction, search, signers and mute
+policy; four quiet gates and 53 browser checks passed on the then-fetched contract.
 
 ## One product
 
-web/ is the only interface. crates/lkjstr-engine-worker owns the Worker and
-its browser effects; the root Cargo.toml is a virtual workspace. The Leptos
-UI/runtime, root HTML entry, exclusive styles/icons and browser drivers are
-removed. Shared static icons and the loopback relay helper remain in use.
-Root build and quiet release gates build web/ with the real engine. No Trunk
-installation is needed. Docker configuration follows that build but cannot
-be run in this environment. Historical UI results do not verify this product.
-
-Review regressions cover nonnegative numeric counts, filtered-window refill,
-anchorless history fetches, and refused, timed-out or truncated profile lookups.
+web/ is the only interface; lkjstr-engine-worker owns browser effects. The root
+workspace is virtual; Leptos/Trunk are removed. Shared icons and loopback fixtures
+remain. Root/Docker gates build this real product; historical UI checks do not.
 
 ## Signer conformance follow-up (2026-11-15)
 
@@ -198,3 +187,14 @@ A shared loopback NIP-46 fixture checks optional/required connect tokens, signin
 reload credential reuse, refusal, disappearance during signing and recovery.
 Remote RPC failures retain signer-refused versus signer-missing; losing all RPC
 sockets now fails immediately and releases sockets instead of waiting a minute.
+
+## Reader state and optional previews (2026-11-15)
+
+Protocol 5 adds bounded per-note link previews and near-note hints, including
+nested notification notes. The Worker probes health once; one HTTP request
+runs after other work. The optional Rust lkjstr-preview binary fetches public
+page metadata; static hosting works without it. No hosting changes were made.
+Reader choices persist per tab; channel drafts save at once. Deferred filter
+redraws preserve the control receiving focus. Enter opens only applied results. Scroll hydration restores each scroller once
+and respects page resets. Period fields accept common calendar/relative forms;
+tab search spans workspaces. Gates and browser coverage: verification.md.

@@ -21,7 +21,7 @@
 .rrow > .x, .srow > .x { flex: none; width: 26px; height: 26px; font-size: 16px; }
 .rrow > .chip { flex: none; }
 .relaysv > .fstate { padding: 0 0 10px; text-align: left; }
-.sbox { width: 100%; max-width: 460px; }
+.sbox { width: 100%; }
 .srow { display: flex; align-items: center; gap: 8px; min-height: 32px; border-bottom: 1px solid var(--line); }
 .srow > :first-child { flex: none; }
 .srow > .clip:first-child, .srow > .name { flex: 1; min-width: 0; text-align: left; }
@@ -62,11 +62,13 @@
 .srow > .rhost { flex: 1; min-width: 0; }
 .sitem > .actions > .lnk { font-size: 12.5px; }
 /* Accounts: who is on this device, then the ways in. One column, no wider than a form should be. */
-.alist, .aadd { max-width: 520px; }
+.aadd { max-width: 520px; }
 .alist { margin-bottom: 16px; border-top: 1px solid var(--line); }
 .alist[hidden] { display: none; }
 .arow { padding: 5px 0; border-bottom: 1px solid var(--line); }
 .ahead { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.aidentity { display: flex; flex: 1; align-items: center; gap: 6px; min-width: 0; }
+.aidentity > .avb { align-self: center; }
 .amain { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; padding: 4px 8px 4px 4px; border-radius: 6px; text-align: left; }
 .amain:hover { background: var(--hover); }
 .amain[aria-current] { cursor: default; }
@@ -100,7 +102,7 @@
 .asaid:empty { display: none; }
 @container (max-width: 400px) {
   .ahead { flex-wrap: wrap; }
-  .ahead > .amain { flex-basis: 100%; }
+  .ahead > .aidentity { flex-basis: 100%; }
   .ahead > .abtns { margin-left: calc(var(--avatar, 36px) + 14px); }
 }
 @media (pointer: coarse) {

@@ -9,7 +9,10 @@ import { chromium } from 'playwright-core';
 import bundle from 'playwright-core/lib/utilsBundle';
 import { fakeBunker } from '../../scripts/browser-bunker.mjs';
 import { fakeRelay } from '../../scripts/browser-relay.mjs';
+import { auditFixtures } from './audit-fixtures.mjs';
+import { auditOwner } from './audit-owner.mjs';
 import { channelScenarios } from './smoke-channels.mjs';
+import { realReaderChecks, visitorRelayChecks } from './smoke-reader.mjs';
 import { openKeyField, seedLayouts } from './smoke-seed.mjs';
 import { writeReport } from './smoke-signer-support.mjs';
 import { signerScenarios } from './smoke-signers.mjs';
@@ -30,8 +33,13 @@ signer.stderr.resume();
 const lines = createInterface({ input: signer.stdout })[Symbol.asyncIterator]();
 const fixture = JSON.parse((await lines.next()).value);
 const fake = fakeRelay();
+// The archive/audit can fill one 1000-event store; reader arrivals get their own bounded fixture.
+const readerFake = fakeRelay();
 const bunker = await fakeBunker();
-for (const event of [fixture.note, ...fixture.events]) fake.add(event);
+for (const event of [fixture.note, ...fixture.events]) {
+  fake.add(event);
+  readerFake.add(event);
+}
 let signing = Promise.resolve();
 const relay = createServer();
 const ws = new bundle.wsServer({ server: relay });
@@ -41,7 +49,7 @@ ws.on('connection', (socket, req) => {
     return bunker.route(socket, req.url === '/bunker-secret');
   activePaths.set(socket, req.url);
   socket.on('close', () => activePaths.delete(socket));
-  fake.route({
+  (req.url === '/reader' ? readerFake : fake).route({
     send: (text) => socket.send(text),
     onMessage: (fn) => socket.on('message', fn),
     onClose: (fn) => socket.on('close', fn),
@@ -55,7 +63,7 @@ signer.stdin.write(
 fake.add(JSON.parse((await lines.next()).value));
 const server = spawn(
   process.execPath,
-  ['web/scripts/serve.ts', '--port=0', `--test-relay=${relayUrl}`],
+  ['web/scripts/serve.ts', '--port=0', '--test-previews', `--test-relay=${relayUrl}`],
   { stdio: ['ignore', 'pipe', 'pipe'] },
 );
 const errors = [],
@@ -235,6 +243,18 @@ try {
     fake.published.some((e) => e.kind === 7),
   );
   await channelScenarios({ page, launch, check, fake, shots, shot });
+  await auditFixtures({ fake, sign: fixtureSign, owner: fixture.note.pubkey, note: fixture.note });
+  await auditOwner({
+    browser,
+    base,
+    real: true,
+    pubkey: fixture.note.pubkey,
+    check,
+    prepare: async (context) => {
+      await context.exposeFunction('fixtureSign', fixtureSign);
+      await installExtension(context, relayUrl, fixture.note.pubkey, errors);
+    },
+  });
   if (shots) {
     // Signed in, the ordinary layout as it starts, in Japanese (the language is put back afterwards).
     // Use the reader's reset: deleting storage bypasses the live WM store, whose
@@ -286,29 +306,19 @@ try {
   await page.reload();
   await page.locator('.view[data-kind="global"] .note').first().waitFor();
   check('signed out survives a reload', await out(page));
-  await launch('Settings', 'settings');
-  const relayField = page.getByLabel('Relay address', { exact: true });
-  await relayField.fill(`${relayUrl}/visitor`);
-  await relayField.press('Enter');
-  await page.waitForTimeout(500);
-  check(
-    'signed-out relay edit is saved',
-    await page.evaluate(
-      (url) =>
-        JSON.parse(localStorage.getItem('lkjstr:relays:') ?? '[]').some(
-          (r) => r.url.replace(/\/$/, '') === url,
-        ),
-      `${relayUrl}/visitor`,
-    ),
-  );
-  await page.reload();
-  await page.getByLabel('Relay address', { exact: true }).waitFor();
-  // The form mounts before the engine returns its persisted relay rows.
-  const visitorRelay = page.locator(
-    `[data-entry="set.relayList"] .rhost[title^="${relayUrl}/visitor"]`,
-  );
-  await visitorRelay.waitFor();
-  check('signed-out relay edit survives reload', (await visitorRelay.count()) === 1);
+  await visitorRelayChecks({ page, relayUrl, check, launch });
+  await realReaderChecks({
+    browser,
+    base,
+    relayUrl: `${relayUrl}/reader`,
+    fake: readerFake,
+    fixture,
+    fixtureSign,
+    check,
+    onReader: (reader) => {
+      page = reader;
+    },
+  });
   check('no page errors', errors.length === 0);
 } catch (error) {
   checks.failure = String(error);

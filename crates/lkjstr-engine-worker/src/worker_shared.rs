@@ -101,6 +101,8 @@ pub fn start_shared() -> Result<SharedWorkerHandle, JsValue> {
         quality_persisted: 0,
         stopped: false,
         clock_offset: 0,
+        preview_probed: false,
+        preview_busy: false,
         identity_inflight: 0,
         identity_attempts: BTreeMap::new(),
     }));

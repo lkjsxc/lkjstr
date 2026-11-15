@@ -7,6 +7,7 @@ import type { Query } from '../engine/protocol.ts';
 import { h } from '../shared/h.ts';
 import { type Key, t } from '../shared/i18n.ts';
 import { pressed } from '../shared/keys.ts';
+import { periodField } from './period-field.ts';
 
 export type Filter = {
   /** The query as typed. */
@@ -16,6 +17,7 @@ export type Filter = {
   media?: 'only' | 'none';
   /** The period: local days as `yyyy-mm-dd`, both included. */
   start?: string;
+  dates?: { start?: string; end?: string };
   end?: string;
   /** Only these people, each as typed (a name, an npub, a NIP-05 name). */
   people?: string[];
@@ -103,7 +105,7 @@ export const filterNarrows = (f: Filter): boolean => filterActive(f) || Boolean(
 export function filterBar(
   f: Filter,
   placeholder: Key,
-  change: (next: Filter, typing: boolean) => void,
+  change: (next: Filter, typing: boolean, apply?: boolean) => void,
   /** Escape in an empty field. */
   leave: () => void,
   /** Takes every narrowing back: offered in the row while there is one. */
@@ -140,25 +142,15 @@ export function filterBar(
     [true, 'filter.show'],
     [false, 'filter.hide'],
   ] as const;
-  // Days are typed and shown as yyyy/mm/dd, as every date here is; a day that is not one is marked and ignored.
   const day = (key: 'start' | 'end', label: Key): HTMLElement =>
-    h('input', {
-      type: 'text',
-      inputmode: 'numeric',
-      size: 10,
-      value: (f[key] ?? '').replaceAll('-', '/'),
-      placeholder: 'yyyy/mm/dd',
-      'aria-label': t(label),
-      title: t(label),
-      onchange: (e) => {
-        const field = e.target as HTMLInputElement;
-        const m = /^(\d{4})[/\-.](\d{1,2})[/\-.](\d{1,2})$/.exec(field.value.trim());
-        const next = m ? `${m[1]}-${m[2]?.padStart(2, '0')}-${m[3]?.padStart(2, '0')}` : undefined;
-        if (field.value.trim() && dayStart(next) === undefined)
-          return field.setAttribute('aria-invalid', 'true');
-        change({ ...f, [key]: next }, false);
-      },
-    });
+    periodField(
+      key,
+      label,
+      f[key],
+      (next) => change({ ...f, [key]: next, dates: { ...f.dates, [key]: undefined } }, false),
+      f.dates?.[key],
+      (raw) => change({ ...f, dates: { ...f.dates, [key]: raw } }, true, false),
+    );
   const people = f.people ?? [];
   const person = h('input', {
     type: 'text',
@@ -253,6 +245,7 @@ export function filterBar(
   input.addEventListener('input', () => {
     if (reset) reset.hidden = !filterNarrows({ ...f, text: input.value });
     clearTimeout(timer);
+    change({ ...f, text: input.value }, true, false);
     timer = setTimeout(() => change({ ...f, text: input.value }, true), 250);
   });
   input.addEventListener('keydown', (e) => {

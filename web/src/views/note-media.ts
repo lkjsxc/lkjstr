@@ -7,6 +7,8 @@ import { hostOf } from '../shared/address.ts';
 import { h } from '../shared/h.ts';
 import { t } from '../shared/i18n.ts';
 import { icon } from '../shared/icons.ts';
+import { readNoteState, writeNoteState } from '../shared/note-state.ts';
+import { keepNoteAudio } from './note-audio.ts';
 import type { ViewEnv } from './registry.ts';
 
 /** Sizes learned from pictures that have loaded here: the next time one is drawn its box is exact from the start. */
@@ -36,16 +38,39 @@ export function mediaGrid(
   media: readonly Media[],
   env: ViewEnv,
   title: string,
+  noteId?: string,
 ): HTMLElement | null {
   if (!media.length) return null;
   const one = media.length === 1;
   const cell = (m: Media, index: number): HTMLElement => {
-    if (m.type === 'audio')
-      return h(
-        'div',
-        { class: 'mbox audio' },
-        h('audio', { src: m.url, controls: true, preload: 'none' }),
-      );
+    if (
+      noteId &&
+      m.sensitive &&
+      !env.settings.get().showSensitive &&
+      !readNoteState(env.instance, noteId).warning &&
+      !readNoteState(env.instance, noteId).media?.includes(m.url)
+    ) {
+      const show = h('button', { class: 'mbox cw' }, t('media.reveal'));
+      show.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const seen = readNoteState(env.instance, noteId).media ?? [];
+        writeNoteState(env.instance, noteId, { media: [...seen, m.url].slice(-16) });
+        show.replaceWith(cell(m, index));
+      });
+      return show;
+    }
+    if (m.type === 'audio') {
+      const audio = h('audio', {
+        src: m.url,
+        controls: true,
+        preload:
+          noteId && readNoteState(env.instance, noteId).audio?.[String(index)]
+            ? 'metadata'
+            : 'none',
+      });
+      if (noteId) keepNoteAudio(audio, env, noteId, String(index));
+      return h('div', { class: 'mbox audio' }, audio);
+    }
     // One picture keeps its own ratio (within reason) and is never drawn larger than it is; a picture of unknown
     // size gets a 3:2 box and is fitted into it whole. Several share a grid of squares.
     const size = m.w && m.h ? { w: m.w, h: m.h } : seen.get(m.thumb ?? m.url);

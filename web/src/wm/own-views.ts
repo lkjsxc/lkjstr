@@ -3,7 +3,13 @@
 // scroll position survives the re-renders that detach it.
 import { t } from '../shared/i18n.ts';
 import { createSignal, type Signal } from '../shared/signal.ts';
-import { dropViewState, loadViewState, saveViewState } from '../shared/view-state.ts';
+import {
+  dropViewState,
+  loadViewState,
+  restoreViewState,
+  saveViewSlice,
+  snapshotViewState,
+} from '../shared/view-state.ts';
 import { freshTab, kindOf, type ViewEnv, viewOf } from '../views/registry.ts';
 import { type Launcher, type LauncherApi, mountLauncher, NEW_TAB } from './launcher.ts';
 import type { MenuItem } from './menus.ts';
@@ -61,7 +67,7 @@ export function createOwnViews(
         el.dataset.kind = kindOf(tab);
         const visible = createSignal(false);
         if (isNew) {
-          const l = mountLauncher(el, launcher(tab));
+          const l = mountLauncher(el, launcher(tab), instance(tab));
           m = { el, dispose: l.dispose, launcher: l, visible, top: 0 };
         } else {
           const setTitle = (title: string): void => {
@@ -83,6 +89,64 @@ export function createOwnViews(
           if (dispose) made.dispose = dispose;
           m = made;
         }
+        const scroll =
+          loadViewState<{ scroll: Record<string, number | { top: number; left: number }> }>(
+            instance(tab),
+          ).scroll ?? {};
+        // Hydrate each scroll axis once; later mutations must respect deliberate position changes.
+        // Weak entries also allow replacement child scrollers to restore their saved position.
+        const restoredTop = new WeakSet<HTMLElement>();
+        const restoredLeft = new WeakSet<HTMLElement>();
+        const restore = (): void => {
+          for (const [selector, position] of Object.entries(scroll)) {
+            if (selector === 'self' && el.matches('.feed:not(.chans)')) continue;
+            const node = selector === 'self' ? el : el.querySelector<HTMLElement>(selector);
+            if (node) {
+              const top = typeof position === 'number' ? position : position.top;
+              const left = typeof position === 'number' ? 0 : position.left;
+              if (!restoredTop.has(node) && node.scrollHeight > node.clientHeight) {
+                restoredTop.add(node);
+                node.scrollTop = top;
+              }
+              if (!restoredLeft.has(node) && node.scrollWidth > node.clientWidth) {
+                restoredLeft.add(node);
+                node.scrollLeft = left;
+              }
+            }
+          }
+        };
+        const observer = new ResizeObserver(restore);
+        observer.observe(el);
+        const content = new MutationObserver(restore);
+        content.observe(el, { childList: true, subtree: true });
+        const scrolled = (e: Event): void => {
+          const target = e.target as HTMLElement;
+          const selector =
+            target === el
+              ? 'self'
+              : target.matches('.dtree, .dpage, .stab-wrap, .sbox, textarea')
+                ? target.matches('textarea')
+                  ? 'textarea'
+                  : target.matches('.sbox')
+                    ? `[data-entry="${target.closest<HTMLElement>('[data-entry]')?.dataset.entry}"] .sbox`
+                    : `.${target.classList[0]}`
+                : '';
+          if (!selector || !el.isConnected || !visible.get()) return;
+          if (selector === 'self' && el.matches('.feed:not(.chans)')) return;
+          restoredTop.add(target);
+          restoredLeft.add(target);
+          scroll[selector] = { top: target.scrollTop, left: target.scrollLeft };
+          saveViewSlice(instance(tab), 'scroll', scroll);
+        };
+        el.addEventListener('scroll', scrolled, true);
+        const disposeView = m.dispose;
+        m.dispose = () => {
+          observer.disconnect();
+          content.disconnect();
+          el.removeEventListener('scroll', scrolled, true);
+          disposeView();
+        };
+        m.top = typeof scroll.self === 'number' ? scroll.self : (scroll.self?.top ?? 0);
         mounts.set(tab, m);
       }
       return m.el;
@@ -101,14 +165,14 @@ export function createOwnViews(
     fresh(kind, used, state) {
       const tab = freshTab(kind, used);
       dropViewState(instance(tab));
-      if (state) saveViewState(instance(tab), state);
+      if (state) restoreViewState(instance(tab), state);
       titles.delete(tab);
       return tab;
     },
     retire(tab) {
       mounts.get(tab)?.dispose(); // a view writes what it still held (its reading position) as it goes
       mounts.delete(tab);
-      const state = loadViewState<object>(instance(tab));
+      const state = snapshotViewState(instance(tab));
       dropViewState(instance(tab));
       return state;
     },

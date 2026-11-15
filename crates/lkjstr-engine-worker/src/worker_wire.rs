@@ -213,6 +213,7 @@ impl Host {
         } else {
             None
         };
+        let refresh_previews = matches!(&input, W::Configure { .. } | W::Hint { .. });
         let translated = self
             .sessions
             .get(&id)
@@ -240,6 +241,9 @@ impl Host {
                 }
             }
             _ => {}
+        }
+        if refresh_previews {
+            previews::refresh(self);
         }
     }
 }

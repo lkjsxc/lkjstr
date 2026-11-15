@@ -99,20 +99,40 @@ export function mountFeedBar(o: {
   const search = kind === 'search';
   const filter = (): Filter => ({ ...state.filter, ...(search ? { text: state.text } : {}) });
   const input = (): HTMLInputElement | null => slot.querySelector('input');
+  let deferred = false;
+  const resume = (event: FocusEvent): void => {
+    // Keep a newly focused control alive through its pending click or input.
+    if (event.relatedTarget instanceof Node && slot.contains(event.relatedTarget)) return;
+    if (deferred) {
+      deferred = false;
+      queueMicrotask(draw);
+    }
+  };
+  slot.addEventListener('focusout', resume);
   const draw = (): void => {
+    if (
+      slot.contains(document.activeElement) &&
+      document.activeElement?.matches('input:not(.padd)')
+    ) {
+      deferred = true;
+      return;
+    }
+    deferred = false;
     const f = filter();
     if (!search && !wanted() && !f.shown && !filterNarrows(f)) return put(null);
     put(
       filterBar(
         f,
         search ? 'filter.search' : 'filter.query',
-        (next, typed) => {
+        (next, typed, apply = true) => {
           if (search) state.text = next.text;
           state.filter = search ? { ...next, text: undefined } : next;
           o.save();
           const full = rich(env.engine);
           const narrowed =
             JSON.stringify(filterQuery(next, full)) !== JSON.stringify(filterQuery(f, full));
+          Object.assign(f, next);
+          if (!apply) return;
           if (!typed) draw();
           if (narrowed || typed) o.reopen();
         },
@@ -161,5 +181,11 @@ export function mountFeedBar(o: {
     if (filterNarrows(filter())) o.reopen();
   });
   const offWho = env.engine.accounts.subscribe(draw);
-  return () => (off(), offInfo(), offWho(), window.removeEventListener('keydown', key));
+  return () => (
+    slot.removeEventListener('focusout', resume),
+    off(),
+    offInfo(),
+    offWho(),
+    window.removeEventListener('keydown', key)
+  );
 }

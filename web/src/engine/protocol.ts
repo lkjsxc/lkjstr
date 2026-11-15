@@ -15,6 +15,7 @@
  * create an account on it.
  * 3: the query fields `phrases`, `exclude`, `has`, `from`, `notifications` and `show`. The interface draws their
  * controls only for an engine that reports 3 or more, and sends an older one the plain words in `text`.
+ * 5: optional link previews, engine configuration and the near-note hint.
  * 4: channels (NIP-28): the sources `channels` and `channel`, `ChannelRow`, `NoteRow.channel`, `Draft.channel` and
  * the actions `channel.join`, `channel.save`, `channel.seen`. The interface draws no channel control for an engine
  * that reports less. */
@@ -196,7 +197,18 @@ export type Counts = {
   readonly partial: boolean;
 };
 
+/** Since version 5. Absent previews means the service is unavailable. At most two, in link order. */
+export type LinkPreview = {
+  readonly source: string;
+  readonly url: string;
+  readonly siteName?: string;
+  readonly title?: string;
+  readonly description?: string;
+  readonly imageUrl?: string | null;
+  readonly kind: 'loading' | 'link' | 'page' | 'post';
+};
 export type NoteRow = {
+  readonly previews?: readonly LinkPreview[];
   readonly kind: 'note';
   readonly key: RowKey;
   /** Event id (hex) of the note itself: for a repost row, the reposted note. */
@@ -596,6 +608,8 @@ export type Hint = {
 
 /** Engine-side settings. The interface stores settings and sends the whole object whenever one changes. */
 export type EngineConfig = {
+  /** Since version 5. Default on; data saver always disables it. */
+  readonly linkPreviews?: boolean;
   // engine-added 2026-11-15: 2
   /** Include the lkjstr client tag on authored events (default true). */
   readonly clientTag?: boolean;
@@ -613,6 +627,8 @@ export type EngineConfig = {
 // ───────────────────────────────────────── messages ─────────────────────────────────────────
 
 export type ToEngine =
+  /** Since version 5. Near, uncovered note ids only, lowest priority; an empty list releases wants. */
+  | { readonly t: 'preview'; readonly sub: SubId; readonly ids: readonly string[] }
   // engine-added 2026-11-15: 4
   | { readonly t: 'stats'; readonly req: ReqId }
   // end engine-added
