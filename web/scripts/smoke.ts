@@ -571,7 +571,7 @@ async function filtering(browser: Browser, still: Record<string, unknown>): Prom
   );
   await page.locator(`${feed} .ppeople .chip`).click();
   await settle();
-  await page.locator(`${feed} .prow`).last().locator('.chip').last().click();
+  await page.locator(`${feed} .prow`).last().locator('.chip').first().click();
   await page.locator(`${feed} .list > .notif`).first().waitFor();
   fact(
     'notifications flow into the timeline when asked',
@@ -1378,7 +1378,7 @@ async function pages(browser: Browser, still: Record<string, unknown>): Promise<
   fact(
     'about: version, engine, source, licence',
     /lkjstr \d+\.\d+\.\d+/.test(about) &&
-      about.includes('mock, protocol 3') &&
+      about.includes('mock, protocol 4') &&
       (await count(page, `${sv} a[href="https://github.com/lkjsxc/lkjstr"]`)) === 1 &&
       about.includes('Apache License 2.0'),
     about,

@@ -220,15 +220,7 @@ export function filterBar(
         )
       : null,
     opts.rich && opts.news
-      ? seg(
-          'filter.news',
-          [
-            [false, 'filter.hide'],
-            [true, 'filter.show'],
-          ] as const,
-          f.news === true,
-          (v) => ({ ...f, news: v || undefined }),
-        )
+      ? seg('filter.news', onOff, f.news === true, (v) => ({ ...f, news: v || undefined }))
       : null,
   );
   const toggle = h(
@@ -245,8 +237,9 @@ export function filterBar(
   const input = h('input', {
     type: 'search',
     value: f.text ?? '',
-    placeholder: t(placeholder),
-    'aria-label': t(placeholder),
+    // The field says what can be typed in it; an engine that takes words only is promised words only.
+    placeholder: t(placeholder === 'filter.query' && !opts.rich ? 'filter.words' : placeholder),
+    'aria-label': t(placeholder === 'filter.query' ? 'filter.title' : placeholder),
     title: opts.rich ? t('filter.syntax') : null,
   });
   const reset = clear

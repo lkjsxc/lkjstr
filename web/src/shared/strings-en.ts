@@ -101,7 +101,8 @@ export const en = {
   'notif.mention': ' mentioned you',
   'notif.reply': ' replied to you',
   'filter.title': 'Filter',
-  'filter.query': 'Query…',
+  'filter.query': 'words  from:name  has:image',
+  'filter.words': 'Words…',
   'filter.syntax': 'words  "a phrase"  -word  from:name  has:image|video|link',
   'filter.search': 'Search notes and people',
   'filter.replies': 'Replies',
@@ -181,6 +182,9 @@ export const en = {
   'set.composeNew': 'Posting: Always open a new Post tab',
   'set.composeNew.d':
     'The Post key and the pen button always open a new tab. Switched off, they go to the Post tab that is open when there is one.',
+  'set.clientTag': 'Posting: via lkjstr',
+  'set.clientTag.d':
+    'Notes, reposts and reactions you publish carry a client tag saying they were sent with lkjstr.',
   'tabs.search': 'Search tabs',
   'set.resetLayouts': 'Layout: Reset every layout',
   'set.resetLayouts.d': 'Put all nine workspaces back to how they started.',

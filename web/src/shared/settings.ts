@@ -19,6 +19,7 @@ export const DEFAULT_SETTINGS = {
   showRelayCount: false, // connected relays in the top bar
   showSensitive: false, // content-warned notes open
   composeNew: false, // the composer key always opens a new tab instead of going to the open one
+  clientTag: true, // what the reader publishes says it was written with lkjstr
 };
 export type Settings = typeof DEFAULT_SETTINGS;
 export type SettingKey = keyof Settings;
@@ -51,6 +52,7 @@ export const SETTINGS_SCHEMA: readonly SettingField[] = [
   field('closeClicks', num(1, 5)),
   field('showRelayCount', BOOL),
   field('composeNew', BOOL),
+  field('clientTag', BOOL),
 ];
 
 export const SETTINGS_KEY = 'settings';

@@ -103,7 +103,8 @@ export const ja: Record<keyof typeof en, string> = {
   'notif.mention': 'があなたに言及しました',
   'notif.reply': ' から返信が届きました',
   'filter.title': '絞り込み',
-  'filter.query': 'クエリ…',
+  'filter.query': '言葉　from:名前　has:image',
+  'filter.words': '言葉…',
   'filter.syntax': '言葉　"フレーズ"　-除外　from:名前　has:image|video|link',
   'filter.search': 'ノートと人を検索',
   'filter.replies': '返信',
@@ -183,6 +184,9 @@ export const ja: Record<keyof typeof en, string> = {
   'set.composeNew': '投稿: いつも新しい投稿タブを開く',
   'set.composeNew.d':
     '投稿のキーやペンのボタンで、いつも新しいタブを開きます。切っているときは、開いている投稿タブがあればそこへ移ります。',
+  'set.clientTag': '投稿: via lkjstr',
+  'set.clientTag.d':
+    '投稿、リポスト、リアクションに、lkjstr から送ったことを示すクライアントタグを付けます。',
   'tabs.search': 'タブを検索',
   'set.resetLayouts': 'レイアウト: すべての配置を初期状態に戻す',
   'set.resetLayouts.d': '9つのワークスペースを最初の状態に戻します。',

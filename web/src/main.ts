@@ -27,6 +27,7 @@ const engine = createEngine(await createTransport(__ENGINE_URL__));
 const configure = (): void =>
   engine.configure({
     language,
+    clientTag: settings.get().clientTag,
     heuristics: true,
     prefetch: true,
     mock: kv.get('mock') as { live: boolean; accounts?: 'none' } | undefined,
@@ -94,8 +95,10 @@ engine.accounts.subscribe(() => {
   arrive?.();
 });
 
+let tagged = settings.get().clientTag;
 settings.subscribe((s) => {
   host.look(s);
+  if (s.clientTag !== tagged) (tagged = s.clientTag), configure();
   const next = resolveLang(s.language);
   if (next === language) return;
   // Another language: every label is drawn again.
