@@ -40,9 +40,10 @@ fn an_owners_home_keeps_its_follow_watch_after_eose_and_releases_it_on_close() {
         0,
     );
     n.connected(relay, 0);
+    n.tick(75);
     let first = frames(&mut n);
     let id = first.iter().find(|v| v[0] == "REQ").expect("request")[1].clone();
-    n.message(relay, &json!(["EOSE", id]).to_string(), 1);
+    n.message(relay, &json!(["EOSE", id]).to_string(), 76);
     assert!(frames(&mut n).iter().any(|v| v[0] == "CLOSE"));
     let home = Query {
         source: Source::TheirHome,

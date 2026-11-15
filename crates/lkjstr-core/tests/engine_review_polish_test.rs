@@ -87,13 +87,14 @@ fn wholly_withheld_window_refills_cache_and_fetches_history_without_a_row_anchor
     open(&mut e);
     e.drain();
     e.network.connected(relay, 0);
+    e.network.tick(75);
     let frames = requests(&mut e.network);
     let profile = frames
         .iter()
         .find(|f| f[2]["kinds"] == json!([0]))
         .expect("profile");
     e.network
-        .message(relay, &json!(["EOSE", profile[1]]).to_string(), 1);
+        .message(relay, &json!(["EOSE", profile[1]]).to_string(), 76);
     e.tick(100);
     assert!(e.network.profile_absent(&"a".repeat(64)));
     let older = note(99, &"b".repeat(64));
@@ -120,13 +121,14 @@ fn wholly_withheld_window_refills_cache_and_fetches_history_without_a_row_anchor
     open(&mut e);
     e.drain();
     e.network.connected(relay, 0);
+    e.network.tick(75);
     let frames = requests(&mut e.network);
     let profile = frames
         .iter()
         .find(|f| f[2]["kinds"] == json!([0]))
         .expect("profile");
     e.network
-        .message(relay, &json!(["EOSE", profile[1]]).to_string(), 1);
+        .message(relay, &json!(["EOSE", profile[1]]).to_string(), 76);
     e.tick(100);
     let head = frames
         .iter()
@@ -139,10 +141,11 @@ fn wholly_withheld_window_refills_cache_and_fetches_history_without_a_row_anchor
     e.network
         .message(relay, &json!(["EOSE", head[1]]).to_string(), 102);
     e.tick(200);
+    e.tick(300);
     let pages = requests(&mut e.network);
     assert!(pages.iter().any(|f| f[2]["until"] == 99));
     // Repeated ticks do not reopen the same cursor or release profile evidence.
-    e.tick(300);
+    e.tick(400);
     assert!(requests(&mut e.network).is_empty());
     assert!(e.network.profile_absent(&"a".repeat(64)));
 }
@@ -169,25 +172,26 @@ fn profile_absence_requires_successful_untruncated_results_on_all_routes() {
             0,
         );
         n.connected(relay, 0);
+        n.tick(75);
         let frames = requests(&mut n);
         let id = frames[0][1].clone();
         assert!(!n.profile_absent(&author));
         if outcome == "truncated" {
-            let mut profile = note(100, &"b".repeat(64));
+            let mut profile = note(100, &author);
             profile.kind = 0;
-            n.message(relay, &json!(["EVENT", id, profile]).to_string(), 1);
+            n.message(relay, &json!(["EVENT", id, profile]).to_string(), 76);
         }
         match outcome {
             "closed" => {
                 n.message(
                     relay,
                     &json!(["CLOSED", id, "blocked: fixture"]).to_string(),
-                    2,
+                    77,
                 );
             }
-            "timeout" => n.tick(15001),
+            "timeout" => n.tick(15076),
             _ => {
-                n.message(relay, &json!(["EOSE", id]).to_string(), 2);
+                n.message(relay, &json!(["EOSE", id]).to_string(), 77);
             }
         }
         assert!(n.profile_finished(&author, &[]), "{outcome}");
@@ -217,16 +221,16 @@ fn successful_primary_and_failed_fallback_cannot_prove_profile_absence() {
         &lkjstr_core::store::Store::new(0),
         0,
     );
-    n.connected(routes[0], 0);
+    n.connected(routes[0], 75);
     let primary = requests(&mut n);
-    n.connected(routes[1], 0);
+    n.connected(routes[1], 75);
     let fallback = requests(&mut n);
-    n.message(routes[0], &json!(["EOSE", primary[0][1]]).to_string(), 1);
+    n.message(routes[0], &json!(["EOSE", primary[0][1]]).to_string(), 76);
     assert!(!n.profile_absent(&author));
     n.message(
         routes[1],
         &json!(["CLOSED", fallback[0][1], "blocked: fixture"]).to_string(),
-        2,
+        77,
     );
     assert!(n.profile_finished(&author, &[]));
     assert!(!n.profile_absent(&author));

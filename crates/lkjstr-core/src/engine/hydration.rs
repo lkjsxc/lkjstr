@@ -106,23 +106,28 @@ impl Engine {
             });
             people.truncate(6000);
             for (author, seen) in people {
+                if self.store.profile(&author).is_some() {
+                    continue;
+                }
                 let delivered: Vec<_> = seen
                     .into_iter()
                     .filter(|u| reads.contains(u))
-                    .take(2)
+                    .take(1)
                     .collect();
-                let routes = if delivered.is_empty()
-                    || (self.store.profile(&author).is_none()
-                        && self.network.profile_finished(&author, &delivered))
-                {
+                let first = if delivered.is_empty() {
+                    reads.iter().take(1).cloned().collect()
+                } else {
+                    delivered
+                };
+                let routes = if self.network.profile_finished(&author, &first) {
                     reads
                         .iter()
                         .take(2)
                         .cloned()
-                        .chain(delivered.iter().cloned())
+                        .chain(first.iter().cloned())
                         .collect()
                 } else {
-                    delivered
+                    first
                 };
                 for relay in routes {
                     batches

@@ -6,6 +6,11 @@ impl Network {
             return;
         };
         if let Some(r) = self.relays.get_mut(relay) {
+            // NIP-01 advertises multi-filter REQ support. Try only two when no
+            // tighter NIP-11 limit is given; CLOSED falls back to single filters.
+            if info.supports(1) && r.max_filters <= 1 && !r.single_filters {
+                r.max_filters = 2;
+            }
             if let Some(limit) = info
                 .limitation
                 .as_ref()
@@ -29,6 +34,9 @@ impl Network {
                 .and_then(|v| v.as_u64())
             {
                 r.max_filters = limit.clamp(1, 8) as usize;
+            }
+            if r.single_filters {
+                r.max_filters = 1;
             }
             r.nip11 = true;
         }
@@ -122,7 +130,10 @@ impl Network {
             .requests
             .values()
             .filter(|r| {
-                r.filter.authors.as_deref() == Some(&[account.to_owned()])
+                r.filter
+                    .authors
+                    .as_ref()
+                    .is_some_and(|authors| authors.iter().any(|a| a == account))
                     && r.filter.kinds.as_ref().is_some_and(|ks| ks.contains(&kind))
                     && r.filter.ids.is_none()
                     && r.filter.tags.is_empty()
@@ -137,9 +148,11 @@ impl Network {
                 r.asked
                     && (r.eose || (kind == 10005 && r.page_eose))
                     && r.received.len() < r.page_limit
-                    && r.received
-                        .iter()
-                        .all(|id| store.get(id).is_some_and(|e| e.kind != kind))
+                    && r.received.iter().all(|id| {
+                        store
+                            .get(id)
+                            .is_some_and(|e| e.kind != kind || e.pubkey != account)
+                    })
             })
     }
 }

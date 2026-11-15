@@ -75,12 +75,26 @@ impl Network {
                     } else {
                         0
                     },
+                counts_filter(&r.filter),
                 std::cmp::Reverse(r.weight),
                 id.clone(),
             )
         });
         for id in ids {
             let r = &self.requests[&id];
+            // Collect the initial visible page before freezing count buckets.
+            // Otherwise every verification slice creates another 200-event stream.
+            if counts_filter(&r.filter)
+                && self.requests.values().any(|q| {
+                    q.relay == r.relay
+                        && q.priority <= 1
+                        && !q.page_eose
+                        && !q.complete
+                        && !q.members.is_disjoint(&r.members)
+                })
+            {
+                continue;
+            }
             if now < r.ready_at
                 || r.sent
                 || r.complete
@@ -108,6 +122,12 @@ impl Network {
                         .find(|(_, q)| {
                             q.relay == r.relay
                                 && q.sent
+                                // Finite hydration must finish or time out. Replaying
+                                // a large follower/ID answer for every name is costly.
+                                && (q.live || q.eose || focused_page
+                                    || !(q.filter.ids.is_some()
+                                        || (q.filter.kinds.as_deref() == Some(&[3])
+                                            && q.filter.tags.contains_key("p"))))
                                 && (!visible_profile(q) || (focused_page && q.priority > 0))
                                 && (q.priority != 0 || q.eose)
                                 && ((focused_page && q.priority > 0)
@@ -183,10 +203,11 @@ pub(super) fn filter_live(f: &NostrFilter) -> bool {
 }
 
 fn counts_filter(f: &NostrFilter) -> bool {
-    matches!(
-        f.kinds.as_deref(),
-        Some([1, 6, 7, 9735] | [42, 16, 7, 9735] | [1, 42, 6, 16, 7, 9735])
-    )
+    f.tags.contains_key("e")
+        && matches!(
+            f.kinds.as_deref(),
+            Some([1, 6, 7, 9735] | [42, 16, 7, 9735] | [1, 42, 6, 16, 7, 9735])
+        )
 }
 
 // A bounded cooldown shares slots between channels, follow watches and live feeds.

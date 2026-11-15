@@ -33,6 +33,7 @@ fn anchored_hydration_follows_displayed_authors_and_references() {
     frames(&mut e);
     window(&mut e, Some(old.id.clone()), 0, 310);
     e.tick(410);
+    e.tick(510);
     let sent = frames(&mut e);
     assert!(
         sent.iter()

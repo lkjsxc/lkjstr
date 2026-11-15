@@ -66,16 +66,18 @@ fn history_preempts_settled_count_requests_and_counts_resume() {
     let mut n = Network::default();
     n.configure(vec![RELAY.into()], 0);
     n.relay_information(RELAY, r#"{"limitation":{"max_subscriptions":1}}"#);
-    let counts = NostrFilter {
+    let mut counts = NostrFilter {
         kinds: Some(vec![1, 6, 7, 9735]),
+        limit: Some(200),
         ..Default::default()
     };
+    counts.tags.insert("e".into(), vec!["a".repeat(64)]);
     n.plan(
         vec![("counts".into(), counts.clone(), Query::default())],
         &lkjstr_core::store::Store::new(0),
         0,
     );
-    n.connected(RELAY, 1);
+    n.connected(RELAY, 75);
     let req = n
         .drain_effects()
         .into_iter()
@@ -86,7 +88,7 @@ fn history_preempts_settled_count_requests_and_counts_resume() {
             _ => None,
         })
         .expect("count request");
-    n.message(RELAY, &json!(["EOSE", req[1]]).to_string(), 2);
+    n.message(RELAY, &json!(["EOSE", req[1]]).to_string(), 76);
     let page = NostrFilter {
         kinds: Some(vec![1, 6]),
         until: Some(100),
@@ -100,6 +102,7 @@ fn history_preempts_settled_count_requests_and_counts_resume() {
         &lkjstr_core::store::Store::new(0),
         110,
     );
+    n.tick(185);
     let effects = n
         .drain_effects()
         .into_iter()
@@ -115,8 +118,8 @@ fn history_preempts_settled_count_requests_and_counts_resume() {
         .iter()
         .find(|f| f[0] == "REQ" && f[2]["until"] == 100)
         .expect("history sent");
-    n.message(RELAY, &json!(["EOSE", page[1]]).to_string(), 111);
-    n.tick(220);
+    n.message(RELAY, &json!(["EOSE", page[1]]).to_string(), 186);
+    n.tick(286);
     assert!(n.drain_effects().iter().any(
         |f| matches!(f, lkjstr_core::engine::network::Effect::Send(_,text) if text.contains("REQ"))
     ));

@@ -1,7 +1,7 @@
 # Status
 
 ## Purpose
-Current engine behavior and unfinished variants.
+Current engine behavior and unfinished variants. Traffic work: [cover.md](cover.md).
 
 ## Protocol 4 channels (2026-11-15)
 
@@ -59,15 +59,17 @@ Conformance uses this worktree's contract; commands/artifacts: engine-package.md
 ## Engine polish (2026-11-15)
 
 Visible windows batch up to 6000 authors per view, including nested quotes,
-reply context and repost actors. Profile batches share relay work, prefer
-note-delivering read relays, fall back after completion and release on hiding.
-Cached names render immediately while metadata refreshes. Visible profiles
-can preempt occupied relay slots; completed focused feeds wait for lookup replies.
+reply context and repost actors. Profile batches share relay work in 75 ms windows,
+prefer note-delivering read relays, fall back after completion and release on hiding.
+Cached names render immediately; automatic hydration skips cached metadata.
+Explicit People/account lookups refresh; finite replies finish before name preemption.
+Completed focused feeds wait for lookup replies.
 Unfinished focused pages keep priority and replay their filters until EOSE.
 Completed coverage and cursors survive live resumption without exhausting history.
 Native regressions cover delayed hydration, interruption and pagination.
 Six native regressions cover routing, batching, context, refresh and release.
-The 240 ms congested-slot probe improves note-to-name from 1893.7 to 232.5 ms.
+The earlier 240 ms probe improved note-to-name from 1893.7 to 232.5 ms.
+Current coalescing results and remaining gaps: [cover.md](cover.md).
 
 Protocol 2 uses absent profile fields for unknown counts and the existing
 partial flag for lower bounds. Count requests are bounded and exact only after

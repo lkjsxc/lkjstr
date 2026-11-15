@@ -177,6 +177,7 @@ fn channel_reference_lookup_preempts_and_releases_a_settled_live_slot() {
         &lkjstr_core::store::Store::new(0),
         110,
     );
+    n.tick(185);
     let sent = n
         .drain_effects()
         .into_iter()
@@ -192,7 +193,7 @@ fn channel_reference_lookup_preempts_and_releases_a_settled_live_slot() {
         .iter()
         .find(|m| m[0] == "REQ" && m[2]["ids"].is_array())
         .expect("lookup");
-    n.message(RELAY, &json!(["EOSE", lookup[1]]).to_string(), 111);
-    n.tick(220);
+    n.message(RELAY, &json!(["EOSE", lookup[1]]).to_string(), 186);
+    n.tick(286);
     assert!(n.drain_effects().iter().any(|f|matches!(f,lkjstr_core::engine::network::Effect::Send(_,s) if s.contains("REQ")&&s.contains("42"))));
 }

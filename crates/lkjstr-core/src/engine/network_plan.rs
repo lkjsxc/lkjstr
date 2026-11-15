@@ -32,6 +32,11 @@ impl Network {
             }
         }
         let live_lists = lists::views(&wants);
+        let refresh_profiles: BTreeSet<_> = wants
+            .iter()
+            .filter(|(_, f, q)| q.source == Source::People && f.kinds.as_deref() == Some(&[0]))
+            .map(|(sub, _, _)| sub.clone())
+            .collect();
         let queries = wants.iter().map(|(sub, _, q)| (sub.clone(), q)).collect();
         let mut weights = crate::engine::weights::PlanWeights::new(store, private);
         let mut desired = Desired::new();
@@ -61,7 +66,7 @@ impl Network {
                 entry.1.insert(sub.clone());
             }
         }
-        self.stabilize_profiles(&mut desired);
+        self.stabilize_profiles(&mut desired, &live_lists);
         let mut retained = BTreeSet::new();
         for ((relay, _key), (filter, members)) in desired {
             let list_watch = lists::watch(&filter, &members, &live_lists);
@@ -75,7 +80,7 @@ impl Network {
                 r.list_watch = list_watch;
                 let relay = r.relay.clone();
                 let wire = r.wire_id.clone();
-                r.refresh_profile(&members, now);
+                r.refresh_profile(&members, &refresh_profiles, now);
                 r.live |= members.contains("~account-discovery");
                 r.members = members;
                 retained.insert(id.clone());
@@ -87,6 +92,11 @@ impl Network {
                 let id = format!("e{}", self.next);
                 retained.insert(id.clone());
                 let (wire_filter, exhausted) = self.page_request(&relay, &filter);
+                let ready_at = if list_watch || !members.is_disjoint(&refresh_profiles) {
+                    now
+                } else {
+                    self.hydration_ready(&filter, &members, now)
+                };
                 self.requests.insert(
                     id.clone(),
                     Request {
@@ -109,7 +119,7 @@ impl Network {
                         live,
                         list_watch,
                         asked: false,
-                        ready_at: now,
+                        ready_at,
                         received: BTreeSet::new(),
                         page_limit: 200,
                         oldest: None,
@@ -127,6 +137,9 @@ impl Network {
         for id in obsolete {
             if let Some(r) = self.requests.remove(&id)
                 && r.sent
+                && !self.requests.iter().any(|(id, q)| {
+                    retained.contains(id) && q.sent && q.relay == r.relay && q.wire_id == r.wire_id
+                })
             {
                 self.close_group(&r.relay, &r.wire_id);
             }

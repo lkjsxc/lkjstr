@@ -67,11 +67,12 @@ fn preempt(n: &mut Network, filter: &NostrFilter, head: &Value) {
         &lkjstr_core::store::Store::new(0),
         30,
     );
+    n.tick(105);
     let lookup = requests(n).remove(0);
     assert_eq!(lookup[2]["kinds"], json!([0]));
     // A late response from the closed feed must not finish its page.
-    eose(n, head, 31);
-    eose(n, &lookup, 40);
+    eose(n, head, 106);
+    eose(n, &lookup, 107);
 }
 #[test]
 fn interrupted_pages_replay_original_filters_before_claiming_exhaustion() {

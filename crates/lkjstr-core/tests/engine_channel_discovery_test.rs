@@ -57,6 +57,7 @@ fn metadata_seed_discovers_old_creation_on_search_only_route() {
         .expect("metadata match");
     e.enqueue(relay.into(), verified);
     e.tick(401);
+    e.tick(601);
     let lookup = frames(&mut e)
         .into_iter()
         .find(|f| f[0] == "REQ" && f[2]["ids"] == json!([creation.id]))
@@ -66,11 +67,11 @@ fn metadata_seed_discovers_old_creation_on_search_only_route() {
         .message(
             relay,
             &json!(["EVENT", lookup[1], creation]).to_string(),
-            402,
+            602,
         )
         .expect("creation match");
     e.enqueue(relay.into(), verified);
-    e.tick(501);
+    e.tick(701);
     let outputs = engine_review_support::output(&mut session, &mut e);
     assert!(
         outputs

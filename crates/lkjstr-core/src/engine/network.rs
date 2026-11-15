@@ -67,6 +67,7 @@ pub struct Relay {
     pub sent: u64,
     pub max_reqs: usize,
     pub max_filters: usize,
+    pub single_filters: bool, // A rejected envelope disables capability inference.
     pub max_limit: u64,
     pub nip11: bool,
     pub next_req_at: u64,
