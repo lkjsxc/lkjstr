@@ -38,6 +38,7 @@ export function mountAdd(env: ViewEnv): { el: HTMLElement; sync(): void } {
   };
   const run = async (way: Way, action: Action, waiting: Key, remote = false): Promise<void> => {
     if (busy) return;
+    const from = document.activeElement as HTMLElement | null;
     busy = true;
     sync();
     say(way, t(waiting));
@@ -46,6 +47,9 @@ export function mountAdd(env: ViewEnv): { el: HTMLElement; sync(): void } {
     creatingAccount(false);
     busy = false;
     sync();
+    // The control that was pressed was off while it waited: the keyboard goes back to it.
+    if (from?.isConnected && document.activeElement === document.body)
+      from.focus({ preventScroll: true });
     if (!r.ok) return say(way, t(failure(way, remote, r.error?.code)), true);
     say(way, '');
     // The engine has already said who is signed in: a created account's key is shown at once.

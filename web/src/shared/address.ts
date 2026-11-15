@@ -16,4 +16,4 @@ export const relayAddress = (text: string): string | undefined =>
 /** `https://host[/path]` of a media server. */
 export const serverAddress = (text: string): string | undefined => tidy(text, 'https:', ['https:']);
 /** The part of an address worth reading: the host, and the path when there is one. */
-export const hostOf = (url: string): string => url.replace(/^[a-z]+:\/\//, '');
+export const hostOf = (url: string): string => url.replace(/^[a-z]+:\/\//, '').replace(/\/$/, '');

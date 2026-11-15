@@ -69,7 +69,7 @@ export function relayEntry(env: ViewEnv): { entry: Entry; dispose: Disposer } {
   const form = addForm('wss://', t('relays.address'), (text) => {
     const url = relayAddress(text);
     if (!url) return (toast(env.layer, t('relays.invalid')), false);
-    if (rows.some((r) => r.url === url && listed(r)))
+    if (rows.some((r) => r.url.replace(/\/$/, '') === url && listed(r)))
       return (toast(env.layer, t('relays.already')), false);
     put({ url, read: true, write: true });
     return true;

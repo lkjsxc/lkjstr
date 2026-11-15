@@ -974,7 +974,8 @@ async function pages(browser: Browser, still: Record<string, unknown>): Promise<
   );
   fact(
     'settings: an emptied list says so',
-    (await page.locator(`${set} .snone`).nth(1).innerText()) === 'No muted words.',
+    (await page.locator(`${set} .sitem[data-entry="set.mute.word"] .snone`).innerText()) ===
+      'No muted words.',
   );
   await page.locator('.toast.undo button').click();
   await page.waitForFunction(

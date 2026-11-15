@@ -42,8 +42,14 @@ Seams worth knowing inside `src/views/`:
   ask for. `feed-draw.ts` turns rows into nodes, `feed-place.ts` keeps the
   reading position as an anchor row plus offset, `feed-keys.ts` is the
   keyboard, `feed-bar.ts` and `filter-bar.ts` are the filter.
-- `note.ts` draws a note, `note-actions.ts` its action row and menus,
-  `held.ts` holds a like or repost back until its Undo has lapsed.
+- `note.ts` draws a note, `note-media.ts` its pictures, `note-actions.ts`
+  its action row and menus, `held.ts` holds a like or repost back until its
+  Undo has lapsed.
+- `account.ts` is the Accounts tab, `account-add.ts` the ways to sign in,
+  `account-key.ts` the only place a secret key is shown. `can.ts` says
+  whether the reader can write and what a press says when they cannot.
+- `wm/presets.ts` has two layout families: `main` for an account and `guest`
+  for a visitor; `main.ts` shows the one that fits who is signed in.
 - `wm/controller.ts` owns one workspace; `wm/closed.ts` is its stored list of
   closed tabs, `wm/choices.ts` what the New tab page offers.
 
@@ -57,7 +63,12 @@ Seams worth knowing inside `src/views/`:
 - `act {req, action}` with a `result`, plus `progress` and per-relay
   `delivery` for publishes and uploads.
 - `sign` from the engine when the account uses a browser extension, answered
-  with `signed` (NIP-07 exists only on the main thread).
+  with `signed` (NIP-07 exists only on the main thread). `getPublicKey` is
+  answered by the real transport itself, and by `client.ts` for the mock.
+- Accounts: `account.add` (extension, key, create), `account.use`,
+  `account.remove`, and since protocol 2 `account.key`, whose result carries
+  the `nsec` of a local account for the "Back up key" box. The interface
+  offers "Create a new account" only to an engine that reports 2 or more.
 - `hint` (visible subscriptions, page hidden, idle, network quality) and
   `configure` (engine-side settings; the interface owns their storage).
 
@@ -67,8 +78,9 @@ Rules:
   `protocol.ts` changes only on the frontend side.
 - The interface keeps on this device, in `localStorage` under `lkjstr:`, only
   what is its own: settings, layouts, each tab's state and reading position,
-  closed tabs, the active account's pubkey. Events, keys and relay state are
-  the engine's.
+  closed tabs, the active account's pubkey and face (name, picture, kind of
+  signer: public data, so a reload starts as the reader). Events, keys and
+  relay state are the engine's; a typed or shown key is never stored.
 - One deliberate piece of optimism lives in the interface: a like or repost
   is drawn at once and published only after its Undo lapses (or when the page
   is hidden or closed). Everything else is drawn from engine patches.

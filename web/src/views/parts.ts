@@ -54,8 +54,12 @@ export function withEmoji(text: string, emoji: readonly Emoji[] = []): Child[] {
     return url ? emojiImg(part, url) : part;
   });
 }
-export const emojiImg = (code: string, url: string): HTMLElement =>
-  h('img', { class: 'emo', src: url, alt: code, title: code, draggable: false });
+/** A custom emoji. One whose picture cannot be had is its `:code:` as plain text, not a broken image. */
+export function emojiImg(code: string, url: string): HTMLElement {
+  const img = h('img', { class: 'emo', src: url, alt: code, title: code, draggable: false });
+  img.addEventListener('error', () => img.replaceWith(code));
+  return img;
+}
 
 export const displayName = (a: Author): Child[] => withEmoji(nameOf(a), a.emoji);
 /** The name as plain text (tab titles, tooltips). */

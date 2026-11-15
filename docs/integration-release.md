@@ -79,10 +79,50 @@ search-only relay routing, thread focus and decoded profile deep-link headers.
 
 ## UI gaps and owner decisions
 
-- Accounts/account.add: the top bar says Sign in, but neither its menu nor
-  Settings provides a first-account control. A person cannot add a signer in
-  the current interface. The owner must supply that control before signed-in
-  use can be released. No account UI was designed in this integration.
+- Accounts: closed by the interface slice below. A person can sign in, add,
+  switch and remove accounts, and is signed out again when none is left.
+
+## Interface slice, 2026-11-15
+
+The interface now carries the whole account surface and the first minute of
+a visit; docs/design.md has the rules. In short: an Accounts tab (extension,
+key or address, new account; switch; remove; back up key), a visitor's own
+layout (one tile of Global, Sign in on the bar), publishing controls drawn
+off for a reader who cannot write, short npubs in place of unknown names,
+no count before it is known, picture boxes with their final shape and a
+tint, relay editing in Settings only, a phone bar that fits.
+
+Protocol changes (web/src/engine/protocol.ts) for the engine to follow:
+
+1. The protocol number (the constant at the top of the file) is 2. New
+   action `account.key {pubkey}`: the result carries `key`, the `nsec1...`
+   of a `local` account; any other signer fails with `unsupported`. The
+   engine reports 2 in `ready` once it answers this action. Until then the
+   interface hides "Create a new account" and "Back up key", so no key is
+   made that cannot be shown.
+2. `ProfileRow.following`, `followers` and `notes` are optional: absent means
+   not known yet. A partial 0 is treated the same way.
+3. `Author.name` may be empty, the pubkey or the npub until the profile is
+   known; the interface shows a short npub in its place. No field was added.
+4. `EngineConfig.mock.accounts: 'none'` (mock only): a first visit.
+
+Asked of the engine, with no protocol change: `Counts.partial` and
+`ProfileRow.partial` are always true today, so every count reads "1+" for
+good; they should turn false once the relays asked have answered. A link's
+`text` should be the host and a shortened path. A visitor cannot change
+bootstrap relays (`relays.save` needs an account).
+
+Gates in web/: pnpm check, pnpm build, pnpm smoke, pnpm smoke:real all pass.
+smoke:real has 27 checks and now signs in through the interface (fixture
+extension, and a throwaway key made in the test and used on loopback only),
+covers read-only, switching, removal, signing out and the signed-out first
+run. LKJSTR_SHOTS=1 makes it write the review captures.
+
+Captures in ignored tmp/screens/ (earlier ones moved to tmp/screens-earlier/):
+slice-firstrun-1440.png (public relays, signed out), slice-signin-390-dark-ja.png,
+slice-profile-pending-1440-dark.png, slice-signedin-1440-ja.png (loopback).
+
+Release candidate: ARTIFACT_LINE
 
 ## Files
 

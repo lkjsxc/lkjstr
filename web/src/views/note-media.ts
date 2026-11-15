@@ -9,6 +9,29 @@ import { t } from '../shared/i18n.ts';
 import { icon } from '../shared/icons.ts';
 import type { ViewEnv } from './registry.ts';
 
+/** Sizes learned from pictures that have loaded here: the next time one is drawn its box is exact from the start. */
+const seen = new Map<string, { w: number; h: number }>(); // bound: SEEN_MAX, oldest dropped
+const SEEN_MAX = 600;
+const learn = (url: string, w: number, h: number): void => {
+  if (!w || !h) return;
+  if (seen.size >= SEEN_MAX) seen.delete(seen.keys().next().value ?? '');
+  seen.set(url, { w, h });
+};
+/** A picture of unknown size has loaded into its 3:2 box. The box keeps its height, so nothing below moves: a
+ * narrower picture takes the box in to its own width, a wider one fills the box (cropped at the sides) unless it is
+ * a strip, which stays whole. */
+function settle(box: HTMLElement, img: HTMLImageElement): void {
+  const r = img.naturalWidth / img.naturalHeight;
+  const height = box.getBoundingClientRect().height;
+  if (!Number.isFinite(r) || !height) return;
+  if (r < 1.5) {
+    box.style.height = `${height}px`;
+    box.style.width = `${Math.max(height * r, 40)}px`;
+    box.style.aspectRatio = 'auto';
+  }
+  if (r < 2.4) box.classList.remove('fit');
+}
+
 export function mediaGrid(
   media: readonly Media[],
   env: ViewEnv,
@@ -25,10 +48,11 @@ export function mediaGrid(
       );
     // One picture keeps its own ratio (within reason) and is never drawn larger than it is; a picture of unknown
     // size gets a 3:2 box and is fitted into it whole. Several share a grid of squares.
-    const sized = Boolean(m.w && m.h);
-    const ratio = sized ? Math.min(4, Math.max(0.4, (m.w ?? 3) / (m.h ?? 2))) : 1.5;
+    const size = m.w && m.h ? { w: m.w, h: m.h } : seen.get(m.thumb ?? m.url);
+    const sized = size !== undefined;
+    const ratio = size ? Math.min(4, Math.max(0.4, size.w / size.h)) : 1.5;
     const style = one
-      ? `--r:${ratio.toFixed(4)};${sized ? `--w:${m.w}px;` : ''}`
+      ? `--r:${ratio.toFixed(4)};${size ? `--w:${size.w}px;` : ''}`
       : 'aspect-ratio:1 / 1;';
     const box: HTMLElement = h('a', {
       class: one && !sized ? 'mbox fit' : 'mbox',
@@ -59,6 +83,11 @@ export function mediaGrid(
         decoding: 'async',
       });
       img.addEventListener('error', gone(img));
+      if (one && !sized)
+        img.addEventListener('load', () => {
+          learn(img.src, img.naturalWidth, img.naturalHeight);
+          settle(box, img);
+        });
       box.append(img);
     } else {
       const video = h('video', {

@@ -1,5 +1,6 @@
 // Screenshots of the mock build for judging the look: ../tmp/screens/<name>-<width>-<theme>-<lang>.png.
-// Scenes: home, profile, thread, notifications, compose (with the emoji picker), media, settings, relays.
+// Scenes: home, profile, thread, notifications, compose (with the emoji picker), media, settings, relays, accounts,
+// and a visitor's first run and sign-in (nobody signed in).
 // node scripts/shots.ts [--only=<width>-<theme>-<lang>] [--scenes=home,thread]
 import { spawn } from 'node:child_process';
 import { mkdirSync } from 'node:fs';
@@ -36,7 +37,12 @@ try {
         const tag = `${width}-${theme}-${lang}`;
         if (only && only !== tag) continue;
         // Every scene starts from a fresh page, so none shows what another left behind.
-        const scene = async (name: string, path: string, act: (page: Page) => Promise<void>) => {
+        const scene = async (
+          name: string,
+          path: string,
+          act: (page: Page) => Promise<void>,
+          mock = '{"live":false}',
+        ) => {
           if (scenes && !scenes.includes(name)) return;
           const ctx = await browser.newContext({
             viewport: { width, height },
@@ -44,7 +50,7 @@ try {
             colorScheme: theme,
             locale: lang === 'ja' ? 'ja-JP' : 'en-US',
           });
-          await ctx.addInitScript(() => localStorage.setItem('lkjstr:mock', '{"live":false}'));
+          await ctx.addInitScript((m) => localStorage.setItem('lkjstr:mock', m), mock);
           const page = await ctx.newPage();
           try {
             await page.goto(`http://127.0.0.1:${port}${path}`);
@@ -96,6 +102,18 @@ try {
         });
         await scene('settings', '/', launch(lang === 'ja' ? '設定' : 'Settings', 'settings'));
         await scene('relays', '/', launch(lang === 'ja' ? 'リレー' : 'Relays', 'relays'));
+        await scene('accounts', '/', launch(lang === 'ja' ? 'アカウント' : 'Accounts', 'account'));
+        const guest = '{"live":false,"accounts":"none"}';
+        await scene('firstrun', '/', async () => undefined, guest);
+        await scene(
+          'signin',
+          '/',
+          async (page) => {
+            await page.locator('.acct.out').click();
+            await page.waitForSelector('.view[data-kind="account"] [data-f="extension"]');
+          },
+          guest,
+        );
       }
 } finally {
   await browser.close();

@@ -1,6 +1,7 @@
 // End-to-end app check. Serve the release with its production CSP; workers can
 // reach only the loopback fixture relay. Public HTTP is blocked in all contexts.
 import { spawn } from 'node:child_process';
+import { randomBytes } from 'node:crypto';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import { createInterface } from 'node:readline';
@@ -66,7 +67,7 @@ const polymod = (values) => {
   }
   return c;
 };
-const npubOf = (hex) => {
+const bech32 = (hrp, hex) => {
   const data = [];
   let acc = 0;
   let bits = 0;
@@ -76,11 +77,13 @@ const npubOf = (hex) => {
     while (bits >= 5) data.push((acc >>> (bits -= 5)) & 31);
   }
   if (bits) data.push((acc << (5 - bits)) & 31);
-  const mod = polymod([3, 3, 3, 3, 0, 14, 16, 21, 2, ...data, 0, 0, 0, 0, 0, 0]) ^ 1;
+  const codes = [...hrp].map((c) => c.charCodeAt(0));
+  const expanded = [...codes.map((c) => c >>> 5), 0, ...codes.map((c) => c & 31)];
+  const mod = polymod([...expanded, ...data, 0, 0, 0, 0, 0, 0]) ^ 1;
   const sum = Array.from({ length: 6 }, (_, i) => (mod >>> (5 * (5 - i))) & 31);
-  return `npub1${[...data, ...sum].map((i) => CH[i]).join('')}`;
+  return `${hrp}1${[...data, ...sum].map((i) => CH[i]).join('')}`;
 };
-const npub = npubOf('79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798');
+const npub = bech32('npub', '79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798');
 let browser, page;
 try {
   const base = await new Promise((done, fail) => {
@@ -176,7 +179,6 @@ try {
       firstRun.off &&
       !firstRun.hex,
   );
-  if (shots) await shot(page, 'slice-firstrun-loopback-1440.png');
   // Sign in through the interface: the Accounts tab, the browser extension (the fixture signer).
   await page.locator('.acct.out').click();
   const accounts = '.view[data-kind="account"]:visible';
@@ -244,6 +246,48 @@ try {
   );
   if (shots) await shot(stranger, 'slice-profile-pending-1440-dark.png');
   await stranger.context().close();
+  // A key typed by hand: a throwaway made here, used against the loopback relay only and removed again. It is
+  // held in this process and in the engine, and must be nowhere the interface could leave it.
+  const throwaway = bech32('nsec', randomBytes(32).toString('hex'));
+  const keyed = await visit({ viewport: { width: 1024, height: 768 }, locale: 'en-US' });
+  await keyed.locator('.acct.out').click();
+  await keyed.locator(`${accounts} input`).fill(throwaway);
+  await keyed.locator(`${accounts} input`).press('Enter');
+  await keyed.locator('.acct:not(.out)').waitFor();
+  await keyed.locator('.acct').click();
+  await keyed.locator('.menu button', { hasText: 'Accounts' }).click();
+  await keyed.locator(`${accounts} .arow.on`).waitFor();
+  const kept = await keyed.evaluate(
+    (k) => ({
+      stored: Object.keys(localStorage).some((x) => (localStorage.getItem(x) ?? '').includes(k)),
+      shown: document.body.innerText.includes(k) || document.documentElement.outerHTML.includes(k),
+      address: location.href.includes(k),
+      field: document.querySelector('.view[data-kind="account"] input[type="password"]').value,
+      signer: document.querySelector('.arow.on .asigner')?.textContent,
+      canPost: document.querySelectorAll('.note .act.off').length === 0,
+      backup: document.querySelectorAll('[data-f="backup"]').length,
+    }),
+    throwaway,
+  );
+  check(
+    'a typed key signs in and is kept nowhere by the interface',
+    !kept.stored &&
+      !kept.shown &&
+      !kept.address &&
+      kept.field === '' &&
+      kept.signer === 'Key on this device' &&
+      kept.canPost &&
+      kept.backup === 0,
+  );
+  await keyed.locator(`${accounts} .arow.on [data-f="remove"]`).click();
+  check(
+    'removing an account with a key asks first',
+    (await keyed.locator(`${accounts} .aask`).count()) === 1 &&
+      (await keyed.locator(`${accounts} .arow`).count()) === 1,
+  );
+  await keyed.locator(`${accounts} .aask [data-f="remove"]`).click();
+  await keyed.locator('.acct.out').waitFor();
+  await keyed.context().close();
   await page.locator(`${accounts} input`).fill('not a key');
   await page.locator(`${accounts} input`).press('Enter');
   await page.locator(`${accounts} .asaid.error`).waitFor();
@@ -262,10 +306,6 @@ try {
       (await page.evaluate(() => typeof JSON.parse(localStorage.getItem('lkjstr:account')))) ===
         'string',
   );
-  if (shots) {
-    await page.waitForTimeout(600);
-    await shot(page, 'slice-signedin-loopback-1440.png');
-  }
   await page.locator('.view[data-kind="home"] .note .text').first().click();
   await page.locator('.th-focus').waitFor();
   check('note opens as thread');
@@ -340,6 +380,21 @@ try {
     'reaction reaches relay',
     fake.published.some((e) => e.kind === 7),
   );
+  if (shots) {
+    // Signed in, the ordinary layout as it starts, in Japanese (the language is put back afterwards).
+    await page.evaluate(() => {
+      for (const key of Object.keys(localStorage))
+        if (/^lkjstr:(layout|view):main/.test(key)) localStorage.removeItem(key);
+      localStorage.setItem('lkjstr:settings', '{"language":"ja"}');
+    });
+    await page.reload();
+    await page.locator('.view[data-kind="home"] .note').first().waitFor();
+    await page.waitForTimeout(1200);
+    await shot(page, 'slice-signedin-1440-ja.png');
+    await page.evaluate(() => localStorage.removeItem('lkjstr:settings'));
+    await page.reload();
+    await page.locator('.view[data-kind="home"] .note').first().waitFor();
+  }
   await launch('Settings', 'settings');
   await page.getByLabel('Theme', { exact: true }).selectOption('dark');
   await page.reload();

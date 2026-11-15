@@ -30,8 +30,8 @@ export function mountSettings(el: HTMLElement, env: ViewEnv): () => void {
   const relays = relayEntry(env);
   const entries = [
     ...SETTINGS_SCHEMA.map((f) => fieldEntry(f, env.settings)),
-    ...lists.entries,
     relays.entry,
+    ...lists.entries,
     actionEntry('set.resetLayouts', env.resetLayouts),
   ];
   const groups = [...new Set(entries.map((e) => e.group))].map((name) => ({
@@ -40,6 +40,7 @@ export function mountSettings(el: HTMLElement, env: ViewEnv): () => void {
     entries: entries.filter((e) => e.group === name),
   }));
   let changed = new Set<Entry>(); // bound: the entries of this view
+  let seat: ReturnType<typeof setTimeout> | undefined;
 
   const filter = (): void => {
     const words = search.value.toLowerCase().split(/\s+/).filter(Boolean);
@@ -87,14 +88,20 @@ export function mountSettings(el: HTMLElement, env: ViewEnv): () => void {
   const off = env.settings.subscribe(sync);
   // Opened for one entry (the relay list, from the Relays tab): it is brought to the top, once.
   const state = loadViewState<{ at?: string }>(env.instance);
-  const target = entries.find((e) => e.node.dataset.entry === state.at)?.node;
+  const target = entries.find((e) => e.node.dataset.entry === state.at);
   if (state.at) saveViewState(env.instance, {});
-  if (target)
+  if (target) {
+    // Its group's heading goes to the top, under the search box; once more when its rows have arrived.
+    const head = groups.find((g) => g.name === target.group)?.head ?? target.node;
+    const show = (): void => head.scrollIntoView({ block: 'start' });
     requestAnimationFrame(() => {
-      target.scrollIntoView({ block: 'start' });
-      target.querySelector<HTMLElement>('[tabindex], input')?.focus({ preventScroll: true });
+      show();
+      target.node.querySelector<HTMLElement>('[tabindex]')?.focus({ preventScroll: true });
     });
+    seat = setTimeout(show, 300);
+  }
   return () => {
+    clearTimeout(seat);
     off();
     lists.dispose();
     relays.dispose();
