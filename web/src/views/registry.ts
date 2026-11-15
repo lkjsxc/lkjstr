@@ -84,7 +84,7 @@ export const VIEWS: readonly ViewDef[] = [
     title: 'view.compose',
     hint: 'view.compose.hint',
     launch: true,
-    aliases: 'post write new note 書く',
+    aliases: 'post write new note compose 書く ノート',
     mount: mountCompose,
   },
   {

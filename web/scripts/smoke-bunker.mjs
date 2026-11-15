@@ -28,7 +28,7 @@ async function remote(options, secret) {
     await page.locator('.acct:not(.out)').waitFor();
     const connects = bunker.calls.filter((c) => c.method === 'connect' && c.authorized).length;
     check(`NIP-46 connects ${secret ? 'with' : 'without'} secret`);
-    await launch(page, 'Write', 'compose');
+    await launch(page, 'Post', 'compose');
     const text = `bunker ${secret} before reload`;
     await post(page, text);
     await page.waitForFunction(() =>

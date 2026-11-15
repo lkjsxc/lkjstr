@@ -13,7 +13,7 @@ async function failure(options, mode) {
     await page.locator(`${accounts} [data-f="extension"]`).click();
     if (mode.endsWith('sign')) {
       await page.locator('.acct:not(.out)').waitFor();
-      await launch(page, 'Write', 'compose');
+      await launch(page, 'Post', 'compose');
       await page.locator(`${compose} textarea`).fill(draft);
       await page.locator(compose).getByRole('button', { name: 'Post', exact: true }).click();
       await page.waitForFunction(() => window.signerCalls.signEvent === 1);

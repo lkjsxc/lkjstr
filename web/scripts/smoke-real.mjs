@@ -179,7 +179,7 @@ try {
   for (let n = 0; n < 200 && !fake.searches.includes('Engine fixture'); n++)
     await page.waitForTimeout(25);
   check('search returns relay result', fake.searches.includes('Engine fixture'));
-  await launch('Write', 'compose');
+  await launch('Post', 'compose');
   const text = `real engine smoke ${Date.now()}`;
   await page.locator('.pane.cur .view[data-kind="compose"]:visible textarea').fill(text);
   await page
