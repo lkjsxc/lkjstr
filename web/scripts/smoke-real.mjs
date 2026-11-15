@@ -460,7 +460,6 @@ try {
   const relayField = page.getByLabel('Relay address', { exact: true });
   await relayField.fill(`${relayUrl}/visitor`);
   await relayField.press('Enter');
-  // Must remain a real interface check: the signed-out guard currently blocks this request.
   await page.waitForTimeout(500);
   check(
     'signed-out relay edit is saved',

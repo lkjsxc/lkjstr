@@ -19,8 +19,11 @@ const entry = ({ url, read, write }: RelayEntry): RelayEntry => ({ url, read, wr
 export function relayEntry(env: ViewEnv): { entry: Entry; dispose: Disposer } {
   let rows: RelayRow[] = [];
   const mine = (): RelayEntry[] => rows.filter(listed).map(entry);
+  // Signed out, the list is the visitor's own on this device (`engine/startup.ts`), so it is saved without an account.
   const save = (relays: readonly RelayEntry[]): void =>
-    void act(env, (as) => ({ a: 'relays.save', as, relays }));
+    void (env.engine.me()
+      ? act(env, (as) => ({ a: 'relays.save', as, relays }))
+      : env.engine.act({ a: 'relays.save', as: '', relays }));
   /** Adds or changes one relay of the list, at `at` or where it already is. */
   const put = (e: RelayEntry, at?: number): void => {
     const list = mine();

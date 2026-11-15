@@ -1,7 +1,7 @@
 // Only engine plumbing changes between mock and release builds.
 import { kv } from '../shared/storage.ts';
 import { workerTransport as mockTransport, type Transport } from './client.ts';
-import type { RelayEntry } from './protocol.ts';
+import type { FromEngine, RelayEntry } from './protocol.ts';
 
 export type BootstrapRelay = RelayEntry & { readonly search: boolean };
 export const DEFAULT_RELAYS: readonly BootstrapRelay[] = [
@@ -56,12 +56,25 @@ export async function createTransport(url: string): Promise<Transport> {
   let account = kv.get('account') ?? '';
   // Bound by the transport's 64 in-flight actions. Persist only confirmed relay edits.
   const saves = new Map<string, { as: string; relays: readonly RelayEntry[] }>();
+  let heard: ((msg: FromEngine) => void) | undefined;
   return {
     post(msg, transfer) {
-      if (msg.t === 'act' && msg.action.a === 'relays.save') saves.set(msg.req, msg.action);
+      if (msg.t === 'act' && msg.action.a === 'relays.save') {
+        const { req, action } = msg;
+        if (!action.as) {
+          // A visitor's list belongs to this device alone: nothing is signed or published. It is kept here and
+          // handed to the engine as the relays to read from.
+          kv.set('relays:', savedRelays('', action.relays));
+          transport.post({ t: 'relays', relays: bootstrapRelays('') });
+          queueMicrotask(() => heard?.({ t: 'result', req, ok: true }));
+          return;
+        }
+        saves.set(req, action);
+      }
       transport.post(msg, transfer);
     },
     listen(fn) {
+      heard = fn;
       transport.listen((msg) => {
         if (msg.t === 'result') {
           const save = saves.get(msg.req);
