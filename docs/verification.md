@@ -148,13 +148,11 @@ write rule. Changes remain uncommitted; no CI or existing services were changed.
 
 ## Owner returning-profile audit (2026-11-15)
 
-The owner audit adds shared mock/real browser checks and numbered dark captures
-at 1440 and 390, historical-bundle upgrades on the same origin and storage,
-and a real-engine regression that keeps the first rows after reading past 800.
-Post failure/retry checks now inspect retained drafts while the input is free.
-A remount test guards the next draft against a late publication result.
-See [owner-audit.md](owner-audit.md) for scope, commands and unresolved gaps.
-Final run evidence and verdicts are recorded under ignored tmp/.
+Shared mock/real checks capture dark views at 1440 and 390, upgrade historical
+bundles on the same origin/storage and retain real-engine rows after reading
+past 800. Failure/retry checks inspect saved drafts while the input is free;
+a remount test protects the next draft from late results. Scope and open gaps:
+[owner-audit.md](owner-audit.md).
 
 Owner audit final: frontend check, build, shots and 432-check mock smoke pass.
 All four quiet gates pass; Worker conformance passes 211 checks without page
@@ -166,12 +164,36 @@ Public Channels discovery and Stats fetch purposes remain open; see owner-audit.
 ## Main and owner audit integration (2026-11-15)
 
 The merged tree keeps main's scrolling, windowing and time rail implementation
-and the owner audit's draft, migration and browser isolation repairs. Shared
-audit width checks measure the content space beside the reserved rail, within
-two pixels. Both mock smoke reports and server-start failure handling survive.
+and the owner audit's draft, migration and browser isolation repairs. Width
+checks allow two pixels beside the rail. Mock smoke reports and server-start
+failure handling survive.
 Frontend check/build, all four quiet gates and mock smoke (441 checks) pass.
 Real smoke with LKJSTR_SHOTS=1 passes 174 checks without page errors. Desktop
 and phone rail captures were reviewed. Docker remains excluded by the
 worktree-only write rule. No CI workflows or existing services were changed.
 Worker conformance passes 216 checks with no page errors; the delayed
 profile probe also passes. Gate logs are under ignored tmp/merge-*.log.
+
+## Orchestration (2026-11-15)
+
+All four quiet gates and frontend check/build/mock smoke pass. Stats captures
+pass at 1440 dark English and 390 dark Japanese. Conformance passes 211/211
+with no page errors; the delayed profile probe measures 229.1 ms at 240 ms delay.
+Read/publication scorecards, public read-only observation, bounds and deferred
+design: orchestration.md and ignored tmp/orchestration-report.md. Two real UI
+smokes pass 84/84 with no page errors; an interrupted driver (exit 143) was rerun
+standalone. Real Stats captures were inspected at 1440 and 390 in one tile.
+Docker is excluded by the worktree-only write rule. No commits, CI edits,
+production access, deployments or existing-service changes occurred.
+
+## Orchestration branch review (2026-11-15)
+
+Three native regressions preserve page evidence across quality changes, allow
+new pages/configuration and keep hints from displacing routes. Pagination fails
+against the pre-fix selector. Two Stats regressions cover publication states,
+cap reasons, idle relays, repeated URLs and 32 x 2240 distinct destinations.
+All four quiet gates pass with four build jobs/test threads and worktree caches.
+Worker conformance passes 211/211 checks with no page errors; the delayed profile
+probe also passes. Gate logs are under ignored tmp/review-*.log.
+Docker remains excluded by the worktree-only write rule; no commit, CI edit,
+production access, deployment or existing-service change was performed.

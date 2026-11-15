@@ -45,6 +45,24 @@ describe('stats', () => {
     expect(order('latency', true)).toEqual(['mute', 'busy', 'fine', 'slow', 'down']);
   });
 
+  it('sorts grouped publication columns by their leading count, with unreported figures last', () => {
+    const rows = [
+      relay('missing'),
+      relay('zero', { publishAccepted: 0, publishPlanned: 99 }),
+      relay('sent', { publishAccepted: 8, publishPlanned: 8 }),
+    ];
+    expect(sortRelays(rows, { by: 'publishAccepted', up: false }).map((r) => r.url)).toEqual([
+      'sent',
+      'zero',
+      'missing',
+    ]);
+    expect(sortRelays(rows, { by: 'publishAccepted', up: true }).map((r) => r.url)).toEqual([
+      'zero',
+      'sent',
+      'missing',
+    ]);
+  });
+
   it('writes sizes in decimal units', () => {
     expect(bytesText(0)).toBe('0 B');
     expect(bytesText(999)).toBe('999 B');

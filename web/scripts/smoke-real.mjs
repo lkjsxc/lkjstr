@@ -236,7 +236,7 @@ try {
     'reaction reaches relay',
     fake.published.some((e) => e.kind === 7),
   );
-  await channelScenarios({ page, launch, check, fake });
+  await channelScenarios({ page, launch, check, fake, shots, shot });
   await auditFixtures({ fake, sign: fixtureSign, owner: fixture.note.pubkey, note: fixture.note });
   await auditOwner({
     browser,

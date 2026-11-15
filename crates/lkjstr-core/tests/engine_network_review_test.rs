@@ -37,7 +37,11 @@ fn requests(n: &mut Network) -> Vec<serde_json::Value> {
 fn queued_work_survives_deadline_and_sends_when_capacity_is_released() {
     let mut n = Network::default();
     n.configure(vec![RELAY.into()], 0);
-    n.plan((0..5).map(|i| want(&format!("s{i}"))).collect(), 0);
+    n.plan(
+        (0..5).map(|i| want(&format!("s{i}"))).collect(),
+        &lkjstr_core::store::Store::new(0),
+        0,
+    );
     n.connected(RELAY, 10);
     let mut sent = requests(&mut n);
     for now in [110, 210, 310] {
@@ -55,7 +59,7 @@ fn queued_work_survives_deadline_and_sends_when_capacity_is_released() {
             .iter()
             .any(|o| matches!(o, Output::Status {sub,..} if sub=="s4"))
     );
-    n.plan(vec![want("s4")], 20001);
+    n.plan(vec![want("s4")], &lkjstr_core::store::Store::new(0), 20001);
     let sent = requests(&mut n);
     assert_eq!(sent.len(), 1);
     assert_eq!(sent[0][2]["search"], "s4");
@@ -65,13 +69,17 @@ fn rate_limit_retries_after_cooldown_but_terminal_refusal_does_not() {
     for reason in ["rate-limited: slow down", "blocked: denied"] {
         let mut n = Network::default();
         n.configure(vec![RELAY.into()], 0);
-        n.plan(vec![want("feed")], 0);
+        n.plan(vec![want("feed")], &lkjstr_core::store::Store::new(0), 0);
         n.connected(RELAY, 10);
         let req = requests(&mut n).remove(0);
         n.message(RELAY, &json!(["CLOSED", req[1], reason]).to_string(), 20);
         n.tick(16000);
         assert!(requests(&mut n).is_empty());
-        n.plan(vec![want("feed")], 30019);
+        n.plan(
+            vec![want("feed")],
+            &lkjstr_core::store::Store::new(0),
+            30019,
+        );
         assert!(requests(&mut n).is_empty());
         n.tick(30020);
         assert_eq!(
@@ -120,7 +128,7 @@ fn connecting_sockets_are_released_on_close_hide_and_watchdog() {
     }
     let mut n = Network::default();
     n.configure(vec![RELAY.into()], 0);
-    n.plan(vec![want("feed")], 0);
+    n.plan(vec![want("feed")], &lkjstr_core::store::Store::new(0), 0);
     n.drain_effects();
     n.tick(15000);
     assert!(

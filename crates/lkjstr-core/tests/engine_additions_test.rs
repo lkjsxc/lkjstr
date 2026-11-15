@@ -42,6 +42,17 @@ fn configure_retains_unused_urls_and_validates_atomically() {
     }
 }
 #[test]
+fn relay_addresses_bound_raw_and_normalized_bytes() {
+    let prefix = "wss://x.test/";
+    let boundary = format!("{prefix}{}", "a".repeat(2048 - prefix.len()));
+    assert!(settings::strict_relay(&boundary).is_some());
+    assert!(settings::strict_relay(&format!("{boundary}a")).is_none());
+    // URL normalization percent-encodes non-ASCII paths and can expand bytes.
+    let expanded = format!("{prefix}{}", "é".repeat(500));
+    assert!(expanded.len() < 2048);
+    assert!(settings::strict_relay(&expanded).is_none());
+}
+#[test]
 fn server_save_rejects_bad_addresses_before_signing() {
     let mut s = Session::default();
     let mut e = Engine::new();
