@@ -77,7 +77,11 @@ impl Engine {
                 || v.query.filters.notifications == Some(true)
                 || matches!(
                     v.query.source,
-                    Source::Profile
+                    Source::Thread
+                        | Source::Bookmarks
+                        | Source::Channels
+                        | Source::Channel
+                        | Source::Profile
                         | Source::Followers
                         | Source::Following
                         | Source::Mutes

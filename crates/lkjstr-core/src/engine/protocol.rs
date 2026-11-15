@@ -75,6 +75,8 @@ pub enum Source {
     Diagnostics,
     MediaServers,
     Emoji,
+    Channels,
+    Channel,
 }
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[serde(rename_all = "camelCase")]
@@ -94,6 +96,8 @@ pub struct Filters {
     pub from: Option<Vec<String>>,
     pub notifications: Option<bool>,
     pub show: Option<String>,
+    #[serde(default)]
+    pub relay_hints: Vec<String>,
 }
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RelayEntry {
@@ -110,6 +114,14 @@ pub enum Action {
         target: Option<String>,
         #[serde(default)]
         tags: Vec<Vec<String>>,
+    },
+    ChannelJoin {
+        id: String,
+        on: bool,
+    },
+    ChannelSave {
+        id: Option<String>,
+        channel: serde_json::Value,
     },
     Follow {
         pubkey: String,

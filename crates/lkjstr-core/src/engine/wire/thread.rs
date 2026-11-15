@@ -3,7 +3,7 @@ use lkjstr_protocol::{NostrEvent, reply_parent, reply_root};
 use std::collections::{HashMap, VecDeque};
 
 fn parent(event: &NostrEvent) -> Option<String> {
-    reply_parent(event).or_else(|| reply_root(event))
+    reply_parent(event).or_else(|| (event.kind != 42).then(|| reply_root(event)).flatten())
 }
 
 /// Temporary indexes bounded by Store::thread's 500-note walk. Build before
@@ -28,6 +28,7 @@ pub(super) fn positions(store: &Store, focus: &str) -> HashMap<String, (&'static
         current = by_id.get(id.as_str()).copied();
         // A root tag can still identify a cached ancestor across a cache gap.
         if current.is_none()
+            && event.kind != 42
             && let Some(root) = reply_root(event)
             && !positions.contains_key(&root)
         {

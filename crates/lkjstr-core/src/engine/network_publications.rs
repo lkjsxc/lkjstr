@@ -1,6 +1,9 @@
 use super::*;
 use crate::engine::protocol::Delivery;
 impl Network {
+    pub fn pending_event(&self, id: &str) -> bool {
+        self.publications.contains_key(id)
+    }
     pub fn publish(&mut self, req: String, event: NostrEvent, now: u64) {
         if self.publications.len() >= 64 || self.publications.contains_key(&event.id) {
             self.output.push(Output::Error {
@@ -64,11 +67,11 @@ impl Network {
                 .collect();
             let done = rs
                 .iter()
-                .all(|r| r.eose || r.complete || (r.sent && now >= r.deadline));
+                .all(|r| r.page_eose || r.eose || r.complete || (r.sent && now >= r.deadline));
             if done {
                 let state = if rs.iter().any(|r| r.last_event.is_some()) {
                     "data"
-                } else if rs.iter().any(|r| !r.eose) {
+                } else if rs.iter().any(|r| !r.eose && !r.page_eose) {
                     "error"
                 } else {
                     "not-found"

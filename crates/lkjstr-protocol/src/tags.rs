@@ -48,6 +48,9 @@ pub fn reply_root(event: &NostrEvent) -> Option<String> {
 }
 
 pub fn reply_parent(event: &NostrEvent) -> Option<String> {
+    if event.kind == 42 {
+        return marker(&event.tags, "reply");
+    }
     if let Some(reply) = marker(&event.tags, "reply") {
         return Some(reply);
     }
@@ -76,4 +79,12 @@ fn unmarked_events(event: &NostrEvent) -> Vec<String> {
         .filter(|t| t.first().is_some_and(|v| v == "e") && t.get(3).is_none_or(String::is_empty))
         .filter_map(|t| t.get(1).filter(|id| !id.is_empty()).cloned())
         .collect()
+}
+
+/// NIP-28 separates the channel root from message reply links.
+pub fn channel_id(event: &NostrEvent) -> Option<String> {
+    (event.kind == 42)
+        .then(|| marker(&event.tags, "root"))
+        .flatten()
+        .filter(|id| crate::is_event_id(id))
 }

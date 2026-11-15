@@ -69,7 +69,7 @@ impl Network {
             .len();
         let answered = requests
             .iter()
-            .filter(|r| r.asked && (r.eose || r.last_event.is_some()))
+            .filter(|r| r.asked && (r.page_eose || r.eose || r.last_event.is_some()))
             .map(|r| &r.relay)
             .collect::<std::collections::BTreeSet<_>>()
             .len();
@@ -127,7 +127,7 @@ impl Network {
             && !requests.is_empty()
             && requests.iter().all(|r| {
                 r.asked
-                    && r.eose
+                    && (r.eose || (kind == 10005 && r.page_eose))
                     && r.received.len() < r.page_limit
                     && r.received
                         .iter()
@@ -187,12 +187,22 @@ impl Network {
             .values()
             .filter(|r| {
                 let mut requested = filter.clone();
-                if requested.kinds.as_deref() == Some(&[1, 6, 7, 9735])
-                    && let (Some(ids), Some(batch)) =
-                        (requested.tags.get("e"), r.filter.tags.get("e"))
+                if matches!(
+                    requested.kinds.as_deref(),
+                    Some([1, 6, 7, 9735] | [42, 16, 7, 9735])
+                ) && let (Some(ids), Some(batch)) =
+                    (requested.tags.get("e"), r.filter.tags.get("e"))
                     && ids.iter().all(|id| batch.contains(id))
                 {
                     requested.tags.insert("e".into(), batch.clone());
+                    if r.filter.kinds.as_ref().is_some_and(|ks| {
+                        requested
+                            .kinds
+                            .as_ref()
+                            .is_some_and(|want| want.iter().all(|k| ks.contains(k)))
+                    }) {
+                        requested.kinds = r.filter.kinds.clone();
+                    }
                 }
                 r.filter == requested
             })

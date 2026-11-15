@@ -133,10 +133,24 @@ impl Network {
                             }
                         })
                     })
-                    .take(2)
+                    .take(if matches!(q.source, Source::Channel | Source::Channels) {
+                        24
+                    } else {
+                        2
+                    })
                     .cloned()
                     .collect()
             };
+            let mut routes = routes;
+            routes.extend(
+                q.filters
+                    .relay_hints
+                    .iter()
+                    .filter(|u| self.relays.contains_key(*u))
+                    .cloned(),
+            );
+            routes.sort();
+            routes.dedup();
             for r in routes {
                 let key = (r, filter_to_value(&f).to_string());
                 let entry = desired.entry(key).or_insert((f.clone(), BTreeSet::new()));

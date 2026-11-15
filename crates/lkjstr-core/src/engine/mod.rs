@@ -1,6 +1,10 @@
 //! Pure engine. Explicit time and effect outputs make long-idle failures testable.
 pub mod accounts;
 pub mod bench;
+mod channel_actions;
+mod channel_create;
+mod channel_pending;
+pub mod channels;
 pub mod clients;
 mod commands;
 pub mod discovery;
@@ -15,6 +19,7 @@ pub mod network;
 mod network_limits;
 pub mod protocol;
 pub mod query;
+mod query_hidden;
 mod query_predicates;
 mod rich;
 mod row_media;
@@ -49,6 +54,11 @@ struct Signing {
     deadline: u64,
 }
 pub struct Engine {
+    pending_publications: usize,
+    // At most 64 in-flight two-event creates; removed after both terminal outcomes.
+    channel_creates: BTreeMap<String, channel_create::Creation>,
+    // At most 64 channel edits awaiting an owner-list lookup; 20-second deadline.
+    channel_pending: BTreeMap<String, channel_pending::Pending>,
     pub client_tag: bool,
     pub discovery_paused: bool,
     pub discovery_account: Option<String>,
@@ -79,6 +89,9 @@ impl Default for Engine {
 impl Engine {
     pub fn new() -> Self {
         Self {
+            pending_publications: 0,
+            channel_creates: BTreeMap::new(),
+            channel_pending: BTreeMap::new(),
             client_tag: true,
             discovery_paused: false,
             discovery_account: None,
@@ -161,6 +174,13 @@ impl Engine {
             self.replan(now);
         }
         self.network.tick(now);
+        self.resume_channel_actions(now);
+        if self.network.publications.len() != self.pending_publications {
+            self.pending_publications = self.network.publications.len();
+            for v in self.views.values_mut() {
+                v.dirty = true;
+            }
+        }
         if std::mem::take(&mut self.network.profiles_changed) {
             self.replan(now);
             for v in self.views.values_mut() {
@@ -199,7 +219,7 @@ impl Engine {
     pub fn drain(&mut self) -> Vec<Output> {
         let mut result = std::mem::take(&mut self.outgoing);
         result.extend(self.network.drain_output());
-        result
+        self.channel_outputs(result)
     }
     fn error(&mut self, req: Option<String>, code: &str) {
         self.outgoing.push(Output::Error {

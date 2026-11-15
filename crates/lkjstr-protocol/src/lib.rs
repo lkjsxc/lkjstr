@@ -148,7 +148,9 @@ pub use reactions::{
     custom_emoji_reaction_shortcode, parse_reaction, reaction_content, reaction_target_event_id,
 };
 pub use relay_url::normalize_relay_url;
-pub use tags::{IndexedTags, first_tag_value, index_tags, reply_parent, reply_root, tag_values};
+pub use tags::{
+    IndexedTags, channel_id, first_tag_value, index_tags, reply_parent, reply_root, tag_values,
+};
 
 pub mod compact;
 pub mod upload;

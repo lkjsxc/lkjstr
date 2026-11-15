@@ -193,7 +193,11 @@ impl Host {
             }
             W::Act {
                 req,
-                action: action @ (A::AccountUse { .. } | A::AccountRemove { .. } | A::Seen { .. }),
+                action:
+                    action @ (A::AccountUse { .. }
+                    | A::AccountRemove { .. }
+                    | A::Seen { .. }
+                    | A::ChannelSeen { .. }),
             } => {
                 if self.account_tasks.len() < 32 {
                     self.account_tasks.push((id, req, action));

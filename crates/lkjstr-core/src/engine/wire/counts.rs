@@ -12,7 +12,11 @@ pub(super) fn settle(row: &mut Value, e: &Engine) {
     if row["kind"] == "note" {
         let id = row["id"].as_str().unwrap_or("");
         let mut f = lkjstr_protocol::NostrFilter {
-            kinds: Some(vec![1, 6, 7, 9735]),
+            kinds: Some(if row["channel"].is_object() {
+                vec![42, 16, 7, 9735]
+            } else {
+                vec![1, 6, 7, 9735]
+            }),
             limit: Some(200),
             ..Default::default()
         };

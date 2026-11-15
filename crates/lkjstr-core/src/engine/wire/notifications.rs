@@ -21,7 +21,7 @@ pub(super) fn notifications(q: &Query, e: &Engine) -> Vec<Value> {
         let parent = p::reply_parent(&event);
         let kind = match event.kind {
             3 => "follow",
-            6 => "repost",
+            6 | 16 => "repost",
             7 => "reaction",
             9735 => "zap",
             _ => {
@@ -75,7 +75,7 @@ pub(super) fn notifications(q: &Query, e: &Engine) -> Vec<Value> {
             continue;
         }
         let mut row = json!({"kind":"notification","key":group,"type":kind,"actors":[actor],"others":0,"at":at,"unread":at>seen});
-        if event.kind == 1 {
+        if matches!(event.kind, 1 | 42) {
             row["note"] = note::note(
                 &rows::row_with_lists(&e.store, &event, Some(account), 0, &e.private_lists),
                 &e.store,

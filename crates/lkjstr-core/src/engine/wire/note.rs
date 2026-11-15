@@ -72,6 +72,14 @@ pub(super) fn note(row: &Row, store: &Store, account: Option<&str>) -> Value {
         "counts":super::counts::note(row),
         "reactions":row.reactions.iter().map(|r|{let mut v=json!({"emoji":r.content,"count":r.count,"mine":r.mine});if let Some(url)=&r.url{v["url"]=json!(url);}v}).collect::<Vec<_>>(),
         "mine":{"reposted":row.own.reposted,"bookmarked":row.own.bookmarked,"own":Some(row.author.pubkey.as_str())==account}});
+    if let Some(event) = store.get(&row.id) {
+        if let Some(id) = lkjstr_protocol::channel_id(&event) {
+            v["channel"] = json!({"id":id,"name":crate::engine::channels::metadata(store,&id).0["name"].as_str().unwrap_or("")});
+        }
+        if let Some(client) = lkjstr_protocol::first_tag_value(&event, "client") {
+            v["client"] = json!(client);
+        }
+    }
     if let Some(cw) = &row.warning {
         v["cw"] = json!(cw);
     }
@@ -85,7 +93,7 @@ pub(super) fn note(row: &Row, store: &Store, account: Option<&str>) -> Value {
         let at = store
             .referencing(&row.id)
             .iter()
-            .filter(|e| e.kind == 6)
+            .filter(|e| matches!(e.kind, 6 | 16))
             .map(|e| e.created_at)
             .max()
             .unwrap_or(row.created_at);

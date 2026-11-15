@@ -139,6 +139,8 @@ impl Accounts {
             return Err("not-found");
         }
         self.seen.remove(key);
+        let prefix = format!("channel:{key}:");
+        self.seen.retain(|k, _| !k.starts_with(&prefix));
         self.entries.retain(|a| a.pubkey != key);
         if self.active.as_deref() == Some(key) {
             self.active = self.entries.first().map(|a| a.pubkey.clone());

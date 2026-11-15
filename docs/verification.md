@@ -112,3 +112,25 @@ passes. Real smoke is 73/73, including all 39 signer checks. Eight new native
 regressions cover rich filters, profile kinds, NIP-05, retained windows, mixed
 paging, deferred repost hydration and grouped fresh counts. Details and files:
 [protocol3.md](protocol3.md). Docker remains excluded by the worktree-only rule.
+
+## Protocol 4 channels (2026-11-15)
+
+All four quiet gates pass: check:repo, test:quiet, rust-wasm:quiet and verify:quiet.
+Worker conformance passes 211/211 checks with no page errors; the delayed profile
+probe and frontend pnpm check also pass. Nineteen native channel regressions cover
+metadata authority, list order, references/hints, filters, thread/notification
+context, authored tags, device marks, index isolation, timestamp paging, bounded
+creates and single-slot relay rotation. The Worker suite covers all seven requests,
+including 230 channel messages with timestamp ties, pending/confirmed publication,
+muting/deletion and joined-list recovery in a fresh device context.
+Implementation and bounds: [channels.md](channels.md). Reports and gate logs are
+under ignored tmp/. All builds/tests use at most four jobs and worktree caches.
+Docker is excluded by the worktree-only write rule. No commits, CI edits,
+production access, deployments or existing-service restarts were performed.
+
+The merged channels frontend passes pnpm check (63 tests), build and mock smoke.
+Real UI smoke passes 81/81, including all 39 signer checks, channel creation,
+list navigation, posting, Thread replies, edits, join/leave, client-tag Settings
+and Stats. Early create/join waits for the owner-list lookup instead of racing
+it; failed lookups expire without overwriting an unknown list. All four quiet
+gates, expanded conformance and the delayed profile probe pass after that fix.

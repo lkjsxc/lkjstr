@@ -9,6 +9,7 @@ import { chromium } from 'playwright-core';
 import bundle from 'playwright-core/lib/utilsBundle';
 import { fakeBunker } from '../../scripts/browser-bunker.mjs';
 import { fakeRelay } from '../../scripts/browser-relay.mjs';
+import { channelScenarios } from './smoke-channels.mjs';
 import { openKeyField, seedLayouts } from './smoke-seed.mjs';
 import { writeReport } from './smoke-signer-support.mjs';
 import { signerScenarios } from './smoke-signers.mjs';
@@ -214,6 +215,7 @@ try {
     'reaction reaches relay',
     fake.published.some((e) => e.kind === 7),
   );
+  await channelScenarios({ page, launch, check, fake });
   if (shots) {
     // Signed in, the ordinary layout as it starts, in Japanese (the language is put back afterwards).
     await page.evaluate(() => {

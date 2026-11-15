@@ -5,13 +5,54 @@ impl Engine {
     pub(super) fn replan(&mut self, now: u64) {
         let mut wants = self.profile_wants();
         wants.extend(self.discovery_wants());
+        wants.extend(self.channel_action_wants());
         for (sub, v) in self.views.iter().filter(|(_, v)| v.visible) {
             if matches!(v.query.source, Source::Relays | Source::Diagnostics) {
                 continue;
             }
             for f in requests(&self.store, &self.network, v, self.signed_out_global_filter) {
-                wants.push((sub.clone(), f, v.query.clone()));
+                let mut q = v.query.clone();
+                if matches!(q.source, Source::Channels | Source::Channel) {
+                    let ids = q
+                        .target
+                        .clone()
+                        .into_iter()
+                        .chain(super::channels::joined(&self.store, q.account.as_deref()));
+                    for id in ids {
+                        q.filters
+                            .relay_hints
+                            .extend(super::channels::relays(&self.store, &id));
+                    }
+                    q.filters.relay_hints.sort();
+                    q.filters.relay_hints.dedup();
+                    q.filters.relay_hints.truncate(8);
+                }
+                wants.push((sub.clone(), f, q));
             }
+        }
+        let mut urls = self.network.relay_order.clone();
+        for (_, _, q) in &wants {
+            urls.extend(q.filters.relay_hints.iter().cloned());
+        }
+        let mut unique = std::collections::BTreeSet::new();
+        urls.retain(|url| unique.insert(url.clone()));
+        if urls.iter().any(|u| !self.network.relays.contains_key(u)) {
+            let order = self.network.relay_order.clone();
+            let known = self
+                .network
+                .known
+                .keys()
+                .cloned()
+                .collect::<std::collections::BTreeSet<_>>();
+            self.network.configure(urls, now);
+            for (url, r) in &mut self.network.known {
+                if !known.contains(url) {
+                    r.read = false;
+                    r.write = false;
+                    r.search = false;
+                }
+            }
+            self.network.relay_order = order;
         }
         self.network.plan(wants, now);
     }
@@ -27,6 +68,7 @@ fn requests(
         return vec![];
     }
     let mut result = vec![query::filter(store, q)];
+    result.extend(super::channels::wants(store, q));
     result.extend(v.history.clone());
     if let Some(f) = super::history::notification_filter(store, q) {
         result.push(f);
@@ -60,7 +102,15 @@ fn requests(
     // Batch visible note counts; released with the view and bounded by its window.
     for events in events[range.clone()].chunks(120) {
         let mut f = NostrFilter {
-            kinds: Some(vec![1, 6, 7, 9735]),
+            kinds: Some(if events.iter().any(|e| e.kind == 42) {
+                if events.iter().any(|e| e.kind != 42) {
+                    vec![1, 42, 6, 16, 7, 9735]
+                } else {
+                    vec![42, 16, 7, 9735]
+                }
+            } else {
+                vec![1, 6, 7, 9735]
+            }),
             limit: Some(200),
             ..Default::default()
         };
