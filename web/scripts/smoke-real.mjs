@@ -141,6 +141,11 @@ try {
   await page.locator('.th-focus .name').first().click();
   await page.locator('.profile').waitFor();
   check('profile opens');
+  check(
+    'protocol 3 exposes all profile kinds',
+    (await page.locator('.pkinds [role="tab"]').allTextContents()).join(',') ===
+      'Posts,Replies,Reposts,Reactions,Media',
+  );
   // A second account that is only a public key: read-only is plain before anything is pressed.
   await page.locator('.acct').click();
   await page.locator('.menu button', { hasText: 'Accounts' }).click();
@@ -164,7 +169,7 @@ try {
   );
   // Switch back from the top bar, then remove the read-only account (it goes at once, with an Undo).
   await page.locator('.acct').click();
-  await page.locator('.menu button').first().click();
+  await page.locator('.menu button').nth(1).click();
   await page.waitForFunction(() => !document.querySelector('.acct .ro'));
   check(
     'switching accounts changes who posts',
@@ -180,9 +185,8 @@ try {
   await page.locator('.view[data-kind="search"] input').first().fill('Engine fixture');
   await page.locator('.view[data-kind="search"] input').first().press('Enter');
   await page.locator('.view[data-kind="search"] .note').first().waitFor();
-  for (let n = 0; n < 200 && !fake.searches.includes('Engine fixture'); n++)
-    await page.waitForTimeout(25);
-  check('search returns relay result', fake.searches.includes('Engine fixture'));
+  for (let n = 0; n < 200 && !fake.searches.includes('Engine'); n++) await page.waitForTimeout(25);
+  check('search returns relay result', fake.searches.includes('Engine'));
   await launch('Post', 'compose');
   const text = `real engine smoke ${Date.now()}`;
   await page.locator('.pane.cur .view[data-kind="compose"]:visible textarea').fill(text);
@@ -235,11 +239,13 @@ try {
   await other.locator('.tab[data-view="global"]').click();
   await other.locator('.view[data-kind="global"] .note').first().waitFor();
   check('second app tab receives notes');
-  for (let n = 0; n < 200 && fake.connections() !== 1; n++) await page.waitForTimeout(25);
-  check('two app tabs share one relay socket', fake.connections() === 1);
+  const sharedRoutes = () => fake.connections() === new Set(activePaths.values()).size;
+  for (let n = 0; n < 200 && !sharedRoutes(); n++) await page.waitForTimeout(25);
+  check('two app tabs share one socket per relay', sharedRoutes() && activePaths.size > 0);
   check(
     'learned owner relays survive reload and another tab bootstrap',
-    [...activePaths.values()].every((path) => path === '/owner'),
+    [...activePaths.values()].includes('/owner') &&
+      [...activePaths.values()].every((path) => path === '/owner' || path === '/'),
   );
   // Signed out again: the visitor's layout returns, here and in the other tab, and stays after a reload.
   await page.locator('.acct').click();

@@ -20,6 +20,14 @@ export async function ownerRelays({page,send,wait,check,note,signer,lines,fake,o
   fake.add(await sign(10002,[['r',first,'write']],1700000200));
   await adopted(first,false,true);
   check('bootstrap discovers and adopts owner kind 10002 flags',true);
+  await send({t:'window',sub:'owner-relays',anchor:'top',before:0,after:800});
+  await wait(url=>window.messages.filter(m=>m.t==='rows'&&m.sub==='owner-relays').at(-1)?.rows[0]?.url===url,new URL(first).href);
+  check('NIP-65 owner relays are first with yours and exact usage flags',await page.evaluate(url=>{
+    const rows=window.messages.filter(m=>m.t==='rows'&&m.sub==='owner-relays').at(-1).rows;
+    return rows[0].url===url&&rows[0].why==='yours'&&!rows[0].read&&rows[0].write&&rows.filter(r=>r.why==='yours').length===1;
+  },new URL(first).href));
+  await wait(()=>window.messages.filter(m=>m.t==='status').at(-1)?.wanted>=2);
+  check('status wanted includes the discovered owner route and bootstrap',true);
   fake.add(await sign(10002,[['r',next,'read'],['r',relay,'write']],1700000300));
   await adopted(next,true,false);
   check('discovery follows newer kind 10002 on retained bootstrap',true);
@@ -70,6 +78,13 @@ export async function continuity({page,send,wait,check,note,signer,lines,origin,
     if(keys.length===5000)break;
   }
   check('5000 relay-paged rows have no gaps or duplicates',prior.length===5000&&history.every(e=>prior.includes(e.id)));
+  await send({t:'window',sub:'continuity',anchor:'top',before:0,after:800});
+  await wait(()=>window.continuityRows.length===800);
+  const first=await page.evaluate(()=>window.continuityRows[0].key);
+  const anchor=await page.evaluate(()=>window.continuityRows[499].key);
+  await send({t:'window',sub:'continuity',anchor:{key:anchor},before:800,after:200});
+  await wait(()=>window.continuityRows.length===699);
+  check('protocol 3 retains the first row across 500 read notes with 800-row windows',await page.evaluate(first=>window.continuityRows[0].key===first,first));
   const at=history[2345].created_at*1000;
   await send({t:'rowAtTime',req:'continuity-time',sub:'continuity',at});
   await wait(()=>window.messages.some(m=>m.t==='rowAtTime'&&m.req==='continuity-time'));

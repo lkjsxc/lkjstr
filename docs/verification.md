@@ -76,8 +76,8 @@ The integration gate record is in integration-release.md. The real smoke covers
 creation/backup, visitor relay persistence, injected extension rejection and
 60-second deadlines, and encrypted bunker connect/sign/reload/outage/recovery.
 Signer scenarios record result codes without retaining action or key payloads.
-A rapid rejected-send/reload currently fails draft persistence; its frontend
-handoff remains a release blocker. Pagination regressions also run against the
+The earlier rejected-send/reload failure is fixed by the merged frontend's
+immediate draft saving; both reload signer scenarios now pass. Pagination regressions also run against the
 pre-review scheduler in ignored tmp/ evidence, proving they detect the old bugs.
 Docker remains excluded by the worktree-only write rule.
 
@@ -103,3 +103,12 @@ resumption without subscription cycling. The four quiet gates pass with four
 build jobs and test threads; caches remain in ignored tmp/.
 The loopback Worker conformance gate and delayed profile probe also pass.
 Docker was not run because its storage writes are outside this worktree.
+
+## Protocol 3 integration (2026-11-15)
+
+All four quiet gates and web check, build, smoke and smoke:real pass. Worker
+conformance passes 164/164 with no page errors; the delayed profile probe
+passes. Real smoke is 73/73, including all 39 signer checks. Eight new native
+regressions cover rich filters, profile kinds, NIP-05, retained windows, mixed
+paging, deferred repost hydration and grouped fresh counts. Details and files:
+[protocol3.md](protocol3.md). Docker remains excluded by the worktree-only rule.

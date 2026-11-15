@@ -10,6 +10,10 @@ impl Session {
                 at_top,
                 at_bottom,
             } => {
+                let (at_top, at_bottom) = if self.queries.get(&sub).is_some_and(|q| q.source == "profile" || q.source == "notifications" || q.notifications == Some(true)) {
+                    let edges = self.source_edges(&sub, engine);
+                    (edges.0, at_bottom && edges.1)
+                } else { (at_top, at_bottom) };
                 let mut rows = self.rows(&sub, &items, engine);
                 for row in &mut rows { super::quote_state::settle(row, engine); }
                 self.delivered.insert(sub.clone(), rows.clone());
@@ -43,7 +47,7 @@ impl Session {
                 }
                 // Specialized sources are recalculated from the store as one typed window.
                 if self.queries.get(&sub).is_some_and(|q| {
-                    matches!(
+                    q.notifications == Some(true) || matches!(
                         q.source.as_str(),
                         "thread" | "profile" | "followers" | "following" | "mutes" | "list" | "notifications" | "bookmarks" | "relays" | "media-servers" | "emoji"
                     )
@@ -72,6 +76,9 @@ impl Session {
                 }
             }
             p::Output::Fresh { sub, count } => {
+                let count = if self.queries.get(&sub).is_some_and(|q| q.notifications == Some(true)) {
+                    self.source_fresh(&sub, engine)
+                } else { count };
                 let ops = self.settled_quote_patch(&sub,engine);
                 let mut out = vec![Output::Fresh { sub:sub.clone(), count }];
                 if !ops.is_empty() { out.push(Output::Patch {sub,ops}); }
@@ -116,7 +123,10 @@ impl Session {
             } => {
                 let ops=self.settled_quote_patch(&sub,engine);
                 let answered = answered_relays;
-                let mut out=vec![Output::State{sub:sub.clone(),state:json!({"phase":match state.as_str(){"data"=>"live","not-found"=>"done",_=>"failed"},"relaysAsked":asked_relays,"relaysAnswered":answered})}];
+                let empty_profile = self.queries.get(&sub).is_some_and(|q| q.source == "profile")
+                    && self.delivered.get(&sub).is_some_and(|r| r.iter().all(|r| r["kind"] == "profile"))
+                    && engine.views.get(&sub).is_some_and(|v| v.source_exhausted);
+                let mut out=vec![Output::State{sub:sub.clone(),state:json!({"phase":match state.as_str(){"data"=>if empty_profile {"done"} else {"live"},"not-found"=>"done",_=>"failed"},"relaysAsked":asked_relays,"relaysAnswered":answered})}];
                 if !ops.is_empty(){out.push(Output::Patch{sub,ops});}out
             },
             p::Output::Diagnostics { sub, .. } => {
@@ -168,26 +178,27 @@ impl Session {
     fn rows(&self, sub: &str, items: &[crate::engine::rows::Row], engine: &Engine) -> Vec<Value> {
         let q = self.queries.get(sub);
         if q.is_some_and(|q| {
-            matches!(
-                q.source.as_str(),
-                "thread"
-                    | "profile"
-                    | "followers"
-                    | "following"
-                    | "mutes"
-                    | "list"
-                    | "notifications"
-                    | "bookmarks"
-                    | "relays"
-                    | "media-servers"
-                    | "emoji"
-            )
+            q.notifications == Some(true)
+                || matches!(
+                    q.source.as_str(),
+                    "thread"
+                        | "profile"
+                        | "followers"
+                        | "following"
+                        | "mutes"
+                        | "list"
+                        | "notifications"
+                        | "bookmarks"
+                        | "relays"
+                        | "media-servers"
+                        | "emoji"
+                )
         }) {
             return self.source_rows(sub, engine);
         }
         items
             .iter()
-            .filter(|r| !r.own.muted)
+            .filter(|r| !r.own.muted && !matches!(r.kind, 6 | 16))
             .map(|r| {
                 let mut row =
                     super::note::note(r, &engine.store, q.and_then(|q| q.account.as_deref()));

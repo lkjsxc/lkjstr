@@ -52,7 +52,7 @@ impl Query {
             target,
             filters: p::Filters {
                 authors: self.authors.clone(),
-                since: self.since.map(|v| v / 1000),
+                since: self.since.map(|v| v.div_ceil(1000)),
                 until: self.until.map(|v| v / 1000),
                 types: self.types.as_ref().map(|v| {
                     v.iter()
@@ -70,6 +70,12 @@ impl Query {
                 reposts: self.reposts,
                 language: self.language.as_ref().and_then(|v| v.first()).cloned(),
                 text: self.text.clone(),
+                phrases: self.phrases.clone(),
+                exclude: self.exclude.clone(),
+                has: self.has.clone(),
+                from: self.from.clone(),
+                notifications: self.notifications,
+                show: self.show.clone(),
             },
         })
     }

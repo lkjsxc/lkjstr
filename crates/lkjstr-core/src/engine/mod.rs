@@ -16,6 +16,7 @@ mod network_limits;
 pub mod protocol;
 pub mod query;
 mod query_predicates;
+mod rich;
 mod row_media;
 mod row_model;
 pub mod rows;
@@ -39,6 +40,7 @@ pub struct View {
     dirty: bool,
     // One current historical request per view; released with visibility/close.
     history: Option<lkjstr_protocol::NostrFilter>,
+    notification_history: Option<lkjstr_protocol::NostrFilter>,
     at_bottom: bool,
     source_exhausted: bool,
 }

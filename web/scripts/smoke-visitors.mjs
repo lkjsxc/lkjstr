@@ -67,6 +67,7 @@ async function visitorChecks({ page, browser, base, relayUrl, errors, shots, sho
       route.request().url().startsWith(`${base}/`) ? route.continue() : route.abort(),
     );
     await fresh.addInitScript((relayUrl) => {
+      if (location.protocol !== 'http:') return;
       localStorage.setItem(
         'lkjstr:relays:',
         JSON.stringify([{ url: relayUrl, read: true, write: true, search: true }]),

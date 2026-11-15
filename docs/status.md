@@ -6,6 +6,17 @@ Current engine cutover, verified behavior and explicitly unfinished variants.
 The independent frontend owns visible UI in web/. Integration changes only
 engine plumbing, startup and build/test/release scripts.
 
+## Protocol 3 integration (2026-11-15)
+
+The real Worker advertises protocol 3 at startup. Rich note filters include all-word
+text, exact phrases, exclusions, image/video/link requirements, author unions,
+known-profile names and bounded verified NIP-05 query lookups. Millisecond date
+bounds round inward to Nostr seconds. Home/Global can mix notification rows;
+profile kinds project posts, replies, reposts (6/16), reactions and image/video
+notes. Ordinary windows accept 800 rows on either side; retainAbove remains
+bounded at 6000. Existing account discovery adopts verified NIP-65 relay lists.
+Native regressions, Worker conformance and results: [protocol3.md](protocol3.md).
+
 ## Owner feedback (2026-11-15)
 
 Account discovery follows active signers independently of account views, retains
@@ -183,7 +194,7 @@ sockets now fails immediately and releases sockets instead of waiting a minute.
 Six pagination regressions pass with the review fixes restored and fail against
 fc3cf32a's parent, including disconnect/reconnect as well as profile preemption.
 Evidence is in tmp/preemption-regression.json and the adjacent test logs.
-The fast-rejection/reload check exposes a frontend draft-save race; see
-integration-release.md. All four root gates and web check pass; conformance is
-57/57 and real smoke is 71/72, failing only the deterministic draft reload check.
+The earlier fast-rejection/reload check exposed a frontend draft-save race;
+the merged frontend fixes it. Earlier gates passed with conformance 57/57 and
+real smoke 71/72. Current protocol 3 results are in protocol3.md.
 No views, styles, strings or frontend policy were edited.

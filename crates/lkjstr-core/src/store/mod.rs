@@ -45,6 +45,8 @@ pub struct Store {
     replaceable: HashMap<(String, u64), String>,
     profiles: HashMap<String, Arc<Profile>>,
     verified_nip05: HashMap<String, String>,
+    // At most 512 query name bindings; HTTP evidence is checked before insertion.
+    query_names: HashMap<String, String>,
     deleted: HashSet<(String, String)>,
     cap: usize,
     replaceable_cap: usize,
@@ -71,6 +73,7 @@ impl Store {
             replaceable: HashMap::new(),
             profiles: HashMap::new(),
             verified_nip05: HashMap::new(),
+            query_names: HashMap::new(),
             deleted: HashSet::new(),
             cap,
             replaceable_cap,

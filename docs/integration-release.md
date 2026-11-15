@@ -61,13 +61,11 @@ scrolling into history, and repeated disconnect/reconnect. Mutation was confined
 to this worktree and all five files were restored byte-for-byte. Evidence:
 tmp/preemption-regression.json, preemption-old.log and preemption-current.log.
 
-## For the frontend
+## Merged frontend follow-up
 
-- Flush the current composer text before reload/pagehide, or save it immediately
-  on input. A rapid NIP-07 rejection followed by reload can beat the 300 ms
-  debounced save and lose the draft. The real smoke retains this failing check;
-  the text remains intact before reload, and the timeout/reload variant passes.
-  See web/src/views/compose.ts and tmp/signer-reject-sign.json (booleans only).
+The merged frontend saves composer text on each input. Both rejected-send/reload
+and timeout/reload signer checks now pass. The smoke keeps the deterministic
+paused-clock regression. Current integration results: [protocol3.md](protocol3.md).
 
 ## Verification
 
@@ -78,8 +76,8 @@ rejected-send/reload draft check fails. The page clock pauses inside the 300 ms
 save window while Worker timeouts use real time. Results are recorded in
 tmp/gates.json and tmp/gate-*.log.
 The real-engine and conformance reports are tmp/smoke-real/report.json and
-tmp/engine-harness/report.json. The draft persistence failure is kept as a release
-blocker; engine-only changes cannot repair the frontend debounce policy.
+tmp/engine-harness/report.json. These are earlier measurements; the merged frontend fixes the draft persistence
+failure. The current record is in protocol3.md.
 All runs use fresh browser data, fresh loopback ports and intercepted HTTP.
 Docker, deployment, production access and public-relay tests are excluded.
 No commits, CI edits, existing-service restarts or reader-visible edits were made.

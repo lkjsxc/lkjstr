@@ -32,7 +32,7 @@ impl Session {
                     return Err((None, "subscription-limit"));
                 }
                 let converted = query.convert().ok_or((None, "unsupported"))?;
-                self.queries.insert(sub.clone(), query);
+                self.queries.insert(sub.clone(), *query);
                 vec![p::Input::Open {
                     sub,
                     query: converted,
@@ -58,9 +58,9 @@ impl Session {
                     Anchor::Top(_) => None,
                     Anchor::Key { key } => Some(key),
                 };
-                let before = if retain_above { 6000 } else { before.min(100) };
+                let before = if retain_above { 6000 } else { before.min(800) };
                 self.windows
-                    .insert(sub.clone(), (anchor.clone(), before, after.min(200)));
+                    .insert(sub.clone(), (anchor.clone(), before, after.min(800)));
                 vec![p::Input::Window {
                     sub,
                     anchor,

@@ -1,4 +1,4 @@
-//! Mirrors web/next-20261114:web/src/engine/protocol.ts (authoritative).
+//! Mirrors the frontend-owned web/src/engine/protocol.ts.
 pub mod actions;
 mod counts;
 mod feedback;
@@ -44,7 +44,7 @@ pub enum Input {
     },
     Open {
         sub: String,
-        query: Query,
+        query: Box<Query>,
     },
     Close {
         sub: String,
@@ -168,7 +168,7 @@ pub struct Session {
 impl Session {
     pub fn ready(shared: bool) -> Output {
         Output::Ready {
-            version: 2,
+            version: 3,
             engine: if shared {
                 "rust-wasm-shared"
             } else {

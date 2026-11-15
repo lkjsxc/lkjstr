@@ -24,7 +24,7 @@ pub fn collect(rows: &[Event], store: &Store) -> Prefetch {
     collect_bounded(rows, store, 60)
 }
 
-/// Engine windows contain at most 301 rows; output retains the same 120-target cap.
+/// Engine windows use bounded query slices; output retains the 120-target cap.
 pub fn collect_window(rows: &[Event], store: &Store) -> Prefetch {
     collect_bounded(rows, store, 301)
 }

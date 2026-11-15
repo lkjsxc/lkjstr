@@ -5,6 +5,7 @@ import { fallback } from './engine-fallback.mjs';
 import { coldStart } from './engine-cold-start.mjs';
 import { ownerRelays, localDiscovery, continuity } from './engine-feedback.mjs';
 import { conformance } from './engine-conformance.mjs';
+import { rich } from './engine-rich.mjs';
 import { createServer } from 'node:http';
 import { readFile, writeFile, readdir, mkdir } from 'node:fs/promises';
 import { resolve, join, extname } from 'node:path';
@@ -159,6 +160,9 @@ try {
   fake.setReading(true);
   await ownerRelays({page,send,wait,check,note,signer,lines,fake,origin});
   await conformance({page,send,wait,check,note,signer,lines,origin,bunkerKey,bunker,fake});
+  await rich({page,send,wait,check,note,signer,lines,fake});
+  validateReplies(await page.evaluate(()=>window.messages));
+  check('protocol 3 replies satisfy the frontend contract',true);
   await localDiscovery({page,send,wait,check,start,origin});
   const isolated=await browser.newContext();
   await isolated.route('**/*',r=>r.request().url().startsWith(origin)?r.continue():r.abort());

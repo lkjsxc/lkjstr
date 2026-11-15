@@ -3,6 +3,34 @@ use crate::engine::{Engine, query, rows};
 use serde_json::{Value, json};
 impl Session {
     pub(super) fn source_rows(&self, sub: &str, e: &Engine) -> Vec<Value> {
+        self.project_source(sub, e, true)
+    }
+    pub(super) fn source_fresh(&self, sub: &str, e: &Engine) -> usize {
+        let Some((Some(anchor), before, _)) = self.windows.get(sub) else {
+            return 0;
+        };
+        self.project_source(sub, e, false)
+            .iter()
+            .position(|r| r["key"].as_str() == Some(anchor))
+            .unwrap_or(0)
+            .saturating_sub(*before)
+    }
+    pub(super) fn source_edges(&self, sub: &str, e: &Engine) -> (bool, bool) {
+        let all = self.project_source(sub, e, false);
+        let (start, end) = self
+            .windows
+            .get(sub)
+            .map(|(anchor, before, after)| {
+                let at = anchor
+                    .as_ref()
+                    .and_then(|key| all.iter().position(|r| r["key"].as_str() == Some(key)))
+                    .unwrap_or(0);
+                (at.saturating_sub(*before), at.saturating_add(*after))
+            })
+            .unwrap_or((0, 50));
+        (start == 0, end >= all.len())
+    }
+    fn project_source(&self, sub: &str, e: &Engine, windowed: bool) -> Vec<Value> {
         let Some(q) = self.queries.get(sub) else {
             return vec![];
         };
@@ -24,13 +52,13 @@ impl Session {
             }).collect()).unwrap_or_default(),
             "relays"=>e.relay_rows(),
             "diagnostics"=>{
-                let facts=json!({"events":store.len(),"eventPayloadBytes":store.payload_bytes(),"verified":e.verified,"rejected":e.rejected,"dropped":e.dropped,"persistenceQueue":e.pending.len(),"timings":e.metrics,"relayStatistics":e.network.stats(),"protocol":2});
+                let facts=json!({"events":store.len(),"eventPayloadBytes":store.payload_bytes(),"verified":e.verified,"rejected":e.rejected,"dropped":e.dropped,"persistenceQueue":e.pending.len(),"timings":e.metrics,"relayStatistics":e.network.stats(),"protocol":3});
                 facts.as_object().map(|m|m.iter().map(|(k,v)|json!({"kind":"info","key":k,"label":k,"value":v.to_string()})).collect()).unwrap_or_default()
             }
             "media-servers"=>q.account.as_deref().map(|a|e.upload_servers(a).into_iter().map(|url|json!({"kind":"server","key":url,"url":url,"protocol":e.servers.get(&url).map(|v|v.0.as_str()).unwrap_or(if crate::engine::feedback::BLOSSOM_SERVERS.contains(&url.as_str()) {"blossom"}else{"unknown"}),"ok":e.servers.get(&url).is_some_and(|v|v.1)})).collect()).unwrap_or_default(),
             "emoji"=>q.account.as_deref().and_then(|a|store.replaceable(a,10030)).map(|event|lkjstr_protocol::custom_emojis(&event).into_iter().map(|e|json!({"kind":"emoji","key":format!("emoji:{}",e.shortcode),"set":"","code":e.shortcode,"url":e.url})).collect()).unwrap_or_default(),
             "notifications"=>super::notifications::notifications(q,e),
-            "bookmarks"=>q.account.as_deref().and_then(|a|store.replaceable(a,10003)).map(|list|e.list_tags(&list).iter().filter(|t|t.first().is_some_and(|k|k=="e")).filter_map(|t|store.get(t.get(1)?)).map(|event|super::note::note(&rows::row_with_lists(store,&event,q.account.as_deref(),0,&e.private_lists),store,q.account.as_deref())).collect()).unwrap_or_default(),
+            "bookmarks"=>q.account.as_deref().and_then(|a|store.replaceable(a,10003)).map(|list|e.list_tags(&list).iter().filter(|t|t.first().is_some_and(|k|k=="e")).filter_map(|t|store.get(t.get(1)?)).filter(|event|converted.as_ref().is_some_and(|q|query::matches_note(store,q,event))).map(|event|super::note::note(&rows::row_with_lists(store,&event,q.account.as_deref(),0,&e.private_lists),store,q.account.as_deref())).collect()).unwrap_or_default(),
             "list"=>{
                 q.convert().map(|converted|query::events(store,&converted).into_iter().next().map(|event|e.list_tags(&event).iter().filter(|t|t.first().is_some_and(|k|k=="p")).filter_map(|t|t.get(1)).map(|p|person(e,p,q.account.as_deref())).collect()).unwrap_or_default()).unwrap_or_default()
             }
@@ -42,8 +70,13 @@ impl Session {
                             Some(positions) => Some(*positions.get(&event.id)?),
                             None => None,
                         };
-                        let row = rows::row_with_lists(store, &event, q.account.as_deref(), 0, &e.private_lists);
+                        let wrapper = event.kind == 6 || (q.source == "profile" && matches!(q.show.as_deref(), Some("reposts" | "reactions")));
+                        let shown = if wrapper { lkjstr_protocol::tags::tag_values(&event, "e").last().and_then(|id| store.get(id))? } else { event.clone() };
+                        let row = rows::row_with_lists(store, &shown, q.account.as_deref(), 0, &e.private_lists);
                         let mut value = super::note::note(&row, store, q.account.as_deref());
+                        if wrapper && q.show.as_deref() == Some("reposts") {
+                            value["repostedBy"] = json!({"actors":[super::note::author(&rows::author(store,&event.pubkey))],"others":0,"at":event.created_at.saturating_mul(1000)});
+                        }
                         if let Some((role, depth)) = position {
                             value["thread"] = json!({"role":role,"depth":depth});
                         }
@@ -52,8 +85,36 @@ impl Session {
                     }).collect()
             }).unwrap_or_default(),
         };
+        if q.notifications == Some(true) && matches!(q.source.as_str(), "home" | "global") {
+            // Render ordinary timeline notes, then insert the identical notification rows.
+            let mut plain = q.clone();
+            plain.notifications = None;
+            if let Some(converted) = plain.convert() {
+                let ids: std::collections::HashSet<_> = query::events(store, &converted)
+                    .iter()
+                    .map(|e| e.id.clone())
+                    .collect();
+                out.retain(|r| r["id"].as_str().is_some_and(|id| ids.contains(id)));
+            }
+            let mut news = q.clone();
+            news.source = "notifications".into();
+            news.notifications = None;
+            for row in super::notifications::notifications(&news, e) {
+                if row["note"]["id"].is_string() && out.iter().any(|r| r["id"] == row["note"]["id"])
+                {
+                    continue;
+                }
+                out.push(row);
+            }
+            out.sort_by(|a, b| b["at"].as_u64().cmp(&a["at"].as_u64()));
+        }
+        let mut keys = std::collections::HashSet::new();
+        out.retain(|r| keys.insert(r["key"].clone().to_string()));
         if q.source == "profile" {
             out.insert(0, profile(e, target, q.account.as_deref()));
+        }
+        if !windowed {
+            return out;
         }
         if let Some((anchor, before, after)) = self.windows.get(sub) {
             let at = anchor

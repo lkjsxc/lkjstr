@@ -74,6 +74,7 @@ impl Engine {
                 }
             }
             if !ops.is_empty()
+                || v.query.filters.notifications == Some(true)
                 || matches!(
                     v.query.source,
                     Source::Profile
@@ -113,7 +114,11 @@ pub(super) fn range(v: &super::View, events: &[crate::store::Event]) -> std::ops
     let at = v
         .anchor
         .as_ref()
-        .and_then(|id| events.iter().position(|e| e.id == *id))
+        .and_then(|id| {
+            events
+                .iter()
+                .position(|e| super::rich::anchored(e, id, &v.query))
+        })
         .unwrap_or(0);
     let end = at
         .saturating_add(v.after)

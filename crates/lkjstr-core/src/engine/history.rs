@@ -14,14 +14,26 @@ fn paged(v: &View) -> bool {
             | Source::Notifications
     )
 }
+pub(super) fn notification_filter(
+    store: &Store,
+    q: &super::Query,
+) -> Option<lkjstr_protocol::NostrFilter> {
+    if q.filters.notifications != Some(true) || !matches!(q.source, Source::Home | Source::Global) {
+        return None;
+    }
+    let mut news = q.clone();
+    news.source = Source::Notifications;
+    Some(query::filter(store, &news))
+}
 pub(super) fn exhausted(network: &Network, store: &Store, v: &View) -> bool {
     query::signed_out(&v.query)
         || !paged(v)
-        || network.page_exhausted(
+        || (network.page_exhausted(
             v.history
                 .as_ref()
                 .unwrap_or(&query::filter(store, &v.query)),
-        )
+        ) && notification_filter(store, &v.query)
+            .is_none_or(|f| network.page_exhausted(v.notification_history.as_ref().unwrap_or(&f))))
 }
 impl Engine {
     pub(super) fn advance_history(&mut self, sub: &str) -> bool {
@@ -44,24 +56,38 @@ impl Engine {
         {
             return false;
         }
+        let mut changed = false;
+        if let Some(mut head) = notification_filter(&self.store, &v.query) {
+            let active = v.notification_history.as_ref().unwrap_or(&head);
+            if self.network.page_finished(active)
+                && !self.network.page_exhausted(active)
+                && let Some(until) = self.network.page_cursor(active)
+            {
+                head.until = Some(until);
+                if v.notification_history.as_ref() != Some(&head) {
+                    v.notification_history = Some(head);
+                    changed = true;
+                }
+            }
+        }
         let head = query::filter(&self.store, &v.query);
         let active = v.history.as_ref().unwrap_or(&head);
-        if !self.network.page_finished(active) {
-            return false;
+        if !self.network.page_finished(active) || self.network.page_exhausted(active) {
+            return changed;
         }
         let Some(until) = self
             .network
             .page_cursor(active)
             .or_else(|| events.last().map(|e| e.created_at))
         else {
-            return false;
+            return changed;
         };
         let mut page = head;
         // Inclusive boundary avoids silently dropping tied timestamps. A full,
         // nonadvancing page remains unknown rather than claiming exhaustion.
         page.until = Some(until);
         if v.history.as_ref() == Some(&page) {
-            return false;
+            return changed;
         }
         v.history = Some(page);
         true
@@ -96,7 +122,11 @@ impl Engine {
                 let at = v
                     .anchor
                     .as_ref()
-                    .and_then(|id| events.iter().position(|e| e.id == *id))
+                    .and_then(|id| {
+                        events
+                            .iter()
+                            .position(|e| super::rich::anchored(e, id, &v.query))
+                    })
                     .unwrap_or(0);
                 let needed = at.saturating_add(v.after).saturating_add(1).min(6000);
                 let filtered = self.signed_out_global_filter

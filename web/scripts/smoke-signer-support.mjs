@@ -19,6 +19,7 @@ async function setup({ browser, base, relayUrl, pubkey, mode, sign, errors, bunk
   await ctx.exposeFunction('fixtureSign', sign);
   await ctx.addInitScript(
     ({ relayUrl, pubkey, mode, bunkerKey }) => {
+      if (location.protocol !== 'http:') return;
       for (const key of ['', pubkey, bunkerKey])
         localStorage.setItem(
           `lkjstr:relays:${key}`,

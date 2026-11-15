@@ -22,6 +22,7 @@ impl Engine {
                         visible: true,
                         dirty: true,
                         history: None,
+                        notification_history: None,
                         at_bottom: false,
                         source_exhausted: false,
                     },
@@ -42,7 +43,7 @@ impl Engine {
                 if let Some(v) = self.views.get_mut(&sub) {
                     v.anchor = anchor;
                     v.before = before.min(6000);
-                    v.after = after.min(200);
+                    v.after = after.min(800);
                     self.advance_history(&sub);
                     self.replan(now);
                     self.render(&sub, true);

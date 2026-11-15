@@ -88,6 +88,12 @@ pub struct Filters {
     pub reposts: Option<bool>,
     pub language: Option<String>,
     pub text: Option<String>,
+    pub phrases: Option<Vec<String>>,
+    pub exclude: Option<Vec<String>>,
+    pub has: Option<Vec<String>>,
+    pub from: Option<Vec<String>>,
+    pub notifications: Option<bool>,
+    pub show: Option<String>,
 }
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RelayEntry {

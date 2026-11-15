@@ -3,6 +3,7 @@
  * arrangement saved on the device (a visitor's single tile of Global; at desktop width a reader's four tiles). */
 async function seedLayouts(ctx) {
   await ctx.addInitScript(() => {
+    if (location.protocol !== 'http:') return;
     const tile = (id, tabs) => ({ type: 'pane', id, tabs, active: tabs[0] });
     const put = (key, value) => {
       if (!localStorage.getItem(key)) localStorage.setItem(key, JSON.stringify(value));

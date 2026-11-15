@@ -28,6 +28,10 @@ fn requests(
     }
     let mut result = vec![query::filter(store, q)];
     result.extend(v.history.clone());
+    if let Some(f) = super::history::notification_filter(store, q) {
+        result.push(f);
+        result.extend(v.notification_history.clone());
+    }
     if q.source == Source::Thread
         && let Some(id) = &q.target
     {
@@ -87,7 +91,18 @@ fn requests(
             ..Default::default()
         });
     }
-    let prefetch = crate::prefetch::collect_window(&events[range], store);
+    let mut prefetch = crate::prefetch::collect_window(&events[range.clone()], store);
+    for event in &events[range] {
+        if matches!(event.kind, 6 | 7 | 16) {
+            let ids = tag_values(event, "e")
+                .into_iter()
+                .filter(|id| store.get(id).is_none())
+                .collect::<Vec<_>>();
+            if !ids.is_empty() {
+                prefetch.notes.extend(ids);
+            }
+        }
+    }
     let mut ids = prefetch.notes;
     if q.source == Source::Bookmarks
         && let Some(list) = q
