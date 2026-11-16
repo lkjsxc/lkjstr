@@ -16,7 +16,7 @@ if (!pkg || !/^[a-f0-9]{64}$/.test(expectedWasm ?? '') || !/^[a-f0-9]{64}$/.test
 const output = resolve(process.env.LKJSTR_ENGINE_REPORT ?? 'tmp/account-persistence-proof');
 const temporary = resolve(process.env.LKJSTR_TEST_TMPDIR ?? join(resolve(process.env.CARGO_TARGET_DIR ?? 'target', '..'), 'tmp'));
 await mkdir(output, { recursive: true }); await mkdir(temporary, { recursive: true });
-const owned = await mkdtemp(join(temporary, 'acct-')); process.env.TMPDIR = owned;
+const owned = await mkdtemp(join(temporary, 'a-')); process.env.TMPDIR = owned;
 const hash = value => createHash('sha256').update(value).digest('hex');
 const report = { startedAt: new Date().toISOString(), loadStart: loadavg(), package: resolve(pkg),
   checks: [], cases: [], cleanup: {}, pageErrors: 0, externalRequests: 0, forbiddenSockets: 0 };
@@ -28,6 +28,8 @@ async function processIdentity(pid) {
 }
 try {
   report.package = await realpath(pkg);
+  report.temporary = { path: owned, socketPathBytes: Buffer.byteLength(join(owned, 'org.chromium.Chromium.XXXXXX', 'SingletonSocket')) };
+  if (report.temporary.socketPathBytes >= 108) throw Error('owned browser socket path exceeds Linux limit');
   const assets = new Map();
   for (const name of ['lkjstr_engine.js', 'lkjstr_engine_bg.wasm']) assets.set('/current/' + name, await readFile(join(pkg, name)));
   report.wasmSha256 = hash(assets.get('/current/lkjstr_engine_bg.wasm'));
@@ -82,8 +84,9 @@ try {
       ['aPresent', 'bPresent', 'aProtected', 'bProtected', 'aPlaintext', 'bPlaintext'].every(key => entry.current[key] === entry.after[key]));
     await client.close(); client = undefined; await context.close(); context = undefined;
   }
-} catch {
-  // Do not stringify browser/action errors: they can retain RPC payload context.
+} catch (error) {
+  // Startup precedes all accounts; later errors may retain secret RPC context.
+  if (stage === 'browser startup') report.startupError = { name: error.name, message: String(error.message).slice(0, 3000) };
   report.failure = stage; console.error('account persistence fixture failed during ' + stage);
 } finally {
   for (const [name, close] of [
