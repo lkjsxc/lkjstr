@@ -136,4 +136,6 @@ failed on freshly compiled old Rust at 17:11:15 UTC; the candidate passed all
 19 xtask tests in 2.217 seconds, load 4.98/2.58/1.95. Strict Clippy passed.
 Both builds refreshed and recorded owned source mtimes/hashes, and restored
 the candidate after the before proof. Evidence: `tmp/numeric-proof/` in the
-release-fix worktree. Required combined gates and deployment remain separate.
+release-fix worktree. The combined required gates and exact packaging now
+pass; [engine-history-route.md](engine-history-route.md) records dates, loads
+and final artifact hashes. The prescribed ship retry remains pending.

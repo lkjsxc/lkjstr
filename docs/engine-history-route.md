@@ -71,7 +71,8 @@ with this defect, but per-request receipt counts are still needed to attribute
 that observation. No public query, browser inspection or frozen-run mutation
 was added by this native proof.
 
-Merged required gates and post-change public measurement remain pending.
+Combined required gates passed as recorded below; post-change public
+measurement remains pending.
 
 
 ## Production Worker proof
@@ -116,3 +117,47 @@ LKJSTR_ENGINE_PKG=tmp/engine-pkg node scripts/engine-history-route.mjs
 The native `engine-fixtures` helper must already exist in `CARGO_TARGET_DIR`, or
 be specified with `LKJSTR_ENGINE_FIXTURE_BIN`. The command never invokes Cargo.
 `LKJSTR_ENGINE_REPORT` selects a fresh evidence directory.
+
+
+## Combined release verification
+
+All required gates ran serially on 2026-11-16 against source
+`8cd22affe733dd865276fb48b37c9c76e845446d`, with four Cargo jobs and test threads.
+Tracked source hashes stayed unchanged; each Cargo stage refreshed owned Rust
+mtimes before building. Load is the start-of-command 1/5/15-minute average.
+All gate cleanup records found no remaining owned child process.
+
+| Gate | UTC start | Load | Seconds | Result |
+| --- | --- | --- | --- | --- |
+| root check:repo | 17:21:35 | 1.10/1.63/1.80 | 1.191 | passed |
+| root test:quiet | 17:21:36 | 1.10/1.63/1.80 | 133.785 | passed |
+| root rust-wasm:quiet | 17:23:50 | 5.50/4.12/2.76 | 121.851 | passed |
+| root verify:quiet | 17:25:52 | 6.42/6.24/3.81 | 125.301 | passed |
+| web check | 17:27:57 | 5.17/6.83/4.42 | 7.021 | passed |
+| web build | 17:28:04 | 5.32/6.83/4.44 | 0.446 | passed |
+| web smoke | 17:28:05 | 5.32/6.83/4.44 | 403.986 | passed |
+| engine conformance | 17:34:49 | 1.46/3.40/3.67 | 290.992 | passed |
+| web package | 17:39:40 | 3.91/3.81/3.77 | 0.646 | passed |
+
+Engine evidence contains 452 main checks, five historical-route checks,
+31 private-list checks, 72 retained-stop checks and 22 signer-deadline checks;
+all passed without recorded page, Worker, fixture or cleanup errors. The
+historical-route final verdict now includes cleanup/fixture error arrays, and
+engine-check runs it after building the helper. Full web smoke also passed its
+mock, layout, real upload/signer and offline lifecycle phases. This is not a
+claim that the separate prescribed ship's full real-interface suite has run.
+
+The checked production WASM SHA-256 is
+`c7c7a7dd5d9fd30f0f768e9e523ad661b9646a465024b98add368b6bd6c5a46b`.
+The distinct conformance harness WASM is
+`fbd50e17a2d6698937516d164dd3d62f9671db3df34b8f8e81f75fb5623ddf85`.
+The production index SHA-256 is
+`ad1f46abea175eda9a5332bc3133200658262057d9967584601aa5ae551392c9`.
+Exact packaging passed with an 8,550,400-byte raw tar and a 1,539,603-byte gzip.
+The gzip SHA-256 is
+`3124a583b981ab461dd63098cc9a680434f2c801412b59071d9118411f38ad51`.
+
+The release-fix worktree retains `tmp/release-gates.json`, per-command logs,
+source fingerprints, copied reports and immutable package/dist snapshots.
+`tmp/release-fix-proof/final.json` maps the exact source, artifacts and reports.
+The prescribed ship retry and served-site verification are still pending.

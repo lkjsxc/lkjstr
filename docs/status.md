@@ -31,7 +31,7 @@ old policy survived until the next status pass. Revoked private anchors are reje
 The subsequent private-list read support is described below.
 
 Full historical predecessors now retain their ordinary route slot at an inclusive cursor, preventing false exhaustion after quality reranking.
-Native and production Worker before/after proof passed; merged gates are pending. See [engine-history-route.md](engine-history-route.md).
+Native and production Worker before/after, merged required gates and loopback conformance passed. See [engine-history-route.md](engine-history-route.md).
 
 Recovering relays retain their missing span without displacing healthy live fallbacks. History waits for verification; queue loss revokes completion
 and retries the unchanged span with bounded backoff. See [engine-verification-pressure.md](engine-verification-pressure.md). Indexed retained-row
@@ -174,7 +174,8 @@ private-list scope follow-up has separate evidence. Protocol 9 and its startup/d
 passed all required gates, 452 main Worker checks and 31 private-list checks; the dated record is
 [engine-private-verification.md](engine-private-verification.md). The next required public hour will use the completed sixth landing.
 The sixth prescribed ship stopped before deployment at 16:35:57 UTC: separate package validators still required a direct HTML WASM preload.
-The archive graph and numeric-token corrections pass 80 package cases and 19 xtask tests; combined required gates and the corrected ship are pending.
+The archive graph and numeric-token corrections pass 80 package cases and 19 xtask tests; all required combined gates and exact packaging passed.
+The corrected prescribed ship and served-site verification remain pending.
 See [engine-startup.md](engine-startup.md) for hashes, the failed-before proof and preserved archive/CSP checks.
 
 The owner's 2026-11-16 delegation authorizes rebased pushes and the prescribed ship script. Tests use fresh ports and fixture data, clean their
