@@ -118,7 +118,7 @@ Bounds, atomic removal, conflicts and the Worker-scoped unlock limit are in [dm-
 - `Engine.signerAuth?` exposes an in-memory pending signal and explicit cancellation; it never opens, fetches or persists URLs.
 - Current method names, deadlines, recipient ownership and unsupported fallback paths are specified in [bunker-auth.md](bunker-auth.md).
 
-## Protocol 12 storage inspection additions (2026-11-16, source candidate)
+## Protocol 12 storage inspection additions (2026-11-16, verified)
 
 - `storage.inspect {req}` requests one owner-scoped, finite observation; it does not mutate storage.
 - `storage.close {req}` cancels only that client's pending observation and suppresses late effects.
@@ -139,3 +139,4 @@ Bounds, atomic removal, conflicts and the Worker-scoped unlock limit are in [dm-
 - `Engine.storage?` offers `inspect({signal?})` with bounded cancellation and no replay across Worker lifetimes.
 
 Inspection bounds and verification limits are in [storage-inspection.md](storage-inspection.md).
+Merged gate and exact production evidence are in [engine-device-verification.md](engine-device-verification.md).

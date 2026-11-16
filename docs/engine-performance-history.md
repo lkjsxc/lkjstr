@@ -108,7 +108,7 @@ All imported measurement sources and both native helpers must be frozen before
 launch, as required by the hour harness. Source hashes and helper hashes are
 part of the run manifest; a later build must not replace them beneath a run.
 
-## Verification and pending integration
+## Verification and integration
 
 The pure Node policy suite passed all 15 cases on 2026-11-16 at
 19:45:46 UTC in 0.160 seconds, with load 2.39/1.30/1.11 before and after.
@@ -116,7 +116,7 @@ It covers aggregate bytes/IDs/frames/deadlines, primary-account preference,
 three-candidate limits, explicit-account preservation, positive membership,
 cache-only/group/outside-window exclusions and unknown evidence limits.
 Native verification and network discovery are stubbed in this pure suite.
-Its registration in the full observer preflight has not yet been exercised.
+This initial run preceded full observer-preflight integration.
 
 All 14 changed or added measurement modules passed `node --check`; existing
 compiled documentation and line checks plus `git diff --check` passed at
@@ -158,6 +158,8 @@ and recorded zero external requests, forbidden frames or page errors. Browser,
 server, sockets, profile and temporary-data cleanup completed. Exact evidence:
 `tmp/historical-witness-proof-s8XWz0/report.json` and tmp/device-gates.json.
 
-The default gate integration and actual real-build historical phase remain
-unexecuted. No public measurement was started for this change. This finite
-instrumentation proof is not evidence of a production application/public run.
+The full observer preflight and all required merged gates pass on source
+cada84e17335. Fresh helper and 11-check browser proof are bound in
+[engine-device-verification.md](engine-device-verification.md). The actual
+real-build historical public phase remains unexecuted. Finite instrumentation
+proof does not establish a production application or public-network result.

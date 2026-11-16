@@ -54,6 +54,7 @@ Engine (`crates/`):
 - [engine-proposals.md](engine-proposals.md): protocol proposals and their outcome.
 - [engine-proposals-history.md](engine-proposals-history.md): preserved earlier protocol additions.
 - [storage-inspection.md](storage-inspection.md): finite storage observations, bounds and verification limits.
+- [engine-device-verification.md](engine-device-verification.md): protocol-12 merged gates, production and historical proof.
 - [storage-next.md](storage-next.md): separate cache-clear and settings-archive proposals.
 - [parity.md](parity.md): audited client capability inventory.
 - [details.md](details.md): observed frictions and fixes.

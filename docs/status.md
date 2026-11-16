@@ -130,8 +130,8 @@ surfaces.
 
 ## Accounts, routing and publication
 
-Create/import/use/remove and explicit raw backup are durable account actions; read-only npub and external signers cannot return a local private key.
-Secret-bearing Debug representations are redacted. Extension discovery and signing correlate replies and validate the exact requested event.
+Account writes commit before acknowledgement, but lack a cross-Worker stale-snapshot guard; failed/corrupt boot reads are also under audit.
+Read-only npub/external signers cannot export a local key; secret-bearing Debug is redacted. Extension signing validates the exact request.
 Preauthorized bunkers use NIP-44 RPC, verified public keys and bounded closed sockets.
 
 Every saved account refreshes profile/follow/relay/mute/server records without an open account view. Verified NIP-65 usage wins, with retained
@@ -164,7 +164,7 @@ These are concrete runtime limits, not permission to fake a successful answer.
 - Uploads: phases, zero/validated completion and cancellation work; actual byte
   progress is unavailable without weakening redirect/body limits. NIP-96 processing remains bounded.
 - Device: protocol12 inspection distinguishes memory payload bytes, all event-store records (including ciphertext), and approximate origin usage.
-  Focused 14 native/19 Worker checks and strict Clippy pass; full merged gates and a surface remain pending.
+  Focused 14 native/19 Worker checks, strict Clippy and full merged gates pass; a surface remains pending.
   Exact disk bytes, clearing, settings archives and setup sync remain absent; [storage-inspection.md](storage-inspection.md).
 - Followed hashtags, parsed article documents, reports and complete NIP-11 detail
   projection remain missing. Full inventory and new protocol families: parity.md.
@@ -187,8 +187,8 @@ The seventh prescribed ship passed all 548 real interface checks and packaging, 
 No successful deployment receipt or served-index verification exists; the last confirmed successful ship remains 541e4a1e. Extra host commands
 are forbidden by the owner handoff; read-only diagnosis was requested through Desk. Exact artifacts and limits are in [engine-startup.md](engine-startup.md).
 
-Protocol-11 integration passed all required gates, 459 main Worker checks, 541 default real UI checks and exact archive validation on source 9766cd1a.
-Dated results, screenshot-mode exclusions and artifact hashes are in [engine-variants-verification.md](engine-variants-verification.md).
+Protocol-11 results are in [engine-variants-verification.md](engine-variants-verification.md). Protocol-12 storage and historical controls
+also pass merged gates; exact source, production proofs and artifacts are in [engine-device-verification.md](engine-device-verification.md).
 
 The owner's 2026-11-16 delegation authorizes rebased pushes and the prescribed ship script. Tests use fresh ports and fixture data, clean their
 processes and never publish to public relays or touch a saved owner account. The public hour uses REQ/CLOSE only. Docker and unrelated host services

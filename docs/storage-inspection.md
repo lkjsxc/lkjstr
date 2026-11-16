@@ -3,8 +3,8 @@
 ## Purpose
 
 Protocol 12 adds finite, read-only storage observations for a future surface.
-Focused native, client and production Worker checks pass; full merged gates
-remain pending. This does not clear data, export settings or reinterpret Stats.
+Focused native, client and production Worker checks and all merged gates pass.
+This does not clear data, export settings or reinterpret Stats.
 
 ## Contract and scope
 
@@ -86,7 +86,7 @@ replays an observation into a different monotonic clock domain. The mock has
 no signed-event store and reports zero retained events, with unsupported
 physical/origin observations instead of fabricated disk evidence.
 
-## Focused verification and remaining gates
+## Focused and merged verification
 
 The original isolated preflight passed `pnpm --dir web check` on 2026-11-16
 at 19:47:00 UTC in 7.177 seconds, load 2.32 / 1.52 / 1.20. It includes
@@ -135,8 +135,9 @@ The final report is `tmp/storage-focused-try3/report.json`; all stage logs,
 source maps and cleanup results are in tmp/device-gates.json and adjacent
 files. No owned descendant or short temporary alias remained. The fixture
 opens no account or external socket and is registered in engine-check.sh.
-Full required merged gates, a reachable interface and a public deployment are
-still pending. No production test-control export was introduced.
+All required merged gates and fresh production/helper proofs pass; exact
+source, timings and artifacts are in [engine-device-verification.md](engine-device-verification.md).
+A reachable interface and deployment remain pending. No test-control export was introduced.
 
 The initial merged gate was deliberately stopped on 2026-11-16 at 20:29 UTC
 to correct public-only wording in comments and this contract. The actual DM
