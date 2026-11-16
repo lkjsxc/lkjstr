@@ -1,36 +1,7 @@
 import assert from 'node:assert/strict';
-import { webcrypto } from 'node:crypto';
 import { test } from 'node:test';
-import { workerTransport } from '../engine/transport.js';
+import { deliver, fixture, hello, welcome } from './engine-transport-fixture.mjs';
 
-function fixture(run) {
-  const descriptors = new Map();
-  const ports = [];
-  const set = (name, value) => {
-    descriptors.set(name, Object.getOwnPropertyDescriptor(globalThis, name));
-    Object.defineProperty(globalThis, name, { configurable: true, writable: true, value });
-  };
-  set('crypto', webcrypto);
-  set('SharedWorker', class {
-    constructor() {
-      this.port = { sent: [], onmessage: null, start() {}, close() {},
-        postMessage(message) { this.sent.push(message); } };
-      ports.push(this.port);
-    }
-  });
-  set('document', { visibilityState: 'visible', addEventListener() {}, removeEventListener() {} });
-  set('addEventListener', () => {});
-  set('removeEventListener', () => {});
-  const transport = workerTransport();
-  try { run(transport, ports[0]); }
-  finally {
-    transport.close();
-    for (const [name, descriptor] of descriptors) {
-      if (descriptor) Object.defineProperty(globalThis, name, descriptor);
-      else delete globalThis[name];
-    }
-  }
-}
 const query = { account: 'a'.repeat(64), conversation: 'b'.repeat(64), before: 'c'.repeat(64) };
 
 test('replay opens a retained hidden private view atomically without losing its query', () => {
@@ -84,4 +55,102 @@ test('an upload cancelled before ready cannot be replayed with its bytes', () =>
     assert.equal(port.sent.some((m) => m.t === 'act'), false);
     assert.equal(bytes.byteLength, 8);
   });
+});
+
+
+test('retired SharedWorker callbacks cannot deliver releases or reconnect a newer connection', () => {
+  fixture((transport, first, state) => {
+    const received = [];
+    transport.listen((m) => received.push(m));
+    deliver(first, { t: 'ready', version: 8, engine: 'first' });
+    const retiredMessage = first.onmessage, retiredError = state.workers[0].onerror;
+    retiredError();
+    deliver(state.ports[1], { t: 'ready', version: 8, engine: 'second' });
+    received.length = 0;
+    retiredMessage({ data: { t: 'dm.flush', req: 'old', account: query.account, phase: 'release' } });
+    assert.deepEqual(received, []);
+    retiredError();
+    assert.equal(state.workers.length, 2);
+  });
+});
+
+test('an asynchronous public-key answer stays with the connection that requested it', () =>
+  fixture(async (transport, first, state, set) => {
+    let answer;
+    set('nostr', { getPublicKey: () => new Promise((done) => { answer = done; }) });
+    deliver(first, { t: 'ready', version: 8, engine: 'first' });
+    deliver(first, { t: 'getPublicKey', req: 'old-discovery' });
+    state.workers[0].onerror();
+    deliver(state.ports[1], { t: 'ready', version: 8, engine: 'second' });
+    answer(query.account);
+    await Promise.resolve();
+    await Promise.resolve();
+    assert.equal(state.ports[1].sent.some((m) => m.t === 'publicKey'), false);
+  }));
+
+test('a follower rejects old-leader output after the current leader prepares a lock', () => {
+  fixture((transport, _port, state) => {
+    const channel = state.channels[0], received = [];
+    transport.listen((m) => received.push(m));
+    welcome(channel, 'old-epoch');
+    deliver(channel, { leader: true, epoch: 'new-epoch' });
+    welcome(channel, 'new-epoch');
+    const client = hello(channel).from;
+    deliver(channel, { to: client, epoch: 'new-epoch', msg: { t: 'dm.flush', req: 'one', account: query.account, phase: 'prepare' } });
+    deliver(channel, { to: client, epoch: 'old-epoch', msg: { t: 'dm.flush', req: 'one', account: query.account, phase: 'release' } });
+    assert.deepEqual(received.filter((m) => m.t === 'dm.flush').map((m) => m.phase), ['prepare']);
+  }, true);
+});
+
+test('a delayed welcome cannot switch a follower back to a retired leader', () => {
+  fixture((transport, _port, state) => {
+    const channel = state.channels[0], initial = hello(channel);
+    welcome(channel, 'old-epoch', initial);
+    deliver(channel, { leader: true, epoch: 'new-epoch' });
+    welcome(channel, 'new-epoch');
+    welcome(channel, 'old-epoch', initial);
+    transport.post({ t: 'heartbeat' });
+    assert.equal(channel.sent.at(-1).epoch, 'new-epoch');
+  }, true);
+});
+
+test('a retired leader port cannot label its queued output with the replacement epoch', () => {
+  fixture((transport, _port, state) => {
+    void state.lead();
+    const channel = state.channels[0];
+    deliver(channel, { hello: true, from: 'other-page', join: 'other-join' });
+    const retired = state.pairs[1].port1.onmessage;
+    state.now = 61000;
+    state.tick();
+    const count = channel.sent.length;
+    retired({ data: { t: 'dm.flush', req: 'old', account: query.account, phase: 'release' } });
+    assert.equal(channel.sent.length, count);
+    assert.equal(state.workers.length, 2);
+  }, true);
+});
+
+test('one hello accepts only one welcome across overlapping leader handoff delivery', () => {
+  fixture((transport, _port, state) => {
+    const channel = state.channels[0], request = hello(channel);
+    welcome(channel, 'current-epoch', request);
+    welcome(channel, 'retired-epoch', request);
+    transport.post({ t: 'heartbeat' });
+    assert.equal(channel.sent.at(-1).epoch, 'current-epoch');
+  }, true);
+});
+
+test('current leader welcomes a returning peer and keeps its bidirectional route usable', () => {
+  fixture((_transport, _port, state) => {
+    void state.lead();
+    const channel = state.channels[0];
+    deliver(channel, { hello: true, from: 'peer', join: 'first-join' });
+    const peer = state.pairs[1].port1, epoch = channel.sent.at(-1).epoch;
+    deliver(channel, { hello: true, from: 'peer', join: 'second-join' });
+    assert.equal(state.pairs.length, 2);
+    assert.deepEqual(channel.sent.at(-1), { to: 'peer', epoch, welcome: true, join: 'second-join' });
+    deliver(channel, { from: 'peer', epoch, msg: { t: 'heartbeat' } });
+    assert.deepEqual(peer.sent, [{ t: 'heartbeat' }]);
+    deliver(peer, { t: 'heartbeat' });
+    assert.deepEqual(channel.sent.at(-1), { to: 'peer', epoch, msg: { t: 'heartbeat' } });
+  }, true);
 });

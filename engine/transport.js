@@ -4,6 +4,7 @@ export function workerTransport(options = {}) {
   // Old and new hashed engine graphs may coexist during an atomic release.
   const namespace = `lkjstr-engine-v1:${import.meta.url}`;
   let receive = () => {}, closed = false, port, worker, release, epoch;
+  let connection = 0, join;
   let config, relays = options.relays ? { t: 'relays', relays: options.relays } : undefined, hint;
   const privateSubs = new Map(); // at most 32 private subscriptions
   const subs = new Map(); // bounded by engine's 128-subscription limit
@@ -31,23 +32,24 @@ export function workerTransport(options = {}) {
     receive({ t: 'reconnect' });
     replay();
   };
-  const message = async (msg) => {
-    if (closed) return;
+  const message = async (msg, generation = connection) => {
+    const live = () => !closed && generation === connection;
+    if (!live()) return;
     lastAlive=performance.now();
     if (msg.t === 'heartbeat') return;
     if (msg.t === 'reconnect') {
       if (!channel) { port.close(); connectShared(); }
       else if (worker) { peers.get(client)?.close(); peers.delete(client); attachLocal(); }
-      else channel.postMessage({ hello: true, from: client });
+      else { ++connection; epoch = undefined; greet(); }
       reconnect(); return;
     }
     if (msg.t === 'getPublicKey') {
       try {
         if (!globalThis.nostr?.getPublicKey) throw new Error('signer-missing');
         const pubkey = await globalThis.nostr.getPublicKey();
-        send({ t: 'publicKey', req: msg.req, pubkey });
+        if (live()) send({ t: 'publicKey', req: msg.req, pubkey });
       } catch (e) {
-        send({ t: 'publicKey', req: msg.req, error: e.message === 'signer-missing' ? 'signer-missing' : 'signer-refused' });
+        if (live()) send({ t: 'publicKey', req: msg.req, error: e.message === 'signer-missing' ? 'signer-missing' : 'signer-refused' });
       }
       return;
     }
@@ -66,51 +68,68 @@ export function workerTransport(options = {}) {
     receive(msg);
   };
   const url = (name) => new URL(name, import.meta.url);
-  let channel, peers, attachLocal, restartLeader;
+  let channel, peers, attachLocal, restartLeader, greet;
   let lastAlive=performance.now();
   const connectShared = () => {
-    worker = new SharedWorker(url('shared.js'), { type: 'module', name: namespace });
-    port = worker.port;
-    port.onmessage = (e) => void message(e.data);
-    port.start();
-    worker.onerror = () => { if (!closed) { port.close(); connectShared(); reconnect(); } };
+    const generation = ++connection;
+    const current = new SharedWorker(url('shared.js'), { type: 'module', name: namespace });
+    const currentPort = current.port;
+    worker = current; port = currentPort;
+    currentPort.onmessage = (e) => void message(e.data, generation);
+    currentPort.start();
+    current.onerror = () => {
+      if (!closed && generation === connection) {
+        currentPort.close(); connectShared(); reconnect();
+      }
+    };
   };
   if (!options.dedicated && typeof SharedWorker !== 'undefined') connectShared();
   else {
     if (!navigator.locks || !globalThis.BroadcastChannel) throw new Error('Web Locks and BroadcastChannel required');
     channel = new BroadcastChannel(namespace);
     peers = new Map(); // max 32, matching Rust port ownership
-    const attach = (id) => {
-      if (peers.has(id)) return;
-      if (peers.size >= 32) return;
-      const pair = new MessageChannel();
-      peers.set(id, pair.port1);
-      pair.port1.onmessage = (e) => {
-        channel.postMessage({ to: id, epoch, msg: e.data });
-        if(e.data.t==='reconnect') {pair.port1.close();peers.delete(id);}
-      };
-      worker.postMessage({ t: 'connect' }, [pair.port2]);
-      channel.postMessage({ to: id, epoch, welcome: true });
+    greet = () => {
+      join = crypto.randomUUID();
+      channel.postMessage({ hello: true, from: client, join });
+    };
+    const attach = (id, request) => {
+      if (!peers.has(id)) {
+        if (peers.size >= 32) return;
+        const pair = new MessageChannel(), owner = worker, ownerEpoch = epoch;
+        peers.set(id, pair.port1);
+        pair.port1.onmessage = (e) => {
+          if (closed || worker !== owner || epoch !== ownerEpoch || peers.get(id) !== pair.port1) return;
+          channel.postMessage({ to: id, epoch: ownerEpoch, msg: e.data });
+          if(e.data.t==='reconnect') {pair.port1.close();peers.delete(id);}
+        };
+        owner.postMessage({ t: 'connect' }, [pair.port2]);
+      }
+      if (request) channel.postMessage({ to: id, epoch, welcome: true, join: request });
     };
     attachLocal = () => {
-      const pair=new MessageChannel();
+      const pair=new MessageChannel(), generation=++connection;
+      peers.get(client)?.close();
       peers.set(client,pair.port1);
-      pair.port1.onmessage=(e)=>void message(e.data);
+      pair.port1.onmessage=(e)=>void message(e.data,generation);
       worker.postMessage({t:'connect'},[pair.port2]);
     };
     port = { postMessage: (msg, transfer=[]) => {
       if (worker) {
-        attach(client);
+        if (!peers.has(client)) attachLocal();
         peers.get(client)?.postMessage(msg,transfer);
-      } else channel.postMessage({ from: client, epoch, msg:transfer.length?structuredClone(msg,{transfer}):msg });
+      } else if (epoch) channel.postMessage({ from: client, epoch, msg:transfer.length?structuredClone(msg,{transfer}):msg });
     } };
     channel.onmessage = (e) => {
       const data = e.data;
-      if (data.hello && worker) attach(data.from);
-      if (data.leader) { channel.postMessage({ hello: true, from: client }); }
-      if (data.to === client) {
-        if (data.welcome && data.epoch !== epoch) { epoch = data.epoch; reconnect(); }
-        if (data.msg) void message(data.msg);
+      if (closed) return;
+      if (data.hello && worker && typeof data.join === 'string' && data.join.length <= 128) attach(data.from, data.join);
+      if (data.leader && !worker) greet();
+      if (!worker && data.to === client) {
+        if (data.welcome && join && data.join === join && typeof data.epoch === 'string') {
+          join = undefined;
+          if (data.epoch !== epoch) { epoch = data.epoch; ++connection; reconnect(); }
+        }
+        if (data.msg && epoch && data.epoch === epoch) void message(data.msg, connection);
       }
       if (worker && data.from && data.msg && data.epoch === epoch) {
         attach(data.from);
@@ -127,7 +146,7 @@ export function workerTransport(options = {}) {
         worker?.terminate();
         for(const peer of peers.values())peer.close();
         peers.clear();
-        epoch=crypto.randomUUID();
+        epoch=crypto.randomUUID(); join=undefined;
         worker=new Worker(url('worker.js'),{type:'module'});
         attachLocal();
         channel.postMessage({leader:true,epoch});
@@ -136,7 +155,7 @@ export function workerTransport(options = {}) {
       restartLeader();
       await new Promise((done) => { release = done; });
     }).catch((e) => { if (e.name !== 'AbortError') throw e; });
-    channel.postMessage({ hello: true, from: client });
+    if (!worker) greet();
   }
   const heartbeat = setInterval(() => {
     if(performance.now()-lastAlive>60_000) {
@@ -146,7 +165,7 @@ export function workerTransport(options = {}) {
     }
     send({t:'heartbeat'});
   },20_000);
-  const resume = () => { if (document.visibilityState === 'visible') { send({ t: 'heartbeat' }); if (channel) channel.postMessage({ hello: true, from: client }); } };
+  const resume = () => { if (document.visibilityState === 'visible') { send({ t: 'heartbeat' }); if (channel && !worker) greet(); } };
   document.addEventListener('visibilitychange', resume);
   const close = () => {
     if (closed) return;
@@ -154,7 +173,8 @@ export function workerTransport(options = {}) {
     closed = true;
     clearInterval(heartbeat);
     document.removeEventListener('visibilitychange', resume);
-    removeEventListener('pagehide',close);
+    removeEventListener('pagehide',pagehide);
+    removeEventListener('pageshow',pageshow);
     port?.close?.();
     for (const peer of peers?.values() ?? []) peer.close();
     channel?.close();
@@ -162,7 +182,11 @@ export function workerTransport(options = {}) {
     release?.();
     privateSubs.clear(); subs.clear(); pending.clear(); startup.length=0;
   };
-  addEventListener('pagehide', close, { once: true });
+  // A retained history page still owns its editor: expiry may orphan it, never certify it clean.
+  const pagehide = (event) => { if (!event.persisted) close(); };
+  const pageshow = (event) => { if (event.persisted) resume(); };
+  addEventListener('pagehide', pagehide);
+  addEventListener('pageshow', pageshow);
   return {
     post(msg, transfer=[]) {
       if (closed) return;
