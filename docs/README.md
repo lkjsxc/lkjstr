@@ -49,5 +49,8 @@ Engine (`crates/`):
 - [Private-message engine and limits](dm.md)
 - [Encrypted local keys and session access](keys.md)
 - [Engine capabilities awaiting interface specifications](interface-needs.md)
+- [interface-specs.md](interface-specs.md): surfaces to build, item by item, with their state.
+- [interface-keys.md](interface-keys.md): password-protected keys: sign-in, lock, backup, protection.
+- [interface-dm.md](interface-dm.md): private messages: list, conversation, writing, inbox relays.
 
 - [relay-auth.md](relay-auth.md): scoped relay authentication and async identity races.

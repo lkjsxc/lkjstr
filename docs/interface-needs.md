@@ -4,6 +4,7 @@
 
 Engine capabilities awaiting Claude's written visible specifications. No new
 strings, CSS, layout or controls are implied by this list.
+Both sections below are specified in [interface-specs.md](interface-specs.md) (items K1 to K4, M1 to M6, D1).
 
 ## Private messages
 
