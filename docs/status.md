@@ -184,8 +184,8 @@ production Worker before/after proof and combined gates. Public availability is 
 The sixth prescribed ship stopped before deployment at 16:35:57 UTC: separate package validators still required a direct HTML WASM preload.
 The archive graph and numeric-token corrections pass 80 package cases and 19 xtask tests; all required combined gates and exact packaging passed.
 The seventh prescribed ship passed all 548 real interface checks and packaging, then failed at the host operation at 17:53:27 UTC.
-No successful deployment receipt or served-index verification exists; the last confirmed successful ship remains 541e4a1e. Extra host commands
-are forbidden by the owner handoff; read-only diagnosis was requested through Desk. Exact artifacts and limits are in [engine-startup.md](engine-startup.md).
+No successful deployment receipt or served-index verification exists; the last confirmed successful ship remains 541e4a1e. The second owner note authorizes lkjstr-only host diagnosis and repair. The stale host validator rejected the direct-Worker asset graph before activation;
+the corrected route, exact-source shipping and schema-2 rollback baseline are documented in [engine-shipping.md](engine-shipping.md). Live repair is pending.
 
 Protocol-11/12 gate records: [variants](engine-variants-verification.md), [device](engine-device-verification.md).
 The [ninth hour](engine-performance-ninth.md) and [coverage audit](engine-performance-ninth-coverage.md) record hidden quotes and evidence limits.
