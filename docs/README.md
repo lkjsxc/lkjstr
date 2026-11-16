@@ -25,6 +25,7 @@ Engine (`crates/`):
 - [zaps.md](zaps.md): provider-authorized receipts, unpaid invoice intents, lifetime and bounds.
 - [engine-zap-verification.md](engine-zap-verification.md): zap integration gates and runtime regressions.
 - [protocol3.md](protocol3.md): rich filters, notifications, profile kinds and gates.
+- [search.md](search.md): retained people, note-only windows, language arrays and verification.
 - [status.md](status.md): what works, what does not, next steps in order.
 - [outbox.md](outbox.md): read cursors, durable quality, focus, weights and purposes.
 - [cover.md](cover.md): hydration traffic, duplicate resumption, public medians and gaps.

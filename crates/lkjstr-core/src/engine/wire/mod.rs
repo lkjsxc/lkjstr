@@ -23,6 +23,7 @@ pub mod queries;
 mod query_translate;
 mod quote_state;
 mod reading;
+mod search;
 mod sources;
 use super::thread;
 mod timeline;
@@ -45,6 +46,7 @@ pub struct Session {
     pub config: Config,
     notification_states: std::collections::BTreeMap<String, notification_evidence::Cached>,
     private_states: std::collections::BTreeMap<String, private_lists::Cached>,
+    searches: std::collections::BTreeMap<String, search::Cached>,
     timelines: std::collections::BTreeMap<String, timeline::Index>,
     timeline_turn: usize,
     return_keys: std::collections::BTreeMap<String, String>,

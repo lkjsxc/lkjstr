@@ -105,6 +105,7 @@ pub struct Filters {
     pub replies: Option<bool>,
     pub reposts: Option<bool>,
     pub language: Option<String>,
+    pub languages: Option<Vec<String>>,
     pub text: Option<String>,
     pub phrases: Option<Vec<String>>,
     pub exclude: Option<Vec<String>>,

@@ -1,5 +1,5 @@
 use super::protocol::{Query, Source};
-use lkjstr_protocol::{NostrEvent, reply_parent, tags::tag_values};
+use lkjstr_protocol::{NostrEvent, reply_parent};
 pub(super) fn matches_extra(e: &NostrEvent, q: &Query) -> bool {
     let f = &q.filters;
     if f.since.is_some_and(|s| e.created_at < s)
@@ -35,17 +35,28 @@ pub(super) fn matches_extra(e: &NostrEvent, q: &Query) -> bool {
     {
         return false;
     }
-    if let Some(lang) = &f.language {
-        let tagged = tag_values(e, "L")
-            .into_iter()
-            .chain(tag_values(e, "l"))
-            .any(|l| l == *lang);
-        if !tagged
-            && (!matches!(lang.as_str(), "en" | "ja")
-                || !crate::reading::language_matches(&e.content, lang == "ja"))
-        {
+    let matches_language = |lang: &str| {
+        e.tags.iter().any(|tag| {
+            tag.first()
+                .is_some_and(|key| matches!(key.as_str(), "L" | "l"))
+                && tag.get(1).is_some_and(|value| value == lang)
+        }) || (matches!(lang, "en" | "ja")
+            && crate::reading::language_matches(&e.content, lang == "ja"))
+    };
+    if let Some(languages) = f
+        .languages
+        .as_ref()
+        .filter(|languages| !languages.is_empty())
+    {
+        if !languages.iter().any(|lang| matches_language(lang)) {
             return false;
         }
+    } else if f
+        .language
+        .as_deref()
+        .is_some_and(|lang| !matches_language(lang))
+    {
+        return false;
     }
     !(q.source == Source::Notifications
         && f.types.as_ref().is_some_and(|types| {

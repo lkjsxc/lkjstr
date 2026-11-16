@@ -5,6 +5,7 @@ import { channelHeader, channelList, channelOf } from './channels.ts';
 import { finite, notifications } from './lists.ts';
 import { byPubkey, byRef, FOLLOWERS, PEOPLE, type Person } from './people.ts';
 import { noteRow, pendingProfile, personRow, profileRow, type RowOpts } from './rows.ts';
+import { matchesLanguage, searchPeople } from './search.ts';
 import type { MNote, World } from './world.ts';
 
 /** One row of a subscription's list: built when it is sent, so it always shows the current state. */
@@ -53,6 +54,7 @@ export function matches(w: World, q: Query, n: MNote, me: string): boolean {
   if (q.media === 'only' && !n.media.length) return false;
   if (q.media === 'none' && n.media.length) return false;
   if (q.replies === false && n.re) return false;
+  if (!matchesLanguage(n, q.language)) return false;
   const words = (q.text ?? '').toLowerCase().split(/\s+/).filter(Boolean);
   const text = hay(n);
   if (!words.every((x) => text.includes(x))) return false;
@@ -220,19 +222,6 @@ export function select(w: World, q: Query, me: string): Entry[] {
     const unknown = /^([0-9a-f]{64}|npub1[a-z0-9]{20,})$/.test(named) ? stranger(named) : undefined;
     return unknown ? [fixed(pendingProfile(unknown))] : [];
   }
-  if (q.source === 'search') {
-    const words = (q.text ?? '').toLowerCase().split(/\s+/).filter(Boolean);
-    const people = words.length
-      ? PEOPLE.filter((p) =>
-          words.every((x) =>
-            `${p.author.name} ${p.handle} ${p.author.nip05 ?? ''}`.toLowerCase().includes(x),
-          ),
-        )
-      : [];
-    return [
-      ...people.map((p) => ({ key: p.author.pubkey, row: () => personRow(w, p, me) })),
-      ...notes,
-    ];
-  }
+  if (q.source === 'search') return [...searchPeople(w, q, me), ...notes];
   return notes;
 }

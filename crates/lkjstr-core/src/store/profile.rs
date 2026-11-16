@@ -73,3 +73,12 @@ impl Profile {
             .find(|text| !text.is_empty())
     }
 }
+
+impl super::Store {
+    /// The retained signed metadata index; iteration allocates no whole-directory snapshot.
+    pub(crate) fn profile_entries(&self) -> impl Iterator<Item = (&str, &Profile)> {
+        self.profiles
+            .iter()
+            .map(|(key, profile)| (key.as_str(), profile.as_ref()))
+    }
+}

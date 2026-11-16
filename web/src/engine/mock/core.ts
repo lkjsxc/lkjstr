@@ -4,6 +4,8 @@ import { createAccounts } from './accounts.ts';
 import { privateListAccountSnapshot, privateListState } from './private-lists.ts';
 import { entry, matches, select } from './query.ts';
 import { relays } from './relays.ts';
+import { searchPrefix } from './search.ts';
+import { refreshSearch, resyncSearch } from './search-window.ts';
 import type { Sub } from './subscription.ts';
 import { sendTimelines } from './timeline.ts';
 import { createWorld, type MNote } from './world.ts';
@@ -79,13 +81,19 @@ export function createCore(post: (msg: FromEngine) => void, now: () => number) {
             s.end++, push(s, { op: 'insert', before: null, rows: [e.row()] });
           continue;
         }
-        const at = s.query.source === 'profile' || s.query.source === 'channel' ? 1 : 0;
+        const search = s.query.source === 'search';
+        const at = search
+          ? searchPrefix(s.entries)
+          : s.query.source === 'profile' || s.query.source === 'channel'
+            ? 1
+            : 0;
         const e = entry(world, n, { me: me(), reposts: s.query.reposts });
         const first = s.entries[at]?.key ?? null;
         s.entries.splice(at, 0, e);
         queueTimeline();
         if (!s.windowed) continue;
-        if (s.live) s.end++, push(s, { op: 'insert', before: first, rows: [e.row()] });
+        if (search) refreshSearch(s, post);
+        else if (s.live) s.end++, push(s, { op: 'insert', before: first, rows: [e.row()] });
         else s.start++, s.end++, post({ t: 'fresh', sub: s.id, count: ++s.fresh });
         post({
           t: 'state',
@@ -105,6 +113,11 @@ export function createCore(post: (msg: FromEngine) => void, now: () => number) {
       for (const s of subs.values()) {
         if (only && !only(s.query)) continue;
         const next = select(world, s.query, me());
+        if (s.query.source === 'search') {
+          resyncSearch(s, next, post);
+          queueTimeline();
+          continue;
+        }
         const shown = s.entries.slice(s.start, s.end);
         const had = new Set(s.entries.map((e) => e.key));
         const wasBottom = s.end === s.entries.length;

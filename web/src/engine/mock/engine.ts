@@ -9,6 +9,7 @@ import { createCore } from './core.ts';
 import { createPrivateMock } from './dm.ts';
 import { privateListState } from './private-lists.ts';
 import { select } from './query.ts';
+import { searchWindow } from './search-window.ts';
 import { createSignerAuthMock } from './signer-auth.ts';
 import { mockStats } from './stats.ts';
 import type { Sub } from './subscription.ts';
@@ -159,14 +160,17 @@ export function createMockEngine(post: (msg: FromEngine) => void, now = Date.now
       else if (msg.t === 'window') {
         const s = subs.get(msg.sub);
         if (!s) return;
-        const key = timeKey(s.entries, msg.anchor, core.now());
-        s.anchor = key;
-        if (msg.anchor !== 'top' && 'month' in msg.anchor) s.returnKey = msg.anchor.returnKey;
-        const found = msg.anchor === 'top' ? 0 : s.entries.findIndex((e) => e.key === key);
-        const at = Math.max(0, found);
-        s.live = msg.anchor === 'top' || found < 0;
-        s.start = Math.max(0, at - (msg.retainAbove ? 6000 : msg.before));
-        s.end = Math.min(s.entries.length, at + msg.after);
+        if (s.query.source === 'search') searchWindow(s, msg, core.now(), post);
+        else {
+          const key = timeKey(s.entries, msg.anchor, core.now());
+          s.anchor = key;
+          if (msg.anchor !== 'top' && 'month' in msg.anchor) s.returnKey = msg.anchor.returnKey;
+          const found = msg.anchor === 'top' ? 0 : s.entries.findIndex((e) => e.key === key);
+          const at = Math.max(0, found);
+          s.live = msg.anchor === 'top' || found < 0;
+          s.start = Math.max(0, at - (msg.retainAbove ? 6000 : msg.before));
+          s.end = Math.min(s.entries.length, at + msg.after);
+        }
         s.windowed = true;
         s.ops = [];
         if (s.live && s.fresh) (s.fresh = 0), post({ t: 'fresh', sub: s.id, count: 0 });

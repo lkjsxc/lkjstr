@@ -14,4 +14,5 @@ export type Sub = {
   timeline?: string;
   anchor?: string;
   returnKey?: string;
+  searchRange?: { before: number; after: number; retainAbove: boolean };
 };

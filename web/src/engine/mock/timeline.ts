@@ -22,7 +22,12 @@ export function timeline(
   entries.forEach((e, i) => {
     const row = e.row();
     if (row.kind !== 'note' && row.kind !== 'notification') {
-      if (row.kind !== 'profile' && row.kind !== 'channel') supported = false;
+      if (
+        row.kind !== 'profile' &&
+        row.kind !== 'channel' &&
+        !(q.source === 'search' && row.kind === 'person')
+      )
+        supported = false;
       return;
     }
     const time = row.kind === 'note' ? (row.repostedBy?.at ?? row.at) : row.at;

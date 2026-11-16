@@ -153,8 +153,9 @@ These are concrete runtime limits, not permission to fake a successful answer.
   NIP-04. Public edits preserve ciphertext; private editing, named-set navigation
   and list-specific Retry controls remain absent. Rows/hydration are owner-scoped.
 - Emoji: referenced sets pass native tests; Worker/full gates pending. Limits: [emoji-sets.md](emoji-sets.md).
-- Search: matching people are not placed ahead of notes; multi-language arrays
-  use the first language. Bounded verified NIP-05 from-query lookup exists.
+- Search: retained matching people and language-array OR are prepared; native
+  and Worker proof remain pending. Remote people discovery is absent; bounded
+  verified NIP-05 from-query lookup exists. See search.md for the current proof.
 - Bunkers: auth_url is a candidate without controls; verification and routing limits: [bunker-auth.md](bunker-auth.md). Relay switching is unsupported.
 - Uploads: intermediate transmitted-byte progress remains missing; zero and
   validated completion are reported, with bounded NIP-96 processing.

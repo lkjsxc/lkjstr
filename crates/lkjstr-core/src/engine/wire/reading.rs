@@ -12,6 +12,9 @@ impl Session {
                 if key.len() > 256 {
                     return vec![];
                 }
+                if let Some(anchor) = self.search_header_anchor(&sub, &key) {
+                    return self.reading(sub, anchor);
+                }
                 let row = self
                     .delivered
                     .get(&sub)

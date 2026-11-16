@@ -87,7 +87,8 @@ impl Query {
                 media: self.media.as_ref().map(|s| s == "only"),
                 replies: self.replies,
                 reposts: self.reposts,
-                language: self.language.as_ref().and_then(|v| v.first()).cloned(),
+                language: None,
+                languages: self.language.clone(),
                 text: if source == p::Source::Channels && resolved.is_some() {
                     None
                 } else {

@@ -56,8 +56,8 @@ Evidence prefixes: `E/` = `crates/lkjstr-core/src/engine/`,
 | Grouped notifications and read state | done | Mentions/replies/reposts/reactions/zaps, filters and persistent timestamp ties; E/wire/notifications.rs, E/clients.rs. Zap trust is separate below. |
 | Reading position and fresh-note indicator | done | Per-tab anchors, retained windows and fresh counts; V/feed-place.ts, V/feed-fresh.ts. Page freeze and actual Worker pause were measured separately; host/OS sleep remains untested; docs/engine-performance-hour.md. |
 | Calendar/time navigation | done | Cache-wide month counts and ordinal seeks; E/wire/timeline.rs, V/time-rail.ts. Not a count of all relay history. |
-| Rich note search | partial | Text/phrases/exclusions/media/author/date filters work; language arrays use only their first entry; E/wire/query_translate.rs, E/rich.rs. |
-| People in search | partial | `people` directory and verified NIP-05 lookup exist; ordinary search does not prepend matching people; E/wire/people.rs, E/identities.rs. |
+| Rich note search | partial | Rich filters exist; language-array OR is prepared in source, with native/Worker proof pending; E/wire/query_translate.rs, E/query_predicates.rs, docs/search.md. |
+| People in search | partial | Six retained verified-metadata matches precede note windows; no remote people search. Native/Worker proof pending; E/search_people.rs, E/wire/search.rs, docs/search.md. |
 | Hashtag timelines | done | `hashtag` filter and linked tile exist; E/query.rs, V/registry.ts, V/note.ts. |
 | Followed hashtags | missing | No kind-10015 discovery/edit or Home integration; list codecs alone do not supply it. |
 | One-relay timeline | partial | `source:relay` targets requests, but cached membership is not relay-scoped and no feed tile is registered; E/network_plan.rs, E/query.rs, V/registry.ts. |

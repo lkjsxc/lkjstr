@@ -14,6 +14,7 @@ import { uploadCancel } from './engine-upload-cancel.mjs';
 import { privateRevocation } from './engine-private-revoke.mjs';
 import { timeRail } from './engine-time-rail.mjs';
 import { rich } from './engine-rich.mjs';
+import { searchContract } from './engine-search.mjs';
 import { createServer } from 'node:http';
 import { readFile, writeFile, readdir, mkdir } from 'node:fs/promises';
 import { resolve, join, extname } from 'node:path';
@@ -173,6 +174,7 @@ try {
   await uploadCancel({page,send,wait,check,note,signer,lines,bunker,origin});
   await privateRevocation({page,origin,check});
   await rich({page,send,wait,check,note,signer,lines,fake});
+  await searchContract({page,send,wait,check,account:note.pubkey,fake});
   await timeRail({page,send,wait,check,note,signer,lines,fake});
   validateReplies(await page.evaluate(()=>window.messages));
   check('replies satisfy the current frontend contract',true);

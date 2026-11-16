@@ -11,7 +11,11 @@ impl Session {
             | p::Output::Status { sub, .. } => Some(sub.clone()),
             _ => None,
         };
+        let search = self.search_before(&out);
         let mut output = self.output_inner(out, engine);
+        if let Some(context) = search {
+            self.search_after(context, &mut output, engine);
+        }
         self.notification_state(sub.as_deref(), &mut output, engine);
         for out in &mut output {
             self.preview_output(out, engine);

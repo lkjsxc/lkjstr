@@ -82,6 +82,7 @@ impl Session {
                 self.timelines.remove(&sub);
                 self.notification_states.remove(&sub);
                 self.private_states.remove(&sub);
+                self.searches.remove(&sub);
                 self.queries.insert(sub.clone(), *query);
                 vec![p::Input::OpenVisible {
                     sub,
@@ -93,6 +94,7 @@ impl Session {
                 self.notification_states.remove(&sub);
                 self.queries.remove(&sub);
                 self.private_states.remove(&sub);
+                self.searches.remove(&sub);
                 self.delivered.remove(&sub);
                 self.windows.remove(&sub);
                 self.preview_near.remove(&sub);
@@ -113,12 +115,17 @@ impl Session {
                 let account = self.queries.get(&sub).and_then(|q| q.account.as_deref());
                 let anchor = match anchor {
                     Anchor::Top(_) => None,
-                    Anchor::Key { key } => Some(key),
+                    Anchor::Key { key } => {
+                        self.search_header_anchor(&sub, &key).unwrap_or(Some(key))
+                    }
                     Anchor::Month {
                         month,
                         offset,
                         return_key,
                     } => {
+                        let return_key = return_key.and_then(|key| {
+                            self.search_header_anchor(&sub, &key).unwrap_or(Some(key))
+                        });
                         if let Some(key) =
                             return_key.filter(|key| engine.accepts_private_anchor(account, key))
                         {

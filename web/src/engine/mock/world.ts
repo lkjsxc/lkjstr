@@ -14,6 +14,7 @@ export type MNote = {
   readonly by: Person;
   readonly at: number;
   readonly text: string;
+  readonly languages?: readonly string[]; // Explicit language-label fixture values.
   readonly segments: Segment[];
   readonly media: Media[];
   readonly re?: string;

@@ -16,6 +16,7 @@ import { mountScrub } from './feed-scrub.ts';
 import { CHILD, DATED, FILTERED, hasDaySeparators, OWN } from './feed-sources.ts';
 import { feedState } from './feed-state.ts';
 import { feedTitle } from './feed-title.ts';
+import { feedWindow } from './feed-window.ts';
 import { filterQuery } from './filter-bar.ts';
 import { onHeld } from './held.ts';
 import { pauseNoteAudio } from './note-audio.ts';
@@ -140,16 +141,14 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
     if (kind === 'bookmarks' && sstate?.privateLists?.phase === 'loading') return;
     const top = el.scrollTop;
     const room = el.scrollHeight - top - el.clientHeight;
-    const first = rows[0]?.key;
-    const last = rows[rows.length - 1]?.key;
+    const { first, last, count } = feedWindow(kind, rows);
     if (top < 8 && atTop && !keys.held()) {
-      if (!live) (live = true), request('top', 0, Math.max(PAGE, Math.min(rows.length, LIMIT)));
-    } else if (live && first)
-      (live = false), request({ key: first }, 0, Math.max(rows.length, PAGE));
+      if (!live) (live = true), request('top', 0, Math.max(PAGE, Math.min(count, LIMIT)));
+    } else if (live && first) (live = false), request({ key: first }, 0, Math.max(count, PAGE));
     else if (room < NEAR_PX && !atBottom && last)
-      request({ key: last }, Math.min(rows.length, LIMIT), PAGE);
+      request({ key: last }, Math.min(count, LIMIT), PAGE);
     else if (top < NEAR_PX && !atTop && first)
-      request({ key: first }, PAGE, Math.min(rows.length, LIMIT));
+      request({ key: first }, PAGE, Math.min(count, LIMIT));
   };
   let frame = 0;
   const onScroll = (): void => {

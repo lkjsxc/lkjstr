@@ -22,6 +22,7 @@ impl Session {
             )
         });
         self.delivered.clear();
+        self.searches.clear();
         let timelines = std::mem::take(&mut self.timelines);
         timelines
             .into_keys()
