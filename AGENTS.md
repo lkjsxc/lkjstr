@@ -38,9 +38,12 @@ Engine work:
 - Work in `web/`. The gate is `pnpm check`, then `pnpm build` and
   `pnpm smoke`; each prints one `ok ...` line.
 - The main thread never parses an event, opens a socket or touches the event
-  store. Everything goes through `web/src/engine/protocol.ts`, which changes
-  only on the frontend side; the engine side proposes changes in
-  `docs/engine-proposals.md`.
+  store. Everything goes through `web/src/engine/protocol.ts`. The 2026-11-16
+  owner delegation permits additive engine messages and fields, with one line
+  per addition in `docs/engine-proposals.md`; existing contracts stay intact.
+- Claude owns layout, CSS and visible words. Implement new surfaces only from
+  written `docs/interface-specs.md` items; describe engine operations awaiting
+  a surface in `docs/interface-needs.md`. This preserves the agreed division.
 - Source files at most 300 lines, `create*` factories instead of classes, DOM
   through `h()`, no HTML strings.
 - Every visible string is in both string tables; Japanese is written as
@@ -62,6 +65,8 @@ Engine work:
   explicit release path (wants are dropped when a view hides or unmounts).
 - Source files at most 250 lines, docs at most 200; docs are ASCII English.
 - Keep docs and code aligned in the same change, especially docs/status.md.
+- Release-word checks apply to prose, not inline identifiers or fenced code:
+  exact protocol fields and report paths must remain copyable and truthful.
 - Tests and browser checks use fresh ports and local data; never publish to
   public relays from tests.
 
@@ -70,8 +75,13 @@ Engine work:
 Frontend: in `web/`, `pnpm check`, `pnpm build`, `pnpm smoke`.
 
 Engine, from the repository root, quiet gates print one `ok ...` line: `pnpm check:repo`, `pnpm test:quiet`,
-`pnpm rust-wasm:quiet`, `pnpm verify:quiet`. Docker Compose `verify` is the
-final gate. Cap parallel jobs on shared hosts (`CARGO_BUILD_JOBS=4`).
+`pnpm rust-wasm:quiet`, `pnpm verify:quiet`. Use the worktree-local gates on
+shared hosts; do not create Docker state outside the worktree. Cap both builds
+and native tests (`CARGO_BUILD_JOBS=4`, `RUST_TEST_THREADS=4`).
+The separate `pnpm real:hour` public-relay harness is strictly read-only, uses
+fresh browser data and records date/load; never publish to public relays.
+The owner delegation authorizes rebase/push and the prescribed ship script.
+Rebase on origin/main before each landing; do not modify other services.
 
 ## Commits
 

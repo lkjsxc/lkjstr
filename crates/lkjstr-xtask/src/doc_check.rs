@@ -93,6 +93,25 @@ fn allows_wide_tables(rel: &str, text: &str) -> bool {
 }
 
 fn contains_release_shorthand(text: &str) -> bool {
+    let mut fenced = false;
+    for line in text.lines() {
+        if line.trim_start().starts_with("```") {
+            fenced = !fenced;
+            continue;
+        }
+        if !fenced
+            && line
+                .split('`')
+                .enumerate()
+                .any(|(i, part)| i % 2 == 0 && release_words(part))
+        {
+            return true;
+        }
+    }
+    false
+}
+
+fn release_words(text: &str) -> bool {
     text.split(|character: char| !character.is_ascii_alphanumeric())
         .filter(|token| !token.is_empty())
         .map(str::to_ascii_lowercase)
@@ -170,4 +189,22 @@ fn toc_mentions(text: &str, target: &str) -> bool {
 
 fn counts_as_docs_child(path: &Path) -> bool {
     path.is_dir() || path.extension().and_then(|ext| ext.to_str()) == Some("md")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::contains_release_shorthand;
+    #[test]
+    fn exact_contract_fields_and_report_paths_are_not_release_prose() {
+        assert!(!contains_release_shorthand(
+            "The field is `legacy`; evidence is `tmp/real-hour-v3/`."
+        ));
+        assert!(!contains_release_shorthand(
+            "```json\n{\"version\":6}\n```\nCurrent contract."
+        ));
+        assert!(contains_release_shorthand("The legacy version is v3."));
+        assert!(contains_release_shorthand(
+            "`result` belongs to the legacy release."
+        ));
+    }
 }
