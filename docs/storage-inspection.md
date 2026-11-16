@@ -95,6 +95,11 @@ unknown client failure code. The watchdog now uses existing `offline` instead
 of the invalid code. Initial failures and final results remain in
 `tmp/storage-preflight/{initial,after}.json` and their adjacent logs.
 
+The two pure Node transport/contract cases also passed at 19:49:07 UTC in
+0.214 seconds, load 2.21 / 1.80 / 1.35. The exact command was
+`node --test scripts/engine-transport-storage.test.mjs`; evidence is
+`tmp/storage-preflight/transport-contract-1.{json,log}`.
+
 No native/WASM compile, native test, real Worker fixture or build has run for
 this candidate. The following coverage boundaries remain explicit:
 
@@ -103,7 +108,7 @@ this candidate. The following coverage boundaries remain explicit:
   cancellation/reuse, hidden/detached/cleared leases and additive messages.
 - Nine passing client/mock cases cover capability, ownership, cancellation,
   late/reconnected replies, failure delivery and no invented physical size.
-- Authored, unrun transport/contract cases cover no replay, old connections and
+- Two passing transport/contract cases cover no replay, old connections and
   the literal true marker, including rejection of a false marker.
 - The unrun `scripts/engine-storage.mjs` uses two ports, fresh contexts and
   three synthetic invalid public cache rows. It checks exact physical count
