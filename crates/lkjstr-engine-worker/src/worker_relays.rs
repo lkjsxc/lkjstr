@@ -39,6 +39,7 @@ impl Host {
                     uploaded: None,
                     key: None,
                     encrypted_key: None,
+                    cancelled: None,
                 }
             }
             _ => Session::failure(req, "rejected"),

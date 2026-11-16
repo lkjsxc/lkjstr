@@ -73,6 +73,7 @@ pub(in crate::worker) fn pump(host: &Rc<RefCell<Host>>) {
                     uploaded: None,
                     key: None,
                     encrypted_key: None,
+                    cancelled: None,
                     error: None,
                     delivery: None,
                     id: None,

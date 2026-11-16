@@ -6,8 +6,12 @@ use lkjstr_core::engine::wire::{Output as W, Session};
 mod attempt;
 #[path = "worker_server_check.rs"]
 pub(super) mod checks;
+#[path = "worker_upload_control.rs"]
+pub(super) mod control;
 #[path = "worker_upload_http.rs"]
 mod http;
+#[path = "worker_upload_input.rs"]
+pub(super) mod input;
 #[path = "worker_upload_sign.rs"]
 pub(in crate::worker) mod signing;
 pub(super) fn clock() -> u64 {
@@ -22,16 +26,18 @@ pub(super) struct Task {
     pub bytes: Vec<u8>,
     pub server: Option<String>,
     pub deadline: Deadline,
+    pub lease: lkjstr_core::engine::upload_jobs::Lease,
+    pub signal: web_sys::AbortSignal,
 }
 pub(super) fn pump_uploads(host: &Rc<RefCell<Host>>) {
+    control::prune(&mut host.borrow_mut());
     let tasks = std::mem::take(&mut host.borrow_mut().upload_tasks);
     for mut task in tasks {
         let host = host.clone();
         wasm_bindgen_futures::spawn_local(async move {
             let result = task.run(&host).await;
             let mut h = host.borrow_mut();
-            h.upload_inflight = h.upload_inflight.saturating_sub(1);
-            if h.stopped {
+            if !h.upload_control.current(&task.lease) {
                 return;
             }
             let out = match result {
@@ -43,6 +49,7 @@ pub(super) fn pump_uploads(host: &Rc<RefCell<Host>>) {
                         uploaded: Some(uploaded),
                         key: None,
                         encrypted_key: None,
+                        cancelled: None,
                         error: None,
                         delivery: None,
                         id: None,
@@ -60,12 +67,30 @@ pub(super) fn pump_uploads(host: &Rc<RefCell<Host>>) {
                     result
                 }
             };
-            h.scope.direct(task.id, &out);
+            if !h.upload_control.finish(&task.lease) {
+                return;
+            }
+            h.upload_inflight = h.upload_inflight.saturating_sub(1);
+            if !h.stopped {
+                h.scope.direct(task.id, &out);
+            }
         });
     }
 }
 impl Task {
+    fn current(&self, host: &Host) -> Result<(), &'static str> {
+        if self.signal.aborted() || !host.upload_control.current(&self.lease) {
+            return Err(crate::browser::abort::CANCELLED);
+        }
+        if host.stopped || !host.sessions.contains_key(&self.id) {
+            return Err("offline");
+        }
+        host.accounts.require_signer(&self.account).map(|_| ())
+    }
     fn progress(&self, host: &Host, phase: &str, sent: usize) {
+        if self.current(host).is_err() {
+            return;
+        }
         host.scope.direct(
             self.id,
             &W::Progress {
@@ -78,6 +103,7 @@ impl Task {
         );
     }
     async fn run(&mut self, host: &Rc<RefCell<Host>>) -> Result<serde_json::Value, String> {
+        self.current(&host.borrow())?;
         self.progress(&host.borrow(), "discovering", 0);
         host.borrow().accounts.require_signer(&self.account)?;
         if !(self.mime.starts_with("image/")
@@ -88,20 +114,28 @@ impl Task {
         }
         if self.server.is_none() {
             for _ in 0..150 {
-                if host.borrow().stopped {
-                    return Err("offline".into());
-                }
+                self.current(&host.borrow())?;
                 if host.borrow().engine.upload_servers_ready(&self.account) {
                     break;
                 }
-                crate::browser::promise::pause(self.deadline.wait(clock(), 100)?)
-                    .await
-                    .map_err(|_| "internal")?;
+                crate::browser::promise::pause_for(
+                    self.deadline.wait(clock(), 100)?,
+                    Some(&self.signal),
+                )
+                .await
+                .map_err(|error| {
+                    if error.as_string().as_deref() == Some(crate::browser::abort::CANCELLED) {
+                        crate::browser::abort::CANCELLED
+                    } else {
+                        "internal"
+                    }
+                })?;
             }
             if !host.borrow().engine.upload_servers_ready(&self.account) {
                 return Err("upload-discovery".into());
             }
         }
+        self.current(&host.borrow())?;
         let candidates = if let Some(server) = self.server.clone() {
             vec![server]
         } else {
@@ -115,14 +149,17 @@ impl Task {
         };
         let mut error = "not-found";
         for server in candidates {
+            self.current(&host.borrow())?;
             self.deadline.wait(clock(), 1)?;
             self.server = Some(server.clone());
             match self.run_server(host, &server).await {
                 Ok(value) => {
+                    self.current(&host.borrow())?;
                     self.deadline.wait(clock(), 1)?;
                     return Ok(value);
                 }
                 Err(failure) => {
+                    self.current(&host.borrow())?;
                     self.deadline.wait(clock(), 1)?;
                     error = failure.code;
                     if !failure.fallback {

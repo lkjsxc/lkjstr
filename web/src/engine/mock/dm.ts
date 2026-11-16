@@ -10,6 +10,7 @@ export function createPrivateMock(core: Core) {
   const inboxes = new Map<string, readonly string[]>(); // <=32 saved mock accounts
   const hidden = new Set<string>(); // <=32 private views
   let accountRefresh = false;
+  let pageHidden = false;
   const rooms = new Map<string, string>(); // <=2000 retained conversations
   const room = (peers: readonly string[]) => {
     const signature = [...peers].sort().join(':');
@@ -20,20 +21,23 @@ export function createPrivateMock(core: Core) {
     }
     return key;
   };
-  const emit = (sub: string, query: DmQuery, forced?: string): void => {
-    if (hidden.has(sub)) return;
+  const access = (query: DmQuery): string | undefined => {
     const account = core.who.list().find((a) => a.author.pubkey === query.account);
+    if (!account) return 'signed-out';
+    if (account.signer === 'none') return 'read-only';
+    if (account.locked) return 'signer-missing';
+    if (
+      [query.account, query.conversation, query.before].some(
+        (v) => v !== undefined && !/^[0-9a-f]{64}$/.test(v),
+      )
+    )
+      return 'rejected';
+    return undefined;
+  };
+  const emit = (sub: string, query: DmQuery, forced?: string): void => {
+    if (!forced && (pageHidden || hidden.has(sub))) return;
     const error =
-      forced ??
-      (!account
-        ? 'signed-out'
-        : account.signer === 'none'
-          ? 'read-only'
-          : account.locked
-            ? 'signer-missing'
-            : !inboxes.has(query.account)
-              ? 'not-found'
-              : undefined);
+      forced ?? access(query) ?? (!inboxes.has(query.account) ? 'not-found' : undefined);
     const rows = error
       ? []
       : messages
@@ -83,6 +87,12 @@ export function createPrivateMock(core: Core) {
   };
   return {
     handle(msg: ToEngine): boolean {
+      if (msg.t === 'hint') {
+        const wasHidden = pageHidden;
+        pageHidden = msg.hint.pageHidden;
+        if (wasHidden && !pageHidden) refresh();
+        return false;
+      }
       if (msg.t === 'act' && msg.action.a.startsWith('account.') && !accountRefresh) {
         accountRefresh = true;
         core.later(0, () => {
@@ -93,12 +103,18 @@ export function createPrivateMock(core: Core) {
         });
       }
       if (msg.t === 'dm.open') {
+        const error = access(msg.query);
+        if (error) {
+          emit(msg.sub, msg.query, error);
+          return true;
+        }
         if (subscriptions.size >= 32 && !subscriptions.has(msg.sub)) {
           emit(msg.sub, msg.query, 'too-large');
           return true;
         }
         subscriptions.set(msg.sub, msg.query);
-        hidden.delete(msg.sub);
+        if (msg.visible === false) hidden.add(msg.sub);
+        else hidden.delete(msg.sub);
         emit(msg.sub, msg.query);
         return true;
       }

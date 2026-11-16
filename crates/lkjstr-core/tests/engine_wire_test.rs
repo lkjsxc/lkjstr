@@ -93,9 +93,16 @@ fn authoritative_actions_and_signer_json_are_correlated() {
         .into_iter()
         .flat_map(|o| s.output(o, &e))
         .collect::<Vec<_>>();
-    let Output::Sign { req, pubkey, event } = &output[0] else {
+    let Output::Sign {
+        req,
+        pubkey,
+        event,
+        action_req,
+    } = &output[0]
+    else {
         panic!("sign")
     };
+    assert!(action_req.is_none());
     assert_eq!(req, "p");
     assert_eq!(pubkey, &"a".repeat(64));
     let event: Value = serde_json::from_str(event).expect("sign event JSON");

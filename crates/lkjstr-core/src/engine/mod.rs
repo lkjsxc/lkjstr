@@ -36,6 +36,7 @@ pub mod rows;
 pub mod settings;
 mod thread;
 pub mod upload;
+pub mod upload_jobs;
 mod wants;
 pub mod weights;
 mod windows;

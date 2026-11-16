@@ -4,6 +4,7 @@ impl WorkerHandle {
     pub fn stop(&mut self) {
         let mut h = self.host.borrow_mut();
         h.stopped = true;
+        uploads::control::stop(&mut h);
         h.scope.close();
         h.timer.take();
         h.sockets.clear();

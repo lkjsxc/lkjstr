@@ -185,6 +185,7 @@ fn key_actions_results_and_owned_password_debug_are_redacted() {
         uploaded: None,
         key: None,
         encrypted_key: Some(encrypted.clone()),
+        cancelled: None,
     };
     assert!(!format!("{result:?}").contains(&encrypted));
     let encoded = serde_json::to_value(result).expect("wire result");

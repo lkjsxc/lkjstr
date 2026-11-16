@@ -58,7 +58,7 @@ lookup, signer, HTTP, processing and fallback waits. Each wait is capped by the
 remaining budget; expiry stops fallback and late signing replies are discarded.
 The page settles lost replies after 300 seconds, leaving 15 seconds for dispatch.
 View disposal releases the server-list subscription; HTTP timers and remote sockets have
-settlement cleanup. Cancellation remains outside the contract.
+settlement cleanup. Protocol 7 adds acknowledged cancellation through the existing removal/clear controls.
 
 ## Evidence
 
@@ -87,3 +87,17 @@ Protocol references checked for this repair:
 - https://nostr.build/.well-known/nostr/nip96.json
 - https://blossom.primal.net/ (implemented BUDs)
 - https://github.com/quentintaranpino/nostrcheck-server
+
+## Cancellation lifetime
+
+The original request owns one client-scoped lease. Cancellation consumes it
+before aborting queued authorization, the HTTP request/body, processing polls
+and signer waits. A stale completion cannot produce progress, health evidence,
+fallback or a second terminal result. Reusing a request in another port creates
+a separate job. Signer request identifiers keep their CSPRNG nonce across Worker
+replacement. Already-open extension permission dialogs cannot be closed by the
+page; their late replies are discarded. Already accepted remote blobs remain.
+
+The loopback cancellation fixtures hold response headers/bodies and processing
+polls. Their small request body does not measure cancellation midway through a
+large transmitted body; that separate measurement remains outstanding.

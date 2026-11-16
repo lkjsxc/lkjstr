@@ -83,32 +83,15 @@ impl Host {
                 }
                 return;
             }
+            W::UploadCancel { req } => {
+                uploads::control::cancel(self, id, &req);
+                return;
+            }
             W::Act {
                 req,
-                action:
-                    A::Upload {
-                        account,
-                        name,
-                        mime,
-                        bytes,
-                        server,
-                    },
+                action: action @ A::Upload { .. },
             } => {
-                if self.upload_inflight >= 4 {
-                    self.scope.direct(id, &Session::failure(req, "too-large"));
-                    return;
-                }
-                self.upload_tasks.push(uploads::Task {
-                    deadline: lkjstr_core::engine::upload::Deadline::new(uploads::clock()),
-                    id,
-                    req,
-                    account,
-                    name,
-                    mime,
-                    bytes,
-                    server,
-                });
-                self.upload_inflight += 1;
+                uploads::input::enqueue(self, id, req, action);
                 return;
             }
             W::Act {

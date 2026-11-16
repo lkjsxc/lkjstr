@@ -17,6 +17,7 @@ impl Session {
             | Input::DmVisible { .. }
             | Input::DmMore { .. }
             | Input::Crypted { .. }
+            | Input::UploadCancel { .. }
             | Input::Stats { .. }
             | Input::RowAtTime { .. }
             | Input::Relays { .. }

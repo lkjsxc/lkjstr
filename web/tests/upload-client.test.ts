@@ -60,3 +60,124 @@ it('settles pending uploads when the client is disposed', async () => {
   engine.dispose();
   expect(await result).toMatchObject({ ok: false, error: { code: 'offline' } });
 });
+
+it('acknowledges upload cancellation once and suppresses queued or late authorization', async () => {
+  let receive: (msg: FromEngine) => void = () => {};
+  const sent: ToEngine[] = [];
+  const engine = createEngine({
+    post: (m) => {
+      sent.push(m);
+    },
+    listen: (fn) => {
+      receive = fn;
+    },
+    close() {},
+  });
+  const abort = new AbortController();
+  const progress = vi.fn();
+  const signEvent = vi.fn(async () => ({}));
+  (window as { nostr?: unknown }).nostr = { signEvent };
+  try {
+    const result = engine.act(
+      {
+        a: 'upload',
+        as: 'account',
+        name: 'file.png',
+        mime: 'image/png',
+        bytes: new ArrayBuffer(4),
+      },
+      { uploadSignal: abort.signal, progress },
+    );
+    const action = sent.find((m) => m.t === 'act');
+    if (!action || action.t !== 'act') throw new Error('missing upload');
+    abort.abort();
+    abort.abort();
+    expect(sent.filter((m) => m.t === 'upload.cancel')).toEqual([
+      { t: 'upload.cancel', req: action.req },
+    ]);
+    receive({ t: 'sign', req: 'held-sign', actionReq: action.req, pubkey: 'account', event: '{}' });
+    await Promise.resolve();
+    expect(signEvent).not.toHaveBeenCalled();
+    receive({ t: 'progress', req: action.req, sent: 4, total: 4 });
+    expect(progress).not.toHaveBeenCalled();
+    receive({ t: 'result', req: action.req, ok: false, cancelled: true });
+    expect(await result).toMatchObject({ ok: false, cancelled: true });
+    receive({ t: 'result', req: action.req, ok: true });
+    receive({ t: 'progress', req: action.req, sent: 4, total: 4 });
+    expect(progress).not.toHaveBeenCalled();
+  } finally {
+    delete (window as { nostr?: unknown }).nostr;
+    engine.dispose();
+  }
+});
+it('does not transfer an already cancelled upload', async () => {
+  const sent: ToEngine[] = [];
+  const engine = createEngine({
+    post: (m) => {
+      sent.push(m);
+    },
+    listen() {},
+    close() {},
+  });
+  const abort = new AbortController();
+  abort.abort();
+  try {
+    const bytes = new ArrayBuffer(4);
+    const result = await engine.act(
+      { a: 'upload', as: 'account', name: 'file.png', mime: 'image/png', bytes },
+      { uploadSignal: abort.signal },
+    );
+    expect(result).toMatchObject({ ok: false, cancelled: true });
+    expect(sent.some((m) => m.t === 'act')).toBe(false);
+    expect(bytes.byteLength).toBe(4);
+  } finally {
+    engine.dispose();
+  }
+});
+it('drops an extension answer if its upload was cancelled during the open dialog', async () => {
+  let receive: (msg: FromEngine) => void = () => {};
+  const sent: ToEngine[] = [];
+  let answer: (value: unknown) => void = () => {};
+  const signEvent = vi.fn(
+    () =>
+      new Promise((resolve) => {
+        answer = resolve;
+      }),
+  );
+  (window as { nostr?: unknown }).nostr = { signEvent };
+  const engine = createEngine({
+    post: (m) => {
+      sent.push(m);
+    },
+    listen: (fn) => {
+      receive = fn;
+    },
+    close() {},
+  });
+  const abort = new AbortController();
+  try {
+    const result = engine.act(
+      {
+        a: 'upload',
+        as: 'account',
+        name: 'file.png',
+        mime: 'image/png',
+        bytes: new ArrayBuffer(4),
+      },
+      { uploadSignal: abort.signal },
+    );
+    const action = sent.find((m) => m.t === 'act');
+    if (!action || action.t !== 'act') throw new Error('missing upload');
+    receive({ t: 'sign', req: 'old-sign', actionReq: action.req, pubkey: 'account', event: '{}' });
+    expect(signEvent).toHaveBeenCalledTimes(1);
+    abort.abort();
+    receive({ t: 'result', req: action.req, ok: false, cancelled: true });
+    answer({ old: true });
+    await Promise.resolve();
+    expect(sent.some((m) => m.t === 'signed' && m.req === 'old-sign')).toBe(false);
+    expect((await result).cancelled).toBe(true);
+  } finally {
+    delete (window as { nostr?: unknown }).nostr;
+    engine.dispose();
+  }
+});

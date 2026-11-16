@@ -3,7 +3,11 @@ use super::*;
 use lkjstr_core::engine::wire::actions::Action as A;
 pub(super) fn input(h: &mut Host, id: u64, input: &I) -> bool {
     match input {
-        I::DmOpen { sub, query } => {
+        I::DmOpen {
+            sub,
+            query,
+            visible,
+        } => {
             let error = h
                 .accounts
                 .require_signer(&query.account)
@@ -47,7 +51,7 @@ pub(super) fn input(h: &mut Host, id: u64, input: &I) -> bool {
                 (id, sub.clone()),
                 View {
                     query: query.clone(),
-                    visible: true,
+                    visible: visible.unwrap_or(true),
                     last: None,
                 },
             );

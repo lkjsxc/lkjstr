@@ -2,7 +2,6 @@
 use super::timer::Timer;
 use js_sys::{Array, Promise};
 use wasm_bindgen::JsValue;
-use wasm_bindgen_futures::JsFuture;
 pub async fn bounded(
     work: Promise,
     seconds: u64,
@@ -22,6 +21,15 @@ pub async fn bounded_ms(
     ms: u32,
     message: &'static str,
     cancel: impl FnOnce() + 'static,
+) -> Result<JsValue, JsValue> {
+    bounded_ms_for(work, ms, message, cancel, None).await
+}
+pub async fn bounded_ms_for(
+    work: Promise,
+    ms: u32,
+    message: &'static str,
+    cancel: impl FnOnce() + 'static,
+    signal: Option<&web_sys::AbortSignal>,
 ) -> Result<JsValue, JsValue> {
     let mut timer = None;
     let mut cancel = Some(cancel);
@@ -43,7 +51,7 @@ pub async fn bounded_ms(
     let promises = Array::new();
     promises.push(&work);
     promises.push(&deadline);
-    let result = JsFuture::from(Promise::race(&promises)).await;
+    let result = super::abort::race(Promise::race(&promises), signal).await;
     drop(timer);
     result
 }
@@ -53,6 +61,10 @@ fn reject_timer_failure(reject: &js_sys::Function) -> Result<JsValue, JsValue> {
 
 /// Cancellable worker delay; the timer is released after settlement.
 pub async fn pause(ms: u32) -> Result<(), JsValue> {
+    pause_for(ms, None).await
+}
+pub async fn pause_for(ms: u32, signal: Option<&web_sys::AbortSignal>) -> Result<(), JsValue> {
+    super::abort::check(signal)?;
     let mut timer = None;
     let work = Promise::new(&mut |resolve, reject| {
         timer = Timer::after(ms, move || {
@@ -63,7 +75,7 @@ pub async fn pause(ms: u32) -> Result<(), JsValue> {
             let _ = reject_timer_failure(&reject);
         }
     });
-    let result = JsFuture::from(work).await.map(|_| ());
+    let result = super::abort::race(work, signal).await.map(|_| ());
     drop(timer);
     result
 }

@@ -147,6 +147,7 @@ pub(super) fn pump_accounts(host: &Rc<RefCell<Host>>) {
                     h.accounts = next;
                     relay_auth::sync(&mut h);
                     direct_messages::sync(&mut h);
+                    uploads::control::prune(&mut h);
                     h.engine.seen = h.accounts.seen.clone();
                     h.engine.notification_ties = h.accounts.notification_ties.clone();
                     h.account_revision = u64::MAX;
@@ -170,6 +171,7 @@ pub(super) fn pump_accounts(host: &Rc<RefCell<Host>>) {
                             uploaded: None,
                             key: None,
                             encrypted_key: exported,
+                            cancelled: None,
                         },
                     );
                 }

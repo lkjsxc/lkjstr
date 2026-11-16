@@ -11,6 +11,14 @@ use std::{
 };
 use wasm_bindgen::JsValue;
 type SocketSlot = Rc<RefCell<Option<Socket>>>;
+struct Cleanup(Rc<RefCell<Vec<SocketSlot>>>);
+impl Drop for Cleanup {
+    fn drop(&mut self) {
+        for slot in self.0.borrow_mut().drain(..) {
+            slot.borrow_mut().take();
+        }
+    }
+}
 pub async fn rpc(
     remote: &Remote,
     method: &str,
@@ -24,11 +32,22 @@ pub async fn rpc_for(
     params: Vec<String>,
     ms: u32,
 ) -> Result<String, &'static str> {
+    rpc_for_signal(remote, method, params, ms, None).await
+}
+pub async fn rpc_for_signal(
+    remote: &Remote,
+    method: &str,
+    params: Vec<String>,
+    ms: u32,
+    signal: Option<&web_sys::AbortSignal>,
+) -> Result<String, &'static str> {
+    super::abort::check(signal).map_err(|_| super::abort::CANCELLED)?;
     let id = lkjstr_protocol::upload::hash(lkjstr_protocol::generate_secret_key().as_bytes());
     let event = remote
         .request(&id, method, params, js_sys::Date::now() as u64 / 1000)
         .ok_or("internal")?;
     let slots: Rc<RefCell<Vec<SocketSlot>>> = Rc::default();
+    let _cleanup = Cleanup(slots.clone());
     let request=json!(["REQ",id,{"kinds":[24133],"authors":[remote.peer],"#p":[remote.client().ok_or("internal")?],"since":event.created_at.saturating_sub(60)}]).to_string();
     let publication = json!(["EVENT", event]).to_string();
     let remaining = Rc::new(Cell::new(remote.relays.len()));
@@ -91,13 +110,26 @@ pub async fn rpc_for(
             }
         }
     });
-    let result = promise::bounded_ms(done, ms, "signer-missing", || {}).await;
+    let _parent = signal
+        .map(|signal| {
+            let slots = slots.clone();
+            super::abort::listen(signal, move || {
+                for slot in slots.borrow_mut().drain(..) {
+                    slot.borrow_mut().take();
+                }
+            })
+        })
+        .transpose()
+        .map_err(|_| "internal")?;
+    let result = promise::bounded_ms_for(done, ms, "signer-missing", || {}, signal).await;
     for slot in slots.borrow_mut().drain(..) {
         slot.borrow_mut().take();
     }
     result
         .map_err(|e| {
-            if e.as_string().as_deref() == Some("signer-refused") {
+            if e.as_string().as_deref() == Some(super::abort::CANCELLED) {
+                super::abort::CANCELLED
+            } else if e.as_string().as_deref() == Some("signer-refused") {
                 "signer-refused"
             } else {
                 "signer-missing"

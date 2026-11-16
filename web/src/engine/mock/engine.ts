@@ -165,6 +165,7 @@ export function createMockEngine(post: (msg: FromEngine) => void, now = Date.now
   return {
     handle(msg) {
       if (dm.handle(msg)) return;
+      if (msg.t === 'upload.cancel') return act.cancelUpload(msg.req);
       if (msg.t === 'stats') post({ t: 'stats', req: msg.req, stats: mockStats(core) });
       else if (msg.t === 'rowAtTime') {
         const row = subs
@@ -181,6 +182,7 @@ export function createMockEngine(post: (msg: FromEngine) => void, now = Date.now
         });
       } else if (msg.t === 'heartbeat') post({ t: 'heartbeat' });
       else if (msg.t === 'detach') {
+        act.dispose();
         clearInterval(liveTimer);
         core.dispose();
       } else if (msg.t === 'relays') {
@@ -274,6 +276,7 @@ export function createMockEngine(post: (msg: FromEngine) => void, now = Date.now
       } else if (msg.t === 'act') act.run(msg.req, msg.action);
     },
     dispose() {
+      act.dispose();
       dm.dispose();
       clearInterval(liveTimer);
       core.dispose();

@@ -18,6 +18,7 @@ pub(super) fn receive(h: &mut Host, id: u64, input: I) -> Option<I> {
                     uploaded: None,
                     key: Some(key),
                     encrypted_key: None,
+                    cancelled: None,
                 },
                 Err(code) => Session::failure(req, code),
             };

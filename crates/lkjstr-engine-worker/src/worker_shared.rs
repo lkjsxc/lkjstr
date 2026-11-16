@@ -77,6 +77,7 @@ pub fn start_shared() -> Result<SharedWorkerHandle, JsValue> {
         bootstrap_relays: vec![],
         relay_owner: None,
         upload_tasks: vec![],
+        upload_control: Default::default(),
         upload_inflight: 0,
         relay_auth_inflight: 0,
         dm: Default::default(),
@@ -182,25 +183,8 @@ fn attach(host: &Rc<RefCell<Host>>, port: web_sys::MessagePort) {
         accounts::ready(&host.borrow(), id, true);
     }
 }
-#[wasm_bindgen]
-impl SharedWorkerHandle {
-    pub fn stop(&mut self) {
-        self.scope.set_onconnect(None);
-        let mut h = self.host.borrow_mut();
-        h.stopped = true;
-        h.scope.close();
-        h.timer.take();
-        h.sockets.clear();
-        if let Some(db) = h.db.take() {
-            db.close();
-        }
-    }
-}
-impl Drop for SharedWorkerHandle {
-    fn drop(&mut self) {
-        self.stop();
-    }
-}
+#[path = "worker_shared_handle.rs"]
+mod handle;
 
 fn send(target: &JsValue, out: &lkjstr_core::engine::wire::Output) {
     if let Ok(value) = out.serialize(&serde_wasm_bindgen::Serializer::json_compatible())
@@ -224,6 +208,7 @@ pub(super) fn expire(host: &Rc<RefCell<Host>>) {
     }
 }
 pub(super) fn detach(h: &mut Host, id: u64) {
+    uploads::control::detach(h, id);
     let now = h.time();
     if let Sink::Shared { clients, peers } = &mut h.scope {
         let inputs = clients.disconnect(id);

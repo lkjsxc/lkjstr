@@ -27,6 +27,7 @@ mod input_types;
 mod output_types;
 pub use input_types::Input;
 pub use output_types::{Failure, Output};
+pub const PROTOCOL_VERSION: u32 = 7;
 /// Adapter state is per transport client; the engine remains independent of pixels.
 #[derive(Default)]
 pub struct Session {
@@ -46,7 +47,7 @@ pub struct Session {
 impl Session {
     pub fn ready(shared: bool) -> Output {
         Output::Ready {
-            version: 6,
+            version: PROTOCOL_VERSION,
             engine: if shared {
                 "rust-wasm-shared"
             } else {

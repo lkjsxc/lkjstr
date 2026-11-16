@@ -134,6 +134,7 @@ pub(super) fn output(host: &Rc<RefCell<Host>>, output: &Output) -> bool {
             uploaded: None,
             key: None,
             encrypted_key: None,
+            cancelled: None,
             error: (!send.accepted).then(|| lkjstr_core::engine::wire::Failure {
                 code: "rejected".into(),
                 message: None,

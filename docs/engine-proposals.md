@@ -137,3 +137,12 @@ contract number change or new user-facing state is needed.
 All existing protocol messages and fields retain their meanings. No visible
 surfaces are added without a specification. See [dm.md](dm.md), [keys.md](keys.md)
 and [interface-needs.md](interface-needs.md) for contracts and remaining design.
+
+## Protocol 7 lifetime additions (2026-11-16, owner authorized)
+
+- `ToEngine.dm.open.visible?` supplies initial private visibility atomically; omission keeps the existing visible default.
+- `ToEngine.upload.cancel {req}` cancels only that client's pending upload request and its authorization, HTTP and processing waits.
+- `FromEngine.result.cancelled?` confirms cancellation by its owning queue or Worker, with `ok:false` and no pending effect.
+- `FromEngine.sign.actionReq?` identifies the originating upload so cancelled authorization cannot start or consume a later signer request.
+- `Engine.dm.open(query,receive,{visible?})` supplies the optional initial private visibility through the existing client API.
+- `ActWatch.uploadSignal?` connects the existing attachment removal/clear/dispose controls to upload cancellation.

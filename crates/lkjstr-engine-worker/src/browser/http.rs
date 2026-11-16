@@ -1,7 +1,6 @@
 //! Abortable, streaming, size-bounded HTTP for identity and relay information.
 use super::{promise, timer::Timer};
 use wasm_bindgen::{JsCast, JsValue};
-use wasm_bindgen_futures::JsFuture;
 use web_sys::{
     AbortController, ReadableStreamDefaultReader, Request, RequestInit, RequestRedirect, Response,
 };
@@ -31,7 +30,25 @@ pub async fn request_for(
     (body, mime, auth): (Option<&JsValue>, Option<&str>, Option<&str>),
     ms: u32,
 ) -> Result<lkjstr_nips::identity::HttpResponse, JsValue> {
+    request_for_signal(url, accept, max, method, (body, mime, auth), ms, None).await
+}
+pub async fn request_for_signal(
+    url: &str,
+    accept: &str,
+    max: usize,
+    method: &str,
+    (body, mime, auth): (Option<&JsValue>, Option<&str>, Option<&str>),
+    ms: u32,
+    signal: Option<&web_sys::AbortSignal>,
+) -> Result<lkjstr_nips::identity::HttpResponse, JsValue> {
+    super::abort::check(signal)?;
     let abort = AbortController::new()?;
+    let _parent = signal
+        .map(|signal| {
+            let abort = abort.clone();
+            super::abort::listen(signal, move || abort.abort())
+        })
+        .transpose()?;
     let options = RequestInit::new();
     options.set_method(method);
     if let Some(body) = body {
@@ -54,7 +71,7 @@ pub async fn request_for(
     let pending: js_sys::Promise = fetch.call1(&global, &request)?.dyn_into()?;
     let cancel = abort.clone();
     let response: Response =
-        promise::bounded_ms(pending, ms, "http-timeout", move || cancel.abort())
+        promise::bounded_ms_for(pending, ms, "http-timeout", move || cancel.abort(), signal)
             .await?
             .dyn_into()?;
     if method == "HEAD" {
@@ -71,7 +88,7 @@ pub async fn request_for(
         .dyn_into()?;
     let mut bytes = Vec::new();
     loop {
-        let chunk = JsFuture::from(reader.read()).await?;
+        let chunk = super::abort::race(reader.read(), signal).await?;
         if js_sys::Reflect::get(&chunk, &"done".into())?.as_bool() == Some(true) {
             break;
         }

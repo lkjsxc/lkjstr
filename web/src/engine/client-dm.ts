@@ -5,11 +5,20 @@ export function createDmClient(transport: Transport) {
   let serial = 0;
   const listeners = new Map<string, (snapshot: DmSnapshot) => void>(); // <=32 private subscriptions
   return {
-    open(query: DmQuery, receive: (snapshot: DmSnapshot) => void) {
+    open(
+      query: DmQuery,
+      receive: (snapshot: DmSnapshot) => void,
+      options: { readonly visible?: boolean } = {},
+    ) {
       if (listeners.size >= 32) throw new Error('private subscription limit');
       const sub = 'dm' + String(++serial);
       listeners.set(sub, receive);
-      transport.post({ t: 'dm.open', sub, query });
+      transport.post({
+        t: 'dm.open',
+        sub,
+        query,
+        ...(options.visible === undefined ? {} : { visible: options.visible }),
+      });
       return {
         id: sub,
         visible: (visible: boolean) => transport.post({ t: 'dm.visible', sub, visible }),

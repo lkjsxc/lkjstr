@@ -10,6 +10,7 @@ impl Task {
         blossom: bool,
         result: Result<T, &'static str>,
     ) -> Result<T, AttemptFailure> {
+        self.current(&host.borrow())?;
         host.borrow_mut().engine.observe_server(
             server,
             if blossom { "blossom" } else { "nip96" },
@@ -22,6 +23,7 @@ impl Task {
         host: &Rc<RefCell<Host>>,
         server: &str,
     ) -> Result<serde_json::Value, AttemptFailure> {
+        self.current(&host.borrow())?;
         if !lkjstr_core::engine::settings::valid_server(server) {
             return Err("rejected".into());
         }
@@ -36,15 +38,13 @@ impl Task {
                 host,
                 server,
                 false,
-                http::discover(server, self.deadline).await,
+                http::discover_for(server, self.deadline, Some(&self.signal)).await,
             )?
         };
         loop {
-            if host.borrow().stopped {
-                return Err("offline".into());
-            }
+            self.current(&host.borrow())?;
             self.progress(&host.borrow(), "signing", 0);
-            let signed = signing::sign(
+            let signed = signing::sign_for(
                 host,
                 self.id,
                 self.deadline,
@@ -55,8 +55,11 @@ impl Task {
                     &hash,
                     blossom,
                 ),
+                Some(&self.signal),
+                Some(&self.req),
             )
             .await?;
+            self.current(&host.borrow())?;
             let auth = upload::authorization(&signed).map_err(|_| "internal")?;
             self.progress(&host.borrow(), "uploading", 0);
             let response = http::send(
@@ -66,9 +69,10 @@ impl Task {
                 &self.mime,
                 &self.bytes,
                 blossom,
-                self.deadline,
+                (self.deadline, &self.signal),
             )
             .await;
+            self.current(&host.borrow())?;
             // Discover only when a server has no Blossom endpoint; refusals stay visible.
             if blossom
                 && response
@@ -80,7 +84,7 @@ impl Task {
                     host,
                     server,
                     false,
-                    http::discover(server, self.deadline).await,
+                    http::discover_for(server, self.deadline, Some(&self.signal)).await,
                 )?;
                 blossom = false;
                 continue;
@@ -93,7 +97,7 @@ impl Task {
                         host,
                         server,
                         false,
-                        http::discover(server, self.deadline)
+                        http::discover_for(server, self.deadline, Some(&self.signal))
                             .await
                             .map_err(|_| "upload-network"),
                     )?;
@@ -110,7 +114,7 @@ impl Task {
                     host,
                     server,
                     blossom,
-                    http::processed(&body, self.deadline).await,
+                    http::processed(&body, self.deadline, &self.signal).await,
                 )?;
             }
             return self.record(

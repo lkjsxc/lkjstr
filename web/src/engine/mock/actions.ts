@@ -2,20 +2,13 @@
 
 import { serverAddress } from '../../shared/address.ts';
 import { reactionLabel } from '../../shared/reactions.ts';
-import type {
-  Action,
-  Delivery,
-  Draft,
-  Failure,
-  FromEngine,
-  ToEngine,
-  Uploaded,
-} from '../protocol.ts';
+import type { Action, Delivery, Draft, Failure, FromEngine, ToEngine } from '../protocol.ts';
 import { channelAct, channelTouched, chatter } from './channels.ts';
 import type { Core } from './engine.ts';
 import { FILLER } from './fixtures-notes.ts';
 import { byHandle, byPubkey, SELF } from './people.ts';
 import { answers, isKnown, relayUrl } from './relays.ts';
+import { createUploads } from './uploads.ts';
 import { vaultAct } from './vault.ts';
 
 /** How the mock's write relays answer a publish: two at once, one slowly, one with a refusal. */
@@ -53,34 +46,7 @@ export function createActions(core: Core) {
     );
   };
 
-  async function upload(req: string, a: Extract<Action, { a: 'upload' }>): Promise<void> {
-    const total = a.bytes.byteLength;
-    if (total > 20 * 1024 * 1024)
-      return fail(req, 'too-large', 'the server accepts files up to 20 MB');
-    if (/fail/i.test(a.name)) {
-      post({ t: 'progress', req, sent: Math.round(total * 0.4), total });
-      return later(500, () => fail(req, 'rejected', 'media.example.jp: unsupported media type'));
-    }
-    const type = a.mime.startsWith('video')
-      ? 'video'
-      : a.mime.startsWith('audio')
-        ? 'audio'
-        : 'image';
-    const blob = new Blob([a.bytes], { type: a.mime });
-    const out: Uploaded = { url: URL.createObjectURL(blob), type, mime: a.mime };
-    let size: { w?: number; h?: number } = {};
-    try {
-      const bmp = type === 'image' ? await createImageBitmap(blob) : undefined;
-      if (bmp) size = { w: bmp.width, h: bmp.height };
-    } catch {
-      // not decodable here: the size stays unknown
-    }
-    for (let i = 1; i <= 5; i++)
-      later(i * 220, () => {
-        post({ t: 'progress', req, sent: Math.round((total * i) / 5), total });
-        if (i === 5) done(req, { uploaded: { ...out, ...size } });
-      });
-  }
+  const uploads = createUploads(core);
 
   function run(req: string, a: Action): void {
     const me = core.me();
@@ -176,7 +142,7 @@ export function createActions(core: Core) {
         core.resync((q) => q.source === 'bookmarks');
         return deliver(req);
       case 'upload':
-        return void upload(req, a);
+        return uploads.run(req, a);
       case 'relays.save': {
         const next = a.relays.map((r) => ({ ...r, url: relayUrl(r.url) ?? '' }));
         const bad = a.relays.find((r) => !relayUrl(r.url));
@@ -285,7 +251,7 @@ export function createActions(core: Core) {
     core.resync((q) => q.source === 'notifications', true);
   }
 
-  return { run, tick, publicKey };
+  return { run, tick, publicKey, cancelUpload: uploads.cancel, dispose: uploads.dispose };
 }
 
 function expandMentions(draft: Draft): string {

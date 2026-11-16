@@ -26,7 +26,8 @@
  * the engine validates their labels, expands them to nostr:npub and derives p tags.
  * Also adds cache-wide month counts, window ordinals and month/ordinal anchors for time rails. */
 /** 6: private messages, external encryption, encrypted key import/export and session locks. */
-export const PROTOCOL_VERSION = 6;
+/** 7: atomic private visibility, correlated upload cancellation and signer ownership. */
+export const PROTOCOL_VERSION = 7;
 
 /** Chosen by the interface, unique among its open subscriptions. */
 export type SubId = string;
@@ -672,7 +673,14 @@ export type EngineConfig = {
 // ───────────────────────────────────────── messages ─────────────────────────────────────────
 
 export type ToEngine =
-  | { readonly t: 'dm.open'; readonly sub: SubId; readonly query: DmQuery }
+  | { readonly t: 'upload.cancel'; readonly req: ReqId }
+  | {
+      readonly t: 'dm.open';
+      readonly sub: SubId;
+      readonly query: DmQuery;
+      /** Initial visibility is atomic with opening; omitted means visible. */
+      readonly visible?: boolean;
+    }
   | { readonly t: 'dm.close'; readonly sub: SubId }
   | { readonly t: 'dm.visible'; readonly sub: SubId; readonly visible: boolean }
   | { readonly t: 'dm.more'; readonly sub: SubId }
@@ -888,6 +896,8 @@ export type FromEngine =
       readonly t: 'result';
       readonly req: ReqId;
       readonly ok: boolean;
+      /** Explicit cancellation acknowledged by the engine; always accompanies ok=false. */
+      readonly cancelled?: boolean;
       readonly error?: Failure;
       readonly delivery?: readonly Delivery[];
       readonly uploaded?: Uploaded;
@@ -899,7 +909,14 @@ export type FromEngine =
     }
   /** The account signs with a browser extension (NIP-07 exists only on the main thread): sign this unsigned
    * event (JSON text) and answer with `signed`. */
-  | { readonly t: 'sign'; readonly req: ReqId; readonly pubkey: Pubkey; readonly event: string }
+  | {
+      readonly t: 'sign';
+      readonly req: ReqId;
+      readonly pubkey: Pubkey;
+      readonly event: string;
+      /** Upload action owning this authorization, so a removed draft cannot open a queued prompt. */
+      readonly actionReq?: ReqId;
+    }
   /** Connection summary for the optional count in the top bar: of the relays in use or on the reader's list
    * (`wanted`), how many are connected. Sent after `ready` and whenever either number changes. */
   | {

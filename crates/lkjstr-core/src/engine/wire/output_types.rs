@@ -77,6 +77,8 @@ pub enum Output {
         req: String,
         pubkey: String,
         event: String,
+        #[serde(rename = "actionReq", skip_serializing_if = "Option::is_none")]
+        action_req: Option<String>,
     },
     Delivery {
         req: String,
@@ -85,6 +87,8 @@ pub enum Output {
     Result {
         req: String,
         ok: bool,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        cancelled: Option<bool>,
         #[serde(skip_serializing_if = "Option::is_none")]
         error: Option<Failure>,
         #[serde(skip_serializing_if = "Option::is_none")]

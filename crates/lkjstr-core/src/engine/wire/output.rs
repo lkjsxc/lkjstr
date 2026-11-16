@@ -142,6 +142,7 @@ impl Session {
                 out
             }
             p::Output::Sign { req, event } => vec![Output::Sign {
+                action_req: None,
                 req,
                 pubkey: event.pubkey.clone(),
                 event: serde_json::to_string(&event).unwrap_or_default(),
@@ -178,6 +179,7 @@ impl Session {
                     uploaded: None,
                     key: None,
                     encrypted_key: None,
+                    cancelled: None,
                 }]
             }
             p::Output::Status {

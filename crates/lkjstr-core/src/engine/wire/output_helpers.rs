@@ -2,6 +2,17 @@ use super::*;
 use crate::engine::Engine;
 use serde_json::Value;
 impl Session {
+    pub fn cancelled(req: String) -> Output {
+        let mut result = Self::failure(req, "internal");
+        if let Output::Result {
+            error, cancelled, ..
+        } = &mut result
+        {
+            *error = None;
+            *cancelled = Some(true);
+        }
+        result
+    }
     pub fn failure(req: String, code: &str) -> Output {
         let mapped = match code {
             "list-not-loaded" | "target-unavailable" => "not-found",
@@ -30,6 +41,7 @@ impl Session {
             uploaded: None,
             key: None,
             encrypted_key: None,
+            cancelled: None,
         }
     }
     pub(super) fn rows(

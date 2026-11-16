@@ -3,6 +3,7 @@
 
 import { learnPerson, learnRows, onPerson } from '../shared/people.ts';
 import { createSignal, type Signal } from '../shared/signal.ts';
+import { createActionRequests } from './client-actions.ts';
 import { answerCrypt, answerPublicKey } from './client-crypto.ts';
 import { createDeliveryWatches } from './client-delivery.ts';
 import { createDmClient } from './client-dm.ts';
@@ -53,6 +54,7 @@ export type Subscription = {
 };
 export type ActResult = Extract<FromEngine, { t: 'result' }>;
 export type ActWatch = {
+  uploadSignal?: AbortSignal;
   deliverySignal?: AbortSignal;
   progress?(sent: number, total: number, detail?: Extract<FromEngine, { t: 'progress' }>): void;
   delivery?(relays: readonly Delivery[]): void;
@@ -81,7 +83,6 @@ const STATS_MS = 4000;
 export function createEngine(transport: Transport): Engine {
   const dm = createDmClient(transport);
   const subs = new Map<string, SubHandlers>(); // bound: open subscriptions (one per mounted list)
-  const pending = new Map<string, { done(r: ActResult): void; watch?: ActWatch }>(); // bound: actions in flight
   const owners = new Map<string, HTMLElement>(); // bound: open subscriptions
   const visible = new Set<string>(); // bound: as `subs`
   const asked = new Map<string, (s: EngineStats | undefined) => void>(); // bound: `stats` requests in flight
@@ -117,6 +118,11 @@ export function createEngine(transport: Transport): Engine {
     });
   };
   const deliveries = createDeliveryWatches(hint);
+  const actions = createActionRequests(
+    transport,
+    () => 'r' + String(++serial),
+    (req, watch) => deliveries.add(req, watch),
+  );
   const active = (): void => {
     idle = false;
     hint();
@@ -130,12 +136,18 @@ export function createEngine(transport: Transport): Engine {
   active();
 
   const sign = async (msg: Extract<FromEngine, { t: 'sign' }>): Promise<void> => {
+    if (!actions.wantsSign(msg.actionReq)) {
+      transport.post({ t: 'signed', req: msg.req, error: 'signer-refused' });
+      return;
+    }
     const ext = (window as { nostr?: Nip07 }).nostr;
     try {
       if (!ext) throw new Error('no signer extension');
       const event = JSON.stringify(await ext.signEvent(JSON.parse(msg.event)));
+      if (!actions.wantsSign(msg.actionReq)) return;
       transport.post({ t: 'signed', req: msg.req, event });
     } catch (e) {
+      if (!actions.wantsSign(msg.actionReq)) return;
       transport.post({ t: 'signed', req: msg.req, error: String((e as Error).message ?? e) });
     }
   };
@@ -169,12 +181,10 @@ export function createEngine(transport: Transport): Engine {
       subs.get(msg.sub)?.patch(msg.ops);
     } else if (msg.t === 'fresh') subs.get(msg.sub)?.fresh?.(msg.count);
     else if (msg.t === 'state') subs.get(msg.sub)?.state?.(msg.state);
-    else if (msg.t === 'progress')
-      pending.get(msg.req)?.watch?.progress?.(msg.sent, msg.total, msg);
+    else if (msg.t === 'progress') actions.progress(msg);
     else if (msg.t === 'delivery') deliveries.receive(msg);
     else if (msg.t === 'result') {
-      pending.get(msg.req)?.done(msg);
-      pending.delete(msg.req);
+      actions.result(msg);
       deliveries.result(msg);
     } else if (msg.t === 'accounts')
       accounts.set({
@@ -235,35 +245,7 @@ export function createEngine(transport: Transport): Engine {
         },
       };
     },
-    act(action, watch) {
-      const req = `r${++serial}`;
-      deliveries.add(req, watch);
-      return new Promise((done) => {
-        const timer =
-          action.a === 'upload'
-            ? setTimeout(() => {
-                if (pending.delete(req))
-                  done({
-                    t: 'result',
-                    req,
-                    ok: false,
-                    error: { code: 'upload-timeout', message: action.server },
-                  });
-              }, 300_000)
-            : undefined;
-        pending.set(req, {
-          done: (result) => {
-            clearTimeout(timer);
-            done(result);
-          },
-          watch,
-        });
-        transport.post(
-          { t: 'act', req, action },
-          action.a === 'upload' ? [action.bytes] : undefined,
-        );
-      });
-    },
+    act: (action, watch) => actions.act(action, watch),
     stats() {
       const req = `q${++serial}`;
       return new Promise((done) => {
@@ -285,9 +267,7 @@ export function createEngine(transport: Transport): Engine {
       clearTimeout(idleTimer);
       offPeople();
       dm.dispose();
-      for (const [req, action] of pending)
-        action.done({ t: 'result', req, ok: false, error: { code: 'offline' } });
-      pending.clear();
+      actions.dispose();
       deliveries.dispose();
       transport.close();
     },

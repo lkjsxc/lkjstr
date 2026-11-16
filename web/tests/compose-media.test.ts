@@ -97,3 +97,53 @@ it.each(['result', 'progress'])(
     }
   },
 );
+
+it.each(['remove', 'clear', 'dispose'] as const)(
+  '%s aborts the upload behind an existing attachment control',
+  async (operation) => {
+    const x = setup();
+    let finish: (result: ActResult) => void = () => {};
+    x.act.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          finish = resolve;
+        }),
+    );
+    try {
+      x.attachments.add([x.file]);
+      await vi.waitFor(() => expect(x.act).toHaveBeenCalledTimes(1));
+      const signal = x.act.mock.lastCall?.[1]?.uploadSignal;
+      expect(signal?.aborted).toBe(false);
+      if (operation === 'remove')
+        (x.attachments.el.querySelector('.x') as HTMLButtonElement).click();
+      else x.attachments[operation]();
+      expect(signal?.aborted).toBe(true);
+      finish({ t: 'result', req: 'upload', ok: false, cancelled: true });
+      await Promise.resolve();
+      expect(x.attachments.el.querySelector('.failed')).toBeNull();
+    } finally {
+      x.attachments.dispose();
+    }
+  },
+);
+it('a late File read cannot start an attachment removed before transfer', async () => {
+  const x = setup();
+  let finish: (buffer: ArrayBuffer) => void = () => {};
+  x.read.mockImplementationOnce(
+    () =>
+      new Promise((resolve) => {
+        finish = resolve;
+      }),
+  );
+  try {
+    x.attachments.add([x.file]);
+    (x.attachments.el.querySelector('.x') as HTMLButtonElement).click();
+    finish(new ArrayBuffer(4));
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(x.act).not.toHaveBeenCalled();
+    expect(x.attachments.count()).toBe(0);
+  } finally {
+    x.attachments.dispose();
+  }
+});

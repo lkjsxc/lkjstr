@@ -11,6 +11,7 @@ pub enum Input {
     DmOpen {
         sub: String,
         query: crate::engine::dm::Query,
+        visible: Option<bool>,
     },
     #[serde(rename = "dm.close")]
     DmClose {
@@ -29,6 +30,10 @@ pub enum Input {
         req: String,
         value: Option<String>,
         error: Option<String>,
+    },
+    #[serde(rename = "upload.cancel")]
+    UploadCancel {
+        req: String,
     },
     Preview {
         sub: String,

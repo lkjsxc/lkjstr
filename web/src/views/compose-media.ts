@@ -8,7 +8,14 @@ import { failureText } from './can.ts';
 import { watchList } from './lists.ts';
 import type { ViewEnv } from './registry.ts';
 
-type Item = { file: File; el: HTMLElement; busy: boolean; done?: Uploaded; removed?: boolean };
+type Item = {
+  file: File;
+  el: HTMLElement;
+  busy: boolean;
+  done?: Uploaded;
+  removed?: boolean;
+  abort?: AbortController;
+};
 const READ_MS = 10_000;
 export function createAttachments(
   env: ViewEnv,
@@ -48,7 +55,9 @@ export function createAttachments(
     });
   };
   const run = async (item: Item, server?: string): Promise<void> => {
-    if (item.busy || item.removed) return;
+    if (item.busy || item.removed || disposed) return;
+    const abort = new AbortController();
+    item.abort = abort;
     const account = env.engine.me();
     let target = server ?? servers[0] ?? t('upload.server');
     for (const pick of pickers) if (!pick.isConnected) pickers.delete(pick);
@@ -70,6 +79,7 @@ export function createAttachments(
         'aria-label': t('compose.drop'),
         onclick: () => {
           item.removed = true;
+          item.abort?.abort();
           items = items.filter((x) => x !== item);
           const picker = item.el.querySelector('select');
           if (picker) pickers.delete(picker);
@@ -114,6 +124,7 @@ export function createAttachments(
           bytes,
         },
         {
+          uploadSignal: abort.signal,
           progress(sent, total, detail) {
             if (disposed || item.removed) return;
             target = detail?.server ?? target;
@@ -153,6 +164,7 @@ export function createAttachments(
         ),
       );
     } finally {
+      if (item.abort === abort) item.abort = undefined;
       item.busy = false;
       if (!disposed) changed();
     }
@@ -236,13 +248,17 @@ export function createAttachments(
     blocked: (): boolean => items.some((i) => !i.done),
     media: (): Uploaded[] => items.flatMap((i) => (i.done ? [i.done] : [])),
     clear(): void {
-      for (const i of items) i.removed = true;
+      for (const i of items) {
+        i.removed = true;
+        i.abort?.abort();
+      }
       items = [];
       pickers.clear();
       el.replaceChildren();
     },
     dispose(): void {
       disposed = true;
+      for (const i of items) i.abort?.abort();
       off?.();
       pickers.clear();
     },

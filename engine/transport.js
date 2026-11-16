@@ -19,8 +19,11 @@ export function workerTransport(options = {}) {
       state.seekPending = state.window?.anchor?.month !== undefined;
       if (state.window && !state.seekPending) send(state.window);
     }
-    for (const state of privateSubs.values()) { send(state.open); if (state.visible) send(state.visible); }
+    // Set the page state before a private open can schedule a signer call.
     if (hint) send(hint);
+    for (const state of privateSubs.values()) {
+      send({ ...state.open, visible: state.visible?.visible ?? state.open.visible ?? true });
+    }
   };
   const reconnect = () => {
     for (const req of started ? pending : []) receive({ t: 'result', req, ok: false, error: { code: 'offline' } });
@@ -163,6 +166,15 @@ export function workerTransport(options = {}) {
   return {
     post(msg, transfer=[]) {
       if (closed) return;
+      if (msg.t === 'upload.cancel' && !started) {
+        const at = startup.findIndex(([action]) => action.t === 'act' && action.req === msg.req && action.action.a === 'upload');
+        if (at >= 0) {
+          startup.splice(at, 1);
+          pending.delete(msg.req);
+          receive({ t: 'result', req: msg.req, ok: false, cancelled: true });
+          return;
+        }
+      }
       if (msg.t === 'dm.open' && (privateSubs.has(msg.sub)||privateSubs.size<32)) privateSubs.set(msg.sub,{open:msg});
       if (msg.t === 'dm.visible' && privateSubs.has(msg.sub)) privateSubs.get(msg.sub).visible=msg;
       if (msg.t === 'dm.close') privateSubs.delete(msg.sub);

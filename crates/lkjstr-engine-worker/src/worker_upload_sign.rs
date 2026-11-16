@@ -8,13 +8,25 @@ pub(in crate::worker) async fn sign(
     deadline: Deadline,
     event: UnsignedNostrEvent,
 ) -> Result<lkjstr_protocol::NostrEvent, &'static str> {
+    sign_for(host, id, deadline, event, None, None).await
+}
+pub(in crate::worker) async fn sign_for(
+    host: &Rc<RefCell<Host>>,
+    id: u64,
+    deadline: Deadline,
+    event: UnsignedNostrEvent,
+    signal: Option<&web_sys::AbortSignal>,
+    action_req: Option<&str>,
+) -> Result<lkjstr_protocol::NostrEvent, &'static str> {
+    crate::browser::abort::check(signal).map_err(|_| crate::browser::abort::CANCELLED)?;
     let remote = host.borrow().accounts.remote(&event.pubkey);
     if let Some(remote) = remote {
-        let raw = crate::browser::remote::rpc_for(
+        let raw = crate::browser::remote::rpc_for_signal(
             &remote,
             "sign_event",
             vec![serde_json::to_string(&event).map_err(|_| "internal")?],
             deadline.wait(clock(), 60_000)?,
+            signal,
         )
         .await?;
         let signed =
@@ -29,7 +41,6 @@ pub(in crate::worker) async fn sign(
         return Ok(event);
     }
     let ms = deadline.wait(clock(), 60_000)?;
-    // Old extension answers can cross Worker replacement; counters alone can repeat.
     let nonce = crate::browser::random_bytes::<16>()?;
     let req = {
         let mut h = host.borrow_mut();
@@ -43,16 +54,24 @@ pub(in crate::worker) async fn sign(
         h.scope.direct(
             id,
             &W::Sign {
+                action_req: action_req.map(str::to_owned),
                 req: req.clone(),
                 pubkey: event.pubkey.clone(),
                 event: serde_json::to_string(&event).unwrap_or_default(),
             },
         );
     });
-    let result = crate::browser::promise::bounded_ms(promise, ms, "signer-missing", || {}).await;
+    let result =
+        crate::browser::promise::bounded_ms_for(promise, ms, "signer-missing", || {}, signal).await;
     host.borrow_mut().upload_auth.remove(&(id, req));
     let raw = result
-        .map_err(|_| "signer-missing")?
+        .map_err(|error| {
+            if error.as_string().as_deref() == Some(crate::browser::abort::CANCELLED) {
+                crate::browser::abort::CANCELLED
+            } else {
+                "signer-missing"
+            }
+        })?
         .as_string()
         .ok_or("signer-refused")?;
     let signed =
