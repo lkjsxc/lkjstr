@@ -3,7 +3,7 @@
 ## Purpose
 
 Current behavior and limits: [parity.md](parity.md) audits source; [engine-performance.md](engine-performance.md) records network evidence.
-Claude owns the interface. [Account persistence](account-persistence.md) passed 23 native, 12 race and 105 IDB checks; full gates pending.
+Claude owns the interface. [Account persistence](account-persistence.md) passed focused proofs, all seven gates, 541 real UI checks and packaging at `04c10b9b`.
 
 ## Specified keys and messages (2026-11-16)
 

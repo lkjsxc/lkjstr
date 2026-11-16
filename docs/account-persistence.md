@@ -5,7 +5,7 @@
 Protect the durable account record when independent Worker graphs share one
 IndexedDB database. This correction adds no account surface, words or protocol.
 Focused native, production-Worker and actual IndexedDB boundary checks passed.
-The full release gates remain pending.
+All required release gates, real smoke and packaging passed at `04c10b9b`.
 
 ## Observed old behavior
 
@@ -58,6 +58,11 @@ boundedly; it cannot silently purge an older Host's unflushed editor state.
 The relevant browser rules are the IndexedDB opening and closing algorithms:
 https://w3c.github.io/IndexedDB/#opening and
 https://w3c.github.io/IndexedDB/#closing-connection .
+
+The schema fence also defines rollback compatibility: an old schema-1 bundle
+cannot reopen an upgraded browser database. The account-fix release must become
+the retained compatible fallback before later performance releases. Host rollback
+must select a schema-2-compatible bundle; no downgrade or data reset is attempted.
 
 ## Atomic snapshot commits
 
@@ -132,6 +137,37 @@ browser. `LKJSTR_ENGINE_REPORT` selects a fresh output directory. The wrapper
 has syntax/control-flow checks; the individual proof helpers have executed as
 recorded above. No Cargo build is implicit in this production-artifact command.
 
-The full release gates are pending. No test-only production export is
-introduced. This evidence does not claim global account reconciliation,
-physical memory zeroization in JavaScript, or an owner-account incident.
+## Completed release checkpoint
+
+At unchanged source `04c10b9b`, the eleven stages below passed on 2026-11-16.
+The first engine stage began at 23:08:38 UTC; packaging finished at 23:38:51 UTC.
+The seven required gates are included, with the extra production checks shown
+separately. All stages retained the same tracked-source SHA-256 and reported no
+remaining owned processes. No duplicate focused suites were run.
+
+| Stage | Seconds | Result |
+| --- | ---: | --- |
+| check:repo | 1.200 | passed |
+| test:quiet | 163.568 | passed |
+| rust-wasm:quiet | 132.403 | passed |
+| verify:quiet | 132.374 | passed |
+| web check | 9.122 | passed |
+| web build | 0.529 | passed |
+| engine conformance | 328.904 | 459 main checks passed |
+| web smoke | 402.682 | 418 mock and 131 upload checks passed; offline checks passed |
+| real build | 28.741 | passed |
+| real smoke | 534.800 | 541 checks passed; zero page errors |
+| package | 0.761 | passed |
+
+Real-smoke load was 4.81 / 5.14 / 5.21 at start and 7.61 / 5.98 / 5.44 at end.
+The production WASM and loader hashes exactly match the focused corrected
+package above. The 1,601,690-byte archive SHA-256 is
+`1731c7073b30247ecd83e46fb64801d079b9ae4ff0019c7ce97ecf99169d29a2`.
+The ledger, source manifests, logs and frozen artifacts are under ignored
+`tmp/account-release-*`; the bounded summary is
+`tmp/account-release-evidence-04c10b9b.json`. The real-smoke report SHA-256 is
+`758477d33690ad3591b186ea41ad0b88367579b4c4bf0ea39179dacd83a501f7`.
+
+No test-only production export is introduced. This evidence does not claim a
+new deployment, automatic account reconciliation, physical memory zeroization
+in JavaScript, or an owner-account incident.
