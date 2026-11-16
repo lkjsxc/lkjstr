@@ -155,7 +155,7 @@ These are concrete runtime limits, not permission to fake a successful answer.
 - Private lists: supported local/extension/bunker reads cover NIP-44 and older
   NIP-04. Public edits preserve ciphertext; private editing, named-set navigation
   and list-specific Retry controls remain absent. Rows/hydration are owner-scoped.
-- Emoji: referenced sets pass 20 native cases and the combined WASM check; finite Worker/follow-up Clippy/full gates remain pending. See emoji-sets.md.
+- Emoji: referenced sets pass 20 native and 11 Worker cases plus strict Clippy; full conformance remains pending. See [emoji-sets.md](emoji-sets.md).
 - Search: retained people/language OR pass native and Worker proof. Remote people
   discovery remains absent; bounded verified NIP-05 from-query lookup exists.
   Combined gates/deployment remain pending. See [search.md](search.md).

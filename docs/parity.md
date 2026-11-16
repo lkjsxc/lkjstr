@@ -33,8 +33,8 @@ New written Claude specifications take priority when present.
 1. Complete required combined gates for the productive-route/verification guards;
    native and production Worker before/after pass. The sixth hour's seven Home
    candidates remain unresolved; these fixes cannot retroactively establish receipt.
-2. Close existing-control verification: Search now passes eleven native and seven
-   Worker checks; referenced emoji still needs its Worker/follow-up Clippy gate.
+2. Close existing-control conformance: Search passes eleven native/seven Worker
+   checks; referenced emoji passes twenty native/eleven Worker checks and Clippy.
    Bunker challenge operations await their combined gates and a designed surface.
 3. Use the next required public hour to qualify Home, notification/thread controls,
    observer overhead and real signer/provider behavior. The sixth 3600-second
@@ -122,7 +122,7 @@ New written Claude specifications take priority when present.
 | Capability | Status | Concrete scope, limit and evidence |
 | --- | --- | --- |
 | Notes, replies, reposts and quotes | done | Read and publish through all existing signer types; E/wire/publish.rs, V/note-actions.ts, V/compose.ts. |
-| Unicode/custom reaction picker | partial | Direct entries and up to 32 owner-selected kind-30030 sets project at most 400 codes with finite discovery. Twenty native cases pass; finite Worker and follow-up Clippy remain pending. Encrypted sets and per-set retry are unsupported. E/emoji.rs, V/emoji-picker.ts, docs/emoji-sets.md. |
+| Unicode/custom reaction picker | partial | Direct entries and up to 32 owner-selected kind-30030 sets project at most 400 codes with finite discovery. Twenty native and eleven Worker cases plus strict Clippy pass; full conformance remains pending. Encrypted sets and per-set retry are unsupported. E/emoji.rs, V/emoji-picker.ts, docs/emoji-sets.md. |
 | Selected mentions and custom emoji in text | done | Engine expands selected ranges and preserves emoji tags; E/wire/mentions.rs, V/compose-mentions.ts. |
 | Image/video/audio upload | partial | Blossom and NIP-96 discovery, every signer and retries work; cancellation and phases work; fetch cannot expose intermediate transmitted bytes while preserving redirect rejection and bounded responses; W/worker_upload*.rs, V/compose-media.ts. |
 | Media rendering and metadata | done | Notes render image/video/audio, dimensions, alt text and playback state; E/row_media.rs, V/note-media.ts, V/note-audio.ts. Dedicated media event kinds are separate below. |

@@ -3,8 +3,8 @@
 ## Purpose
 
 Record the Core discovery and projection used by the existing emoji picker.
-No new layout, visible words, action or wire shape is required. This isolated
-implementation has native evidence; real Worker checks are still pending.
+No new layout, visible words, action or wire shape is required. Native and
+finite real Worker checks pass; the combined conformance gate remains pending.
 
 ## Authority and selection
 
@@ -90,12 +90,32 @@ artifacts; its unexpected results remain in `tmp/emoji-limits-proof/`. Refreshin
 only Core/protocol source timestamps forced the intended source into both proof
 phases. No runtime or assertion changed between those runs.
 
-The follow-up has not rerun strict Clippy; its native proof does not replace the
-pending Worker and full integration gates.
+The combined native/all-target strict Clippy, WASM, repository and frontend
+check/build/smoke gates passed on source 274fd7e0. The all-target pass includes
+the bounded-value tests. These records are in the combined worktree's
+`tmp/release-gates.json`; they do not replace the remaining conformance gate.
 
-The authored real Worker fixture is registered in `scripts/engine-check.sh` but
-has not run. WASM, full integration gates and a public post-change measurement
-remain unrun; this checkpoint is not a completed feature landing.
+The first combined Worker gate stopped in the emoji fixture HTTP server:
+it sent 200 headers before reading a missing file, then threw while attempting
+404. This was a fixture failure before the emoji assertions, not a product
+regression. Commit 0bbf832a reads the body before choosing headers; no runtime
+or assertion changed. The complete short failure tail is retained in
+`tmp/release-engine-try1.log`; the ordinary fixture log was reused afterward.
+
+The corrected finite fixture passed all eleven checks at 18:38:56 UTC in
+1.304 seconds, load 1.87/2.43/2.76. It covers verified set discovery, exact
+coordinates, pending completion, invalid signatures, existing row shapes,
+direct-entry precedence, refreshed withdrawal and account isolation. The
+unchanged protocol contract passed with zero browser errors, forbidden relay
+operations or request-record drops. Browser, signer, server and profile cleanup
+completed; the owned-process ledger and a scoped scan found no leftover browser.
+
+The harness WASM is
+`d0190ae85b266cfa8dfc4b50eaf4848c5c85811eae86b894ec422427432beb9c`.
+Its immutable package is under `tmp/release-artifacts/aeede028a9d360bd0c65`;
+the report is `tmp/release-reports/emoji-try1/engine-emoji/report.json`.
+The lasting fixture remains registered in `scripts/engine-check.sh`.
+Full conformance, real interface smoke and the next public hour remain pending.
 
 Primary specifications checked on 2026-11-16:
 
