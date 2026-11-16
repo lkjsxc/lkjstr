@@ -8,7 +8,7 @@ export function sourceFilter(filter, source, account, focus) {
     && filter['#p']?.length === 1 && filter['#p'][0] === account.pubkey;
   return source === 'thread' && kinds(filter, [1, 42]) && filter['#e']?.length === 1 && filter['#e'][0] === focus;
 }
-function matches(event, filter) {
+export function matches(event, filter) {
   return (!filter.ids || filter.ids.some((id) => event.id.startsWith(id)))
     && (!filter.authors || filter.authors.some((author) => event.pubkey.startsWith(author)))
     && (!filter.kinds || filter.kinds.includes(event.kind))

@@ -43,6 +43,20 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
     let mut result = json!({"verified": verified, "rejected": rejected});
+    if value["relationships"].as_bool() == Some(true) {
+        let ids: BTreeSet<_> = controls
+            .iter()
+            .filter_map(|event| event["id"].as_str())
+            .collect();
+        let relations: Vec<_> = ids
+            .into_iter()
+            .filter_map(|id| store.get(id))
+            .map(|event| json!({"id": event.id,
+                "parent": lkjstr_protocol::reply_parent(&event),
+                "root": lkjstr_protocol::reply_root(&event)}))
+            .collect();
+        result["relationships"] = json!(relations);
+    }
     if let Some(queries) = value["queries"].as_object() {
         let mut policies = serde_json::Map::new();
         for (name, spec) in queries {
@@ -50,10 +64,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let mut q = wire.convert().ok_or("unsupported query")?;
             q.filters.since = spec["since"].as_u64().or(q.filters.since);
             q.filters.until = spec["until"].as_u64().or(q.filters.until);
-            let selected: BTreeSet<_> = query::events(&store, &q)
+            let ordered: Vec<_> = query::events(&store, &q)
                 .iter()
                 .map(|event| event.id.clone())
                 .collect();
+            let selected: BTreeSet<_> = ordered.iter().cloned().collect();
             let mut eligible = BTreeSet::new();
             let mut excluded = Vec::new();
             let ids: BTreeSet<_> = controls
@@ -85,10 +100,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     eligible.insert(id);
                 }
             }
-            policies.insert(
-                name.clone(),
-                json!({"eligible": eligible, "excluded": excluded, "query": q}),
-            );
+            let mut policy = json!({"eligible": eligible, "excluded": excluded, "query": q});
+            if value["ordered"].as_bool() == Some(true) {
+                policy["ordered"] = json!(ordered);
+            }
+            policies.insert(name.clone(), policy);
         }
         result["eligibility"] = Value::Object(policies);
         result["storeEvents"] = json!(store.len());

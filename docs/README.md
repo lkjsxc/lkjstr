@@ -91,3 +91,5 @@ Engine (`crates/`):
 - [emoji-sets.md](emoji-sets.md): bounded owner-selected emoji discovery, native
   evidence and real Worker verification.
 - [engine-live-route.md](engine-live-route.md): productive live recovery, bounded slot ownership and verification evidence.
+
+- [Historical measurement witnesses](engine-performance-history.md): bounded independent selection and post-hour evidence; execution pending.

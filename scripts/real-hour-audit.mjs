@@ -26,13 +26,17 @@ export async function publicContext(page) {
     };
   }));
 }
-export function nativeEligibility(events, context, queries) {
+export function nativeEligibility(events, context, queries, { timeoutMs, relationships = false, ordered = false } = {}) {
   const verify = spawnSync(process.env.LKJSTR_REAL_VERIFY ?? 'target/debug/examples/engine-public-verify', {
-    input: JSON.stringify({ events, context, queries }), encoding: 'utf8', maxBuffer: 16 * 1024 * 1024,
+    input: JSON.stringify({ events, context, queries, relationships, ordered }), encoding: 'utf8', maxBuffer: 16 * 1024 * 1024,
+    ...(timeoutMs === undefined ? {} : { timeout: Math.max(1, timeoutMs) }),
   });
   if (verify.status !== 0) throw Error(`Native eligibility failed: ${String(verify.error ?? verify.stderr).slice(0, 500)}`);
   const result = JSON.parse(verify.stdout);
   if (!result.eligibility) throw Error('Rebuild engine-public-verify: native eligibility mode is required');
+  if (relationships && !Array.isArray(result.relationships)) throw Error('Rebuild engine-public-verify: relationship mode is required');
+  if (ordered && Object.values(result.eligibility).some(policy => !Array.isArray(policy.ordered)))
+    throw Error('Rebuild engine-public-verify: ordered query mode is required');
   return result;
 }
 export function sourceRoutes(queries, account) {

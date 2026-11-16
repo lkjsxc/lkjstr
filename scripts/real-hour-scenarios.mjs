@@ -42,8 +42,15 @@ export async function faultScenarios({ measured, page, account, directory, repor
     delete report.audit.controls;
     await save();
   }
-  const { inspectThread } = await import('./real-hour-thread.mjs');
-  out.thread = await inspectThread({ page, cdp: measured.cdp, account, directory });
+  if (report.historicalAvailability) {
+    const { runHistoricalWitness } = await import('./real-hour-history.mjs');
+    out.historical = await runHistoricalWitness({ measured, page, account,
+      selection: report.historicalAvailability.selection, directory });
+    out.thread = out.historical.thread ?? { status: out.historical.status };
+  } else {
+    const { inspectThread } = await import('./real-hour-thread.mjs');
+    out.thread = await inspectThread({ page, cdp: measured.cdp, account, directory });
+  }
   await save();
   for (const seconds of [30, 600]) {
     const before = await place(page);

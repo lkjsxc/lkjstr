@@ -10,6 +10,7 @@ import { prepareReader, signInReadOnly, samplePage, scrollArchive, returnHomeTop
 import { comparePublic } from './real-hour-compare.mjs';
 import { ownedDirectory } from './real-hour-owned.mjs';
 import { readObservation, domStatus } from './real-hour-dom.mjs';
+import { preflightHistorical } from './real-hour-history-preflight.mjs';
 const root = new URL('../', import.meta.url).pathname;
 process.chdir(root);
 const option = (name, fallback) => process.argv.find((arg) => arg.startsWith(`--${name}=`))?.slice(name.length + 3) ?? fallback;
@@ -17,6 +18,8 @@ const seconds = Number(option('seconds', '3600'));
 if (!Number.isFinite(seconds) || seconds < 1 || seconds > 86400) throw Error('seconds must be 1..86400');
 const scrollNotes = Number(option('scroll-notes', seconds >= 3600 ? '2000' : '120'));
 if (!Number.isInteger(scrollNotes) || scrollNotes < 1 || scrollNotes > 10000) throw Error('scroll-notes must be 1..10000');
+const historical = option('historical', seconds >= 3600 ? 'on' : 'off');
+if (!['on', 'off'].includes(historical)) throw Error('historical must be on or off');
 const stamp = new Date().toISOString().replaceAll(':', '-').replaceAll('.', '-');
 const directory = await ownedDirectory(root, option('output', `tmp/real-hour-${stamp}`), true);
 // Keep Chromium's Unix-domain socket path below Linux's 108-byte bound.
@@ -63,7 +66,17 @@ try {
     report.harnessHashes[name] = createHash('sha256').update(content).digest('hex');
   }
   const relays = option('relays', 'wss://yabu.me/,wss://nos.lol/,wss://relay.damus.io/').split(',');
-  const account = await publicAccount(relays, option('account'));
+  let account;
+  if (historical === 'on') {
+    let availability;
+    ({ account, report: availability } = await preflightHistorical({ relays, requested: option('account') }));
+    await writeFile(`${directory}/historical-preflight.json`, JSON.stringify(availability));
+    report.historicalAvailability = { file: 'historical-preflight.json', startedAt: availability.startedAt,
+      finishedAt: availability.finishedAt, primary: availability.primary, chosen: availability.chosen,
+      selection: availability.selection, budget: availability.budget, errors: availability.errors };
+    availability = undefined; // Signed controls stay on disk, outside the timed-hour heap.
+    if (!account) throw Error('No verified public account from bounded preflight; see historical-preflight.json');
+  } else account = await publicAccount(relays, option('account'));
   report.account = { pubkey: account.pubkey, follows: account.follows.length, followEvent: account.followEvent.id, relays: account.relays, probes: account.probes };
   await writeFile(`${directory}/account-public.json`, JSON.stringify(account));
   measured = await launchMeasured({ directory: snapshot, runDirectory: directory });
