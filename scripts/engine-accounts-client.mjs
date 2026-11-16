@@ -87,31 +87,31 @@ export async function accountsClient(context, origin) {
     }
     window.accountPersistence = {
       async prepare() {
-        await boot('first'); await act('first', { k: 'account.add', how: 'create' });
+        await boot('first'); await act('first', { a: 'account.add', how: 'create' });
         const entry = hosts.get('first');
         if (!/^[a-f0-9]{64}$/.test(entry.active ?? '')) throw Error('owned account identity missing');
         ids.set('a', entry.active); await boot('second');
         return publicState(hosts.get('second'));
       },
       async addSecond() {
-        await act('second', { k: 'account.add', how: 'create' });
+        await act('second', { a: 'account.add', how: 'create' });
         const entry = hosts.get('second');
         if (!/^[a-f0-9]{64}$/.test(entry.active ?? '') || entry.active === ids.get('a')) throw Error('owned account identity collision');
         ids.set('b', entry.active); return durable();
       },
       async protectFirst() {
-        let result = await act('second', { k: 'account.exportEncrypted', pubkey: ids.get('a'), password: passphrase, logN: 16 });
+        let result = await act('second', { a: 'account.exportEncrypted', pubkey: ids.get('a'), password: passphrase, logN: 16 });
         if (typeof result.encryptedKey !== 'string') throw Error('owned encrypted fixture missing');
-        try { await act('second', { k: 'account.importEncrypted', key: result.encryptedKey, password: passphrase }); }
+        try { await act('second', { a: 'account.importEncrypted', key: result.encryptedKey, password: passphrase }); }
         finally { result.encryptedKey = undefined; result = undefined; }
         return durable();
       },
       async staleSeen() {
-        const result = await act('first', { k: 'seen', as: ids.get('a') }, true);
+        const result = await act('first', { a: 'seen', as: ids.get('a') }, true);
         return { acknowledged: result.ok === true, ...await durable() };
       },
       async currentSeen() {
-        const result = await act('fresh', { k: 'seen', as: ids.get('a') });
+        const result = await act('fresh', { a: 'seen', as: ids.get('a') });
         return { acknowledged: result.ok === true, ...await durable() };
       },
       async reload() { await boot('fresh'); return publicState(hosts.get('fresh')); },
