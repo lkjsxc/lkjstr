@@ -15,7 +15,8 @@
     "ci:quiet": "PATH=\"$HOME/.cargo/bin:$PATH\" cargo run -q -p lkjstr-xtask -- quiet ci",
     "smoke:browser": "pnpm --dir web smoke:real",
     "engine:check": "sh scripts/engine-check.sh",
-    "engine:package": "sh scripts/engine-package.sh"
+    "engine:package": "sh scripts/engine-package.sh",
+    "real:hour": "pnpm --dir web build:real && node scripts/real-hour.mjs"
   },
   "devDependencies": {
     "playwright-core": "1.65.0",

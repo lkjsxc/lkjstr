@@ -6,6 +6,18 @@ Record runtime measurements and reproducible workloads. Synthetic index fixtures
 never enter the product or a public relay. Timing is elapsed wall time on this
 shared Linux host, not a throughput promise for another device.
 
+## Offline shell regression (2026-11-16)
+
+The real packaged shell and six focused lifecycle/fault scenarios passed in
+78.341 seconds including the JS-only rebuild. A load sample during that run,
+06:27:30 UTC, was 10.47/10.84/9.16. Chromium's first update after offline
+emulation accounts for about 60 seconds; this is a test duration, not app startup.
+The same six focused cases passed again with worktree-local temporary profiles
+in 16.829 seconds. Both rollback/cache-growth regressions fail on the original
+generator. Tests use explicit awaited polling: Playwright 1.65 treats an async
+waitForFunction predicate's Promise as truthy without polling its resolved value.
+See [offline-shell.md](offline-shell.md) for cache bounds, evidence and limitations.
+
 ## Native index workload
 
 `CARGO_BUILD_JOBS=4 cargo run --release -p lkjstr-core --example engine-bench`
@@ -87,3 +99,96 @@ and disk, and remains a separate workload.
 Memory retains 16000 regular and 4000 replaceable events. Live committed writes
 prune disk to 20000 rows; the benchmark deliberately seeds an oversized existing
 database and measures indexed boot without waiting for a subsequent live write.
+
+## Read-only public-network measurements (2026-11-16)
+
+`pnpm real:hour` builds the real release and native helpers, snapshots their
+hashes, and opens a fresh headless Chromium profile. It is outside default gates.
+Only a public npub is imported. A before-execution REQ/CLOSE-only socket guard
+blocks publication and authentication; no owner account or signing key is used.
+Worktree-local profiles and owned servers close on success or failure. Release
+asset bytes remain unchanged; reports and public-only fixtures stay under `tmp/`.
+
+Use `--account=<64-hex-public-key>`, `--relays=<comma-list>` and
+`--output=tmp/<name>` for repeatability. `--seconds=300 --scroll-notes=2000`
+is a short archive check, never an hour. `--helpers=existing` skips recompilation.
+The default observes 3600 real seconds before network cuts, page/Worker freezing,
+two-tab checks and a separate 20000-event physical cache boot. Current runs block
+service workers because Chromium cannot install the guard before their initial
+execution here; public offline-shell behavior is excluded. See the independent
+service-worker smoke gate and [public measurement details](engine-performance-public.md).
+
+### Completed baseline and fixed short check
+
+The baseline live hour ran 04:24:59.152-05:24:59.298 UTC, 3600.146 seconds, on
+`6830584c`; faults finished 05:38:24.055 UTC. First live load average was
+10.62/9.79/7.64, last 14.08/9.06/7.68; sampled one-minute load ranged 3.25-14.08.
+The fixed build ran 05:30:22.396-05:35:22.465 UTC, 300.069 seconds; first live
+load 7.97/7.75/7.47, last 6.79/7.25/7.37. These are individual shared-host runs.
+
+| Measurement | Baseline | Fixed short run |
+| --- | --- | --- |
+| Signed-out Global DOM note / name / loaded avatar | 360 / 487 / 691 ms | 353 / 555 / 758 ms |
+| Home after public npub import, reusing Global cache | 142 ms | 126 ms |
+| Warm Home note / name / loaded avatar | 243 / 344 / 243 ms | 267 / 470 / 267 ms |
+| Archive, 2000 requested | 808 notes in 126738 ms, stalled | 2031 notes in 65677 ms |
+| Scroll polling step median / maximum | 610 / 835 ms | 617 / 916 ms |
+| Physical IndexedDB event rows, first / last | 32 / 3855 | 32 / 8373 |
+| Browser storage estimate, first / last | 75864 / 7492046 bytes | 69759 / 10651582 bytes |
+| Engine sockets / tracked requests maximum | 8 / 32 | 8 / 32 |
+| rAF intervals over 34 / 100 ms | 365 / 186 | 224 / 89 |
+| Longest rAF interval | 350 ms | 383.4 ms |
+
+DOM timestamps use 100 ms polling and loaded image dimensions, not compositor
+paint timestamps. Scroll steps include intentional 600 ms waits. The fixed run
+observed 69 new-row batches: median wait 663 ms, maximum 2148 ms. Frame intervals
+cover 213265 baseline and 16501 fixed live observations; they do not directly
+count dropped display frames. No page errors or forbidden outbound frames arose.
+The initial request counter can retain relay-CLOSED IDs until client CLOSE;
+current probes remove them immediately. Its maximum is a client-tracking bound.
+
+The archive stalled 45 seconds without an end state. Diagnostics kept healthy
+Azzamo and failed Damus in the two focused read slots while permitted readers
+were connected. Three history regressions failed before fixing failed-route
+vetoes and partial-answer cursors; two read-fallback regressions also failed.
+Healthy routes now advance independently, unknown routes retain their original
+span, and unavailable routes release ordinary read slots without granting write
+relays read permission. Seventeen focused paging/recovery/stability tests passed.
+The fixed public archive reached the requested depth; network samples differ.
+
+### Memory attribution and recovery
+
+Baseline page JS heap first/last/min/max was 4.58/13.32/4.58/37.55 MB; embedder
+heap 25.50/183.73/25.50/365.33 MB. Worker JS heap reached 41.99 MB, but the
+observer retained 33.48 MB of serialized repeated query evidence. That number
+cannot establish product memory growth. Baseline WASM linear memory was not
+sampled. The fixed short run sampled Worker linear memory 3.54-67.04 MB while
+its cache grew; five minutes cannot establish a long-run bound. Values are
+unforced-GC snapshots, not process RSS. Corrected probes intern query payloads,
+cap retained evidence, and label completeness unknown if evidence is dropped.
+
+Baseline network cuts lasted 30.421 and 604.587 seconds; a subscribed relay
+socket returned 3020 and 1510 ms after resume. Page-only freezing lasted 30.007
+seconds with the SharedWorker still active; its 2 ms recovery is not engine wake.
+Closing the first SharedWorker tab preserved connectivity in 90 ms. Disabling
+SharedWorker in a separate fresh profile proved dedicated-Worker replacement
+with a new target and subscribed socket in 509 ms. A physical 20000-event cache
+seed took 730.6 ms; first profile note appeared 332 ms after navigation.
+
+A separate fixed-build engine pause ran 05:57:18-05:57:55 UTC at load
+5.91/6.85/7.40 to 7.28/7.08/7.46: actual engine Worker debugger pause 30.051 s,
+page freeze 30.002 s, Worker clock gap 30.098 s and subscribed recovery 3062 ms.
+Only owned sockets/HTTP were cut. This scoped suspension is not host/OS sleep.
+
+The source-route controls did not establish a missed Home/notification/thread note in
+these samples, but returned few or zero eligible events and included failed
+relays. They do not prove completeness. Startup-only routes and broader relay
+coverage are reported separately in the linked audit, including corrections to
+the original thread probe. The fixed short run encountered two service-worker
+inspection timeouts; its engine/DOM archive measurements remain separate from
+unsupported shell instrumentation. Both failed pause attempts are preserved.
+
+The corrected full-hour run started 05:58:06.401 UTC against the same fixed
+WASM with bounded/interned probes and copied native helpers; first load was
+7.25/7.07/7.45. Its results are pending in `tmp/real-hour-20261116-corrected`.
+A full memory conclusion remains pending; the completed baseline is retained.
