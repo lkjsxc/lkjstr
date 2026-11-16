@@ -2,86 +2,90 @@
 
 ## Purpose
 
-Current engine behavior and concrete limits. The source audit is
-[parity.md](parity.md); measured network work is in
+Current engine behavior and concrete limits. The source audit is [parity.md](parity.md); network measurements are in
 [engine-performance.md](engine-performance.md). Interface work belongs to Claude.
+
+## Specified keys and messages (2026-11-16)
+
+Protocol 8 implements Claude's K1-K4, M1-M6 and D1 specifications with the
+existing paired strings and design tokens. Conversation lists, older private
+messages, one-to-one/group text, inbox settings and encrypted draft/failed-send
+recovery are reachable. Private bodies never enter public row caches or ordinary
+layout storage. Lock coordinates registered editors across clients before
+revoking plaintext; an unresponsive or expired unresolved editor prevents lock.
+The durable archive, signer and editor bounds are documented in
+[dm-drafts.md](dm-drafts.md), [dm-signers.md](dm-signers.md) and
+[dm-editor-locks.md](dm-editor-locks.md). No group-subject/file/reaction/delete
+surface was added. Strict per-page unlocking remains a recorded K2 difference.
+
+The 468 required width/theme/language captures were generated and reviewed.
+Fresh real-Worker UI checks passed 13 key and 16 message assertions, including
+stable inbox discovery across relay-slot rotation. All seven required gates
+passed; evidence and limits are in [interface-verification.md](interface-verification.md).
+Persisted browser-history pages now keep their editor lease and probe the
+connection on resume; deterministic transport events cover live/expired Workers.
+Completed empty inbox evidence survives relay-slot rotation. Explicit stop
+revokes private rows, key/startup queues and projections, and closes all entry paths.
 
 ## Follow-up lifetime fixes (2026-11-16)
 
 Protocol 7 adds atomic private-view visibility and acknowledged upload
-cancellation. Existing attachment removal, clear and disposal cancel queued
-authorization, HTTP response/body waits and processing polls. Late signer and
-upload replies cannot settle a replacement job. Accurate intermediate transmitted
-bytes remain unavailable; a remote blob already accepted is not deleted.
+cancellation. Attachment removal, clear and disposal cancel queued authorization,
+HTTP response/body waits and processing polls. Late replies cannot settle a
+replacement job. Intermediate transmitted bytes remain unavailable; cancellation
+does not delete a remote blob already accepted.
 
-Successful account lock/remove now synchronously prunes decrypted private-list
-policy and replaces derived rows, including hidden views, before acknowledgement.
-Previously a query immediately after acknowledgement could use the old policy
-until the next account-status pass. That was a transient memory/projection gap,
-not evidence of durable plaintext. Failed account transactions preserve the prior
-authorized state. Revoked private mute anchors are removed and rejected on replay.
-Loss of signer access forces cache replacement even when a prior status pass
-already cleared the private policy map. Ordinary seen/use actions retain the
-cheap unchanged-authority path. External private-list decryption remains missing.
+Successful lock/remove synchronously prunes decrypted private-list policy and
+derived rows, including hidden views, before acknowledgement. Previously old
+policy survived until the next status pass. Revoked private anchors are rejected
+on replay; failed account transactions preserve authorized state. External
+private-list decryption remains missing.
 
-A recovering relay keeps its own unknown span without displacing a healthy live
-fallback. Profile/count hydration retains its existing stable route behavior.
-History and exhaustion wait for queued verification. Queue loss closes the
-participating wire, revokes completion evidence and retries its unchanged span
-with bounded backoff; hiding or removing the route releases that work. See
-[engine-verification-pressure.md](engine-verification-pressure.md) for evidence.
-
-Retained row diffs now index keys instead of repeatedly scanning the full list;
-the normal real Worker reaches and physically stores all 5,000 loopback notes.
-Thread ancestors precede their focus despite timestamp ties or clock skew.
-All required gates and 338 real Worker checks passed; exact times, host load and
-limits are in [engine-lifetime-verification.md](engine-lifetime-verification.md).
+Recovering relays retain their missing span without displacing healthy live
+fallbacks. History waits for verification; queue loss revokes completion and
+retries the unchanged span with bounded backoff. See
+[engine-verification-pressure.md](engine-verification-pressure.md).
+Indexed retained-row diffs acquire and store all 5,000 loopback notes.
+Thread ancestors precede the focus despite timestamp ties or clock skew.
+The preceding landing passed required gates and 338 real Worker checks;
+[engine-lifetime-verification.md](engine-lifetime-verification.md) records limits.
 
 ## Engine stream (2026-11-16)
 
-Protocol 6 adds private messages and encrypted-key operations without changing
-existing messages or fields. The exact additions and their shapes are recorded
-in [engine-proposals.md](engine-proposals.md). New operations without an existing
-control are listed in [interface-needs.md](interface-needs.md); no new visible
-strings, CSS, layout or conversation/unlock view was invented.
+Protocol 6 introduced DM, encrypted-key and relay authentication operations.
+Protocols 7/8 are additive; exact shapes are in
+[engine-proposals.md](engine-proposals.md). Unreached operations remain in
+[interface-needs.md](interface-needs.md).
 
-- DM decisions live in core, with Worker effects for local, NIP-07 and NIP-46
-  signers. NIP-17 text/group messages use NIP-44 seals and NIP-59 gift wraps;
-  kind-10050 discovery routes a separate envelope to every recipient and self.
-  Success requires acceptance for every envelope, not merely one relay reply.
-  Conversation snapshots/read marks, release on hide/close and read-only older
-  NIP-04 messages are implemented. Plaintext is isolated from public row/store
-  caches and cleared on lock; delayed signer results cannot restore a revoked
-  session. Backdated wraps retain a 48-hour overlap on reconnect. See [dm.md](dm.md).
-- NIP-49 ncryptsec import/export and explicit session lock/unlock are implemented.
+- Core/Worker DM supports local, NIP-07 and NIP-46 signers. NIP-17 text/group
+  messages use NIP-44 seals and NIP-59 wrappers sent to each participant and self.
+  Success needs every envelope accepted. Conversation/read marks, history,
+  hidden-view release and read-only NIP-04 are implemented. Private bodies stay
+  out of public caches; lock/replacement revoke them. Reconnect overlaps
+  backdated wraps by 48 hours. See [dm.md](dm.md).
+- NIP-49 import/export and explicit lock/unlock commit accounts transactionally.
   Encrypted imports persist ciphertext only; session keys do not survive Worker
-  restart. Account changes commit transactionally. Existing plaintext accounts
-  remain usable until an explicit conversion. Claude's password/migration and
-  DM interface specifications now take priority for the next implementation.
-  See [keys.md](keys.md) for KDF bounds and limits.
-- NIP-42 auth-required reads/writes use all three signers. A challenge alone
-  causes no signature. Current demand, original publication owner, active read
-  account and signer eligibility are rechecked on asynchronous completion.
-  AUTH events never enter public history. Optional NIP-67 hints are not handled;
-  see [relay-auth.md](relay-auth.md) for identity and lifetime guarantees.
-- A failed or silent relay no longer vetoes healthy history forever. Paging
-  waits for actual completion or the original deadline, advances only successful
-  pages and preserves each failed route's cursor for recovery. Failure does not
-  establish an empty history. Native regressions exceed 2000 healthy notes and
-  exercise timeout/refusal/recovery alongside existing cursor/preemption cases.
-- Real builds install a complete, hash-verified offline shell when CacheStorage
-  and Web Locks are available. Failed updates and rollback preserve viable
-  active/waiting shells; complete updates wait for every old client to close.
-  Repeated waiting updates retain at most three shell caches. Interrupted
-  activation cleanup recovers on the next controlled fetch. Events, keys and
-  remote media never enter this cache. Loopback cases cover corrupt updates,
-  rollback, update/activation races, offline assets/deep links and two tabs;
-  see [offline-shell.md](offline-shell.md) and [hosting-needs.md](hosting-needs.md).
+  restart. Existing plaintext accounts remain usable until explicit protection.
+  K1-K4 supply verified password/import/unlock/backup/migration controls.
+  Unlock is Worker-scoped; strict per-page permission needs
+  a vault/cache lease, not a visual flag. See [keys.md](keys.md).
+- NIP-42 auth-required reads/writes use all signers. A challenge alone causes no
+  signature. Demand, original owner and authority are checked on asynchronous
+  completion. AUTH never enters public history. Optional NIP-67 hints remain
+  unsupported; see [relay-auth.md](relay-auth.md).
+- Failed/silent relays do not veto healthy history forever. Paging waits for
+  completion or the original deadline, advances successful pages and preserves
+  failed-route cursors. Failure never establishes empty history.
+- Real builds install a complete hash-verified offline shell with CacheStorage
+  and Web Locks. Failed updates/rollback preserve usable shells; activation waits
+  for old clients to close. At most three shell caches remain, and interrupted
+  cleanup recovers on fetch. Events, keys and remote media are excluded.
+  Loopback cases cover corruption, rollback, offline links and two-tab races;
+  see [offline-shell.md](offline-shell.md).
 
-The separate `pnpm real:hour` command runs the real build with a fresh read-only
-public account and fail-closed WebSocket publication guards. It remains outside
-the default gate. Its baseline hour and fault phases are recorded separately;
-loopback and mock checks do not substitute for public-network measurements.
+The separate `pnpm real:hour` uses fresh read-only public-account data and
+fail-closed publication guards. Its dated baseline hour and fault phases are
+recorded independently; mock/loopback checks do not replace network measurements.
 
 ## Corrections to the handoff and older status
 
@@ -153,9 +157,10 @@ failure stays unknown. See [media-uploads.md](media-uploads.md).
 
 These are concrete runtime limits, not permission to fake a successful answer.
 
-- Private people/bookmark/mute lists: local NIP-44 decryption works; NIP-07,
-  bunker and historical NIP-04 list decryption remain incomplete. Public edits
-  preserve ciphertext; encrypted private editing is unavailable.
+- Private lists: local NIP-44 works; external signers and historical NIP-04
+  remain incomplete. Named-list queries can merge another saved account's
+  private tags; no named-list surface exists. Public edits preserve ciphertext;
+  encrypted private editing is unavailable.
 - Emoji: own kind-10030 entries work; referenced kind-30030 sets are not fetched.
 - Search: matching people are not placed ahead of notes; multi-language arrays
   use the first language. Bounded verified NIP-05 from-query lookup exists.
@@ -178,6 +183,9 @@ Worker harness; native cases cover pure decisions and failure races. Public
 measurements retain UTC date, host load, selected relays and limitations.
 The first shipped tree passed all required gates and 287 real Worker checks.
 Dates, load and concrete scope are in [engine-stream-verification.md](engine-stream-verification.md).
+Current UI evidence, including 34 focused key tests, the 468-state matrix and
+fresh real key/message flows, is in [interface-verification.md](interface-verification.md).
+The specification index marks these items built, with the recorded K2 differences.
 
 The owner's 2026-11-16 delegation authorizes rebased pushes and the prescribed
 ship script. Tests use fresh ports and fixture data, clean their processes and

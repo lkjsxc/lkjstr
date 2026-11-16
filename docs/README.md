@@ -10,6 +10,7 @@ Frontend (`web/`):
 
 - [design.md](design.md): the look and the interaction rules, as built.
 - [time-rail.md](time-rail.md): cache-wide month scale, native fallbacks and verification.
+- [interface-verification.md](interface-verification.md): specified keys/messages, captures and runtime gate evidence.
 - [frontend.md](frontend.md): structure of `web/`, the engine boundary, gates.
 - [integration-release.md](integration-release.md): real-engine release candidate and UI gaps.
 - [hosting-needs.md](hosting-needs.md): what the static host must serve.
@@ -52,6 +53,10 @@ Engine (`crates/`):
 - [wishes.md](wishes.md): owner wishes, protocol 5 and verification boundaries.
 - [owner-audit.md](owner-audit.md): returning profiles and owner complaint verification.
 - [Private-message engine and limits](dm.md)
+- [Encrypted private drafts and failed sends](dm-drafts.md)
+- [Private editor coordination before locking](dm-editor-locks.md)
+- [Private signer lifetime and failure bounds](dm-signers.md)
+- [Specified private-message interface wiring](frontend-dm.md)
 - [Encrypted local keys and session access](keys.md)
 - [Engine capabilities awaiting interface specifications](interface-needs.md)
 - [interface-specs.md](interface-specs.md): surfaces to build, item by item, with their state.

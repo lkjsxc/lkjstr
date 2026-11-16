@@ -2,8 +2,10 @@
 
 ## Purpose
 
-Source audit of `6830584c` plus the 2026-11-16 engine stream. This replaces
-the 11-14 inventory; gate/run evidence is in status.md and engine-performance.md.
+Source audit refreshed on 2026-11-16 against the current protocol-8 integration
+tree, including K1-K4 and M1-M6. Required gates passed and spec items are built;
+source status alone does not establish the deployed build.
+Unregistered staging under tmp/ is excluded. This replaces the 11-14 inventory.
 Rows describe lkjstr's real Worker and reachable interface, not mock capability.
 `done` means implemented for the stated scope; it does not establish public-network
 completeness. `partial` names a concrete limit. `engine ready, no surface` requires
@@ -19,24 +21,23 @@ to implement every NIP. Public-network measurement is tracked separately in
 Evidence prefixes: `E/` = `crates/lkjstr-core/src/engine/`,
 `W/` = `crates/lkjstr-engine-worker/src/`,
 `P/` = `crates/lkjstr-protocol/src/`, `N/` = `crates/lkjstr-nips/src/`,
-`V/` = `web/src/views/`. Tests below are existing coverage, not rerun by this audit.
+`V/` = `web/src/views/`. Tests below are referenced evidence, not rerun by this document audit.
 
 ## Work order by daily impact
 
-1. Measure the real build: missed Home/notification/thread notes, late names,
-   paging, idle growth, offline recovery, leader loss and 20000-event boot.
-   Reproduced loss, freezes and incorrect success states take precedence.
-2. Restore unavailable data paths: relay AUTH for all signers, private-list
-   decryption, then remove misleading zap totals through provider validation.
-3. Key protection/import/export and complete DM delivery, including inbox
-   discovery, unread state, every signer and old-message reading.
-4. Finish existing controls: referenced emoji sets, search people/languages,
-   bunker authorization challenges, upload cancellation/progress.
-5. Add offline/update safety, measured cache management and settings backup;
-   then articles, followed hashtags, reports and other new protocol families.
-6. Request Claude's surfaces for ready operations; implement pending written
-   interface specifications before feature work. Revisit this order after each
-   measured run. No unfinished `docs/interface-specs.md` existed at audit start.
+1. Repeat the read-only public hour on the new build after this third landing.
+   Verify route recovery and missed-note coverage after the measured fixes;
+   extend weak notification/thread controls and separate observer memory.
+2. Scope named-list private projection to its query account, then complete
+   external/older private-list decryption, trusted zap receipts and LNURL invoices.
+3. Finish existing controls: referenced emoji sets, people/language search,
+   bunker authorization challenges and measured upload progress. Upload
+   cancellation and relay AUTH are already implemented.
+4. Add physical cache accounting/clearing and settings backup, then optional
+   encrypted setup sync, article documents, followed hashtags and reports.
+5. Actor details, missing-bookmark placeholders, pins and person relay views
+   still await Claude's specifications. Implement new written specs first;
+   storage alone does not make their missing operations engine-ready.
 
 ## Reading, recovery and truth
 
@@ -49,16 +50,16 @@ Evidence prefixes: `E/` = `crates/lkjstr-core/src/engine/`,
 | Following/follower lists | done | Distinct membership, metadata-independent rows and relay paging; E/wire/sources.rs, crates/lkjstr-core/tests/engine_list_integrity_test.rs. |
 | Replies and nested thread navigation | done | Ancestors, focus, descendants and missing-reference states; E/thread.rs, V/feed.ts. |
 | Grouped notifications and read state | done | Mentions/replies/reposts/reactions/zaps, filters and persistent timestamp ties; E/wire/notifications.rs, E/clients.rs. Zap trust is separate below. |
-| Reading position and fresh-note indicator | done | Per-tab anchors, retained windows, new-row counts and hydration restoration; V/feed-place.ts, V/feed-fresh.ts. Public sleep/wake is unmeasured. |
+| Reading position and fresh-note indicator | done | Per-tab anchors, retained windows and fresh counts; V/feed-place.ts, V/feed-fresh.ts. Page freeze and actual Worker pause were measured separately; host/OS sleep remains untested; docs/engine-performance-hour.md. |
 | Calendar/time navigation | done | Cache-wide month counts and ordinal seeks; E/wire/timeline.rs, V/time-rail.ts. Not a count of all relay history. |
 | Rich note search | partial | Text/phrases/exclusions/media/author/date filters work; language arrays use only their first entry; E/wire/query_translate.rs, E/rich.rs. |
 | People in search | partial | `people` directory and verified NIP-05 lookup exist; ordinary search does not prepend matching people; E/wire/people.rs, E/identities.rs. |
 | Hashtag timelines | done | `hashtag` filter and linked tile exist; E/query.rs, V/registry.ts, V/note.ts. |
 | Followed hashtags | missing | No kind-10015 discovery/edit or Home integration; list codecs alone do not supply it. |
 | One-relay timeline | partial | `source:relay` targets requests, but cached membership is not relay-scoped and no feed tile is registered; E/network_plan.rs, E/query.rs, V/registry.ts. |
-| Public-network completeness and hour-long use | partial | Loopback coverage exists; no controlled hour-long public comparison in this snapshot; scripts/engine-harness.mjs. |
-| Shared Worker, two tabs and leader loss | done | SharedWorker plus Web Locks/BroadcastChannel fallback; engine/transport.js and existing harness. Real sleep/wake and public recovery remain unmeasured. |
-| Bounded cache and cold boot | partial | 16000 regular/4000 replaceable in memory; newest 2000 indexed on boot, disk pruned to 20000 after live writes. Physical 20000-event fixture boot measured; see engine-performance-hour.md and W/worker_persist.rs. |
+| Public-network completeness and hour-long use | partial | Baseline and corrected 3600-second read-only runs completed; corrected scroll reached 2004 notes. Home controls saw five eligible notes, three rendered and two coverage candidates; later route fixes have loopback proof, not a new public hour. docs/engine-performance-hour.md. |
+| Shared Worker, two tabs and leader loss | done | SharedWorker continuity and fallback leader replacement were measured; 30-second/10-minute cuts include one delivered Home recovery witness. Later stale-callback and retained-history fixes have transport regressions; engine/transport.js, docs/engine-performance-hour.md. |
+| Bounded cache and cold boot | partial | 16000 regular/4000 replaceable in memory; newest 2000 indexed on boot, disk pruned to 20000 after live writes. A physical 20000-event boot and an hour of page/Worker/WASM memory were measured; observer overhead and indefinite growth remain unproven. W/worker_persist.rs, docs/engine-performance-hour.md. |
 | Physical cache size and clearing | missing | Stats `cacheBytes` is stored payload bytes, not actual IndexedDB usage; no clear-cache operation; E/feedback.rs. |
 
 ## Identity, signers and private data
@@ -66,8 +67,8 @@ Evidence prefixes: `E/` = `crates/lkjstr-core/src/engine/`,
 | Capability | Status | Concrete scope, limit and evidence |
 | --- | --- | --- |
 | Create/import a local key and explicit backup | done | Create, nsec import and explicit `account.key`; E/accounts.rs, V/account-add.ts, V/account-key.ts. |
-| NIP-49 encrypted import/export | engine ready, no surface | Explicit ciphertext import/export, bounded KDF and native/browser cases; E/accounts_vault.rs, W/worker_keys.rs, docs/keys.md. |
-| Local keys encrypted at rest and session unlock | partial | Encrypted imports persist ciphertext and unlock only for the Worker session. Existing plaintext accounts need the specified migration/unlock UI; docs/keys.md. |
+| NIP-49 encrypted import/export | done | K1/K3 ciphertext sign-in and encrypted backup use the bounded codec; the real K13 flow verified exact download and same-key recovery. V/account-import.ts, V/account-key.ts, docs/keys.md; required integration gates passed. |
+| Local keys encrypted at rest and session unlock | partial | K2/K4 unlock, lock, cross-page idle lock and explicit protection are reachable. Unlock is Worker-scoped: a sibling can keep a reload unlocked. Existing plaintext accounts convert only by explicit protection/import; strict per-page vault/cache leases are missing. docs/keys.md. |
 | NIP-07 extension signing | done | Correlated public-key discovery, exact-event validation and deadlines; W/worker_sign.rs, web/src/engine/client.ts. Encryption/decryption is separate below. |
 | NIP-46 bunker signing | partial | Pasted preauthorized bunker URI, durable session and verified signing work; auth_url challenges and relay-switch negotiation do not; V/account-add.ts, W/browser/remote.rs. |
 | QR/nostrconnect connection workflow | missing | Current input accepts bunker text; no connection-QR generation/scanning flow. |
@@ -80,7 +81,7 @@ Evidence prefixes: `E/` = `crates/lkjstr-core/src/engine/`,
 | Public mute people/words/tags/threads | done | Existing settings and note actions, with feed/notification hiding; E/settings.rs, V/settings-lists.ts, V/note-actions.ts. |
 | Encrypted private list reading | partial | Local-key NIP-44 entries work; extension/bunker decrypt and historical NIP-04 do not; E/accounts.rs, N/list_crypto.rs. |
 | Encrypted private list edits | missing | Public edits preserve ciphertext; removing private entries is refused. No encrypt/edit flow for any signer. |
-| People/follow-set reading | engine ready, no surface | `open source:list` projects members and resolves addresses; E/wire/sources.rs, E/wire/query_translate.rs. No list tile in V/registry.ts. |
+| People/follow-set reading | partial | `open source:list` projects members, but cached private tags are not constrained to the query account. No list tile exists; E/wire/sources.rs, E/wire/query_translate.rs. |
 | People-set creation/edit and feed subscription | missing | No list-edit action or dedicated saved-set feed workflow. |
 | User status and external identity proofs | missing | NIP-38/39 have no runtime projection or action. |
 
@@ -88,10 +89,13 @@ Evidence prefixes: `E/` = `crates/lkjstr-core/src/engine/`,
 
 | Capability | Status | Concrete scope, limit and evidence |
 | --- | --- | --- |
-| NIP-17 DMs and gift wrapping | engine ready, no surface | NIP-44 receive/send through all signers, per-recipient/self wrappers and private snapshots; E/dm/, W/worker_dm*.rs, docs/dm.md. |
-| DM inbox relay list and delivery | engine ready, no surface | Kind-10050 discovery/edit, recipient/self inbox routing and per-envelope acceptance; dm.relays.save and dm.send. |
-| DM conversations, unread marks and attachments | partial | Protocol6 conversation/text snapshots, durable read marks and history exist without a view. Dedicated attachments and a composer need further work. |
-| Read old NIP-04 messages | engine ready, no surface | Read-only older decryption/projecting works for local, extension and bunker signers; no NIP-04 sending. |
+| NIP-17 DMs and gift wrapping | done | M1-M3 conversation/list/text composer surfaces use all three signers, NIP-44 seals and per-recipient/self wraps. Private models stay separate from public rows; E/dm/, W/worker_dm*.rs, V/messages.ts, V/message.ts, docs/frontend-dm.md. |
+| DM inbox relay list and delivery | done | M4 edits/publishes kind 10050 and presents proved missing-inbox setup. Routing uses every recipient's and self's inbox; success requires each envelope, with actual partial outcomes. V/settings-dm.ts, E/dm/routing.rs, docs/frontend-dm.md. |
+| DM history, unread and account mark | partial | M1/M2/M6 show conversations, durable Seen state and a body-free account count. Lists cap at 200, cached messages at 8000; saturated single-second history can stall and late older arrivals can fall below Seen. E/dm/, V/dm-window.ts, web/src/engine/dm-watch.ts. |
+| External private-signer access | done | M5 consent, refusal, deadline and explicit Retry gate subscriptions/crypto; late replies cannot restore revoked access. web/src/engine/client-dm-access.ts, docs/dm-signers.md. |
+| Encrypted local private drafts and failed sends | done | Protocol 8 archives up to 32 tabs/account and 32 retained rows/tab, 256 KiB/tab and 2 MiB/catalog; no eviction or automatic retry. All signers, revision guards and before-lock page flushing are implemented; docs/dm-drafts.md, docs/dm-editor-locks.md. Older protocols retain memory-only drafts. |
+| Private files, reactions and message deletion | missing | URLs stay links; no private attachment, reaction or delete action. Group subjects display when received, but subject/member editing and read-receipt/sync controls are absent; docs/interface-dm.md. |
+| Read old NIP-04 messages | done | M2 renders older messages decrypted by local, extension or bunker signers; no NIP-04 write API. W/worker_dm_receive.rs, V/dm-message-row.ts. |
 | Public channels | done | NIP-28 discovery, metadata, join, send and unread marks; E/channels.rs, E/channel_actions.rs, V/channels.ts. |
 | Public-channel moderator actions | missing | No kind-43/44 hide/mute action; ordinary personal mutes are distinct. |
 | NIP-29 relay groups | missing | P/groups.rs has codecs; no engine membership/moderation or group view. |
@@ -103,7 +107,7 @@ Evidence prefixes: `E/` = `crates/lkjstr-core/src/engine/`,
 | Zap receipt display and totals | partial | Amounts come from receipt/description tags without trusted provider discovery; E/wire/note.rs, E/wire/notifications.rs, P/nip57.rs. Not verified payment totals. |
 | LNURL discovery, zap signing and invoice retrieval | missing | N/zap.rs and N/invoice.rs validate structures but have no Worker flow. Existing zap button only explains unavailability. |
 | WebLN, invoice payment/QR and NWC | missing | No payment contract or provider integration; V/note-actions.ts. NIP-47 is a separate missing wallet capability. |
-| Per-note reactors and reposters | engine ready, no surface | Verified stored references/reactions retain actors; E/rows.rs, core store. No detail-query wire shape or view yet. |
+| Per-note reactors and reposters | partial | Verified stored events retain authors; repost rows expose bounded actors and reaction rows expose counts. A complete actor-detail query and its specified view are missing; E/rows.rs, web/src/engine/protocol.ts. |
 | Trusted zapper list | partial | Stored receipts and actor parsing exist; provider validation and a detail-query shape are missing. |
 | Reliable publication feedback and retry | done | Early success, bounded retries, late confirmations and retained composer drafts; E/network_delivery.rs, V/compose-outbox.ts. |
 
@@ -149,7 +153,7 @@ inventory finding, not permission to add unplanned interface surfaces.
 | App handlers and recommendations (89) | partial | Optional client tag is emitted; handler discovery/opening is absent. |
 | Graph-based moderation and recommendations | partial | Graph weights affect relay planning, not a trust-controlled media policy or recommendation feed; E/weights.rs. |
 | Negentropy and completeness hints (77/67) | missing | No NEG-* reconciliation or EOSE completeness-hint policy. |
-| Background push notifications | missing | Notification feed is foreground/live only; no push subscription or service worker. |
+| Background push notifications | missing | The service worker caches the application shell; it has no push subscription or background message/notification delivery. Foreground feeds and the opt-in private unread watch are separate. web/scripts/shell-cache.ts. |
 | In-app translation | missing | Interface localization exists; note translation does not. |
 | User-event archive import/export | missing | No user-accessible archive action. |
 
@@ -162,7 +166,7 @@ inventory finding, not permission to add unplanned interface surfaces.
 | Responsive tiles and appearance controls | done | Existing tile layout, scale/theme and reader settings; web/src/wm/, web/src/shared/settings.ts. |
 | Japanese interface | partial | Paired string tables and guards exist; external provider errors may remain in their original language. |
 | Settings file export/import | missing | No settings archive, validation or restore action. |
-| Installable offline shell and coherent updates | done | Real-build SHA-256 shell cache, failed-install rollback, offline navigation and activation after old tabs close; web/scripts/shell-cache.ts and smoke-offline.mjs. |
+| Installable offline shell and coherent updates | done | Real-build SHA-256 asset cache with CacheStorage/Web Locks, failed-update rollback and activation after old clients close; at most three caches across waiting updates. Loopback verified; the public-hour guard excludes service workers. web/scripts/shell-cache.ts, docs/offline-shell.md. |
 | Encrypted optional setup sync (78/44) | missing | Local same-origin UI storage is not encrypted cross-device sync. |
 
 ## Audit corrections and sources
@@ -170,9 +174,20 @@ inventory finding, not permission to add unplanned interface surfaces.
 The older table incorrectly called bunker signing, follow-list creation,
 NIP-05 verification, uploads, public mutes/bookmarks, quotes, hashtag reading,
 own-event deletion, grouped notifications and social Undo missing or narrower.
-The handoff also overstates relay AUTH and pins; their runtime gaps are above.
-status.md's visitor-settings guard warning is stale: V/settings-relays.ts already
-calls the engine directly for a signed-out bootstrap save.
+The first audit's missing relay AUTH is now implemented; pins still lack dedicated
+operations. Visitor bootstrap relay editing already existed. The newer engine
+stream supplied the offline service worker, and Claude's specs supplied the K/M
+surfaces; older no-surface/no-public-hour prose is no longer a current finding.
+
+The full 2026-11-16 screenshot matrix covered all 39 K/M states in 12 variants
+(468 required captures); review sheets are under tmp/screens-interface-20261116-matrix.
+Fresh loopback real UI runs passed K13 at 10:32:12 UTC (6.576 s, starting load
+7.92/7.87/6.35) and M16 at 10:57:49 UTC (11.561 s, load 6.33/3.44/3.65).
+Evidence: docs/keys.md, docs/frontend-dm.md and their raw report paths. Required
+gates and specification closure are recorded in docs/interface-verification.md.
+These runs do not measure public DM delivery, real providers or this build for an hour.
+Public controls also exclude grouped notification constituents and deeper
+untagged thread replies; recovery witnesses are not universal completeness.
 
 - [A] [Amethyst supported features](https://github.com/vitorpamplona/amethyst#supported-features), checked 2026-11-16.
 - [B] [Coracle features](https://github.com/coracle-social/coracle#features), checked 2026-11-16.
