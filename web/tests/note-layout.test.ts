@@ -1,4 +1,4 @@
-import { afterEach, expect, it } from 'vitest';
+import { afterEach, expect, it, vi } from 'vitest';
 import { noteRow } from '../src/engine/mock/rows.ts';
 import { createWorld } from '../src/engine/mock/world.ts';
 import type { NoteRow } from '../src/engine/protocol.ts';
@@ -15,6 +15,7 @@ afterEach(() => {
     if (descriptor) Object.defineProperty(HTMLElement.prototype, name, descriptor);
     else Reflect.deleteProperty(HTMLElement.prototype, name);
   heights.clear();
+  vi.restoreAllMocks();
   localStorage.clear();
   document.body.replaceChildren();
   setLang('en');
@@ -101,6 +102,37 @@ it('keeps short, unfolded and already fitted notes unchanged through later batch
 it('keeps native-scrollbar decisions sequential when folding can change line width', () => {
   const { rows, list, measured, drawn } = setup(3);
   list.className = 'view';
+  drawn.draw(rows);
+  expect(measured.map((read) => read.controls)).toEqual([0, 1, 2]);
+  expect(list.querySelectorAll('.fold')).toHaveLength(3);
+});
+
+function nativeView(list: HTMLElement, height: number): HTMLElement {
+  const view = document.createElement('div');
+  view.className = 'view feed';
+  list.className = 'list';
+  view.append(list);
+  document.body.append(view);
+  vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (
+    this: HTMLElement,
+  ) {
+    return new DOMRect(0, 0, 320, this === view ? height : this.matches('.avb') ? 36 : 0);
+  });
+  return view;
+}
+
+it('batches native notes when their permanent avatar columns keep the scrollbar present', () => {
+  const { rows, list, measured, drawn } = setup(32);
+  nativeView(list, 800);
+  drawn.draw(rows);
+  expect(list.querySelectorAll('.fold')).toHaveLength(32);
+  expect(measured).toHaveLength(32);
+  expect(measured.every((read) => read.controls === 0)).toBe(true);
+});
+
+it('preserves sequential decisions at the native scrollbar boundary', () => {
+  const { rows, list, measured, drawn } = setup(3);
+  nativeView(list, 108);
   drawn.draw(rows);
   expect(measured.map((read) => read.controls)).toEqual([0, 1, 2]);
   expect(list.querySelectorAll('.fold')).toHaveLength(3);

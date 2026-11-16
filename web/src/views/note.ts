@@ -8,6 +8,7 @@ import { icon } from '../shared/icons.ts';
 import { readNoteState, writeNoteState } from '../shared/note-state.ts';
 import { linkCards } from './link-cards.ts';
 import { actionRow, reactionChips } from './note-actions.ts';
+import { stableNoteWidths } from './note-fit-geometry.ts';
 import { mediaGrid } from './note-media.ts';
 import { quoteCard } from './note-quote.ts';
 import { displayName, faceButton, how, nameButton, plainName, segments } from './parts.ts';
@@ -274,8 +275,7 @@ export function fitNote(el: HTMLElement): void {
 
 /** Measure the batch before fold controls invalidate another note's layout. */
 export function fitNotes(elements: readonly HTMLElement[]): void {
-  // Native scrollbars can change line widths as folded link cards disappear.
-  if (elements.some((el) => el.closest('.view:not(.has-time-rail)'))) {
+  if (!stableNoteWidths(elements)) {
     for (const el of elements) fitNote(el);
     return;
   }

@@ -37,16 +37,20 @@ then measures their text overflow as a group before inserting any fold control.
 It runs synchronously before the draw returns, so the reading-position keeper
 still sees the completed geometry. Existing nodes do not get fitted again.
 
-Native-scrollbar views retain sequential fitting: hiding a folded link card can
-change scrollbar width and therefore another note's line wrapping. Time-rail
-views have stable line widths and use the batched path. Single-note reveals still
-use `fitNote`; unfolded text, warning choices, fold-button behavior, DOM structure,
-CSS and both string tables are unchanged.
+Time-rail views have stable line widths and use the batched path. A native view
+also batches when the sum of its direct notes' in-flow avatar heights exceeds the
+view height by more than one pixel: folding cannot remove those columns, so the
+scrollbar cannot disappear. The geometry check stops once that lower bound is
+proved. Nested quotes, hidden notes and revealed wrappers do not inflate it.
+Uncertain native views remain sequential because hiding a folded link card can
+change scrollbar width and another note's line wrapping. Single-note reveals
+still use `fitNote`; unfolded text, warning choices, fold-button behavior, DOM
+structure, CSS and both string tables are unchanged.
 
 ## Regression and before/after measurements
 
 The focused row-list test failed on the old code because each overflow read saw
-earlier fold controls already inserted. Three focused cases now cover batching,
+earlier fold controls already inserted. The original three cases cover batching,
 short/unfolded/already-fitted rows and the native-scrollbar fallback. Existing
 note redraw and reading-choice tests also pass.
 
@@ -75,11 +79,37 @@ had different host loads and are retained as evidence, not used for a speed rati
 See `tmp/layout-tree/tmp/note-layout-paired-comparison.json` in the canonical
 worktree for the exact frozen bundle and report paths.
 
+## Native-scrollbar follow-up (2026-11-16)
+
+The sixth frozen public run used a native-scrollbar Home. It did not exercise
+the time-rail batching above. The added unit regression fails on the unchanged
+native path, with seven controls passing; the correction passes all eight.
+The actual Chromium fixture now checks both paths at 720 and 320 px, with
+Playwright's scrollbar-hiding argument removed. A separate short-view case proves
+that hiding a link card still removes the 14 px scrollbar without changing its
+result. Every final DOM hash, row height/order and boundary result matches.
+
+For 120 notes, native layout counts fall from 242 to four at both widths; the
+rail remains four, and unchanged redraws remain zero. A 2000-note native draw
+at 720 px falls from 4002 layouts to four. Before ran at 17:36:55-17:36:57 UTC,
+load 2.67/3.28/3.59 to 2.54/3.25/3.58; after at 17:37:28-17:37:30 UTC,
+load 5.20/3.88/3.78 at both ends. Elapsed draw times are 1675.6 and 773.9 ms,
+with layout durations 1298.799 and 445.181 ms. Different shared-host loads mean
+these elapsed values are diagnostic, not a public-scroll speed guarantee.
+The complete 2000-row DOM hash is the same `1af4125d...` hash recorded above.
+
+Full frontend check passed at 17:38:06-17:38:13 UTC in 6.764 seconds, load
+4.40/3.84/3.77 to 4.65/3.91/3.80. Exact source, frozen bundles, reports and
+comparisons are in `tmp/native-layout-tree/tmp/native-layout-proof/` in the
+canonical worktree. The first fixture attempt kept Chromium's hidden scrollbar
+and failed its boundary premise; it is retained separately, not counted as the
+width-changing regression. All owned browsers and loopback servers were closed.
+
 The default loopback regression is part of `web`'s `pnpm smoke`. To run it alone:
 
 ```sh
 node web/scripts/smoke-note-layout.mjs
-node web/scripts/smoke-note-layout.mjs --rows=2000
+node web/scripts/smoke-note-layout.mjs --mode=native --rows=2000
 ```
 
 Each run uses a fresh loopback port and browser context, blocks external requests

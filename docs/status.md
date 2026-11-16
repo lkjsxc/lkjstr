@@ -100,9 +100,9 @@ mutes, bookmarks, lists, channels and rich note search already existed before th
 existing control already permits signed-out bootstrap changes. No replacement UI was needed.
 
 The design document says 800 retained rows; code permits 6000 through retainAbove. The public scroll measurements exercised this larger retained DOM.
-The 800-row moving request remains distinct; Claude's design file was left unchanged. Time-rail note fitting now groups geometry reads before changing
-fold controls. The paired 2000-note draw fell from 4002 layouts to four with identical DOM and row heights; [frontend-layout.md](frontend-layout.md)
-separates this finite workload from the public scroll delays that motivated it.
+The 800-row moving request remains distinct; Claude's design file was left unchanged. Note fitting batches stable time-rail/native widths; uncertain
+native-scrollbar cases keep sequential decisions. Separate 2000-note draws fell from 4002 layouts to four with identical DOM and row heights;
+[frontend-layout.md](frontend-layout.md) separates these finite workloads from the public scroll delays that motivated them.
 
 ## Reading and lists
 
