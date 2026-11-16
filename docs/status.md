@@ -78,7 +78,9 @@ Protocol 6 introduced DM, encrypted-key and relay authentication operations. Pro
   see [offline-shell.md](offline-shell.md).
 
 The separate `pnpm real:hour` uses fresh read-only public-account data and fail-closed publication guards. Its dated baseline hour and fault phases
-are recorded independently; mock/loopback checks do not replace network measurements.
+are recorded independently; mock/loopback checks do not replace network measurements. Host evidence now copies capture-time targets, query endings
+and receipt metadata; the frozen sixth record retains its earlier mutable-counter limitation.
+See [engine-performance-evidence.md](engine-performance-evidence.md).
 
 Signed-out notifications retain the core done state; later zap receipt-evidence changes preserve the last observed relay phase and counters. The
 initial rows no longer synthesize a cache phase before the network supplies its real state.

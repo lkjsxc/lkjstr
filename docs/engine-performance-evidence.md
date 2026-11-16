@@ -106,3 +106,30 @@ frames and completed cleanup. Its report is in the private-list worktree at
 `tmp/host-network-proof-gYZenc/report.json`; the original startup timeline is
 `tmp/host-network-proof-Jh1Pfz/report.json`. No claim about an unrun second public
 hour is implied.
+
+## Capture-time metadata correction (2026-11-16)
+
+The frozen sixth run exposed a report alias: summary completeness was captured
+by value, but its target objects kept changing with later traffic and probe
+epochs. Full snapshots also shared query/delivery arrays; selected event
+witnesses shared their request metadata. A later JSON save could therefore
+combine a capture-time verdict with counters or route endings from the future.
+The sixth artifacts retain this limitation; their original dated snapshots
+remain evidence and this correction does not repair them retroactively.
+
+Collector summaries now copy targets and bounds. Query snapshots and complete
+evidence exports copy their bounded metadata; per-event witnesses copy each
+matched request once per call, even when several payload digests share it.
+Returned records cannot mutate the live collector. The CDP query capture uses
+that existing copy without duplicating it again. No body is retained, no budget
+is raised, and no public request or page/Worker instrumentation is added.
+Copies can temporarily coexist with the collector and are not included in its
+retained-byte counters; the caller owns their lifetime.
+
+Three added Node cases fail as assertions against the previous collector, with
+nine network controls passing. The correction passes all 27 observer/network/
+ownership cases, including the three new cases. Before ran at 17:48:47 UTC in
+0.071 seconds, load 4.77/4.36/3.99; after at 17:49:27 UTC in 0.105 seconds,
+load 3.70/4.16/3.94. Source hashes, logs and original collector are retained in
+the variants worktree at `tmp/evidence-snapshot-proof/`. No Cargo, browser or
+public network was used for this proof.

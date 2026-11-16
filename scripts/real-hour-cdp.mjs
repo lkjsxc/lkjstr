@@ -89,7 +89,7 @@ export async function attachBrowser(endpoint, { wasmModule } = {}) {
   const queryEvidence = async () => {
     const hostNetwork = networkEvidence.summary();
     if (hostNetwork.complete) return { at: Date.now(), hostNetwork,
-      queries: structuredClone(networkEvidence.queries()) };
+      queries: networkEvidence.queries() };
     const queries = [];
     for (const [session, target] of sessions) if (target.type.includes('worker'))
       queries.push(...await evaluate(session, 'globalThis.__realHour?.queries ?? []').catch(() => []));

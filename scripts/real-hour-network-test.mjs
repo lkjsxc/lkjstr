@@ -134,3 +134,46 @@ test('post-hoc Worker counters do not certify the original script startup bounda
   evidence.observeProbe('worker', { started: 1, sent: 0, received: 0 });
   assert.equal(evidence.summary().complete, false);
 });
+
+test('saved target counters and their completeness keep the same capture time', () => {
+  const { evidence, frame } = fixture();
+  frame(true, ['REQ', 'sub', { kinds: [1] }]);
+  frame(false, ['EVENT', 'sub', event], 12);
+  evidence.observeProbe('worker', { started: 1, sent: 1, received: 1 }, bootstrap);
+  const saved = evidence.summary(), original = structuredClone(saved);
+  assert.equal(saved.complete, true);
+  frame(false, ['EOSE', 'sub'], 13);
+  evidence.observeProbe('worker', { started: 2, sent: 0, received: 0 }, bootstrap);
+  assert.equal(evidence.summary().complete, false);
+  assert.deepEqual(saved, original);
+});
+test('full evidence snapshots never acquire later receipts or query endings', () => {
+  const { evidence, frame } = fixture();
+  frame(true, ['REQ', 'sub', { kinds: [1], authors: [event.pubkey] }]);
+  frame(false, ['EVENT', 'sub', event], 12);
+  const saved = evidence.snapshot();
+  const original = structuredClone({ queries: saved.queries, deliveries: saved.deliveries });
+  frame(false, ['EOSE', 'sub'], 13);
+  frame(true, ['REQ', 'next', { kinds: [6] }], 14);
+  frame(false, ['EVENT', 'next', { ...event, id: 'd'.repeat(64) }], 15);
+  frame(true, ['CLOSE', 'sub'], 16);
+  assert.equal(evidence.snapshot().deliveries.length, 2);
+  assert.deepEqual({ queries: saved.queries, deliveries: saved.deliveries }, original);
+});
+test('selected query and event witnesses cannot rewrite collector metadata', () => {
+  const { evidence, frame } = fixture();
+  frame(true, ['REQ', 'sub', { kinds: [1], authors: [event.pubkey] }]);
+  frame(false, ['EVENT', 'sub', event], 12);
+  const selected = evidence.forEvent(event.id), queries = evidence.queries();
+  const selectedAtCapture = structuredClone(selected), queriesAtCapture = structuredClone(queries);
+  frame(true, ['CLOSE', 'sub'], 13);
+  assert.deepEqual(selected, selectedAtCapture);
+  assert.deepEqual(queries, queriesAtCapture);
+  selected[0].request.filters[0].authors.push('e'.repeat(64));
+  queries[0].filters[0].kinds.push(7);
+  const summary = evidence.summary();
+  summary.bounds.queries = 0;
+  assert.deepEqual(evidence.queries()[0].filters, [{ kinds: [1], authors: [event.pubkey] }]);
+  assert.equal(evidence.summary().bounds.queries, 10000);
+  assert.ok(!JSON.stringify(evidence.snapshot()).includes(event.content));
+});

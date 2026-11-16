@@ -136,11 +136,19 @@ export function createNetworkEvidence(limits = {}) {
       return { source: 'host-CDP', complete: relevant.length > 0 && relevant.every(t => t.enabled && t.sampled && t.bootstrapped && !t.reset
           && t.sent >= t.probeSent && t.received >= t.probeReceived)
           && !Object.values(dropped).some(Boolean) && forbidden === 0,
-        targets: relevant, activeSockets: sockets.size, queries: queries.length, queryBytes,
-        deliveries: deliveries.length, deliveryBytes, dropped: { ...dropped }, forbidden, bounds: cap };
+        targets: relevant.map(target => ({ ...target })), activeSockets: sockets.size, queries: queries.length, queryBytes,
+        deliveries: deliveries.length, deliveryBytes, dropped: { ...dropped }, forbidden, bounds: { ...cap } };
     },
-    queries: () => queries,
-    forEvent(id) { return deliveries.filter(item => item.id === id).map(item => ({ ...item, request: queries[item.query] })); },
-    snapshot() { return { summary: this.summary(), queries, deliveries }; },
+    queries: () => structuredClone(queries),
+    forEvent(id) {
+      // Clone each request once per call, even for many conflicting payload digests.
+      const requests = new Map();
+      return deliveries.filter(item => item.id === id).map(item => {
+        if (!requests.has(item.query)) requests.set(item.query, structuredClone(queries[item.query]));
+        return { ...item, request: requests.get(item.query) };
+      });
+    },
+    // Later traffic must not rewrite a report's captured counters or request lifetime.
+    snapshot() { return structuredClone({ summary: this.summary(), queries, deliveries }); },
   };
 }
