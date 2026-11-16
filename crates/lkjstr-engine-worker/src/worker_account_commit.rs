@@ -87,6 +87,8 @@ pub(in crate::worker) fn pump_accounts(host: &Rc<RefCell<Host>>) {
             Some(Err(code)) => Err(*code),
             _ => mutation::apply(action, &mut next, watermark, &caller).await,
         };
+        // A backup remains redacted/zeroizing until its exact live success reply.
+        let result = result.map(|value| value.map(SecretText::new));
         let mut storage_failure = None;
         let result = match (result, db) {
             (Ok(exported), Some(db)) if !signal.aborted() => {
@@ -158,29 +160,32 @@ pub(in crate::worker) fn pump_accounts(host: &Rc<RefCell<Host>>) {
                     for id in h.sessions.keys() {
                         send_accounts(&h, *id);
                     }
-                    let (key, encrypted_key) = if raw_backup {
-                        (exported, None)
-                    } else {
-                        (None, exported)
-                    };
-                    h.scope.direct(
-                        id,
-                        &W::Result {
-                            req,
-                            ok: true,
-                            error: None,
-                            delivery: None,
-                            id: None,
-                            uploaded: None,
-                            key,
-                            encrypted_key,
-                            zap_intent: None,
-                            dm_draft: None,
-                            dm_draft_revision: None,
-                            dm_delivery: None,
-                            cancelled: None,
-                        },
-                    );
+                    if h.sessions.contains_key(&id) {
+                        let exported = exported.map(|value| value.to_string());
+                        let (key, encrypted_key) = if raw_backup {
+                            (exported, None)
+                        } else {
+                            (None, exported)
+                        };
+                        h.scope.direct(
+                            id,
+                            &W::Result {
+                                req,
+                                ok: true,
+                                error: None,
+                                delivery: None,
+                                id: None,
+                                uploaded: None,
+                                key,
+                                encrypted_key,
+                                zap_intent: None,
+                                dm_draft: None,
+                                dm_draft_revision: None,
+                                dm_delivery: None,
+                                cancelled: None,
+                            },
+                        );
+                    }
                 }
                 Err(code) => h.scope.direct(id, &Session::failure(req, code)),
             }
