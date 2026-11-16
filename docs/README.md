@@ -13,6 +13,7 @@ Frontend (`web/`):
 - [frontend.md](frontend.md): structure of `web/`, the engine boundary, gates.
 - [integration-release.md](integration-release.md): real-engine release candidate and UI gaps.
 - [hosting-needs.md](hosting-needs.md): what the static host must serve.
+- [offline-shell.md](offline-shell.md): verified shell storage, update lifetimes and bounds.
 - [repost.md](repost.md): public-source repost comparison.
 
 Engine (`crates/`):
@@ -26,11 +27,13 @@ Engine (`crates/`):
 - [orchestration.md](orchestration.md): publication routing, freshness, weights and limits.
 - [architecture.md](architecture.md): crates, runtime, orchestration, storage.
 - [verification.md](verification.md): gates, browser checks and their results.
+- [engine-stream-verification.md](engine-stream-verification.md): current stream gate evidence and limits.
 - [decisions.md](decisions.md): durable decisions and why.
 - [engine.md](engine.md): the engine Worker and how it serves the protocol.
 - [engine-package.md](engine-package.md): building the Worker assets for `web/`.
 - [engine-polish.md](engine-polish.md): author hydration, count estimates and Global sample.
 - [engine-performance.md](engine-performance.md): measurements.
+- [engine-performance-public.md](engine-performance-public.md): public controls, attribution and limits.
 - [engine-proposals.md](engine-proposals.md): protocol proposals and their outcome.
 - [parity.md](parity.md): audited client capability inventory.
 - [details.md](details.md): observed frictions and fixes.
@@ -43,3 +46,8 @@ Engine (`crates/`):
 
 - [wishes.md](wishes.md): owner wishes, protocol 5 and verification boundaries.
 - [owner-audit.md](owner-audit.md): returning profiles and owner complaint verification.
+- [Private-message engine and limits](dm.md)
+- [Encrypted local keys and session access](keys.md)
+- [Engine capabilities awaiting interface specifications](interface-needs.md)
+
+- [relay-auth.md](relay-auth.md): scoped relay authentication and async identity races.
