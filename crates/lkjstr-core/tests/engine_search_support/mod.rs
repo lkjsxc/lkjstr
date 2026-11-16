@@ -36,6 +36,7 @@ pub struct Fixture {
     pub session: wire::Session,
     pub rows: Vec<Value>,
     pub messages: Vec<Value>,
+    pub native_messages: Vec<Value>,
     pub now: u64,
 }
 impl Fixture {
@@ -49,6 +50,7 @@ impl Fixture {
             session: Default::default(),
             rows: vec![],
             messages: vec![],
+            native_messages: vec![],
             now: 1_800_000_000_000,
         }
     }
@@ -68,6 +70,8 @@ impl Fixture {
     pub fn draw(&mut self) {
         let outputs = self.engine.drain();
         for output in outputs {
+            self.native_messages
+                .push(serde_json::to_value(&output).unwrap());
             for message in self.session.output(output, &self.engine) {
                 let message = serde_json::to_value(message).unwrap();
                 self.apply(&message);
