@@ -6,7 +6,7 @@ use crate::engine::{
 use serde_json::{Value, json};
 #[derive(Default)]
 pub(super) struct Cached {
-    base: Value,
+    base: Option<Value>,
     evidence: Option<Evidence>,
 }
 fn selected(q: &Query, engine: &Engine, unread: bool) -> Evidence {
@@ -85,22 +85,13 @@ impl Session {
         let Some(sub) = sub else {
             return;
         };
-        let Some(q) = self
-            .queries
-            .get(sub)
-            .filter(|q| q.source == "notifications" || q.notifications == Some(true))
-        else {
+        let Some(q) = self.queries.get(sub).filter(|q| {
+            q.account.is_some() && (q.source == "notifications" || q.notifications == Some(true))
+        }) else {
             return;
         };
         let evidence = selected(q, engine, false);
-        let (asked, answered) = engine.network.request_progress(sub);
-        let cached = self
-            .notification_states
-            .entry(sub.into())
-            .or_insert_with(|| Cached {
-                base: json!({"phase":"cache","relaysAsked":asked,"relaysAnswered":answered}),
-                evidence: None,
-            });
+        let cached = self.notification_states.entry(sub.into()).or_default();
         let mut has_state = false;
         for message in out.iter_mut() {
             if let Output::State {
@@ -109,13 +100,18 @@ impl Session {
             } = message
                 && state_sub == sub
             {
-                cached.base = state.clone();
+                cached.base = Some(state.clone());
                 state["zapEvidence"] = json!(evidence);
                 has_state = true;
             }
         }
-        if !has_state && cached.evidence != Some(evidence) {
-            let mut state = cached.base.clone();
+        // Receipt discovery is independent of the relay phase. Only repeat a
+        // phase that the network already emitted; initial rows cannot invent one.
+        if !has_state
+            && cached.evidence != Some(evidence)
+            && let Some(base) = cached.base.as_ref()
+        {
+            let mut state = base.clone();
             state["zapEvidence"] = json!(evidence);
             out.push(Output::State {
                 sub: sub.into(),
