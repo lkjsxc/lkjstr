@@ -19,7 +19,9 @@ URLs are limited to 4 KiB. HTTPS is accepted; HTTP is accepted only for literal
 127.0.0.1 and [::1] authorities. Credentials, whitespace, control characters,
 backslashes and other schemes are rejected before exposure. The engine never
 fetches a challenge URL or opens a window. Authorization still requires the
-future interface specified by Claude.
+future interface specified by Claude. The current client rejects such a request
+as unsupported when no authorization presenter is registered, rather than
+retaining a hidden wait that the user cannot finish.
 
 ## Ownership and lifetime
 
@@ -58,6 +60,13 @@ diagnostics and measurement reports. Native debug representations redact the
 URL. The client retains at most 16 temporary intents, clears them on connection
 loss/disposal and does not replay them after Worker replacement.
 
+A live `pending.subscribe` callback is a presenter lease. Subscribe before
+starting an action, and dispose that subscription when its surface closes.
+The last presenter leaving clears retained URLs/timers and sends the existing
+unsupported cancellation. Multiple presenters retain independent leases;
+connection reset clears intents but does not detach a still-mounted presenter.
+No new visible word, control or protocol message is needed for this boundary.
+
 ## Transport limits
 
 Direct MessagePorts carry the challenge only to its initiating page. The
@@ -88,5 +97,17 @@ It covers discovery, public/private signing, private NIP-44/NIP-04 reads,
 owner cancellation, account removal, original deadlines and retained Host stop.
 Its timer trigger tests the original callback; it is not a wall-clock latency
 measurement. The fixture never navigates to an authorization URL.
+
+The presenter boundary has three failing-before regressions and nine passing
+controls on the unchanged client. The corrected client passed all twelve at
+17:13:45 UTC in 0.665 seconds, load 3.13/2.61/2.05. Full web check then passed
+in 6.477 seconds, ending at 17:13:52 UTC, load 3.74/2.76/2.10. The cases cover
+absent/last presenters, supported pending intents, disposal and immediate
+unsupported completion through the existing mock contract. An initial fixture
+assertion counted the mock engine's independent startup timer; the final
+comparison checks its unchanged baseline and zero timers after disposal.
+Original source, all attempts and hashes are in
+`tmp/auth-presenter-proof/` in the combined variants worktree.
+This client-only proof does not replace pending native or actual Worker checks.
 
 No new visible words, layout or styles are part of this capability.

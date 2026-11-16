@@ -71,7 +71,11 @@ and lack a complete runtime operation.
 `signer.auth.clear {id}` expose a verified, temporary request through
 `engine.signerAuth.pending`; `cancel(id)` sends the owned cancellation.
 The user needs to identify the signer and explicitly open or cancel its URL.
-No URL is opened automatically. No current surface handles this intent.
+No URL is opened automatically. Subscribe to `pending` before starting the
+action; that subscription owns the presenter lifetime. Without a presenter,
+or after its last subscription closes, the client cancels as unsupported.
+No current surface handles this intent, so existing actions fail promptly
+instead of retaining an invisible authorization wait.
 SharedWorker/direct ports and the fallback leader's own port are supported;
 a fallback follower returns unsupported because its BroadcastChannel is not
 private. Background relay authentication also cannot choose a page on behalf

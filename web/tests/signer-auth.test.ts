@@ -21,6 +21,7 @@ function fixture() {
     listen() {},
     close() {},
   });
+  auth.pending.subscribe(() => {});
   return { sent, auth };
 }
 it('keeps an auth intent ephemeral and cancels only a currently owned handle', () => {

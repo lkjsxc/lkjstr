@@ -157,6 +157,7 @@ These are concrete runtime limits, not permission to fake a successful answer.
   and Worker proof remain pending. Remote people discovery is absent; bounded
   verified NIP-05 from-query lookup exists. See search.md for the current proof.
 - Bunkers: auth_url is a candidate without controls; verification and routing limits: [bunker-auth.md](bunker-auth.md). Relay switching is unsupported.
+  Without a registered authorization presenter, the current client returns unsupported promptly; no new surface exists.
 - Uploads: intermediate transmitted-byte progress remains missing; zero and
   validated completion are reported, with bounded NIP-96 processing.
 - Device: physical IndexedDB size, cache clearing, settings archive import/export

@@ -6,6 +6,26 @@ export function createSignerAuthClient(transport: Transport) {
   const pending = createSignal<readonly SignerAuthorization[]>([]);
   const timers = new Map<string, ReturnType<typeof setTimeout>>(); // at most 16 owned calls
   let disposed = false;
+  let presenters = 0; // One lease per live subscriber to the authorization surface.
+  const subscribe = pending.subscribe;
+  pending.subscribe = (fn) => {
+    if (disposed) return () => {};
+    presenters++;
+    const off = subscribe((value) => fn(value));
+    let active = true;
+    return () => {
+      if (!active) return;
+      active = false;
+      off();
+      presenters--;
+      if (!disposed && presenters === 0) {
+        const ids = pending.get().map((row) => row.id);
+        reset();
+        for (const id of ids)
+          transport.post({ t: 'signer.auth.cancel', id, reason: 'unsupported' });
+      }
+    };
+  };
   function clear(id: string): void {
     clearTimeout(timers.get(id));
     timers.delete(id);
@@ -40,6 +60,10 @@ export function createSignerAuthClient(transport: Transport) {
         return true;
       }
       if (message.t !== 'signer.auth') return false;
+      if (presenters === 0) {
+        transport.post({ t: 'signer.auth.cancel', id: message.id, reason: 'unsupported' });
+        return true;
+      }
       const previous = pending.get().find((row) => row.id === message.id);
       if (!previous && timers.size >= 16) {
         transport.post({ t: 'signer.auth.cancel', id: message.id });
