@@ -9,12 +9,13 @@
     "serve": "node scripts/serve.ts",
     "check": "node scripts/check.ts",
     "package": "node scripts/package.ts",
-    "smoke": "node scripts/build.ts && node scripts/smoke.ts && pnpm build:real && PATH=\"$HOME/.cargo/bin:$PATH\" node scripts/smoke-upload.mjs",
+    "smoke": "node scripts/build.ts && node scripts/smoke.ts && pnpm build:real && PATH=\"$HOME/.cargo/bin:$PATH\" node scripts/smoke-upload.mjs && node scripts/smoke-offline.mjs",
     "shots": "node scripts/build.ts && node scripts/shots.ts",
     "test": "vitest run",
     "fix": "biome check --write .",
     "build:real": "cd .. && sh scripts/engine-package.sh && cd web && node scripts/build.ts --engine=../tmp/engine-dist",
-    "smoke:real": "pnpm build:real && cd .. && PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_BUILD_JOBS=4 RUST_TEST_THREADS=4 CARGO_HOME=\"$PWD/tmp/cargo-home\" XDG_CACHE_HOME=\"$PWD/tmp/cache\" TMPDIR=\"$PWD/tmp/temp\" node web/scripts/smoke-real.mjs"
+    "smoke:real": "pnpm build:real && cd .. && PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_BUILD_JOBS=4 RUST_TEST_THREADS=4 CARGO_HOME=\"$PWD/tmp/cargo-home\" XDG_CACHE_HOME=\"$PWD/tmp/cache\" TMPDIR=\"$PWD/tmp/temp\" node web/scripts/smoke-real.mjs",
+    "smoke:offline": "node scripts/smoke-offline.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.6.6",

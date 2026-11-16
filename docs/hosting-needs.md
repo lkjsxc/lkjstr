@@ -19,6 +19,7 @@ test runs against.
 | `engine-{wasm,shared,worker}-<hash>.js` | Real build: WASM glue and both worker entries |
 | `engine-<hash>.wasm` | Only in a build made with `--engine=<dir>` |
 | `privacy.html`, `LICENSE.txt` | Static pages linked from the About tab |
+| `sw.js` | Real builds only: integrity-checked offline shell and atomic updates |
 | `icon.svg`, `icon-192.png`, `icon-512.png`, `favicon.ico`, `manifest.webmanifest` | Icons and the web app manifest |
 
 The site is served from the root of its origin (`/`), over HTTPS.
@@ -87,7 +88,23 @@ expected of the host; nothing is precompressed.
 ## What the host does not need
 
 No server-side rendering, no required API, no WebSocket endpoint, no cookies, no
-relay proxy, no accounts. There is no service worker today.
+relay proxy, no accounts. The real build registers a same-origin service worker.
+Its complete asset manifest is SHA-256 checked before installation succeeds.
+Each new attempt has a separate cache and a build-bound completion marker.
+Failed installs preserve both active and waiting shells, including a rollback
+to the active build. Missing cached assets use the same integrity check online.
+Activation waits for every old controlled client; no open draft is taken over.
+Cleanup retains the active, waiting and current installer, at most three shell
+copies across repeated updates. An interrupted activation retries cleanup on the
+first controlled fetch; fetches never recreate retired caches. Short Web Locks
+serialize allocation, completion and cleanup; network downloads hold no lock.
+Root/note/profile navigation works from the cached shell. Only packaged static
+assets are cached: no events, keys, uploads or remote media. Serve sw.js with
+no-cache as above; no new headers or backend are required. CacheStorage and
+Web Locks must be available for shell installation. Storage or locking denial
+keeps the normal online app operational. Shell installation does not make
+uncached notes or pictures available offline. Design and regression evidence:
+[offline-shell.md](offline-shell.md).
 
 ## Checking a host
 

@@ -15,6 +15,7 @@ import {
 import { join } from 'node:path';
 import * as esbuild from 'esbuild';
 import { engineAssets } from './engine-assets.ts';
+import { buildShellCache } from './shell-cache.ts';
 import { buildPublicPages } from './site.ts';
 
 process.env.GOMAXPROCS ??= '4';
@@ -108,6 +109,7 @@ async function build(): Promise<void> {
   copyFileSync(join(here, 'src/static/privacy.html'), join(out, 'privacy.html'));
   copyFileSync(join(here, '..', 'LICENSE'), join(out, 'LICENSE.txt'));
   buildPublicPages(out);
+  if (engineDir) buildShellCache(out);
 }
 
 await build();

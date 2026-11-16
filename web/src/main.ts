@@ -1,3 +1,4 @@
+import { installShell } from './engine/offline-shell.ts';
 // lkjstr: the page. It starts from what is saved on this device (settings, layouts, the last account) and draws
 // at once; the engine answers from its worker when it is ready.
 
@@ -152,3 +153,5 @@ const link = /^\/(n|p)\/([a-z0-9]+)\/?$/.exec(location.pathname);
 if (link) (incoming = () => ctl?.open(link[1] === 'p' ? 'profile' : 'thread', { ref: link[2] }))();
 if (location.pathname !== '/' || location.search || location.hash)
   history.replaceState(null, '', '/');
+
+if (__REAL_ENGINE__) installShell();
