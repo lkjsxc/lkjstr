@@ -32,6 +32,7 @@ const CSS = [
   'pages.css',
   'stats.css',
   'channels.css',
+  'dm.css',
 ];
 const STATIC = ['icon.svg', 'icon-192.png', 'icon-512.png', 'favicon.ico', 'manifest.webmanifest'];
 

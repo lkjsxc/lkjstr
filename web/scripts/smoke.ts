@@ -1389,7 +1389,7 @@ async function pages(browser: Browser, still: Record<string, unknown>): Promise<
   fact(
     'docs: a tree of groups and pages',
     tree.join(' | ') ===
-      'About lkjstr: What lkjstr is, Version and licence | Using it: Keys and safety, Relays, Filters, Shortcuts | Legal: Privacy policy, Terms',
+      'About lkjstr: What lkjstr is, Version and licence | Using it: Keys and safety, Private messages, Relays, Filters, Shortcuts | Legal: Privacy policy, Terms',
     tree,
   );
   fact(
@@ -1658,6 +1658,13 @@ async function accounts(browser: Browser): Promise<void> {
 
   // A created account opens on its key, in the reader's own layout, and the key goes nowhere else.
   await page.locator(`${av} [data-f="create"]`).click();
+  await page.locator(`${av} .kbox .kpassword`).waitFor();
+  fact(
+    'a created account opens protected backup with raw key folded',
+    (await count(page, `${av} .kfield`)) === 0 &&
+      (await page.locator(`${av} .kbox [type="submit"]`).isDisabled()),
+  );
+  await page.locator(`${av} [data-f="raw"]`).click();
   await page.locator(`${av} .kbox .kfield`).waitFor();
   await page.waitForFunction(
     () => document.querySelector<HTMLInputElement>('.kfield')?.value.startsWith('nsec1') === true,
@@ -1672,10 +1679,10 @@ async function accounts(browser: Browser): Promise<void> {
       secret,
     );
   fact(
-    'a created account: the ordinary layout arrives, and the key is shown, covered',
+    'a created account: the ordinary layout arrives, and explicit raw backup stays covered',
     (await count(page, '.pane')) === 4 &&
       (await page.locator(`${av} .kfield`).getAttribute('type')) === 'password' &&
-      (await text(`${av} .kbox .btn.primary`)) === 'I saved it' &&
+      (await text(`${av} .kbox [data-f="done"]`)) === 'I saved it' &&
       !(await leaks()),
   );
   fact(

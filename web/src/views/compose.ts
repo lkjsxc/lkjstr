@@ -7,7 +7,7 @@ import { keyCaps, pressed } from '../shared/keys.ts';
 import { kv } from '../shared/storage.ts';
 import { loadViewState, saveViewState } from '../shared/view-state.ts';
 import { openMenu } from '../wm/menus.ts';
-import { ability, failureText } from './can.ts';
+import { ability, abilityText, denied, failureText } from './can.ts';
 import { createComposeMedia } from './compose-media-state.ts';
 import { createMentions } from './compose-mentions.ts';
 import { type ChannelDraft, createChannelOutbox } from './compose-outbox.ts';
@@ -126,7 +126,7 @@ export function mountCompose(el: HTMLElement, env: ViewEnv, channel?: string): (
     const can = ability(env.engine);
     const busy = media.busy();
     post.hidden = can === 'signed-out';
-    post.title = can === 'read-only' ? t('error.read-only') : (keyCaps('send')[0] ?? '');
+    post.title = abilityText(can) || (keyCaps('send')[0] ?? '');
     attach.disabled = can !== 'ok';
     post.disabled =
       !!outbox?.full() ||
@@ -217,6 +217,7 @@ export function mountCompose(el: HTMLElement, env: ViewEnv, channel?: string): (
   }
   async function send(): Promise<void> {
     ready();
+    if (ability(env.engine) === 'locked') return denied(env, 'locked');
     if (post.disabled) return;
     const text = area.value;
     const draft: Draft = {
@@ -247,7 +248,7 @@ export function mountCompose(el: HTMLElement, env: ViewEnv, channel?: string): (
     area.focus({ preventScroll: true });
   }
 
-  // Saved on every keystroke (one small stored key): a reload a moment after typing must not lose the last words.
+  // Keep every typed word across a reload.
   area.addEventListener('input', () => (ready(), (state.text = area.value), save()));
   area.addEventListener('keydown', (e) => {
     if (pressed(e, 'send')) e.preventDefault(), void send();
@@ -263,7 +264,6 @@ export function mountCompose(el: HTMLElement, env: ViewEnv, channel?: string): (
   );
   file.addEventListener('change', () => (media.add(file.files), (file.value = '')));
   post.addEventListener('click', () => void send());
-
   const who = createWho(env, ready);
   el.classList.add('compose');
   el.replaceChildren(

@@ -42,6 +42,7 @@ export const KEYS = {
   goHome: go('H'),
   goNotifications: go('N'),
   goBookmarks: go('B'),
+  goMessages: one('go', 'Alt+Shift+M'),
   compose: one('go', 'N'),
   help: one('go', '?'),
   back: one('go', 'Escape'),

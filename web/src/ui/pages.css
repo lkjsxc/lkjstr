@@ -127,3 +127,13 @@
   .dtree { position: static; padding: 8px 8px 6px; border-bottom: 1px solid var(--line); }
   .dpage { padding: 10px 12px 24px; }
 }
+
+/* Protected-key boxes reuse the backup spacing, controls and existing surface tokens. */
+.kpassword, .klabel { display: grid; gap: 6px; max-width: 460px; min-width: 0; }
+.klabel input { box-sizing: border-box; width: 100%; min-width: 0; height: 28px; }
+.ktitle { margin-bottom: 6px; font-weight: 600; }
+.kbox > .krow, .klabel + .krow, .krow + .asaid { margin-top: 6px; }
+.kdivider { margin: 10px 0; padding-top: 6px; border-top: 1px solid var(--line); }
+.abtns { flex-wrap: wrap; }
+.ahead > .abtns { flex-shrink: 1; min-width: 0; }
+@media (pointer: coarse) { .klabel input { height: 40px; } }

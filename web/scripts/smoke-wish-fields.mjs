@@ -50,7 +50,7 @@ export async function wishFields({ page, width, real, relayUrl, events, fact }) 
     );
     await slowly(
       page,
-      page.getByLabel('Relay address', { exact: true }),
+      page.locator('[data-entry="set.relayList"]').getByLabel('Relay address', { exact: true }),
       real ? `${relayUrl}/wish` : 'wss://relay.test',
       fact,
       '2 relay address',

@@ -22,19 +22,26 @@ what the engine offers and no surface reaches yet.
 
 | Id | Item | Spec | State |
 | --- | --- | --- | --- |
-| K1 | Sign in with a password-protected key | [interface-keys.md](interface-keys.md#k1-sign-in-with-a-password-protected-key) | open |
-| K2 | Locked accounts: unlock, lock, idle lock | [interface-keys.md](interface-keys.md#k2-locked-accounts) | open |
-| K3 | Back up key: protected copy first | [interface-keys.md](interface-keys.md#k3-back-up-key) | open |
-| K4 | Protect a key already on the device | [interface-keys.md](interface-keys.md#k4-protect-a-key-already-on-the-device) | open |
-| M1 | Messages tab | [interface-dm.md](interface-dm.md#m1-messages-tab) | open |
-| M2 | Conversation tab | [interface-dm.md](interface-dm.md#m2-conversation-tab) | open |
-| M3 | Writing a private message | [interface-dm.md](interface-dm.md#m3-writing) | open |
-| M4 | Inbox relays | [interface-dm.md](interface-dm.md#m4-inbox-relays) | open |
-| M5 | Signers that ask | [interface-dm.md](interface-dm.md#m5-signers-that-ask) | open |
-| M6 | New-message mark on the account | [interface-dm.md](interface-dm.md#m6-new-message-mark) | open |
-| D1 | Docs pages for both | [interface-dm.md](interface-dm.md#d1-docs-pages) | open |
+| K1 | Sign in with a password-protected key | [interface-keys.md](interface-keys.md#k1-sign-in-with-a-password-protected-key) | built |
+| K2 | Locked accounts: unlock, lock, idle lock | [interface-keys.md](interface-keys.md#k2-locked-accounts) | built |
+| K3 | Back up key: protected copy first | [interface-keys.md](interface-keys.md#k3-back-up-key) | built |
+| K4 | Protect a key already on the device | [interface-keys.md](interface-keys.md#k4-protect-a-key-already-on-the-device) | built |
+| M1 | Messages tab | [interface-dm.md](interface-dm.md#m1-messages-tab) | built |
+| M2 | Conversation tab | [interface-dm.md](interface-dm.md#m2-conversation-tab) | built |
+| M3 | Writing a private message | [interface-dm.md](interface-dm.md#m3-writing) | built |
+| M4 | Inbox relays | [interface-dm.md](interface-dm.md#m4-inbox-relays) | built |
+| M5 | Signers that ask | [interface-dm.md](interface-dm.md#m5-signers-that-ask) | built |
+| M6 | New-message mark on the account | [interface-dm.md](interface-dm.md#m6-new-message-mark) | built |
+| D1 | Docs pages for both | [interface-dm.md](interface-dm.md#d1-docs-pages) | built |
 
 Keys come first because a locked account changes what the Messages tab says.
+
+Built on 2026-11-16 with protocol 8 and all required gates passed. The review
+matrix covers 468 specified width/theme/language captures; real flows passed
+13 key and 16 message checks. Evidence, exact sheet paths and limits are in
+[interface-verification.md](interface-verification.md). K2 retains its recorded
+Worker-scoped unlock and coordinated-lock differences; design judgement remains
+with the design owner.
 
 ## Not specified yet
 

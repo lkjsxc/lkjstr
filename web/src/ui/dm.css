@@ -1,0 +1,35 @@
+/* M1-M6: channel and note rhythm, with private-only controls using the existing palette. */
+.dm-faces { flex: none; display: flex; align-items: flex-start; width: var(--avatar, 36px); }
+.dm-faces.group { width: calc(var(--avatar, 36px) * 5 / 3); }
+.dm-faces.group > :nth-child(2) { margin-left: calc(var(--avatar, 36px) / -3); }
+.dm-faces.group .av { box-shadow: 0 0 0 2px var(--bg); }
+.dm-count { margin-left: 6px; font-size: 12.5px; font-weight: 400; }
+.dm-setup { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; padding: 8px 12px; border-bottom: 1px solid var(--line); }
+.dm-rule { border-top: 1px solid var(--line); }
+.dm-head { align-items: flex-start; }
+.dm-head-faces { display: flex; flex-wrap: wrap; flex: 0 1 auto; gap: 4px; max-width: 34%; }
+.dm-head .pname { padding-top: 4px; }
+.dm-head > .icon { margin-left: auto; flex: none; }
+.dm-picker { padding: 10px; width: min(360px, calc(100vw - 40px)); }
+.dm-picker > .muted { margin-bottom: 8px; }
+.dm-picker > input { box-sizing: border-box; width: 100%; }
+.dm-tools { display: inline-flex; flex: none; gap: 2px; margin-left: auto; opacity: 0; }
+.dm-tools .icon { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 4px; }
+.dm-tools .icon:hover { background: var(--hover); }
+.dm-note:hover .dm-tools, .dm-row.sel .dm-tools, .dm-note:focus-within .dm-tools { opacity: 1; }
+.dm-note .nhead time { margin-left: auto; }
+.dm-note .nhead time ~ .dm-tools { margin-left: 0; }
+.dm-note.grouped { padding-top: 3px; }
+.dm-note.grouped .nhead { height: 0; position: relative; }
+.dm-note.grouped .dm-tools { position: absolute; right: 0; top: 0; background: var(--bg); }
+.dm-note.grouped .dm-legacy { position: absolute; right: 52px; top: 0; }
+.dm-in-reply { display: block; text-align: left; width: 100%; margin-left: 0; margin-bottom: 3px; font-size: 12.5px; }
+.dm-in-reply:disabled { cursor: default; }
+.dm-subject { font-weight: 600; }
+.dm-row.sel > .note { background: var(--hover); }
+.dm-compose .cbar { display: flex; gap: 6px; align-items: center; }
+.dm-compose .cbar .icon { display: grid; place-items: center; width: 28px; height: 28px; }
+.dm-outbox-row .actions { display: flex; gap: 6px; margin: 6px 0; }
+.dm-outbox-row .text { white-space: pre-wrap; overflow-wrap: anywhere; }
+.dm-space { pointer-events: none; }
+.dm-dot { position: absolute; right: -1px; top: -1px; width: 7px; height: 7px; border: 2px solid var(--paper); border-radius: 50%; background: var(--seal); }

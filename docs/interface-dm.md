@@ -22,6 +22,8 @@ conversation is built like a channel on purpose: whoever knows one knows the oth
 - People are named as everywhere: name, or a short npub until it arrives. Several names join with `list.sep`. A face
   opens the profile.
 
+Implementation note: the shortcut binds Alt+Shift+M explicitly; the existing `go('M')` helper means G then M.
+
 ## M1 Messages tab
 
 The first row scrolls away with the list, as the Channels field does.

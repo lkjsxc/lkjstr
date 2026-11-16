@@ -1,10 +1,8 @@
-// The interface's side of the protocol: subscriptions with their handlers, actions as promises, and the hints the
-// engine cannot see for itself. One client per page; the engine behind it is a Worker (real or mock).
-
+// One page's subscriptions, actions and private writer leases behind the real or mock Worker.
 import { learnPerson, learnRows, onPerson } from '../shared/people.ts';
 import { createSignal, type Signal } from '../shared/signal.ts';
 import { createActionRequests } from './client-actions.ts';
-import { answerCrypt, answerPublicKey } from './client-crypto.ts';
+import { answerPublicKey } from './client-crypto.ts';
 import { createDeliveryWatches } from './client-delivery.ts';
 import { createDmClient } from './client-dm.ts';
 import type {
@@ -129,7 +127,12 @@ export function createEngine(transport: Transport): Engine {
     clearTimeout(idleTimer);
     idleTimer = setTimeout(() => ((idle = true), hint()), IDLE_MS);
   };
-  document.addEventListener('visibilitychange', hint);
+  const resumed = (): void => {
+    if (document.visibilityState !== 'hidden') dm.flushers.resume(info.get()?.version ?? 0);
+    hint();
+  };
+  document.addEventListener('visibilitychange', resumed);
+  window.addEventListener('pageshow', resumed);
   document.addEventListener('focusin', hint);
   window.addEventListener('pointerdown', active, { passive: true, capture: true });
   window.addEventListener('keydown', active, { passive: true, capture: true });
@@ -186,17 +189,22 @@ export function createEngine(transport: Transport): Engine {
     else if (msg.t === 'result') {
       actions.result(msg);
       deliveries.result(msg);
-    } else if (msg.t === 'accounts')
+    } else if (msg.t === 'accounts') {
+      dm.access.accounts(msg.accounts);
       accounts.set({
         accounts: msg.accounts.map((a) => ({ ...a, author: learnPerson(a.author) })),
         active: msg.active,
       });
-    else if (msg.t === 'status')
+    } else if (msg.t === 'status')
       status.set({ connected: msg.connected, wanted: msg.wanted, offline: msg.offline });
-    else if (msg.t === 'ready') info.set({ engine: msg.engine, version: msg.version });
-    else if (msg.t === 'stats') asked.get(msg.req)?.(msg.stats);
+    else if (msg.t === 'reconnect') dm.flushers.suspend();
+    else if (msg.t === 'ready') {
+      dm.flushers.ready(msg.version);
+      info.set({ engine: msg.engine, version: msg.version });
+    } else if (msg.t === 'stats') asked.get(msg.req)?.(msg.stats);
     else if (msg.t === 'dm') dm.receive(msg);
-    else if (msg.t === 'crypt') void answerCrypt(msg, (m) => transport.post(m));
+    else if (msg.t === 'dm.flush') dm.flushers.receive(msg);
+    else if (msg.t === 'crypt') void dm.access.crypt(msg);
     else if (msg.t === 'sign') void sign(msg);
     else if (msg.t === 'getPublicKey') void answerPublicKey(msg.req, (m) => transport.post(m));
   });
@@ -245,7 +253,21 @@ export function createEngine(transport: Transport): Engine {
         },
       };
     },
-    act: (action, watch) => actions.act(action, watch),
+    act: (action, watch) => {
+      if (
+        action.a !== 'account.lock' ||
+        (info.get()?.version ?? 0) >= 8 ||
+        !dm.flushers.has(action.pubkey)
+      )
+        return actions.act(action, watch);
+      return dm.flushers
+        .run(action.pubkey)
+        .then((ok) =>
+          ok
+            ? actions.act(action, watch)
+            : { t: 'result', req: 'private-lock', ok: false, error: { code: 'internal' } },
+        );
+    },
     stats() {
       const req = `q${++serial}`;
       return new Promise((done) => {
@@ -260,7 +282,8 @@ export function createEngine(transport: Transport): Engine {
     },
     configure: (config) => transport.post({ t: 'configure', config }),
     dispose() {
-      document.removeEventListener('visibilitychange', hint);
+      document.removeEventListener('visibilitychange', resumed);
+      window.removeEventListener('pageshow', resumed);
       document.removeEventListener('focusin', hint);
       window.removeEventListener('pointerdown', active, true);
       window.removeEventListener('keydown', active, true);

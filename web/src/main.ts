@@ -5,6 +5,7 @@ import { installShell } from './engine/offline-shell.ts';
 import { watchAccountProfiles } from './engine/account-profiles.ts';
 import { createEngine } from './engine/client.ts';
 import { createTransport } from './engine/startup.ts';
+import { createIdleLock } from './shared/account-idle.ts';
 import { rememberAccounts, rememberedAccounts, rememberFace } from './shared/face.ts';
 import { resolveLang, setLang } from './shared/i18n.ts';
 import { pressedAt, watchPairs } from './shared/keys.ts';
@@ -52,6 +53,10 @@ if (typeof cached === 'string')
     active: cached,
   });
 watchAccountProfiles(engine);
+const stopIdleLock = createIdleLock(engine, settings);
+window.addEventListener('pagehide', (event) => {
+  if (!event.persisted) stopIdleLock();
+});
 engine.accounts.subscribe((a) => {
   if (a.active) kv.set('account', a.active);
   else kv.remove('account');
@@ -100,7 +105,7 @@ const top = createTopBar(host.bar, {
   search: () => ctl?.search(),
   layer: host.layer,
   open: (kind, state) =>
-    kind === 'account'
+    (kind === 'account' || kind === 'messages') && !state
       ? ctl?.go(kind)
       : kind === 'compose' && !state
         ? ctl?.compose()

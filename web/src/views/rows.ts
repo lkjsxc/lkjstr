@@ -6,7 +6,7 @@ import { getLang, type Key, t } from '../shared/i18n.ts';
 import { icon } from '../shared/icons.ts';
 import { reactionLabel } from '../shared/reactions.ts';
 import { openMenu } from '../wm/menus.ts';
-import { ability } from './can.ts';
+import { ability, abilityText } from './can.ts';
 import { renderNote } from './note.ts';
 import { act } from './note-actions.ts';
 import {
@@ -32,7 +32,7 @@ function followButton(env: ViewEnv, pubkey: string, followed: boolean): HTMLElem
     {
       class: can !== 'ok' ? 'btn off' : followed ? 'btn' : 'btn primary',
       'aria-disabled': can !== 'ok' ? true : null,
-      title: can !== 'ok' ? t(`error.${can}`) : null,
+      title: can !== 'ok' ? abilityText(can) : null,
       onclick: (e) => (
         e.stopPropagation(), void act(env, (as) => ({ a: 'follow', as, pubkey, on: !followed }))
       ),

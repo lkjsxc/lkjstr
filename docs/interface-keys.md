@@ -48,6 +48,10 @@ Scenes: password step, busy, wrong password.
 
 ## K2 Locked accounts
 
+Implementation difference: a reload can remain unlocked while another client keeps the shared Worker alive;
+Lock or a Worker restart revokes access for every client.
+Implementation difference: Lock waits for encrypted editor saves for up to 15 seconds; unresolved expired editors refuse it.
+
 A protected key is locked after every reload. Reading works; signing, decrypting and backup do not.
 
 **Account row.** The signer line reads `account.signer.protected` while unlocked and `account.signer.locked` while
@@ -73,6 +77,8 @@ box and returns focus to the row. Only one box is open in the tab.
 is above 0 and that many minutes pass with no key press and no pointer move inside lkjstr, the interface sends
 `account.lock` for every unlocked protected account. A hidden page counts as idle time. Typing a password restarts the
 count.
+
+Implementation scope: idle activity is shared across live lkjstr pages using timestamp-only messages; lock and unlock still apply to the shared Worker session.
 
 Scenes: row locked, row unlocked, unlock box, wrong password, top bar with the lock mark and the menu open, composer
 locked.

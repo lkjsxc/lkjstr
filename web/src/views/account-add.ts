@@ -7,7 +7,9 @@ import type { Action, Failure } from '../engine/protocol.ts';
 import { h } from '../shared/h.ts';
 import { type Key, t } from '../shared/i18n.ts';
 import { loadViewState, saveViewState } from '../shared/view-state.ts';
+import { encryptedImport } from './account-import.ts';
 import { canKey, creatingAccount, markCreated } from './account-key.ts';
+import { canVault } from './account-vault.ts';
 import type { ViewEnv } from './registry.ts';
 
 type Way = 'extension' | 'key' | 'create';
@@ -21,7 +23,8 @@ const failure = (way: Way, remote: boolean, code: Failure['code'] | undefined): 
   return `error.${code ?? 'internal'}` as Key;
 };
 
-export function mountAdd(env: ViewEnv): { el: HTMLElement; sync(): void } {
+export function mountAdd(env: ViewEnv): { el: HTMLElement; sync(): void; dispose(): void } {
+  let disposed = false;
   const pair = h('div', { class: 'asaid' }); // under the two buttons, for either of them
   const said: Record<Way, HTMLElement> = {
     extension: pair,
@@ -49,6 +52,8 @@ export function mountAdd(env: ViewEnv): { el: HTMLElement; sync(): void } {
     const r = await env.engine.act(action);
     creatingAccount(false);
     busy = false;
+    if (r.ok && way === 'create') markCreated(env.engine.me());
+    if (disposed) return;
     sync();
     // The control that was pressed was off while it waited: the keyboard goes back to it.
     if (from?.isConnected && document.activeElement === document.body)
@@ -56,7 +61,6 @@ export function mountAdd(env: ViewEnv): { el: HTMLElement; sync(): void } {
     if (!r.ok) return say(way, t(failure(way, remote, r.error?.code)), true);
     say(way, '');
     // The engine has already said who is signed in: a created account's key is shown at once.
-    if (way === 'create') markCreated(env.engine.me());
   };
 
   const extension = h(
@@ -99,6 +103,12 @@ export function mountAdd(env: ViewEnv): { el: HTMLElement; sync(): void } {
         const key = field.value.trim();
         field.value = ''; // sent once, kept nowhere
         if (!key) return;
+        if (canVault(env.engine) && /^ncryptsec1/i.test(key)) {
+          form.hidden = true;
+          said.key.textContent = '';
+          imported.start(key);
+          return;
+        }
         const remote = key.startsWith('bunker://');
         void run(
           'key',
@@ -111,6 +121,10 @@ export function mountAdd(env: ViewEnv): { el: HTMLElement; sync(): void } {
     field,
     submit,
   );
+  const imported = encryptedImport(env, () => {
+    form.hidden = false;
+    if (env.visible.get() && !document.hidden && field.isConnected) field.focus();
+  });
   const create = h(
     'button',
     {
@@ -121,7 +135,7 @@ export function mountAdd(env: ViewEnv): { el: HTMLElement; sync(): void } {
     t('account.add.create'),
   );
   const otherOpen = loadViewState<{ otherOpen: boolean }>(env.instance).otherOpen === true;
-  const keyRow = h('div', { class: 'away', hidden: !otherOpen }, form, said.key);
+  const keyRow = h('div', { class: 'away', hidden: !otherOpen }, form, imported.el, said.key);
   const other: HTMLElement = h(
     'button',
     {
@@ -129,6 +143,7 @@ export function mountAdd(env: ViewEnv): { el: HTMLElement; sync(): void } {
       'data-f': 'other',
       'aria-expanded': otherOpen,
       onclick: () => {
+        if (imported.active()) imported.cancel();
         keyRow.hidden = !keyRow.hidden;
         saveViewState(env.instance, { ...loadViewState(env.instance), otherOpen: !keyRow.hidden });
         other.setAttribute('aria-expanded', String(!keyRow.hidden));
@@ -142,6 +157,7 @@ export function mountAdd(env: ViewEnv): { el: HTMLElement; sync(): void } {
     submit.disabled = busy || !field.value.trim();
     // An engine that cannot show a key afterwards is not asked to make one.
     create.hidden = !canKey(env);
+    imported.sync();
   }
   sync();
   return {
@@ -154,5 +170,10 @@ export function mountAdd(env: ViewEnv): { el: HTMLElement; sync(): void } {
       keyRow,
     ),
     sync,
+    dispose() {
+      disposed = true;
+      field.value = '';
+      imported.dispose();
+    },
   };
 }

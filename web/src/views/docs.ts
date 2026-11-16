@@ -29,6 +29,7 @@ export const DOC_TREE: readonly { readonly title: Key; readonly pages: readonly 
     title: 'docs.g.use',
     pages: [
       { id: 'keys', ...text('docs.keys', 'docs.keys.b') },
+      { id: 'dm', ...text('docs.dm', 'docs.dm.b') },
       { id: 'relays', ...text('docs.relays', 'docs.relays.b') },
       {
         id: 'filters',

@@ -1,202 +1,184 @@
-// The Accounts tab: who is on this device, which one is in use, and the ways to add another. Signed out it is the
-// sign-in surface: the same three ways and nothing else. A press on an account switches to it; removing one that
-// holds a key (or a signer connection) asks first, because that cannot be taken back; the others go at once with
-// an Undo.
-import type { Account } from '../engine/protocol.ts';
+// One account box per tab. Closing or leaving it releases all password and backup fields.
+import type { Action } from '../engine/protocol.ts';
 import { h } from '../shared/h.ts';
 import { type Key, t } from '../shared/i18n.ts';
-import { icon } from '../shared/icons.ts';
+import { loadViewState, saveViewState } from '../shared/view-state.ts';
 import { mountAdd } from './account-add.ts';
 import { canKey, forget, isPending, keyBox, onPending } from './account-key.ts';
+import { passwordForm } from './account-password.ts';
+import { protectBox } from './account-protect.ts';
+import { type AccountRow, accountRow } from './account-row.ts';
+import { type AccountBox, canVault, lockedAccount, vaultFailure } from './account-vault.ts';
 import { type Keyed, reconcile } from './lists.ts';
-import { displayName, faceButton, how, plainName, shortNpub, toast, unnamed } from './parts.ts';
+import { plainName, toast } from './parts.ts';
 import type { ViewEnv } from './registry.ts';
 
-type RowModel = {
-  readonly key: string;
-  readonly author: Account['author'];
-  readonly signer: Account['signer'];
-  readonly active: boolean;
-  readonly asking: boolean;
-  readonly keyOpen: boolean;
-  readonly canKey: boolean;
-};
+type Kind = 'backup' | 'unlock' | 'protect';
 
 export function mountAccount(el: HTMLElement, env: ViewEnv): () => void {
   const list = h('div', { class: 'alist' });
-  const cache: Keyed = new Map(); // bound: the accounts on this device (at most 32)
-  const boxes = new Map<string, HTMLElement>(); // bound: open key boxes, one per local account
-  let asking = ''; // the account whose removal is being confirmed
+  const cache: Keyed = new Map(); // bound: 32 device accounts
+  const failures = new Map<string, Key>();
+  const locking = new Set<string>(); // bound: one in-flight lock per device account
+  let opened: { pubkey: string; kind: Kind; handle: AccountBox; locked: boolean } | undefined;
+  let asking = '';
+  let disposed = false;
   const add = mountAdd(env);
+  const state = loadViewState<{ unlock?: string }>(env.instance);
+  let requested = state.unlock;
+  if (state.unlock) {
+    delete state.unlock;
+    saveViewState(env.instance, state);
+  }
 
-  const act = async (action: Parameters<ViewEnv['engine']['act']>[0]): Promise<boolean> => {
+  const dropBox = (): void => {
+    opened?.handle.dispose();
+    opened?.handle.el.remove();
+    opened = undefined;
+  };
+  const focusRow = (pubkey: string): void =>
+    cache
+      .get(pubkey)
+      ?.node.querySelector<HTMLElement>('[data-f="use"]')
+      ?.focus({ preventScroll: true });
+  const closeBox = (): void => {
+    const pubkey = opened?.pubkey;
+    dropBox();
+    draw();
+    if (pubkey && env.visible.get()) focusRow(pubkey);
+  };
+  const openBox = (pubkey: string, kind: Kind): void => {
+    dropBox();
+    const account = env.engine.accounts.get().accounts.find((a) => a.author.pubkey === pubkey);
+    if (account?.signer !== 'local' || (kind !== 'backup' && !canVault(env.engine))) return;
+    const handle =
+      kind === 'backup'
+        ? keyBox(env, pubkey, closeBox, () => openBox(pubkey, 'unlock'))
+        : kind === 'protect'
+          ? protectBox(env, pubkey, closeBox, () => openBox(pubkey, 'backup'), draw)
+          : passwordForm({
+              kind: 'unlock',
+              submit: 'account.unlock',
+              busy: 'account.busy.unlock',
+              cancel: closeBox,
+              send: (password) => env.engine.act({ a: 'account.unlock', pubkey, password }),
+              success: closeBox,
+            });
+    if (kind === 'unlock') handle.el.classList.add('kbox');
+    opened = { pubkey, kind, handle, locked: lockedAccount(env.engine, account) };
+    draw();
+    queueMicrotask(() => {
+      if (opened?.handle === handle && env.visible.get()) handle.focus?.();
+    });
+  };
+  const act = async (action: Action): Promise<boolean> => {
     const r = await env.engine.act(action);
-    if (!r.ok) toast(env.layer, t(`error.${r.error?.code ?? 'internal'}` as Key));
+    if (!r.ok && !disposed) toast(env.layer, t(`error.${r.error?.code ?? 'internal'}` as Key));
     return r.ok;
   };
-  const closeKey = (pubkey: string): void => {
-    boxes.delete(pubkey);
-    draw();
-  };
-  const openKey = (pubkey: string): void => {
-    if (!boxes.has(pubkey))
-      boxes.set(
-        pubkey,
-        keyBox(env, pubkey, () => closeKey(pubkey)),
-      );
-    draw();
-  };
-  const remove = async (a: RowModel): Promise<void> => {
+  const remove = async (row: AccountRow): Promise<void> => {
     asking = '';
-    const name = plainName(a.author);
-    if (!(await act({ a: 'account.remove', pubkey: a.key }))) return;
-    boxes.delete(a.key);
-    forget(a.key);
-    // Only what can be had again without the reader's secret is offered back.
+    if (opened?.pubkey === row.key) dropBox();
+    if (!(await act({ a: 'account.remove', pubkey: row.key }))) return;
+    forget(row.key);
+    if (disposed) return;
+    const { signer, author } = row.account;
     const again =
-      a.signer === 'none'
-        ? () => void act({ a: 'account.add', how: 'key', key: a.author.npub })
-        : a.signer === 'extension'
+      signer === 'none'
+        ? () => void act({ a: 'account.add', how: 'key', key: author.npub })
+        : signer === 'extension'
           ? () => void act({ a: 'account.add', how: 'extension' })
           : undefined;
-    toast(env.layer, t('account.removed', { name }), again);
+    toast(env.layer, t('account.removed', { name: plainName(author) }), again);
   };
-
-  const row = (a: RowModel): HTMLElement => {
-    const name = plainName(a.author);
-    const main = h(
-      'button',
-      {
-        class: 'amain',
-        'data-f': 'use',
-        'aria-current': a.active ? 'true' : null,
-        title: a.active ? t('account.active') : t('account.use', { name }),
-        onclick: () => void (a.active || act({ a: 'account.use', pubkey: a.key })),
-      },
-      h(
-        'span',
-        { class: 'awho' },
-        h('b', { class: 'clip' }, displayName(a.author)),
-        h(
-          'span',
-          { class: 'muted clip' },
-          h(
-            'span',
-            { class: a.signer === 'none' ? 'badge warn' : 'asigner' },
-            t(`account.signer.${a.signer}`),
-          ),
-          // Someone whose name is not known yet is already named by their key, once.
-          unnamed(a.author) ? null : ` ${shortNpub(a.author)}`,
-        ),
-      ),
-      a.active ? icon('check') : null,
-    );
-    const guarded = a.signer === 'local' || a.signer === 'remote';
-    const drop = h(
-      'button',
-      {
-        class: 'btn',
-        'data-f': 'remove',
-        title: t('account.removeOf', { name }),
-        onclick: () => {
-          if (!guarded) return void remove(a);
-          asking = a.key;
-          draw();
-        },
-      },
-      t('account.remove'),
-    );
-    const backup =
-      a.signer === 'local' && a.canKey && !a.keyOpen
-        ? h(
-            'button',
-            { class: 'btn', 'data-f': 'backup', onclick: () => openKey(a.key) },
-            t('account.backup'),
-          )
-        : null;
-    const profile = h(
-      'button',
-      {
-        class: 'btn',
-        'data-f': 'profile',
-        onclick: (e) => env.open('profile', { pubkey: a.key, title: name }, how(e as MouseEvent)),
-      },
-      t('view.profile'),
-    );
-    const confirm = a.asking
-      ? h(
-          'div',
-          { class: 'aask', role: 'alert' },
-          h(
-            'span',
-            null,
-            t(a.signer === 'remote' ? 'account.remove.remote' : 'account.remove.local'),
-          ),
-          h(
-            'span',
-            { class: 'abtns' },
-            h(
-              'button',
-              { class: 'btn danger', 'data-f': 'remove', onclick: () => void remove(a) },
-              t('account.remove'),
-            ),
-            h(
-              'button',
-              {
-                class: 'btn',
-                'data-f': 'cancel',
-                onclick: () => {
-                  asking = '';
-                  draw();
-                },
-              },
-              t('account.cancel'),
-            ),
-          ),
-        )
-      : null;
-    return h(
-      'div',
-      { class: a.active ? 'arow on' : 'arow' },
-      h(
-        'div',
-        { class: 'ahead' },
-        h('div', { class: 'aidentity' }, faceButton(a.author, env), main),
-        a.asking ? null : h('span', { class: 'abtns' }, profile, backup, drop),
-      ),
-      confirm,
-      a.keyOpen ? (boxes.get(a.key) ?? null) : null,
-    );
+  const lock = async (pubkey: string): Promise<void> => {
+    if (locking.has(pubkey)) return;
+    locking.add(pubkey);
+    if (opened?.pubkey === pubkey) dropBox();
+    failures.delete(pubkey);
+    draw();
+    const r = await env.engine.act({ a: 'account.lock', pubkey });
+    locking.delete(pubkey);
+    if (disposed) return;
+    if (!r.ok) failures.set(pubkey, vaultFailure(r.error?.code, 'unlock'));
+    draw();
   };
 
   function draw(): void {
-    const a = env.engine.accounts.get();
+    if (disposed) return;
+    const all = env.engine.accounts.get();
     const able = canKey(env);
-    // A created account opens on its key: it is not left without one.
-    for (const x of a.accounts)
-      if (isPending(x.author.pubkey) && able && !boxes.has(x.author.pubkey))
-        boxes.set(
-          x.author.pubkey,
-          keyBox(env, x.author.pubkey, () => closeKey(x.author.pubkey)),
-        );
+    const vault = canVault(env.engine);
+    if (opened) {
+      const account = all.accounts.find((a) => a.author.pubkey === opened?.pubkey);
+      const locked = lockedAccount(env.engine, account);
+      if (
+        account?.signer !== 'local' ||
+        (opened.kind !== 'backup' && !vault) ||
+        (opened.kind === 'protect' && locked)
+      )
+        dropBox();
+      else if (opened.kind === 'unlock' && !locked) {
+        const pubkey = opened.pubkey;
+        dropBox();
+        queueMicrotask(() => focusRow(pubkey));
+      } else if (opened.kind === 'backup' && locked !== opened.locked) {
+        const pubkey = opened.pubkey;
+        openBox(pubkey, 'backup');
+        return;
+      }
+    }
+    for (const pubkey of failures.keys())
+      if (!all.accounts.some((a) => a.author.pubkey === pubkey)) failures.delete(pubkey);
     reconcile(
       list,
       cache,
-      a.accounts.map(
-        (x): RowModel => ({
-          key: x.author.pubkey,
-          author: x.author,
-          signer: x.signer,
-          active: x.author.pubkey === a.active,
-          asking: asking === x.author.pubkey,
-          keyOpen: boxes.has(x.author.pubkey),
+      all.accounts.map(
+        (account): AccountRow => ({
+          key: account.author.pubkey,
+          account,
+          active: account.author.pubkey === all.active,
+          asking: asking === account.author.pubkey,
+          box: opened?.pubkey === account.author.pubkey ? opened.kind : '',
           canKey: able,
+          vault,
+          locking: locking.has(account.author.pubkey),
+          failure: failures.get(account.author.pubkey),
         }),
       ),
-      row,
+      (a) =>
+        accountRow(a, env, {
+          use: (pubkey) => void act({ a: 'account.use', pubkey }),
+          ask: (pubkey) => {
+            asking = pubkey;
+            draw();
+          },
+          remove: (row) => void remove(row),
+          box: openBox,
+          lock: (pubkey) => void lock(pubkey),
+        }),
     );
-    list.hidden = a.accounts.length === 0;
+    if (opened) {
+      const slot = cache.get(opened.pubkey)?.node.querySelector('.account-box-slot');
+      if (slot && opened.handle.el.parentElement !== slot) slot.append(opened.handle.el);
+    }
+    list.hidden = !all.accounts.length;
     add.sync();
+    if (!env.visible.get()) return;
+    if (requested && vault && all.accounts.some((a) => a.author.pubkey === requested)) {
+      const pubkey = requested;
+      requested = undefined;
+      if (
+        lockedAccount(
+          env.engine,
+          all.accounts.find((a) => a.author.pubkey === pubkey),
+        )
+      )
+        openBox(pubkey, 'unlock');
+    } else if (!opened && able) {
+      const fresh = all.accounts.find((a) => isPending(a.author.pubkey));
+      if (fresh) openBox(fresh.author.pubkey, 'backup');
+    }
   }
 
   el.classList.add('pad', 'acctv');
@@ -207,6 +189,17 @@ export function mountAccount(el: HTMLElement, env: ViewEnv): () => void {
     env.engine.accounts.subscribe(draw),
     env.engine.info.subscribe(draw),
     onPending(draw),
+    env.visible.subscribe((on) => {
+      if (!on) dropBox();
+      draw();
+    }),
   ];
-  return () => offs.forEach((off) => off());
+  return () => {
+    disposed = true;
+    dropBox();
+    add.dispose();
+    offs.forEach((off) => off());
+    failures.clear();
+    locking.clear();
+  };
 }

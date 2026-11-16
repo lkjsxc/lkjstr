@@ -1,6 +1,7 @@
 // Existing visitor/key checks shared by the real-engine smoke.
 import { randomBytes } from 'node:crypto';
 import { openKeyField, seedLayouts } from './smoke-seed.mjs';
+import { vaultUiChecks } from './smoke-vault.mjs';
 
 const accounts = '.view[data-kind="account"]:visible';
 // The npub of a public key nobody here has metadata for (the curve's generator point: nobody's account).
@@ -167,13 +168,17 @@ async function visitorChecks({ page, browser, base, relayUrl, errors, shots, sho
   const created = await visit({ viewport: { width: 1024, height: 768 }, locale: 'en-US' });
   await created.locator('.acct.out').click();
   await created.locator(`${accounts} [data-f="create"]`).click();
+  await created.locator('.kbox .kpassword').waitFor();
+  check(
+    'new account opens protected backup before any raw secret',
+    (await created.locator('.kfield').count()) === 0 &&
+      (await created.locator('.kbox [type="submit"]').isDisabled()),
+  );
+  await created.locator('.kbox [data-f="raw"]').click();
   const keyField = created.locator('.kfield');
   await created.waitForFunction(() => document.querySelector('.kfield')?.value.startsWith('nsec1'));
   const newKey = await keyField.inputValue();
-  check(
-    'new account opens its masked backup key',
-    (await keyField.getAttribute('type')) === 'password',
-  );
+  check('explicit raw backup opens covered', (await keyField.getAttribute('type')) === 'password');
   await created.locator('.kbox [data-f="show"]').click();
   check(
     'explicit backup can reveal the generated key',
@@ -188,12 +193,14 @@ async function visitorChecks({ page, browser, base, relayUrl, errors, shots, sho
   );
   await created.locator('.kbox [data-f="done"]').click();
   await created.locator(`${accounts} [data-f="backup"]`).click();
+  await created.locator('.kbox [data-f="raw"]').click();
   await created.waitForFunction(() => document.querySelector('.kfield')?.value.startsWith('nsec1'));
   check(
     'Back up key returns the same local secret',
     (await created.locator('.kfield').inputValue()) === newKey,
   );
   await created.locator('.kbox [data-f="done"]').click();
+  await vaultUiChecks(created, check);
   await created.context().close();
   // A key typed by hand: a throwaway made here, used against the loopback relay only and removed again. It is
   // held in this process and in the engine, and must be nowhere the interface could leave it.

@@ -61,7 +61,12 @@ export function createActionRequests(
               });
               transport.post({ t: 'upload.cancel', req });
             }, 300_000)
-          : undefined;
+          : action.a === 'dm.editor'
+            ? setTimeout(
+                () => finish({ t: 'result', req, ok: false, error: { code: 'internal' } }),
+                15_000,
+              )
+            : undefined;
         pending.set(req, {
           upload,
           watch,

@@ -2,9 +2,9 @@
 
 ## Purpose
 
-Protocol 6 adds engine-only NIP-49 import, explicit encrypted backup, session
-unlock and lock. No password dialog, visible string or new account surface is
-included. Existing plaintext accounts continue working without migration.
+Protocol 6 adds NIP-49 import, explicit encrypted backup, session unlock and
+lock. The Accounts tab implements Claude's K1-K4 specifications for these
+operations. Existing plaintext accounts continue working without migration.
 Importing an encrypted backup explicitly replaces the same account's plaintext
 record only after password validation and a successful storage commit.
 
@@ -97,15 +97,60 @@ action, and restores the preceding fixture account. No public relay receives
 test traffic. Mock fixtures use a visibly non-NIP-49 marker so they cannot be
 mistaken for real backups. `web/tests/vault.test.ts` checks their contract.
 
+After a real UI build, `node web/scripts/smoke-vault-only.mjs` checks the
+specified controls with a fresh Worker-generated account and an empty loopback
+relay, including downloading and re-importing the protected copy. It needs no
+native fixture build and writes tmp/vault-ui-report.json. The same helper is
+also included in smoke:real.
+
 Run status belongs in docs/status.md and the landing's gate record. Native
 test code and this specification do not by themselves claim a browser run.
 
-## Interface work still needed
+## Accounts surface and session scope
 
-Claude owns the import/password/unlock/lock and encrypted-backup surfaces, both
-string tables, wrong-password recovery and session explanation. An explicit
-existing-account migration flow can reuse encrypted export followed by verified
-encrypted import; do not remove plaintext before a successful transaction.
-A device/session policy for locking and stronger KDF choice also needs a written
-interface specification. Nothing in this change claims all existing keys are
-encrypted or automatically migrates them.
+[interface-keys.md](interface-keys.md) defines the exact K1-K4 surfaces and words.
+Fields empty when sent; password forms and backup values never enter tab state.
+An imported ciphertext survives only its password step, cleared on cancel, tab
+leave or one hidden minute. A raw backup starts folded and is cleared on fold,
+page hide, lock/remove intent, account revocation or box teardown; delayed
+replies cannot restore it.
+Choosing a new password requires two equal fields of at least eight characters.
+Import and unlock accept an existing empty password, as the native codec does;
+the new-password rule never prevents reading a compatible existing backup.
+Export uses the default KDF cost. Downloaded copies use the specified npub-based
+filename. Protection exports first and imports only while that operation remains
+open, preserving the working account unless the authenticated import commits.
+
+The idle-lock setting defaults to zero. A positive minute count uses key presses
+and pointer movement across live lkjstr pages. A throttled BroadcastChannel
+carries only finite, nonfuture activity timestamps and probes, with at most one
+pending broadcast per page. Hidden time counts when every page is idle; expiry
+and wake allow a 750 ms activity probe before locking. The default-off setting
+opens no activity channel. Dispose closes its channel and cancels every timer.
+Lock affects every client sharing the Worker. Reload alone may stay unlocked
+when another client keeps that Worker alive, a recorded K2 implementation
+difference. Strict per-page protection needs client-bound vault and decrypted
+cache leases. Cached public faces restore as locked until authoritative state.
+
+The 34 focused DOM regressions cover pre-status revocation, delayed backup
+replies, account-state-before-result ordering, existing empty passwords and
+shared idle/wake behavior. They live in web/tests/vault-ui-*.test.ts.
+
+On 2026-11-16, pnpm shots completed at 09:58:17 UTC in 606.188 seconds. The
+start/end load averages were 3.41/4.58/4.70 and 7.81/6.50/5.66. All 16 key and
+23 message states were captured at 1440, 1024 and 390 pixels, in both languages
+and themes: 468 required captures. The 16 review sheets were visually inspected
+without a clipping or structure defect. Evidence: tmp/interface-shots-result.json
+and tmp/screens-interface-20261116-matrix/review/index.html. These are mock
+visual checks; final landing gates remain separate.
+
+The real vault UI runner passed 13 checks at 10:32:19 UTC on 2026-11-16 in
+6.576 seconds, at start/end loads 7.92/7.87/6.35 and 7.28/7.74/6.31. It generated
+a fresh local fixture account, protected it, locked/unlocked it, rejected wrong
+passwords, downloaded the exact encrypted copy and re-imported the same account.
+No event was published and no page error occurred. Browser and loopback servers
+were closed. Evidence: tmp/vault-ui-report.json, tmp/vault-ui-final.log and
+tmp/vault-ui-final-result.json. The tab assertion follows the originating guest
+layout through its persistence debounce; a previously open reader Accounts tile
+correctly survives sign-in. No product change was needed for that harness fix.
+The built/review record belongs to interface-specs.md and the landing gates.

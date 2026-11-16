@@ -31,7 +31,12 @@ async function failure(options, mode) {
     await launch(page, 'Search', 'search');
     await page.locator('.pane.cur .view[data-kind="search"] input').first().fill('still usable');
     check(`NIP-07 ${mode} leaves navigation and input usable`);
-    await code(page, mode.startsWith('reject') ? 'signer-refused' : 'signer-missing');
+    const expected = mode.startsWith('reject')
+      ? 'signer-refused'
+      : mode === 'hang-sign'
+        ? 'signer-timeout'
+        : 'signer-missing';
+    await code(page, expected);
     check(`NIP-07 ${mode} returns the expected failure code`);
     check(`NIP-07 ${mode} publishes nothing`, fake.published.length === start);
     if (mode.endsWith('sign')) {

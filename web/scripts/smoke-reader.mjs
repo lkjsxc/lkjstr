@@ -119,7 +119,9 @@ export async function realReaderChecks({
 
 export async function visitorRelayChecks({ page, relayUrl, check, launch }) {
   await launch('Settings', 'settings');
-  const relayField = page.getByLabel('Relay address', { exact: true });
+  const relayField = page
+    .locator('[data-entry="set.relayList"]')
+    .getByLabel('Relay address', { exact: true });
   await relayField.fill(`${relayUrl}/visitor`);
   await relayField.press('Enter');
   await page.waitForTimeout(500);
@@ -134,7 +136,10 @@ export async function visitorRelayChecks({ page, relayUrl, check, launch }) {
     ),
   );
   await page.reload();
-  await page.getByLabel('Relay address', { exact: true }).waitFor();
+  await page
+    .locator('[data-entry="set.relayList"]')
+    .getByLabel('Relay address', { exact: true })
+    .waitFor();
   // The form mounts before the engine returns its persisted relay rows.
   const visitorRelay = page.locator(
     `[data-entry="set.relayList"] .rhost[title^="${relayUrl}/visitor"]`,

@@ -4,7 +4,7 @@ import type { ChannelEdit, ChannelRow } from '../engine/protocol.ts';
 import { h } from '../shared/h.ts';
 import { type Key, t } from '../shared/i18n.ts';
 import { loadViewState, saveViewSlice } from '../shared/view-state.ts';
-import { ability, failureText } from './can.ts';
+import { ability, abilityText, failureText } from './can.ts';
 import { act } from './note-actions.ts';
 import { avatar } from './parts.ts';
 import type { ViewEnv } from './registry.ts';
@@ -29,7 +29,7 @@ export function joinButton(env: ViewEnv, c: ChannelRow): HTMLElement {
       'data-f': 'join',
       'aria-disabled': can !== 'ok' ? true : null,
       'aria-pressed': c.joined,
-      title: can !== 'ok' ? t(`error.${can}`) : c.joined ? t('channel.leave') : null,
+      title: can !== 'ok' ? abilityText(can) : c.joined ? t('channel.leave') : null,
       onclick: (e) => (
         e.stopPropagation(),
         void act(env, (as) => ({ a: 'channel.join', as, id: c.id, on: !c.joined }))

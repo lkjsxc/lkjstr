@@ -34,6 +34,7 @@ export function mountWmKeys(ops: WmKeyOps): () => void {
     ['goHome', () => ops.go('home')],
     ['goNotifications', () => ops.go('notifications')],
     ['goBookmarks', () => ops.go('bookmarks')],
+    ['goMessages', () => ops.go('messages')],
     ['compose', ops.compose],
     ['tabSearch', ops.search],
     ['help', () => ops.go('docs', { page: 'shortcuts' })],

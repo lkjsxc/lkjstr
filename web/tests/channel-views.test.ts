@@ -20,6 +20,7 @@ function setup() {
     engine: {
       me: () => 'author',
       accounts: createSignal({ active: 'author', accounts: [] }),
+      info: createSignal({ engine: 'fixture', version: 6 }),
       act,
       open: vi.fn((_: unknown, h: SubHandlers) => {
         handlers = h;

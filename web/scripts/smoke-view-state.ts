@@ -59,7 +59,9 @@ export async function prepareViewChecks(page: Page, check: Check): Promise<() =>
   const statsTab = await page.locator('.pane.cur .tab.active').getAttribute('data-view');
   await go('Settings');
   await front('settings').locator('.ssearch input').fill('relay');
-  const relay = front('settings').getByLabel('Relay address', { exact: true });
+  const relay = front('settings')
+    .locator('[data-entry="set.relayList"]')
+    .getByLabel('Relay address', { exact: true });
   await relay.fill('wss://unfinished.example');
   const settingsTab = await page.locator('.pane.cur .tab.active').getAttribute('data-view');
   await page.locator('.pane.cur .strip').getByTitle('New tab', { exact: true }).click();
@@ -111,8 +113,10 @@ export async function prepareViewChecks(page: Page, check: Check): Promise<() =>
     check(
       'view state: Settings search and public draft survive reload',
       (await front('settings').locator('.ssearch input').inputValue()) === 'relay' &&
-        (await front('settings').getByLabel('Relay address', { exact: true }).inputValue()) ===
-          'wss://unfinished.example',
+        (await front('settings')
+          .locator('[data-entry="set.relayList"]')
+          .getByLabel('Relay address', { exact: true })
+          .inputValue()) === 'wss://unfinished.example',
     );
     await show(newTab);
     check(

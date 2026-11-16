@@ -50,7 +50,9 @@ Seams worth knowing inside `src/views/`:
   its action row and menus, `held.ts` holds a like or repost back until its
   Undo has lapsed.
 - `account.ts` is the Accounts tab, `account-add.ts` the ways to sign in,
-  `account-key.ts` the only place a secret key is shown. `can.ts` says
+  `account-key.ts` owns protected backup and its folded raw-key part. Password
+  forms are disposable; account-vault.ts routes unlock, account-idle.ts locks idle
+  protected sessions. `can.ts` says
   whether the reader can write and what a press says when they cannot.
 - `channels.ts` is the Channels tab, `channel-desk.ts` the head and the
   composer of a channel tab (which is `feed.ts`), `channel-parts.ts` what

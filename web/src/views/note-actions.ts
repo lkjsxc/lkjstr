@@ -8,7 +8,7 @@ import { getLang, type Key, t } from '../shared/i18n.ts';
 import { type IconName, icon } from '../shared/icons.ts';
 import { groupReactions } from '../shared/reactions.ts';
 import { type MenuItem, openMenu } from '../wm/menus.ts';
-import { ability, able } from './can.ts';
+import { ability, abilityText, able } from './can.ts';
 import { openEmojiPicker } from './emoji-picker.ts';
 import { type HeldWhat, hold, unhold } from './held.ts';
 import { copy, emojiImg, nameText, plainName, toast } from './parts.ts';
@@ -106,7 +106,7 @@ export function actionRow(row: NoteRow, env: ViewEnv): HTMLElement {
       'button',
       {
         class: `act a-${name}${on ? ' on' : ''}${dead ? ' off' : ''}`,
-        title: dead ? `${t(label)}: ${t(`error.${can}`)}` : t(label),
+        title: dead ? `${t(label)}: ${abilityText(can)}` : t(label),
         'aria-label': t(label),
         'aria-pressed': on,
         'aria-disabled': dead ? true : null,

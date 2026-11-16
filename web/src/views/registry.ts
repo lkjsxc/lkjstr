@@ -12,6 +12,8 @@ import { mountDocs } from './docs.ts';
 import { mountFeed } from './feed.ts';
 import { gated } from './gated.ts';
 import { mountMedia } from './media.ts';
+import { mountMessage } from './message.ts';
+import { mountMessages } from './messages.ts';
 import { mountRelays } from './relays.ts';
 import { mountSettings } from './settings.ts';
 import { mountStats } from './stats.ts';
@@ -77,6 +79,22 @@ export const VIEWS: readonly ViewDef[] = [
   feed('global', true, 'public firehose 全体'),
   feed('notifications', true, 'mentions replies 返信 メンション'),
   feed('bookmarks', true, 'saved 保存'),
+  {
+    id: 'messages',
+    title: 'view.messages',
+    hint: 'view.messages.hint',
+    launch: true,
+    since: 6,
+    mount: gated(6, 'dm.unsupported', mountMessages),
+  },
+  {
+    id: 'message',
+    title: 'dm.message',
+    hint: 'view.message.hint',
+    launch: false,
+    since: 6,
+    mount: gated(6, 'dm.unsupported', mountMessage),
+  },
   feed('search', true, 'find 探す'),
   feed('hashtag', false),
   feed('thread', false),

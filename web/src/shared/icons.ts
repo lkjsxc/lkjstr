@@ -36,6 +36,7 @@ const PATHS = {
   ],
   play: ['M8 5l11 7-11 7z'],
   filter: ['M4 5h16l-6 8v5l-4 2v-7z'],
+  lock: ['M6 10h12v11H6z', 'M8 10V6a4 4 0 0 1 8 0v4'],
 } as const;
 export type IconName = keyof typeof PATHS;
 

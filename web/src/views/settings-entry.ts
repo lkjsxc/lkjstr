@@ -98,6 +98,7 @@ export function fieldEntry(f: SettingField, store: SettingsStore): Entry {
           h('label', { class: 'scheck' }, c.input, h('span', null, t(desc))),
         )
       : frame(group, title, reset, h('div', { class: 'muted' }, t(desc)), c.input);
+  node.dataset.entry = f.key;
   c.input.setAttribute('aria-label', title);
   return {
     group,

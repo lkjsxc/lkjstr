@@ -20,6 +20,8 @@ export const DEFAULT_SETTINGS = {
   linkPreviews: true,
   showSensitive: false, // content-warned notes open
   composeNew: false, // the composer key always opens a new tab instead of going to the open one
+  dmWatch: true, // count-only private unread watch while this page is visible
+  lockIdle: 0, // idle minutes; 0 leaves the session unlocked
   clientTag: true, // what the reader publishes says it was written with lkjstr
 };
 export type Settings = typeof DEFAULT_SETTINGS;
@@ -55,6 +57,8 @@ export const SETTINGS_SCHEMA: readonly SettingField[] = [
   field('showRelayCount', BOOL),
   field('composeNew', BOOL),
   field('clientTag', BOOL),
+  field('dmWatch', BOOL),
+  field('lockIdle', num(0, 10080, 1)),
 ];
 
 export const SETTINGS_KEY = 'settings';

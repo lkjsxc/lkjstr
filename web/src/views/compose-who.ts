@@ -49,7 +49,13 @@ export function createWho(env: ViewEnv, changed: () => void): Who {
         me
           ? [avatar(me.author, 'av sm'), h('span', { class: 'clip' }, displayName(me.author))]
           : null,
-        can === 'read-only' ? h('span', { class: 'badge warn' }, t('account.signer.none')) : null,
+        can === 'read-only' || can === 'locked'
+          ? h(
+              'span',
+              { class: 'badge warn' },
+              t(can === 'locked' ? 'account.signer.locked' : 'account.signer.none'),
+            )
+          : null,
       );
     if (me && next === signature) {
       const name = el.querySelector('.clip');
@@ -58,7 +64,7 @@ export function createWho(env: ViewEnv, changed: () => void): Who {
     signature = next;
     changed();
   };
-  const off = env.engine.accounts.subscribe(draw);
+  const offs = [env.engine.accounts.subscribe(draw), env.engine.info.subscribe(draw)];
   draw();
-  return { el, signIn, dispose: off };
+  return { el, signIn, dispose: () => offs.forEach((off) => off()) };
 }

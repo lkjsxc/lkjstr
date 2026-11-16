@@ -4,7 +4,9 @@
 // node scripts/shots.ts [--only=<width>-<theme>-<lang>] [--scenes=home,thread]
 import { spawn } from 'node:child_process';
 import { mkdirSync } from 'node:fs';
-import { chromium, type Page } from 'playwright-core';
+import { type Browser, chromium, type Page } from 'playwright-core';
+import { dmShots } from './shots-dm.ts';
+import { keysShots } from './shots-keys.ts';
 import { looksShots } from './shots-looks.ts';
 
 const here = new URL('..', import.meta.url).pathname;
@@ -38,12 +40,15 @@ const server = spawn(
     stdio: 'pipe',
   },
 );
-const base = await new Promise<string>((done, fail) => {
-  server.stdout?.once('data', (data) => done(String(data).trim()));
-  server.once('exit', (code) => fail(new Error(`server exited ${code}`)));
-});
-const browser = await chromium.launch({ executablePath: chrome, args: ['--no-sandbox'] });
+let ownedBrowser: Browser | undefined;
 try {
+  const base = await new Promise<string>((done, fail) => {
+    server.stdout?.once('data', (data) => done(String(data).trim()));
+    server.once('error', fail);
+    server.once('exit', (code) => fail(new Error(`server exited ${code}`)));
+  });
+  const browser = await chromium.launch({ executablePath: chrome, args: ['--no-sandbox'] });
+  ownedBrowser = browser;
   for (const [width, height] of SIZES)
     for (const theme of ['light', 'dark'] as const)
       for (const lang of ['ja', 'en'] as const) {
@@ -119,6 +124,8 @@ try {
                 throw new Error('horizontal overflow');
             });
         await looksShots(scene, lang === 'ja' ? '統計' : 'Stats');
+        await keysShots(scene, launch(lang === 'ja' ? 'アカウント' : 'Accounts', 'account'), lang);
+        await dmShots(scene, launch(lang === 'ja' ? '設定' : 'Settings', 'settings'), lang);
         for (const [name, url] of [
           ['news', 'https://news.example/picture'],
           ['plain', 'https://news.example/article'],
@@ -191,7 +198,7 @@ try {
         await scene('backup', '/', async (page) => {
           await launch(lang === 'ja' ? 'アカウント' : 'Accounts', 'account')(page);
           await page.locator('.view[data-kind="account"] [data-f="backup"]').first().click();
-          await page.waitForSelector('.kbox .kfield');
+          await page.waitForSelector('.kbox .kpassword');
         });
         await scene('accounts', '/', launch(lang === 'ja' ? 'アカウント' : 'Accounts', 'account'));
         const guest = '{"live":false,"accounts":"none"}';
@@ -207,8 +214,15 @@ try {
         );
       }
 } finally {
-  await browser.close();
-  server.kill();
+  try {
+    await ownedBrowser?.close();
+  } finally {
+    if (server.pid && server.exitCode === null && server.signalCode === null) {
+      const closed = new Promise<void>((done) => server.once('close', () => done()));
+      server.kill();
+      await closed;
+    }
+  }
 }
 if (failed.length) console.log(failed.join('\n')), process.exit(1);
 console.log('ok shots');

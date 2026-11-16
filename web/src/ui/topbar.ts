@@ -3,11 +3,13 @@
 // active account's face and a menu of what is the reader's own: their profile, the other accounts to switch to,
 // and the Accounts tab. Everything else is reached from the name. The relay count shows only when asked for.
 import type { Engine } from '../engine/client.ts';
+import { createDmWatch } from '../engine/dm-watch.ts';
 import { h, replaceChildren } from '../shared/h.ts';
 import { t } from '../shared/i18n.ts';
 import { icon } from '../shared/icons.ts';
 import { keyCaps } from '../shared/keys.ts';
 import type { SettingsStore } from '../shared/settings.ts';
+import { lockedAccount } from '../views/account-vault.ts';
 import { avatar, plainName } from '../views/parts.ts';
 import { type MenuItem, openMenu } from '../wm/menus.ts';
 
@@ -23,6 +25,7 @@ export function createTopBar(
     open(kind: string, state?: object): void;
   },
 ): TopBar {
+  const dm = createDmWatch(o.engine, o.settings);
   const relays = h('button', { class: 'relays muted', onclick: () => o.open('relays') });
   const account: HTMLElement = h('button', { class: 'acct' });
   const pages = (...kinds: ('account' | 'settings' | 'relays' | 'stats' | 'docs')[]) =>
@@ -37,6 +40,9 @@ export function createTopBar(
     const me = a.accounts.find((x) => x.author.pubkey === a.active);
     const others = a.accounts.filter((x) => x.author.pubkey !== a.active);
     openMenu(o.layer, account, [
+      ...(lockedAccount(o.engine, me)
+        ? [{ label: t('account.unlock'), run: () => o.open('account', { unlock: a.active }) }]
+        : []),
       ...(me
         ? [
             {
@@ -45,6 +51,15 @@ export function createTopBar(
               lead: avatar(me.author, 'av'),
               run: () =>
                 o.open('profile', { pubkey: me.author.pubkey, title: plainName(me.author) }),
+            },
+          ]
+        : []),
+      ...(dm.unread.get() > 0
+        ? [
+            {
+              label: t('view.messages'),
+              lead: h('span', { class: 'cnew' }, dm.unread.get()),
+              run: () => o.open('messages'),
             },
           ]
         : []),
@@ -70,12 +85,30 @@ export function createTopBar(
     account.className = face ? 'acct' : 'acct out';
     account.title = me ? plainName(me.author) : t(face ? 'bar.account' : 'bar.signedOut');
     account.setAttribute('aria-label', t(face ? 'bar.account' : 'bar.signedOut'));
-    const nextFace = JSON.stringify([face?.pubkey, !!face, me?.signer === 'none']);
+    const locked = lockedAccount(o.engine, me);
+    const nextFace = JSON.stringify([
+      face?.pubkey,
+      !!face,
+      me?.signer === 'none',
+      locked,
+      dm.unread.get(),
+    ]);
     if (nextFace !== faceSig)
       replaceChildren(
         account,
         face ? avatar(face, 'av sm') : t('bar.signedOut'),
-        me?.signer === 'none' ? h('span', { class: 'ro', title: t('error.read-only') }) : null,
+        dm.unread.get() > 0
+          ? h('span', {
+              class: 'dm-dot',
+              'aria-label': t('bar.unreadMessages', { n: dm.unread.get() }),
+              role: 'status',
+            })
+          : null,
+        locked
+          ? h('span', { class: 'ro locked', title: t('account.signer.locked') }, icon('lock'))
+          : me?.signer === 'none'
+            ? h('span', { class: 'ro', title: t('error.read-only') })
+            : null,
       );
     faceSig = nextFace;
     search.title = `${t('tabs.search')} (${keyCaps('tabSearch')[0]})`;
@@ -105,10 +138,18 @@ export function createTopBar(
     account,
   );
   const offs = [
+    dm.unread.subscribe(render),
     o.engine.accounts.subscribe(render),
+    o.engine.info.subscribe(render),
     o.engine.status.subscribe(render),
     o.settings.subscribe(render),
   ];
   render();
-  return { render, dispose: () => offs.forEach((off) => off()) };
+  return {
+    render,
+    dispose: () => {
+      dm.dispose();
+      offs.forEach((off) => off());
+    },
+  };
 }

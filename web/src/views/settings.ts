@@ -6,7 +6,9 @@ import { both, t } from '../shared/i18n.ts';
 import { keepPublicDrafts } from '../shared/public-drafts.ts';
 import { SETTINGS_SCHEMA, type Settings } from '../shared/settings.ts';
 import { loadViewState, saveViewState } from '../shared/view-state.ts';
+import { canVault } from './account-vault.ts';
 import type { ViewEnv } from './registry.ts';
+import { inboxRelayEntry } from './settings-dm.ts';
 import { type Entry, fieldEntry, frame, searchText } from './settings-entry.ts';
 import { listEntries } from './settings-lists.ts';
 import { relayEntry } from './settings-relays.ts';
@@ -30,9 +32,12 @@ export function mountSettings(el: HTMLElement, env: ViewEnv): () => void {
   const state = loadViewState<{ at?: string; search?: string }>(env.instance);
   const lists = listEntries(env);
   const relays = relayEntry(env);
+  const inbox = inboxRelayEntry(env);
   const entries = [
-    ...SETTINGS_SCHEMA.map((f) => fieldEntry(f, env.settings)),
+    ...SETTINGS_SCHEMA.filter((f) => f.key !== 'dmWatch').map((f) => fieldEntry(f, env.settings)),
     relays.entry,
+    inbox.entry,
+    ...SETTINGS_SCHEMA.filter((f) => f.key === 'dmWatch').map((f) => fieldEntry(f, env.settings)),
     ...lists.entries,
     actionEntry('set.resetLayouts', env.resetLayouts),
   ];
@@ -49,17 +54,25 @@ export function mountSettings(el: HTMLElement, env: ViewEnv): () => void {
     saveViewState(env.instance, state);
     const words = search.value.toLowerCase().split(/\s+/).filter(Boolean);
     let shown = 0;
+    const available = entries.filter(
+      (e) =>
+        (e.node.dataset.entry !== 'lockIdle' || canVault(env.engine)) &&
+        (e.node.dataset.entry !== 'dmRelays' || (env.engine.info.get()?.version ?? 0) >= 6) &&
+        (e.node.dataset.entry !== 'dmWatch' || (env.engine.info.get()?.version ?? 0) >= 8),
+    );
     for (const e of entries) {
-      const hit = words.every((w) => (w === MODIFIED ? changed.has(e) : e.text.includes(w)));
+      const hit =
+        available.includes(e) &&
+        words.every((w) => (w === MODIFIED ? changed.has(e) : e.text.includes(w)));
       e.node.hidden = !hit;
       if (hit) shown++;
     }
     for (const g of groups) g.head.hidden = g.entries.every((e) => e.node.hidden);
     count.textContent =
-      shown === entries.length
+      shown === available.length
         ? t('settings.count', { n: shown })
         : shown
-          ? t('settings.countOf', { n: shown, all: entries.length })
+          ? t('settings.countOf', { n: shown, all: available.length })
           : t('settings.none');
     modified.textContent = t('settings.modified', { n: changed.size });
     modified.hidden = !changed.size;
@@ -92,6 +105,7 @@ export function mountSettings(el: HTMLElement, env: ViewEnv): () => void {
   const drafts = keepPublicDrafts(el, env.instance);
   sync(env.settings.get());
   const off = env.settings.subscribe(sync);
+  const infoOff = env.engine.info.subscribe(filter);
   // Opened for one entry (the relay list, from the Relays tab): it is brought to the top, once.
   const target = entries.find((e) => e.node.dataset.entry === state.at);
   if (state.at) {
@@ -112,7 +126,9 @@ export function mountSettings(el: HTMLElement, env: ViewEnv): () => void {
     clearTimeout(seat);
     drafts();
     off();
+    infoOff();
     lists.dispose();
     relays.dispose();
+    inbox.dispose();
   };
 }
