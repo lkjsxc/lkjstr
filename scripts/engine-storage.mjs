@@ -16,7 +16,7 @@ process.env.TMPDIR=process.env.LKJSTR_TEST_TMPDIR??join(resolve(process.env.CARG
 await mkdir(process.env.TMPDIR,{recursive:true});
 const report={startedAt:new Date().toISOString(),loadStart:loadavg(),package:pkg,virtualDeadline:true,
   wasmSha256:createHash('sha256').update(await readFile(join(pkg,'lkjstr_engine_bg.wasm'))).digest('hex'),checks:[]};
-const check=(name,ok)=>{report.checks.push({name,ok:!!ok});console.log((ok?'ok ':'FAIL ')+name);};
+const check=(name,ok,evidence)=>{report.checks.push({name,ok:!!ok,...(evidence?{evidence}:{})});console.log((ok?'ok ':'FAIL ')+name);};
 let server,browser,context,client;
 try{
   server=createServer(async(req,res)=>{

@@ -6,7 +6,7 @@ export async function storageCases(c,check) {
   check('origin estimate is marked approximate and is not event-cache bytes',base.origin.phase==='ready'&&base.origin.approximate===true&&base.origin.usage===700&&base.origin.quota===900);
   check('component callback times use one Worker monotonic domain',base.startedAt===base.memory.at&&base.startedAt<=base.persistedEvents.at&&base.startedAt<=base.origin.at&&base.finishedAt>=Math.max(base.persistedEvents.at,base.origin.at));
   const trace=await c.control('fixture.trace');
-  check('inspection never reads private keys, archives or event payloads',trace.reads.length===1&&trace.reads[0].store==='events'&&trace.reads[0].method==='count');
+  check('inspection never reads private keys, archives or event payloads',trace.reads.length===1&&trace.reads[0].store==='events'&&trace.reads[0].method==='count',{reads:trace.reads});
   await c.send(0,{t:'stats',req:'original'});await c.until(ms=>ms.some(m=>m.t==='stats'&&m.req==='original'));
   const stats=(await c.all(0)).find(m=>m.t==='stats'&&m.req==='original').stats;
   check('existing Stats payload accounting is unchanged',stats.totals.eventsStored===base.memory.events&&stats.totals.cacheBytes===base.memory.eventPayloadBytes);
