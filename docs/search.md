@@ -7,9 +7,10 @@ which data it can use, and what has actually been verified.
 
 ## Status
 
-This is a source checkpoint on the isolated Search branch, based on d210b01a.
-Frontend preflight passed on 2026-11-16. Native compilation, native regression
-proof, the selector workload and real Worker conformance are still pending.
+This source candidate is integrated with remote-signer authorization and emoji
+sets on the sixth landing, 37b14ab5. Combined frontend preflight passed on
+2026-11-16. Native compilation, native regression proof, the selector workload,
+real Worker conformance and required combined landing gates are still pending.
 This document does not claim a shipped change or public search completeness.
 
 ## Retained people
@@ -82,7 +83,14 @@ Full web check passed at 16:13:24 UTC in 6.275 seconds, starting load
 1.66/1.52/1.43. Earlier attempts caught test-only type narrowing and formatting.
 Node syntax checks passed for the new real Worker helper and harness hook.
 
-Evidence: `tmp/search-web-proof/{before-try2,after-try2,check-try3}.{json,log}`.
+Evidence in the isolated Search worktree:
+`tmp/search-web-proof/{before-try2,after-try2,check-try3}.{json,log}`.
+The combined source e7eebb72 passed the seven contract/authorization Node cases
+at 16:33:43 UTC (0.214 seconds). Its full web check passed at 16:33:51 UTC
+in 7.227 seconds, load 0.86/2.23/2.57 to 1.60/2.36/2.61. Combined evidence is
+`tmp/variants-{node-preflight,web-check}.{json,log}`. No native or Worker gate
+was run during this source-only integration.
+
 Native cases are authored in `engine_search_language_test.rs`,
 `engine_search_people_test.rs` and `engine_search_private_test.rs`.
 The ignored `retained_directory_selection_workload` prepares 2000 signed
