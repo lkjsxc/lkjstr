@@ -91,7 +91,7 @@ finally{
   if(server?.listening)await new Promise(ok=>server.close(ok));
   report.fixtureErrors=route?.errors??[];
   report.finishedAt=new Date().toISOString();report.loadEnd=loadavg();report.durationMs=Date.now()-Date.parse(report.startedAt);
-  report.ok=!report.failure&&report.checks.length>0&&report.checks.every(c=>c.ok);
+  report.ok=!report.failure&&!report.errors.length&&!report.fixtureErrors.length&&report.checks.length>0&&report.checks.every(c=>c.ok);
   await writeFile(join(out,'report.json'),JSON.stringify(report,null,2)+'\n');
   console.log(JSON.stringify({out,ok:report.ok,failure:report.failure,durationMs:report.durationMs,rows:report.final?.ids?.length}));
   if(!report.ok)process.exitCode=1;

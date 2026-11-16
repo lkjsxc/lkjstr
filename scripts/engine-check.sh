@@ -16,6 +16,7 @@ sh scripts/engine-contract-prepare.sh > tmp/engine-contract.log 2>&1 || { tail -
 cargo build -q -p lkjstr-nips --example zap-fixtures > tmp/zap-fixtures-build.log 2>&1 || { tail -20 tmp/zap-fixtures-build.log; exit 1; }
 LKJSTR_ENGINE_HARNESS=1 sh scripts/engine-build.sh > tmp/engine-build.log 2>&1 || { tail -30 tmp/engine-build.log; exit 1; }
 cargo build -q -p lkjstr-core --example engine-fixtures --example engine-bunker > tmp/engine-helper-build.log 2>&1 || { tail -20 tmp/engine-helper-build.log; exit 1; }
+LKJSTR_ENGINE_REPORT=tmp/history-route-gate node scripts/engine-history-route.mjs > tmp/history-route-gate.log 2>&1 || { tail -20 tmp/history-route-gate.log; exit 1; }
 if [ "${LKJSTR_COLD_START:-0}" = "1" ]; then
   cargo run -q --release -p lkjstr-core --example engine-cold-fixtures > tmp/engine-pkg/cold-fixtures.json 2> tmp/cold-fixtures.log || { tail -10 tmp/cold-fixtures.log; exit 1; }
 fi
