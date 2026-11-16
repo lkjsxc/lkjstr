@@ -16,7 +16,14 @@ use relay_information::relay_info;
 pub use shared::{start_port_host, start_shared};
 #[path = "worker_persist.rs"]
 mod persistence;
-use persistence::{load, persist};
+use persistence::persist;
+#[path = "worker_account_boot.rs"]
+mod account_boot;
+use account_boot::load;
+#[path = "worker_account_failure.rs"]
+mod account_failure;
+#[path = "worker_account_store.rs"]
+mod account_store;
 #[path = "worker_defaults.rs"]
 mod defaults;
 use defaults::initial_engine;
@@ -71,6 +78,7 @@ struct Host {
     accounts: lkjstr_core::engine::accounts::Accounts,
     account_tasks: Vec<(u64, String, lkjstr_core::engine::wire::actions::Action)>,
     account_busy: bool,
+    account_store: account_store::State,
     discovery: BTreeMap<(u64, String), u64>,
     loaded: bool,
     startup: Vec<(u64, lkjstr_core::engine::wire::Input)>,
@@ -122,6 +130,7 @@ pub fn start() -> Result<WorkerHandle, JsValue> {
         accounts: Default::default(),
         account_tasks: vec![],
         account_busy: false,
+        account_store: Default::default(),
         discovery: BTreeMap::new(),
         loaded: false,
         startup: vec![],

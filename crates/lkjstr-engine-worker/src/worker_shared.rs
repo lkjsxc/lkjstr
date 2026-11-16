@@ -96,6 +96,7 @@ pub fn start_shared() -> Result<SharedWorkerHandle, JsValue> {
         accounts: Default::default(),
         account_tasks: vec![],
         account_busy: false,
+        account_store: Default::default(),
         discovery: BTreeMap::new(),
         loaded: false,
         startup: vec![],
@@ -189,10 +190,7 @@ fn attach(host: &Rc<RefCell<Host>>, port: web_sys::MessagePort) {
             },
         );
     }
-    let loaded = host.borrow().loaded;
-    if loaded {
-        accounts::ready(&mut host.borrow_mut(), id, true);
-    }
+    account_boot::ready(&mut host.borrow_mut(), id, true);
 }
 #[path = "worker_shared_handle.rs"]
 mod handle;
@@ -220,6 +218,7 @@ pub(super) fn expire(host: &Rc<RefCell<Host>>) {
     }
 }
 pub(super) fn detach(h: &mut Host, id: u64) {
+    account_store::detach(h, id);
     storage::detach(h, id);
     zaps::detach(h, id);
     direct_messages::editors::detach(h, id);

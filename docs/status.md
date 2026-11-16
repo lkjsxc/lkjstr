@@ -5,6 +5,11 @@
 Current engine behavior and concrete limits. The source audit is [parity.md](parity.md); network measurements are in
 [engine-performance.md](engine-performance.md). Interface work belongs to Claude.
 
+## Account snapshot correction under verification
+
+A fresh two-Worker proof reproduced stale Seen overwriting a newer key/protection; see [account-persistence.md](account-persistence.md).
+The schema fence and guarded transaction candidate still needs native and corrected-Worker verification.
+
 ## Specified keys and messages (2026-11-16)
 
 Protocol 8 implements Claude's K1-K4, M1-M6 and D1 specifications with the existing paired strings and design tokens. Conversation lists, older

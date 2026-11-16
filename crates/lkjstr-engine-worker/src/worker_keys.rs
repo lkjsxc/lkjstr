@@ -1,34 +1,9 @@
 //! Explicit key operations. All vault mutations share the account transaction queue.
 use super::*;
-use lkjstr_core::engine::wire::{Input as I, Output as O, Session, actions::Action as A};
+use lkjstr_core::engine::wire::{Input as I, Session, actions::Action as A};
 
 pub(super) fn receive(h: &mut Host, id: u64, input: I) -> Option<I> {
     match input {
-        I::Act {
-            req,
-            action: A::AccountKey { pubkey },
-        } => {
-            let result = match h.accounts.backup_key(&pubkey) {
-                Ok(key) => O::Result {
-                    req,
-                    ok: true,
-                    error: None,
-                    delivery: None,
-                    id: None,
-                    uploaded: None,
-                    key: Some(key),
-                    encrypted_key: None,
-                    zap_intent: None,
-                    dm_draft: None,
-                    dm_draft_revision: None,
-                    dm_delivery: None,
-                    cancelled: None,
-                },
-                Err(code) => Session::failure(req, code),
-            };
-            h.scope.direct(id, &result);
-            None
-        }
         I::Act { req, action } if is_vault(&action) => {
             let password = match &action {
                 A::AccountImportEncrypted { password, .. }
@@ -51,7 +26,8 @@ pub(super) fn receive(h: &mut Host, id: u64, input: I) -> Option<I> {
 pub(super) fn is_vault(action: &A) -> bool {
     matches!(
         action,
-        A::AccountImportEncrypted { .. }
+        A::AccountKey { .. }
+            | A::AccountImportEncrypted { .. }
             | A::AccountUnlock { .. }
             | A::AccountLock { .. }
             | A::AccountExportEncrypted { .. }
@@ -62,6 +38,7 @@ pub(super) fn apply(
     action: &A,
 ) -> Result<Option<String>, &'static str> {
     match action {
+        A::AccountKey { pubkey } => accounts.backup_key(pubkey).map(Some),
         A::AccountImportEncrypted { key, password } => {
             accounts.import_encrypted(key, password).map(|_| None)
         }

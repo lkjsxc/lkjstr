@@ -26,7 +26,7 @@ web-sys = { version = "0.3.99", features = [
  "ReadableStream", "ReadableStreamDefaultReader",
  "WebSocket", "CloseEvent", "MessageEvent", "Event", "DedicatedWorkerGlobalScope", "SharedWorkerGlobalScope",
  "WorkerGlobalScope", "MessagePort", "IdbFactory", "IdbDatabase", "IdbRequest",
- "IdbOpenDbRequest", "IdbTransaction", "IdbTransactionMode", "IdbObjectStore",
+ "IdbOpenDbRequest", "IdbVersionChangeEvent", "IdbTransaction", "IdbTransactionMode", "IdbObjectStore",
  "IdbObjectStoreParameters", "IdbIndex", "IdbCursorWithValue", "IdbCursorDirection",
  "DomStringList"
 ] }

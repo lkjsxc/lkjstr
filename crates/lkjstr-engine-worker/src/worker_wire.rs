@@ -39,9 +39,19 @@ impl Host {
         if storage::input(self, id, &input) {
             return;
         }
+        if matches!(&input, W::Detach | W::Heartbeat) {
+            account_failure::input(self, id, input);
+            return;
+        }
+        if account_failure::failed(self) {
+            account_failure::input(self, id, input);
+            return;
+        }
         if !self.loaded {
             if self.startup.len() < 256 {
                 self.startup.push((id, input));
+            } else {
+                account_failure::input(self, id, input);
             }
             return;
         }
@@ -119,17 +129,6 @@ impl Host {
             } if account.is_empty() && self.accounts.active.is_none() => {
                 let result = self.save_visitor_relays(req, relays);
                 self.scope.direct(id, &result);
-                return;
-            }
-            W::Heartbeat => {
-                self.scope.direct(id, &O::Heartbeat);
-                if let Sink::Shared { clients, .. } = &mut self.scope {
-                    clients.heartbeat(id, now());
-                }
-                return;
-            }
-            W::Detach => {
-                shared::detach(self, id);
                 return;
             }
             W::Relays { relays } => {

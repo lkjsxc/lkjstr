@@ -9,12 +9,9 @@ use wasm_bindgen::{JsCast, JsValue, closure::Closure};
 use web_sys::{IdbCursorDirection, IdbDatabase, IdbRequest};
 
 pub use super::idb_commit::kv_commit;
-
-// Intentionally incompatible with the legacy `lkjstr` database (version 18).
-const DB_NAME: &str = "lkjstr-wasm";
+pub use super::idb_open::open;
 
 type Step = Closure<dyn FnMut(web_sys::Event)>;
-const DB_VERSION: u32 = 1;
 
 fn err(value: JsValue) -> String {
     value
@@ -39,42 +36,6 @@ fn settle(request: &IdbRequest) -> Promise {
         request.set_onsuccess(Some(on_ok.unchecked_ref()));
         request.set_onerror(Some(on_err.unchecked_ref()));
     })
-}
-
-pub async fn open() -> Result<IdbDatabase, String> {
-    let factory: web_sys::IdbFactory = Reflect::get(&js_sys::global(), &"indexedDB".into())
-        .map_err(err)?
-        .dyn_into()
-        .map_err(|_| "IndexedDB unavailable")?;
-    let request = factory.open_with_u32(DB_NAME, DB_VERSION).map_err(err)?;
-    let upgrade_request = request.clone();
-    let upgrade = Closure::once_into_js(move |_: web_sys::Event| {
-        let Ok(result) = upgrade_request.result() else {
-            return;
-        };
-        let db: IdbDatabase = result.unchecked_into();
-        let names = db.object_store_names();
-        if !names.contains("events") {
-            let params = web_sys::IdbObjectStoreParameters::new();
-            params.set_key_path(&"id".into());
-            if let Ok(store) = db.create_object_store_with_optional_parameters("events", &params) {
-                let _ = store.create_index_with_str("created_at", "created_at");
-            }
-        }
-        if !names.contains("kv") {
-            let _ = db.create_object_store("kv");
-        }
-    });
-    request.set_onupgradeneeded(Some(upgrade.unchecked_ref()));
-    let value = super::promise::bounded(
-        settle(&request),
-        15,
-        "Local storage did not answer. Reload to try again.",
-        || {},
-    )
-    .await
-    .map_err(err)?;
-    Ok(value.unchecked_into())
 }
 
 pub async fn kv_get(db: &IdbDatabase, key: &str) -> Result<Option<String>, String> {
