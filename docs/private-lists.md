@@ -31,6 +31,9 @@ Dependency-only updates retain the last relay phase and counters actually
 observed for this query. Both private-list and zap evidence are projected
 from current engine state at emission. Opening a replacement query clears
 the prior phase; initial rows cannot invent a relay completion state.
+Each logical Open resets relay observation suppression without restarting
+shared requests or cursors. An undelivered prior-query State is discarded;
+current relay completion can seed the new query's dependency updates.
 
 `lists.retry {as}` explicitly resets this account's private-list failures.
 The Messages consent preference and refusal state are separate. List reads
@@ -146,6 +149,16 @@ native and rust-wasm gates then passed before the upstream startup packaging
 rebase. The merged protocol-10 browser suite and remaining release gates are
 pending; [engine-private-verification.md](engine-private-verification.md)
 records exact timings, artifact boundaries and the remaining commands.
+
+The first merged Worker attempt exposed a same-sub replacement hole: clearing
+query metadata without resetting relay observation suppressed the next State.
+Three native cases failed at 15:12:45 UTC in 0.779 seconds, load 0.97/1.55/1.94;
+close/reopen controls passed. After resetting only the logical observer,
+all five new and sixteen adjacent cases passed at 15:13:41 UTC in 4.764
+seconds, load 1.38/1.60/1.94. The signer remains unanswered while the browser
+fixture waits for the independent relay State. It cannot certify loading
+from a fabricated phase or a completed decrypt. Evidence:
+`tmp/sixth-reopen-{before,after}.{log,json}`. The merged rerun is pending.
 
 Primary contracts: [NIP-51](https://github.com/nostr-protocol/nips/blob/master/51.md),
 [NIP-07](https://github.com/nostr-protocol/nips/blob/master/07.md),

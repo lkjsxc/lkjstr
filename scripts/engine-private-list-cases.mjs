@@ -7,7 +7,8 @@ export async function extensionListCases(c,fixture,check){
   await c.open('m','mutes',false,true);await c.barrier();await c.page.waitForTimeout(180);
   check('initial hidden list cannot prompt between open and hint',c.crypts(await c.all()).length===0);
   await c.hint(['m']);
-  let all=await c.until(ms=>c.crypts(ms).length===1);
+  // Keep the signer unanswered while waiting for the independent relay completion.
+  let all=await c.until(ms=>c.crypts(ms).length===1&&c.status(ms,'m')!==undefined);
   const old=c.crypts(all)[0];c.handled.add(old.req);
   check('private-list crypto carries exact owned view/event context',
     old.context.sub==='m'&&old.peer===c.pubkey&&old.context.event===fixture.first.events.find(e=>e.kind===10000).id);

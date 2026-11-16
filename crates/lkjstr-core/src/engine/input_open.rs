@@ -6,6 +6,9 @@ impl Engine {
             self.error(Some(sub), "subscription-limit");
             return;
         }
+        self.network.reset_observation(&sub);
+        self.outgoing
+            .retain(|out| !matches!(out, Output::Status { sub: old, .. } if old == &sub));
         self.metrics.served_from_cache +=
             super::list_events::events(&self.store, &query, &self.private_lists)
                 .len()

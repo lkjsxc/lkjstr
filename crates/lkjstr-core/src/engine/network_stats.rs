@@ -1,5 +1,11 @@
 use super::*;
 impl Network {
+    /// A new logical Open observes the current requests afresh, without restarting them.
+    pub(in crate::engine) fn reset_observation(&mut self, sub: &str) {
+        self.reported.remove(sub);
+        self.output
+            .retain(|out| !matches!(out, Output::Status { sub: old, .. } if old == sub));
+    }
     pub fn drain_effects(&mut self) -> Vec<Effect> {
         std::mem::take(&mut self.effects)
     }
