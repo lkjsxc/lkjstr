@@ -130,7 +130,7 @@ surfaces.
 
 ## Accounts, routing and publication
 
-Account writes commit before acknowledgement, but lack a cross-Worker stale-snapshot guard; failed/corrupt boot reads are also under audit.
+Account writes compare durable revisions before acknowledgement; strict boot and the schema fence preserve account rows across Worker graphs.
 Read-only npub/external signers cannot export a local key; secret-bearing Debug is redacted. Extension signing validates the exact request.
 Preauthorized bunkers use NIP-44 RPC, verified public keys and bounded closed sockets.
 
