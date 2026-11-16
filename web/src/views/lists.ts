@@ -21,11 +21,13 @@ export function watchList(
   let initial = true;
   const collected = new Map<string, Row>();
   let generation = 0;
+  let requestSerial = 0;
   const request = (anchor: 'top' | { key: string }): void => {
     pending = true;
     const current = generation;
+    const serial = ++requestSerial;
     queueMicrotask(() => {
-      if (current === generation) sub?.window(anchor, 0, MOST);
+      if (current === generation && serial === requestSerial) sub?.window(anchor, 0, MOST);
     });
   };
   const open = (): void => {

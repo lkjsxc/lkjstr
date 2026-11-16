@@ -10,7 +10,8 @@ Followers and threads page full relay replies. Thread walks use the retained sto
 bound rather than stopping at 500. Public/private bookmark IDs and joined channels keep all batches.
 Reply numbers use visible thread descendants; zap totals use known receipts.
 Settings collects finite pages past 500 and swaps complete snapshots to keep focus.
-Muted windows refill without scrolling; follower pubkeys anchor contact events.
+Muted windows refill without scrolling; only visible rows request counts/references.
+Settings coalesces refresh bursts; follower anchors and refill use person membership.
 Tests: engine_list_{integrity,history,counts}_test.rs and web/tests/lists.test.ts.
 Unavailable bookmark placeholders, pins and note-action detail views need interface
 work; this change adds no strings, CSS or layout.

@@ -160,7 +160,10 @@ pub(super) fn selection(
                 if visible >= raw.len() {
                     return None;
                 }
-                let hidden = query::hidden_with_lists(store, &v.query, event, private).is_some();
+                // Followers project person rows, independent of contact-list payloads
+                // and note mutes. Their raw membership must agree with the wire list.
+                let hidden = v.query.source != Source::Followers
+                    && query::hidden_with_lists(store, &v.query, event, private).is_some();
                 if !hidden {
                     visible += 1;
                 }

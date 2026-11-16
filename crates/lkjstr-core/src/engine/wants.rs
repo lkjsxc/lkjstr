@@ -128,9 +128,17 @@ fn requests(
         }
     }
     let events = super::list_events::events(store, q, private);
-    let range = super::windows::selection(store, network, v, enabled, &events, private).0;
+    let (range, held) = super::windows::selection(store, network, v, enabled, &events, private);
+    // Refill can cross the whole retained store. Hidden rows must not turn that
+    // scan into count streams or consume the reference collector's row budget.
+    let visible: Vec<_> = events[range]
+        .iter()
+        .zip(held)
+        .filter(|(_, reason)| reason.is_none())
+        .map(|(event, _)| event.clone())
+        .collect();
     // Batch visible note counts; released with the view and bounded by its window.
-    for events in events[range.clone()].chunks(120) {
+    for events in visible.chunks(120) {
         let mut f = NostrFilter {
             kinds: Some(if events.iter().any(|e| e.kind == 42) {
                 if events.iter().any(|e| e.kind != 42) {
@@ -173,8 +181,8 @@ fn requests(
             });
         }
     }
-    let mut prefetch = crate::prefetch::collect_window(&events[range.clone()], store);
-    for event in &events[range] {
+    let mut prefetch = crate::prefetch::collect_window(&visible, store);
+    for event in &visible {
         if matches!(event.kind, 6 | 7 | 16) {
             let ids = tag_values(event, "e")
                 .into_iter()

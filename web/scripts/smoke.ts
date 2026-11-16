@@ -1024,15 +1024,26 @@ async function reading(browser: Browser, still: Record<string, unknown>): Promis
     (await page.locator(`${feed} .rbar input`).inputValue()) === '',
   );
   await page.locator(`${feed} .note`).first().waitFor();
-  const times = await page
-    .locator(`${feed} .note time`)
-    .evaluateAll(
-      (els, today) =>
-        els
-          .filter((e) => !e.getAttribute('title')?.startsWith(today))
-          .map((e) => e.textContent ?? ''),
-      dayOf(Date.now()),
-    );
+  const times = await page.locator(`${feed} .note time`).evaluateAll(
+    (els, today) =>
+      els
+        .filter((e) => !e.getAttribute('title')?.startsWith(today))
+        .map((e) => {
+          const text = e.textContent ?? '';
+          const title = e.getAttribute('title') ?? '';
+          // Dated feeds put the day in a divider, including just after midnight.
+          // Require the matching divider and exact clock; quoted notes keep full dates.
+          if (/^\d\d:\d\d$/.test(text) && !e.closest('.quote')) {
+            let divider = e.closest('.list > *')?.previousElementSibling;
+            while (divider && !divider.matches('.day')) divider = divider.previousElementSibling;
+            return divider?.textContent === title.slice(0, 10) && text === title.slice(11, 16)
+              ? `${divider.textContent} ${text}`
+              : '';
+          }
+          return text === title.slice(0, 16) ? text : '';
+        }),
+    dayOf(Date.now()),
+  );
   fact(
     'older notes carry their date',
     times.every((x) => /^\d{4}\/\d\d\/\d\d \d\d:\d\d$/.test(x)),
