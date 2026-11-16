@@ -14,9 +14,10 @@ Retries preserve the chosen destination when an error message is plain text;
 only a reported server URL replaces it.
 
 Progress names discovery, signer permission, upload or deferred processing.
-Byte progress remains honest: zero until the response has been validated, then
-complete. A retry reads a fresh ArrayBuffer from the retained File because the
-previous buffer was transferred to the Worker.
+The sent-byte field stays zero while completion is unknown, then becomes the
+original file length after a validated successful response. These endpoints do
+not measure incremental transmission. A retry reads a fresh ArrayBuffer from
+the retained File because the previous buffer was transferred to the Worker.
 
 The Worker tries the first server in the owner's list without a fresh required-
 request failure, in list order. The signed event size bounds this candidate
@@ -59,6 +60,30 @@ remaining budget; expiry stops fallback and late signing replies are discarded.
 The page settles lost replies after 300 seconds, leaving 15 seconds for dispatch.
 View disposal releases the server-list subscription; HTTP timers and remote sockets have
 settlement cleanup. Protocol 7 adds acknowledged cancellation through the existing removal/clear controls.
+
+## Transmitted-byte progress boundary
+
+The 2026-11-16 source/API audit keeps the existing fetch transport. Its
+redirect rejection, abort deadline and streamed 64 KiB response limit remain
+part of the upload contract. JavaScript fetch exposes no upload-progress
+callback; counting request-stream reads measures browser consumption or
+buffering, not bytes sent over the network.
+
+XMLHttpRequest supplies upload progress but has no equivalent redirect-error
+setting. A 307/308 can forward the body before responseURL becomes available.
+Its buffered response also cannot preserve the current incremental body cap.
+For multipart NIP-96, request-body counters include boundaries and headers,
+whereas the existing sent/total fields describe only the original file.
+
+Current phase changes, validated completion and acknowledged cancellation stay
+supported. Intermediate transmitted bytes remain unavailable. This audit did
+not upload data, measure large-body cancellation or change the product surface.
+
+Primary browser contracts checked on 2026-11-16:
+
+- https://fetch.spec.whatwg.org/#request-class
+- https://xhr.spec.whatwg.org/#the-send()-method
+- https://developer.chrome.com/docs/capabilities/web-apis/fetch-streaming-requests
 
 ## Evidence
 

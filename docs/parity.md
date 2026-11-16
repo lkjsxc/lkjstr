@@ -30,9 +30,9 @@ Evidence prefixes: `E/` = `crates/lkjstr-core/src/engine/`,
 
 New written Claude specifications take priority when present.
 
-1. Complete the productive-live-route and verification-queue Worker replay and
-   required combined gates. The sixth hour's seven Home candidates remain
-   unresolved; the native correction does not retroactively establish receipt.
+1. Complete required combined gates for the productive-route/verification guards;
+   native and production Worker before/after pass. The sixth hour's seven Home
+   candidates remain unresolved; these fixes cannot retroactively establish receipt.
 2. Close existing-control verification: Search now passes eleven native and seven
    Worker checks; referenced emoji still needs its Worker/follow-up Clippy gate.
    Bunker challenge operations await their combined gates and a designed surface.

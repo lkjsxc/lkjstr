@@ -178,8 +178,8 @@ private-list scope follow-up has separate evidence. Protocol 9 and its startup/d
 [engine-zap-verification.md](engine-zap-verification.md) records the runtime and measurement evidence. Protocol-10 private-list and layout integration
 passed all required gates, 452 main Worker checks and 31 private-list checks; the dated record is
 [engine-private-verification.md](engine-private-verification.md). The [sixth public hour](engine-performance-sixth.md) and faults are complete: 1903
-of 2000 requested notes and seven unresolved Home coverage candidates. Productive-route recovery and verification-queue guards have native proof;
-production Worker replay and combined gates remain pending. This does not resolve public candidates; see [engine-live-route.md](engine-live-route.md).
+of 2000 requested notes and seven unresolved Home coverage candidates. Productive-route recovery and verification-queue guards pass native and
+production Worker before/after proof; combined gates remain pending. Public availability is still unknown; see [engine-live-route.md](engine-live-route.md).
 The sixth prescribed ship stopped before deployment at 16:35:57 UTC: separate package validators still required a direct HTML WASM preload.
 The archive graph and numeric-token corrections pass 80 package cases and 19 xtask tests; all required combined gates and exact packaging passed.
 The seventh prescribed ship passed all 548 real interface checks and packaging, then failed at the host operation at 17:53:27 UTC.
