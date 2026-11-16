@@ -27,6 +27,15 @@ undocumented_unsafe_blocks = "deny"
 unimplemented = "deny"
 unwrap_used = "deny"
 
+# Shared-host build artifacts must stay within the 25 GiB workspace budget.
+[profile.dev]
+debug = 0
+incremental = false
+
+[profile.test]
+debug = 0
+incremental = false
+
 [profile.release]
 opt-level = "z"
 lto = true
