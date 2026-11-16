@@ -17,6 +17,7 @@ impl Engine {
         let bytes = crate::store::event_payload_bytes(&event);
         if self.queue.len() >= 4096 || self.queue_bytes.saturating_add(bytes) > 8 * 1024 * 1024 {
             self.dropped += 1;
+            self.network.verification_dropped(&relay, &event);
             return;
         }
         self.queue_bytes += bytes;

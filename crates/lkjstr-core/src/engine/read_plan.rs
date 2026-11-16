@@ -73,6 +73,10 @@ pub fn weight(
     if refused { quality / 4 } else { quality }
 }
 
+pub(super) struct ReadRoutes {
+    pub routes: Vec<String>,
+    pub primary: BTreeSet<String>,
+}
 impl super::Network {
     pub(in crate::engine) fn read_routes<'a>(
         &self,
@@ -82,6 +86,16 @@ impl super::Network {
         weights: &mut crate::engine::weights::PlanWeights<'a>,
         now: u64,
     ) -> Vec<String> {
+        self.read_route_plan(f, q, store, weights, now).routes
+    }
+    pub(super) fn read_route_plan<'a>(
+        &self,
+        f: &lkjstr_protocol::NostrFilter,
+        q: &'a crate::engine::protocol::Query,
+        store: &crate::store::Store,
+        weights: &mut crate::engine::weights::PlanWeights<'a>,
+        now: u64,
+    ) -> ReadRoutes {
         use crate::engine::protocol::Source;
         let authors: BTreeMap<_, _> = f
             .authors
@@ -160,7 +174,13 @@ impl super::Network {
         let mut routes: Vec<_> = candidates
             .iter()
             .filter(|c| !q.filters.relay_hints.contains(&c.url))
-            .filter(|c| current.contains_key(c.url.as_str()) && !unavailable.contains(&c.url))
+            .filter(|c| {
+                current.get(c.url.as_str()).is_some_and(|r| {
+                    // Hydration rewrites logical filter keys into immutable buckets.
+                    // Preserve their existing routing independently of live-slot ownership.
+                    r.read_slot || super::profiles::family(f, &r.members).is_some()
+                }) && !unavailable.contains(&c.url)
+            })
             .take(limit)
             .map(|c| c.url.clone())
             .collect();
@@ -175,18 +195,23 @@ impl super::Network {
                 routes.push(url);
             }
         }
+        let primary = routes.iter().cloned().collect();
         // Keep failed-page uncertainty outside those slots. Historical evidence
         // also survives recovery/reranking; bounded by configured read routes and
         // released when the filter/view or explicit read permission is removed.
         for candidate in &candidates {
-            if current.contains_key(candidate.url.as_str())
-                && (f.until.is_some() || unavailable.contains(&candidate.url))
-                && !routes.contains(&candidate.url)
+            if current.get(candidate.url.as_str()).is_some_and(|r| {
+                f.until.is_some()
+                    || unavailable.contains(&candidate.url)
+                    // A demoted live route must answer its own resumed gap before
+                    // retirement. Its old page EOSE cannot prove reconnection complete.
+                    || (r.live && !r.read_slot && !r.eose && !r.complete)
+            }) && !routes.contains(&candidate.url)
             {
                 routes.push(candidate.url.clone());
             }
         }
-        routes
+        ReadRoutes { routes, primary }
     }
 }
 

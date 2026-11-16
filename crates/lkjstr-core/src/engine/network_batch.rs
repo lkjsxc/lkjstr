@@ -19,6 +19,7 @@ impl Network {
                             && r.relay == relay
                             && !r.live
                             && !r.sent
+                            && !(r.verification_retry && self.verifying)
                             && !r.complete
                             && !r.eose
                             && now >= r.ready_at
@@ -59,6 +60,7 @@ impl Network {
                 r.oldest = None;
             }
             r.wire_id = wire.clone();
+            r.verification_retry = false;
             r.sent = true;
             if !r.asked {
                 r.initial_deadline = now + 15000;

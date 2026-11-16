@@ -34,15 +34,21 @@ pub(super) fn notification_filter(
 pub(super) fn exhausted(network: &Network, store: &Store, v: &View) -> bool {
     query::signed_out(&v.query)
         || !paged(v)
-        || (network.page_exhausted(
-            v.history
-                .as_ref()
-                .unwrap_or(&query::filter(store, &v.query)),
-        ) && notification_filter(store, &v.query)
-            .is_none_or(|f| network.page_exhausted(v.notification_history.as_ref().unwrap_or(&f))))
+        || (!network.verifying
+            && network.page_exhausted(
+                v.history
+                    .as_ref()
+                    .unwrap_or(&query::filter(store, &v.query)),
+            )
+            && notification_filter(store, &v.query).is_none_or(|f| {
+                network.page_exhausted(v.notification_history.as_ref().unwrap_or(&f))
+            }))
 }
 impl Engine {
     pub(super) fn advance_history(&mut self, sub: &str) -> bool {
+        if self.network.verifying {
+            return false;
+        }
         let Some(v) = self.views.get_mut(sub) else {
             return false;
         };
@@ -104,6 +110,9 @@ impl Engine {
 impl Engine {
     /// Refill incomplete windows after EOSE, including inclusive timestamp overlap.
     pub(super) fn refill_history(&mut self, now: u64) {
+        if self.network.verifying {
+            return;
+        }
         let subs: Vec<_> = self
             .views
             .iter()

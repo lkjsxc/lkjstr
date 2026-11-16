@@ -40,17 +40,22 @@ impl Network {
         let queries = wants.iter().map(|(sub, _, q)| (sub.clone(), q)).collect();
         let mut weights = crate::engine::weights::PlanWeights::new(store, private);
         let mut desired = Desired::new();
+        let mut primary_reads = BTreeSet::new();
         for (sub, f, q) in &wants {
-            let routes: Vec<String> = if q.source == Source::Relay {
-                q.target
-                    .iter()
-                    .filter(|r| self.relays.contains_key(*r))
-                    .cloned()
-                    .collect()
+            let selected = if q.source == Source::Relay {
+                read_plan::ReadRoutes {
+                    routes: q
+                        .target
+                        .iter()
+                        .filter(|r| self.relays.contains_key(*r))
+                        .cloned()
+                        .collect(),
+                    primary: BTreeSet::new(),
+                }
             } else {
-                self.read_routes(f, q, store, &mut weights, now)
+                self.read_route_plan(f, q, store, &mut weights, now)
             };
-            let mut routes = routes;
+            let mut routes = selected.routes;
             // Keep unfinished, still-permitted routes when a healthy route
             // advances. Quality reranking must not abandon their missing span.
             routes.extend(self.pending_page_routes(sub, f).into_iter().filter(|url| {
@@ -74,14 +79,19 @@ impl Network {
             routes.sort();
             routes.dedup();
             for r in routes {
+                let primary = selected.primary.contains(&r);
                 let key = (r, filter_to_value(f).to_string());
+                if primary {
+                    primary_reads.insert(key.clone());
+                }
                 let entry = desired.entry(key).or_insert((f.clone(), BTreeSet::new()));
                 entry.1.insert(sub.clone());
             }
         }
         self.stabilize_profiles(&mut desired, &live_lists);
         let mut retained = BTreeSet::new();
-        for ((relay, _key), (filter, members)) in desired {
+        for ((relay, key), (filter, members)) in desired {
+            let read_slot = primary_reads.contains(&(relay.clone(), key));
             let list_watch = lists::watch(&filter, &members, &live_lists);
             let live = filter_live(&filter) || members.contains("~account-discovery") || list_watch;
             let existing = self
@@ -96,6 +106,7 @@ impl Network {
                 r.refresh_profile(&members, &refresh_profiles, now);
                 r.live |= members.contains("~account-discovery");
                 r.members = members;
+                r.read_slot = read_slot;
                 retained.insert(id.clone());
                 if close {
                     self.close_group(&relay, &wire);
@@ -111,6 +122,7 @@ impl Network {
                     if !still_wanted && let Some(r) = self.requests.get_mut(id) {
                         r.page_filter = filter;
                         r.members = members;
+                        r.read_slot = read_slot;
                         r.live = live;
                         if r.retryable_page_timeout() {
                             r.complete = false;
@@ -139,6 +151,8 @@ impl Network {
                         filter: wire_filter,
                         page_filter: filter.clone(),
                         members,
+                        read_slot,
+                        verification_retry: previous.is_some_and(|r| r.verification_retry),
                         sent: false,
                         eose: exhausted,
                         page_eose: exhausted,

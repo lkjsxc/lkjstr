@@ -116,3 +116,89 @@ fn refused_historical_route_preserves_uncertainty_after_fallback_completes() {
     );
     assert_eq!(n.request_progress("feed").0, 3);
 }
+
+#[test]
+fn recovered_primary_does_not_evict_a_working_live_fallback() {
+    for answered_before_failure in [false, true] {
+        let mut n = Network::default();
+        n.configure(vec![A.into(), B.into(), C.into()], 0);
+        let filter = NostrFilter {
+            kinds: Some(vec![1, 6]),
+            limit: Some(2),
+            ..Default::default()
+        };
+        plan(&mut n, &filter, 0);
+        n.connected(A, 1);
+        n.connected(B, 1);
+        let first = frames(&mut n);
+        n.message(A, &json!(["EOSE", first[A][1]]).to_string(), 2);
+        if answered_before_failure {
+            n.message(B, &json!(["EOSE", first[B][1]]).to_string(), 2);
+        }
+        n.disconnected(B, 3);
+        plan(&mut n, &filter, 4);
+        n.connected(C, 5);
+        let fallback = frames(&mut n);
+        assert!(fallback.contains_key(C));
+        n.message(C, &json!(["EOSE", fallback[C][1]]).to_string(), 6);
+        plan(&mut n, &filter, 7);
+        n.drain_effects();
+        n.connected(B, 2008);
+        let recovery = frames(&mut n);
+        assert!(
+            recovery.contains_key(B),
+            "the unresolved route must still recover"
+        );
+        plan(&mut n, &filter, 2009);
+        assert_eq!(
+            n.request_progress("feed").0,
+            3,
+            "B's resumed gap remains owned before its new EOSE"
+        );
+        let gap = support::event(1, 1, "recovered route's unique gap note", vec![]);
+        assert!(
+            n.message(B, &json!(["EVENT", recovery[B][1], gap]).to_string(), 2010)
+                .is_some()
+        );
+        n.message(B, &json!(["EOSE", recovery[B][1]]).to_string(), 2011);
+        plan(&mut n, &filter, 2012);
+        let effects = n.drain_effects();
+        assert!(
+            effects.iter().all(|effect| {
+                !matches!(effect, Effect::Send(url, text)
+                if url == C && serde_json::from_str::<Value>(text).is_ok_and(|v| v[0] == "CLOSE"))
+            }),
+            "recovering an earlier configured relay must not close a healthy fallback: {effects:?}"
+        );
+        let event = support::event(2, 1, "later note only on healthy fallback", vec![]);
+        assert!(
+            n.message(
+                C,
+                &json!(["EVENT", fallback[C][1], event]).to_string(),
+                2013
+            )
+            .is_some()
+        );
+        assert_eq!(
+            n.request_progress("feed").0,
+            2,
+            "completed recovery releases its extra route"
+        );
+        n.known.get_mut(C).expect("known").read = false;
+        plan(&mut n, &filter, 2014);
+        assert!(
+            n.drain_effects().iter().any(|effect| {
+                matches!(effect, Effect::Send(url, text)
+                if url == C && serde_json::from_str::<Value>(text).is_ok_and(|v| v[0] == "CLOSE"))
+            }),
+            "revoking read permission releases the fallback immediately"
+        );
+        n.plan(Vec::new(), &Store::new(0), 2015);
+        assert_eq!(
+            n.request_progress("feed").0,
+            0,
+            "hiding the final view releases all wants"
+        );
+        assert!(n.open_wires().is_empty());
+    }
+}

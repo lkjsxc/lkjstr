@@ -41,6 +41,8 @@ mod quality;
 mod routing_observations;
 #[path = "network_tick.rs"]
 mod scheduler;
+#[path = "network_verification.rs"]
+mod verification;
 use scheduler::filter_live;
 #[path = "read_plan.rs"]
 pub mod read_plan;
@@ -89,6 +91,8 @@ pub(super) struct Request {
     pub filter: NostrFilter,
     pub page_filter: NostrFilter, // Logical union, independent of the route cursor.
     pub members: BTreeSet<String>,
+    pub read_slot: bool, // Owns an ordinary reader slot; recovery routes remain separate.
+    pub verification_retry: bool, // Local queue loss: replay this span after backlog drains.
     pub sent: bool,
     pub eose: bool,
     pub page_eose: bool, // Historical completion survives live resubscription.

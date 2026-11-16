@@ -101,6 +101,7 @@ impl Network {
                 continue;
             }
             if now < r.ready_at
+                || (r.verification_retry && self.verifying)
                 || r.sent
                 || r.complete
                 || r.eose
