@@ -42,7 +42,7 @@ export async function listClient({browser,origin,fixture,fake,kind}){
       await send({t:'stats',req:'list-timeout-stats'});await page.waitForTimeout(100);
       const messages=await all();
       const physical=await page.evaluate(async()=>{
-        const db=await new Promise((ok,bad)=>{const r=indexedDB.open('lkjstr-wasm',1);r.onsuccess=()=>ok(r.result);r.onerror=bad;});
+        const db=await new Promise((ok,bad)=>{const r=indexedDB.open('lkjstr-wasm');r.onsuccess=()=>ok(r.result);r.onerror=bad;});
         try{return await new Promise((ok,bad)=>{const r=db.transaction('events').objectStore('events').getAllKeys();r.onsuccess=()=>ok(r.result);r.onerror=bad;});}finally{db.close();}
       });
       throw Error('private-list predicate timeout '+JSON.stringify({

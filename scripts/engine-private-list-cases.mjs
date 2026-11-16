@@ -67,7 +67,7 @@ export async function commonListCases(c,fixture,fake,kind,check){
   check(kind+' does not repeat private crypto after an unrelated public Store insertion',
     (kind==='extension'?c.crypts(later).length:fixture.calls.filter(m=>m.method.endsWith('_decrypt')).length)===count);
   const stored=await c.page.evaluate(async()=>{
-    const db=await new Promise((ok,bad)=>{const r=indexedDB.open('lkjstr-wasm',1);r.onsuccess=()=>ok(r.result);r.onerror=bad;});
+    const db=await new Promise((ok,bad)=>{const r=indexedDB.open('lkjstr-wasm');r.onsuccess=()=>ok(r.result);r.onerror=bad;});
     try{return await new Promise((ok,bad)=>{const r=db.transaction('events').objectStore('events').getAll();
       r.onsuccess=()=>ok(r.result.map(e=>e.raw));r.onerror=bad;});}finally{db.close();}
   });
