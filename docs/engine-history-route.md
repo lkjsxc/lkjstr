@@ -4,7 +4,7 @@
 
 Record the bounded fix and evidence for a full historical route lost during
 quality reranking at its inclusive cursor. No interface or protocol change is
-required. The native defect is proven; actual Worker checks are pending.
+required. Native and actual production Worker before/after checks pass.
 
 ## Failure and boundary
 
@@ -71,5 +71,48 @@ with this defect, but per-request receipt counts are still needed to attribute
 that observation. No public query, browser inspection or frozen-run mutation
 was added by this native proof.
 
-Finite Worker checks against the unchanged 1c0 production bytes and a corrected
-package, merged required gates and post-change public measurement remain pending.
+Merged required gates and post-change public measurement remain pending.
+
+
+## Production Worker proof
+
+`scripts/engine-history-route.mjs` serves unmodified generated assets and uses
+only fresh loopback sockets, browser data and signed public fixture notes.
+There are no test-only Worker methods, saved accounts or public publications.
+The relay advertises a three-event limit; B returns exactly three distinct notes
+plus duplicates, then a delayed EOSE. Other permitted routes return empty pages.
+B alone has the strictly older fourth note. The fixture checks its actual wire
+limit, distinct response count and successful EOSE before judging continuation.
+
+The unchanged production package fails all three product assertions: no B
+continuation, no fourth note, and exhaustion from empty replacement routes.
+The corrected package passes all five checks, retaining all head notes and
+receiving the fourth note before the final short page establishes exhaustion.
+No page or Worker errors occurred. The process reaps the fixture signer, browser,
+relay sockets and server in its guarded lifetime.
+
+Exact production WASM hashes:
+
+```text
+before 1c0b50bef2a56c5def00dba885358481fdad1037d9b9f2127ff233d5131a6f97
+after  c7c7a7dd5d9fd30f0f768e9e523ad661b9646a465024b98add368b6bd6c5a46b
+```
+
+The final finite runs started at 17:13:42 and 17:13:46 UTC on 2026-11-16,
+taking 3.050 and 4.896 seconds. Load was 3.13/2.61/2.05 before and
+3.13/2.61/2.05 after. Reports, exact requests, IDs and timestamps are in
+`tmp/history-worker-before/report.json` and `tmp/history-worker-after/report.json`.
+The first successful reproduction pair remains separately in the `-try1` paths.
+`tmp/history-worker-codes.json` records exit 1 before and exit 0 after. The final
+package and helper are copied under `tmp/history-route-final`; the earlier 33b
+package remains intermediate evidence, not the final corrected build.
+
+Run this outside default gates against a prepared production package:
+
+```sh
+LKJSTR_ENGINE_PKG=tmp/engine-pkg node scripts/engine-history-route.mjs
+```
+
+The native `engine-fixtures` helper must already exist in `CARGO_TARGET_DIR`, or
+be specified with `LKJSTR_ENGINE_FIXTURE_BIN`. The command never invokes Cargo.
+`LKJSTR_ENGINE_REPORT` selects a fresh evidence directory.
