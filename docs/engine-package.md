@@ -66,8 +66,9 @@ pnpm smoke:real exercises the actual TypeScript app with production headers
 and a loopback-only connect-src override. External HTTP is blocked. It covers
 home/global, note/profile navigation, search, composition through NIP-07,
 publication/reaction, settings reload and two app tabs sharing one engine.
-There is no account-add UI yet: only the fixture account setup uses a second
-real adapter port; composition and reactions use the app's existing controls.
+Fixture account setup uses a second real adapter port; key and message cases
+also exercise their specified app controls. Composition and reactions use the
+app's existing controls.
 The report is tmp/smoke-real/report.json.
 
 The optional benchmark seeds 100000 physical signed compact rows. Timings are
@@ -120,4 +121,6 @@ worktree, with the six-case logs and `package-after.json` in its sibling tmp.
 The first fixture setup attempt had a wrong scratch path and is retained as a
 setup failure; its six empty directories were removed before the valid proof.
 No Cargo, browser, public traffic, deployment or full combined gate ran for
-this isolated packaging correction. The parent integration runs those gates.
+this isolated packaging correction. The parent integration now passes those
+gates and exact archive validation; see
+[engine-variants-verification.md](engine-variants-verification.md).

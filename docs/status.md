@@ -155,11 +155,11 @@ These are concrete runtime limits, not permission to fake a successful answer.
 - Private lists: supported local/extension/bunker reads cover NIP-44 and older
   NIP-04. Public edits preserve ciphertext; private editing, named-set navigation
   and list-specific Retry controls remain absent. Rows/hydration are owner-scoped.
-- Emoji: referenced sets pass 20 native and 11 Worker cases plus strict Clippy; full conformance remains pending. See [emoji-sets.md](emoji-sets.md).
-- Search: retained people/language OR pass focused proof; unavailable reposts now
-  preserve note quota/Fresh in eight native cases. Remote people discovery is absent.
-  Worker replay/gates/deployment remain pending. See [unavailable-reposts.md](unavailable-reposts.md).
-- Bunkers: auth_url passes focused native/52 Worker checks, without controls; routing limits: [bunker-auth.md](bunker-auth.md). Relay switching is unsupported.
+- Emoji: referenced sets pass 20 native and 11 Worker cases, strict Clippy and combined gates. See [emoji-sets.md](emoji-sets.md).
+- Search: retained people, language OR and unavailable repost quotas/Fresh pass
+  native/Worker proof and combined gates. Remote people discovery remains absent.
+  See [unavailable-reposts.md](unavailable-reposts.md).
+- Bunkers: auth_url passes native/52 Worker checks and combined gates, without controls; see [bunker-auth.md](bunker-auth.md). Relay switching is unsupported.
   Without a registered authorization presenter, the current client returns unsupported promptly; no new surface exists.
 - Uploads: phases, zero/validated completion and cancellation work; actual byte
   progress is unavailable without weakening redirect/body limits. NIP-96 processing remains bounded.
@@ -179,12 +179,15 @@ private-list scope follow-up has separate evidence. Protocol 9 and its startup/d
 passed all required gates, 452 main Worker checks and 31 private-list checks; the dated record is
 [engine-private-verification.md](engine-private-verification.md). The [sixth public hour](engine-performance-sixth.md) and faults are complete: 1903
 of 2000 requested notes and seven unresolved Home coverage candidates. Productive-route recovery and verification-queue guards pass native and
-production Worker before/after proof; combined gates remain pending. Public availability is still unknown; see [engine-live-route.md](engine-live-route.md).
+production Worker before/after proof and combined gates. Public availability is still unknown; see [engine-live-route.md](engine-live-route.md).
 The sixth prescribed ship stopped before deployment at 16:35:57 UTC: separate package validators still required a direct HTML WASM preload.
 The archive graph and numeric-token corrections pass 80 package cases and 19 xtask tests; all required combined gates and exact packaging passed.
 The seventh prescribed ship passed all 548 real interface checks and packaging, then failed at the host operation at 17:53:27 UTC.
 No successful deployment receipt or served-index verification exists; the last confirmed successful ship remains 541e4a1e. Extra host commands
 are forbidden by the owner handoff; read-only diagnosis was requested through Desk. Exact artifacts and limits are in [engine-startup.md](engine-startup.md).
+
+Protocol-11 integration passed all required gates, 459 main Worker checks, 541 default real UI checks and exact archive validation on source 9766cd1a.
+Dated results, screenshot-mode exclusions and artifact hashes are in [engine-variants-verification.md](engine-variants-verification.md).
 
 The owner's 2026-11-16 delegation authorizes rebased pushes and the prescribed ship script. Tests use fresh ports and fixture data, clean their
 processes and never publish to public relays or touch a saved owner account. The public hour uses REQ/CLOSE only. Docker and unrelated host services

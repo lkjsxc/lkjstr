@@ -2,11 +2,11 @@
 
 ## Purpose
 
-Source audit refreshed on 2026-11-16 against the protocol-11 candidate after source landing ce05e292.
+Source audit refreshed on 2026-11-16 against protocol-11 source 9766cd1a; required integration gates passed.
 The K1-K4/M1-M6 base passed its gates and is built. Protocol-9 required gates, 451 main Worker checks and 40 finite zap checks passed; exact source boundaries
 and failures are recorded in [engine-zap-verification.md](engine-zap-verification.md).
 Protocol-10 required gates, 452 main Worker checks and 31 private-list checks passed; see [engine-private-verification.md](engine-private-verification.md).
-Search people/language has focused proof; unavailable repost corrections await merged gates. See [unavailable-reposts.md](unavailable-reposts.md).
+Current combined gates passed; see [engine-variants-verification.md](engine-variants-verification.md).
 The last confirmed ship is 541e4a1e; the seventh ship failed at the host operation. Source status does not establish the deployed build.
 Unregistered staging under tmp/ is excluded. This replaces the 11-14 inventory.
 Rows describe lkjstr's real Worker and reachable interface, not mock capability.
@@ -30,20 +30,16 @@ Evidence prefixes: `E/` = `crates/lkjstr-core/src/engine/`,
 
 New written Claude specifications take priority when present.
 
-1. Complete required combined gates for the productive-route/verification guards;
-   native and production Worker before/after pass. The sixth hour's seven Home
-   candidates remain unresolved; these fixes cannot retroactively establish receipt.
-2. Close existing-control conformance: Search passes eleven native/seven Worker
-   checks; referenced emoji passes twenty native/eleven Worker checks and Clippy.
-   Bunker challenge operations await their combined gates and a designed surface.
-3. Use the next required public hour to qualify Home, notification/thread controls,
-   observer overhead and real signer/provider behavior. The sixth 3600-second
-   run is complete; host/OS sleep and all-relay completeness remain unproven.
-4. Add physical cache accounting/clearing and settings backup, then optional
-   encrypted setup sync, article documents, followed hashtags and reports.
-5. Actor details, missing-bookmark placeholders, pins and person relay views
-   await Claude's specifications. Upload phases/cancel work; actual intermediate
-   transmitted bytes remain unavailable without weakening current transport guarantees.
+1. Run the next required public hour after the ninth landing with informative
+   notification/thread controls. The sixth hour's seven Home candidates remain
+   unresolved; fixed route lifetimes cannot retroactively establish receipt.
+2. Add bounded storage observations and clearing, then settings backup. Payload
+   bytes and approximate origin estimates must not masquerade as physical size.
+3. Add article documents, followed hashtags and reports, then optional encrypted
+   setup sync. Existing signer and provider behavior still needs public evidence.
+4. Authorization, actor details, missing-bookmark placeholders, pins and person
+   relay views await Claude's specifications. Upload phases/cancel work; actual
+   intermediate bytes remain unavailable under the current transport guarantees.
 
 ## Reading, recovery and truth
 
@@ -58,7 +54,7 @@ New written Claude specifications take priority when present.
 | Grouped notifications and read state | done | Mentions/replies/reposts/reactions/zaps, filters and persistent timestamp ties; E/wire/notifications.rs, E/clients.rs. Zap trust is separate below. |
 | Reading position and fresh-note indicator | done | Per-tab anchors, retained windows and fresh counts; V/feed-place.ts, V/feed-fresh.ts. Page freeze and actual Worker pause were measured separately; host/OS sleep remains untested; docs/engine-performance-hour.md. |
 | Calendar/time navigation | done | Cache-wide month counts and ordinal seeks; E/wire/timeline.rs, V/time-rail.ts. Not a count of all relay history. |
-| Rich note search | done | Rich filters include every language-array alternative. Native unavailable-repost fixes preserve note quota and Fresh; merged Worker proof is pending. E/wire/query_translate.rs, E/query_predicates.rs, docs/search.md, docs/unavailable-reposts.md. |
+| Rich note search | done | Rich filters include every language-array alternative. Unavailable-repost fixes preserve note quota and Fresh; native, Worker and combined gates pass. E/wire/query_translate.rs, E/query_predicates.rs, docs/search.md, docs/unavailable-reposts.md. |
 | People in search | partial | Six retained verified-metadata matches precede the exact note quota, with mute scope and stable anchors/Fresh. Native/Worker proof passes; remote people discovery remains absent. E/search_people.rs, E/wire/search.rs, docs/search.md. |
 | Hashtag timelines | done | `hashtag` filter and linked tile exist; E/query.rs, V/registry.ts, V/note.ts. |
 | Followed hashtags | missing | No kind-10015 discovery/edit or Home integration; list codecs alone do not supply it. |
@@ -76,7 +72,7 @@ New written Claude specifications take priority when present.
 | NIP-49 encrypted import/export | done | K1/K3 ciphertext sign-in and encrypted backup use the bounded codec; the real K13 flow verified exact download and same-key recovery. V/account-import.ts, V/account-key.ts, docs/keys.md; required integration gates passed. |
 | Local keys encrypted at rest and session unlock | partial | K2/K4 unlock, lock, cross-page idle lock and explicit protection are reachable. Unlock is Worker-scoped: a sibling can keep a reload unlocked. Existing plaintext accounts convert only by explicit protection/import; strict per-page vault/cache leases are missing. docs/keys.md. |
 | NIP-07 extension signing | done | Correlated public-key discovery, exact-event validation and deadlines; W/worker_sign.rs, web/src/engine/client.ts. Encryption/decryption is separate below. |
-| NIP-46 bunker signing | partial | Pasted preauthorized bunker URI, durable session and verified signing work. Owner-bound auth_url passes native/52 Worker checks; merged gates and a surface remain pending; fallback followers/background relay AUTH remain unsupported, as does relay-switch negotiation. docs/bunker-auth.md. |
+| NIP-46 bunker signing | partial | Pasted preauthorized bunker URI, durable session and verified signing work. Owner-bound auth_url passes native/52 Worker checks and merged gates; a surface remains pending; fallback followers/background relay AUTH remain unsupported, as does relay-switch negotiation. docs/bunker-auth.md. |
 | QR/nostrconnect connection workflow | missing | Current input accepts bunker text; no connection-QR generation/scanning flow. |
 | Read-only npub account | done | Imported public account cannot sign; E/accounts.rs, V/account-add.ts. |
 | Multiple saved accounts and switch | done | Global active account, removal and per-account draft/outbox isolation; E/accounts.rs, V/compose-who.ts. |
@@ -122,7 +118,7 @@ New written Claude specifications take priority when present.
 | Capability | Status | Concrete scope, limit and evidence |
 | --- | --- | --- |
 | Notes, replies, reposts and quotes | done | Read and publish through all existing signer types; E/wire/publish.rs, V/note-actions.ts, V/compose.ts. |
-| Unicode/custom reaction picker | partial | Direct entries and up to 32 owner-selected kind-30030 sets project at most 400 codes with finite discovery. Twenty native and eleven Worker cases plus strict Clippy pass; full conformance remains pending. Encrypted sets and per-set retry are unsupported. E/emoji.rs, V/emoji-picker.ts, docs/emoji-sets.md. |
+| Unicode/custom reaction picker | partial | Direct entries and up to 32 owner-selected kind-30030 sets project at most 400 codes with finite discovery. Twenty native and eleven Worker cases, strict Clippy and combined conformance pass. Encrypted sets and per-set retry are unsupported. E/emoji.rs, V/emoji-picker.ts, docs/emoji-sets.md. |
 | Selected mentions and custom emoji in text | done | Engine expands selected ranges and preserves emoji tags; E/wire/mentions.rs, V/compose-mentions.ts. |
 | Image/video/audio upload | partial | Blossom and NIP-96 discovery, every signer and retries work; cancellation and phases work; fetch cannot expose intermediate transmitted bytes while preserving redirect rejection and bounded responses; W/worker_upload*.rs, V/compose-media.ts. |
 | Media rendering and metadata | done | Notes render image/video/audio, dimensions, alt text and playback state; E/row_media.rs, V/note-media.ts, V/note-audio.ts. Dedicated media event kinds are separate below. |

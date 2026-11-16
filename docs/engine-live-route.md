@@ -112,9 +112,11 @@ socket and temporary-directory cleanup. Reports and exact REQ/EOSE/CLOSE/event-I
 traces are `tmp/live-route-proof/worker-{before,after}/report.json` in the isolated
 live-route worktree; immutable packages and source copies remain beside them.
 
-## Remaining checks
+## Integration and limits
 
-The full combined integration gates remain pending.
+The full combined integration gates and default real interface smoke passed on
+9766cd1a; see [engine-variants-verification.md](engine-variants-verification.md).
+These loopback results do not establish deployment or public availability.
 
 The fixed number of primary routes remains a coverage tradeoff. This change
 cannot establish all-relay completeness, future productivity, or causal

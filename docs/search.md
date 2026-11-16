@@ -7,11 +7,12 @@ which data it can use, and what has actually been verified.
 
 ## Status
 
-This source candidate includes the seventh landing, ce05e292, and the measured
-live-route corrections at 19bca1ee. Focused native tests, strict Clippy, the
-Worker WASM check and seven real Worker checks now pass. The selector workload
-below is a native debug measurement. Required combined gates and deployment
-remain pending; no public search-completeness claim is made.
+The retained-people/language contract and unavailable-repost correction have
+focused native and frozen Worker proofs. The selector workload below remains
+a native debug measurement; no public search-completeness claim is made.
+Current combined-gate evidence belongs in
+[engine-variants-verification.md](engine-variants-verification.md).
+Focused proof does not establish production smoke, packaging or deployment.
 
 ## Retained people
 
@@ -140,7 +141,8 @@ load 1.08/1.49/2.23: two-note quota plus people, time-rail counts/positions,
 current person anchoring, held Fresh, both language orders and Japanese-only.
 Both runs had no page/Worker errors, overflow or publications. Worker, browser,
 sockets, server and owned-process cleanup completed. These are harness-enabled
-Worker bytes; required production/default integration gates remain pending.
+Worker bytes; consult [engine-variants-verification.md](engine-variants-verification.md)
+for current production/default integration evidence.
 
 Immutable package identities:
 
@@ -163,5 +165,28 @@ The combined Worker gate exposed a pre-existing note-window error that the
 fresh Search fixture did not exercise. Unavailable repost wrappers consumed
 note slots and Fresh counts before wire projection discarded them. The raw
 history and target wants are now preserved separately from the note quota;
-[unavailable-reposts.md](unavailable-reposts.md) records native and frozen
-Worker evidence, explicit target bounds and the pending combined checks.
+[unavailable-reposts.md](unavailable-reposts.md) records the corrected policy,
+native proof and explicit target bounds.
+
+The deterministic retained-wrapper fixture preserves the original seven
+assertions. Its pre-fix run at 19:37:52 UTC, load 0.80/0.88/0.99, timed out with
+one person and one note after proving exactly one verified/stored warmup event.
+No original assertion was reached; the expected failure took 15.510 s.
+
+The corrected 9766cd1a package passed all seven at 19:53:31 UTC in 0.851 s,
+load 4.27/4.39/2.65. Its warmup again captured events 0 to 1 and verified 0 to 1,
+with zero rejected or dropped events. There were no page/Worker errors or
+publications; Worker, browser, sockets, server and owned processes were reaped.
+An intermediate corrected run passed all seven but lost its admission snapshot
+after cleanup, so its evidence verdict remains false. The final observer fixes
+only that capture. Both the incomplete report and the revised observer remain
+separately frozen. These durations are correctness-run lifetimes, not a speedup.
+
+Package-audit evidence: `tmp/search-repost-proof/proof-summary.json` binds the
+pre-fix, incomplete-observer and corrected-observer reports. The final report
+is under `tmp/search-repost-proof/after-observation-20261116T195331Z`.
+
+```text
+WASM   04e309d63831cfcc974674a282b4e6bcce6349f16703f5f1b9bbf39411f54774
+report 4e697ef8f4ec3b60326614675cfe6193310318fbcbe651bf96fb85d2e79a295a
+```

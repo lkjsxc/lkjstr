@@ -4,7 +4,7 @@
 
 Record the Core discovery and projection used by the existing emoji picker.
 No new layout, visible words, action or wire shape is required. Native and
-finite real Worker checks pass; the combined conformance gate remains pending.
+finite real Worker checks and the combined conformance gate pass.
 
 ## Authority and selection
 
@@ -93,7 +93,7 @@ phases. No runtime or assertion changed between those runs.
 The combined native/all-target strict Clippy, WASM, repository and frontend
 check/build/smoke gates passed on source 274fd7e0. The all-target pass includes
 the bounded-value tests. These records are in the combined worktree's
-`tmp/release-gates.json`; they do not replace the remaining conformance gate.
+`tmp/release-gates.json`; the later conformance completion is recorded below.
 
 The first combined Worker gate stopped in the emoji fixture HTTP server:
 it sent 200 headers before reading a missing file, then threw while attempting
@@ -115,7 +115,9 @@ The harness WASM is
 Its immutable package is under `tmp/release-artifacts/aeede028a9d360bd0c65`;
 the report is `tmp/release-reports/emoji-try1/engine-emoji/report.json`.
 The lasting fixture remains registered in `scripts/engine-check.sh`.
-Full conformance, real interface smoke and the next public hour remain pending.
+Full combined conformance and default real interface smoke passed on 9766cd1a;
+see [engine-variants-verification.md](engine-variants-verification.md).
+The next required public hour remains separate.
 
 Primary specifications checked on 2026-11-16:
 

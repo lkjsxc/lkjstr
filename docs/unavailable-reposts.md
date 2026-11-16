@@ -1,7 +1,9 @@
 # Unavailable reposts and ordinary note windows
 
-Updated: 2026-11-16. The corrected native cases pass. Corrected Worker proof,
-required combined gates, real interface smoke and deployment remain pending.
+Updated: 2026-11-16. Corrected native and deterministic frozen Worker proofs pass.
+For current combined-gate evidence, see
+[engine-variants-verification.md](engine-variants-verification.md).
+These focused proofs do not establish production smoke, packaging or deployment.
 
 ## Purpose
 
@@ -107,5 +109,35 @@ report   f4268ff636b0c8b5fe18d808d83fecba18a1b6b659f29c69224aaede165f946c
 ```
 
 The original seven note-budget, people, anchor, Fresh and language assertions
-remain unchanged. Corrected frozen bytes and the full combined gate must pass
-before landing.
+remain unchanged.
+
+## Corrected frozen Worker proof
+
+The same frozen Search helper and native signer fixture were used against the
+corrected source 9766cd1a package. At 19:53:31 UTC, load 4.27/4.39/2.65, all
+seven original assertions passed in 0.851 s; total runner lifetime was 1.277 s.
+The captured warmup again moved verified and stored event counts from 0 to 1,
+with zero rejected or dropped events. No page/Worker errors or publications
+occurred. Worker, browser, sockets and server closed, with no owned processes
+remaining. These are harness-enabled bytes and a finite loopback scenario.
+
+An earlier corrected run at 19:52:24 UTC, load 7.02/4.79/2.64, also passed all
+seven assertions in 0.868 s. Its late observer read lost the admission snapshot
+after helper cleanup, leaving the outer evidence verdict false. That original
+report remains unchanged. The separately frozen observer now snapshots at the
+warmup close; it changes no Worker input, helper scenario or assertion.
+The duration difference includes the expected pre-fix timeout; it is not a
+performance speedup or a public-network completeness measurement.
+
+Evidence in the package-audit worktree:
+`tmp/search-repost-proof/after-observation-20261116T195331Z`.
+The incomplete observer run is `tmp/search-repost-proof/after-20261116T195224Z`.
+`tmp/search-repost-proof/proof-summary.json` binds all three retained runs.
+
+```text
+WASM     04e309d63831cfcc974674a282b4e6bcce6349f16703f5f1b9bbf39411f54774
+manifest c3e6df4dec134e5c90b7153d542208ebb6eb07588430de5ad74721c8b37e4e51
+scenario bd249160d39a58589005e5e46320c8ea6e8004c25f30562e125b556d5117fa74
+helper   3c9fff8aac296946a5fc123a15bdb472c1cccce16a6c85d205beab453936ca2f
+report   4e697ef8f4ec3b60326614675cfe6193310318fbcbe651bf96fb85d2e79a295a
+```

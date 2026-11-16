@@ -5,7 +5,7 @@
 Implement NIP-46 intermediate authorization challenges without transferring
 signer tokens to unrelated pages or interpreting them as completed RPCs.
 The primary contract is [NIP-46](https://github.com/nostr-protocol/nips/blob/master/46.md).
-This is an integration candidate. Focused proofs passed; merged gates remain pending.
+Focused proofs and merged gates passed; authorization still awaits its designed surface.
 
 ## Verified intermediate responses
 
@@ -160,7 +160,8 @@ Four current auth transport cases also passed at 18:01 UTC.
 
 The lasting `engine-check.sh` gate runs auth transport coverage plus both raw
 Worker modes using its existing package and native fixtures. The combined
-repository, main Worker, UI and deployment gates have not run for this candidate.
+repository, main Worker and default real UI gates now pass; exact evidence is in
+[engine-variants-verification.md](engine-variants-verification.md). Deployment remains unconfirmed.
 ## Production artifact boundary
 
 `scripts/engine-production.ts` inspects actual WASM exports without
@@ -180,7 +181,8 @@ web TypeScript package lacks that parser API, so the helper now uses the existin
 root dependency. This failure is separate from the original-emitter proof.
 Full web check passed at 18:15:40 UTC in 6.226 seconds, load 1.16/1.64/2.14;
 record: `tmp/production-export-audit/static-20261116T181540Z/`.
-The positive artifact predates this auth candidate. Its future merged production
-package must still pass the newly enforced artifact check and all normal gates.
+That positive artifact predates this auth candidate. The current merged production
+package also passes the export guard and exact archive audit; the dated combined
+record above binds its distinct WASM and archive hashes.
 
 No new visible words, layout or styles are part of this capability.
