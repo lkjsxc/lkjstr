@@ -38,7 +38,13 @@ impl Network {
             let Some(r) = r else { continue };
             let mut filter = r.filter.clone();
             if let Some(at) = r.last_event.filter(|_| r.live && r.page_eose) {
-                filter.since = Some(at.saturating_sub(2).max(filter.since.unwrap_or(0)));
+                // Gift-wrap timestamps are randomized over the preceding two days.
+                let overlap = if filter.kinds.as_ref().is_some_and(|ks| ks.contains(&1059)) {
+                    172_802
+                } else {
+                    2
+                };
+                filter.since = Some(at.saturating_sub(overlap).max(filter.since.unwrap_or(0)));
             }
             filter.limit = Some(
                 filter

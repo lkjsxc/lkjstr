@@ -14,6 +14,7 @@ impl Network {
                 let own = member == "~account-discovery"
                     || member.starts_with("~publication:")
                     || member.starts_with("~channel-action:")
+                    || member.starts_with("~dm-list:")
                     || q.and_then(|q| q.account.as_ref()).is_some_and(|account| {
                         r.filter.authors.as_deref() == Some(std::slice::from_ref(account))
                             && r.filter.kinds.as_ref().is_some_and(|ks| {
@@ -32,6 +33,15 @@ impl Network {
                 });
                 let (priority, purpose) = if own {
                     (2, "own")
+                } else if member.starts_with("~dm:") || member.starts_with("~dm-legacy:") {
+                    (
+                        1,
+                        if r.page_filter.until.is_some() {
+                            "history"
+                        } else {
+                            "visible"
+                        },
+                    )
                 } else if primary && self.focused_sub.as_ref() == Some(member) {
                     (0, "focused")
                 } else if primary && q.is_some_and(|q| q.source == Source::Notifications) {

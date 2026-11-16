@@ -8,6 +8,8 @@ pub mod channels;
 pub mod clients;
 mod commands;
 pub mod discovery;
+pub mod dm;
+mod dm_network;
 pub mod feedback;
 pub mod global;
 mod history;
@@ -63,6 +65,7 @@ struct Signing {
     deadline: u64,
 }
 pub struct Engine {
+    dm_wants: Vec<dm::routing::Want>,
     pub previews: preview::Previews,
     pending_publications: usize,
     // At most 64 in-flight two-event creates; removed after both terminal outcomes.
@@ -104,6 +107,7 @@ impl Engine {
     pub fn new() -> Self {
         Self {
             previews: Default::default(),
+            dm_wants: vec![],
             pending_publications: 0,
             channel_creates: BTreeMap::new(),
             channel_pending: BTreeMap::new(),
