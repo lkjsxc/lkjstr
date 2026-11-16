@@ -121,3 +121,19 @@ The resulting 1,539,503-byte gzip SHA-256 is
 Evidence is `tmp/package-proof/` in the isolated package-fix worktree.
 This proof rebuilt no product assets and ran no Cargo, browser or deployment.
 The corrected prescribed ship remains a separate required outcome.
+
+
+A subsequent review found a shared lexer bypass: after a numeric literal, a
+division slash was mistaken for a regex and could hide a missing import even
+when valid WASM was already reachable. Both the Python archive lexer and Rust
+distribution lexer now consume numeric literals as expression-ending tokens.
+This is limited token recognition, not a general JavaScript parser.
+
+At 17:06:09 UTC the Python numeric fixtures produced five failures and three
+passing controls on the old lexer. All 80 package cases passed after the fix
+at 17:06:55 UTC in 3.620 seconds, load 1.22/1.15/1.49. The native regression
+failed on freshly compiled old Rust at 17:11:15 UTC; the candidate passed all
+19 xtask tests in 2.217 seconds, load 4.98/2.58/1.95. Strict Clippy passed.
+Both builds refreshed and recorded owned source mtimes/hashes, and restored
+the candidate after the before proof. Evidence: `tmp/numeric-proof/` in the
+release-fix worktree. Required combined gates and deployment remain separate.

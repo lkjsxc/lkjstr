@@ -7,6 +7,31 @@ WASM_MAGIC = b"\0asm\x01\0\0\0"
 WORDS = {"URL", "url", "Worker", "SharedWorker", "fetch", "init", "importScripts"}
 
 
+
+def number_end(text, at):
+    """Numeric literals finish an expression; a following slash is division."""
+    prefix = text[at:at + 2].lower()
+    radix = {"0x": "0123456789abcdefABCDEF_", "0o": "01234567_", "0b": "01_"}
+    if prefix in radix:
+        at += 2
+        while at < len(text) and text[at] in radix[prefix]:
+            at += 1
+    else:
+        while at < len(text) and text[at] in "0123456789_":
+            at += 1
+        if at < len(text) and text[at] == ".":
+            at += 1
+            while at < len(text) and text[at] in "0123456789_":
+                at += 1
+        if at < len(text) and text[at] in "eE":
+            at += 1
+            if at < len(text) and text[at] in "+-":
+                at += 1
+            while at < len(text) and text[at] in "0123456789_":
+                at += 1
+    return at + 1 if at < len(text) and text[at] == "n" else at
+
+
 def tokens(text):
     """Yield literal tokens, never dependencies hidden in comments or text."""
     at, regexp = 0, True
@@ -52,6 +77,10 @@ def tokens(text):
                     break
             while at < len(text) and text[at].isascii() and text[at].isalpha():
                 at += 1
+        elif char in "0123456789" or (
+            char == "." and at + 1 < len(text) and text[at + 1] in "0123456789"
+        ):
+            at = number_end(text, at)
         elif char.isascii() and (char.isalpha() or char in "_$"):
             start = at
             while at < len(text) and text[at].isascii() and (

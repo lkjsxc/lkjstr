@@ -44,6 +44,51 @@ impl<'a> Tokens<'a> {
         }
         Token::Other
     }
+    fn number(&mut self) {
+        let bytes = self.text.as_bytes();
+        let radix = match &bytes[self.at..] {
+            [b'0', b'x' | b'X', ..] => 16,
+            [b'0', b'o' | b'O', ..] => 8,
+            [b'0', b'b' | b'B', ..] => 2,
+            _ => 10,
+        };
+        let digit = |b: &u8| b.is_ascii_digit() || *b == b'_';
+        if radix != 10 {
+            self.at += 2;
+            while bytes.get(self.at).is_some_and(|b| {
+                *b == b'_'
+                    || match radix {
+                        16 => b.is_ascii_hexdigit(),
+                        8 => (b'0'..=b'7').contains(b),
+                        _ => matches!(b, b'0' | b'1'),
+                    }
+            }) {
+                self.at += 1;
+            }
+        } else {
+            while bytes.get(self.at).is_some_and(digit) {
+                self.at += 1;
+            }
+            if bytes.get(self.at) == Some(&b'.') {
+                self.at += 1;
+                while bytes.get(self.at).is_some_and(digit) {
+                    self.at += 1;
+                }
+            }
+            if matches!(bytes.get(self.at), Some(b'e' | b'E')) {
+                self.at += 1;
+                if matches!(bytes.get(self.at), Some(b'+' | b'-')) {
+                    self.at += 1;
+                }
+                while bytes.get(self.at).is_some_and(digit) {
+                    self.at += 1;
+                }
+            }
+        }
+        if bytes.get(self.at) == Some(&b'n') {
+            self.at += 1;
+        }
+    }
     fn regexp(&mut self) {
         self.at += 1;
         let bytes = self.text.as_bytes();
@@ -90,6 +135,12 @@ impl<'a> Iterator for Tokens<'a> {
                 b'\'' | b'"' | 0x60 => self.quoted(byte),
                 b'/' if self.regex => {
                     self.regexp();
+                    Token::Other
+                }
+                b if b.is_ascii_digit()
+                    || b == b'.' && bytes.get(self.at + 1).is_some_and(u8::is_ascii_digit) =>
+                {
+                    self.number();
                     Token::Other
                 }
                 b if b.is_ascii_alphabetic() || b == b'_' || b == b'$' => {

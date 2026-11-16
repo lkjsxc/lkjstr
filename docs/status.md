@@ -174,7 +174,7 @@ private-list scope follow-up has separate evidence. Protocol 9 and its startup/d
 passed all required gates, 452 main Worker checks and 31 private-list checks; the dated record is
 [engine-private-verification.md](engine-private-verification.md). The next required public hour will use the completed sixth landing.
 The sixth prescribed ship stopped before deployment at 16:35:57 UTC: separate package validators still required a direct HTML WASM preload.
-The exact archive graph correction passes 72 package cases and full web check on byte-identical real dist input; the corrected ship is pending.
+The archive graph and numeric-token corrections pass 80 package cases and 19 xtask tests; combined required gates and the corrected ship are pending.
 See [engine-startup.md](engine-startup.md) for hashes, the failed-before proof and preserved archive/CSP checks.
 
 The owner's 2026-11-16 delegation authorizes rebased pushes and the prescribed ship script. Tests use fresh ports and fixture data, clean their

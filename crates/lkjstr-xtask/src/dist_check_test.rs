@@ -198,3 +198,18 @@ fn resolves_cycles_once_and_checks_all_edges() -> Result {
     f.fails("missing.js");
     Ok(())
 }
+
+#[test]
+fn checks_dependencies_after_numeric_division() -> Result {
+    for number in ["1000", "1000.", "1.5", "1e+3", ".5", "0x400", "1_000", "1n"] {
+        let f = Fixture::new()?;
+        f.put(
+            "assets/app.js",
+            format!("new URL('/engine.wasm',import.meta.url); const rate={number}/performance.now(); import './missing.js';"),
+        )?;
+        f.fails("missing.js");
+        f.put("assets/missing.js", "export {};")?;
+        assert_eq!(check(&f.0), Ok(()));
+    }
+    Ok(())
+}

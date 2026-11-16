@@ -71,6 +71,14 @@ describe('exact package reachable asset graph', () => {
     "fetch('./engine.wasm');",
     "init('engine.wasm');",
   ])('accepts generated WASM URL form %s', (statement) => accepts(graph(statement)));
+  it.each(['1000', '1000.', '1.5', '1e+3', '.5', '0x400', '1_000', '1n'])(
+    'checks dependencies after numeric division: %s',
+    (number) => {
+      const script = `new URL('/engine.wasm',import.meta.url);const rate=${number}/performance.now();import './missing.js';`;
+      rejects(graph(script), 'missing.js');
+      accepts(graph(script, [['missing.js', 'export {};']]));
+    },
+  );
   it('handles a dependency cycle once and still validates its WASM edge', () => {
     accepts(
       graph("import './loader.js';", [
