@@ -2,6 +2,15 @@ use super::*;
 use crate::engine::Engine;
 use serde_json::Value;
 impl Session {
+    /// Cache only observed relay metadata; independent dependencies are projected afresh.
+    pub(super) fn relay_state(state: &Value) -> Value {
+        let mut base = state.clone();
+        if let Some(fields) = base.as_object_mut() {
+            fields.remove("privateLists");
+            fields.remove("zapEvidence");
+        }
+        base
+    }
     pub fn cancelled(req: String) -> Output {
         let mut result = Self::failure(req, "internal");
         if let Output::Result {

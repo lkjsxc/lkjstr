@@ -8,7 +8,7 @@ use serde_json::{Value, json};
 use std::collections::BTreeSet;
 #[derive(Default)]
 pub(super) struct Cached {
-    base: Value,
+    base: Option<Value>,
     status: Option<Status>,
 }
 impl Session {
@@ -58,7 +58,7 @@ impl Session {
                     return;
                 };
                 let cached = self.private_states.entry(sub.clone()).or_default();
-                cached.base = state.clone();
+                cached.base = Some(Self::relay_state(state));
                 state["privateLists"] = json!(status);
                 cached.status = Some(status);
             }
@@ -86,23 +86,21 @@ impl Session {
             .collect::<Vec<_>>();
         let mut out = Vec::new();
         for (sub, status) in states {
-            let cached = self
-                .private_states
-                .entry(sub.clone())
-                .or_insert_with(|| Cached {
-                    base: json!({"phase":"cache","relaysAsked":0,"relaysAnswered":0}),
-                    status: None,
-                });
+            let cached = self.private_states.entry(sub.clone()).or_default();
             if cached.status.as_ref() == Some(&status) {
                 continue;
             }
-            let mut state = cached.base.clone();
-            if !state.is_object() {
-                state = json!({"phase":"cache","relaysAsked":0,"relaysAnswered":0});
-            }
+            // A private completion cannot invent or reuse another query's relay phase.
+            let Some(mut state) = cached.base.clone() else {
+                continue;
+            };
             state["privateLists"] = json!(status);
             cached.status = Some(status);
-            out.push(Output::State { sub, state });
+            out.push(Output::State {
+                sub: sub.clone(),
+                state,
+            });
+            self.notification_state(Some(&sub), &mut out, engine);
         }
         out
     }

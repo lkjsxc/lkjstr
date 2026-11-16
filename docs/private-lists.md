@@ -27,6 +27,10 @@ algorithm. There is no production NIP-04 encryption operation.
 optional stable error code. These counts describe list containers, not tags.
 Relay EOSE does not complete private decryption. Existing loading/failure
 nodes show private dependency state; available public rows stay available.
+Dependency-only updates retain the last relay phase and counters actually
+observed for this query. Both private-list and zap evidence are projected
+from current engine state at emission. Opening a replacement query clears
+the prior phase; initial rows cannot invent a relay completion state.
 
 `lists.retry {as}` explicitly resets this account's private-list failures.
 The Messages consent preference and refusal state are separate. List reads
@@ -81,6 +85,9 @@ timeout and cannot invent successful completion.
 
 Closing or hiding a view cancels queued work and invalidates responses.
 An already open extension dialog cannot be programmatically dismissed.
+The frontend rechecks the request lifetime after each awaited signer call,
+so revocation or expiry cannot start a later decrypt or identity-check call.
+This cancellation does not set the Messages refusal state.
 Successful cached data can remain available across a hidden visit while the
 account remains authorized. Cache saturation reports `too-large`; explicit
 Retry does not evict successful data. Account revocation or a new Worker
@@ -125,6 +132,17 @@ omitted the canonical trailing slash. Their reports remain unchanged under
 `tmp/private-lists-run1` through `tmp/private-lists-run4`; the passing run
 changed only that fixture URL, not the compiled Worker. Eleven frontend
 access/mock tests and 21 transport/history tests also pass.
+
+The frontend await-boundary regression failed in all nine cases before its
+correction at 13:53:57 UTC on 2026-11-16; all 22 adjacent cases then passed.
+The protocol-10 integration reproduced three independent state-composition
+failures at 14:08:39 UTC in 9.889 seconds, load 3.53/3.02/2.83. Its reverse-order
+control passed before the correction. All four composition cases and ten
+adjacent native cases passed afterward, together with the Worker WASM check,
+at 14:09:32 UTC in 10.463 seconds, load 2.74/2.89/2.80. Evidence is under
+`tmp/private-state-{before,after}.{log,json}` in the integration worktree.
+The merged frontend check passed at 14:08:09 UTC in 6.168 seconds. The merged
+protocol-10 browser suite and complete release gates remain pending.
 
 Primary contracts: [NIP-51](https://github.com/nostr-protocol/nips/blob/master/51.md),
 [NIP-07](https://github.com/nostr-protocol/nips/blob/master/07.md),

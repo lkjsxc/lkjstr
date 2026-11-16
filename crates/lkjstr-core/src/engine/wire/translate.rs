@@ -80,6 +80,7 @@ impl Session {
                 }
                 self.timelines.remove(&sub);
                 self.notification_states.remove(&sub);
+                self.private_states.remove(&sub);
                 self.queries.insert(sub.clone(), *query);
                 vec![p::Input::OpenVisible {
                     sub,

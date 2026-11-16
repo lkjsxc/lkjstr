@@ -103,7 +103,16 @@ fn completion_without_public_store_change_emits_truthful_private_state() -> Resu
         demand,
         0,
     );
-    let state = private_state(s.private_tick(&e)).ok_or("private state")?;
+    let state = private_state(s.output(
+        p::Output::Status {
+            sub: "list".into(),
+            state: "not-found".into(),
+            asked_relays: 0,
+            answered_relays: 0,
+        },
+        &e,
+    ))
+    .ok_or("private state")?;
     assert_eq!(state["phase"], "loading");
     assert_eq!(state["pending"], 1);
     let revision = e.store.revision();

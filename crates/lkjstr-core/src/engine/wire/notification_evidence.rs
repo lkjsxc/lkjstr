@@ -100,7 +100,7 @@ impl Session {
             } = message
                 && state_sub == sub
             {
-                cached.base = Some(state.clone());
+                cached.base = Some(Self::relay_state(state));
                 state["zapEvidence"] = json!(evidence);
                 has_state = true;
             }
