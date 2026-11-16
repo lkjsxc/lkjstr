@@ -5,6 +5,8 @@ import { createActionRequests } from './client-actions.ts';
 import { answerPublicKey } from './client-crypto.ts';
 import { createDeliveryWatches } from './client-delivery.ts';
 import { createDmClient } from './client-dm.ts';
+import type { Transport } from './client-transport.ts';
+import { createZapClient } from './client-zaps.ts';
 import type {
   Account,
   Action,
@@ -20,21 +22,9 @@ import type {
   Row,
   SubState,
   Timeline,
-  ToEngine,
 } from './protocol.ts';
-export type Transport = {
-  post(msg: ToEngine, transfer?: Transferable[]): void;
-  listen(fn: (msg: FromEngine) => void): void;
-  close(): void;
-};
-export function workerTransport(url: string): Transport {
-  const worker = new Worker(url, { type: 'module', name: 'lkjstr-engine' });
-  return {
-    post: (msg, transfer) => worker.postMessage(msg, transfer ?? []),
-    listen: (fn) => void (worker.onmessage = (e: MessageEvent<FromEngine>) => fn(e.data)),
-    close: () => worker.terminate(),
-  };
-}
+
+export { type Transport, workerTransport } from './client-transport.ts';
 export type SubHandlers = {
   rows(rows: readonly Row[], atTop: boolean, atBottom: boolean): void;
   patch(ops: readonly PatchOp[]): void;
@@ -45,6 +35,7 @@ export type SubHandlers = {
 export type Subscription = {
   readonly id: string;
   near(ids: readonly string[]): void;
+  reading?(key: string | null): void;
   window(anchor: Anchor, before: number, after: number): void;
   /** Whether its tab is in front (the engine may pause what is not). */
   visible(on: boolean): void;
@@ -53,6 +44,7 @@ export type Subscription = {
 export type ActResult = Extract<FromEngine, { t: 'result' }>;
 export type ActWatch = {
   uploadSignal?: AbortSignal;
+  zapSignal?: AbortSignal;
   deliverySignal?: AbortSignal;
   progress?(sent: number, total: number, detail?: Extract<FromEngine, { t: 'progress' }>): void;
   delivery?(relays: readonly Delivery[]): void;
@@ -60,6 +52,7 @@ export type ActWatch = {
 export type Accounts = { readonly accounts: readonly Account[]; readonly active?: Pubkey };
 export type Engine = {
   readonly dm?: ReturnType<typeof createDmClient>;
+  readonly zaps?: ReturnType<typeof createZapClient>;
   readonly accounts: Signal<Accounts>;
   readonly status: Signal<{ connected: number; wanted: number; offline: boolean }>;
   /** Which engine answered (`null` until it is ready). */
@@ -80,6 +73,7 @@ const STATS_MS = 4000;
 
 export function createEngine(transport: Transport): Engine {
   const dm = createDmClient(transport);
+  const zaps = createZapClient(transport);
   const subs = new Map<string, SubHandlers>(); // bound: open subscriptions (one per mounted list)
   const owners = new Map<string, HTMLElement>(); // bound: open subscriptions
   const visible = new Set<string>(); // bound: as `subs`
@@ -137,7 +131,6 @@ export function createEngine(transport: Transport): Engine {
   window.addEventListener('pointerdown', active, { passive: true, capture: true });
   window.addEventListener('keydown', active, { passive: true, capture: true });
   active();
-
   const sign = async (msg: Extract<FromEngine, { t: 'sign' }>): Promise<void> => {
     if (!actions.wantsSign(msg.actionReq)) {
       transport.post({ t: 'signed', req: msg.req, error: 'signer-refused' });
@@ -203,20 +196,22 @@ export function createEngine(transport: Transport): Engine {
       info.set({ engine: msg.engine, version: msg.version });
     } else if (msg.t === 'stats') asked.get(msg.req)?.(msg.stats);
     else if (msg.t === 'dm') dm.receive(msg);
+    else if (msg.t === 'zap.quote' || msg.t === 'zap.receipts') zaps.receive(msg);
     else if (msg.t === 'dm.flush') dm.flushers.receive(msg);
     else if (msg.t === 'crypt') void dm.access.crypt(msg);
     else if (msg.t === 'sign') void sign(msg);
     else if (msg.t === 'getPublicKey') void answerPublicKey(msg.req, (m) => transport.post(m));
   });
-
   return {
     dm,
+    zaps,
     accounts,
     status,
     info,
     me: () => accounts.get().active ?? '',
     open(query, handlers, owner) {
       const id = `s${++serial}`;
+      let reading: string | null | undefined;
       subs.set(id, handlers);
       if (owner) owners.set(id, owner);
       transport.post({ t: 'open', sub: id, query });
@@ -224,6 +219,10 @@ export function createEngine(transport: Transport): Engine {
         id,
         near: (ids) => {
           if ((info.get()?.version ?? 0) >= 5) transport.post({ t: 'preview', sub: id, ids });
+        },
+        reading: (key) => {
+          if (!subs.has(id) || (info.get()?.version ?? 0) < 9 || key === reading) return;
+          transport.post({ t: 'reading', sub: id, key: (reading = key) });
         },
         window: (anchor, before, after) =>
           transport.post({
@@ -290,6 +289,7 @@ export function createEngine(transport: Transport): Engine {
       clearTimeout(idleTimer);
       offPeople();
       dm.dispose();
+      zaps.dispose();
       actions.dispose();
       deliveries.dispose();
       transport.close();

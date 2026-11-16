@@ -6,6 +6,7 @@ type Pending = {
   done(result: ActResult): void;
   watch?: ActWatch;
   upload: boolean;
+  zap: boolean;
   cancelled: boolean;
 };
 export function createActionRequests(
@@ -35,7 +36,8 @@ export function createActionRequests(
     act(action: Action, watch?: ActWatch): Promise<ActResult> {
       const req = next();
       const upload = action.a === 'upload';
-      const signal = upload ? watch?.uploadSignal : undefined;
+      const zap = action.a === 'zap.invoice';
+      const signal = upload ? watch?.uploadSignal : zap ? watch?.zapSignal : undefined;
       if (signal?.aborted) return Promise.resolve({ t: 'result', req, ok: false, cancelled: true });
       if (pending.size >= 64)
         return Promise.resolve({ t: 'result', req, ok: false, error: { code: 'internal' } });
@@ -45,7 +47,8 @@ export function createActionRequests(
           const entry = pending.get(req);
           if (!entry || entry.cancelled) return;
           entry.cancelled = true;
-          transport.post({ t: 'upload.cancel', req });
+          if (upload) transport.post({ t: 'upload.cancel', req });
+          else if (zap) transport.post({ t: 'zap.close', req });
         };
         const timer = upload
           ? setTimeout(() => {
@@ -66,9 +69,16 @@ export function createActionRequests(
                 () => finish({ t: 'result', req, ok: false, error: { code: 'internal' } }),
                 15_000,
               )
-            : undefined;
+            : zap
+              ? setTimeout(() => {
+                  if (!pending.has(req)) return;
+                  finish({ t: 'result', req, ok: false, error: { code: 'offline' } });
+                  transport.post({ t: 'zap.close', req });
+                }, 95_000)
+              : undefined;
         pending.set(req, {
           upload,
+          zap,
           watch,
           cancelled: false,
           done(result) {
@@ -88,6 +98,7 @@ export function createActionRequests(
       for (const [req, entry] of pending) {
         finish({ t: 'result', req, ok: false, error: { code: 'offline' } });
         if (entry.upload) transport.post({ t: 'upload.cancel', req });
+        if (entry.zap) transport.post({ t: 'zap.close', req });
       }
     },
   };

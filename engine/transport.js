@@ -8,7 +8,11 @@ export function workerTransport(options = {}) {
   let config, relays = options.relays ? { t: 'relays', relays: options.relays } : undefined, hint;
   const privateSubs = new Map(); // at most 32 private subscriptions
   const subs = new Map(); // bounded by engine's 128-subscription limit
-  let started=false;
+  let started=false, readsReady=false;
+  const zapReads = new Map(); // at most 16 finite reads / 64 KiB JSON, released on reconnect/close
+  const failedRead = (msg, error) => receive(msg.t === 'zap.quote'
+    ? { t: msg.t, req: msg.req, quote: { target: msg.query.target, phase: 'failed', error, recipients: [] } }
+    : { t: msg.t, req: msg.req, page: { target: msg.query.target, phase: 'failed', error, coverage: 'failed', page: null } });
   const startup=[]; // at most 64 actions before the first ready
   const pending = new Set(); // bounded by engine's action limit
   const send = (msg, transfer=[]) => port?.postMessage(msg,transfer);
@@ -27,6 +31,11 @@ export function workerTransport(options = {}) {
     }
   };
   const reconnect = () => {
+    readsReady=false;
+    const lostReads = [...zapReads.values()];
+    zapReads.clear();
+    for (const msg of started ? lostReads : []) failedRead(msg, 'network');
+    if (!started) for (const msg of lostReads) zapReads.set(msg.req, msg);
     for (const req of started ? pending : []) receive({ t: 'result', req, ok: false, error: { code: 'offline' } });
     if(started)pending.clear();
     receive({ t: 'reconnect' });
@@ -56,6 +65,11 @@ export function workerTransport(options = {}) {
     if (msg.t === 'ready') {
       replay();
       if(!started) {started=true;for(const [msg,transfer] of startup.splice(0))send(msg,transfer);}
+      if (!readsReady) { readsReady=true; for (const msg of [...zapReads.values()]) send(msg); }
+    }
+    if (msg.t === 'rows') {
+      const reading = subs.get(msg.sub)?.reading;
+      if (reading && (reading.key === null || msg.rows.some((r) => r.key === reading.key))) send(reading);
     }
     if (msg.t === 'timeline') {
       const state = subs.get(msg.sub);
@@ -65,6 +79,7 @@ export function workerTransport(options = {}) {
       }
     }
     if (msg.t === 'result') pending.delete(msg.req);
+    if (msg.t === 'zap.quote' && msg.quote.phase !== 'loading' || msg.t === 'zap.receipts' && msg.page.phase !== 'loading') zapReads.delete(msg.req);
     receive(msg);
   };
   const url = (name) => new URL(name, import.meta.url);
@@ -180,7 +195,7 @@ export function workerTransport(options = {}) {
     channel?.close();
     worker?.terminate?.();
     release?.();
-    privateSubs.clear(); subs.clear(); pending.clear(); startup.length=0;
+    privateSubs.clear(); subs.clear(); pending.clear(); zapReads.clear(); startup.length=0;
   };
   // A retained history page still owns its editor: expiry may orphan it, never certify it clean.
   const pagehide = (event) => { if (!event.persisted) close(); };
@@ -190,8 +205,23 @@ export function workerTransport(options = {}) {
   return {
     post(msg, transfer=[]) {
       if (closed) return;
-      if (msg.t === 'upload.cancel' && !started) {
-        const at = startup.findIndex(([action]) => action.t === 'act' && action.req === msg.req && action.action.a === 'upload');
+      if (msg.t === 'zap.close' && zapReads.delete(msg.req)) { if (readsReady) send(msg); return; }
+      if (msg.t === 'zap.quote' || msg.t === 'zap.receipts') {
+        if (zapReads.has(msg.req) || pending.has(msg.req)) return;
+        if (zapReads.size >= 16) { failedRead(msg, 'too-large'); return; }
+        let queued;
+        try {
+          const json = JSON.stringify(msg);
+          if (!json || json.length > 4096 || new TextEncoder().encode(json).length > 4096) { failedRead(msg, 'too-large'); return; }
+          queued = JSON.parse(json); // Own a bounded snapshot, like postMessage itself.
+        } catch { failedRead(msg, 'rejected'); return; }
+        zapReads.set(msg.req, queued);
+        if (readsReady) send(queued);
+        return;
+      }
+      if (!started && (msg.t === 'upload.cancel' || msg.t === 'zap.close')) {
+        const kind = msg.t === 'upload.cancel' ? 'upload' : 'zap.invoice';
+        const at = startup.findIndex(([action]) => action.t === 'act' && action.req === msg.req && action.action.a === kind);
         if (at >= 0) {
           startup.splice(at, 1);
           pending.delete(msg.req);
@@ -207,8 +237,14 @@ export function workerTransport(options = {}) {
       if (msg.t === 'hint') hint = msg;
       if (msg.t === 'open' && (subs.has(msg.sub)||subs.size<128)) subs.set(msg.sub, { open: msg });
       if (msg.t === 'window' && subs.has(msg.sub)) subs.get(msg.sub).window = msg;
+      if (msg.t === 'reading') {
+        const state = subs.get(msg.sub);
+        if (!state || (msg.key !== null && (typeof msg.key !== 'string' || msg.key.length > 256))) return;
+        state.reading = { t: 'reading', sub: msg.sub, key: msg.key };
+      }
       if (msg.t === 'close') subs.delete(msg.sub);
       if (msg.t === 'act') {
+        if(pending.has(msg.req)||zapReads.has(msg.req))return;
         if(pending.size>=64) {receive({t:'result',req:msg.req,ok:false,error:{code:'internal'}});return;}
         pending.add(msg.req);
         if(!started) {startup.push([msg,transfer]);return;}

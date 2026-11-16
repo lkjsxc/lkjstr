@@ -139,7 +139,15 @@ export function actionRow(row: NoteRow, env: ViewEnv): HTMLElement {
   const zap = button(
     'zap',
     'act.zap',
-    row.counts.zaps ? countText(row.counts.zaps, row.counts.partial, lang) : '',
+    row.counts.zaps
+      ? countText(
+          row.counts.zaps,
+          row.counts.partial ||
+            !!row.counts.zapLimited ||
+            (row.counts.zapState !== undefined && row.counts.zapState !== 'ready'),
+          lang,
+        )
+      : '',
     false,
     zapRun,
   );

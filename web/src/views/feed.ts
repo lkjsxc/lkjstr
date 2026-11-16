@@ -24,8 +24,8 @@ import type { ViewEnv } from './registry.ts';
 import { watchHomeTitle } from './their-home.ts';
 import { mountTimeRail } from './time-rail.ts';
 
-const PAGE = 60; // Prefetch size.
-const LIMIT = 800; // Maximum retained rows.
+const PAGE = 60;
+const LIMIT = 800;
 const NEAR_PX = 1400;
 type State = BarState & {
   title?: string;
@@ -110,6 +110,7 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
     fresh.read(rows);
     keys.paint();
     previews.sync(), rail.sync();
+    if (env.visible.get()) sub?.reading?.(keeper.get()?.key ?? rows[0]?.key ?? null);
   };
   let seated = kind !== 'thread' || Boolean(state.pos);
   const seat = (): void => {
@@ -126,15 +127,16 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
   const showState = (): void => {
     const empty = rows.every((r) => r.kind === 'profile' || r.kind === 'channel');
     const phase = sstate?.phase ?? 'cache';
+    const zapPhase = sstate?.zapEvidence?.phase;
     const key: Key | null = !empty
-      ? atBottom && rows.length > 8
+      ? atBottom && rows.length > 8 && (zapPhase === undefined || zapPhase === 'ready')
         ? 'feed.end'
         : null
       : kind === 'search' && !state.text
         ? 'feed.searchHint'
-        : phase === 'cache'
+        : phase === 'cache' || zapPhase === 'loading'
           ? 'feed.loading'
-          : phase === 'failed'
+          : phase === 'failed' || zapPhase === 'failed' || zapPhase === 'unsupported'
             ? 'feed.failed'
             : 'feed.empty';
     if (empty && !account && OWN.has(kind)) status.replaceChildren(signIn);
@@ -144,6 +146,7 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
       : '';
   };
   const follow = (): void => {
+    if (env.visible.get()) sub?.reading?.(keeper.get()?.key ?? rows[0]?.key ?? null);
     if (waiting || rail.busy() || !sub || !env.visible.get()) return;
     const top = el.scrollTop;
     const room = el.scrollHeight - top - el.clientHeight;
@@ -160,8 +163,7 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
   };
   let frame = 0;
   const onScroll = (): void => {
-    keeper.read();
-    fresh.read(rows);
+    keeper.read(), fresh.read(rows);
     if (!frame) frame = requestAnimationFrame(() => ((frame = 0), follow()));
   };
   el.addEventListener('scroll', onScroll, { passive: true });
