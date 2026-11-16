@@ -1,8 +1,17 @@
 // @vitest-environment node
 import { spawnSync } from 'node:child_process';
-import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  copyFileSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { productionBindings, productionWasm } from './package-production-fixture.ts';
 
 const checker = new URL('../scripts/package-check.py', import.meta.url).pathname;
 type Entry = [name: string, body: string | Buffer, type?: string];
@@ -66,15 +75,33 @@ describe('release package preflight', () => {
     try {
       mkdirSync(join(root, 'web/scripts'), { recursive: true });
       mkdirSync(join(root, 'dist'));
-      for (const file of ['package.ts', 'package-check.py', 'package-graph.py'])
+      for (const file of [
+        'package.ts',
+        'package-engine.ts',
+        'package-check.py',
+        'package-graph.py',
+      ])
         copyFileSync(
           new URL(`../scripts/${file}`, import.meta.url),
           join(root, 'web/scripts', file),
         );
+      mkdirSync(join(root, 'scripts'));
+      copyFileSync(
+        new URL('../../scripts/engine-production.ts', import.meta.url),
+        join(root, 'scripts/engine-production.ts'),
+      );
+      symlinkSync(
+        new URL('../../node_modules', import.meta.url).pathname,
+        join(root, 'node_modules'),
+        'dir',
+      );
       const wasm = 'engine-0123456789abcdef.wasm';
       writeFileSync(join(root, 'dist/index.html'), shell.replace('engine.wasm', wasm));
-      writeFileSync(join(root, 'dist/app.js'), 'export {};');
-      writeFileSync(join(root, 'dist', wasm), assets[1]![1]);
+      writeFileSync(
+        join(root, 'dist/app.js'),
+        productionBindings.replace('renamed-data.wasm', wasm),
+      );
+      writeFileSync(join(root, 'dist', wasm), productionWasm());
       const run = () => spawnSync(process.execPath, [join(root, 'web/scripts/package.ts')]);
       expect(run().status).toBe(0);
       const tar = join(root, 'tmp/lkjstr-dist.tar.gz');

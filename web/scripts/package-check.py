@@ -2,6 +2,7 @@
 from html.parser import HTMLParser
 from pathlib import Path, PurePosixPath
 import io
+import json
 import posixpath
 import re
 import runpy
@@ -75,7 +76,7 @@ def create_page_check(name, files):
 def check(raw):
     if len(raw) > LIMIT:
         fail("dist/", "archive exceeds 128 MiB")
-    files = {}
+    files, members = {}, []
     with tarfile.open(fileobj=io.BytesIO(raw), mode="r:") as archive:
         for count, entry in enumerate(archive, 1):
             if count > 4096:
@@ -92,8 +93,10 @@ def check(raw):
             if PurePosixPath(name).suffix.lower().removeprefix(".") not in SUFFIXES:
                 fail(name, "unsupported file suffix")
             files[name] = archive.extractfile(entry).read()
+            members.append({"name": name, "offset": entry.offset_data, "size": entry.size})
     if "index.html" not in files:
         fail("index.html", "missing archive root page")
+    parents = {}
     for name, data in files.items():
         if not name.lower().endswith(".html"):
             continue
@@ -110,11 +113,16 @@ def check(raw):
             for ref in references:
                 if ref.endswith(".wasm") and not files[ref].startswith(b"\0asm\x01\0\0\0"):
                     fail(ref, "invalid WASM module")
-            CHECK_GRAPH(files, graph_references, fail, local_name)
+            parents = CHECK_GRAPH(files, graph_references, fail, local_name)
+    return {"members": members, "parents": parents}
 
 
 if __name__ == "__main__":
     try:
-        check(sys.stdin.buffer.read(LIMIT + 1))
+        if sys.argv[1:] not in ([], ["--members"]):
+            fail("dist/", "unsupported checker argument")
+        checked = check(sys.stdin.buffer.read(LIMIT + 1))
+        if sys.argv[1:]:
+            print(json.dumps(checked, separators=(",", ":")))
     except (ValueError, tarfile.TarError) as error:
         sys.exit(str(error))

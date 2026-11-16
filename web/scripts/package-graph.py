@@ -137,12 +137,15 @@ def resolve(source, target, module, fail, local_name):
 
 
 def check_graph(files, references, fail, local_name):
-    pending, seen = deque(), set()
+    pending, seen, parents = deque(), set(), {}
 
     def add(source, refs):
         for target, module in refs:
             name = resolve(source, target, module, fail, local_name)
-            if name is None or name in seen:
+            if name is None:
+                continue
+            parents.setdefault(name, set()).add(source)
+            if name in seen:
                 continue
             seen.add(name)
             if len(seen) > MAX_ASSETS:
@@ -169,3 +172,4 @@ def check_graph(files, references, fail, local_name):
             wasm = True
     if not js or not wasm:
         fail("index.html", "no reachable app .js and .wasm graph")
+    return {name: sorted(sources) for name, sources in parents.items()}

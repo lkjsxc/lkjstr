@@ -80,3 +80,44 @@ The package command prints current byte sizes. Harness exports and fixture
 files are excluded from product output; the frontend copies every required
 engine dependency explicitly. The release has one WASM module, three hashed
 engine JavaScript modules, the hashed adapter, and the unchanged UI assets.
+
+## Exact archive production guard (2026-11-16)
+
+Standalone `pnpm --dir web package` now audits the retained raw tar before gzip
+or output replacement. The existing Python checks still validate every archive
+entry, HTML restriction and reachable dependency. Their optional metadata mode
+returns at most 4096 member offsets and a graph of at most 1024 assets; Node caps
+that metadata response at 4 MiB and checks every selected byte range.
+
+The generated product has one WASM module and one reachable JavaScript loader
+that directly names it. Packaging requires that unambiguous pair, regardless of
+its filenames, and rejects extra WASM files. It reads both members from the exact
+validated raw tar, then reuses `assertProductionEngine` to reject test-only
+exports and stale harness bindings. No mutable dist file is reopened, archive
+member extracted, binding executed, or WASM instance created by this audit.
+Generic package-check fixtures retain their prior archive/graph semantics.
+
+On base `274fd7e0`, the unchanged package command failed four new rejection
+assertions and passed two controls at 18:49:00 UTC, load 1.58/1.78/2.23.
+The corrected six cases passed at 18:52:49 in 1.216 seconds; the existing
+80 package/graph cases passed in 3.921 seconds, load 0.91/1.34/1.95.
+TypeScript and focused formatting checks passed. The six new cases now run in
+`web/scripts/check.ts`; the prior command-level output-preservation assertion
+still runs with a valid inert production fixture, and mock rejection remains.
+
+The actual frozen harness binary `577c049a` reproduced the standalone bypass
+at 18:53:48 UTC in 0.242 seconds: the original command wrote a compressed archive
+and failed the new rejection assertion. The corrected command rejected those
+same bytes and production `c7c7a7dd` bytes paired with stale harness bindings.
+The complete immutable ce05 production archive passed and recompressed to the
+identical SHA-256 `3124a583b981ab461dd63098cc9a680434f2c801412b59071d9118411f38ad51`.
+These three corrected checks took 0.726 seconds at 18:53:49, load 0.94/1.27/1.88.
+Only the fixture loader's asset URL was renamed; the actual WASM bytes stayed
+unchanged. Every owned fixture directory was removed, including the before case.
+
+Evidence is in `tmp/package-audit-tree/tmp/package-proof/` under the stream
+worktree, with the six-case logs and `package-after.json` in its sibling tmp.
+The first fixture setup attempt had a wrong scratch path and is retained as a
+setup failure; its six empty directories were removed before the valid proof.
+No Cargo, browser, public traffic, deployment or full combined gate ran for
+this isolated packaging correction. The parent integration runs those gates.

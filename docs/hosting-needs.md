@@ -153,3 +153,10 @@ The graph is bounded at 1024 distinct assets and skips text/comment/regex
 decoys. Existing archive and HTML/CSP restrictions remain; no archive contents
 are extracted or executed. See engine-startup.md for the dated before/after
 package proof and the failed sixth ship's deployment boundary.
+
+The standalone package command additionally requires one unambiguous reachable
+production engine pair and checks its actual WASM exports and generated bindings.
+It audits byte ranges in the same validated raw tar before gzip/output, so an
+older existing dist cannot bypass the real-build export guard. Extra WASM files,
+harness controls and mixed stale bindings fail closed. The generic archive
+validator retains its graph semantics; dated evidence is in engine-package.md.
