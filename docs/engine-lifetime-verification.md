@@ -87,14 +87,19 @@ were used. Documentation-only changes receive a final repo check before landing.
 
 | Command | Start UTC | Seconds | Load before | Load after |
 | --- | --- | ---: | --- | --- |
-| `pnpm check:repo` | 08:46:41 | 0.702 | 9.60/10.06/8.73 | 9.60/10.06/8.73 |
+| `pnpm check:repo` | 09:20:25 | 0.639 | 2.53/3.86/5.93 | 2.53/3.86/5.93 |
 | `pnpm test:quiet` | 08:46:42 | 103.400 | 9.60/10.06/8.73 | 10.40/10.88/9.20 |
 | `pnpm rust-wasm:quiet` | 08:48:25 | 82.578 | 10.40/10.88/9.20 | 7.11/9.47/8.84 |
 | `pnpm verify:quiet` | 08:49:48 | 67.692 | 7.11/9.47/8.84 | 6.18/8.75/8.63 |
-| `pnpm --dir web check` | 07:28:32 | 7.457 | 15.09/11.02/9.59 | 15.32/11.13/9.63 |
-| `pnpm --dir web build` | 07:28:39 | 0.417 | 15.32/11.13/9.63 | 15.30/11.20/9.66 |
-| `pnpm --dir web smoke` | 09:07:40 | 381.798 | 8.41/7.72/8.22 | 3.64/5.70/7.24 |
+| `pnpm --dir web check` | 09:20:26 | 5.162 | 2.53/3.86/5.93 | 4.01/4.15/6.00 |
+| `pnpm --dir web build` | 09:20:31 | 0.295 | 4.01/4.15/6.00 | 4.01/4.15/6.00 |
+| `pnpm --dir web smoke` | 09:20:31 | 395.270 | 4.01/4.15/6.00 | 3.34/4.06/5.43 |
 | `sh scripts/engine-check.sh` | 08:51:36 | 232.404 | 5.22/8.13/8.43 | 9.72/10.13/9.30 |
+
+The final repo/web rows repeat the gates after rebasing onto `397e20f1`.
+That upstream commit changed only Claude's specifications, their index and
+the two string tables; native and Worker source bytes were unchanged by rebase.
+The earlier complete smoke passed in 381.798 seconds at 09:07:40 UTC.
 
 The smoke includes the normal interface, 128 upload checks and offline shell
 integrity/update/lifetime cases. Its first attempt stopped at Chromium launch:
