@@ -1,5 +1,5 @@
 // Protocol 3 semantics through the real Worker. Fixtures stay on loopback.
-import { spawn } from 'node:child_process';
+import { fixtureProcess } from './engine-fixture-process.mjs';
 import { createInterface } from 'node:readline';
 export async function rich({page,send,wait,check,note,signer,lines,fake}) {
   check('ready retains protocol 3 features',await page.evaluate(()=>window.messages.some(m=>m.t==='ready'&&m.version>=3)));
@@ -24,7 +24,7 @@ export async function rich({page,send,wait,check,note,signer,lines,fake}) {
     signer.stdin.write(`${JSON.stringify({pubkey:note.pubkey,kind,created_at,content,tags})}\n`);
     return JSON.parse((await lines.next()).value);
   };
-  const other=spawn('cargo',['run','-q','-p','lkjstr-core','--example','engine-fixtures'],{stdio:['pipe','pipe','pipe']});
+  const other=fixtureProcess('engine-fixtures',{stdio:['pipe','pipe','pipe']});
   other.stderr.resume();
   const secondary=createInterface({input:other.stdout})[Symbol.asyncIterator]();
   const owner=JSON.parse((await secondary.next()).value).note;

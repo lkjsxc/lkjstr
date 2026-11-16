@@ -1,22 +1,30 @@
 // Real loopback TLS/CORS fixture. Nothing is proxied to public media hosts.
 import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
-import { mkdtemp, readFile } from 'node:fs/promises';
+import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { createServer } from 'node:https';
 import { resolve } from 'node:path';
 export async function fakeMedia() {
   const dir = await mkdtemp(resolve('tmp/temp/media-'));
+  const servers = [];
+  const close = async () => {
+    try { for (const server of servers) { server.closeAllConnections(); await new Promise(done => server.close(() => done())); } }
+    finally { await rm(dir, { recursive: true, force: true }); }
+  };
+  try {
   const cert = spawnSync('openssl', ['req', '-x509', '-newkey', 'rsa:2048', '-nodes', '-keyout', `${dir}/key.pem`, '-out', `${dir}/cert.pem`, '-days', '1', '-subj', '/CN=localhost'], { stdio: 'ignore' });
   if (cert.status !== 0) throw new Error('loopback TLS certificate failed');
   const tls = { key: await readFile(`${dir}/key.pem`), cert: await readFile(`${dir}/cert.pem`) };
   const requests = [], modes = { blossom: 'ok', nip96: 'ok' }, origins = {}, blobs = new Map();
-  const servers = [];
   for (const protocol of ['blossom', 'nip96']) {
     const server = createServer(tls, async (req, res) => {
       const mode = modes[protocol], path = req.url;
       const headers = { 'access-control-allow-origin': '*', 'access-control-allow-methods': 'GET, PUT, POST, OPTIONS', 'access-control-allow-headers': 'Authorization, Content-Type', 'access-control-max-age': '0', 'content-type': 'application/json' };
       if (requests.length >= 1000) requests.shift();
-      const record = { protocol, method: req.method, path, mode };
+      const record = { protocol, method: req.method, path, mode, closed: false, complete: false, aborted: false };
+      req.on('aborted', () => { record.aborted = true; });
+      req.on('error', () => { record.aborted = true; });
+      res.on('close', () => { record.closed = true; record.complete = res.writableEnded; });
       requests.push(record);
       if (path === '/') return void res.writeHead(200, { 'content-type': 'text/plain' }).end('No root CORS');
       if (req.method === 'OPTIONS') {
@@ -32,13 +40,16 @@ export async function fakeMedia() {
       }
       if (protocol === 'nip96' && path === '/upload') return reply(404, {});
       if (path === '/processing') {
+        if (mode === 'processing-hold') return;
         if (mode === 'processing') await new Promise(done => setTimeout(done, 11000));
         const blob = blobs.get(protocol);
         return reply(201, { status: 'success', nip94_event: { tags: [['url', `${origins[protocol]}/${blob.hash}.png`], ['ox', blob.hash], ['m', 'image/png']] } });
       }
       if (req.method === 'GET') return void res.writeHead(200, { ...headers, 'content-type': 'image/png' }).end(blobs.get(protocol)?.bytes);
       if (mode === 'hang') return; // closed by AbortController; no fixture timer survives
-      const chunks = []; for await (const data of req) chunks.push(data);
+      const chunks = [];
+      try { for await (const data of req) chunks.push(data); }
+      catch (error) { if (req.aborted || res.destroyed) return; throw error; }
       const body = Buffer.concat(chunks);
       let auth; try { auth = JSON.parse(Buffer.from((req.headers.authorization ?? '').replace(/^Nostr /, ''), 'base64')); } catch { return reply(401, {}); }
       const tag = key => auth.tags?.find(t => t[0] === key)?.[1];
@@ -62,20 +73,26 @@ export async function fakeMedia() {
       blobs.set(protocol, { hash, bytes });
       if (mode === 'slow') await new Promise(done => setTimeout(done, 11000));
       if (mode === 'body-hang') { res.writeHead(201, headers); res.write('{'); return; }
-      if (mode === 'processing') return reply(202, { status: 'processing', processing_url: `${origins.nip96}/processing` });
+      if (mode === 'processing' || mode === 'processing-hold') return reply(202, { status: 'processing', processing_url: `${origins.nip96}/processing` });
       reply(201, protocol === 'blossom' ? { url: `${origins[protocol]}/${hash}.png`, sha256: hash, type: 'image/png' } : { status: 'success', nip94_event: { tags: [['url', `${origins[protocol]}/${hash}.png`], ['ox', hash], ['m', 'image/png']] } });
     });
-    await new Promise(done => server.listen(0, '127.0.0.1', done));
-    origins[protocol] = `https://127.0.0.1:${server.address().port}`;
     servers.push(server);
+    await new Promise((done, failed) => {
+      server.once('error', failed);
+      server.listen(0, '127.0.0.1', () => { server.off('error', failed); done(); });
+    });
+    origins[protocol] = `https://127.0.0.1:${server.address().port}`;
   }
-  return { origins, requests, set(protocol, mode) { modes[protocol] = mode; }, async close() { for (const server of servers) { server.closeAllConnections(); await new Promise(done => server.close(done)); } } };
+  return { origins, requests, set(protocol, mode) { modes[protocol] = mode; }, close };
+  } catch (error) { await close(); throw error; }
 }
 
 // Each concurrent signer scenario owns its response modes and unique ports.
 export async function fakeMediaSet() {
   const groups = [];
-  for (const signer of ['local', 'extension', 'remote']) groups.push([signer, await fakeMedia()]);
+  try {
+    for (const signer of ['local', 'extension', 'remote']) groups.push([signer, await fakeMedia()]);
+  } catch (error) { await Promise.all(groups.map(([, media]) => media.close())); throw error; }
   return {
     bySigner: Object.fromEntries(groups),
     origins: Object.fromEntries(groups.flatMap(([signer, media]) => Object.entries(media.origins).map(([protocol, url]) => [`${signer}-${protocol}`, url]))),

@@ -46,7 +46,7 @@ export async function continuity({page,send,wait,check,note,signer,lines,origin,
   await send({t:'configure',config:{language:'en',heuristics:false,prefetch:false}});
   await send({t:'relays',relays:[{url:relay,read:true,write:true,search:true}]});
   await page.evaluate(()=>{
-    window.continuityRows=[];
+    window.continuityRows=[];window.continuityPageTimes=[];
     const original=window.worker.onmessage;
     window.worker.onmessage=e=>{
       original(e);
@@ -66,8 +66,9 @@ export async function continuity({page,send,wait,check,note,signer,lines,origin,
   for(let n=0;n<30;n++){
     await send({t:'window',sub:'continuity',anchor:prior.length?{key:prior.at(-1)}:'top',before:0,after:200,retainAbove:true});
     const target=Math.min(5000,prior.length?prior.length+190:200);
-    await page.evaluate(info=>{window.continuityProgress=info;},{page:n+1,prior:prior.length,target});
+    await page.evaluate(info=>{window.continuityProgress=info;},{page:n+1,prior:prior.length,target,waitStartedAt:Date.now()});
     await wait(n=>window.continuityRows.length>=n,target);
+    await page.evaluate(()=>{window.continuityProgress={...window.continuityProgress,completedAt:Date.now(),completedRows:window.continuityRows.length};window.continuityPageTimes.push(window.continuityProgress);});
     const rows=await page.evaluate(()=>window.continuityRows.map(r=>({key:r.key,at:r.at})));
     const keys=rows.map(r=>r.key);
     check(`continuity page ${n+1} retains everything above`,prior.every((id,i)=>keys[i]===id));

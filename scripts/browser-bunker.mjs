@@ -1,8 +1,8 @@
 // Loopback NIP-46 fixture. Keys and decrypted RPC payloads stay in Rust.
-import { spawn } from 'node:child_process';
+import { fixtureProcess } from './engine-fixture-process.mjs';
 import { createInterface } from 'node:readline';
 export async function fakeBunker() {
-  const child = spawn('cargo', ['run', '-q', '-p', 'lkjstr-core', '--example', 'engine-bunker'], {
+  const child = fixtureProcess('engine-bunker', {
     stdio: ['pipe', 'pipe', 'pipe'],
   });
   child.stderr.resume();

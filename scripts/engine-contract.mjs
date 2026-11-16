@@ -34,6 +34,8 @@ function valid(s, v) {
   if (s.object) return v !== null && typeof v === 'object' && Object.entries(s.object).every(([k, t]) => (t.optional && v[k] === undefined) || valid(t.shape, v[k]));
   return false;
 }
+export const protocolVersion=Number(text.match(/PROTOCOL_VERSION\s*=\s*(\d+)/)?.[1]);
+if(!Number.isInteger(protocolVersion))throw new Error('missing protocol number');
 const schema = shape(aliases.get('FromEngine'));
 export function validateReplies(messages) {
   for (const msg of messages) if (!valid(schema, msg)) throw new Error('protocol shape mismatch (payload redacted)');

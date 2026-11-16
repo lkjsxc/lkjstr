@@ -1,13 +1,18 @@
 // Browser profiles and artifacts stay inside this checkout and are removed after every run.
-import { mkdir, mkdtemp, readdir, rm } from 'node:fs/promises';
-import { join } from 'node:path';
+import { mkdir, mkdtemp, readdir, realpath, rm } from 'node:fs/promises';
+import { join, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright-core';
 
 export async function shellBrowser() {
   const root = fileURLToPath(new URL('../../tmp/', import.meta.url));
   await mkdir(root, { recursive: true });
-  const scratch = await mkdtemp(join(root, 'sw-'));
+  // Keep a caller's short symlink spelling, but only when its target is inside this checkout.
+  const requested = process.env.LKJSTR_ENGINE_TMPDIR ?? process.env.TMPDIR;
+  const owned = await realpath(root);
+  const resolved = requested ? await realpath(requested).catch(() => '') : '';
+  const base = resolved === owned || resolved.startsWith(owned + sep) ? requested : root;
+  const scratch = await mkdtemp(join(base, 'sw-'));
   const previousTmp = process.env.TMPDIR;
   let browser;
   try {

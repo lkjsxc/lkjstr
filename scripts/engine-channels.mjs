@@ -1,6 +1,7 @@
+import { protocolVersion } from './engine-contract.mjs';
 // NIP-28 acceptance against a fresh loopback route; no public relay traffic.
 export async function channels({page,send,wait,check,note,signer,lines,fake,origin,act,kinds,bunker}) {
-  check('ready advertises channels protocol 6',await page.evaluate(()=>window.messages.some(m=>m.t==='ready'&&m.version===6)));
+  check('ready advertises the current channels contract',await page.evaluate(version=>window.messages.some(m=>m.t==='ready'&&m.version===version),protocolVersion));
   const route=`${origin.replace('http:','ws:')}/channels`;
   check('channel fixture selects its loopback owner relay',(await act({a:'relays.save',as:note.pubkey,relays:[{url:route,read:true,write:true}]},true)).ok);
   await page.evaluate(()=>{
@@ -122,7 +123,10 @@ export async function channels({page,send,wait,check,note,signer,lines,fake,orig
   await open('ch-news',{source:'notifications',account:note.pubkey});
   await send({t:'close',sub:'ch-room'});
   await page.waitForTimeout(1100);
-  const incoming=await bunker.fixture(42,[...root(created.id),['e',published.id,route,'reply'],['p',note.pubkey]],Math.floor(Date.now()/1000));fake.add(incoming);
+  // Diagnostic-only continuity runs avoid the separately retained same-second thread-order failure.
+  const incomingAt=process.env.LKJSTR_CONTINUITY_DIAGNOSTIC==='1'?Math.max(Math.floor(Date.now()/1000),message.created_at+1):Math.floor(Date.now()/1000);
+  if(process.env.LKJSTR_CONTINUITY_DIAGNOSTIC==='1'&&incomingAt*1000>Date.now())await page.waitForTimeout(incomingAt*1000-Date.now()+10);
+  const incoming=await bunker.fixture(42,[...root(created.id),['e',published.id,route,'reply'],['p',note.pubkey]],incomingAt);fake.add(incoming);
   await wait(id=>window.channelRows['ch-list'].some(r=>r.id===id&&r.unread===1),created.id);
   check('closed joined channel counts messages from other authors unread',true);
   await wait(id=>window.channelRows['ch-news'].some(r=>r.type==='reply'&&r.note?.id===id&&r.note.channel),incoming.id);

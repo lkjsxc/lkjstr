@@ -7,7 +7,7 @@ export CARGO_HOME="${CARGO_HOME:-$PWD/tmp/cargo-home}"
 export XDG_CACHE_HOME="${XDG_CACHE_HOME:-$PWD/tmp/cache}"
 export XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$PWD/tmp/config}"
 export XDG_DATA_HOME="${XDG_DATA_HOME:-$PWD/tmp/data}"
-export TMPDIR="$PWD/tmp/temp"
+export TMPDIR="${LKJSTR_ENGINE_TMPDIR:-$PWD/tmp/temp}"
 mkdir -p "$TMPDIR"
 sh scripts/engine-contract-prepare.sh > tmp/engine-contract.log 2>&1 || { tail -20 tmp/engine-contract.log; exit 1; }
 LKJSTR_ENGINE_HARNESS=1 sh scripts/engine-build.sh > tmp/engine-build.log 2>&1 || { tail -30 tmp/engine-build.log; exit 1; }
