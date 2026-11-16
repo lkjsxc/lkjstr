@@ -39,8 +39,11 @@ try{
   check('missing IndexedDB remains unsupported while origin evidence survives',result.persistedEvents.phase==='unsupported'&&result.origin.phase==='ready');
   validateReplies((await client.all(0)).filter(m=>m.t==='storage'));
   const estimateCalls=(await client.control('fixture.trace')).estimates;
-  await client.send(0,{t:'detach'});await client.send(0,{t:'storage.inspect',req:'after-preboot-detach'});
-  await client.page.waitForFunction(()=>window.storageControls.some(m=>m.observed?.req==='after-preboot-detach'),undefined,{timeout:5000});
+  await client.send(0,{t:'detach'});
+  await client.page.waitForFunction(()=>window.storageControls.some(m=>m.observed?.port===0&&m.observed.t==='detach'),undefined,{timeout:5000});
+  await client.send(0,{t:'storage.inspect',req:'after-preboot-detach'});await client.control('fixture.trace');
+  await client.page.waitForFunction(()=>window.storageControls.some(m=>(m.observed?.port===0&&m.observed.req==='after-preboot-detach')||m.closedPorts?.includes(0)),undefined,{timeout:5000});
+  await client.send(1,{t:'heartbeat'});await client.until(ms=>ms.some(m=>m.t==='heartbeat'),1);
   check('detach before database readiness prevents re-admission',(await client.control('fixture.trace')).estimates===estimateCalls&&!(await client.all(0)).some(m=>m.req==='after-preboot-detach'));
 
 }catch(error){report.failure=String(error).slice(0,2000);console.error(report.failure);}

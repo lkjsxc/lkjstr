@@ -4,6 +4,8 @@ export function storageBoot(noIdb = false) {
 Object.defineProperty(performance,'now',{value:()=>nativeNow()+clock});
 let estimateMode='ready',countMode='ready',estimates=0,aborts=0,sockets=0,marksReady=false;
 const reads=[],estimateWaiters=[],countWaiters=[];
+const ownedPorts=new WeakMap(),closedPorts=new Set();let nextPort=0;
+const nativeClose=MessagePort.prototype.close;MessagePort.prototype.close=function(){const id=ownedPorts.get(this);if(id!==undefined)closedPorts.add(id);return nativeClose.call(this);};
 self.WebSocket=class{constructor(){sockets++;throw Error('fixture forbids sockets');}};
 const fetchOwn=self.fetch.bind(self);self.fetch=(input,init)=>{const u=new URL(typeof input==='string'?input:input.url??input,self.location);if(u.origin!==self.location.origin)return Promise.reject(Error('fixture forbids external HTTP'));return fetchOwn(input,init);};
 const estimate=()=>{estimates++;if(estimateMode==='failed')return Promise.reject(Error('fixture estimate rejection'));
@@ -22,11 +24,11 @@ ${noIdb ? "Object.defineProperty(self,'indexedDB',{value:undefined,configurable:
 import init,{start_port_host}from './lkjstr_engine.js';const queued=[];self.onmessage=e=>queued.push(e);await init();const handle=start_port_host(),input=self.onmessage;
 self.onmessage=e=>{const m=e.data,reply=value=>self.postMessage({fixtureRequest:m.fixtureRequest,...value});
 if(m.t==='fixture.mode'){if(['ready','hold','failed','invalid','unsupported'].includes(m.estimate))estimateMode=m.estimate;if(['ready','hold','failed'].includes(m.count))countMode=m.count;reply({ok:true});}
-else if(m.t==='fixture.trace')reply({reads,estimates,aborts,sockets,marksReady,heldCounts:countWaiters.length,heldEstimates:estimateWaiters.length});
+else if(m.t==='fixture.trace')reply({reads,estimates,aborts,sockets,marksReady,closedPorts:[...closedPorts],heldCounts:countWaiters.length,heldEstimates:estimateWaiters.length});
 else if(m.t==='fixture.reset'){reads.length=0;reply({ok:true});}
 else if(m.t==='fixture.estimate'){for(const resolve of estimateWaiters.splice(0))resolve(m.value??{usage:700,quota:900});reply({ok:true});}
 else if(m.t==='fixture.count'){for(const complete of countWaiters.splice(0))complete();reply({ok:true});}
 else if(m.t==='fixture.advance'){if(Number.isInteger(m.ms)&&m.ms>=0&&m.ms<=16000)clock+=m.ms;reply({ok:true});}
 else if(m.t==='fixture.stop'){handle.stop();for(const resolve of estimateWaiters.splice(0))resolve({usage:700,quota:900});for(const complete of countWaiters.splice(0))complete();reply({ok:true});}
-else{input(e);for(const port of e.ports){const receive=port.onmessage;port.onmessage=event=>{receive(event);self.postMessage({observed:{t:event.data?.t,req:event.data?.req}});};}}};for(const e of queued)self.onmessage(e);self.postMessage({started:true});`;
+else{for(const port of e.ports)if(nextPort<32)ownedPorts.set(port,nextPort++);input(e);for(const port of e.ports){const receive=port.onmessage;port.onmessage=event=>{receive(event);self.postMessage({observed:{port:ownedPorts.get(port),t:event.data?.t,req:event.data?.req}});};}}};for(const e of queued)self.onmessage(e);self.postMessage({started:true});`;
 }
