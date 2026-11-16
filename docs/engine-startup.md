@@ -87,3 +87,37 @@ Strict xtask clippy and the actual corrected distribution check passed at
 no production asset was rebuilt or changed by this correction.
 Evidence: `tmp/dist-check-proof/`. Full integration gate results are recorded
 separately in [engine-zap-verification.md](engine-zap-verification.md).
+
+## Exact archive validation
+
+The earlier Rust distribution correction left two separate package checks
+requiring a direct HTML WASM preload. The sixth prescribed ship stopped at
+16:35:57 UTC on 2026-11-16 during packaging, after its real interface checks;
+that attempt performed no deployment. The copied 37b14ab5 real distribution
+reproduced both refusals without changing any of its 34 files.
+
+The package command now relies on its exact tar preflight. That preflight
+follows the same constrained generated import, Worker and URL token forms as
+the Rust check, skips comments/text/regex decoys and visits at most 1024 assets.
+All reachable dependencies must exist; every reachable WASM has its header.
+Archive size/count, paths, suffixes, duplicate/empty entries, link rejection,
+all HTML references, base elements and inline-script/event checks remain.
+No archive data is extracted or evaluated.
+
+At 16:54:41 UTC, all 72 package cases passed in 3.670 seconds, starting load
+1.46/1.66/1.90. The initial 29 graph cases had 23 failed assertions and six
+passing controls on the unchanged validator. Final review added a regression
+for preserving header checks on non-executable HTML references; it failed on
+the first correction and now passes. Full web check passed at 16:54:51 UTC
+in 6.628 seconds, starting load 1.74/1.72/1.92. Seven mutations of the copied
+real archive also rejected missing Worker/loader files, invalid WASM/UTF-8,
+orphan/decoy WASM and an escaping dependency path.
+
+The accepted 8,550,400-byte raw tar is byte-identical to the rejected before
+fixture. Its SHA-256 is
+`377158e749fe28ab617609424c57a3dd9d1f412a1996553589da5f528a9d2abb`.
+The resulting 1,539,503-byte gzip SHA-256 is
+`9c84b2cec98fc755398c0d5bc3fde6b22abd16ed51d6f355d91eaf49946a8206`.
+Evidence is `tmp/package-proof/` in the isolated package-fix worktree.
+This proof rebuilt no product assets and ran no Cargo, browser or deployment.
+The corrected prescribed ship remains a separate required outcome.

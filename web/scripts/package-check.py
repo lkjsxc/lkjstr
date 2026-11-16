@@ -1,15 +1,17 @@
 """Preflight the exact tar produced by package.ts; never extract archive data."""
 from html.parser import HTMLParser
-from pathlib import PurePosixPath
+from pathlib import Path, PurePosixPath
 import io
 import posixpath
 import re
+import runpy
 import sys
 import tarfile
 
 SUFFIXES = set("html js wasm css svg png ico jpg jpeg gif webp avif woff woff2 "
                "ttf webmanifest json txt mp3 mp4 ogg webm wav".split())
 LIMIT = 128 * 1024 * 1024
+CHECK_GRAPH = runpy.run_path(str(Path(__file__).with_name("package-graph.py")))["check_graph"]
 
 
 def fail(name, reason):
@@ -36,6 +38,7 @@ def local_url_path(url, source):
 def create_page_check(name, files):
     page = HTMLParser(convert_charrefs=False)
     references = set()
+    graph_references = set()
 
     def check_tag(tag, attributes):
         attrs = dict(attributes)
@@ -52,6 +55,8 @@ def create_page_check(name, files):
                     if target not in files:
                         fail(name, f"missing packaged reference {target}")
                     references.add(target)
+                    if tag in ("script", "link"):
+                        graph_references.add(target)
         elif tag == "script":
             # Static documents may have absolute canonical/alternate links, but
             # scripts still have to resolve to a file under script-src 'self'.
@@ -64,7 +69,7 @@ def create_page_check(name, files):
                 fail(name, f"missing packaged script {target}")
 
     page.handle_starttag = check_tag
-    return page, references
+    return page, references, graph_references
 
 
 def check(raw):
@@ -96,18 +101,16 @@ def check(raw):
             html = data.decode("utf-8")
         except UnicodeDecodeError:
             fail(name, "HTML must be UTF-8")
-        page, references = create_page_check(name, files)
+        page, references, graph_references = create_page_check(name, files)
         page.feed(html)
         page.close()
         if name == "index.html":
             if "<base" in html.lower():
                 fail(name, "custom base URL")
-            for suffix in (".js", ".wasm"):
-                if not any(ref.endswith(suffix) for ref in references):
-                    fail(name, f"missing {suffix} reference")
             for ref in references:
                 if ref.endswith(".wasm") and not files[ref].startswith(b"\0asm\x01\0\0\0"):
                     fail(ref, "invalid WASM module")
+            CHECK_GRAPH(files, graph_references, fail, local_name)
 
 
 if __name__ == "__main__":

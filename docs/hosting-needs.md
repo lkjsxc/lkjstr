@@ -141,3 +141,15 @@ It also rejects base elements in every HTML file and network-path URLs in
 index references or static scripts, which must resolve to packaged local files.
 The root dist check requires the seven bilingual page pairs and their shared
 assets. No ops deployment verification list exists in this checkout.
+
+
+## Release archive graph
+
+The exact archive preflight follows generated local JS imports, Worker and
+loader URL references from the root HTML to WASM. A document-level WASM preload
+is unnecessary; an orphan WASM file does not certify a real build. All reached
+assets must be present and nonempty, and reached WASM must have its header.
+The graph is bounded at 1024 distinct assets and skips text/comment/regex
+decoys. Existing archive and HTML/CSP restrictions remain; no archive contents
+are extracted or executed. See engine-startup.md for the dated before/after
+package proof and the failed sixth ship's deployment boundary.

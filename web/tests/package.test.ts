@@ -66,7 +66,7 @@ describe('release package preflight', () => {
     try {
       mkdirSync(join(root, 'web/scripts'), { recursive: true });
       mkdirSync(join(root, 'dist'));
-      for (const file of ['package.ts', 'package-check.py'])
+      for (const file of ['package.ts', 'package-check.py', 'package-graph.py'])
         copyFileSync(
           new URL(`../scripts/${file}`, import.meta.url),
           join(root, 'web/scripts', file),

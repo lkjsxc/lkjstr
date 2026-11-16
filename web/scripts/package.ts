@@ -1,13 +1,10 @@
 // Pack the existing real build reproducibly, with index.html at the archive root.
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 const root = join(new URL('..', import.meta.url).pathname, '..');
-const html = readFileSync(join(root, 'dist/index.html'), 'utf8');
-if (!/href="\/engine-[a-f0-9]{16}\.wasm"/.test(html))
-  throw new Error('index.html: package requires a real build; run pnpm build:real first');
 mkdirSync(join(root, 'tmp'), { recursive: true });
 const tar = join(root, 'tmp', 'lkjstr-dist.tar.gz');
 const raw = execFileSync(
