@@ -77,3 +77,5 @@ Engine (`crates/`):
 - [engine-private-verification.md](engine-private-verification.md): protocol-10 private integration gates, proofs and artifact boundaries.
 
 - [engine-performance-dom.md](engine-performance-dom.md): bounded source DOM membership, wire/cutoff separation and evidence limits.
+
+- [engine-history-route.md](engine-history-route.md): inclusive history route continuity and bounded verification evidence.

@@ -30,6 +30,9 @@ Successful lock/remove synchronously prunes decrypted private-list policy and de
 old policy survived until the next status pass. Revoked private anchors are rejected on replay; failed account transactions preserve authorized state.
 The subsequent private-list read support is described below.
 
+Full historical predecessors now retain their ordinary route slot at an inclusive cursor, preventing false exhaustion after quality reranking.
+Native before/after proof passed; Worker and merged gates are pending. See [engine-history-route.md](engine-history-route.md).
+
 Recovering relays retain their missing span without displacing healthy live fallbacks. History waits for verification; queue loss revokes completion
 and retries the unchanged span with bounded backoff. See [engine-verification-pressure.md](engine-verification-pressure.md). Indexed retained-row
 diffs acquire and store all 5,000 loopback notes. Thread ancestors precede the focus despite timestamp ties or clock skew. The preceding landing

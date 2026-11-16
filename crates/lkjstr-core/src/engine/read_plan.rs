@@ -175,11 +175,24 @@ impl super::Network {
             .iter()
             .filter(|c| !q.filters.relay_hints.contains(&c.url))
             .filter(|c| {
-                current.get(c.url.as_str()).is_some_and(|r| {
+                let current_route = current.get(c.url.as_str());
+                let stable = current_route.is_some_and(|r| {
                     // Hydration rewrites logical filter keys into immutable buckets.
                     // Preserve their existing routing independently of live-slot ownership.
                     r.read_slot || super::profiles::family(f, &r.members).is_some()
-                }) && !unavailable.contains(&c.url)
+                });
+                // An actual inclusive continuation inherits a full predecessor's
+                // ordinary slot. Reranking must not discard its unqueried tail.
+                // Short pages and unrelated filters cannot acquire this authority.
+                let continuing = current_route.is_none()
+                    && self.requests.values().any(|r| {
+                        r.relay == c.url
+                            && r.read_slot
+                            && r.page_eose
+                            && r.received.len() >= r.page_limit
+                            && self.preceding_page(r, f)
+                    });
+                (stable || continuing) && !unavailable.contains(&c.url)
             })
             .take(limit)
             .map(|c| c.url.clone())
