@@ -11,7 +11,7 @@ export TMPDIR="${LKJSTR_ENGINE_TMPDIR:-$PWD/tmp/temp}"
 mkdir -p "$TMPDIR"
 node --test scripts/engine-transport-private.test.mjs scripts/engine-transport-history.test.mjs scripts/engine-transport-zaps.test.mjs scripts/engine-transport-reading.test.mjs scripts/engine-transport-lists.test.mjs scripts/engine-transport-auth.test.mjs > tmp/engine-transport.log 2>&1 || { tail -20 tmp/engine-transport.log; exit 1; }
 node --test scripts/real-hour-test.mjs scripts/real-hour-network-test.mjs scripts/real-hour-owned-test.mjs > tmp/real-hour-observer.log 2>&1 || { tail -20 tmp/real-hour-observer.log; exit 1; }
-node --test scripts/engine-contract.test.mjs > tmp/engine-contract-tests.log 2>&1 || { tail -20 tmp/engine-contract-tests.log; exit 1; }
+node --test scripts/engine-contract.test.mjs scripts/engine-production-check.test.mjs > tmp/engine-contract-tests.log 2>&1 || { tail -20 tmp/engine-contract-tests.log; exit 1; }
 sh scripts/engine-contract-prepare.sh > tmp/engine-contract.log 2>&1 || { tail -20 tmp/engine-contract.log; exit 1; }
 cargo build -q -p lkjstr-nips --example zap-fixtures > tmp/zap-fixtures-build.log 2>&1 || { tail -20 tmp/zap-fixtures-build.log; exit 1; }
 LKJSTR_ENGINE_HARNESS=1 sh scripts/engine-build.sh > tmp/engine-build.log 2>&1 || { tail -30 tmp/engine-build.log; exit 1; }

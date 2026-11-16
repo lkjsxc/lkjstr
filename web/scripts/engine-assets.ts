@@ -3,6 +3,7 @@
 import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { assertProductionEngine } from '../../scripts/engine-production.ts';
 
 export function engineAssets(dir: string, out: string): { engine: string; wasm: string } {
   const emit = (name: string, ext: string, bytes: string | Uint8Array): string => {
@@ -11,7 +12,9 @@ export function engineAssets(dir: string, out: string): { engine: string; wasm: 
     writeFileSync(join(out, path), bytes);
     return path;
   };
-  const wasm = emit('engine', 'wasm', readFileSync(join(dir, 'lkjstr_engine_bg.wasm')));
+  const bytes = readFileSync(join(dir, 'lkjstr_engine_bg.wasm'));
+  assertProductionEngine(bytes, readFileSync(join(dir, 'lkjstr_engine.js'), 'utf8'));
+  const wasm = emit('engine', 'wasm', bytes);
   const js = (file: string, name: string, refs: Record<string, string>): string => {
     let text = readFileSync(join(dir, file), 'utf8');
     for (const [from, to] of Object.entries(refs)) text = text.replaceAll(from, to);

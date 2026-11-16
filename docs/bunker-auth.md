@@ -125,8 +125,8 @@ simulates identical device credentials with a renewed generation; ordinary
 bunker import generates new device credentials. The queued action and original
 deadline remain intact. A current-generation control must still sign normally,
 and client detach or Host stop must release the barrier without remote work.
-The controls compile only with the harness feature. Final packaged production
-export inspection remains part of the pending merged build.
+The controls compile only with the harness feature. Production build and app
+packaging also inspect generated artifacts as described below.
 
 A separate split-zap case preflights two providers, advances both fixture clocks
 by 55 seconds while the first 60-second signature remains pending, then inspects
@@ -161,4 +161,26 @@ Four current auth transport cases also passed at 18:01 UTC.
 The lasting `engine-check.sh` gate runs auth transport coverage plus both raw
 Worker modes using its existing package and native fixtures. The combined
 repository, main Worker, UI and deployment gates have not run for this candidate.
+## Production artifact boundary
+
+`scripts/engine-production.ts` inspects actual WASM exports without
+instantiating the module and parses generated bindings using the existing root
+TypeScript parser. All 13 known conformance exports are rejected, including
+benchmark, clock, test-relay, stop probes and the four new queue controls.
+Default production builds and the real-app asset emitter enforce this check;
+explicit harness builds retain their raw Worker test surface.
+
+The original app emitter accepted a harness package and failed the new boundary
+regression. All 18 cases pass with the guard. Actual immutable harness
+`c435d9a6` bytes fail; canonical production `c7c7a7dd` bytes pass; production
+WASM mixed with stale harness bindings fails. No original artifact was changed.
+Evidence: `tmp/production-export-audit/run-20261116T181443Z/`.
+The earlier `run-20261116T181356Z/` retains an AST implementation failure: the
+web TypeScript package lacks that parser API, so the helper now uses the existing
+root dependency. This failure is separate from the original-emitter proof.
+Full web check passed at 18:15:40 UTC in 6.226 seconds, load 1.16/1.64/2.14;
+record: `tmp/production-export-audit/static-20261116T181540Z/`.
+The positive artifact predates this auth candidate. Its future merged production
+package must still pass the newly enforced artifact check and all normal gates.
+
 No new visible words, layout or styles are part of this capability.
