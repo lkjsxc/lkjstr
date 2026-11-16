@@ -1,7 +1,7 @@
 // Two pages of the Docs tab that draw themselves. Shortcuts: the key table itself (`shared/keys.ts`), so it lists
 // exactly the keys that work. About: what this is, which engine answers, and where its source and licence are.
 import { h, replaceChildren } from '../shared/h.ts';
-import { t } from '../shared/i18n.ts';
+import { getLang, type Key, t } from '../shared/i18n.ts';
 import { groupText, KEY_GROUPS, KEYS, type KeyId, keyCaps, keyText } from '../shared/keys.ts';
 import type { ViewEnv } from './registry.ts';
 
@@ -54,6 +54,16 @@ export function mountAbout(el: HTMLElement, env: ViewEnv): () => void {
       engine,
       h('dt', null, t('about.source')),
       h('dd', null, link(SOURCE_URL, SOURCE_URL.replace('https://', ''))),
+      h('dt', null, t('docs.privacy')),
+      h('dd', null, link('/privacy.html', t('docs.privacy'))),
+      h('dt', null, t('view.docs')),
+      h(
+        'dd',
+        null,
+        ['about', 'features', 'guide', 'shortcuts', 'faq', 'nips', 'changelog'].map((id) =>
+          h('span', null, link(`/${getLang()}/${id}.html`, t(`site.${id}` as Key)), ' '),
+        ),
+      ),
       h('dt', null, t('about.licence')),
       h('dd', null, link('/LICENSE.txt', 'Apache License 2.0')),
     ),

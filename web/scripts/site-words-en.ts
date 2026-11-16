@@ -1,0 +1,50 @@
+// Public-page copy. Shared Docs paragraphs and key bindings are inserted by site.ts.
+export const siteEn = {
+  open: 'Open lkjstr',
+  language: '日本語',
+  privacy: 'Privacy policy',
+  licence: 'Licence',
+  source: 'Source',
+  pages: {
+    about: [
+      'A Nostr client in tiles',
+      'lkjstr is a browser-only, local-first Nostr client with a tiled workspace. Read, write and arrange your views in one place.',
+    ],
+    features: [
+      'Features',
+      'Explore lkjstr: tiled workspaces, search, channels, reactions, media uploads, relay routing and local-first reading.',
+    ],
+    guide: [
+      'Getting started',
+      'Read Nostr without an account, add a signer, arrange tiles and publish your first note with lkjstr.',
+    ],
+    shortcuts: [
+      'Keyboard shortcuts',
+      'The current lkjstr keyboard and pointer bindings, generated from the same table as the app’s Docs tab.',
+    ],
+    faq: [
+      'Questions and answers',
+      'Answers about lkjstr accounts, local storage, privacy, offline reading, self-hosting and reporting problems.',
+    ],
+    nips: [
+      'Supported NIPs',
+      'What lkjstr currently does with Nostr specifications, with limits for partial implementations.',
+    ],
+    changelog: [
+      'Changelog',
+      'Reader-facing changes in the current lkjstr frontend and Rust WebAssembly engine.',
+    ],
+  },
+  about:
+    '## Browser and device\nThe interface is TypeScript; a Rust WebAssembly engine runs in a Worker. There is no server-side account or relay proxy. An optional same-origin service retrieves public link previews when enabled.\n\n## Start reading\nOpen lkjstr to read Global, profiles, threads and search without a key. The interface is available in English and Japanese. Below 760px the workspace uses one tile.\n\n## Limits\nDirect messages and sending zaps are not available. Static hosting alone does not provide link preview cards.',
+  features:
+    '## Reading and workspaces\nNine workspaces keep separate tile layouts. Home, Global, Notifications, Search, Bookmarks and Channels are views you can open as tabs. Profiles include posts, replies, reposts, reactions and media. Filters support words, phrases, exclusions, authors, media and dates. Reading positions and tab choices persist on this device.\n\n## Posting and reactions\nPost supports replies, content warnings, selected mentions and media attachments. Like, emoji reactions, repost and bookmark actions are available. A reaction or repost has an Undo interval before publication. Notifications group activity and keep seen marks.\n\n## Uploads and the outbox\nBlossom and NIP-96 uploads support local keys, browser extensions and remote signers. Failed files retain retry and server controls. Pending and failed posts remain in the composer’s outbox with Retry, Edit and Remove controls; success means a relay accepted the publication, not that every relay did.\n\n## Relays, requests and feedback\nThe engine reads authors on their NIP-65 write relays and routes publications to your outboxes and relevant recipient inboxes. Relays shows connection state and reasons for use. Stats shows requests, traffic, cache and publication counters. Per-relay delivery feedback shows acceptance or failure. Hidden views release their data requests. Report problems through the source repository’s Issues.\n\n## Accounts and settings\nCreate or import a local key, use a NIP-07 extension, connect a preauthorized NIP-46 bunker, or import an npub read-only. Edit your profile, public follows, mutes, bookmarks, relay list and media servers. Settings controls language, theme, text, reading and posting. Private-list editing and extension/remote private-list decryption remain incomplete.\n\n## Channels\nDiscover, create, join and leave public NIP-28 channels. Channel messages have their own views and drafts, separate from ordinary feeds.\n\n## Local first\nCached notes can appear before relays answer. Keys and account data live in the browser; local keys are not encrypted at rest. There is no analytics or advertising. Link previews, when enabled, send linked addresses to the optional preview service.',
+  guide:
+    '## 1. Open and read\nUse Open lkjstr above. Global works without a key. Click a note to open Thread in the same tile; click a person to open their profile. Shift-click opens a split; middle click opens a tab behind. Search accepts text and Nostr identifiers.\n\n## 2. Sign in\nOpen Accounts from Sign in. Use a browser extension, a remote signer, a new account or a key. An npub gives read-only access. Back up a local key with Back up key before relying on it. Home follows the active account’s follow list; a new account may have an empty feed.\n\n## 3. Arrange\nDrag tabs to reorder or move them; drop on a tile edge to split. Drag boundaries to resize. The top bar’s numbers select nine workspaces. O opens tab search; Alt+Shift+N opens a new tab. The shortcuts page lists the current bindings.\n\n## 4. Write\nN opens Post. Add text, attachments and an optional content warning. Ctrl+Enter sends (Command+Enter on a Mac). Watch delivery feedback; failed posts retain Retry, Edit and Remove controls in the outbox. With a note focused, R replies, L likes and E chooses an emoji reaction.\n\n## 5. Diagnose and report\nIf a list stays empty, check Relays and Stats for connection and request state. No results and no reachable relay are different states. Use the source repository’s Issues to report problems; include steps and browser details, never keys.',
+  faq: '## What is Nostr?\nNostr is a protocol for signed events exchanged through relays. Your public key identifies you; your secret key signs what you publish. You can use the same identity in other clients.\n\n## Is there a sign-up or fee?\nThere is no lkjstr registration, paid tier or advertising. Relays and media servers have their own policies and may charge or refuse requests.\n\n## Can it work offline?\nThe page needs a network connection to load. Once open, cached notes can remain readable when relays are unavailable. There is no service worker for an offline application install.\n\n## Can I send direct messages or zaps?\nNeither is available. Zap receipt rows may be displayed, but trusted LNURL-provider discovery is incomplete; do not treat a receipt row as proof of payment.\n\n## Can I host it myself?\nYes. Build with pnpm build and serve dist over HTTPS using the headers in the repository’s hosting documentation. WebAssembly must use application/wasm. The preview service is optional.\n\n## How do I give feedback?\nUse Issues in the source repository. Include the view, what happened, what you expected and reproducible steps. Never include a secret key or account backup.',
+  nips: '## Events and identity\n- NIP-01: event validation, filters and relay subscriptions.\n- NIP-02: read and edit public follows; first-list creation waits for a confirmed absent list.\n- NIP-05: checked profile names and bounded name lookup; unavailable domains can leave names unconfirmed.\n- NIP-07: public-key discovery and exact-event extension signing; private-list decryption is not integrated.\n- NIP-09: authored deletion requests are applied; deletion cannot erase copies held elsewhere.\n- NIP-10, NIP-18: replies, thread markers and reposts, including kinds 6 and 16.\n- NIP-19, NIP-21, NIP-27: identifiers and nostr: references, including supported public-list naddr targets.\n\n## Reading and posting\n- NIP-25: likes, dislikes and emoji reactions; undo delays publication.\n- NIP-28: public channels, metadata, messages and joined lists.\n- NIP-30: custom emoji rendering and the account’s own emoji list; referenced emoji sets are incomplete.\n- NIP-36: content warnings in reading and posting.\n- NIP-50: local note filtering and relay search; people results and multi-language OR remain incomplete.\n- NIP-51: public people, mute and bookmark lists; local-key NIP-44 private entries can be read, but private edits are incomplete.\n- NIP-57: partial receipt display only; no zap sending or complete payment trust validation.\n- NIP-65: author routing and editing your read/write relay list.\n- NIP-92: attachment metadata and reserved media dimensions.\n\n## Signing and uploads\n- NIP-42: relay authentication challenges are not answered by the current app; protocol codecs alone do not enable authenticated relay access.\n- NIP-44, NIP-46: encrypted bunker signing sessions; interactive auth_url challenges and relay-switch negotiation are incomplete. NIP-44 use does not mean direct messages are supported.\n- NIP-96, NIP-98 and Blossom: authenticated media uploads with bounded retries; cancellation and intermediate byte progress are incomplete.\n\n## Outside the current interface\nNo private direct messages (NIP-04/NIP-17), long-form editor (NIP-23), relay-based group interface (NIP-29) or application-settings sync (NIP-78) is offered. Library codecs alone are not an app feature.',
+  changelog:
+    '## Current checkout · 15 November 2026\nThe current product has a TypeScript tiled interface and a Rust WebAssembly Worker engine. The old Leptos/Trunk interface is removed.\n\n- English and Japanese interface, nine workspaces, saved reading positions and cross-workspace tab search.\n- Public channels, rich filters, people lookup and list editing, mentions, profile kinds and time rails.\n- Local, extension and bunker signers; public profile/list/relay editing.\n- Blossom and NIP-96 uploads, retained failed drafts, emoji reactions and publication feedback.\n- Relay routing, request and publication statistics, shared browser engine work and optional link previews.\n\n## Public documentation\nThese English and Japanese pages describe this checkout. Their presence in a build does not mean that build has been deployed. The source repository’s commit history is the complete engineering record.',
+  shortcutIntro:
+    'Single-letter keys apply outside text fields. Letters and digits follow physical key positions. Mod is Ctrl, or Command on a Mac; Alt is Option. Pointer gestures appear in the same table.',
+};

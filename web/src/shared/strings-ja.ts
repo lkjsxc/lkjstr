@@ -538,4 +538,11 @@ export const ja: Record<keyof typeof en, string> = {
   'error.upload-payment': 'この送信先は有料です。別の送信先を選んでください。',
   'error.upload-response': '送信先がファイルを受け付けなかったか、応答を読み取れませんでした。',
   'error.upload-discovery': '送信先の情報を取得できませんでした。別の送信先を選んでください。',
+  'site.about': '概要',
+  'site.features': '機能',
+  'site.guide': 'はじめ方',
+  'site.shortcuts': 'ショートカット',
+  'site.faq': 'よくある質問',
+  'site.nips': '対応 NIP',
+  'site.changelog': '更新履歴',
 };
