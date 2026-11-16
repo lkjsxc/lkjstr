@@ -3,7 +3,7 @@
 ## Purpose
 
 Current behavior and limits: [parity.md](parity.md) audits source; [engine-performance.md](engine-performance.md) records network evidence.
-Claude owns the interface. [Account persistence](account-persistence.md) passed focused proofs, all seven gates, 541 real UI checks and packaging at `04c10b9b`.
+Claude owns the interface. Account persistence passes the required gates; [exact evidence](engine-account-verification.md) binds the production checks.
 
 ## Specified keys and messages (2026-11-16)
 
@@ -187,8 +187,8 @@ The seventh prescribed ship passed all 548 real interface checks and packaging, 
 No successful deployment receipt or served-index verification exists; the last confirmed successful ship remains 541e4a1e. Extra host commands
 are forbidden by the owner handoff; read-only diagnosis was requested through Desk. Exact artifacts and limits are in [engine-startup.md](engine-startup.md).
 
-Protocol-11 results are in [engine-variants-verification.md](engine-variants-verification.md). Protocol-12 storage and historical controls
-also pass merged gates; exact source, production proofs and artifacts are in [engine-device-verification.md](engine-device-verification.md).
+Protocol-11/12 gate records: [variants](engine-variants-verification.md), [device](engine-device-verification.md).
+The [ninth hour](engine-performance-ninth.md) and [coverage audit](engine-performance-ninth-coverage.md) record hidden quotes and evidence limits.
 
 The owner's 2026-11-16 delegation authorizes rebased pushes and the prescribed ship script. Tests use fresh ports and fixture data, clean their
 processes and never publish to public relays or touch a saved owner account. The public hour uses REQ/CLOSE only. Docker and unrelated host services

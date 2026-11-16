@@ -5,6 +5,15 @@
 Record runtime measurements and reproducible workloads. Synthetic index fixtures never enter the product or a public relay. Timing is elapsed wall
 time on this shared Linux host, not a throughput promise for another device.
 
+## Ninth-landing hour (2026-11-16)
+
+The frozen build ran 21:47:53.562-22:47:53.670 UTC, 3600.108 seconds, with 451 distinct followed authors including self. The archive reached
+2009 of 2000 requested IDs in 69.087 seconds; cold Global note/name/avatar readiness was 447/9423/9829 ms. Initial load was 1.20/1.40/1.87;
+final post-fault load was 3.26/6.48/5.96. This differs from the sixth account and is not a matched comparison. The original 53/51 Home audit
+included two cached, projected, keyed quote rows hidden by the noise policy. Delivery evidence saturated; completeness remains unknown.
+Sixteen historical controls appeared in scoped DOM, with limited receipt attribution. Faults, memory estimates, cumulative frame-counter scope
+and the unproven page-freeze execution are in [the ninth hour](engine-performance-ninth.md) and [its audit](engine-performance-ninth-coverage.md).
+
 ## Sixth-landing hour (2026-11-16)
 
 The frozen real candidate ran 16:25:30.595-17:25:30.767 UTC, 3600.172 s, at live load 4.77/3.78/2.62 to 7.54/6.43/3.81. Scrolling reached

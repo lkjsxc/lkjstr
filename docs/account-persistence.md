@@ -87,7 +87,7 @@ conservative durable no-key-loss boundary, not automatic reconciliation or
 immediate cross-Worker revocation. Lock remains Worker-scoped; a global lock
 would require a separate editor flush quorum before any durable revocation.
 
-## Focused verification and remaining gates
+## Focused verification
 
 Eight native policy cases passed for strict load, malformed revisions, CAS,
 removal/re-add identity, read-only freshness, terminal conflicts and checked
@@ -134,8 +134,11 @@ It requires `LKJSTR_ACCOUNT_PACKAGE`, `LKJSTR_ACCOUNT_WASM_SHA256`,
 `LKJSTR_ACCOUNT_LOADER_SHA256` and the matching `LKJSTR_ACCOUNT_LEGACY_*`
 variables. Set a short owned `LKJSTR_TEST_TMPDIR`; `LKJSTR_CHROME` can pin the
 browser. `LKJSTR_ENGINE_REPORT` selects a fresh output directory. The wrapper
-has syntax/control-flow checks; the individual proof helpers have executed as
-recorded above. No Cargo build is implicit in this production-artifact command.
+passed against the final production package: 12 race and 105 guard assertions.
+A separate production Storage fixture passed 19 checks. Command times, loads,
+report identities and fixture corrections are in
+[engine-account-verification.md](engine-account-verification.md).
+No Cargo build is implicit in this production-artifact command.
 
 ## Completed release checkpoint
 
@@ -143,7 +146,9 @@ At unchanged source `04c10b9b`, the eleven stages below passed on 2026-11-16.
 The first engine stage began at 23:08:38 UTC; packaging finished at 23:38:51 UTC.
 The seven required gates are included, with the extra production checks shown
 separately. All stages retained the same tracked-source SHA-256 and reported no
-remaining owned processes. No duplicate focused suites were run.
+remaining owned processes. The maintained production checks followed at
+23:39 UTC; their assertions overlap earlier focused evidence, with separate
+command reports and final artifact bindings.
 
 | Stage | Seconds | Result |
 | --- | ---: | --- |

@@ -41,6 +41,8 @@ Engine (`crates/`):
 - [engine-polish.md](engine-polish.md): author hydration, count estimates and Global sample.
 - [engine-startup.md](engine-startup.md): real-build WASM preload regression and scoped correction.
 - [engine-performance.md](engine-performance.md): measurements.
+- [engine-performance-ninth.md](engine-performance-ninth.md): ninth hour, resources, faults and measurement limits.
+- [engine-performance-ninth-coverage.md](engine-performance-ninth-coverage.md): hidden quote rows, receipt budgets and repeated acquisition.
 - [engine-performance-zaps.md](engine-performance-zaps.md): bounded receipt projection and scheduling proofs.
 - [engine-performance-public.md](engine-performance-public.md): public controls, attribution and limits.
 - [engine-performance-third.md](engine-performance-third.md): shipped third-landing hour and faults.
@@ -75,6 +77,7 @@ Engine (`crates/`):
 - [Specified private-message interface wiring](frontend-dm.md)
 - [Encrypted local keys and session access](keys.md)
 - [Account snapshot persistence and schema fence](account-persistence.md)
+- [Account production verification](engine-account-verification.md): maintained command, source binding and fixture corrections.
 - [Engine capabilities awaiting interface specifications](interface-needs.md)
 - [interface-specs.md](interface-specs.md): surfaces to build, item by item, with their state.
 - [interface-keys.md](interface-keys.md): password-protected keys: sign-in, lock, backup, protection.
@@ -94,4 +97,4 @@ Engine (`crates/`):
   evidence and real Worker verification.
 - [engine-live-route.md](engine-live-route.md): productive live recovery, bounded slot ownership and verification evidence.
 
-- [Historical measurement witnesses](engine-performance-history.md): bounded selection and post-hour evidence; 18 Node/11 finite checks, public phase pending.
+- [Historical measurement witnesses](engine-performance-history.md): bounded selection; ninth public DOM positives and receipt limits are recorded separately.

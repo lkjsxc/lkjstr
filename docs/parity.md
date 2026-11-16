@@ -2,11 +2,11 @@
 
 ## Purpose
 
-Source audit refreshed on 2026-11-16 against protocol-11 source 9766cd1a; required integration gates passed.
+Source audit refreshed on 2026-11-16 against protocol 12 and account checkpoint `04c10b9b`; required integration gates passed.
 The K1-K4/M1-M6 base passed its gates and is built. Protocol-9 required gates, 451 main Worker checks and 40 finite zap checks passed; exact source boundaries
 and failures are recorded in [engine-zap-verification.md](engine-zap-verification.md).
 Protocol-10 required gates, 452 main Worker checks and 31 private-list checks passed; see [engine-private-verification.md](engine-private-verification.md).
-Current combined gates passed; see [engine-variants-verification.md](engine-variants-verification.md).
+Current account production gates passed; see [engine-account-verification.md](engine-account-verification.md).
 The last confirmed ship is 541e4a1e; the seventh ship failed at the host operation. Source status does not establish the deployed build.
 Unregistered staging under tmp/ is excluded. This replaces the 11-14 inventory.
 Rows describe lkjstr's real Worker and reachable interface, not mock capability.
@@ -30,13 +30,13 @@ Evidence prefixes: `E/` = `crates/lkjstr-core/src/engine/`,
 
 New written Claude specifications take priority when present.
 
-1. Run the next required public hour after the ninth landing with informative
-   notification/thread controls. The sixth hour's seven Home candidates remain
-   unresolved; fixed route lifetimes cannot retroactively establish receipt.
-2. Add bounded storage observations and clearing, then settings backup. Payload
-   bytes and approximate origin estimates must not masquerade as physical size.
-3. Add article documents, followed hashtags and reports, then optional encrypted
-   setup sync. Existing signer and provider behavior still needs public evidence.
+1. Fix confirmed quote/noise hiding, then repeated count acquisition and
+   concurrent pruning. Account persistence now has full production gate evidence.
+2. Repeat the public hour after landing twelve with independent historical receipt
+   budgets and observed execution suspension. Ninth network completeness and the
+   sixth hour's seven Home candidates remain unresolved.
+3. Add storage clearing and settings backup, then article documents, followed
+   hashtags, reports and optional encrypted setup sync. Size estimates stay explicit.
 4. Authorization, actor details, missing-bookmark placeholders, pins and person
    relay views await Claude's specifications. Upload phases/cancel work; actual
    intermediate bytes remain unavailable under the current transport guarantees.
@@ -52,16 +52,16 @@ New written Claude specifications take priority when present.
 | Following/follower lists | done | Distinct membership, metadata-independent rows and relay paging; E/wire/sources.rs, crates/lkjstr-core/tests/engine_list_integrity_test.rs. |
 | Replies and nested thread navigation | done | Ancestors, focus, descendants and missing-reference states; E/thread.rs, V/feed.ts. |
 | Grouped notifications and read state | done | Mentions/replies/reposts/reactions/zaps, filters and persistent timestamp ties; E/wire/notifications.rs, E/clients.rs. Zap trust is separate below. |
-| Reading position and fresh-note indicator | done | Per-tab anchors, retained windows and fresh counts; V/feed-place.ts, V/feed-fresh.ts. Page freeze and actual Worker pause were measured separately; host/OS sleep remains untested; docs/engine-performance-hour.md. |
+| Reading position and fresh-note indicator | done | Per-tab anchors, retained windows and Fresh; ninth network-cut IDs/offsets matched. Accepted page-freeze commands did not suspend observed execution; OS sleep remains untested. V/feed-place.ts, V/feed-fresh.ts, docs/engine-performance-ninth.md. |
 | Calendar/time navigation | done | Cache-wide month counts and ordinal seeks; E/wire/timeline.rs, V/time-rail.ts. Not a count of all relay history. |
 | Rich note search | done | Rich filters include every language-array alternative. Unavailable-repost fixes preserve note quota and Fresh; native, Worker and combined gates pass. E/wire/query_translate.rs, E/query_predicates.rs, docs/search.md, docs/unavailable-reposts.md. |
 | People in search | partial | Six retained verified-metadata matches precede the exact note quota, with mute scope and stable anchors/Fresh. Native/Worker proof passes; remote people discovery remains absent. E/search_people.rs, E/wire/search.rs, docs/search.md. |
 | Hashtag timelines | done | `hashtag` filter and linked tile exist; E/query.rs, V/registry.ts, V/note.ts. |
 | Followed hashtags | missing | No kind-10015 discovery/edit or Home integration; list codecs alone do not supply it. |
 | One-relay timeline | partial | `source:relay` targets requests, but cached membership is not relay-scoped and no feed tile is registered; E/network_plan.rs, E/query.rs, V/registry.ts. |
-| Public-network completeness and hour-long use | partial | Sixth live interval completed 3600.172 seconds; scrolling reached 1903/2000 distinct Home notes, with a 13.963-second maximum automation step. Seven Home candidates remain unresolved; notification/thread controls are uninformative. docs/engine-performance-sixth.md, docs/engine-live-route.md. |
+| Public-network completeness and hour-long use | partial | Ninth live interval completed 3600.108 s and 2009/2000 scroll IDs. Two valid quote rows were hidden by noise policy. Receipt caps prevent completeness; sixteen historical DOM positives have limited attribution. Sixth seven candidates remain unresolved. docs/engine-performance-ninth-coverage.md. |
 | Shared Worker, two tabs and leader loss | done | SharedWorker continuity and fallback leader replacement were measured; 30-second/10-minute cuts include one delivered Home recovery witness. Later stale-callback and retained-history fixes have transport regressions; engine/transport.js, docs/engine-performance-hour.md. |
-| Bounded cache and cold boot | partial | 16000 regular/4000 replaceable in memory; newest 2000 indexed on boot, disk pruned to 20000 after live writes. Sixth-hour WASM capacity stayed 77.07 MB after history; physical 20000-event boot reached a profile note in 230 ms. Probes and indefinite growth remain qualified. W/worker_persist.rs, docs/engine-performance-sixth.md. |
+| Bounded cache and cold boot | partial | 16000 regular/4000 replaceable events in memory; newest 2000 indexed at boot, disk pruned to 20000 after live writes. Ninth WASM capacity reached 66846720 bytes; physical 20000-row boot reached a note in 328 ms. Concurrent pruning and indefinite growth remain under review. W/worker_persist.rs, docs/engine-performance-ninth.md. |
 | Storage inspection and clearing | partial | Protocol12 separates memory payloads, exact stored-event row count (including ciphertext) and approximate origin usage; 14 native/19 Worker cases, client/mock/transport checks and merged gates pass. A surface, exact physical disk size and clear remain absent. docs/storage-inspection.md. |
 
 ## Identity, signers and private data
@@ -76,6 +76,7 @@ New written Claude specifications take priority when present.
 | QR/nostrconnect connection workflow | missing | Current input accepts bunker text; no connection-QR generation/scanning flow. |
 | Read-only npub account | done | Imported public account cannot sign; E/accounts.rs, V/account-add.ts. |
 | Multiple saved accounts and switch | done | Global active account, removal and per-account draft/outbox isolation; E/accounts.rs, V/compose-who.ts. |
+| Durable account writes across Worker graphs | done | Strict same-database schema fence and revision comparison reject stale snapshots, preserving added/protected keys and atomic removal. Conflicts require explicit reload; no automatic reconciliation. Native, production and release evidence: docs/account-persistence.md, docs/engine-account-verification.md. |
 | Independent per-tile posting identity | missing | Composer identity changes the globally active account; V/compose-who.ts. |
 | Edit profile metadata | engine ready, no surface | `profile.save` carries name/about/picture/banner/NIP-05/website/lightning address; E/wire/actions.rs. No V/ control calls it. |
 | Upload profile picture/banner | partial | Upload action and profile.save exist independently; no profile editor joins them. |
