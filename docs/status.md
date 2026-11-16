@@ -164,7 +164,8 @@ These are concrete runtime limits, not permission to fake a successful answer.
 - Uploads: phases, zero/validated completion and cancellation work; actual byte
   progress is unavailable without weakening redirect/body limits. NIP-96 processing remains bounded.
 - Device: protocol12 inspection source separates payload bytes, exact stored row
-  counts and approximate origin estimates; validation is unrun and no surface
+  counts and approximate origin estimates; Node checks pass, native/Worker checks
+  remain unrun and no surface
   exists. Exact disk bytes, clearing, settings archives and setup sync remain
   absent. See [storage-inspection.md](storage-inspection.md).
 - Followed hashtags, parsed article documents, reports and complete NIP-11 detail

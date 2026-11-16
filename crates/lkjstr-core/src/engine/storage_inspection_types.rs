@@ -64,8 +64,14 @@ impl Count {
 impl Origin {
     pub(super) fn checked(self, start: u64, now: u64) -> Self {
         match self {
-            Self::Ready { usage, quota, at, approximate }
-                if usage > MAX_SAFE || quota > MAX_SAFE || at < start || at > now || !approximate => Self::Failed,
+            Self::Ready {
+                usage,
+                quota,
+                at,
+                approximate,
+            } if usage > MAX_SAFE || quota > MAX_SAFE || at < start || at > now || !approximate => {
+                Self::Failed
+            }
             value => value,
         }
     }

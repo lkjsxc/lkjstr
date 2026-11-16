@@ -42,10 +42,10 @@ mod relay_auth;
 mod relay_config;
 #[path = "worker_sign.rs"]
 mod signing;
-#[path = "worker_upload.rs"]
-mod uploads;
 #[path = "worker_storage.rs"]
 mod storage;
+#[path = "worker_upload.rs"]
+mod uploads;
 #[path = "worker_zaps.rs"]
 mod zaps;
 use effects::pump;

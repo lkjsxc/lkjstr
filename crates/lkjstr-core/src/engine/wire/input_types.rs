@@ -8,9 +8,13 @@ use serde::Deserialize;
 #[serde(tag = "t", rename_all = "camelCase")]
 pub enum Input {
     #[serde(rename = "storage.inspect")]
-    StorageInspect { req: String },
+    StorageInspect {
+        req: String,
+    },
     #[serde(rename = "storage.close")]
-    StorageClose { req: String },
+    StorageClose {
+        req: String,
+    },
     #[serde(rename = "signer.auth.cancel")]
     SignerAuthCancel {
         id: String,

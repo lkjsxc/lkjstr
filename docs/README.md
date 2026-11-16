@@ -52,6 +52,9 @@ Engine (`crates/`):
 - [engine-retained-diff.md](engine-retained-diff.md): retained-window diff cost and bounded key lookup.
 - [engine-thread-order.md](engine-thread-order.md): relationship order across timestamp ties and clock skew.
 - [engine-proposals.md](engine-proposals.md): protocol proposals and their outcome.
+- [engine-proposals-history.md](engine-proposals-history.md): preserved earlier protocol additions.
+- [storage-inspection.md](storage-inspection.md): finite storage observations, bounds and verification limits.
+- [storage-next.md](storage-next.md): separate cache-clear and settings-archive proposals.
 - [parity.md](parity.md): audited client capability inventory.
 - [details.md](details.md): observed frictions and fixes.
 - [workspace.md](workspace.md): historical workspace design; superseded by

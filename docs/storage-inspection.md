@@ -3,8 +3,8 @@
 ## Purpose
 
 Protocol 12 adds finite, read-only storage observations for a future surface.
-This source candidate has authored tests, but none have run yet. It does not
-clear data, export settings or reinterpret the existing Stats fields.
+Client and mock checks have passed; native and browser effects remain untested.
+This candidate does not clear data, export settings or reinterpret Stats fields.
 
 ## Contract and scope
 
@@ -84,17 +84,28 @@ physical/origin observations instead of fabricated disk evidence.
 
 ## Verification status and authored cases
 
-No native compile, test, browser, formatter or build has run for this candidate.
-Root retains the shared gate slot. All following coverage is authored only:
+The 2026-11-16 Node preflight passed at 19:47:00 UTC in 7.177 seconds, with
+load 2.32 / 1.52 / 1.20. `pnpm --dir web check` includes TypeScript, Biome and
+Vitest; the nine client/mock inspection cases passed in that gate. Changed
+Rust files were formatted individually. The already-compiled xtask passed
+`check-docs` and `check-lines`; no Cargo invocation was used.
 
-- Fourteen native policy/wire cases cover independent outcomes, numeric/time
+The first preflight caught missing documentation links, formatting and an
+unknown client failure code. The watchdog now uses existing `offline` instead
+of the invalid code. Initial failures and final results remain in
+`tmp/storage-preflight/{initial,after}.json` and their adjacent logs.
+
+No native/WASM compile, native test, real Worker fixture or build has run for
+this candidate. The following coverage boundaries remain explicit:
+
+- Fourteen authored, unrun native policy/wire cases cover outcomes, numeric/time
   validation, caps, duplicate admission, deadline ties, owner isolation,
   cancellation/reuse, hidden/detached/cleared leases and additive messages.
-- Client/mock cases cover capability, one-request ownership, cancellation,
+- Nine passing client/mock cases cover capability, ownership, cancellation,
   late/reconnected replies, failure delivery and no invented physical size.
-- Transport/contract cases cover no replay, old connection suppression and
+- Authored, unrun transport/contract cases cover no replay, old connections and
   the literal true marker, including rejection of a false marker.
-- `scripts/engine-storage.mjs` uses two owned ports, fresh browser contexts and
+- The unrun `scripts/engine-storage.mjs` uses two ports, fresh contexts and
   three synthetic invalid public cache rows. It checks exact physical count
   versus empty hydrated memory, unchanged Stats, no private reads, independent
   browser failures, deadline/late callback order, hidden/detached/stop cleanup
@@ -103,8 +114,8 @@ Root retains the shared gate slot. All following coverage is authored only:
 
 The finite fixture is registered in `engine-check.sh`, uses no accounts or
 external sockets, records package hash/UTC/load and cleans browser/server on
-failure. Actual pass/failure evidence must replace this unexecuted status
-before landing. No production test-control export was introduced.
+failure. Native and real Worker execution evidence is still required before
+landing. No production test-control export was introduced.
 
 ## Separately planned work
 

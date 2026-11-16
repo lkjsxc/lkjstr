@@ -1229,17 +1229,27 @@ export type StorageTime = number;
 export type StorageUnknown = { readonly phase: 'unsupported' | 'failed' | 'timeout' };
 /** Exact row count observed by one successful readonly events transaction.
  * `at` records its completion callback; live writes may continue afterward. */
-export type StoredEventCount = StorageUnknown | {
-  readonly phase: 'ready'; readonly count: number; readonly at: StorageTime;
-};
+export type StoredEventCount =
+  | StorageUnknown
+  | {
+      readonly phase: 'ready';
+      readonly count: number;
+      readonly at: StorageTime;
+    };
 /** Approximate browser estimate across this origin, including other stores.
  * Neither physical disk bytes nor the size of just the public event cache. */
-export type OriginStorage = StorageUnknown | {
-  readonly phase: 'ready'; readonly usage: number; readonly quota: number;
-  readonly approximate: true; readonly at: StorageTime;
-};
+export type OriginStorage =
+  | StorageUnknown
+  | {
+      readonly phase: 'ready';
+      readonly usage: number;
+      readonly quota: number;
+      readonly approximate: true;
+      readonly at: StorageTime;
+    };
 export type StorageReport = {
-  readonly startedAt: StorageTime; readonly finishedAt: StorageTime;
+  readonly startedAt: StorageTime;
+  readonly finishedAt: StorageTime;
   readonly memory: {
     readonly events: number;
     /** Sum of retained event string bytes; excludes allocation/serialization overhead. */

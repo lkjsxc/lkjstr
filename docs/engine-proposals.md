@@ -138,4 +138,4 @@ Bounds, atomic removal, conflicts and the Worker-scoped unlock limit are in [dm-
 - `StorageReport.origin.at` records the estimate callback in the same Worker clock, only when ready.
 - `Engine.storage?` offers `inspect({signal?})` with bounded cancellation and no replay across Worker lifetimes.
 
-Inspection bounds and unexecuted verification plans are in [storage-inspection.md](storage-inspection.md).
+Inspection bounds and verification limits are in [storage-inspection.md](storage-inspection.md).

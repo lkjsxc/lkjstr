@@ -2,7 +2,10 @@ use serde::Serialize;
 #[derive(Serialize)]
 #[serde(tag = "t", rename_all = "camelCase")]
 pub enum Output {
-    Storage { req: String, report: crate::engine::storage_inspection::Report },
+    Storage {
+        req: String,
+        report: crate::engine::storage_inspection::Report,
+    },
     #[serde(rename = "signer.auth")]
     SignerAuth {
         id: String,
