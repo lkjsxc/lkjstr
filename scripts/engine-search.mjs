@@ -20,9 +20,9 @@ export async function searchContract({ page, send, wait, check, account, fake })
       } finally { clearTimeout(timer); }
     };
     const fixture = (await next()).note;
-    const sign = async (kind, at, content) => {
+    const sign = async (kind, at, content, tags = []) => {
       child.stdin.write(`${JSON.stringify({
-        pubkey: fixture.pubkey, kind, created_at: at, content, tags: [],
+        pubkey: fixture.pubkey, kind, created_at: at, content, tags,
       })}\n`);
       return next();
     };
@@ -74,6 +74,39 @@ export async function searchContract({ page, send, wait, check, account, fake })
     const older = await sign(1, 1700400000, 'searchboundary cached earlier');
     const english = await sign(1, 1700400001, 'searchboundary cached English');
     const japanese = await sign(1, 1700400002, 'searchboundary cached 日本語');
+    // An empty-content repost is valid but cannot match the relay's Search text.
+    // Retain it first through profile/reposts, exactly as a prior tile would.
+    const unavailable = await sign(6, 1700400003, '', [
+      ['e', fixture.id], ['p', fixture.pubkey],
+    ]);
+    const admission = 'search-contract-admission', warm = 'search-contract-reposts';
+    subs.push(admission, warm);
+    await send({ t: 'open', sub: admission, query: { source: 'diagnostics' } });
+    await wait((sub) => window.messages.some((m) => m.t === 'rows' && m.sub === sub), admission);
+    const before = await page.evaluate((sub) => Object.fromEntries(
+      window.messages.filter((m) => m.t === 'rows' && m.sub === sub).at(-1).rows
+        .map((row) => [row.label, JSON.parse(row.value)])), admission);
+    // No other events from this fresh signer are on the relay during admission.
+    fake.add(unavailable);
+    await send({ t: 'open', sub: warm, query: {
+      source: 'profile', pubkey: fixture.pubkey, account, show: 'reposts',
+    } });
+    await send({ t: 'hint', hint: {
+      visibleSubs: [admission, warm], pageHidden: false, idle: false, saveData: false,
+    } });
+    await wait(({ sub, before }) => {
+      const message = window.messages.filter((m) => m.t === 'rows' && m.sub === sub).at(-1);
+      if (!message) return false;
+      const after = Object.fromEntries(message.rows.map((row) => [row.label, JSON.parse(row.value)]));
+      return after.verified > before.verified && after.events > before.events;
+    }, { sub: admission, before });
+    await page.evaluate(({ sub, before, wrapper, target }) => {
+      const after = Object.fromEntries(window.messages.filter((m) => m.t === 'rows' && m.sub === sub)
+        .at(-1).rows.map((row) => [row.label, JSON.parse(row.value)]));
+      window.searchContract.admission = { before, after, wrapper, target };
+    }, { sub: admission, before, wrapper: unavailable.id, target: fixture.id });
+    await send({ t: 'close', sub: warm });
+    await send({ t: 'close', sub: admission });
     for (const event of [profile, older, english, japanese]) fake.add(event);
     const sub = await open('top', undefined, 2);
     const rows = await read(sub);
