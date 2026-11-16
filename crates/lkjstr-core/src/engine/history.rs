@@ -64,7 +64,7 @@ impl Engine {
             &events,
             &self.private_lists,
         )
-        .0
+        .raw
         .end < events.len()
         {
             return false;
@@ -128,7 +128,7 @@ impl Engine {
             })
             .filter_map(|(sub, v)| {
                 let events = super::list_events::events(&self.store, &v.query, &self.private_lists);
-                let (raw, held) = windows::selection(
+                let selected = windows::selection(
                     &self.store,
                     &self.network,
                     v,
@@ -146,10 +146,9 @@ impl Engine {
                     })
                     .unwrap_or(0);
                 let needed = at.saturating_add(v.after).saturating_add(1).min(6000);
-                let filtered = held.iter().any(Option::is_some)
-                    && held.iter().filter(|h| h.is_none()).count()
-                        < windows::range(v, &events).len();
-                (raw.end == events.len() && (events.len() < needed || filtered))
+                let filtered = selected.held.iter().any(Option::is_some)
+                    && selected.held.iter().filter(|h| h.is_none()).count() < selected.quota;
+                (selected.raw.end == events.len() && (events.len() < needed || filtered))
                     .then(|| sub.clone())
             })
             .collect();

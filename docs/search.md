@@ -156,3 +156,12 @@ records and logs; each `freeze-*` directory contains `frozen.json` and copied
 bytes. Each `worker-*` directory keeps the finite verdict and cleanup report.
 The existing `scripts/engine-search.mjs` cases also run in the main Worker
 harness at the end of `engine-rich.mjs`, before time-rail checks.
+
+## Retained unavailable repost follow-up
+
+The combined Worker gate exposed a pre-existing note-window error that the
+fresh Search fixture did not exercise. Unavailable repost wrappers consumed
+note slots and Fresh counts before wire projection discarded them. The raw
+history and target wants are now preserved separately from the note quota;
+[unavailable-reposts.md](unavailable-reposts.md) records native and frozen
+Worker evidence, explicit target bounds and the pending combined checks.

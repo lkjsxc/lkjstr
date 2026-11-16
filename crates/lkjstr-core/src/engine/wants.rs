@@ -138,12 +138,12 @@ fn requests(
         }
     }
     let events = super::list_events::events(store, q, private);
-    let (range, held) = super::windows::selection(store, network, v, enabled, &events, private);
+    let selected = super::windows::selection(store, network, v, enabled, &events, private);
     // Refill can cross the whole retained store. Hidden rows must not turn that
     // scan into count streams or consume the reference collector's row budget.
-    let visible: Vec<_> = events[range]
+    let visible: Vec<_> = events[selected.raw.clone()]
         .iter()
-        .zip(held)
+        .zip(&selected.held)
         .filter(|(_, reason)| reason.is_none())
         .map(|(event, _)| event.clone())
         .collect();
@@ -204,6 +204,12 @@ fn requests(
         }
     }
     let mut ids = prefetch.notes;
+    // A separate 120-target budget preserves visible reference priority.
+    ids.extend(super::windows::projection::targets(
+        &events[selected.raw],
+        &selected.held,
+        store,
+    ));
     if q.source == Source::Bookmarks
         && let Some(list) = q
             .account

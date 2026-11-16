@@ -6,7 +6,7 @@ Source audit refreshed on 2026-11-16 against the protocol-11 candidate after sou
 The K1-K4/M1-M6 base passed its gates and is built. Protocol-9 required gates, 451 main Worker checks and 40 finite zap checks passed; exact source boundaries
 and failures are recorded in [engine-zap-verification.md](engine-zap-verification.md).
 Protocol-10 required gates, 452 main Worker checks and 31 private-list checks passed; see [engine-private-verification.md](engine-private-verification.md).
-Search passes eleven native and seven Worker checks; current combined gates remain pending. See [search.md](search.md).
+Search people/language has focused proof; unavailable repost corrections await merged gates. See [unavailable-reposts.md](unavailable-reposts.md).
 The last confirmed ship is 541e4a1e; the seventh ship failed at the host operation. Source status does not establish the deployed build.
 Unregistered staging under tmp/ is excluded. This replaces the 11-14 inventory.
 Rows describe lkjstr's real Worker and reachable interface, not mock capability.
@@ -58,7 +58,7 @@ New written Claude specifications take priority when present.
 | Grouped notifications and read state | done | Mentions/replies/reposts/reactions/zaps, filters and persistent timestamp ties; E/wire/notifications.rs, E/clients.rs. Zap trust is separate below. |
 | Reading position and fresh-note indicator | done | Per-tab anchors, retained windows and fresh counts; V/feed-place.ts, V/feed-fresh.ts. Page freeze and actual Worker pause were measured separately; host/OS sleep remains untested; docs/engine-performance-hour.md. |
 | Calendar/time navigation | done | Cache-wide month counts and ordinal seeks; E/wire/timeline.rs, V/time-rail.ts. Not a count of all relay history. |
-| Rich note search | done | Existing rich filters include every language-array alternative; native membership, windows and time rails agree. Eleven native and seven Worker cases pass; E/wire/query_translate.rs, E/query_predicates.rs, docs/search.md. |
+| Rich note search | done | Rich filters include every language-array alternative. Native unavailable-repost fixes preserve note quota and Fresh; merged Worker proof is pending. E/wire/query_translate.rs, E/query_predicates.rs, docs/search.md, docs/unavailable-reposts.md. |
 | People in search | partial | Six retained verified-metadata matches precede the exact note quota, with mute scope and stable anchors/Fresh. Native/Worker proof passes; remote people discovery remains absent. E/search_people.rs, E/wire/search.rs, docs/search.md. |
 | Hashtag timelines | done | `hashtag` filter and linked tile exist; E/query.rs, V/registry.ts, V/note.ts. |
 | Followed hashtags | missing | No kind-10015 discovery/edit or Home integration; list codecs alone do not supply it. |

@@ -106,13 +106,15 @@ pub(super) fn authors(
             .unwrap_or(0);
         person_window(view, at, events.len())
     } else {
-        super::windows::selection(store, network, view, enabled, &events, private).0
+        super::windows::selection(store, network, view, enabled, &events, private).raw
     };
     let window: Vec<_> = events[range]
         .iter()
         .filter(|event| {
             view.query.source == Source::Followers
-                || super::query::hidden_with_lists(store, &view.query, event, private).is_none()
+                || (!super::windows::projection::unavailable(&view.query, event)
+                    && super::query::hidden_with_lists(store, &view.query, event, private)
+                        .is_none())
         })
         .collect();
     // Reserve every row author before bounded recursive context hydration.

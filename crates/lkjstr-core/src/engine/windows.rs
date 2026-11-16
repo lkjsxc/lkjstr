@@ -3,6 +3,14 @@ use super::{
     protocol::{Output, Patch, Source},
     query, rows,
 };
+#[path = "window_projection.rs"]
+pub(super) mod projection;
+
+pub(super) struct Selection {
+    pub raw: std::ops::Range<usize>,
+    pub held: Vec<Option<super::global::Held>>,
+    pub quota: usize,
+}
 impl Engine {
     pub(super) fn render(&mut self, sub: &str, full: bool) {
         let Some(v) = self.views.get_mut(sub) else {
@@ -22,7 +30,7 @@ impl Engine {
             return;
         }
         let events = super::list_events::events(&self.store, &v.query, &self.private_lists);
-        let (range, held) = selection(
+        let selected = selection(
             &self.store,
             &self.network,
             v,
@@ -30,11 +38,12 @@ impl Engine {
             &events,
             &self.private_lists,
         );
-        let (start, end) = (range.start, range.end);
+        let (start, end) = (selected.raw.start, selected.raw.end);
+        let fresh = projection::count(&v.query, &events[..start]);
         let window = &events[start..end];
         let items: Vec<_> = window
             .iter()
-            .zip(held)
+            .zip(selected.held)
             .filter(|(_, reason)| reason.is_none())
             .map(|(e, _)| {
                 let mut r = rows::row_with_lists(
@@ -56,7 +65,7 @@ impl Engine {
             self.outgoing.push(Output::Rows {
                 sub: sub.into(),
                 items: items.clone(),
-                at_top: start == 0,
+                at_top: fresh == 0,
                 at_bottom,
             });
         } else {
@@ -103,7 +112,7 @@ impl Engine {
         }
         self.outgoing.push(Output::Fresh {
             sub: sub.into(),
-            count: start,
+            count: fresh,
         });
         v.at_bottom = at_bottom;
         v.rows = items;
@@ -118,7 +127,7 @@ impl Engine {
     }
 }
 
-pub(super) fn range(v: &super::View, events: &[crate::store::Event]) -> std::ops::Range<usize> {
+fn plan(v: &super::View, events: &[crate::store::Event]) -> (usize, usize) {
     let at = v
         .anchor
         .as_ref()
@@ -128,11 +137,19 @@ pub(super) fn range(v: &super::View, events: &[crate::store::Event]) -> std::ops
                 .position(|e| super::rich::anchored(e, id, &v.query))
         })
         .unwrap_or(0);
-    let end = at
-        .saturating_add(v.after)
-        .saturating_add(1)
-        .min(events.len());
-    at.saturating_sub(v.before).min(end)..end
+    let mut start = at;
+    let mut above = 0;
+    while start > 0 && above < v.before {
+        start -= 1;
+        if !projection::unavailable(&v.query, &events[start]) {
+            above += 1;
+        }
+    }
+    // Keep adjacent invisible targets owned when the first note is anchored.
+    while start > 0 && projection::unavailable(&v.query, &events[start - 1]) {
+        start -= 1;
+    }
+    (start, above.saturating_add(v.after).saturating_add(1))
 }
 
 /// Refill from raw rows so every retained anchor can reach older cached notes.
@@ -144,34 +161,44 @@ pub(super) fn selection(
     enabled: bool,
     events: &[crate::store::Event],
     private: &super::settings::PrivateLists,
-) -> (std::ops::Range<usize>, Vec<Option<super::global::Held>>) {
-    let raw = range(v, events);
-    if enabled && v.query.account.is_none() && v.query.source == Source::Global {
-        let held = super::global::classify_window(
+) -> Selection {
+    let (start, quota) = plan(v, events);
+    let held = if enabled && v.query.account.is_none() && v.query.source == Source::Global {
+        super::global::classify_window(
             store,
-            &events[raw.start..],
+            &events[start..],
             |p| network.profile_absent(p),
-            raw.len(),
-        );
-        (raw.start..raw.start + held.len(), held)
+            |e| projection::unavailable(&v.query, e),
+            quota,
+        )
     } else {
         let mut visible = 0;
-        let held: Vec<_> = events[raw.start..]
+        events[start..]
             .iter()
             .scan((), |_, event| {
-                if visible >= raw.len() {
+                if visible >= quota {
                     return None;
                 }
-                // Followers project person rows, independent of contact-list payloads
-                // and note mutes. Their raw membership must agree with the wire list.
-                let hidden = v.query.source != Source::Followers
-                    && query::hidden_with_lists(store, &v.query, event, private).is_some();
-                if !hidden {
+                // Person membership is independent of contact-list payloads and note mutes.
+                let reason = if v.query.source != Source::Followers
+                    && query::hidden_with_lists(store, &v.query, event, private).is_some()
+                {
+                    Some(super::global::Held::Filtered)
+                } else if projection::unavailable(&v.query, event) {
+                    Some(super::global::Held::UnavailableRepost)
+                } else {
+                    None
+                };
+                if reason.is_none() {
                     visible += 1;
                 }
-                Some(hidden.then_some(super::global::Held::Filtered))
+                Some(reason)
             })
-            .collect();
-        (raw.start..raw.start + held.len(), held)
+            .collect()
+    };
+    Selection {
+        raw: start..start + held.len(),
+        held,
+        quota,
     }
 }

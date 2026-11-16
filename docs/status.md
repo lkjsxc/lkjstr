@@ -156,9 +156,9 @@ These are concrete runtime limits, not permission to fake a successful answer.
   NIP-04. Public edits preserve ciphertext; private editing, named-set navigation
   and list-specific Retry controls remain absent. Rows/hydration are owner-scoped.
 - Emoji: referenced sets pass 20 native and 11 Worker cases plus strict Clippy; full conformance remains pending. See [emoji-sets.md](emoji-sets.md).
-- Search: retained people/language OR pass native and Worker proof. Remote people
-  discovery remains absent; bounded verified NIP-05 from-query lookup exists.
-  Combined gates/deployment remain pending. See [search.md](search.md).
+- Search: retained people/language OR pass focused proof; unavailable reposts now
+  preserve note quota/Fresh in eight native cases. Remote people discovery is absent.
+  Worker replay/gates/deployment remain pending. See [unavailable-reposts.md](unavailable-reposts.md).
 - Bunkers: auth_url passes focused native/52 Worker checks, without controls; routing limits: [bunker-auth.md](bunker-auth.md). Relay switching is unsupported.
   Without a registered authorization presenter, the current client returns unsupported promptly; no new surface exists.
 - Uploads: phases, zero/validated completion and cancellation work; actual byte

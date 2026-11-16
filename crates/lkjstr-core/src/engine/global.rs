@@ -1,9 +1,10 @@
-//! Small signed-out Global policy. Refill scans at most 6000 cached rows; retains at most 301.
+//! Small signed-out Global policy. Refill scans at most 6000 cached rows per bounded window.
 use crate::store::{Event, Store};
 use std::collections::{BTreeMap, BTreeSet};
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Held {
     Filtered,
+    UnavailableRepost,
     NoProfile,
     AuthorCap,
     Duplicate,
@@ -16,12 +17,13 @@ pub fn classify(
     events: &[Event],
     finished: impl Fn(&str) -> bool,
 ) -> Vec<Option<Held>> {
-    classify_window(store, events, finished, 301)
+    classify_window(store, events, finished, |e| matches!(e.kind, 6 | 16), 301)
 }
 pub(super) fn classify_window(
     store: &Store,
     events: &[Event],
     finished: impl Fn(&str) -> bool,
+    unavailable: impl Fn(&Event) -> bool,
     limit: usize,
 ) -> Vec<Option<Held>> {
     let mut authors = BTreeMap::<String, usize>::new();
@@ -34,6 +36,9 @@ pub(super) fn classify_window(
                 return None;
             }
             Some((|| {
+                if unavailable(e) {
+                    return Some(Held::UnavailableRepost);
+                }
                 if store.profile(&e.pubkey).is_none() && finished(&e.pubkey) {
                     return Some(Held::NoProfile);
                 }
