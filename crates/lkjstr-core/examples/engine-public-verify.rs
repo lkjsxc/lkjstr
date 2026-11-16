@@ -64,9 +64,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let relations: Vec<_> = ids
             .into_iter()
             .filter_map(|id| store.get(id))
-            .map(|event| json!({"id": event.id,
+            .map(|event| {
+                json!({"id": event.id,
                 "parent": lkjstr_protocol::reply_parent(&event),
-                "root": lkjstr_protocol::reply_root(&event)}))
+                "root": lkjstr_protocol::reply_root(&event)})
+            })
             .collect();
         result["relationships"] = json!(relations);
     }
