@@ -79,10 +79,19 @@ Two old protocol assertions rejected outgoing hyphens. They now assert acceptanc
 because the current NIP-30 permits hyphens, rather than weakening valid-name checks.
 The new note/reaction/private-rumor case proves the selected code retains its tag.
 
-A source-only follow-up adds seven native completeness cases: five isolated
-over-budget coordinate/code/URL cases, accepted exact boundaries and ignored
-invalid small values/recursive references. Those cases and their baseline proof
-have not run yet; the earlier 13-test evidence does not cover this follow-up.
+At 16:16:58-16:17:11 UTC, the bounded-value follow-up failed all five isolated
+over-budget coordinate/code/URL cases against the prior emoji implementation;
+the exact-boundary and invalid-value controls already passed. The corrected
+implementation passed all seven cases and the original 13. The command block
+took 13.508 seconds, at load 2.16/1.62/1.48 to 2.71/1.77/1.53, with four build
+jobs and test threads. Logs and source hashes are in
+`tmp/emoji-limits-proof-try2/`. The initial shared-target run reused stale
+artifacts; its unexpected results remain in `tmp/emoji-limits-proof/`. Refreshing
+only Core/protocol source timestamps forced the intended source into both proof
+phases. No runtime or assertion changed between those runs.
+
+The follow-up has not rerun strict Clippy; its native proof does not replace the
+pending Worker and full integration gates.
 
 The authored real Worker fixture is registered in `scripts/engine-check.sh` but
 has not run. WASM, full integration gates and a public post-change measurement
