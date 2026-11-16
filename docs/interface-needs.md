@@ -29,7 +29,7 @@ cannot provide the required isolation.
 | --- | --- |
 | Profile editing | `profile.save {as,profile}` carries name/about/picture/banner/NIP-05/website/lightning address. The user wants to edit their public profile and use an uploaded picture. |
 | Person relays | `ProfileRow.relays` projects known outbox URLs. The user wants to inspect where a person's public notes can be read. |
-| People lists | `open {sub,query:{source:"list",target,...}}` projects stored list members. The user wants to open a saved people list without treating it as a feed. |
+| People lists | `open {sub,query:{source:"list",tag:"30000:<pubkey>:<identifier>",account?,privateLists?}}` projects current signed public and authorized private members. The user wants to open a saved people list without treating it as a feed. |
 | Article publishing | `publish` with `Draft.longForm` emits kind 30023. The user wants to write a long-form article; a parsed article reader is still missing. |
 | Group subjects | `dm.send {as,draft:{recipients,text,subject?}}` and private snapshots support the subject field. A subject-editing surface remains deliberately unspecified. |
 | Zap quote/invoice | `zap.quote {req,query:{target,amountMsat?}}` returns provider/split evidence; `zap.invoice {as,intent:{target,amountMsat,comment}}` returns `result.zapIntent` with validated unpaid invoices. The user wants to choose an amount/comment, inspect recipients and decide what to do with an invoice. No payment control or wallet call exists. |
@@ -60,5 +60,7 @@ and lack a complete runtime operation.
 
 - `lists.retry {as}` resets private-list failures independently of Messages consent; a Retry control needs a specification.
 - `query.privateLists` and `state.privateLists` support existing feeds/Mutes; named people-set navigation still needs a surface.
+- `SubState.privateLists {phase,pending,failed,error?}` identifies unresolved private reads while public rows remain usable;
+  current shared failure wording does not explain that distinction.
 - `Account.privateLists` qualifies `unread`; unknown dependencies need treatment wherever a future badge uses that number.
 - Private-list editing remains outside this read feature. Contract and bounds: [private-lists.md](private-lists.md).

@@ -2,10 +2,11 @@
 
 ## Purpose
 
-Source audit refreshed on 2026-11-16 against the protocol-9 zap integration tree.
+Source audit refreshed on 2026-11-16 against the protocol-10 private-list/layout tree.
 The K1-K4/M1-M6 base passed its gates and is built. Protocol-9 required gates,
 451 main Worker checks and 40 finite zap checks passed; exact source boundaries
 and failures are recorded in [engine-zap-verification.md](engine-zap-verification.md).
+Protocol-10 required gates, 452 main Worker checks and 31 private-list checks passed; see [engine-private-verification.md](engine-private-verification.md).
 Source status alone does not establish the deployed build.
 Unregistered staging under tmp/ is excluded. This replaces the 11-14 inventory.
 Rows describe lkjstr's real Worker and reachable interface, not mock capability.
@@ -27,12 +28,12 @@ Evidence prefixes: `E/` = `crates/lkjstr-core/src/engine/`,
 
 ## Work order by daily impact
 
-1. Fix measured scrolling stalls and retain complete bounded public delivery
-   evidence; the third-landing hour finished with an unresolved late Home note.
-   Strengthen notification/thread controls and keep observer memory separate.
-2. Integrate external/older private-list reads; named-list account isolation
-   is already fixed. Measure trusted zap providers before treating intercepted
-   loopback checks as public interoperability.
+1. Measure batched note fitting, host deliveries and source-scoped DOM membership
+   in the required sixth-landing hour. The third hour's late Home note remains
+   unresolved; strengthen notification/thread controls and qualify observer memory.
+2. Measure real signer and zap provider behavior after the private-list/layout
+   gate pass. Intercepted loopback fixtures do not establish public
+   interoperability or hour-long completeness.
 3. Finish existing controls: referenced emoji sets, people/language search,
    bunker authorization challenges and measured upload progress. Upload
    cancellation and relay AUTH are already implemented.
@@ -82,7 +83,7 @@ Evidence prefixes: `E/` = `crates/lkjstr-core/src/engine/`,
 | Upload profile picture/banner | partial | Upload action and profile.save exist independently; no profile editor joins them. |
 | Profile relay list | engine ready, no surface | `ProfileRow.relays` contains known outbox URLs; E/wire/sources.rs. V/rows.ts does not draw them. |
 | Public mute people/words/tags/threads | done | Existing settings and note actions, with feed/notification hiding; E/settings.rs, V/settings-lists.ts, V/note-actions.ts. |
-| Encrypted private list reading | partial | Local-key NIP-44 entries work; extension/bunker decrypt and historical NIP-04 do not; E/accounts.rs, N/list_crypto.rs. |
+| Encrypted private list reading | done | Current signed mute/bookmark/people lists support local, extension and bunker NIP-44 and historical NIP-04 reads. External work requires visible opted-in ownership; cache/call bounds and unsupported methods remain explicit. Existing feeds/Mutes are wired; named-set navigation is separate. E/private_lists/, docs/private-lists.md. |
 | Encrypted private list edits | missing | Public edits preserve ciphertext; removing private entries is refused. No encrypt/edit flow for any signer. |
 | People/follow-set reading | engine ready, no surface | `open source:list` projects public members and owner-scoped private entries; hydration follows the same boundary. No list tile exists; E/wire/sources.rs, E/hydration.rs, docs/private-list-scope.md. |
 | People-set creation/edit and feed subscription | missing | No list-edit action or dedicated saved-set feed workflow. |

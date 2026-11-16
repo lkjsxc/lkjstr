@@ -157,7 +157,7 @@ account/result output. Other authorized accounts and query/window intent remain.
 The draft archive is local and encrypted for every signer kind, not account setup sync or a public list.
 Bounds, atomic removal, conflicts and the Worker-scoped unlock limit are in [dm-drafts.md](dm-drafts.md).
 
-## Protocol 9 zap additions (2026-11-16, integration candidate)
+## Protocol 9 zap additions (2026-11-16, owner authorized)
 
 - `ToEngine.zap.quote {req,query:{target,amountMsat?}}` requests finite read-only provider/split evidence.
 - `FromEngine.zap.quote {req,quote}` carries loading/ready/failed/unsupported evidence and recipient ranges.
@@ -177,7 +177,7 @@ Bounds, atomic removal, conflicts and the Worker-scoped unlock limit are in [dm-
 - `ActWatch.zapSignal?` connects caller cancellation to invoice lifetime without an added control.
 - Protocol 9: `reading {sub,key}` carries one delivered reading anchor independently of retained-window bounds; null restores window-anchor fallback.
 
-## Protocol 10 private list additions (2026-11-16, integration candidate)
+## Protocol 10 private list additions (2026-11-16, owner authorized)
 
 - Add `Query.privateLists?` for visible, account-scoped external list-read opt-in.
 - Add `open.visible?` to make initial ordinary subscription visibility atomic.
