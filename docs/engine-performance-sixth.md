@@ -32,7 +32,7 @@ node scripts/real-hour.mjs --seconds=3600 --scroll-notes=2000 \
 
 The owned companion was `node scripts/real-hour-gap-audit.mjs tmp/run`.
 The account had 156 follows; Home included self for 157 authors. The first
-1.149 seconds of the live interval had a smaller bootstrap cohort; all later
+approximately 1.15 seconds of the live interval had a smaller bootstrap cohort; all later
 observed Home filters used the final set. None of the seven missing candidates
 was affected by that initial membership difference.
 

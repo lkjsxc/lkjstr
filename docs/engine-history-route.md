@@ -65,11 +65,14 @@ relay observation was caused by it.
 
 ## Public observation and remaining checks
 
-The ongoing sixth public run stopped below 2,000 distinct Home note IDs and
-reported exhaustion. Its last recorded historical route change is compatible
-with this defect, but per-request receipt counts are still needed to attribute
-that observation. No public query, browser inspection or frozen-run mutation
-was added by this native proof.
+The completed sixth public run stopped at 1,903 distinct Home note IDs and
+reported exhaustion. Exact receipts now show 200 distinct wire IDs on ditto,
+then the inclusive cursor on an empty purple route. Of those bodies, 193 are
+retained, filter-matching and independently signature-verified; seven are
+unavailable. This corroborates the route transition without proving all 200
+were admitted or quantifying an unqueried tail. The [coverage record](engine-performance-sixth-coverage.md)
+keeps the source/cutoff limits. No public query or frozen-run mutation was added
+by the native or Worker proofs.
 
 Combined required gates passed as recorded below; post-change public
 measurement remains pending.
@@ -160,4 +163,6 @@ The gzip SHA-256 is
 The release-fix worktree retains `tmp/release-gates.json`, per-command logs,
 source fingerprints, copied reports and immutable package/dist snapshots.
 `tmp/release-fix-proof/final.json` maps the exact source, artifacts and reports.
-The prescribed ship retry and served-site verification are still pending.
+The prescribed ship passed its real-interface and archive checks but failed at
+the host operation. Its exact artifact and diagnosis boundary are recorded in
+[engine-startup.md](engine-startup.md); no successful ship is claimed.

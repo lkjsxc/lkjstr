@@ -180,7 +180,9 @@ passed all required gates, 452 main Worker checks and 31 private-list checks; th
 of 2000 requested notes and seven unresolved Home coverage candidates; the productive-route recovery transition is under investigation.
 The sixth prescribed ship stopped before deployment at 16:35:57 UTC: separate package validators still required a direct HTML WASM preload.
 The archive graph and numeric-token corrections pass 80 package cases and 19 xtask tests; all required combined gates and exact packaging passed.
-The corrected prescribed ship and served-site verification remain pending.
+The seventh prescribed ship passed all 548 real interface checks and packaging, then failed at the host operation at 17:53:27 UTC.
+No successful deployment receipt or served-index verification exists; the last confirmed successful ship remains 541e4a1e. Extra host commands
+are forbidden by the owner handoff; read-only diagnosis was requested through Desk. Exact artifacts and limits are in [engine-startup.md](engine-startup.md).
 See [engine-startup.md](engine-startup.md) for hashes, the failed-before proof and preserved archive/CSP checks.
 
 The owner's 2026-11-16 delegation authorizes rebased pushes and the prescribed ship script. Tests use fresh ports and fixture data, clean their

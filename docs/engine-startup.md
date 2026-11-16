@@ -138,4 +138,28 @@ Both builds refreshed and recorded owned source mtimes/hashes, and restored
 the candidate after the before proof. Evidence: `tmp/numeric-proof/` in the
 release-fix worktree. The combined required gates and exact packaging now
 pass; [engine-history-route.md](engine-history-route.md) records dates, loads
-and final artifact hashes. The prescribed ship retry remains pending.
+and final artifact hashes. The prescribed ship result is recorded below.
+
+## Prescribed ship reached host failure
+
+The clean rebased `ce05e29244f76de725b78fc71c41fbfd1f14ba8f` was pushed to
+main. Its prescribed ship ran on 2026-11-16 from 17:44:14 to 17:53:27 UTC,
+starting at load 3.20/3.50/3.63. Web check, all 548 real interface checks
+with zero page errors, the final real build and exact archive check passed.
+The production WASM remained the verified `c7c7a7dd...` artifact above.
+
+The submitted 1,539,617-byte gzip SHA-256 was
+`c5380f86904ddbf27e4017d139395fe0169e6be809dc2e2cf4785ae0cbc35b87`;
+its index SHA-256 was
+`075e2b7c57b33ac3c8134753821ded92f93c443e16f1ba0924788a97a4d9da87`.
+Package transfer completed, but the prescribed host operation reported failure.
+There is no successful deployment receipt or served-index verification for this
+attempt. The last confirmed successful ship remains `541e4a1e`.
+
+An ordinary HTTPS read from the workspace timed out after 20 seconds. A
+separate read using the exact origin route from the prescribed script could
+not connect within five seconds. Neither result establishes site state from
+this workspace. The owner handoff forbids other commands on that host; no
+extra SSH diagnosis was run. A read-only diagnostic request is on Desk, while
+engine work continues. Exact logs, tar, UI report, checksums and empty owned
+process inventory are in `tmp/seventh-ship-attempt1/` in the canonical worktree.
