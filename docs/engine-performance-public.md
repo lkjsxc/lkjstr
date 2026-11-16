@@ -47,10 +47,13 @@ mutes, deletion and feed filters. Notification control covers direct kind-1
 mentions/replies: grouped reactions, reposts and zaps do not expose constituent
 IDs through existing rows and cannot be compared with equal confidence.
 Row observations retain IDs from full rows, patch insertions and updates,
-including later-removed rows. Missing candidates require route-lifetime and
-request-filter evidence, not merely a relay having appeared earlier in a run.
+including later-removed rows. Route lifetime/filter evidence separates received
+EVENT loss from acquisition coverage. It must not excuse an intended live route
+being dropped; eligible union gaps remain visible as coverage candidates.
 
-The current observer records each subscription, filter, EOSE and closure. Source
+New direct controls retain per-note first receipt by relay and query start/end
+times; older reports lack those timestamps. The observer records each source
+subscription, filter, EOSE and closure. Source
 selection requires exact relevant kind sets and tag targets. Filter payloads are
 interned with a 1024-payload / 4 Mi-character bound; query records stop at 10000.
 Each source retains at most 40000 observed IDs; source/window maps cap at 128.
@@ -159,12 +162,11 @@ actual engine SharedWorker pause 30.051 s, page freeze 30.002 s, clock gap
 no host sleep/network controls were used. Finally blocks resume owned targets,
 close the browser/server and remove profile data on success or failure.
 
-`tmp/real-hour-20261116-corrected` began 05:58:06.401 with bounded/interned
-probes against the frozen fixed WASM; load 7.25/7.07/7.45. It will observe 3600
-real seconds before extra fault scenarios. Its hour-memory result is pending.
-This running copy predates the final source/ID drop counters; its source/window
-and observed-ID counts are checked against those limits explicitly. Query drops
-were already reported. New runs include every drop counter; nine observer tests
+`tmp/real-hour-20261116-corrected` completed 3600.088 live seconds from
+05:58:06.401 with bounded/interned probes and no query drops. Its completed
+[memory, controls and fault audit](engine-performance-hour.md) records a healthy
+fallback coverage defect and an actual post-outage delivered note. That copied
+probe predates final source/ID drop counters; observed counts stayed below caps. New runs include every drop counter; nine observer tests
 pass, including two cap regressions that failed before the correction. Initial
 subscription counters retained server-CLOSED IDs until client CLOSE; the current
 probe removes them immediately. Older maxima are client-tracking bounds.

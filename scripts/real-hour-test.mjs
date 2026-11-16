@@ -58,7 +58,7 @@ test('relay lifetimes and EOSE latency exclude a replaced or closed subscription
   assert.equal(run('__realHourSnapshot().sockets[0].subscriptions'), 0);
 });
 
-test('control attribution excludes count hydration and notes after a route closed', () => {
+test('control attribution distinguishes count hydration and notes after a route closed', () => {
   const account = { pubkey: 'owner', follows: ['author'] };
   assert.equal(sourceFilter({ kinds: [1,6,7,9735], '#e': ['focus','other'] }, 'thread', account, 'focus'), false);
   assert.equal(sourceFilter({ kinds: [1,42], '#e': ['focus'] }, 'thread', account, 'focus'), true);

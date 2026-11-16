@@ -1,6 +1,6 @@
 // Opt-in real public-network measurement. Never part of a default test gate.
-import { mkdir, cp, writeFile, rm, readFile, readdir } from 'node:fs/promises';
-import { createHash } from 'node:crypto';
+import { mkdir, cp, writeFile, rm, readFile, readdir, realpath } from 'node:fs/promises';
+import { createHash, randomUUID } from 'node:crypto';
 import { resolve } from 'node:path';
 import { loadavg } from 'node:os';
 import { execFileSync, spawnSync } from 'node:child_process';
@@ -8,6 +8,7 @@ import { launchMeasured, buildIdentity } from './real-hour-browser.mjs';
 import { publicAccount, delay } from './real-hour-public.mjs';
 import { prepareReader, signInReadOnly, samplePage, scrollArchive, returnHomeTop, firstPaint } from './real-hour-ui.mjs';
 import { comparePublic } from './real-hour-compare.mjs';
+import { ownedDirectory } from './real-hour-owned.mjs';
 const root = new URL('../', import.meta.url).pathname;
 process.chdir(root);
 const option = (name, fallback) => process.argv.find((arg) => arg.startsWith(`--${name}=`))?.slice(name.length + 3) ?? fallback;
@@ -16,8 +17,7 @@ if (!Number.isFinite(seconds) || seconds < 1 || seconds > 86400) throw Error('se
 const scrollNotes = Number(option('scroll-notes', seconds >= 3600 ? '2000' : '120'));
 if (!Number.isInteger(scrollNotes) || scrollNotes < 1 || scrollNotes > 10000) throw Error('scroll-notes must be 1..10000');
 const stamp = new Date().toISOString().replaceAll(':', '-').replaceAll('.', '-');
-const directory = resolve(option('output', `tmp/real-hour-${stamp}`));
-await mkdir(directory, { recursive: true });
+const directory = await ownedDirectory(root, option('output', `tmp/real-hour-${stamp}`), true);
 // Keep Chromium's Unix-domain socket path below Linux's 108-byte bound.
 process.env.TMPDIR = `${root}tmp/t`;
 process.env.XDG_CACHE_HOME = `${directory}/cache`;
@@ -27,7 +27,7 @@ await mkdir(process.env.TMPDIR, { recursive: true });
 const source = resolve(option('build', 'dist'));
 const snapshot = `${directory}/dist`;
 await cp(source, snapshot, { recursive: true });
-const report = { started: new Date().toISOString(), revision: execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(),
+const report = { ownership: { kind: 'lkjstr-real-hour', id: randomUUID(), root: await realpath(root), directory }, started: new Date().toISOString(), revision: execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(),
   worktreeDirty: execFileSync('git', ['status', '--porcelain'], { encoding: 'utf8' }).trim() !== '',
   mode: seconds >= 3600 ? 'hour' : 'short-validation', requestedLiveSeconds: seconds,
   build: await buildIdentity(snapshot), initialLoadAverage: loadavg(), samples: [], errors: [],
@@ -37,6 +37,7 @@ const save = async () => { await writeFile(`${directory}/report.json`, JSON.stri
 let measured, page;
 const stop = () => { report.interrupted = true; };
 process.on('SIGTERM', stop); process.on('SIGINT', stop);
+await save();
 try {
   if (option('helpers', 'build') !== 'existing') {
   const native = spawnSync(`${process.env.HOME}/.cargo/bin/cargo`, ['build', '-q', '-p', 'lkjstr-core', '--example', 'engine-public-verify', '--example', 'engine-cold-fixtures'], { encoding: 'utf8', env: { ...process.env, CARGO_BUILD_JOBS: '4', RUST_TEST_THREADS: '4', CARGO_HOME: `${root}tmp/cargo-home`, CARGO_TARGET_DIR: `${root}target` }, maxBuffer: 2 * 1024 * 1024 });

@@ -41,7 +41,7 @@ export function sourceRoutes(queries, account) {
   };
 }
 export async function routeControls(relays, filter, cap) {
-  const events = new Map(), seenOn = new Map(), pages = [];
+  const events = new Map(), seenOn = new Map(), firstSeenOn = new Map(), pages = [];
   for (const relay of relays) {
     const sample = await controlPages([relay], filter, cap);
     pages.push(...sample.pages);
@@ -51,9 +51,12 @@ export async function routeControls(relays, filter, cap) {
       const routes = seenOn.get(event.id) ?? [];
       if (!routes.includes(relay)) routes.push(relay);
       seenOn.set(event.id, routes);
+      const times = firstSeenOn.get(event.id) ?? {};
+      times[relay] = sample.firstSeenAt[event.id];
+      firstSeenOn.set(event.id, times);
     }
   }
-  return { filter, pages, events: [...events.values()], seenOn: Object.fromEntries(seenOn), capReached: events.size >= cap };
+  return { filter, pages, events: [...events.values()], seenOn: Object.fromEntries(seenOn), firstSeenOn: Object.fromEntries(firstSeenOn), capReached: events.size >= cap };
 }
 export async function auditControls({ page, cdp, account, controls, savedSeen, startedAt, endedAt }) {
   const queries = await cdp.queries();
@@ -85,6 +88,7 @@ export async function auditControls({ page, cdp, account, controls, savedSeen, s
     controls.home.pages.push(...extra.pages.map((entry) => ({ ...entry, supplementalAuthors: omitted })));
     controls.home.filter.authors = authors;
     controls.home.seenOn = { ...(controls.home.seenOn ?? {}), ...extra.seenOn };
+    controls.home.firstSeenOn = { ...(controls.home.firstSeenOn ?? {}), ...extra.firstSeenOn };
     correction.push({ reason: 'Include every actual Home author, including the account itself', authors: omitted, pages: extra.pages.length });
   }
   const views = await page.evaluate(() => globalThis.__realHour?.views ?? {});
@@ -108,6 +112,8 @@ export async function auditControls({ page, cdp, account, controls, savedSeen, s
     const missing = eligible.filter((event) => !displayed.has(event.id));
     return { controlEvents: ids.size, verifiedEligible: eligible.length, observedRows: displayed.size,
       excluded: policy.excluded.filter((entry) => ids.has(entry.id)),
+      unseenEligible: missing.map((event) => ({ id: event.id, pubkey: event.pubkey, created_at: event.created_at,
+        firstControlSeenOn: sample.firstSeenOn?.[event.id], attribution: byId.get(event.id) })),
       missingCandidates: missing.filter((event) => byId.get(event.id)?.classification === 'matching-query-with-eose')
         .map((event) => ({ id: event.id, pubkey: event.pubkey, created_at: event.created_at, relays: sample.seenOn?.[event.id] })),
       uncertainCandidates: missing.filter((event) => byId.get(event.id)?.classification !== 'matching-query-with-eose').map((event) => byId.get(event.id)),
@@ -129,7 +135,7 @@ export async function auditControls({ page, cdp, account, controls, savedSeen, s
     notificationScope: 'kind-1 mentions/replies only; grouped reaction/repost/zap constituent IDs are not exposed',
     homeScope: 'direct kind-1 notes only; repost wrapper membership is not counted',
     timing: 'Same event-time window; observed rows include control-query grace after the live hour',
-    routeLifetimeLimit: 'Observed REQ routes may change during the hour; candidates need route-lifetime reproduction before being called loss',
+    routeLifetimeLimit: 'Closed REQ lifetimes do not prove fulfilled Home intent. Every unseen eligible note remains a coverage candidate; route ownership and delivered EVENT loss require separate investigation',
     actualSourceRequestsObserved: { home: routes.home.length > 0, notifications: routes.notifications.length > 0 },
     querySource: views.home?.query ? 'observed wire query' : 'fresh harness default Home/notifications queries; no filter controls changed',
     queries, controls, seen };

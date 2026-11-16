@@ -4,7 +4,7 @@ import bundle from 'playwright-core/lib/utilsBundle';
 import { spawnSync } from 'node:child_process';
 export const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 export async function queryRelay(relay, filters, timeoutMs = 15000) {
-  const started = Date.now(), events = new Map(), notices = [];
+  const started = Date.now(), events = new Map(), firstSeenAt = new Map(), notices = [];
   return new Promise((resolve) => {
     const socket = new bundle.ws(relay, { handshakeTimeout: timeoutMs, maxPayload: 2 * 1024 * 1024 });
     let finished = false;
@@ -13,7 +13,8 @@ export async function queryRelay(relay, filters, timeoutMs = 15000) {
       finished = true; clearTimeout(timer);
       if (socket.readyState === 1) socket.send(JSON.stringify(['CLOSE', 'control']));
       socket.terminate();
-      resolve({ relay, filters, status, elapsedMs: Date.now() - started, events: [...events.values()], notices });
+      resolve({ relay, filters, status, startedAt: started, finishedAt: Date.now(), elapsedMs: Date.now() - started,
+        events: [...events.values()], firstSeenAt: Object.fromEntries(firstSeenAt), notices });
     };
     const timer = setTimeout(() => finish('timeout'), timeoutMs);
     socket.on('open', () => socket.send(JSON.stringify(['REQ', 'control', ...filters])));
@@ -22,7 +23,13 @@ export async function queryRelay(relay, filters, timeoutMs = 15000) {
     socket.on('message', (raw) => {
       let message;
       try { message = JSON.parse(String(raw)); } catch { return; }
-      if (message[0] === 'EVENT' && message[1] === 'control' && events.size < 20000) events.set(message[2].id, message[2]);
+      if (!Array.isArray(message)) return;
+      if (message[0] === 'EVENT' && message[1] === 'control' && events.size < 20000
+          && /^[0-9a-f]{64}$/.test(message[2]?.id)) {
+        const event = message[2];
+        events.set(event.id, event);
+        if (!firstSeenAt.has(event.id)) firstSeenAt.set(event.id, Date.now());
+      }
       if (message[0] === 'NOTICE' && notices.length < 20) notices.push(String(message[1]).slice(0, 200));
       if (message[0] === 'EOSE' && message[1] === 'control') finish('eose');
       if (message[0] === 'CLOSED' && message[1] === 'control') { notices.push(String(message[2])); finish('refused'); }
@@ -51,13 +58,18 @@ export async function publicAccount(relays, requested) {
     probes: probes.map(({ events, ...probe }) => ({ ...probe, eventCount: events.length })) };
 }
 export async function controlPages(relays, filter, cap = 3000) {
-  const events = new Map(), pages = [];
+  const events = new Map(), firstSeenAt = new Map(), pages = [];
   for (const relay of relays.slice(0, 8)) {
     let until = filter.until;
     for (let page = 0; page < 12 && events.size < cap; page++) {
       const result = await queryRelay(relay, [{ ...filter, ...(until === undefined ? {} : { until }), limit: 500 }]);
-      pages.push({ relay, status: result.status, elapsedMs: result.elapsedMs, count: result.events.length, notices: result.notices, until });
-      for (const event of result.events) if (events.size < cap) events.set(event.id, event);
+      pages.push({ relay, status: result.status, startedAt: result.startedAt, finishedAt: result.finishedAt,
+        elapsedMs: result.elapsedMs, count: result.events.length, notices: result.notices, until });
+      for (const event of result.events) if (events.size < cap) {
+        events.set(event.id, event);
+        const at = result.firstSeenAt[event.id];
+        firstSeenAt.set(event.id, Math.min(firstSeenAt.get(event.id) ?? at, at));
+      }
       if (result.status !== 'eose' || result.events.length < 500) break;
       const oldest = Math.min(...result.events.map((event) => event.created_at));
       if (oldest === until || oldest <= (filter.since ?? 0)) break;
@@ -65,5 +77,5 @@ export async function controlPages(relays, filter, cap = 3000) {
       await delay(300);
     }
   }
-  return { filter, pages, events: [...events.values()] };
+  return { filter, pages, events: [...events.values()], firstSeenAt: Object.fromEntries(firstSeenAt) };
 }
