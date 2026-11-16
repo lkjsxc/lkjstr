@@ -80,11 +80,14 @@ test('missing target capture, malformed frames and forbidden outgoing frames can
 test('a complete host record only replaces lost query evidence, never lost UI observations', () => {
   const target = { type: 'worker', probe: { queryLogDropped: 9,
     evidenceDropped: { ids: 0, views: 0, sourceMappings: 0 }, seenCounts: { home: 3 } } };
-  assert.match(evidenceStatus([target], { complete: true }).completeness, /^scoped/);
-  assert.equal(evidenceStatus([target], { complete: true }).queryEvidenceDropped, 9);
-  assert.match(evidenceStatus([target], { complete: false }).completeness, /^unknown/);
-  target.probe.evidenceDropped.ids = 1;
   assert.match(evidenceStatus([target], { complete: true }).completeness, /^unknown/);
+  const page = { type: 'page', probe: { queryLogDropped: 0, evidenceDropped: { ids: 0, views: 0, sourceMappings: 0 },
+    dom: { installed: true, sources: { home: { scopeSeen: true }, notifications: { scopeSeen: true } } } } };
+  assert.match(evidenceStatus([target, page], { complete: true }).completeness, /^scoped/);
+  assert.equal(evidenceStatus([target, page], { complete: true }).queryEvidenceDropped, 9);
+  assert.match(evidenceStatus([target, page], { complete: false }).completeness, /^unknown/);
+  target.probe.evidenceDropped.ids = 1;
+  assert.match(evidenceStatus([target, page], { complete: true }).completeness, /^unknown/);
   const { evidence } = fixture();
   evidence.observeProbe('worker', { started: 1, sent: 1, received: 1 }, bootstrap);
   assert.equal(evidence.summary().complete, false);

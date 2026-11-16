@@ -3,6 +3,7 @@ import { spawnSync } from 'node:child_process';
 import { eventDigest } from './real-hour-network.mjs';
 import { controlPages } from './real-hour-public.mjs';
 import { sourceFilter, controlCoverage, evidenceStatus } from './real-hour-coverage.mjs';
+import { readObservation, mergeObservations, observationFor, domStatus } from './real-hour-dom.mjs';
 export async function publicContext(page) {
   return page.evaluate(async () => new Promise((resolve, reject) => {
     const open = indexedDB.open('lkjstr-wasm');
@@ -59,14 +60,15 @@ export async function routeControls(relays, filter, cap) {
   }
   return { filter, pages, events: [...events.values()], seenOn: Object.fromEntries(seenOn), firstSeenOn: Object.fromEntries(firstSeenOn), capReached: events.size >= cap };
 }
-export async function auditControls({ page, cdp, account, controls, savedSeen, startedAt, endedAt }) {
+export async function auditControls({ page, cdp, account, controls, savedSeen, savedObservation, startedAt, endedAt }) {
   const targets = await cdp.sample();
   const querySnapshot = cdp.queryEvidence ? await cdp.queryEvidence()
     : { queries: await cdp.queries(), hostNetwork: cdp.networkEvidence?.summary() };
   const queries = querySnapshot.queries;
   const evidence = evidenceStatus(targets, querySnapshot.hostNetwork);
   const routes = sourceRoutes(queries.filter((query) => query.at <= endedAt), account);
-  const context = await publicContext(page);
+  const context = await publicContext(page), cacheSampledAt = Date.now();
+  const cached = new Map(context.map(event => [event.id, event]));
   const latest = (kind) => context.filter((event) => event.kind === kind && event.pubkey === account.pubkey)
     .sort((a, b) => b.created_at - a.created_at || a.id.localeCompare(b.id))[0];
   const follow = latest(3) ?? account.followEvent;
@@ -106,14 +108,17 @@ export async function auditControls({ page, cdp, account, controls, savedSeen, s
   const currentSeen = await page.evaluate(() => globalThis.__realHour?.seen ?? {});
   const seen = Object.fromEntries(['home', 'notifications'].map((source) =>
     [source, [...new Set([...(savedSeen?.[source] ?? []), ...(currentSeen[source] ?? [])])]]));
+  const observation = mergeObservations(savedObservation, await readObservation(page));
   const compare = (source, sample = controls[source]) => {
     const policy = native.eligibility[source];
     const ids = new Set(sample.events.map((event) => event.id));
     const eligible = sample.events.filter((event) => policy.eligible.includes(event.id));
-    const displayed = new Set(seen[source]);
+    const membership = event => observationFor(observation, source, event.id, endedAt);
+    const displayed = new Set(Object.keys(observation.dom.first[source]));
+    const domEvidence = domStatus(observation.dom, source);
     const coverage = controlCoverage({ events: eligible, sample, queries, source, account, startedAt, endedAt });
     const byId = new Map(coverage.events.map((entry) => [entry.id, entry]));
-    const missing = eligible.filter((event) => !displayed.has(event.id));
+    const missing = eligible.filter(event => !membership(event).domByCutoff);
     const delivery = (event) => {
       const received = cdp.networkEvidence?.forEvent(event.id) ?? [];
       const matching = received.filter(item => item.digest === eventDigest(event));
@@ -124,18 +129,29 @@ export async function auditControls({ page, cdp, account, controls, savedSeen, s
         queryReferences: received.slice(0, 100).map(({ request, ...item }) => item), truncated: received.length > 100,
         limit: 'Exact frame receipt is not verified store acceptance or rendering; host-observed times after the end can include observer delay.' };
     };
-    return { controlEvents: ids.size, verifiedEligible: eligible.length, observedRows: displayed.size,
+    const comparisonStatus = !eligible.length ? 'uninformative: no eligible control events'
+      : !sample.pages.some(page => page.status === 'eose') ? 'unknown: no completed control route'
+        : source === 'home' && follow.id !== account.followEvent.id ? 'unknown: follow membership changed during the interval' : domEvidence;
+    return { controlEvents: ids.size, verifiedEligible: eligible.length, comparisonStatus, observedRows: displayed.size,
+      observationKind: 'top-level source DOM membership', wireProjectedRows: seen[source].length,
+      eligibleDomByLiveEnd: eligible.filter(event => membership(event).domByCutoff).length,
+      eligibleDomDuringControlGrace: eligible.filter(event => membership(event).domDuringGrace).length,
+      unseenAfterControlGrace: eligible.filter(event => !displayed.has(event.id)).map(event => event.id),
       excluded: policy.excluded.filter((entry) => ids.has(entry.id)),
       unseenEligible: missing.map((event) => ({ id: event.id, pubkey: event.pubkey, created_at: event.created_at,
-        firstControlSeenOn: sample.firstSeenOn?.[event.id], attribution: byId.get(event.id), delivery: delivery(event) })),
+        firstControlSeenOn: sample.firstSeenOn?.[event.id], attribution: byId.get(event.id), delivery: delivery(event),
+        observation: membership(event), physicalCache: { sampledAt: cacheSampledAt,
+          matchingVerifiedPayload: cached.has(event.id) && eventDigest(cached.get(event.id)) === eventDigest(event) } })),
       missingCandidates: missing.filter((event) => byId.get(event.id)?.classification === 'matching-query-with-eose')
-        .map((event) => ({ id: event.id, pubkey: event.pubkey, created_at: event.created_at, relays: sample.seenOn?.[event.id] })),
+        .map((event) => ({ id: event.id, pubkey: event.pubkey, created_at: event.created_at, relays: sample.seenOn?.[event.id], observation: membership(event) })),
       uncertainCandidates: missing.filter((event) => byId.get(event.id)?.classification !== 'matching-query-with-eose').map((event) => byId.get(event.id)),
       coverage,
       relayResults: sample.pages.map(({ relay, status, count, notices }) => ({ relay, status, count, notices })),
-      interpretation: 'Native eligibility checked; candidates still require delivery/anchor reproduction. EOSE reports what a relay returned, not universal network completeness.' };
+      interpretation: 'Missing means no observed top-level DOM membership by the live cutoff. Wire projection, cache presence and later DOM appearance are distinct. Fresh buffering or an anchored window still requires reproduction; EOSE is not universal completeness.' };
   };
-  return { nativeEligibility: true, ...evidence, relays: [...new Set([...routes.home, ...routes.notifications])], sourceRoutes: routes,
+  return { nativeEligibility: true, ...evidence,
+    completeness: ['home','notifications'].some(source => domStatus(observation.dom,source).startsWith('unknown:'))
+      ? 'unknown: captured DOM membership evidence is missing, limited or ambiguously attributed' : evidence.completeness, relays: [...new Set([...routes.home, ...routes.notifications])], sourceRoutes: routes,
     window: { since: Math.floor(startedAt / 1000), until: Math.floor(endedAt / 1000) },
     followEvent: follow.id, initialFollowEvent: account.followEvent.id, followsChanged: follow.id !== account.followEvent.id,
     authorCount: authors.length, publicMuteEvent: latest(10000)?.id, privateMutePolicy: 'Read-only npub cannot decrypt private list content',
@@ -148,7 +164,10 @@ export async function auditControls({ page, cdp, account, controls, savedSeen, s
       interpretation: 'Supplemental relay-union coverage only; not same-notification-relay loss.' } } : {}),
     notificationScope: 'kind-1 mentions/replies only; grouped reaction/repost/zap constituent IDs are not exposed',
     homeScope: 'direct kind-1 notes only; repost wrapper membership is not counted',
-    timing: 'Same event-time window; observed rows include control-query grace after the live hour',
+    timing: 'Same event-time window; primary DOM comparison stops at the live-hour cutoff. First DOM appearances during control grace are retained separately; neither proves viewport visibility or compositor paint.',
+    observation, liveCutoff: endedAt,
+    cutoffViewIntent: { capturedAt: savedObservation?.capturedAt, views: savedObservation?.views, dom: savedObservation?.dom?.sources },
+    bufferingLimit: 'A Fresh count or non-top requested anchor can deliberately buffer new rows. No extra Fresh control is clicked after the live cutoff; an unseen candidate is not automatically engine loss.',
     routeLifetimeLimit: 'Closed REQ lifetimes do not prove fulfilled Home intent. Every unseen eligible note remains a coverage candidate; route ownership and delivered EVENT loss require separate investigation',
     actualSourceRequestsObserved: { home: routes.home.length > 0, notifications: routes.notifications.length > 0 },
     querySource: views.home?.query ? 'observed wire query' : 'fresh harness default Home/notifications queries; no filter controls changed',

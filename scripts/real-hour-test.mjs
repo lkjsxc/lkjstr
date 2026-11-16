@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import { createContext, runInContext } from 'node:vm';
 import { observeRelease } from './real-hour-observe.mjs';
 import { sourceFilter, controlCoverage, evidenceStatus } from './real-hour-coverage.mjs';
+import { mergeObservations, observationFor, domStatus } from './real-hour-dom.mjs';
 function setup() {
   const sent = [], posted = [];
   function Socket(url) { this.url = url; this.listeners = {}; this.readyState = 1; }
@@ -37,7 +38,7 @@ test('network cut closes owned sockets and refuses new ones until resume', () =>
   run('__realHourNetwork(true); new WebSocket("wss://example.invalid");');
   assert.equal(run('__realHourSnapshot().sockets.length'), 1);
 });
-test('observation includes rows, patch inserts and updates; removing a row retains evidence it was shown', () => {
+test('wire observation includes rows, inserts and updates; removal retains projection evidence', () => {
   const { run } = setup();
   run('globalThis.port = new MessagePort(); port.postMessage({t:"open",sub:"s1",query:{source:"home"}}); port.onmessage=()=>{};');
   run('port.onmessage({data:{t:"rows",sub:"s1",rows:[{kind:"note",id:"a",key:"a",author:{name:"Alice"}}]}});');
@@ -102,7 +103,8 @@ test('ID evidence cap reports lost observations and never loses previously seen 
 });
 
 test('lost ID, query or source evidence makes completeness unknown', () => {
-  const probe = { queryLogDropped: 0, evidenceDropped: { ids: 0, sourceMappings: 0, views: 0 }, seenCounts: { home: 2 } };
+  const dom = { installed: true, sources: Object.fromEntries(['home','notifications'].map(source => [source, { scopeSeen: true, count: 2, unknown: [] }])) };
+  const probe = { queryLogDropped: 0, evidenceDropped: { ids: 0, sourceMappings: 0, views: 0 }, seenCounts: { home: 2 }, dom };
   const status = (changes) => evidenceStatus([{ type: 'page', probe: { ...probe, ...changes } }]);
   assert.match(status({}).completeness, /^scoped candidates/);
   assert.match(status({ queryLogDropped: 1 }).completeness, /^unknown:/);
@@ -110,4 +112,52 @@ test('lost ID, query or source evidence makes completeness unknown', () => {
     assert.match(status({ evidenceDropped: { ...probe.evidenceDropped, [key]: 1 } }).completeness, /^unknown:/);
   assert.match(status({ seenCounts: { home: 40000 } }).completeness, /^unknown:/);
   assert.match(status({ evidenceDropped: undefined }).completeness, /^unknown:/);
+});
+
+
+test('wire timestamps preserve first projection independently of quote or other-source IDs', () => {
+  const { run } = setup();
+  run('globalThis.port=new MessagePort();port.onmessage=()=>{};port.postMessage({t:"open",sub:"h",query:{source:"home"}});port.postMessage({t:"open",sub:"t",query:{source:"thread"}});');
+  run('Date.now=()=>100;port.onmessage({data:{t:"rows",sub:"h",rows:[{kind:"note",id:"parent",key:"parent",quotes:[{id:"quote-only"}]}]}});');
+  run('Date.now=()=>200;port.onmessage({data:{t:"patch",sub:"h",ops:[{op:"update",row:{kind:"note",id:"parent",key:"parent"}}]}});port.onmessage({data:{t:"rows",sub:"t",rows:[{kind:"note",id:"thread-only",key:"thread-only"}]}});');
+  assert.equal(run('__realHour.wireFirst.home.parent'), 100);
+  assert.equal(run('JSON.stringify(__realHour.seen.home)'), '["parent"]');
+  assert.equal(run('__realHour.wireFirst.thread["thread-only"]'), 200);
+});
+
+test('DOM cutoff and grace cannot be satisfied by an earlier wire projection', () => {
+  const summary = { installed: true, sources: { home: { scopeSeen: true, count: 1, unknown: [], scope: { account: 'a', tab: 'home' } } } };
+  const start = { capturedAt: 100, wireFirst: { home: { note: 90, wireOnly: 95 } }, dom: { ...summary, first: { home: {} } } };
+  const later = { capturedAt: 200, wireFirst: { home: { note: 90 } }, dom: { ...summary, first: { home: { note: 150 } } } };
+  const merged = mergeObservations(start, later);
+  assert.equal(observationFor(merged, 'home', 'note', 100).wireByCutoff, true);
+  assert.equal(observationFor(merged, 'home', 'note', 100).domByCutoff, false);
+  assert.equal(observationFor(merged, 'home', 'note', 100).domDuringGrace, true);
+  assert.equal(observationFor(merged, 'home', 'wireOnly', 200).domByCutoff, false);
+  assert.equal(mergeObservations(merged, later).dom.first.home.note, 150);
+});
+
+test('complete host network cannot repair missing, saturated or ambiguous DOM evidence', () => {
+  const source = { scopeSeen: true, count: 2, unknown: [], scope: { account: 'a', tab: 'home' } };
+  const dom = { installed: true, sources: { home: source, notifications: { ...source, scope: { account: 'a', tab: 'notifications' } } } };
+  const base = { queryLogDropped: 1, evidenceDropped: { ids: 0, sourceMappings: 0, views: 0 }, seenCounts: { home: 2 } };
+  const status = value => evidenceStatus([{ type: 'page', probe: { ...base, dom: value } }], { complete: true });
+  assert.match(status(dom).completeness, /^scoped candidates/);
+  assert.match(status(undefined).completeness, /^unknown:/);
+  for (const change of [{ saturated: true }, { dropped: 1 }, { unknown: ['ambiguous-view'] }, { scopeSeen: false }])
+    assert.match(status({ ...dom, sources: { ...dom.sources, home: { ...source, ...change } } }).completeness, /^unknown:/);
+  const changed = mergeObservations({ dom }, { dom: { ...dom, sources: { ...dom.sources, home: { ...source, scope: { account: 'b', tab: 'home' } } } } });
+  assert.match(domStatus(changed.dom, 'home'), /^unknown:/);
+});
+
+
+test('a captured missing DOM witness stays unknown across later valid captures, unlike an empty accumulator or inactive thread', () => {
+  const source = { scopeSeen: true, count: 1, unknown: [], scope: { account: 'a', tab: 'home' } };
+  const valid = { capturedAt: 200, dom: { installed: true, sources: { home: source, notifications: source, thread: { scopeSeen: false, unknown: [] } }, first: { home: { note: 150 } } } };
+  const missing = { capturedAt: 100, wireFirst: { home: { note: 90 } } };
+  assert.match(domStatus(mergeObservations(missing, valid).dom, 'home'), /^unknown:/);
+  assert.match(domStatus(mergeObservations(mergeObservations(missing, valid), valid).dom, 'home'), /^unknown:/);
+  assert.match(domStatus(mergeObservations(mergeObservations(), valid).dom, 'home'), /^scoped DOM/);
+  const opened = { ...valid, capturedAt: 300, dom: { ...valid.dom, sources: { ...valid.dom.sources, thread: { ...source, scope: { account: 'a', tab: 'thread:one', focus: 'note' } } } } };
+  assert.match(domStatus(mergeObservations(valid, opened).dom, 'thread'), /^scoped DOM/);
 });

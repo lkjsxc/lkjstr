@@ -1,4 +1,5 @@
 // Measurement attribution only. Native code remains responsible for eligibility.
+import { domStatus } from './real-hour-dom.mjs';
 const kinds = (filter, expected) => filter.kinds?.length === expected.length && expected.every((kind) => filter.kinds.includes(kind));
 export function sourceFilter(filter, source, account, focus) {
   if (source === 'home') return kinds(filter, [1, 6]) && !filter['#e'] && !filter['#p']
@@ -46,7 +47,7 @@ export function controlCoverage({ events, sample, queries, source, account, focu
     limit: 'EOSE/lifetime/filter agreement narrows candidates; it does not prove when a backdated note first reached the relay.' };
 }
 
-export function evidenceStatus(targets, hostNetwork) {
+export function evidenceStatus(targets, hostNetwork, domSources = ['home', 'notifications']) {
   const relevant = targets.filter((target) => ['page', 'worker', 'shared_worker'].includes(target.type));
   const evidenceDrops = relevant.map(({ type, probe }) => ({ type, queries: probe?.queryLogDropped ?? 0,
     observations: probe?.evidenceDropped ?? {}, idsBySource: probe?.seenDropped ?? {} }));
@@ -54,9 +55,14 @@ export function evidenceStatus(targets, hostNetwork) {
   const observationEvidenceDropped = evidenceDrops.reduce((sum, item) => sum + Object.values(item.observations).reduce((a, b) => a + b, 0), 0);
   const unobserved = !relevant.length || relevant.some((target) => !target.probe?.evidenceDropped);
   const limitReached = relevant.some(({ probe }) => Object.values(probe?.seenCounts ?? {}).some((count) => count >= 40000));
-  return { queryEvidenceDropped, observationEvidenceDropped, evidenceDrops,
+  const pages = relevant.filter(target => target.type === 'page');
+  const domEvidence = domSources.map(source => ({ source, pages: pages.map(target => ({
+    status: domStatus(target.probe?.dom, source), evidence: target.probe?.dom?.sources?.[source] })) }));
+  const domUnknown = !pages.length || domEvidence.some(item => !item.pages.length || item.pages.some(page => page.status.startsWith('unknown:')));
+  return { queryEvidenceDropped, observationEvidenceDropped, evidenceDrops, domEvidence,
     queryEvidenceSource: hostNetwork?.complete ? "host-CDP" : "Worker probe", hostNetwork,
-    completeness: unobserved ? 'unknown: observation counters unavailable'
+    completeness: domUnknown ? 'unknown: DOM membership evidence unavailable, limited or ambiguously attributed'
+      : unobserved ? 'unknown: observation counters unavailable'
       : (queryEvidenceDropped && !hostNetwork?.complete) || observationEvidenceDropped || limitReached ? 'unknown: bounded observation evidence budget reached'
         : 'scoped candidates only; no global relay completeness claim' };
 }

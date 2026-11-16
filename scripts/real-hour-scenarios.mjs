@@ -36,7 +36,7 @@ export async function faultScenarios({ measured, page, account, directory, repor
   if (!report.audit?.nativeEligibility) {
     const { auditControls } = await import('./real-hour-audit.mjs');
     const controls = JSON.parse(await readFile(`${directory}/public-control.json`, 'utf8'));
-    report.audit = await auditControls({ page, cdp: measured.cdp, account, controls, savedSeen: report.savedSeen,
+    report.audit = await auditControls({ page, cdp: measured.cdp, account, controls, savedSeen: report.savedSeen, savedObservation: report.savedObservation,
       startedAt: Date.parse(report.liveStarted), endedAt: Date.parse(report.liveStarted) + report.liveElapsedSeconds * 1000 });
     await writeFile(`${directory}/public-control.json`, JSON.stringify(report.audit.controls));
     delete report.audit.controls;

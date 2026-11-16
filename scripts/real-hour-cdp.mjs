@@ -1,8 +1,10 @@
 // Raw CDP is used only to observe/instrument this harness's own Chromium targets.
 import bundle from 'playwright-core/lib/utilsBundle';
 import { observeRelease } from './real-hour-observe.mjs';
+import { observeDom } from './real-hour-dom.mjs';
 import { createNetworkEvidence } from './real-hour-network.mjs';
 const injected = `(${observeRelease.toString()})()`;
+const pageInjected = `${injected};(${observeDom.toString()})()`;
 export async function attachBrowser(endpoint, { wasmModule } = {}) {
   const socket = new bundle.ws(endpoint);
   const pending = new Map(), sessions = new Map(), errors = [], debuggerEvents = [];
@@ -41,9 +43,9 @@ export async function attachBrowser(endpoint, { wasmModule } = {}) {
         } catch { /* Guard still applies; missing network evidence remains explicit. */ }
         if (targetInfo.type === 'page') {
           await send('Page.enable', {}, sessionId);
-          await send('Page.addScriptToEvaluateOnNewDocument', { source: injected }, sessionId);
+          await send('Page.addScriptToEvaluateOnNewDocument', { source: pageInjected }, sessionId);
         }
-        const installed = await send('Runtime.evaluate', { expression: `${injected};Boolean(globalThis.__realHour && globalThis.__realHourNetwork)`, returnByValue: true }, sessionId, 3000);
+        const installed = await send('Runtime.evaluate', { expression: `${targetInfo.type === 'page' ? pageInjected : injected};Boolean(globalThis.__realHour && globalThis.__realHourNetwork)`, returnByValue: true }, sessionId, 3000);
         if (installed.exceptionDetails || installed.result?.value !== true) throw Error('Read-only guard installation failed');
         if (!online) {
           await send('Runtime.evaluate', { expression: 'globalThis.__realHourNetwork(false)' }, sessionId);

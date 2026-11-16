@@ -4,6 +4,7 @@ import { delay } from './real-hour-public.mjs';
 export async function prepareReader(context, account) {
   await context.addInitScript(({ pubkey, relays }) => {
     if (location.protocol !== 'http:') return;
+    globalThis.__realHourExpectedAccount = pubkey;
     const put = (key, value) => { if (localStorage.getItem(key) === null) localStorage.setItem(key, JSON.stringify(value)); };
     const tile = (id, tabs) => ({ type: 'pane', id, tabs, active: tabs[0] });
     put('lkjstr:migration', 'owner-audit-1');
@@ -57,7 +58,8 @@ export async function samplePage(page) {
       const kind = view.dataset.kind;
       views[kind] = { notes: [...view.querySelectorAll('.note')].map((note) => ({ id: note.dataset.note,
         key: note.dataset.key, time: note.querySelector('time')?.getAttribute('datetime') })),
-        phase: view.querySelector('.fstate')?.textContent, scrollTop: view.scrollTop, scrollHeight: view.scrollHeight };
+        phase: view.querySelector('.fstate')?.textContent, scrollTop: view.scrollTop, scrollHeight: view.scrollHeight,
+        fresh: { hidden: view.querySelector('.fresh')?.hidden, text: view.querySelector('.fresh')?.textContent } };
     }
     const storage = await navigator.storage.estimate();
     const databases = await indexedDB.databases();

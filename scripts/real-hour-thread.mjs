@@ -4,6 +4,7 @@ import { controlPages, delay } from './real-hour-public.mjs';
 import { nativeEligibility, publicContext } from './real-hour-audit.mjs';
 import { eventDigest } from './real-hour-network.mjs';
 import { evidenceStatus, sourceFilter } from './real-hour-coverage.mjs';
+import { readObservation, mergeObservations, observationFor, domStatus } from './real-hour-dom.mjs';
 export async function inspectThread({ page, cdp, account, directory }) {
   const focus = await page.evaluate(() => {
     const notes = [...document.querySelectorAll('.view[data-kind="home"] .note')].filter((note) => note.querySelector('.text'));
@@ -22,34 +23,43 @@ export async function inspectThread({ page, cdp, account, directory }) {
     const querySnapshot = cdp.queryEvidence ? await cdp.queryEvidence()
       : { queries: await cdp.queries(), hostNetwork: cdp.networkEvidence?.summary() };
     const queries = querySnapshot.queries;
-    const evidence = evidenceStatus(targets, querySnapshot.hostNetwork);
+    const evidence = evidenceStatus(targets, querySnapshot.hostNetwork, ['thread']);
     const exact = queries.filter((q) => q.filters.some((f) => f.kinds?.length === 2 && f.kinds.includes(1) && f.kinds.includes(42) && f['#e']?.length === 1 && f['#e'][0] === focus));
     const relays = [...new Set(exact.map((q) => q.relay))];
     const controlStartedAt = Date.now();
-    const control = await controlPages(relays, { kinds: [1], '#e': [focus] }, 3000);
+    const beforeControl = await readObservation(page);
+    const control = await controlPages(relays, { kinds: [1], '#e': [focus], until: Math.floor(controlStartedAt / 1000) }, 3000);
     const verification = nativeEligibility(control.events, await publicContext(page), {
-      thread: { query: { source: 'thread', account: account.pubkey, id: focus } },
+      thread: { query: { source: 'thread', account: account.pubkey, id: focus }, until: Math.floor(controlStartedAt / 1000) },
     });
     const policy = verification.eligibility.thread;
     const replies = control.events.filter((event) => policy.eligible.includes(event.id));
-    const drawn = await page.evaluate(() => [...document.querySelectorAll('.view[data-kind="thread"] .note')].map((note) => note.dataset.note));
+    const drawn = await page.evaluate(() => [...document.querySelectorAll('.view.feed[data-kind="thread"] > .list > .note[data-note]')].map((note) => note.dataset.note));
     const observed = await page.evaluate(() => globalThis.__realHour?.seen.thread ?? []);
     await writeFile(`${directory}/thread-public-control.json`, JSON.stringify(control));
-    const missing = replies.filter((event) => !observed.includes(event.id));
+    const observation = mergeObservations(beforeControl, await readObservation(page));
+    const membership = event => observationFor(observation, 'thread', event.id, controlStartedAt);
+    const missing = replies.filter(event => !membership(event).domByCutoff);
     const receiptEvidence = missing.map(event => {
       const receipts = cdp.networkEvidence?.forEvent(event.id) ?? [];
       const matching = receipts.filter(item => item.digest === eventDigest(event));
-      return { id: event.id, matchingPayloads: matching.length,
+      return { id: event.id, observation: membership(event), matchingPayloads: matching.length,
         receivedBeforeControl: matching.filter(item => item.at <= controlStartedAt).length,
         sourceReceiptsBeforeControl: matching.filter(item => item.at <= controlStartedAt &&
           item.request.filters.some(filter => sourceFilter(filter, 'thread', account, focus))).length,
         queryReferences: matching.slice(0, 100).map(({ request, ...item }) => item),
         truncated: matching.length > 100 };
     });
-    return { focus, relays, ...evidence, querySnapshotAt: querySnapshot.at, controlStartedAt, receiptEvidence, exactQueries: exact, controlPages: control.pages, verifiedEligibleReferences: replies.length, excluded: policy.excluded,
-      drawnRows: drawn.length, observedRows: observed.length,
+    return { focus, relays, ...evidence,
+      completeness: domStatus(observation.dom,'thread').startsWith('unknown:') ? domStatus(observation.dom,'thread') : evidence.completeness, querySnapshotAt: querySnapshot.at, controlStartedAt, receiptEvidence, exactQueries: exact, controlPages: control.pages, verifiedEligibleReferences: replies.length, excluded: policy.excluded,
+      drawnRows: drawn.length, wireProjectedRows: observed.length, observation,
+      observedRows: Object.keys(observation.dom.first.thread).length,
+      eligibleDomByControlStart: replies.filter(event => membership(event).domByCutoff).length,
+      eligibleDomDuringControlGrace: replies.filter(event => membership(event).domDuringGrace).length,
+      comparisonStatus: !replies.length ? 'uninformative: no eligible control events'
+        : !control.pages.some(page => page.status === 'eose') ? 'unknown: no completed control route' : domStatus(observation.dom, 'thread'),
       missingCandidates: missing.map((event) => event.id),
-      rejectedSignatures: verification.rejected, interpretation: 'Focus #e control, native thread ancestry/filter/mute eligibility; deeper replies without the focus tag and relay completeness remain outside this comparison.' };
+      rejectedSignatures: verification.rejected, interpretation: 'Top-level thread DOM first observed by control start, separate from wire projection and control grace. Focus #e control and native ancestry/filter/mute eligibility only; deeper replies without the focus tag, viewport visibility and compositor paint are unmeasured. Late observer delivery remains a reproduction candidate.' };
   } catch (error) { return { focus, failure: String(error).slice(0, 500) }; }
   finally {
     const close = page.locator('.tab.active[data-view^="thread"] > .x').first();

@@ -75,3 +75,5 @@ Engine (`crates/`):
 
 - [private-lists.md](private-lists.md): account-scoped private reads, cached mute policy and signer lifetimes.
 - [engine-private-verification.md](engine-private-verification.md): protocol-10 private integration gates, proofs and artifact boundaries.
+
+- [engine-performance-dom.md](engine-performance-dom.md): bounded source DOM membership, wire/cutoff separation and evidence limits.

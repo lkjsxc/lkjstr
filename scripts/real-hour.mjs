@@ -9,6 +9,7 @@ import { publicAccount, delay } from './real-hour-public.mjs';
 import { prepareReader, signInReadOnly, samplePage, scrollArchive, returnHomeTop, firstPaint } from './real-hour-ui.mjs';
 import { comparePublic } from './real-hour-compare.mjs';
 import { ownedDirectory } from './real-hour-owned.mjs';
+import { readObservation, domStatus } from './real-hour-dom.mjs';
 const root = new URL('../', import.meta.url).pathname;
 process.chdir(root);
 const option = (name, fallback) => process.argv.find((arg) => arg.startsWith(`--${name}=`))?.slice(name.length + 3) ?? fallback;
@@ -75,6 +76,9 @@ try {
   if (measured.cdp.errors.length) throw Error(`Guard errors: ${measured.cdp.errors.join('; ')}`);
   if (!report.cold.readOnly) throw Error('read-only account was not confirmed');
   if (report.firstTargets.some((target) => target.type.includes('worker') && !target.probe)) throw Error('Worker read-only instrumentation missing');
+  const initialDom = report.firstTargets.find(target => target.type === 'page')?.probe?.dom;
+  if (['home','notifications'].some(source => domStatus(initialDom,source).startsWith('unknown:')))
+    throw Error('DOM membership attribution unavailable before the live-hour start; inspect firstTargets');
   const startedAt = Date.now();
   report.liveStarted = new Date(startedAt).toISOString();
   console.log(JSON.stringify({ phase: 'live-started', directory, at: report.liveStarted, mode: report.mode, account: account.pubkey, relays: account.relays }));
@@ -98,8 +102,11 @@ try {
   if (report.interrupted) throw Error('Measurement interrupted; partial run only');
   const endedAt = Date.now();
   report.liveElapsedSeconds = (endedAt - startedAt) / 1000;
+  report.liveEnded = new Date(endedAt).toISOString();
+  report.observationSchema = 'source-dom-membership-1';
+  report.savedObservation = await readObservation(page);
   report.savedSeen = await page.evaluate(() => globalThis.__realHour?.seen ?? {});
-  report.audit = await comparePublic({ page, cdp: measured.cdp, account, startedAt, endedAt, savedSeen: report.savedSeen });
+  report.audit = await comparePublic({ page, cdp: measured.cdp, account, startedAt, endedAt, savedSeen: report.savedSeen, savedObservation: report.savedObservation });
   await writeFile(`${directory}/public-control.json`, JSON.stringify(report.audit.controls));
   delete report.audit.controls;
   await save();

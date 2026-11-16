@@ -5,6 +5,7 @@ import { loadavg } from 'node:os';
 import bundle from 'playwright-core/lib/utilsBundle';
 import { routeControls, nativeEligibility } from './real-hour-audit.mjs';
 import { sourceFilter, controlCoverage } from './real-hour-coverage.mjs';
+import { mergeObservations, observationFor, domStatus } from './real-hour-dom.mjs';
 const root = new URL('../', import.meta.url).pathname;
 const directory = await ownedDirectory(root, process.argv[2]);
 const output = `${directory}/gap-audit-${new Date().toISOString().replaceAll(':','-').replaceAll('.','-')}`;
@@ -96,14 +97,17 @@ async function connect(account) {
     pending.clear(); socket.close();
   } };
 }
+let observation = mergeObservations();
 const seen = { home: new Set(), notifications: new Set(), thread: new Set() }, pageCoverage = new Map();
-const snapshotExpression = `({at:Date.now(),visibility:document.visibilityState,seen:globalThis.__realHour?.seen??{},views:globalThis.__realHour?.views??{},queryDropped:globalThis.__realHour?.queryLogDropped??0,evidenceDropped:globalThis.__realHour?.evidenceDropped})`;
+const snapshotExpression = `({at:Date.now(),visibility:document.visibilityState,seen:globalThis.__realHour?.seen??{},views:globalThis.__realHour?.views??{},queryDropped:globalThis.__realHour?.queryLogDropped??0,evidenceDropped:globalThis.__realHour?.evidenceDropped,observation:{capturedAt:Date.now(),wireFirst:globalThis.__realHour?.wireFirst??{},dom:globalThis.__realHourDomSnapshot?.(true),views:globalThis.__realHour?.views??{}}})`;
 async function snapshot() {
   await rpc.refresh();
   for (const [session, target] of rpc.sessions) if (target.type === 'page') {
     try {
       const data = await rpc.evaluate(session, snapshotExpression);
       if (!data) continue;
+      observation = mergeObservations(observation, data.observation);
+      if (!data.observation?.dom?.installed) report.observationEvidenceUnknown = true;
       if (!data.evidenceDropped || Object.values(data.evidenceDropped).some(value=>value>0)) report.observationEvidenceUnknown = true;
       for (const source of Object.keys(seen)) for (const id of data.seen[source] ?? []) {
         if (seen[source].size < 40000) seen[source].add(id); else report.seenEvidenceDropped = true;
@@ -111,7 +115,7 @@ async function snapshot() {
       const coverage = pageCoverage.get(target.targetId) ?? { first: data.at, observations: 0 };
       coverage.last = data.at; coverage.observations++; pageCoverage.set(target.targetId, coverage);
       report.lastViews = data.views;
-      if (report.snapshots.length < 160) report.snapshots.push({ at: data.at, target: target.targetId, visibility: data.visibility, counts: Object.fromEntries(Object.entries(data.seen).map(([source, ids]) => [source, ids.length])) });
+      if (report.snapshots.length < 160) report.snapshots.push({ at: data.at, target: target.targetId, visibility: data.visibility, wireCounts: Object.fromEntries(Object.entries(data.seen).map(([source, ids]) => [source, ids.length])), domCounts: Object.fromEntries(Object.entries(data.observation?.dom?.sources ?? {}).map(([source,item]) => [source,item.count])) });
     } catch (error) { if (report.errors.length < 20) report.errors.push({ stage: 'page-observation', error: String(error) }); }
   }
 }
@@ -126,6 +130,7 @@ try {
   const account = JSON.parse(await readFile(`${directory}/account-public.json`, 'utf8'));
   if (account.pubkey !== first.account?.pubkey) throw Error('Public account artifact mismatch');
   rpc = await connect(account);
+  observation = mergeObservations(first.savedObservation, first.audit?.observation);
   for (const source of Object.keys(seen)) for (const id of first.savedSeen?.[source] ?? []) seen[source].add(id);
   await snapshot();
   report.observationBegan = new Date().toISOString();
@@ -145,7 +150,11 @@ try {
   await snapshot();
   report.captureAt = Date.now(); report.captureLoadAverage = loadavg();
   report.pageCoverage = Object.fromEntries(pageCoverage);
-  report.observedIds = Object.fromEntries(Object.entries(seen).map(([source, ids]) => [source, [...ids]]));
+  report.wireObservedIds = Object.fromEntries(Object.entries(seen).map(([source, ids]) => [source, [...ids]]));
+  report.observation = observation;
+  report.observedIds = Object.fromEntries(Object.entries(observation.dom.first).map(([source, ids]) => [source, Object.keys(ids)]));
+  report.domCutoff = report.captureAt;
+  report.observationLimit = 'First observed top-level DOM membership through the last owned-page capture, separate from wire projection; no viewport/compositor measurement or post-control DOM grace sampling. Fresh buffering and requested anchors remain possible reasons for absent rows.';
   let context, queries = [];
   for (const [session, target] of rpc.sessions) {
     if (target.type === 'page' && !context) context = await rpc.evaluate(session, contextExpression, 10000).catch(() => undefined);
@@ -187,8 +196,9 @@ try {
     const sample=controls[source], eligible=sample.events.filter(event=>native.eligibility[source].eligible.includes(event.id));
     const coverage=controlCoverage({events:eligible,sample,queries,source,account,startedAt:report.gapStart,endedAt:report.captureAt});
     report.controls[source]={pages:sample.pages,eligible:eligible.map(event=>event.id),excluded:native.eligibility[source].excluded,coverage,
-      missingCandidates:eligible.filter(event=>!seen[source].has(event.id)).map(event=>({id:event.id,attribution:coverage.events.find(item=>item.id===event.id)})),
-      completeness:!eligible.length?'unknown: responsive same-source controls returned no eligible data':report.queryEvidenceDropped||report.seenEvidenceDropped||report.observationEvidenceUnknown||report.followsChanged?'unknown: capped evidence or changed follow set':'scoped control comparison only; page-close capture boundaries and relay completeness remain limitations'};
+      eligibleDomByCapture:eligible.filter(event=>observationFor(observation,source,event.id,report.captureAt).domByCutoff).length,
+      missingCandidates:eligible.filter(event=>!observationFor(observation,source,event.id,report.captureAt).domByCutoff).map(event=>({id:event.id,observation:observationFor(observation,source,event.id,report.captureAt),attribution:coverage.events.find(item=>item.id===event.id)})),
+      completeness:!eligible.length?'unknown: responsive same-source controls returned no eligible data':domStatus(observation.dom,source).startsWith('unknown:')?domStatus(observation.dom,source):report.queryEvidenceDropped||report.seenEvidenceDropped||report.observationEvidenceUnknown||report.followsChanged?'unknown: capped evidence or changed follow set':'scoped control comparison only; page-close capture boundaries and relay completeness remain limitations'};
   }
   report.thread={focus,sourceQueries:relevant('thread'),scope:relevant('thread').length?'Matching thread lifetime recorded; no extra thread control outside three-relay budget':'No actual thread source overlapped the outage; earlier thread check remains separate, gap completeness unknown'};
   const eligibleIds=new Set([...native.eligibility.home.eligible,...native.eligibility.notifications.eligible]);
@@ -196,7 +206,7 @@ try {
   const variants = new Map();
   for (const event of checkedEvents) { const values = variants.get(event.id) ?? new Set(); values.add(canonical(event)); variants.set(event.id,values); }
   const verified = new Set(native.verified);
-  report.validatedTraffic = report.traffic.notes.filter(note => eligibleIds.has(note.id) && verified.has(note.id) && variants.get(note.id)?.size === 1).map(({event,...note}) => note);
+  report.validatedTraffic = report.traffic.notes.filter(note => eligibleIds.has(note.id) && verified.has(note.id) && variants.get(note.id)?.size === 1).map(({event,...note}) => ({...note,observations:Object.fromEntries(['home','notifications'].filter(source=>native.eligibility[source].eligible.includes(note.id)).map(source=>[source,observationFor(observation,source,note.id,report.captureAt)]))}));
   report.trafficVerification = 'Exact retained event payloads are natively verified; an ID with multiple differing payloads is excluded from validated traffic. Metadata-only socket/REQ evidence is not a delivery proof.';
   await writeFile(`${output}/received-events.json`,JSON.stringify(report.traffic.notes));
   report.traffic.notes = report.traffic.notes.map(({event,...note}) => note);

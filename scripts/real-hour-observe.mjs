@@ -6,7 +6,7 @@ export function observeRelease() {
     started: Date.now(), offline: false, forbidden: 0, sent: 0, received: 0,
     connects: 0, closes: 0, frames: 0, longFrames: 0, stalls: 0, maxFrameMs: 0,
     evidenceDropped: { ids: 0, sourceMappings: 0, views: 0 }, seenDropped: {},
-    queries: [], queryLogDropped: 0, queryFilterCharacters: 0, sources: {}, seen: {}, first: {}, errors: [], views: {},
+    queries: [], queryLogDropped: 0, queryFilterCharacters: 0, sources: {}, seen: {}, wireFirst: {}, first: {}, errors: [], views: {},
   };
   const live = new Set(); // Active sockets only; removed on close.
   const filterIntern = new Map(); // <=1024 immutable filters, <=4 Mi characters of keys.
@@ -85,6 +85,7 @@ export function observeRelease() {
         state.evidenceDropped.ids++; state.seenDropped[source] = (state.seenDropped[source] ?? 0) + 1; return;
       }
       seen.add(id); ids.push(id);
+      (state.wireFirst[source] ??= {})[id] = Date.now();
     };
     if (row.kind === 'note') { add(row.id); add(row.key); }
     if (row.kind === 'notification') { add(row.key); add(row.note?.id); }
@@ -97,7 +98,7 @@ export function observeRelease() {
   };
   const receive = (data) => {
     const msg = data?.msg ?? data;
-    if (!msg || typeof msg !== 'object' || !['rows', 'state', 'patch'].includes(msg.t)) return;
+    if (!msg || typeof msg !== 'object' || !['rows', 'state', 'patch', 'fresh'].includes(msg.t)) return;
     const source = state.sources[msg.sub] ?? msg.sub;
     if (!ensureView(source)) return;
     if (msg.t === 'rows') {
@@ -105,6 +106,7 @@ export function observeRelease() {
       for (const row of msg.rows ?? []) remember(source, row);
     }
     if (msg.t === 'state') state.views[source] = { ...(state.views[source] ?? {}), state: msg.state };
+    if (msg.t === 'fresh') state.views[source] = { ...(state.views[source] ?? {}), fresh: { count: msg.count, at: Date.now() } };
     if (msg.t === 'patch') for (const op of msg.ops ?? []) {
       if (op.row) remember(source, op.row);
       for (const row of op.rows ?? []) remember(source, row);
@@ -126,7 +128,9 @@ export function observeRelease() {
         const source = state.sources[data.sub] ?? data.sub;
         if (ensureView(source)) state.views[source] = { ...state.views[source], window: data };
       }
-      return post.call(this, msg, ...args);
+      const result = post.call(this, msg, ...args);
+      if (data?.t === 'open') globalThis.__realHourDomRefresh?.(data.query?.source);
+      return result;
     };
     const property = Object.getOwnPropertyDescriptor(prototype, 'onmessage');
     if (property?.set) Object.defineProperty(prototype, 'onmessage', { ...property, set(fn) {
@@ -150,7 +154,8 @@ export function observeRelease() {
     addEventListener('error', (event) => { if (state.errors.length < 20) state.errors.push(String(event.message).slice(0, 300)); });
   }
   globalThis.__realHourSnapshot = () => ({
-    ...state, queries: undefined, seen: undefined,
+    ...state, queries: undefined, seen: undefined, wireFirst: undefined,
+    dom: globalThis.__realHourDomSnapshot?.(),
     seenCounts: Object.fromEntries(Object.entries(state.seen).map(([key, ids]) => [key, ids.length])),
     sockets: [...live].map((socket) => ({ url: socket.url, readyState: socket.readyState, subscriptions: socket.__hourSubs.size })),
   });
