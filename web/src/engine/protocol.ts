@@ -1227,7 +1227,7 @@ export type ZapReceiptView = {
  * Values from different Worker lifetimes are not comparable. */
 export type StorageTime = number;
 export type StorageUnknown = { readonly phase: 'unsupported' | 'failed' | 'timeout' };
-/** Exact row count observed by one successful readonly events transaction.
+/** Exact row count from one readonly events transaction, including ciphertext.
  * `at` records its completion callback; live writes may continue afterward. */
 export type StoredEventCount =
   | StorageUnknown
@@ -1237,7 +1237,7 @@ export type StoredEventCount =
       readonly at: StorageTime;
     };
 /** Approximate browser estimate across this origin, including other stores.
- * Neither physical disk bytes nor the size of just the public event cache. */
+ * Neither physical disk bytes nor the size of just the event store. */
 export type OriginStorage =
   | StorageUnknown
   | {

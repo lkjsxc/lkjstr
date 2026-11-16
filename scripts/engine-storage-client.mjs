@@ -1,4 +1,4 @@
-// Fresh context only. Synthetic invalid public-cache rows prove physical count != hydrated count.
+// Fresh context only. Synthetic invalid event-store rows prove stored count != hydrated count.
 export async function storageClient(context, origin, noIdb = false) {
   const page=await context.newPage();await page.goto(origin);
   if(!noIdb)await page.evaluate(()=>new Promise((resolve,reject)=>{

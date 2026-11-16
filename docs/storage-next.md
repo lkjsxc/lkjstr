@@ -7,29 +7,34 @@ by the finite [storage inspection](storage-inspection.md) candidate.
 
 ## Event-cache clear boundary
 
-A future operation should name only the durable public event cache. It must
-preserve current reader windows/anchors and private/authored state. A successful
-clear can report removed rows at commit; it cannot promise reclaimed physical
-disk bytes or a permanently empty cache while new live events arrive.
+A future operation must define which records it can delete from the shared
+durable `events` store. That store also holds encrypted DM kinds 4/1059 and
+private-list ciphertext. Preserving only private archive KV would not preserve
+offline encrypted message history. An indiscriminate `events.clear()` is unsafe.
 
-A Host-only generation is insufficient: an old captured write or another
-Worker can repopulate the store after the clear. Add an event-cache generation
-in IndexedDB and validate it in every event-write transaction. Clear `events`
-and advance that generation atomically in a transaction over `events` and
-`kv`. Old writes must fail the generation comparison and discard only their
-obsolete cache journal. Boot reads and their completions need the same fence.
+A disk-cache operation must distinguish durable removal from memory eviction,
+preserve reader windows/anchors and protect private/authored dependencies.
+Success may report removed records at commit; it cannot promise reclaimed
+physical bytes or a permanently empty cache while live events arrive.
 
-Keep `engine-accounts`, `dm-seen-v1`, private encrypted archive/generation keys,
-relay quality, public drafts/outbox and the offline shell intact. The current
-publication-route ledger does not contain signed event bodies; clear must
-retain required active publication records or refuse while that dependency
-exists. Do not orphan delivery/retry routes by clearing their required data.
+A Host-only generation is insufficient across captured writes and other
+Workers. Advance a persisted generation atomically with eligible deletions in
+an `events`/`kv` transaction. Fence old eligible writes and boot completions;
+protected encrypted/authored writes need a preserve/requeue path. A generation
+mismatch must not discard a mixed journal's protected records. Exact deletion
+eligibility and cooperation with older Workers still need implementation proof.
 
-Required proof: two actual Worker/database connections; an old event batch
-held across clear; transaction abort; new live traffic; a stale boot callback;
-unchanged account/private/draft sentinel values; exact removed-row count at
-commit. No broad database deletion or CacheStorage deletion is appropriate.
-This requires a written interface specification before adding a control.
+Keep `engine-accounts`, `dm-seen-v1`, private archive/generation keys, relay
+quality, drafts/outbox and the offline shell intact. Active publication jobs
+own their complete signed events in memory; the durable publication-route
+ledger holds only IDs/routes. Clearing must preserve required authored/retry
+records or refuse while that dependency exists.
+
+Required proof: two actual Worker/database connections; old mixed event batches
+held across clear; transaction abort; new live traffic; stale boot callbacks;
+unchanged encrypted-message/account/private/draft sentinels; exact removed
+record count at commit. No broad database or CacheStorage deletion applies.
+A reachable control still requires Claude's written specification.
 
 ## Small settings archive
 

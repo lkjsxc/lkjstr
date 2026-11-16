@@ -163,7 +163,7 @@ These are concrete runtime limits, not permission to fake a successful answer.
   Without a registered authorization presenter, the current client returns unsupported promptly; no new surface exists.
 - Uploads: phases, zero/validated completion and cancellation work; actual byte
   progress is unavailable without weakening redirect/body limits. NIP-96 processing remains bounded.
-- Device: protocol12 inspection separates memory payload bytes, exact stored-event row counts and approximate origin estimates.
+- Device: protocol12 inspection distinguishes memory payload bytes, all event-store records (including ciphertext), and approximate origin usage.
   Focused 14 native/19 Worker checks and strict Clippy pass; full merged gates and a surface remain pending.
   Exact disk bytes, clearing, settings archives and setup sync remain absent; [storage-inspection.md](storage-inspection.md).
 - Followed hashtags, parsed article documents, reports and complete NIP-11 detail

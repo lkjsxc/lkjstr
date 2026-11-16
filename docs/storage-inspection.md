@@ -15,14 +15,18 @@ Admission failures use the existing failed `result` and its stable error code.
 There is no new control, visible word, layout or automatic inspection.
 
 `report.memory` contains `events`, `eventPayloadBytes` and `at`. It observes the
-retained core event store at admission. Payload bytes sum the UTF-8 strings in
+retained core event store, including encrypted relay payloads, at admission.
+Payload bytes sum the UTF-8 strings in
 IDs, public keys, signatures, content and tags. They exclude JSON framing,
 numeric fields, allocation overhead and physical storage. Existing
 `Stats.totals.cacheBytes` keeps precisely that previous payload meaning.
 
 `report.persistedEvents` is a tagged union. A ready result has an exact `count`
-from a successful readonly transaction over only the public `events` object
-store. `at` records the completion callback. Live writes may continue before
+from a successful readonly transaction over all records in the `events` object
+store. This includes cached encrypted DM/list payloads; counting neither reads
+nor validates bodies, so invalid persisted records also count. Decrypted
+messages, keys and private archives are separate state and are not traversed.
+`at` records the completion callback. Live writes may continue before
 or after that transaction; this count and memory need not agree. An absent API
 is unsupported, an actual transaction/open failure is failed, and unfinished
 work at the deadline is timeout. Those outcomes contain no guessed count.
@@ -115,13 +119,13 @@ The first two finite Worker attempts reached all 18 assertions but failed
 whole-Host read attribution: normal DM marks loading begins after ready and
 overlapped the inspection trace. A test-only completion witness now waits for
 that known startup transaction before resetting the trace. The original exact
-one-public-count/no-private-read assertion is unchanged. Product Rust/WASM did
+one events-store count/no KV-or-body-read assertion is unchanged. Product Rust/WASM did
 not change. The bounded diagnostic retains store/method/role, never key values
 or stored bodies. Both failed attempts remain under tmp/storage-focused-try1/2.
 
 The corrected fixture passed 19/19 checks on the same production bytes at
 20:18:03 UTC in 0.763 seconds, load 4.28 / 2.45 / 2.29. Its two MessagePorts
-and two fresh contexts cover exact physical row count versus empty hydrated
+and two fresh contexts cover exact stored row count versus empty hydrated
 memory, unchanged Stats, independent failures, cancellation/reused requests,
 hide/detach/stop, missing IndexedDB and the startup measurement boundary.
 The estimator, deadline and callback order are controlled test effects; this
@@ -134,9 +138,17 @@ opens no account or external socket and is registered in engine-check.sh.
 Full required merged gates, a reachable interface and a public deployment are
 still pending. No production test-control export was introduced.
 
+The initial merged gate was deliberately stopped on 2026-11-16 at 20:29 UTC
+to correct public-only wording in comments and this contract. The actual DM
+wants, delivery, store and persistence paths retain encrypted kinds 4/1059 in
+this same store; private plaintext remains separate. No runtime calculation or
+assertion changed. The interrupted process ledger retains exit 130 and empty
+owned cleanup; it is not a product-failure reproduction.
+
 ## Separately planned work
 
-A generation-fenced public-event clear and a narrowly allowlisted settings
-archive are proposals in [storage-next.md](storage-next.md). Neither operation
-is implemented here. Keys, remote credentials, private marks/drafts, pending
-publications, localStorage and offline shell caches remain outside inspection.
+A selective event-cache clear and a narrowly allowlisted settings archive are
+proposals in [storage-next.md](storage-next.md). Neither is implemented. The
+events store also retains encrypted message history, so an indiscriminate clear
+would not preserve offline messages. Inspection reads no keys, credentials,
+private marks/drafts, pending-publication state, localStorage or shell contents.

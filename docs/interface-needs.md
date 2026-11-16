@@ -84,8 +84,8 @@ of the user. Details and current verification status: [bunker-auth.md](bunker-au
 ## Finite storage observations
 
 `storage.inspect {req}` / `storage.close {req}` and `storage {req,report}` expose
-separate memory event-payload counts, exact public-event transaction row counts
-and approximate origin usage/quota, with independent ready/unsupported/failed/
+separate memory payload counts, exact event-store row counts (including cached
+encrypted relay payloads) and approximate origin usage/quota, with independent ready/unsupported/failed/
 timeout states and Worker-monotonic observation times. `engine.storage.inspect`
 provides the finite client helper. The user needs a way to inspect these
 limits without labeling payload bytes or origin estimates as physical cache

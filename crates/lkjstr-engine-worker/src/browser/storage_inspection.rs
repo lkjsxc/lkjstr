@@ -1,4 +1,4 @@
-//! Count only public event rows; estimate reports approximate origin totals.
+//! Count event-store rows including ciphertext; estimate approximate origin totals.
 //! Never enumerate `kv`, archives, keys, CacheStorage or event bodies.
 use js_sys::{Promise, Reflect};
 use lkjstr_core::engine::storage_inspection::{Count, MAX_SAFE, Origin};

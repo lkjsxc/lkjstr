@@ -136,7 +136,7 @@ pub(super) fn persist(host: &Rc<RefCell<Host>>) {
             },
             Err(error) => Err(error),
         };
-        // Physical disk bound: keep the newest 20000; run only after a committed batch.
+        // Event-row retention bound: keep the newest 20000 after a committed batch.
         if result.is_ok()
             && let Ok(count) = idb::count_events(&work.0).await
             && count > 20000
