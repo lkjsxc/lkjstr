@@ -2,12 +2,12 @@
 
 ## Purpose
 
-Source audit refreshed on 2026-11-16 against the protocol-10 private-list/layout tree.
-The K1-K4/M1-M6 base passed its gates and is built. Protocol-9 required gates,
-451 main Worker checks and 40 finite zap checks passed; exact source boundaries
+Source audit refreshed on 2026-11-16 against the protocol-11 candidate after source landing ce05e292.
+The K1-K4/M1-M6 base passed its gates and is built. Protocol-9 required gates, 451 main Worker checks and 40 finite zap checks passed; exact source boundaries
 and failures are recorded in [engine-zap-verification.md](engine-zap-verification.md).
 Protocol-10 required gates, 452 main Worker checks and 31 private-list checks passed; see [engine-private-verification.md](engine-private-verification.md).
-Source status alone does not establish the deployed build.
+Search passes eleven native and seven Worker checks; current combined gates remain pending. See [search.md](search.md).
+The last confirmed ship is 541e4a1e; the seventh ship failed at the host operation. Source status does not establish the deployed build.
 Unregistered staging under tmp/ is excluded. This replaces the 11-14 inventory.
 Rows describe lkjstr's real Worker and reachable interface, not mock capability.
 `done` means implemented for the stated scope; it does not establish public-network
@@ -28,20 +28,22 @@ Evidence prefixes: `E/` = `crates/lkjstr-core/src/engine/`,
 
 ## Work order by daily impact
 
-1. Measure batched note fitting, host deliveries and source-scoped DOM membership
-   in the required sixth-landing hour. The third hour's late Home note remains
-   unresolved; strengthen notification/thread controls and qualify observer memory.
-2. Measure real signer and zap provider behavior after the private-list/layout
-   gate pass. Intercepted loopback fixtures do not establish public
-   interoperability or hour-long completeness.
-3. Finish existing controls: referenced emoji sets, people/language search,
-   bunker authorization challenges and measured upload progress. Upload
-   cancellation and relay AUTH are already implemented.
+New written Claude specifications take priority when present.
+
+1. Complete the productive-live-route and verification-queue Worker replay and
+   required combined gates. The sixth hour's seven Home candidates remain
+   unresolved; the native correction does not retroactively establish receipt.
+2. Close existing-control verification: Search now passes eleven native and seven
+   Worker checks; referenced emoji still needs its Worker/follow-up Clippy gate.
+   Bunker challenge operations await their combined gates and a designed surface.
+3. Use the next required public hour to qualify Home, notification/thread controls,
+   observer overhead and real signer/provider behavior. The sixth 3600-second
+   run is complete; host/OS sleep and all-relay completeness remain unproven.
 4. Add physical cache accounting/clearing and settings backup, then optional
    encrypted setup sync, article documents, followed hashtags and reports.
 5. Actor details, missing-bookmark placeholders, pins and person relay views
-   still await Claude's specifications. Implement new written specs first;
-   storage alone does not make their missing operations engine-ready.
+   await Claude's specifications. Upload phases/cancel work; actual intermediate
+   transmitted bytes remain unavailable without weakening current transport guarantees.
 
 ## Reading, recovery and truth
 
@@ -56,14 +58,14 @@ Evidence prefixes: `E/` = `crates/lkjstr-core/src/engine/`,
 | Grouped notifications and read state | done | Mentions/replies/reposts/reactions/zaps, filters and persistent timestamp ties; E/wire/notifications.rs, E/clients.rs. Zap trust is separate below. |
 | Reading position and fresh-note indicator | done | Per-tab anchors, retained windows and fresh counts; V/feed-place.ts, V/feed-fresh.ts. Page freeze and actual Worker pause were measured separately; host/OS sleep remains untested; docs/engine-performance-hour.md. |
 | Calendar/time navigation | done | Cache-wide month counts and ordinal seeks; E/wire/timeline.rs, V/time-rail.ts. Not a count of all relay history. |
-| Rich note search | partial | Rich filters exist; language-array OR is prepared in source, with native/Worker proof pending; E/wire/query_translate.rs, E/query_predicates.rs, docs/search.md. |
-| People in search | partial | Six retained verified-metadata matches precede note windows; no remote people search. Native/Worker proof pending; E/search_people.rs, E/wire/search.rs, docs/search.md. |
+| Rich note search | done | Existing rich filters include every language-array alternative; native membership, windows and time rails agree. Eleven native and seven Worker cases pass; E/wire/query_translate.rs, E/query_predicates.rs, docs/search.md. |
+| People in search | partial | Six retained verified-metadata matches precede the exact note quota, with mute scope and stable anchors/Fresh. Native/Worker proof passes; remote people discovery remains absent. E/search_people.rs, E/wire/search.rs, docs/search.md. |
 | Hashtag timelines | done | `hashtag` filter and linked tile exist; E/query.rs, V/registry.ts, V/note.ts. |
 | Followed hashtags | missing | No kind-10015 discovery/edit or Home integration; list codecs alone do not supply it. |
 | One-relay timeline | partial | `source:relay` targets requests, but cached membership is not relay-scoped and no feed tile is registered; E/network_plan.rs, E/query.rs, V/registry.ts. |
-| Public-network completeness and hour-long use | partial | Third shipped build completed 3600.072 seconds and 2082 notes/79.159 seconds, with a 12.358-second maximum scroll step. One late Home candidate remains unresolved; query caps and the subsequently found startup guard gap limit completeness. docs/engine-performance-third.md. |
+| Public-network completeness and hour-long use | partial | Sixth live interval completed 3600.172 seconds; scrolling reached 1903/2000 distinct Home notes, with a 13.963-second maximum automation step. Seven Home candidates remain unresolved; notification/thread controls are uninformative. docs/engine-performance-sixth.md, docs/engine-live-route.md. |
 | Shared Worker, two tabs and leader loss | done | SharedWorker continuity and fallback leader replacement were measured; 30-second/10-minute cuts include one delivered Home recovery witness. Later stale-callback and retained-history fixes have transport regressions; engine/transport.js, docs/engine-performance-hour.md. |
-| Bounded cache and cold boot | partial | 16000 regular/4000 replaceable in memory; newest 2000 indexed on boot, disk pruned to 20000 after live writes. Third hour WASM stayed 79.954 MB after history load; a physical 20000-event boot took 352 ms to first profile note. Observer overhead and indefinite growth remain unproven. W/worker_persist.rs, docs/engine-performance-third.md. |
+| Bounded cache and cold boot | partial | 16000 regular/4000 replaceable in memory; newest 2000 indexed on boot, disk pruned to 20000 after live writes. Sixth-hour WASM capacity stayed 77.07 MB after history; physical 20000-event boot reached a profile note in 230 ms. Probes and indefinite growth remain qualified. W/worker_persist.rs, docs/engine-performance-sixth.md. |
 | Physical cache size and clearing | missing | Stats `cacheBytes` is stored payload bytes, not actual IndexedDB usage; no clear-cache operation; E/feedback.rs. |
 
 ## Identity, signers and private data
@@ -120,9 +122,9 @@ Evidence prefixes: `E/` = `crates/lkjstr-core/src/engine/`,
 | Capability | Status | Concrete scope, limit and evidence |
 | --- | --- | --- |
 | Notes, replies, reposts and quotes | done | Read and publish through all existing signer types; E/wire/publish.rs, V/note-actions.ts, V/compose.ts. |
-| Unicode/custom reaction picker | partial | Unicode/recent/own kind-10030 emoji work; referenced kind-30030 sets are not fetched; E/wire/sources.rs, V/emoji-picker.ts. |
+| Unicode/custom reaction picker | partial | Direct entries and up to 32 owner-selected kind-30030 sets project at most 400 codes with finite discovery. Twenty native cases pass; finite Worker and follow-up Clippy remain pending. Encrypted sets and per-set retry are unsupported. E/emoji.rs, V/emoji-picker.ts, docs/emoji-sets.md. |
 | Selected mentions and custom emoji in text | done | Engine expands selected ranges and preserves emoji tags; E/wire/mentions.rs, V/compose-mentions.ts. |
-| Image/video/audio upload | partial | Blossom and NIP-96 discovery, every signer and retries work; cancellation is wired; intermediate transmitted-byte progress is unavailable; W/worker_upload*.rs, V/compose-media.ts. |
+| Image/video/audio upload | partial | Blossom and NIP-96 discovery, every signer and retries work; cancellation and phases work; fetch cannot expose intermediate transmitted bytes while preserving redirect rejection and bounded responses; W/worker_upload*.rs, V/compose-media.ts. |
 | Media rendering and metadata | done | Notes render image/video/audio, dimensions, alt text and playback state; E/row_media.rs, V/note-media.ts, V/note-audio.ts. Dedicated media event kinds are separate below. |
 | Content warnings | done | Engine projection, covered media and composer warning; P/nip36.rs, V/note.ts, V/compose.ts. |
 | Public bookmarks | done | Add/remove, list membership and fetched-note paging; E/list_events.rs, V/note-actions.ts, V/registry.ts. |

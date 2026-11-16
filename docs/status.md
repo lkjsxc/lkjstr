@@ -24,7 +24,7 @@ private rows, key/startup queues and projections, and closes all entry paths.
 
 Protocol 7 adds atomic private-view visibility and acknowledged upload cancellation. Attachment removal, clear and disposal cancel queued
 authorization, HTTP response/body waits and processing polls. Late replies cannot settle a replacement job. Intermediate transmitted bytes remain
-unavailable; cancellation does not delete a remote blob already accepted.
+unavailable under fetch's redirect-rejection/body-limit guarantees; XHR would weaken them. Cancellation does not delete an accepted remote blob.
 
 Successful lock/remove synchronously prunes decrypted private-list policy and derived rows, including hidden views, before acknowledgement. Previously
 old policy survived until the next status pass. Revoked private anchors are rejected on replay; failed account transactions preserve authorized state.
@@ -40,7 +40,7 @@ passed required gates and 338 real Worker checks; [engine-lifetime-verification.
 
 ## Engine stream (2026-11-16)
 
-Protocol 6 introduced DM, encrypted-key and relay authentication operations. Protocols 7/8/9/10 are additive; exact shapes are in
+Protocol 6 introduced DM, encrypted-key and relay authentication operations. Protocols 7/8/9/10/11 are additive; exact shapes are in
 [engine-proposals.md](engine-proposals.md). Unreached operations remain in [interface-needs.md](interface-needs.md).
 
 - Core/Worker DM supports local, NIP-07 and NIP-46 signers. NIP-17 text/group
@@ -109,9 +109,10 @@ native-scrollbar cases keep sequential decisions. Separate 2000-note draws fell 
 ## Reading and lists
 
 Home/Global, another person's Home, replies/ancestors/descendants, grouped notifications and read-watermark ties use verified stored events. Channel
-messages remain separate from ordinary feeds. Search accepts all-word text, phrases, exclusions, media/link filters, author unions and inward-rounded
-dates. Date-only end boundaries follow local calendar days across daylight-saving time. Profile views support posts/replies/reposts/reactions and
-media selections.
+messages remain separate from ordinary feeds. Search accepts all-word text, phrases, exclusions, media/link filters, author unions,
+language-array OR and inward-rounded dates. Date-only end boundaries follow local calendar days across daylight-saving time. Six retained
+verified-directory people precede note windows without shifting budgets, anchors, Fresh or time counts. Eleven native and seven Worker checks pass;
+remote people discovery remains absent. Profile views retain posts/replies/reposts/reactions and media selections. See [search.md](search.md).
 
 Following rows/counts share the newest valid distinct kind-3 p tags. Metadata never removes or reorders a list member. People hydrate in bounded
 window batches. Followers, thread descendants, bookmarks and joined channels page full replies; settings collects finite pages beyond 500 before
@@ -154,14 +155,14 @@ These are concrete runtime limits, not permission to fake a successful answer.
 - Private lists: supported local/extension/bunker reads cover NIP-44 and older
   NIP-04. Public edits preserve ciphertext; private editing, named-set navigation
   and list-specific Retry controls remain absent. Rows/hydration are owner-scoped.
-- Emoji: referenced sets pass native tests; Worker/full gates pending. Limits: [emoji-sets.md](emoji-sets.md).
-- Search: retained matching people and language-array OR are prepared; native
-  and Worker proof remain pending. Remote people discovery is absent; bounded
-  verified NIP-05 from-query lookup exists. See search.md for the current proof.
+- Emoji: referenced sets pass 20 native cases and the combined WASM check; finite Worker/follow-up Clippy/full gates remain pending. See emoji-sets.md.
+- Search: retained people/language OR pass native and Worker proof. Remote people
+  discovery remains absent; bounded verified NIP-05 from-query lookup exists.
+  Combined gates/deployment remain pending. See [search.md](search.md).
 - Bunkers: auth_url is a candidate without controls; verification and routing limits: [bunker-auth.md](bunker-auth.md). Relay switching is unsupported.
   Without a registered authorization presenter, the current client returns unsupported promptly; no new surface exists.
-- Uploads: intermediate transmitted-byte progress remains missing; zero and
-  validated completion are reported, with bounded NIP-96 processing.
+- Uploads: phases, zero/validated completion and cancellation work; actual byte
+  progress is unavailable without weakening redirect/body limits. NIP-96 processing remains bounded.
 - Device: physical IndexedDB size, cache clearing, settings archive import/export
   and encrypted cross-device setup sync are absent. Payload bytes are not disk size.
 - Followed hashtags, parsed article documents, reports and complete NIP-11 detail
@@ -177,13 +178,13 @@ private-list scope follow-up has separate evidence. Protocol 9 and its startup/d
 [engine-zap-verification.md](engine-zap-verification.md) records the runtime and measurement evidence. Protocol-10 private-list and layout integration
 passed all required gates, 452 main Worker checks and 31 private-list checks; the dated record is
 [engine-private-verification.md](engine-private-verification.md). The [sixth public hour](engine-performance-sixth.md) and faults are complete: 1903
-of 2000 requested notes and seven unresolved Home coverage candidates; the productive-route recovery transition is under investigation.
+of 2000 requested notes and seven unresolved Home coverage candidates. Productive-route recovery and verification-queue guards have native proof;
+production Worker replay and combined gates remain pending. This does not resolve public candidates; see [engine-live-route.md](engine-live-route.md).
 The sixth prescribed ship stopped before deployment at 16:35:57 UTC: separate package validators still required a direct HTML WASM preload.
 The archive graph and numeric-token corrections pass 80 package cases and 19 xtask tests; all required combined gates and exact packaging passed.
 The seventh prescribed ship passed all 548 real interface checks and packaging, then failed at the host operation at 17:53:27 UTC.
 No successful deployment receipt or served-index verification exists; the last confirmed successful ship remains 541e4a1e. Extra host commands
 are forbidden by the owner handoff; read-only diagnosis was requested through Desk. Exact artifacts and limits are in [engine-startup.md](engine-startup.md).
-See [engine-startup.md](engine-startup.md) for hashes, the failed-before proof and preserved archive/CSP checks.
 
 The owner's 2026-11-16 delegation authorizes rebased pushes and the prescribed ship script. Tests use fresh ports and fixture data, clean their
 processes and never publish to public relays or touch a saved owner account. The public hour uses REQ/CLOSE only. Docker and unrelated host services
