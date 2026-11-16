@@ -18,7 +18,7 @@ function basis(note = event(2)) {
   return { source: 'notifications', account, plan: { ids: [note.id], minimum: 1 }, span,
     control: { events: [note], seenOn: { [note.id]: [query.relay] }, firstSeenOn: { [note.id]: { [query.relay]: cutoff + 20 } },
       responses: [{ status: 'eose', relay: query.relay }], budget: { exhausted: false } },
-    native: { eligibility: { notifications: { eligible: [note.id], excluded: [], ordered: [id(1), note.id, id(3)] } } },
+    native: { controlVerified: [note.id], eligibility: { notifications: { eligible: [note.id], excluded: [], ordered: [id(1), note.id, id(3)] } } },
     beforeCache: [], afterCache: [note], cutoff, queries: [query],
     exercise: { startedAt, finishedAt: cutoff, unknown: [], limitReached: false, domFirst: { [note.id]: startedAt + 500 },
       snapshots: [{ unknown: [], ids: [id(1), note.id, id(3)], window: { anchor: 'top', before: 0, after: 60 } }] },
@@ -57,7 +57,7 @@ test('independent native relationships choose at most three eligible Home foci',
 });
 test('historical minimum requires text notifications and native direct replies', () => {
   const notes = [event(1), event(2), event(3), event(4), event(5, { kind: 7 })];
-  const native = { eligibility: { notifications: { eligible: [id(2), id(3), id(4), id(5)] },
+  const native = { controlVerified: notes.map(note => note.id), eligibility: { notifications: { eligible: [id(2), id(3), id(4), id(5)] },
     thread0: { eligible: [id(1), id(2), id(3), id(4)] } },
     relationships: [{ id: id(2), parent: id(1) }, { id: id(3), parent: id(1) }, { id: id(4), parent: null }] };
   const selection = historicalSelection(notes, native, [id(1)], span);
@@ -123,7 +123,7 @@ function preflightStub({ informative = true, candidates = 4, requested, cost = 0
     },
     verify: (events, context, queries, options) => {
       verifies++; assert.ok(options.relationships); assert.ok(options.timeoutMs > 0);
-      return { verified: notes.map(note => note.id), rejected: 0,
+      return { verified: notes.map(note => note.id), controlVerified: notes.map(note => note.id), rejected: 0,
         relationships: [{ id: id(2), parent: id(1) }, { id: id(3), parent: id(1) }],
         eligibility: Object.fromEntries(Object.keys(queries).map(name => [name, { eligible: informative ? (name === 'home' ? [id(1)] : [id(2), id(3), id(4)]) : [], excluded: [] }])) };
     },
@@ -158,4 +158,28 @@ test('an unanswered browser RPC is bounded and carries the same absolute expiry'
   const deadline = Date.now() + 10; let expiry;
   await assert.rejects(historyDeadline(value => { expiry = value; return new Promise(() => {}); }, deadline), /deadline/);
   assert.ok(expiry <= deadline);
+});
+
+test('cached valid ID cannot validate an invalid independently returned control body', () => {
+  const value = basis(), note = value.control.events[0];
+  value.beforeCache = [note]; value.native.verified = [note.id];
+  value.control.events = [{ ...note, content: 'altered independent body' }];
+  value.native.controlVerified = [];
+  const result = compareHistorical(value);
+  assert.equal(result.domObserved, 0); assert.equal(result.eligibleSelected, 0);
+  assert.match(result.outcomes[0].classification, /independent control/);
+});
+test('preselection cannot borrow control validity from globally verified context IDs', () => {
+  const notes = [event(1), event(2), event(3), event(4)];
+  const native = { verified: notes.map(note => note.id), controlVerified: [],
+    eligibility: { notifications: { eligible: [id(2), id(3), id(4)] }, thread0: { eligible: [id(2), id(3)] } },
+    relationships: [{ id: id(2), parent: id(1) }, { id: id(3), parent: id(1) }] };
+  const selected = historicalSelection(notes, native, [id(1)], span);
+  assert.equal(selected.informative, false); assert.deepEqual(selected.notifications.ids, []);
+  assert.equal(selected.threadCandidates[0].directReplies, 0);
+});
+test('missing independent control verification metadata remains unknown', () => {
+  const value = basis(); delete value.native.controlVerified;
+  const result = compareHistorical(value);
+  assert.equal(result.domObserved, 0); assert.match(result.status, /^unknown/);
 });

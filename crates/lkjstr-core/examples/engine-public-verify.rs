@@ -29,24 +29,37 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
     let mut store = Store::new(40000);
     let mut verified = BTreeSet::new();
+    let mut control_verified = BTreeSet::new();
+    let mut control_rejected = BTreeSet::new();
     let mut rejected = 0;
-    for raw in context.iter().chain(controls) {
-        let Ok(event) = serde_json::from_value::<NostrEvent>(raw.clone()) else {
-            rejected += 1;
-            continue;
-        };
-        if matches!(verify_event(&event), VerificationResult::Ok(_)) {
-            verified.insert(event.id.clone());
-            store.insert(event, None);
-        } else {
-            rejected += 1;
+    for (index, raw) in context.iter().chain(controls).enumerate() {
+        let is_control = index >= context.len();
+        match serde_json::from_value::<NostrEvent>(raw.clone()) {
+            Ok(event) if matches!(verify_event(&event), VerificationResult::Ok(_)) => {
+                verified.insert(event.id.clone());
+                if is_control {
+                    control_verified.insert(event.id.clone());
+                }
+                store.insert(event, None);
+            }
+            _ => {
+                rejected += 1;
+                if is_control && let Some(id) = raw["id"].as_str() {
+                    control_rejected.insert(id.to_owned());
+                }
+            }
         }
     }
-    let mut result = json!({"verified": verified, "rejected": rejected});
+    // A valid cached body must never lend signature credit to a distinct control body.
+    // Conflicting valid/invalid duplicate controls remain conservatively unverified.
+    control_verified.retain(|id| !control_rejected.contains(id));
+    let mut result = json!({"verified": verified, "controlVerified": control_verified,
+        "rejected": rejected});
     if value["relationships"].as_bool() == Some(true) {
         let ids: BTreeSet<_> = controls
             .iter()
             .filter_map(|event| event["id"].as_str())
+            .filter(|id| control_verified.contains(*id))
             .collect();
         let relations: Vec<_> = ids
             .into_iter()
@@ -77,7 +90,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .collect();
             for id in ids {
                 let event = store.get(id);
-                let reason = if !verified.contains(id) {
+                let reason = if !control_verified.contains(id) {
                     Some("invalid-signature".into())
                 } else if let Some(event) = event {
                     if q.source == Source::Notifications

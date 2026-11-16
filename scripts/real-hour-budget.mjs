@@ -1,5 +1,6 @@
 // Measurement control budget, shared by every concurrent preflight socket.
-// All received bytes count, including duplicate EVENTs; retained event IDs cap separately.
+// Delivered data-message bytes count before parsing, including duplicate/malformed bodies.
+// TCP framing and WebSocket ping/pong traffic are outside these counters.
 export function controlBudget({ milliseconds = 90000, bytes = 8 * 1024 * 1024,
   events = 3000, frames = 6000, frameBytes = 512 * 1024, now = Date.now } = {}) {
   const startedAt = now(), deadlineAt = startedAt + milliseconds;

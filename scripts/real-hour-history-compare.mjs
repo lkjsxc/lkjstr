@@ -16,6 +16,7 @@ export function exercisedRange(id, ordered, exercise) {
 export function compareHistorical({ source, account, plan, span, control, native, beforeCache,
   afterCache, exercise, queries, receipts = () => [], cutoff, acquisitionStartedAt = exercise.startedAt, evidenceUnknown = [] }) {
   const policy = native.eligibility[source], eligible = new Set(policy?.eligible ?? []);
+  const verified = new Set(native.controlVerified ?? []);
   const events = new Map(control.events.map(event => [event.id, event]));
   const prior = new Map(beforeCache.map(event => [event.id, event]));
   const after = new Map(afterCache.map(event => [event.id, event]));
@@ -24,9 +25,11 @@ export function compareHistorical({ source, account, plan, span, control, native
   if (!control.responses.some(response => response.status === 'eose')) unknown.push('no completed actual-source control route');
   if (exercise.limitReached) unknown.push('historical window/deadline bound reached');
   if (!Array.isArray(policy?.ordered)) unknown.push('native ordered query evidence unavailable');
+  if (!Array.isArray(native.controlVerified)) unknown.push('independent control verification unavailable');
   const outcomes = (plan.ids ?? []).slice(0, 20).map(id => {
     const event = events.get(id);
     if (!event) return { id, classification: 'unknown: selected control unavailable on actual source routes', domSuccess: false };
+    if (!verified.has(id)) return { id, classification: 'excluded: independent control body not verified', domSuccess: false };
     if (![1, 42].includes(event.kind)) return { id, classification: 'excluded: grouped or unsupported notification kind', domSuccess: false };
     if (event.created_at < span.since || event.created_at > span.until)
       return { id, classification: 'excluded: outside fixed historical interval', domSuccess: false };

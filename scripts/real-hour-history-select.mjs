@@ -10,7 +10,8 @@ export function candidateFoci(events, policy, relationships) {
     .slice(0, 3).map(event => event.id);
 }
 export function historicalSelection(events, native, foci, span) {
-  const byId = new Map(events.map(event => [event.id, event]));
+  const verified = new Set(native.controlVerified ?? []);
+  const byId = new Map(events.filter(event => verified.has(event.id)).map(event => [event.id, event]));
   const notifications = (native.eligibility.notifications?.eligible ?? [])
     .map(id => byId.get(id)).filter(event => event?.kind === 1).sort(order).slice(0, 20);
   const relations = new Map((native.relationships ?? []).map(relation => [relation.id, relation]));

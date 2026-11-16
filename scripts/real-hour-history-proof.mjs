@@ -48,6 +48,15 @@ try {
   assert.ok(!native.eligibility.thread.eligible.includes(fixture.quote.id));
   assert.equal(native.relationships.find(item => item.id === fixture.first.id).parent, fixture.focus.id);
   check('native direct replies are positive while a focus quote is not a thread reply');
+  const invalidControl = { ...fixture.first, content: fixture.first.content + ' altered control' };
+  const collision = nativeEligibility([invalidControl], [fixture.first, fixture.follow, fixture.mute], queries,
+    { relationships: true, ordered: true });
+  assert.ok(collision.verified.includes(fixture.first.id));
+  assert.ok(!collision.controlVerified.includes(fixture.first.id));
+  assert.ok(!collision.eligibility.notifications.eligible.includes(fixture.first.id));
+  assert.ok(!collision.eligibility.thread.eligible.includes(fixture.first.id));
+  report.controlCollision = collision;
+  check('a valid cached body cannot authorize an altered independent control with the same ID');
   server = createServer((request, response) => response.writeHead(200, { 'Content-Type': 'text/html' })
     .end('<!doctype html><title>Owned historical evidence fixture</title>'));
   server.on('connection', socket => { sockets.add(socket); socket.on('close', () => sockets.delete(socket)); });

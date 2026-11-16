@@ -19,13 +19,22 @@ No browser or application result exists while selection runs.
 
 The preflight has a single 90-second deadline, at most three relay endpoints,
 three possible thread foci per account, 100 events per requested text filter,
-3000 distinct event IDs, 6000 control frames and 8 MiB admitted control-frame
-bytes. Every duplicate frame consumes bytes. A single frame is limited to
-512 KiB; the observed triggering frame may exceed the remaining aggregate
-budget and is recorded separately from admitted bytes. Exhaustion closes all
+3000 distinct event IDs, 6000 delivered data messages and 8 MiB admitted
+data-message bytes. Every duplicate, malformed JSON body and Nostr control
+message consumes bytes before string conversion or JSON parsing. A single
+data message is limited to 512 KiB; an observed message that exceeds the
+remaining aggregate budget is recorded separately from admitted bytes. Exhaustion closes all
 active control sockets, retains its reason and remains unknown. Only REQ/CLOSE
 are transmitted. The selected account's signed follow list and public mute
 record are inputs to native eligibility.
+
+The installed WebSocket receiver checks compressed/uncompressed message size
+through `maxPayload` before delivering the body to the harness. This bounds
+String/JSON input, not every temporary transport or decompression allocation.
+The retained `receivedFrames`/`admittedFrames` names count delivered data
+messages, not wire fragments. Their byte counters exclude TCP/TLS headers and
+WebSocket ping/pong traffic. A message rejected by the receiver before delivery
+is not included in those byte counters; its limit failure remains explicit.
 
 The historical interval is the seven days ending one second before preflight
 starts. Kind-1 text notifications need three native-eligible events. Candidate
@@ -41,6 +50,11 @@ relationships and Core query order. These measurement-only outputs do not add
 an engine message or duplicate product filtering in JavaScript. The helper must
 be rebuilt and frozen with the measured source; an older helper lacking the
 requested metadata is rejected.
+The helper separately reports `controlVerified`: an ID is included only when
+its independent control body verifies, with conflicting valid/invalid duplicate
+controls excluded conservatively. A verified cached body cannot lend signature
+credit to an altered control with the same ID. Historical selection and
+comparison require this evidence; absent metadata remains unknown.
 
 ## Post-hour phase
 
@@ -109,6 +123,15 @@ compiled documentation and line checks plus `git diff --check` passed at
 19:49:06 UTC in 0.229 seconds, load 2.21/1.80/1.35 before and after.
 Evidence is in `tmp/history-witness-proof/node-first.{json,log}` and
 `tmp/history-witness-proof/source-first.{json,log}` in the isolated worktree.
+
+A receive/evidence audit found the shared-ID cache-credit defect above. Three
+new pure assertions failed against the prior comparator/selection at 20:03:47 UTC
+(15 controls passed), then all 18 passed at 20:04:38 UTC in 0.166 seconds, load
+2.21/2.40/2.61 before and after. These tests supply synthetic native decisions;
+they prove JavaScript evidence handling, not the unexecuted native correction.
+Logs are `tmp/history-witness-proof/control-body-{before,after}.{json,log}`.
+The authored native/finite fixture now also checks an invalid control against a
+valid cached body with the same ID; that case remains pending execution.
 
 The standalone finite proof uses owned loopback controls, a native signer that
 never exports its keys, the actual verification helper and Chromium DOM
