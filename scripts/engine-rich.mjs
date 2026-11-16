@@ -1,6 +1,7 @@
 // Protocol 3 semantics through the real Worker. Fixtures stay on loopback.
 import { fixtureProcess } from './engine-fixture-process.mjs';
 import { createInterface } from 'node:readline';
+import { searchContract } from './engine-search.mjs';
 export async function rich({page,send,wait,check,note,signer,lines,fake}) {
   check('ready retains protocol 3 features',await page.evaluate(()=>window.messages.some(m=>m.t==='ready'&&m.version>=3)));
   await page.evaluate(()=>{
@@ -98,4 +99,5 @@ export async function rich({page,send,wait,check,note,signer,lines,fake}) {
     }
     await close(news.sub);
   } finally { other.stdin.end(); }
+  await searchContract({page,send,wait,check,account:note.pubkey,fake});
 }
