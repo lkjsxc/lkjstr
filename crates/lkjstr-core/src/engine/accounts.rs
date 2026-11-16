@@ -1,6 +1,12 @@
 //! At most 32 device accounts. Serialized secrets are only for private storage.
+#[path = "accounts_crypto.rs"]
+mod crypto;
 use lkjstr_protocol as p;
 use serde::{Deserialize, Serialize};
+#[path = "accounts_secret.rs"]
+pub mod secret;
+#[path = "accounts_vault.rs"]
+mod vault;
 #[derive(Clone, Default, Serialize, Deserialize)]
 pub struct Accounts {
     #[serde(default)]
@@ -17,7 +23,11 @@ pub struct Account {
     pub signer: String,
     #[serde(default)]
     pub relay_hints: Vec<String>,
-    secret: Option<String>,
+    secret: Option<secret::SecretText>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    encrypted_key: Option<String>,
+    #[serde(skip)]
+    unlocked_key: Option<lkjstr_nips::keys::SecretKey>,
     #[serde(default)]
     remote: Option<p::remote::Remote>,
 }
@@ -58,6 +68,7 @@ impl Accounts {
                 .collect(),
             _ => vec![],
         };
+        let secret = secret.map(secret::SecretText::new);
         if !self.entries.iter().any(|a| a.pubkey == pubkey) && self.entries.len() >= 32 {
             return Err("too-large");
         }
@@ -66,6 +77,8 @@ impl Accounts {
                 old.signer = signer.into();
                 old.secret = secret;
                 old.remote = None;
+                old.encrypted_key = None;
+                old.unlocked_key = None;
             }
             if !relay_hints.is_empty() {
                 old.relay_hints = relay_hints;
@@ -77,6 +90,8 @@ impl Accounts {
                 secret,
                 relay_hints,
                 remote: None,
+                encrypted_key: None,
+                unlocked_key: None,
             });
         }
         self.active = Some(pubkey);
@@ -92,12 +107,13 @@ impl Accounts {
         if a.signer != "local" {
             return Err("unsupported");
         }
-        lkjstr_protocol::encode_nsec(a.secret.as_deref().ok_or("internal")?).map_err(|_| "internal")
+        let key = a.local_key()?;
+        let hex = zeroize::Zeroizing::new(lkjstr_nips::hex(key.as_bytes()));
+        lkjstr_protocol::encode_nsec(&hex).map_err(|_| "internal")
     }
     pub fn private_entries(&self, event: &p::NostrEvent) -> Option<Vec<Vec<String>>> {
         let a = self.entries.iter().find(|a| a.pubkey == event.pubkey)?;
-        let secret = p::parse_secret_key_hex(a.secret.as_deref()?)?;
-        let owner = lkjstr_nips::keys::SecretKey::from_bytes(*secret.as_bytes()).ok()?;
+        let owner = a.local_key().ok()?;
         let event = serde_json::from_str(&serde_json::to_string(event).ok()?).ok()?;
         lkjstr_nips::list_crypto::decrypt(&event, &owner).ok()
     }
@@ -126,6 +142,8 @@ impl Accounts {
             secret: None,
             relay_hints: vec![],
             remote: Some(session),
+            encrypted_key: None,
+            unlocked_key: None,
         });
         self.active = Some(pubkey);
         Ok(())
@@ -159,6 +177,7 @@ impl Accounts {
             .ok_or("signed-out")?;
         match account.signer.as_str() {
             "none" => Err("read-only"),
+            "local" if account.locked() => Err("signer-missing"),
             "local" | "extension" | "remote" => Ok(()),
             _ => Err("unsupported"),
         }
@@ -174,9 +193,19 @@ impl Accounts {
             .ok_or("signed-out")?;
         match account.signer.as_str() {
             "local" => {
-                p::sign_event_with_secret_hex(event, account.secret.as_deref().ok_or("internal")?)
-                    .map(Some)
-                    .map_err(|_| "internal")
+                let key = account.local_key()?;
+                let id = p::compute_event_id(event).map_err(|_| "internal")?;
+                let hash = lkjstr_nips::unhex::<32>(&id).map_err(|_| "internal")?;
+                let sig = key.sign(&hash, &[0; 32]).map_err(|_| "internal")?;
+                Ok(Some(p::NostrEvent {
+                    id,
+                    sig: lkjstr_nips::hex(&sig),
+                    pubkey: event.pubkey.clone(),
+                    created_at: event.created_at,
+                    kind: event.kind,
+                    tags: event.tags.clone(),
+                    content: event.content.clone(),
+                }))
             }
             "extension" => Ok(None),
             "none" => Err("read-only"),
