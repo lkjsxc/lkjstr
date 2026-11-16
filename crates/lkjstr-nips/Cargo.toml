@@ -7,9 +7,14 @@ publish = false
 description = "Pure, host-independent Nostr protocol codecs and client policy"
 
 [dependencies]
+aes = "0.8.4"
+cbc = { version = "0.1.2", features = ["alloc"] }
 base64 = "0.22.1"
 bech32 = "0.11.1"
 chacha20 = "0.9.1"
+chacha20poly1305 = { version = "0.10.1", default-features = false }
+scrypt = { version = "0.11.0", default-features = false }
+unicode-normalization = "0.1.25"
 hkdf = "0.12.4"
 hmac = "0.12.1"
 k256 = { version = "0.13.4", default-features = false, features = ["schnorr", "ecdh", "ecdsa"] }

@@ -11,6 +11,7 @@ name = "lkjstr_engine"
 crate-type = ["cdylib", "rlib"]
 [dependencies]
 serde-wasm-bindgen = "0.6.5"
+getrandom = { version = "0.2.17", features = ["js"] }
 lkjstr-nips = { path = "../lkjstr-nips" }
 lkjstr-core = { path = "../lkjstr-core" }
 lkjstr-protocol = { path = "../lkjstr-protocol" }
