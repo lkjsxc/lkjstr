@@ -93,7 +93,7 @@ pub async fn open(signal: &AbortSignal) -> Result<IdbDatabase, String> {
             Pending::finish(&failed);
         });
         let upgrading = state.clone();
-        let upgrade = Handler::new(move |event| {
+        let upgrade = Handler::new(move |event: web_sys::Event| {
             if !upgrading.live.get() {
                 upgrading.cancel();
                 return;

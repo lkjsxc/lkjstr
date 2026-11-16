@@ -37,10 +37,12 @@ pub(super) fn input(h: &mut Host, id: u64, message: I) {
         }),
         I::DmOpen { sub, query, .. } => Some(O::Dm {
             sub,
-            snapshot: h
-                .dm
-                .inbox
-                .snapshot(&query, "failed", Some("internal".into()), false),
+            snapshot: lkjstr_core::engine::dm::Inbox::default().snapshot(
+                &query,
+                "failed",
+                Some("internal".into()),
+                false,
+            ),
         }),
         I::ZapQuote { req, query } => Some(O::ZapQuote {
             req,
