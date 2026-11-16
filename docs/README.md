@@ -74,3 +74,4 @@ Engine (`crates/`):
 - [relay-auth.md](relay-auth.md): scoped relay authentication and async identity races.
 
 - [private-lists.md](private-lists.md): account-scoped private reads, cached mute policy and signer lifetimes.
+- [engine-private-verification.md](engine-private-verification.md): protocol-10 private integration gates, proofs and artifact boundaries.
