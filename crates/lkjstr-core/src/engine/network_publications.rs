@@ -9,8 +9,24 @@ impl Network {
         &mut self,
         req: String,
         event: NostrEvent,
+        routes: Vec<crate::engine::publication_plan::Destination>,
+        now: u64,
+    ) {
+        let account = if event.kind == 1059 {
+            String::new()
+        } else {
+            event.pubkey.clone()
+        };
+        self.publish_as(req, event, routes, now, account);
+    }
+    /// Gift wraps require their original sender; their event pubkey is ephemeral.
+    pub fn publish_as(
+        &mut self,
+        req: String,
+        event: NostrEvent,
         mut routes: Vec<crate::engine::publication_plan::Destination>,
         now: u64,
+        auth_account: String,
     ) {
         if self.publications.len() >= 64 || self.publications.contains_key(&event.id) {
             self.output.push(Output::Error {
@@ -59,6 +75,7 @@ impl Network {
             Publication {
                 req,
                 event,
+                auth_account,
                 deadline: now.saturating_add(30000),
                 deliveries,
                 sent: BTreeMap::new(),
@@ -84,10 +101,9 @@ impl Network {
                     && p.sent
                         .get(relay)
                         .is_none_or(|at| now.saturating_sub(*at) >= 5000)
-                    && self
-                        .relays
-                        .get(relay)
-                        .is_some_and(|r| r.online && now >= r.cooldown_until)
+                    && self.relays.get(relay).is_some_and(|r| {
+                        r.online && now >= r.cooldown_until && !r.auth.writes.contains(&p.event.id)
+                    })
                 {
                     p.sent.insert(relay.clone(), now);
                     p.attempted.insert(relay.clone());

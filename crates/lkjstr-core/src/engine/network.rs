@@ -3,6 +3,8 @@ use super::protocol::{Output, Query, Source};
 use lkjstr_protocol::{NostrEvent, NostrFilter, filter_to_value, normalize_relay_url};
 use serde_json::{Value, json};
 use std::collections::{BTreeMap, BTreeSet};
+#[path = "network_auth.rs"]
+pub mod auth;
 #[path = "network_batch.rs"]
 mod batch;
 #[path = "network_cancel.rs"]
@@ -52,6 +54,7 @@ pub enum Effect {
 }
 #[derive(Default)]
 pub struct Relay {
+    pub(super) auth: auth::Authentication,
     pub cooldown_until: u64,
     pub quality_at: u64,
     pub prior_useful: u64,
@@ -108,6 +111,7 @@ pub(super) struct Request {
 pub(super) struct Publication {
     pub req: String,
     pub event: NostrEvent,
+    pub auth_account: String, // Original sender; never infer a gift-wrap identity.
     pub deadline: u64,
     pub deliveries: BTreeMap<String, String>,
     pub sent: BTreeMap<String, u64>,
@@ -123,6 +127,11 @@ pub(super) struct Publication {
 }
 #[derive(Default)]
 pub struct Network {
+    // At most 32 usable device signer public keys, never persisted.
+    auth_signers: BTreeSet<String>,
+    auth_active: Option<String>,
+    // Job identities survive relay removal/re-admission; exhaustion refuses new AUTH.
+    auth_next_job: u64,
     pub relays: BTreeMap<String, Relay>,
     observations: BTreeMap<String, quality::Observation>,
     pub quality_revision: u64,

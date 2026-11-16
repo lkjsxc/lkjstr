@@ -14,6 +14,7 @@ impl Network {
         self.quality_revision = self.quality_revision.wrapping_add(1);
         self.effects.push(Effect::Disconnect(relay.into()));
         if let Some(r) = self.relays.get_mut(relay) {
+            r.auth.reset();
             r.online = false;
             r.connecting = false;
             r.connected_since = None;
@@ -25,6 +26,10 @@ impl Network {
             p.sent.remove(relay);
         }
         for r in self.requests.values_mut().filter(|r| r.relay == relay) {
+            if r.ready_at == u64::MAX {
+                r.ready_at = now;
+                r.complete = false;
+            }
             if !r.complete {
                 r.sent = false;
                 r.eose = false;
@@ -49,7 +54,10 @@ impl Network {
             .filter(|r| r.relay == relay && lkjstr_protocol::matches_filter(e, &r.filter))
         {
             r.last_rx = now;
-            r.last_event = Some(r.last_event.unwrap_or(0).max(e.created_at));
+            // A future-dated event must not move the replay watermark past valid traffic.
+            if e.created_at <= now / 1000 {
+                r.last_event = Some(r.last_event.unwrap_or(0).max(e.created_at));
+            }
         }
     }
 }

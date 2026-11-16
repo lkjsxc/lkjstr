@@ -2,6 +2,7 @@ use super::*;
 impl Network {
     pub fn tick(&mut self, now: u64) {
         self.now = now;
+        self.auth_tick(now);
         self.admit_configured(now);
         let relays: Vec<_> = self.relays.keys().cloned().collect();
         for url in relays {
@@ -18,6 +19,7 @@ impl Network {
                 if r.online || r.connecting {
                     self.effects.push(Effect::Disconnect(url.clone()));
                     if let Some(r) = self.relays.get_mut(&url) {
+                        r.auth.reset();
                         r.online = false;
                         r.connected_since = None;
                         r.connecting = false;
@@ -200,8 +202,12 @@ pub(super) fn filter_live(f: &NostrFilter) -> bool {
     f.ids.is_none()
         && f.until.is_none()
         && f.kinds.as_ref().is_some_and(|ks| {
-            ks.iter()
-                .any(|k| matches!(k, 1 | 6 | 7 | 41 | 42 | 9735 | 10002 | 10005 | 10063))
+            ks.iter().any(|k| {
+                matches!(
+                    k,
+                    1 | 4 | 6 | 7 | 41 | 42 | 1059 | 9735 | 10002 | 10005 | 10050 | 10063
+                )
+            })
         })
 }
 
@@ -215,7 +221,9 @@ fn counts_filter(f: &NostrFilter) -> bool {
 
 // A bounded cooldown shares slots between channels, follow watches and live feeds.
 fn slot_sharing(r: &Request) -> bool {
-    r.list_watch
+    r.members.iter().any(|m| {
+        m.starts_with("~dm:") || m.starts_with("~dm-legacy:") || m.starts_with("~dm-list:")
+    }) || r.list_watch
         || r.filter
             .kinds
             .as_ref()

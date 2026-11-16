@@ -13,6 +13,7 @@ impl Network {
             r.last_rx = now;
         }
         match msg {
+            lkjstr_protocol::RelayMessage::Auth(challenge) => self.auth_challenge(relay, challenge),
             lkjstr_protocol::RelayMessage::Event {
                 subscription_id,
                 event,
@@ -82,6 +83,9 @@ impl Network {
                 message,
             } => {
                 self.close_delivery_check(relay, &subscription_id);
+                if self.auth_closed(relay, &subscription_id, &message, now) {
+                    return None;
+                }
                 let split = !quality::limited(&message)
                     && self
                         .requests
@@ -122,7 +126,11 @@ impl Network {
                 accepted,
                 message,
             } => {
-                self.answer_delivery(&event_id, relay, accepted, &message, now);
+                if !self.auth_answer(relay, &event_id, accepted, &message, now)
+                    && (accepted || !self.auth_write(relay, &event_id, &message))
+                {
+                    self.answer_delivery(&event_id, relay, accepted, &message, now);
+                }
             }
             lkjstr_protocol::RelayMessage::Notice(message) if quality::limited(&message) => {
                 self.cool_down(relay, now);
