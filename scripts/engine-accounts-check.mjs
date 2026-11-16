@@ -25,10 +25,12 @@ const output = process.env.LKJSTR_ENGINE_REPORT ? resolve(process.env.LKJSTR_ENG
 await mkdir(output, { recursive: true });
 const report = { startedAt: new Date().toISOString(), loadStart: loadavg(), packages, steps: [] };
 await writeFile(join(output, 'claim.json'), JSON.stringify(report, null, 2) + '\n', { flag: 'wx' });
-let active;
+let active, cancelled = false;
 const stop = () => { if (active && active.exitCode === null) { try { process.kill(-active.pid, 'SIGTERM'); } catch {} } };
-process.once('SIGTERM', stop); process.once('SIGINT', stop);
+const cancel = () => { cancelled = true; stop(); };
+process.once('SIGTERM', cancel); process.once('SIGINT', cancel);
 async function run(name, script, args = []) {
+  if (cancelled) throw Error('Account contract canceled');
   const startedAt = new Date().toISOString(), begin = performance.now(), chunks = [];
   const env = { ...process.env, LKJSTR_ENGINE_REPORT: join(output, name) };
   const child = spawn(process.execPath, [join(root, 'scripts', script), ...args], {
@@ -54,7 +56,7 @@ async function run(name, script, args = []) {
   }
   report.steps.push(step); await writeFile(join(output, 'report.json'), JSON.stringify(report, null, 2) + '\n');
   console.log(JSON.stringify(step));
-  if (code !== 0 || timedOut) throw Error('Account contract stage failed: ' + name);
+  if (code !== 0 || timedOut || cancelled) throw Error('Account contract stage failed: ' + name);
 }
 try {
   await run('current-production', 'engine-production-check.mjs', [packages.current.path]);
@@ -65,7 +67,8 @@ try {
 } catch {
   report.ok = false; process.exitCode = 1;
 } finally {
-  stop(); process.removeListener('SIGTERM', stop); process.removeListener('SIGINT', stop);
+  stop(); process.removeListener('SIGTERM', cancel); process.removeListener('SIGINT', cancel);
+  report.cancelled = cancelled;
   report.finishedAt = new Date().toISOString(); report.loadEnd = loadavg();
   await writeFile(join(output, 'report.json'), JSON.stringify(report, null, 2) + '\n');
 }
