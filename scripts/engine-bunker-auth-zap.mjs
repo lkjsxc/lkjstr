@@ -18,7 +18,8 @@ export async function authorizationZapDeadline({c,fixture,fake,origin,account,ch
       if(url.pathname.startsWith('/.well-known/lnurlp/')) {
         body={tag:'payRequest',allowsNostr:true,nostrPubkey:seed.provider,
           callback:'https://zap.fixture.invalid/callback',minSendable:1000,maxSendable:1_000_000,
-          commentAllowed:128,metadata:JSON.stringify([['text/plain','Owned split deadline fixture']])};
+          commentAllowed:128,metadata:JSON.stringify([['text/plain','Owned split deadline fixture'],
+            ['text/identifier',url.pathname.split('/').at(-1)+'@zap.fixture.invalid']])};
       }else if(url.pathname==='/callback'){
         callbacks++;
         const request=url.searchParams.get('nostr');if(!request)throw Error('missing owned signed request');
@@ -38,6 +39,7 @@ export async function authorizationZapDeadline({c,fixture,fake,origin,account,ch
     const quoted=await c.until(ms=>ms.some(m=>m.t==='zap.quote'&&m.req==='auth-split-quote'&&m.quote.phase!=='loading'));
     const quote=quoted.filter(m=>m.t==='zap.quote'&&m.req==='auth-split-quote').at(-1).quote;
     check('both split recipients pass provider preflight before signing',quote.phase==='ready'&&quote.recipients.length===2);
+    if(quote.phase!=='ready'||quote.recipients.length!==2)throw Error('owned split preflight '+JSON.stringify({phase:quote.phase,error:quote.error,recipients:quote.recipients.map(r=>({phase:r.phase,error:r.error}))}));
     fixture.configure(origin,['sign_event']);
     const count=async()=> (await c.all(0)).filter(m=>m.t==='signer.auth').length;
     const before=await count(),published=fake.published.length;
