@@ -1,5 +1,4 @@
 use super::*;
-use crate::engine::protocol::Delivery;
 impl Network {
     pub fn pending_event(&self, id: &str) -> bool {
         self.publications
@@ -47,17 +46,6 @@ impl Network {
             .filter(|d| d.state == "pending")
             .map(|d| (d.url.clone(), "pending".into()))
             .collect();
-        self.output.push(Output::Delivery {
-            req: req.clone(),
-            deliveries: deliveries
-                .iter()
-                .map(|(relay, state)| Delivery {
-                    relay: relay.clone(),
-                    state: state.clone(),
-                    message: None,
-                })
-                .collect(),
-        });
         let inbox_routes = routes
             .iter()
             .filter(|d| d.rule != "own" && d.state == "pending")
@@ -74,6 +62,10 @@ impl Network {
                 deadline: now.saturating_add(30000),
                 deliveries,
                 sent: BTreeMap::new(),
+                attempted: BTreeSet::new(),
+                messages: BTreeMap::new(),
+                observed: BTreeSet::new(),
+                transport_confirmed: BTreeSet::new(),
                 reported_success: false,
                 recipients,
                 inbox_routes,
@@ -84,7 +76,9 @@ impl Network {
     }
     pub(super) fn send_pending(&mut self, now: u64) {
         let mut frames = Vec::new();
+        let mut updates = Vec::new();
         for p in self.publications.values_mut().filter(|p| now < p.deadline) {
+            let before = p.attempted.len();
             for (relay, state) in &p.deliveries {
                 if state == "pending"
                     && p.sent
@@ -96,9 +90,16 @@ impl Network {
                         .is_some_and(|r| r.online && now >= r.cooldown_until)
                 {
                     p.sent.insert(relay.clone(), now);
+                    p.attempted.insert(relay.clone());
                     frames.push((relay.clone(), p.event.clone()));
                 }
             }
+            if before != p.attempted.len() {
+                updates.push((p.req.clone(), p.delivery()));
+            }
+        }
+        for (req, deliveries) in updates {
+            self.output.push(Output::Delivery { req, deliveries });
         }
         for (relay, event) in frames {
             self.send(&relay, json!(["EVENT", event]));
@@ -110,6 +111,7 @@ impl Network {
             .keys()
             .filter(|url| {
                 !self.relay_order.contains(url)
+                    && !(self.relays[*url].online && self.delivery_connection_wanted(url, self.now))
                     && !self.requests.values().any(|r| &r.relay == *url)
                     && !self
                         .publications
@@ -205,34 +207,10 @@ impl Network {
             .collect();
         for id in ids {
             if let Some(p) = self.publications.remove(&id) {
-                let deliveries = p
-                    .deliveries
-                    .into_iter()
-                    .map(|(relay, state)| Delivery {
-                        relay,
-                        state: if state == "pending" {
-                            "timeout".into()
-                        } else {
-                            state
-                        },
-                        message: None,
-                    })
-                    .collect::<Vec<_>>();
-                self.update_publication(&id, &deliveries);
-                self.output.push(Output::Delivery {
-                    req: p.req.clone(),
-                    deliveries: deliveries.clone(),
-                });
-                if !p.reported_success {
-                    self.output.push(Output::Result {
-                        req: p.req,
-                        id: Some(id),
-                        error: deliveries.is_empty().then(|| "no-relays".into()),
-                        deliveries,
-                    });
-                }
+                self.finish_delivery(id, p, now);
             }
         }
+        self.check_deliveries(now);
         self.release_publication_relays();
     }
 }

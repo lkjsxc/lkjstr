@@ -10,6 +10,7 @@ impl Network {
                 .requests
                 .values()
                 .any(|r| r.relay == url && !r.complete)
+                || (r.online && self.delivery_connection_wanted(&url, now))
                 || self.publications.values().any(|p| {
                     now < p.deadline && p.deliveries.get(&url).is_some_and(|s| s == "pending")
                 });
@@ -57,7 +58,7 @@ impl Network {
                 self.close_group(&relay, &wire);
             }
         }
-        let mut counts: BTreeMap<String, usize> = BTreeMap::new();
+        let mut counts = self.delivery_check_counts();
         let mut wires = BTreeSet::new();
         for r in self.requests.values().filter(|r| r.sent) {
             if !wires.insert((&r.relay, &r.wire_id)) {

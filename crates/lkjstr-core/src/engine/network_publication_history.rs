@@ -8,6 +8,7 @@ pub(super) struct Record {
     kind: u64,
     at: u64,
     deliveries: Vec<Destination>,
+    messages: BTreeMap<String, String>,
     #[serde(rename = "unresolvedRecipients")]
     unresolved_recipients: usize,
 }
@@ -49,11 +50,17 @@ impl Network {
             kind: event.kind,
             at: now,
             deliveries,
+            messages: BTreeMap::new(),
             unresolved_recipients: crate::engine::publication_discovery::recipients(event).len(),
         });
     }
     pub(super) fn update_publication(&mut self, id: &str, deliveries: &[Delivery]) {
         if let Some(record) = self.publication_history.iter_mut().find(|r| r.id == id) {
+            for d in deliveries {
+                if let Some(message) = &d.message {
+                    record.messages.insert(d.relay.clone(), message.clone());
+                }
+            }
             for d in &mut record.deliveries {
                 if let Some(next) = deliveries.iter().find(|next| next.relay == d.url) {
                     d.state.clone_from(&next.state);
@@ -93,6 +100,9 @@ impl Network {
             record.unresolved_recipients = count.min(32);
         }
     }
+    pub(super) fn retained_delivery(&self, id: &str) -> bool {
+        self.publication_history.iter().any(|r| r.id == id)
+    }
     pub fn recent_publications(&self) -> Value {
         json!(self.publication_history)
     }
@@ -104,8 +114,8 @@ impl Network {
             row.publish_planned += usize::from(d.state != "skipped");
             match d.state.as_str() {
                 "accepted" => row.publish_accepted += 1,
-                "rejected" | "timeout" => row.publish_failed += 1,
-                "pending" => row.publish_pending += 1,
+                "rejected" => row.publish_failed += 1,
+                "pending" | "timeout" => row.publish_pending += 1,
                 "skipped" => row.publish_skipped += 1,
                 _ => {}
             }

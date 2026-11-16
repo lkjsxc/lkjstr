@@ -22,6 +22,7 @@ type Box = {
   drafts: ChannelDraft[];
   busy: Set<ChannelDraft>;
   listeners: Set<Watch>;
+  deliveryWatch?: AbortController;
 };
 // One entry per mounted composer or unsettled send; released when both are gone.
 const boxes = new Map<string, Box>();
@@ -45,7 +46,8 @@ export function createChannelOutbox(
     boxes.set(key, box);
     kv.set(`view:${key}`, { id: box.id, drafts: box.drafts });
   }
-  const { id, drafts, busy, listeners } = box;
+  const currentBox = box;
+  const { id, drafts, busy, listeners } = currentBox;
   const release = (): void => {
     if (!busy.size && !listeners.size && boxes.get(key) === box) boxes.delete(key);
   };
@@ -68,6 +70,8 @@ export function createChannelOutbox(
     el.replaceChildren(
       ...drafts.map((item) => {
         const pending = busy.has(item);
+        const unknown =
+          !pending && item.delivery?.some((r) => r.state === 'timeout' || r.state === 'pending');
         const action = (
           label: 'compose.retry' | 'compose.edit' | 'compose.drop',
           run: () => void,
@@ -79,20 +83,22 @@ export function createChannelOutbox(
           ...(item.draft.media ?? []).map((m) =>
             h('a', { href: m.url, target: '_blank', rel: 'noreferrer' }, m.url),
           ),
-          h(
-            'div',
-            { class: pending ? 'muted' : 'error' },
-            pending
-              ? t('compose.pending')
-              : item.error
-                ? failureText(item.error)
-                : t('compose.retained'),
-          ),
+          unknown
+            ? null
+            : h(
+                'div',
+                { class: pending ? 'muted' : 'error' },
+                pending
+                  ? t('compose.pending')
+                  : item.error
+                    ? failureText(item.error)
+                    : t('compose.retained'),
+              ),
           item.delivery
             ? h(
                 'div',
                 null,
-                t('compose.sending', {
+                t(pending ? 'compose.sending' : 'compose.delivered', {
                   ok: item.delivery.filter((r) => r.state === 'ok').length,
                   all: item.delivery.length,
                 }),
@@ -115,26 +121,40 @@ export function createChannelOutbox(
   async function send(item: ChannelDraft): Promise<void> {
     if (busy.has(item)) return;
     busy.add(item);
-    delivered([], false);
+    currentBox.deliveryWatch?.abort();
+    const watch = (currentBox.deliveryWatch = new AbortController());
+    let final = false;
+    const show: Watch['delivery'] = (...args) => {
+      if (currentBox.deliveryWatch === watch) delivered(...args);
+    };
+    show([], false);
     notify();
     const r = await env.engine.act(
       { a: 'publish', as: item.as, what: { k: 'note', draft: item.draft } },
       {
+        deliverySignal: watch.signal,
         delivery: (relays) => {
+          if (watch.signal.aborted) return;
           item.delivery = relays;
+          show(relays, final);
+          if (final && relays.some((r) => r.state === 'ok')) remove(item);
           notify();
         },
       },
     );
     busy.delete(item);
+    final = true;
     if (r.ok) {
-      delivered(r.delivery ?? [], true);
+      show(r.delivery ?? [], true);
       remove(item);
     } else {
+      item.delivery = r.delivery;
       item.error = r.error;
-      delivered([], true, r.error ?? { code: 'internal' });
+      if (r.delivery?.length) show(r.delivery, true);
+      else show([], true, r.error ?? { code: 'internal' });
       notify();
     }
+    if (!listeners.size) watch.abort();
   }
   const watch = { draw, delivery };
   listeners.add(watch);
@@ -170,6 +190,7 @@ export function createChannelOutbox(
     },
     dispose() {
       listeners.delete(watch);
+      if (!listeners.size && !busy.size) currentBox.deliveryWatch?.abort();
       release();
     },
   };

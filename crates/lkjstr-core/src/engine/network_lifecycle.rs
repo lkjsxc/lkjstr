@@ -42,6 +42,7 @@ impl Network {
     /// Exact copies of retained verified events advance resumption watermarks,
     /// but never earn first-arrival credit in Stats or quality ranking.
     pub fn observe_verified(&mut self, relay: &str, e: &NostrEvent, now: u64) {
+        self.confirm_delivery(relay, &e.id, now);
         for r in self
             .requests
             .values_mut()

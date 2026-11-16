@@ -2,6 +2,7 @@
 // engine cannot see for itself. One client per page; the engine behind it is a Worker (real or mock).
 import { learnPerson, learnRows, onPerson } from '../shared/people.ts';
 import { createSignal, type Signal } from '../shared/signal.ts';
+import { createDeliveryWatches } from './client-delivery.ts';
 import type {
   Account,
   Action,
@@ -19,7 +20,6 @@ import type {
   Timeline,
   ToEngine,
 } from './protocol.ts';
-
 export type Transport = {
   post(msg: ToEngine, transfer?: Transferable[]): void;
   listen(fn: (msg: FromEngine) => void): void;
@@ -33,7 +33,6 @@ export function workerTransport(url: string): Transport {
     close: () => worker.terminate(),
   };
 }
-
 export type SubHandlers = {
   rows(rows: readonly Row[], atTop: boolean, atBottom: boolean): void;
   patch(ops: readonly PatchOp[]): void;
@@ -51,6 +50,7 @@ export type Subscription = {
 };
 export type ActResult = Extract<FromEngine, { t: 'result' }>;
 export type ActWatch = {
+  deliverySignal?: AbortSignal;
   progress?(sent: number, total: number, detail?: Extract<FromEngine, { t: 'progress' }>): void;
   delivery?(relays: readonly Delivery[]): void;
 };
@@ -100,6 +100,7 @@ export function createEngine(transport: Transport): Engine {
         t: 'hint',
         hint: {
           visibleSubs: [...visible],
+          deliveryWatches: deliveries.ids(),
           focusedSub: [...visible].find((id) => owners.get(id)?.closest('.pane.cur')),
           pageHidden: document.visibilityState === 'hidden',
           idle,
@@ -110,6 +111,7 @@ export function createEngine(transport: Transport): Engine {
       });
     });
   };
+  const deliveries = createDeliveryWatches(hint);
   const active = (): void => {
     idle = false;
     hint();
@@ -175,10 +177,11 @@ export function createEngine(transport: Transport): Engine {
     else if (msg.t === 'state') subs.get(msg.sub)?.state?.(msg.state);
     else if (msg.t === 'progress')
       pending.get(msg.req)?.watch?.progress?.(msg.sent, msg.total, msg);
-    else if (msg.t === 'delivery') pending.get(msg.req)?.watch?.delivery?.(msg.relays);
+    else if (msg.t === 'delivery') deliveries.receive(msg);
     else if (msg.t === 'result') {
       pending.get(msg.req)?.done(msg);
       pending.delete(msg.req);
+      deliveries.result(msg);
     } else if (msg.t === 'accounts')
       accounts.set({
         accounts: msg.accounts.map((a) => ({ ...a, author: learnPerson(a.author) })),
@@ -237,6 +240,7 @@ export function createEngine(transport: Transport): Engine {
     },
     act(action, watch) {
       const req = `r${++serial}`;
+      deliveries.add(req, watch);
       return new Promise((done) => {
         const timer =
           action.a === 'upload'
@@ -286,6 +290,7 @@ export function createEngine(transport: Transport): Engine {
       for (const [req, action] of pending)
         action.done({ t: 'result', req, ok: false, error: { code: 'offline' } });
       pending.clear();
+      deliveries.dispose();
       transport.close();
     },
   };

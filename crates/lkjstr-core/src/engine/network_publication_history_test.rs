@@ -15,6 +15,7 @@ fn discovered_routes_preserve_receipts_and_extend_durable_delete_destinations() 
         kind: 1,
         at: 0,
         unresolved_recipients: 0,
+        messages: BTreeMap::new(),
         deliveries: vec![
             destination("wss://accepted.test/", "accepted"),
             destination("wss://skipped.test/", "skipped"),
@@ -50,6 +51,7 @@ fn record(id: usize, deliveries: Vec<Destination>) -> Record {
         at: 0,
         unresolved_recipients: 0,
         deliveries,
+        messages: BTreeMap::new(),
     }
 }
 fn destination(url: &str, state: &str, reason: Option<&str>) -> Destination {
@@ -90,8 +92,8 @@ fn stats_aggregates_shared_urls_states_reasons_and_idle_relays() {
     for (key, count) in [
         ("publishPlanned", 8),
         ("publishAccepted", 2),
-        ("publishPending", 2),
-        ("publishFailed", 4),
+        ("publishPending", 4),
+        ("publishFailed", 2),
         ("publishSkipped", 8),
         ("publishOwnSkipped", 2),
         ("publishInboxSkipped", 4),

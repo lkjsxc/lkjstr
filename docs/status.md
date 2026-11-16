@@ -152,13 +152,14 @@ No top-level message/action is entirely unhandled. Incomplete variants:
   cached lists restored on load; notification relay filters omit kind 3.
 
 Publishing now plans 12 author outboxes plus eight inbox/context routes, retries
-through a deadline and reports success on first acceptance. Missing recipient
-lists are looked up; bounded persisted receipts route deletes after reload.
+through a 30-second wait and resolves the action on first acceptance. Composer
+counts continue updating from late OKs and verified copies on attempted routes;
+unanswered means unknown. One open-socket ids check is allowed after seven seconds.
+Missing recipient lists are looked up; persisted receipts route deletes after reload.
 All saved accounts refresh profile/follow/relay/mute/server records independently
 of cache. Read routes retain page evidence; Stats aggregates publication history
 once. Routing and scheduling lazily share account weights within each plan;
-Authorless routes skip graphs. Two-cover and weighted retention: [outbox.md](outbox.md).
-
+Authorless routes skip graphs; limits: [orchestration.md](orchestration.md), [outbox.md](outbox.md).
 ## Verification
 
 Gate counts and cold-start measurements: engine-package.md, engine-performance.md
@@ -166,7 +167,6 @@ and verification.md. Audit repairs/open gaps: [owner-audit.md](owner-audit.md).
 Browser runs use fresh ports/data, loopback WebSockets and intercepted HTTP only.
 Docker is excluded: its storage is outside this worktree. No commit, deployment,
 production access, CI edit or existing-service restart is performed.
-
 ## One product
 
 web/ is the only interface; lkjstr-engine-worker owns browser effects. The root

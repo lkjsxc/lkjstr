@@ -159,6 +159,7 @@ export const ja: Record<keyof typeof en, string> = {
   'compose.quoting': '{name} のノートを引用：',
   'compose.sending': '送信中… {all}か所のうち{ok}か所に届きました',
   'compose.delivered': '{all}か所のリレーのうち{ok}か所に届きました',
+  'compose.noAnswer': 'まだ返事がありません',
   'settings.search': '設定を検索',
   'settings.reset': '元に戻す',
   'settings.resetHint': '初期値に戻します',

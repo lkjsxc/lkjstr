@@ -27,8 +27,33 @@ Each job has a 30-second deadline. Offline destinations connect with existing
 exponential connection backoff. Pending EVENT frames retry every five seconds;
 reconnect clears the send marker. The first positive OK resolves success once;
 remaining destinations keep attempting and emit delivery updates. A negative OK
-is terminal except rate-limited responses, which remain pending. Deadline expiry
-produces timeouts. Unsolicited OK before sending cannot resolve a publication.
+is terminal except rate-limited responses, which remain pending. The 30-second
+wait is unchanged: measured public OKs needed less than two seconds. Deadline
+expiry means timeout/unknown. Late OKs still correct the record; true duplicate
+OKs are acceptance. Sent evidence survives reconnects independently of retry
+markers. Failed socket sends are removed from the composer list unless an
+earlier send succeeded. Unsolicited OK before sending cannot resolve a publication.
+
+The composer count includes only destinations actually sent an EVENT. The first
+action result does not end its delivery listener. Frontend hint.deliveryWatches
+retains one result per mounted composer (up to 128 per client, 32 clients);
+replacement, unmount after settlement and detach release it. Engine receipts retain the last 32
+publications plus displayed results. They contain no event bodies; every route
+collection is bounded by the publication plan (12 own plus eight context/inbox).
+Recent history retains updated states and bounded refusal messages. Timeout
+receipts remain pending/unknown in aggregate engine counts; Stats columns and
+wording stay unchanged.
+
+A verified copy from an attempted relay also confirms delivery. A timeout gets
+at most one finite ids request, seven to ten seconds after the wait ended, only
+on an already-open socket with a free subscription slot and no cooldown. No new
+connection is opened for confirmation. Already-open sent sockets stay wanted
+through the opportunity/check, at most 15 seconds after waiting. The check closes
+on an event, EOSE, CLOSED,
+five-second expiry, disconnect, deletion or receipt release. An earlier verified
+copy suppresses it. Echoes during the wait are remembered without resolving
+the action before its OK; they confirm an otherwise unanswered result at expiry.
+Unsent or unrelated rebroadcast relays never change the count.
 Channel creation still requires both its creation event and joined-list success.
 
 Limits: 64 simultaneous publications and 64 active transports including the

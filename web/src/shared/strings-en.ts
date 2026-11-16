@@ -157,6 +157,7 @@ export const en = {
   'compose.quoting': 'Quoting {name}:',
   'compose.sending': 'Sending… {ok} of {all} relays have it',
   'compose.delivered': 'Delivered to {ok} of {all} relays',
+  'compose.noAnswer': 'no answer yet',
   'settings.search': 'Search settings',
   'settings.reset': 'Reset',
   'settings.resetHint': 'Back to the default',

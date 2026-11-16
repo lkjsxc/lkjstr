@@ -26,6 +26,7 @@ impl Session {
                 vec![p::Input::GlobalPolicy { enabled }]
             }
             Input::Hint { hint } => {
+                let watches = hint.delivery_watches.clone();
                 self.preview_visible = hint.visible_subs.clone();
                 self.preview_save_data = hint.save_data;
                 self.preview_hidden = hint.page_hidden;
@@ -34,13 +35,19 @@ impl Session {
                 } else {
                     hint.visible_subs.iter().cloned().collect()
                 });
-                vec![p::Input::Hint {
+                let mut inputs = vec![p::Input::Hint {
                     visible_subs: hint.visible_subs,
                     focused_sub: hint.focused_sub,
                     page_hidden: hint.page_hidden,
                     idle: hint.idle,
                     save_data: hint.save_data,
-                }]
+                }];
+                if let Some(reqs) = watches {
+                    inputs.push(p::Input::DeliveryWatch {
+                        reqs: reqs.into_iter().take(128).collect(),
+                    });
+                }
+                inputs
             }
             Input::Open { sub, query } => {
                 if self.queries.len() >= 128 && !self.queries.contains_key(&sub) {
