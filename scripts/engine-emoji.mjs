@@ -36,7 +36,10 @@ const server = createServer(async (req, res) => {
   }
   const file = join(pkg, path);
   if (!file.startsWith(pkg + '/')) return res.writeHead(403).end();
-  try { res.writeHead(200, { 'content-type': extname(file) === '.wasm' ? 'application/wasm' : 'text/javascript' }).end(await readFile(file)); }
+  try {
+    const body = await readFile(file);
+    res.writeHead(200, { 'content-type': extname(file) === '.wasm' ? 'application/wasm' : 'text/javascript' }).end(body);
+  }
   catch { res.writeHead(404).end(); }
 });
 const sockets = new bundle.wsServer({ server });
