@@ -1,4 +1,4 @@
-#![allow(dead_code, clippy::unwrap_used)]
+#![allow(dead_code, clippy::unwrap_used, clippy::panic)]
 use lkjstr_core::engine::{Engine, protocol, wire};
 use lkjstr_nips::{event::UnsignedEvent, keys::SecretKey};
 use lkjstr_protocol::NostrEvent;
