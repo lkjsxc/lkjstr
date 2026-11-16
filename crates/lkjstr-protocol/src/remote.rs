@@ -2,7 +2,10 @@
 use crate::{self as p, NostrEvent, UnsignedNostrEvent};
 use lkjstr_nips::{keys::SecretKey, nip44};
 use serde::{Deserialize, Serialize};
-use serde_json::{Value, json};
+use serde_json::json;
+#[path = "remote_response.rs"]
+mod response;
+pub use response::{AuthUrl, Response};
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Remote {
     pub peer: String,
@@ -93,35 +96,9 @@ impl Remote {
         id: &str,
         private: bool,
     ) -> Option<Result<String, &'static str>> {
-        if event.kind != 24133
-            || event.pubkey != self.peer
-            || !matches!(p::verify_event(event), p::VerificationResult::Ok(_))
-            || !p::tags::tag_values(event, "p").contains(&self.client()?)
-        {
-            return None;
+        match self.classify_response(event, id, private)? {
+            Response::Complete(result) => Some(result),
+            Response::Authenticate(_) => None,
         }
-        let secret = self.secret()?;
-        let peer = p::hex_to_bytes(&self.peer).ok()?.try_into().ok()?;
-        let key = nip44::conversation_key(&secret, &peer).ok()?;
-        let text = nip44::decrypt(&event.content, &key).ok()?;
-        let value: Value = serde_json::from_str(&text).ok()?;
-        if value["id"] != id {
-            return None;
-        }
-        if !value["error"].is_null() {
-            return Some(Err(
-                if private && value["error"].as_str() == Some("unsupported") {
-                    "unsupported"
-                } else {
-                    "signer-refused"
-                },
-            ));
-        }
-        Some(
-            value["result"]
-                .as_str()
-                .map(str::to_owned)
-                .ok_or("signer-refused"),
-        )
     }
 }

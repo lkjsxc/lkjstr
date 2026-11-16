@@ -1,6 +1,7 @@
 //! Pure engine. Explicit time and effect outputs make long-idle failures testable.
 pub mod accounts;
 pub mod bench;
+pub mod bunker;
 mod channel_actions;
 mod channel_create;
 mod channel_pending;
@@ -79,9 +80,8 @@ pub struct Engine {
     pub zaps: zaps::State,
     zap_demand: zap_visible::Demand,
     pending_publications: usize,
-    // At most 64 in-flight two-event creates; removed after both terminal outcomes.
+    // At most 64 creates (both outcomes) and 64 pending owner-list lookups (20s).
     channel_creates: BTreeMap<String, channel_create::Creation>,
-    // At most 64 channel edits awaiting an owner-list lookup; 20-second deadline.
     channel_pending: BTreeMap<String, channel_pending::Pending>,
     pub client_tag: bool,
     pub discovery_paused: bool,
