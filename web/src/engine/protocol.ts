@@ -25,7 +25,8 @@
  * Author.profileId identifies kind 0 for image retry. Draft.mentions holds selected UTF-16 text ranges;
  * the engine validates their labels, expands them to nostr:npub and derives p tags.
  * Also adds cache-wide month counts, window ordinals and month/ordinal anchors for time rails. */
-export const PROTOCOL_VERSION = 5;
+/** 6: private messages, external encryption, encrypted key import/export and session locks. */
+export const PROTOCOL_VERSION = 6;
 
 /** Chosen by the interface, unique among its open subscriptions. */
 export type SubId = string;
@@ -531,6 +532,18 @@ export type RelayEntry = { readonly url: string; readonly read: boolean; readonl
 
 /** Everything the reader can do. Every action acts as `as` and is answered by exactly one `result`. */
 export type Action =
+  | { readonly a: 'dm.send'; readonly as: Pubkey; readonly draft: DmDraft }
+  | { readonly a: 'dm.seen'; readonly as: Pubkey; readonly conversation: string }
+  | { readonly a: 'dm.relays.save'; readonly as: Pubkey; readonly relays: readonly string[] }
+  | { readonly a: 'account.importEncrypted'; readonly key: string; readonly password: string }
+  | { readonly a: 'account.unlock'; readonly pubkey: Pubkey; readonly password: string }
+  | { readonly a: 'account.lock'; readonly pubkey: Pubkey }
+  | {
+      readonly a: 'account.exportEncrypted';
+      readonly pubkey: Pubkey;
+      readonly password: string;
+      readonly logN?: number;
+    }
   | { readonly a: 'publish'; readonly as: Pubkey; readonly what: Publish }
   | { readonly a: 'follow'; readonly as: Pubkey; readonly pubkey: Pubkey; readonly on: boolean }
   /** `on: false` takes a mute back. Either way the `mutes` rows and every open list are patched at once. */
@@ -614,6 +627,8 @@ export type Failure = {
 };
 
 export type Account = {
+  readonly locked?: boolean;
+  readonly encrypted?: boolean;
   readonly author: Author;
   readonly signer: 'local' | 'extension' | 'remote' | 'none';
   /** Notifications that arrived since `seen`. */
@@ -657,6 +672,21 @@ export type EngineConfig = {
 // ───────────────────────────────────────── messages ─────────────────────────────────────────
 
 export type ToEngine =
+  | { readonly t: 'dm.open'; readonly sub: SubId; readonly query: DmQuery }
+  | { readonly t: 'dm.close'; readonly sub: SubId }
+  | { readonly t: 'dm.visible'; readonly sub: SubId; readonly visible: boolean }
+  | { readonly t: 'dm.more'; readonly sub: SubId }
+  | {
+      readonly t: 'crypted';
+      readonly req: ReqId;
+      readonly value?: string;
+      readonly error?:
+        | 'signer-missing'
+        | 'signer-refused'
+        | 'unsupported'
+        | 'rejected'
+        | 'too-large';
+    }
   /** Since version 5. Near, uncovered note ids only, lowest priority; an empty list releases wants. */
   | { readonly t: 'preview'; readonly sub: SubId; readonly ids: readonly string[] }
   // engine-added 2026-11-15: 4
@@ -791,6 +821,15 @@ export type Timeline = {
   readonly older: boolean;
 };
 export type FromEngine =
+  | { readonly t: 'dm'; readonly sub: SubId; readonly snapshot: DmSnapshot }
+  | {
+      readonly t: 'crypt';
+      readonly req: ReqId;
+      readonly pubkey: Pubkey;
+      readonly peer: Pubkey;
+      readonly operation: 'nip44.encrypt' | 'nip44.decrypt' | 'nip04.decrypt';
+      readonly data: string;
+    }
   | { readonly t: 'timeline'; readonly sub: SubId; readonly timeline: Timeline }
   // engine-added 2026-11-15: 4
   | { readonly t: 'stats'; readonly req: ReqId; readonly stats: EngineStats }
@@ -855,6 +894,8 @@ export type FromEngine =
       readonly id?: string;
       /** Of `account.key`: the `nsec1…`. The interface shows it masked, never stores or logs it. */
       readonly key?: string;
+      /** Explicit encrypted backup; never logged or stored by the interface. */
+      readonly encryptedKey?: string;
     }
   /** The account signs with a browser extension (NIP-07 exists only on the main thread): sign this unsigned
    * event (JSON text) and answer with `signed`. */
@@ -867,3 +908,44 @@ export type FromEngine =
       readonly wanted: number;
       readonly offline: boolean;
     };
+
+/** Protocol 6: private data is separate from public rows and never learned by the profile cache. */
+export type DmQuery = {
+  readonly account: Pubkey;
+  readonly conversation?: string;
+  readonly before?: string;
+  readonly limit?: number;
+};
+export type DmDraft = {
+  readonly recipients: readonly Pubkey[];
+  readonly text: string;
+  readonly replyTo?: string;
+  readonly subject?: string;
+};
+export type DmMessage = {
+  readonly id: string;
+  readonly conversation: string;
+  readonly author: Pubkey;
+  readonly participants: readonly Pubkey[];
+  readonly at: Millis;
+  readonly text: string;
+  readonly replyTo: string | null;
+  readonly subject: string | null;
+  readonly legacy: boolean;
+  readonly unread: boolean;
+};
+export type DmConversation = {
+  readonly key: string;
+  readonly participants: readonly Pubkey[];
+  readonly last: DmMessage;
+  readonly unread: number;
+};
+export type DmSnapshot = {
+  readonly account: Pubkey;
+  readonly conversations: readonly DmConversation[];
+  readonly messages: readonly DmMessage[];
+  readonly more: boolean;
+  readonly undecryptable: number;
+  readonly phase: 'loading' | 'cache' | 'live' | 'failed' | 'unsupported';
+  readonly error?: string;
+};

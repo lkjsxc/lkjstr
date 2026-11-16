@@ -31,7 +31,7 @@ const matches = (e, f) =>
     .every(([k, v]) => e.tags.some((t) => t[0] === k.slice(1) && v.includes(t[1])));
 
 export function fakeRelay(options = {}) {
-  const stored = [], published = [], clients = new Map(), searches = [];
+  const stored = [], published = [], clients = new Map(), searches = [], authEvents = [];
   let remote;
   let authRetries = 0, opened = 0;
   let reading = true;
@@ -53,9 +53,11 @@ export function fakeRelay(options = {}) {
     ws.onMessage((raw) => {
       const msg = JSON.parse(String(raw));
       if (msg[0] === 'AUTH') {
+        if(authEvents.length<1000)authEvents.push(msg[1]);
         authenticated = true;
         ws.send(JSON.stringify(['OK', msg[1].id, true, 'authenticated']));
       } else if (msg[0] === 'EVENT') {
+        if(!authenticated){ws.send(JSON.stringify(['OK',msg[1].id,false,'auth-required: authenticate first']));ws.send(JSON.stringify(['AUTH','local smoke challenge']));return;}
         if (published.length < 1000 && !published.some((e) => e.id === msg[1].id)) published.push(msg[1]);
         add(msg[1]);
         ws.send(JSON.stringify(['OK', msg[1].id, true, '']));
@@ -68,7 +70,7 @@ export function fakeRelay(options = {}) {
           ws.send(JSON.stringify(['AUTH', 'local smoke challenge']));
           return;
         }
-        if (authClosed.delete(sub)) authRetries += 1;
+        if (authClosed.size) { authRetries += 1; authClosed.clear(); }
         subs.set(sub, filters);
         if (options.request?.(ws, sub, filters)) return;
         for (const f of filters) if (f.search && searches.length < 1000) searches.push(f.search);
@@ -83,5 +85,5 @@ export function fakeRelay(options = {}) {
       } else if (msg[0] === 'CLOSE') subs.delete(msg[1]);
     });
   }
-  return { route, stored, published, searches, add, connections: () => clients.size, opened: () => opened, authRetries: () => authRetries, setReading: (value) => { reading = value; }, setRemote: (event) => { remote = event; } };
+  return { route, stored, published, searches, authEvents, add, activeFilters:()=>[...clients.values()].flatMap(subs=>[...subs.values()].flat()), connections: () => clients.size, opened: () => opened, authRetries: () => authRetries, setReading: (value) => { reading = value; }, setRemote: (event) => { remote = event; } };
 }

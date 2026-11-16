@@ -98,6 +98,22 @@ export async function continuity({page,send,wait,check,note,signer,lines,origin,
   await send({t:'close',sub:'continuity'});
 }
 
+// Playwright predicates must be synchronous; persistence needs explicit async polling.
+export async function waitForStoredEvent(page,id) {
+  const deadline=Date.now()+15_000;
+  while(Date.now()<deadline){
+    const found=await page.evaluate(async id=>{
+      const db=await new Promise((ok,bad)=>{const r=indexedDB.open('lkjstr-wasm');r.onsuccess=()=>ok(r.result);r.onerror=bad;});
+      try {
+        return await new Promise((ok,bad)=>{const r=db.transaction('events').objectStore('events').get(id);r.onsuccess=()=>ok(!!r.result);r.onerror=bad;});
+      } finally { db.close(); }
+    },id);
+    if(found)return;
+    await page.waitForTimeout(25);
+  }
+  throw new Error('event persistence timed out: '+id);
+}
+
 export async function localDiscovery({page,send,wait,check,start,origin}) {
   const act=async(req,action)=>{
     await send({t:'act',req,action});
@@ -114,10 +130,7 @@ export async function localDiscovery({page,send,wait,check,start,origin}) {
   check('local discovery fixture publishes relay list',saved.ok);
   // Await committed public events, then remove only the test event cache. Account
   // secrets remain inside IndexedDB and are never read back into the harness.
-  await page.waitForFunction(async id=>{
-    const db=await new Promise((ok,bad)=>{const r=indexedDB.open('lkjstr-wasm');r.onsuccess=()=>ok(r.result);r.onerror=bad;});
-    const found=await new Promise((ok,bad)=>{const r=db.transaction('events').objectStore('events').get(id);r.onsuccess=()=>ok(!!r.result);r.onerror=bad;});db.close();return found;
-  },saved.id);
+  await waitForStoredEvent(page,saved.id);
   await page.evaluate(async()=>{
     window.worker.terminate();
     const db=await new Promise((ok,bad)=>{const r=indexedDB.open('lkjstr-wasm');r.onsuccess=()=>ok(r.result);r.onerror=bad;});

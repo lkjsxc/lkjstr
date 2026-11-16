@@ -1,5 +1,7 @@
 //! Stateful test signer. Emits public events only; keys never leave this process.
 use lkjstr_protocol::{EventTemplate, UnsignedNostrEvent, finalize_event, generate_secret_key};
+#[path = "support/crypto.rs"]
+mod crypto;
 use serde_json::json;
 use std::io::{self, BufRead};
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -46,6 +48,23 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     for line in io::stdin().lock().lines() {
         let line = line?;
         let value: serde_json::Value = serde_json::from_str(&line)?;
+        if let Some(request) = value.get("fixtureCrypto") {
+            let owner = request["pubkey"].as_str().ok_or("missing fixture owner")?;
+            let actor = actors.get(owner).unwrap_or(&key);
+            if lkjstr_protocol::public_key_from_secret(actor).map_err(|_| "bad fixture key")?
+                != owner
+            {
+                return Err("unknown fixture owner".into());
+            }
+            let result = crypto::crypt(
+                actor.as_bytes(),
+                request["operation"].as_str().ok_or("missing operation")?,
+                request["peer"].as_str().ok_or("missing peer")?,
+                request["data"].as_str().ok_or("missing data")?,
+            )?;
+            println!("{}", json!({"value": result}));
+            continue;
+        }
         if value["fixtureActor"] == true {
             let actor = generate_secret_key();
             let event = finalize_event(

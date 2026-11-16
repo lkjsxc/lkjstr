@@ -177,6 +177,7 @@ impl Session {
                     id,
                     uploaded: None,
                     key: None,
+                    encrypted_key: None,
                 }]
             }
             p::Output::Status {

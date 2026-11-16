@@ -3,7 +3,12 @@
 import type { Account, Action, Author, Failure } from '../protocol.ts';
 import { byPubkey, byRef, SECOND, SELF } from './people.ts';
 
-type Entry = { readonly author: Author; signer: Account['signer'] };
+type Entry = {
+  readonly author: Author;
+  signer: Account['signer'];
+  encrypted?: boolean;
+  locked?: boolean;
+};
 type Add = Extract<Action, { a: 'account.add' }>;
 const B32 = 'qpzry9x8gf2tvdw0s3jn54khce6mua7l';
 const mix = (seed: string): (() => number) => {
@@ -31,14 +36,29 @@ export function createAccounts() {
   const put = (author: Author, signer: Entry['signer']): null => {
     const had = list.find((a) => a.author.pubkey === author.pubkey);
     // Adding a key that is already here only ever adds an ability: a read-only add does not take a signer away.
-    if (had) had.signer = signer === 'none' ? had.signer : signer;
-    else list.push({ author, signer });
+    if (had && signer !== 'none') {
+      had.signer = signer;
+      had.encrypted = had.locked = undefined;
+    } else if (!had) list.push({ author, signer });
     active = author.pubkey;
     return null;
   };
   return {
     list: (): readonly Entry[] => list,
     active: (): string | undefined => active,
+    vault(pubkey: string): Failure['code'] | null {
+      let entry = list.find((a) => a.author.pubkey === pubkey);
+      if (!entry && list.length >= 32) return 'too-large';
+      if (!entry) {
+        entry = { author: stranger(pubkey), signer: 'local' };
+        list.push(entry);
+      }
+      entry.signer = 'local';
+      entry.encrypted = true;
+      entry.locked = false;
+      active = pubkey;
+      return null;
+    },
     /** A first visit: nobody is signed in. */
     clear(): void {
       list = [];
@@ -73,7 +93,9 @@ export function createAccounts() {
     /** The mock's "secret key": plainly not one, and the same each time it is asked for. */
     key(pubkey: string): string | undefined {
       const a = list.find((x) => x.author.pubkey === pubkey);
-      return a?.signer === 'local' ? `nsec1${chars(mix(`secret ${pubkey}`), 58, B32)}` : undefined;
+      return a?.signer === 'local' && !a.locked
+        ? `nsec1${chars(mix(`secret ${pubkey}`), 58, B32)}`
+        : undefined;
     },
   };
 }

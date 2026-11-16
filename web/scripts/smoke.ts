@@ -5,6 +5,7 @@ import { type ChildProcess, spawn } from 'node:child_process';
 import { appendFileSync, existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { type Browser, chromium, type Page } from 'playwright-core';
+import { PROTOCOL_VERSION } from '../src/engine/protocol.ts';
 import { dayOf } from '../src/shared/format.ts';
 import { KEYS } from '../src/shared/keys.ts';
 import { notesChecks } from './smoke-notes.ts';
@@ -1415,7 +1416,7 @@ async function pages(browser: Browser, still: Record<string, unknown>): Promise<
   fact(
     'about: version, engine, source, licence',
     /lkjstr \d+\.\d+\.\d+/.test(about) &&
-      about.includes('mock, protocol 5') &&
+      about.includes(`mock, protocol ${PROTOCOL_VERSION}`) &&
       (await count(page, `${sv} a[href="https://github.com/lkjsxc/lkjstr"]`)) === 1 &&
       about.includes('Apache License 2.0'),
     about,

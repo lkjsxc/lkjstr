@@ -1,17 +1,9 @@
 //! Dedicated Worker entry. The handle owns every socket, callback and timer.
-use crate::browser::{
-    idb,
-    socket::{Socket, SocketEvent},
-    timer::Timer,
-};
+use crate::browser::{idb, socket::Socket, timer::Timer};
 #[cfg(feature = "harness")]
 use lkjstr_core::engine::protocol::Input;
-use lkjstr_core::engine::{Engine, network::Effect, protocol::Output};
-use std::{
-    cell::RefCell,
-    collections::BTreeMap,
-    rc::{Rc, Weak},
-};
+use lkjstr_core::engine::{Engine, protocol::Output};
+use std::{cell::RefCell, collections::BTreeMap, rc::Rc};
 use wasm_bindgen::{JsCast, closure::Closure, prelude::*};
 #[path = "worker_identity.rs"]
 mod identity;
@@ -30,14 +22,23 @@ mod defaults;
 use defaults::initial_engine;
 #[path = "worker_accounts.rs"]
 mod accounts;
+#[path = "worker_dm.rs"]
+mod direct_messages;
+#[path = "worker_pump.rs"]
+mod effects;
+#[path = "worker_keys.rs"]
+mod keys;
 #[path = "worker_preview.rs"]
 mod previews;
+#[path = "worker_auth.rs"]
+mod relay_auth;
 #[path = "worker_relays.rs"]
 mod relay_config;
 #[path = "worker_sign.rs"]
 mod signing;
 #[path = "worker_upload.rs"]
 mod uploads;
+use effects::pump;
 struct Host {
     preview_probed: bool,
     preview_busy: bool,
@@ -46,6 +47,8 @@ struct Host {
     account_revision: u64,
     upload_tasks: Vec<uploads::Task>,
     upload_inflight: usize,
+    relay_auth_inflight: usize,
+    dm: direct_messages::State,
     server_checks: Vec<(u64, String, String, String, u64)>, // shared four-request bound
     auth_next: u64,
     upload_auth: BTreeMap<(u64, String), (lkjstr_protocol::UnsignedNostrEvent, js_sys::Function)>,
@@ -91,6 +94,8 @@ pub fn start() -> Result<WorkerHandle, JsValue> {
         relay_owner: None,
         upload_tasks: vec![],
         upload_inflight: 0,
+        relay_auth_inflight: 0,
+        dm: Default::default(),
         server_checks: vec![],
         auth_next: 0,
         upload_auth: BTreeMap::new(),
@@ -156,88 +161,6 @@ fn schedule(host: &Rc<RefCell<Host>>) {
     })
     .ok();
     host.borrow_mut().timer = timer;
-}
-fn pump(host: &Rc<RefCell<Host>>) {
-    let (effects, outputs) = {
-        let mut h = host.borrow_mut();
-        (h.engine.network.drain_effects(), h.engine.drain())
-    };
-    for o in outputs {
-        if !signing::process(host, &o) {
-            post(&host.borrow(), &o);
-        }
-    }
-    for effect in effects {
-        match effect {
-            Effect::Inspect(url) => relay_info(host, url),
-            Effect::Connect(url) => {
-                if host.borrow().sockets.contains_key(&url) {
-                    continue;
-                }
-                let weak: Weak<RefCell<Host>> = Rc::downgrade(host);
-                let relay = url.clone();
-                let socket = Socket::connect(&url, move |event| {
-                    if let Some(h) = weak.upgrade() {
-                        {
-                            let mut h = h.borrow_mut();
-                            match event {
-                                SocketEvent::Open => {
-                                    let at = h.time();
-                                    h.engine.network.connected(&relay, at)
-                                }
-                                SocketEvent::Closed(reason) => {
-                                    let at = h.time();
-                                    h.engine.network.disconnected(&relay, at);
-                                    if let Some(r) = h.engine.network.relays.get_mut(&relay) {
-                                        r.last_error = Some(reason.chars().take(512).collect());
-                                    }
-                                }
-                                SocketEvent::Message(text) => {
-                                    let at = h.time();
-                                    if let Some(e) = h.engine.network.message(&relay, &text, at) {
-                                        h.engine.enqueue(relay.clone(), e);
-                                    }
-                                }
-                            }
-                        }
-                        // Effects are drained by the next tick, outside the callback borrow.
-                    }
-                });
-                match socket {
-                    Ok(socket) => {
-                        host.borrow_mut().sockets.insert(url, socket);
-                    }
-                    Err(_) => {
-                        let mut h = host.borrow_mut();
-                        let at = h.time();
-                        h.engine.network.disconnected(&url, at)
-                    }
-                }
-            }
-            Effect::Disconnect(url) => {
-                host.borrow_mut().sockets.remove(&url);
-            }
-            Effect::Send(url, text) => {
-                let sent = host
-                    .borrow()
-                    .sockets
-                    .get(&url)
-                    .is_some_and(|s| s.send(&text));
-                host.borrow_mut()
-                    .engine
-                    .network
-                    .publication_frame_sent(&url, &text, sent);
-            }
-        }
-    }
-    persist(host);
-    identity::identities(host);
-    accounts::pump_accounts(host);
-    accounts::status(host);
-    uploads::pump_uploads(host);
-    uploads::checks::pump(host);
-    shared::expire(host);
-    previews::pump_previews(host);
 }
 #[path = "worker_handle.rs"]
 mod handle;

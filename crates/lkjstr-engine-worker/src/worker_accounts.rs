@@ -1,6 +1,8 @@
 //! Commit account changes before exposing them; serialize mutations across ports.
 use super::*;
 use lkjstr_core::engine::wire::{Output as W, Session, actions::Action as A};
+#[path = "worker_account_mutation.rs"]
+mod mutation;
 pub(super) fn ready(h: &Host, id: u64, shared: bool) {
     h.scope.direct(id, &Session::ready(shared));
     send_accounts(h, id);
@@ -85,7 +87,7 @@ pub(super) fn status(host: &Rc<RefCell<Host>>) {
 fn send_accounts(h: &Host, id: u64) {
     let accounts=h.accounts.entries.iter().map(|a|{
         let author=lkjstr_core::engine::rows::author(&h.engine.store,&a.pubkey);
-        serde_json::json!({"author":lkjstr_core::engine::wire::note::author(&author),"signer":a.signer,"unread":lkjstr_core::engine::wire::unread_count(&h.engine,&a.pubkey)})
+        serde_json::json!({"author":lkjstr_core::engine::wire::note::author(&author),"signer":a.signer,"encrypted":a.encrypted(),"locked":a.locked(),"unread":lkjstr_core::engine::wire::unread_count(&h.engine,&a.pubkey)})
     }).collect();
     h.scope.direct(
         id,
@@ -115,72 +117,19 @@ pub(super) fn pump_accounts(host: &Rc<RefCell<Host>>) {
     let weak = Rc::downgrade(host);
     wasm_bindgen_futures::spawn_local(async move {
         let ((id, req, action), mut next, db, watermark) = task;
-        let refresh = matches!(&action, A::AccountAdd { .. } | A::AccountUse { .. });
-        let result = match action {
-            A::AccountAdd { how, key } => {
-                if how == "key" && key.as_deref().is_some_and(|v| v.starts_with("bunker://")) {
-                    match lkjstr_protocol::remote::Remote::parse(key.as_deref().unwrap_or("")) {
-                        Some((session, token)) => {
-                            let connect = crate::browser::remote::rpc(
-                                &session,
-                                "connect",
-                                vec![session.peer.clone(), token.unwrap_or_default()],
-                            )
-                            .await;
-                            if connect.is_ok() {
-                                match crate::browser::remote::rpc(
-                                    &session,
-                                    "get_public_key",
-                                    vec![],
-                                )
-                                .await
-                                {
-                                    Ok(pubkey) => next.add_remote(pubkey, session),
-                                    Err(code) => Err(code),
-                                }
-                            } else {
-                                Err(connect.err().unwrap_or("signer-refused"))
-                            }
-                        }
-                        None => Err("rejected"),
-                    }
-                } else {
-                    next.add(&how, key.as_deref())
-                }
-            }
-            A::AccountUse { pubkey } => next.use_account(&pubkey),
-            A::AccountRemove { pubkey } => next.remove(&pubkey),
-            A::Seen { account } => {
-                if next.entries.iter().any(|a| a.pubkey == account) {
-                    let (at, ties) = watermark.unwrap_or_default();
-                    next.seen.insert(account.clone(), at);
-                    next.notification_ties.insert(account, ties);
-                    Ok(())
-                } else {
-                    Err("signed-out")
-                }
-            }
-            A::ChannelSeen { account, id } => {
-                if !lkjstr_protocol::is_event_id(&id) {
-                    Err("rejected")
-                } else if next.entries.iter().any(|a| a.pubkey == account) {
-                    let key = format!("channel:{account}:{id}");
-                    if next.seen.len() >= 4096 && !next.seen.contains_key(&key) {
-                        Err("too-large")
-                    } else {
-                        next.seen.insert(key, now());
-                        Ok(())
-                    }
-                } else {
-                    Err("signed-out")
-                }
-            }
-            _ => Err("unsupported"),
-        };
+        let refresh = matches!(
+            &action,
+            A::AccountAdd { .. }
+                | A::AccountUse { .. }
+                | A::AccountImportEncrypted { .. }
+                | A::AccountUnlock { .. }
+        );
+        let result = mutation::apply(action, &mut next, watermark).await;
         let result = match (result, db) {
-            (Ok(()), Some(db)) => match serde_json::to_string(&next) {
+            (Ok(exported), Some(db)) => match serde_json::to_string(&next) {
                 Ok(saved) => idb::kv_put(&db, "engine-accounts", &saved)
                     .await
+                    .map(|_| exported)
                     .map_err(|_| "internal"),
                 Err(_) => Err("internal"),
             },
@@ -194,8 +143,10 @@ pub(super) fn pump_accounts(host: &Rc<RefCell<Host>>) {
                 return;
             }
             match result {
-                Ok(()) => {
+                Ok(exported) => {
                     h.accounts = next;
+                    relay_auth::sync(&mut h);
+                    direct_messages::sync(&mut h);
                     h.engine.seen = h.accounts.seen.clone();
                     h.engine.notification_ties = h.accounts.notification_ties.clone();
                     h.account_revision = u64::MAX;
@@ -218,6 +169,7 @@ pub(super) fn pump_accounts(host: &Rc<RefCell<Host>>) {
                             id: None,
                             uploaded: None,
                             key: None,
+                            encrypted_key: exported,
                         },
                     );
                 }

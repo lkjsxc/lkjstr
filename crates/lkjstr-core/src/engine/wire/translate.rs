@@ -12,7 +12,12 @@ impl Session {
                 self.preview_near(sub, ids);
                 vec![]
             }
-            Input::Stats { .. }
+            Input::DmOpen { .. }
+            | Input::DmClose { .. }
+            | Input::DmVisible { .. }
+            | Input::DmMore { .. }
+            | Input::Crypted { .. }
+            | Input::Stats { .. }
             | Input::RowAtTime { .. }
             | Input::Relays { .. }
             | Input::Heartbeat

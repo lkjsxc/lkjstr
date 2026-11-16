@@ -9,7 +9,7 @@ pub(super) mod checks;
 #[path = "worker_upload_http.rs"]
 mod http;
 #[path = "worker_upload_sign.rs"]
-mod signing;
+pub(in crate::worker) mod signing;
 pub(super) fn clock() -> u64 {
     crate::measure::now() as u64
 }
@@ -42,6 +42,7 @@ pub(super) fn pump_uploads(host: &Rc<RefCell<Host>>) {
                         ok: true,
                         uploaded: Some(uploaded),
                         key: None,
+                        encrypted_key: None,
                         error: None,
                         delivery: None,
                         id: None,

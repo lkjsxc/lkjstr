@@ -5,6 +5,7 @@ export function workerTransport(options = {}) {
   const namespace = `lkjstr-engine-v1:${import.meta.url}`;
   let receive = () => {}, closed = false, port, worker, release, epoch;
   let config, relays = options.relays ? { t: 'relays', relays: options.relays } : undefined, hint;
+  const privateSubs = new Map(); // at most 32 private subscriptions
   const subs = new Map(); // bounded by engine's 128-subscription limit
   let started=false;
   const startup=[]; // at most 64 actions before the first ready
@@ -18,6 +19,7 @@ export function workerTransport(options = {}) {
       state.seekPending = state.window?.anchor?.month !== undefined;
       if (state.window && !state.seekPending) send(state.window);
     }
+    for (const state of privateSubs.values()) { send(state.open); if (state.visible) send(state.visible); }
     if (hint) send(hint);
   };
   const reconnect = () => {
@@ -155,12 +157,15 @@ export function workerTransport(options = {}) {
     channel?.close();
     worker?.terminate?.();
     release?.();
-    subs.clear(); pending.clear(); startup.length=0;
+    privateSubs.clear(); subs.clear(); pending.clear(); startup.length=0;
   };
   addEventListener('pagehide', close, { once: true });
   return {
     post(msg, transfer=[]) {
       if (closed) return;
+      if (msg.t === 'dm.open' && (privateSubs.has(msg.sub)||privateSubs.size<32)) privateSubs.set(msg.sub,{open:msg});
+      if (msg.t === 'dm.visible' && privateSubs.has(msg.sub)) privateSubs.get(msg.sub).visible=msg;
+      if (msg.t === 'dm.close') privateSubs.delete(msg.sub);
       if (msg.t === 'configure') config = msg;
       if (msg.t === 'relays') relays = msg;
       if (msg.t === 'hint') hint = msg;

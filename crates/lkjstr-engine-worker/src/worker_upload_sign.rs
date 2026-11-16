@@ -2,7 +2,7 @@
 use super::*;
 use lkjstr_core::engine::wire::Output as W;
 use lkjstr_protocol::UnsignedNostrEvent;
-pub(super) async fn sign(
+pub(in crate::worker) async fn sign(
     host: &Rc<RefCell<Host>>,
     id: u64,
     deadline: Deadline,
@@ -29,10 +29,12 @@ pub(super) async fn sign(
         return Ok(event);
     }
     let ms = deadline.wait(clock(), 60_000)?;
+    // Old extension answers can cross Worker replacement; counters alone can repeat.
+    let nonce = crate::browser::random_bytes::<16>()?;
     let req = {
         let mut h = host.borrow_mut();
-        h.auth_next += 1;
-        format!("upload-auth-{}", h.auth_next)
+        h.auth_next = h.auth_next.checked_add(1).ok_or("internal")?;
+        format!("upload-auth-{}-{}", h.auth_next, lkjstr_nips::hex(&nonce))
     };
     let promise = js_sys::Promise::new(&mut |resolve, _| {
         let mut h = host.borrow_mut();

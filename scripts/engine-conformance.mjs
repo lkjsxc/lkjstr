@@ -1,12 +1,16 @@
+import { relayAuth } from './engine-relay-auth.mjs';
+import { directMessages } from './engine-dm.mjs';
+import { vault } from './engine-vault.mjs';
 import { channels } from './engine-channels.mjs';
 // Runs within the real Worker harness; all fixture keys stay in the native signer.
 import { validateReplies, actionKinds, sourceKinds, assertCoverage, mockActionKinds } from './engine-contract.mjs';
-export async function conformance({page,send,wait,check,note,signer,lines,origin,bunkerKey,bunker,fake,channelFake}) {
+export async function conformance({page,send,wait,check,note,signer,lines,origin,bunkerKey,bunker,fake,channelFake,authFake}) {
   const messages = () => page.evaluate(() => window.messages);
   const result = async (req) => {
     await wait((r) => window.messages.some((m) => m.t === 'result' && m.req === r), req);
     return (await messages()).find((m) => m.t === 'result' && m.req === req);
   };
+  const authenticate = (account,mode)=>relayAuth({page,send,wait,check,origin,account,signer,lines,authFake,mode,act});
   const kinds = new Set();
   let serial=0;
   async function act(action, signing = false) {
@@ -27,6 +31,7 @@ export async function conformance({page,send,wait,check,note,signer,lines,origin
     }
     return result(req);
   }
+  await authenticate(note.pubkey,'extension');
   await send({t:'configure',config:{language:'en',heuristics:true,prefetch:false}});
   await send({t:'relays',relays:[{url:origin.replace('http:','ws:'),read:true,write:true,search:true}]});
   for (const source of sourceKinds) {
@@ -60,9 +65,10 @@ export async function conformance({page,send,wait,check,note,signer,lines,origin
   check('disabled client tag is absent',!JSON.parse((await messages()).filter(m=>m.t==='sign').at(-1).event).tags.some(t=>t[0]==='client'));
   await send({t:'configure',config:{language:'en',heuristics:true,prefetch:false}});
   const req='upload-contract'; kinds.add('upload');
+  const uploadHandled=(await messages()).filter(m=>m.t==='sign').map(m=>m.req);
   await page.evaluate(({req,key})=>window.worker.postMessage({t:'act',req,action:{a:'upload',as:key,name:'fixture.png',mime:'image/png',bytes:new Uint8Array([1,2,3,4]).buffer}}),{req,key:note.pubkey});
-  await wait(()=>window.messages.some((m)=>m.t==='sign'&&m.req.startsWith('upload-auth-')));
-  const uploadSign=(await messages()).find((m)=>m.t==='sign'&&m.req.startsWith('upload-auth-'));
+  await wait(used=>window.messages.some(m=>m.t==='sign'&&m.req.startsWith('upload-auth-')&&!used.includes(m.req)),uploadHandled);
+  const uploadSign=(await messages()).find(m=>m.t==='sign'&&m.req.startsWith('upload-auth-')&&!uploadHandled.includes(m.req));
   check('Blossom auth is kind 24242 with upload hash and expiration',JSON.parse(uploadSign.event).kind===24242&&['t','x','expiration'].every(k=>JSON.parse(uploadSign.event).tags.some(t=>t[0]===k)));
   signer.stdin.write(`${uploadSign.event}\n`);const signed=JSON.parse((await lines.next()).value);
   await send({t:'signed',req:uploadSign.req,event:JSON.stringify(signed)});
@@ -91,6 +97,7 @@ export async function conformance({page,send,wait,check,note,signer,lines,origin
   check('account switching commits',(await act({a:'account.use',pubkey:local})).ok);
   check('seen commits a read watermark',(await act({a:'seen',as:local})).ok);
   check('local signing needs no main-thread signer',(await act({a:'publish',as:local,what:{k:'note',draft:{text:'local signing fixture'}}})).ok);
+  await authenticate(local,'local');
   check('account removal commits',(await act({a:'account.remove',pubkey:local})).ok);
   check('bad account import rejects',(await act({a:'account.add',how:'key',key:'not-a-key'})).error?.code==='rejected');
   const remoteRelay=`${origin.replace('http:','ws:')}/remote-owner`;
@@ -104,8 +111,11 @@ export async function conformance({page,send,wait,check,note,signer,lines,origin
   check('NIP-46 sign-in discovers owner relay list from bootstrap',true);
   await send({t:'close',sub:'remote-relays'});
   check('remote signing validates and publishes',(await act({a:'publish',as:bunkerKey,what:{k:'note',draft:{text:'remote fixture'}}})).ok);
+  await authenticate(bunkerKey,'remote');
   check('remote account removal commits',(await act({a:'account.remove',pubkey:bunkerKey})).ok);
   await channels({page,send,wait,check,note,signer,lines,fake:channelFake,origin,act,kinds,bunker});
+  await directMessages({page,send,wait,check,note,signer,lines,origin,bunker,fake,act,kinds});
+  await vault({page,send,wait,check,act,kinds,origin});
   assertCoverage(kinds,actionKinds,'action');
   assertCoverage(kinds,mockActionKinds,'mock action');
   validateReplies(await messages());

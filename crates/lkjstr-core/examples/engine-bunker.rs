@@ -1,6 +1,8 @@
 //! Loopback NIP-46 fixture signer. Outputs public keys and encrypted events only.
 use lkjstr_nips::{keys::SecretKey, nip44};
 use lkjstr_protocol as p;
+#[path = "support/crypto.rs"]
+mod crypto;
 use serde_json::{Value, json};
 use std::io::{self, BufRead};
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -37,6 +39,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let result = match Some(method) {
             Some("connect") => "ack".to_owned(),
             Some("get_public_key") => key.public_key(),
+            Some("nip44_encrypt" | "nip44_decrypt" | "nip04_decrypt") => crypto::crypt(
+                secret.as_bytes(),
+                method,
+                request["params"][0].as_str().ok_or("missing peer")?,
+                request["params"][1].as_str().ok_or("missing data")?,
+            )?,
             Some("sign_event") => {
                 let unsigned: p::UnsignedNostrEvent =
                     serde_json::from_str(request["params"][0].as_str().ok_or("missing event")?)?;

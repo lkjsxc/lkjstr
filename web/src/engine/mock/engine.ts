@@ -1,34 +1,16 @@
-import type { EngineConfig, FromEngine } from '../protocol.ts';
-import {
-  type Account,
-  type PatchOp,
-  PROTOCOL_VERSION,
-  type Query,
-  type ToEngine,
-} from '../protocol.ts';
+import type { EngineConfig, FromEngine, PatchOp } from '../protocol.ts';
+import { type Account, PROTOCOL_VERSION, type Query, type ToEngine } from '../protocol.ts';
 import { createAccounts } from './accounts.ts';
 import { createActions } from './actions.ts';
-import { type Entry, entry, matches, select } from './query.ts';
+import { createPrivateMock } from './dm.ts';
+import { entry, matches, select } from './query.ts';
 import { relays } from './relays.ts';
 import { mockStats } from './stats.ts';
+import type { Sub } from './subscription.ts';
 import { sendTimelines, timeKey } from './timeline.ts';
 import { createWorld, type MNote } from './world.ts';
 
 const PATCH_MS = 80;
-type Sub = {
-  readonly id: string;
-  readonly query: Query;
-  entries: Entry[];
-  start: number;
-  end: number;
-  live: boolean;
-  windowed: boolean;
-  fresh: number;
-  ops: PatchOp[];
-  timeline?: string;
-  anchor?: string;
-  returnKey?: string;
-};
 export type MockEngine = { handle(msg: ToEngine): void; dispose(): void };
 export type Core = ReturnType<typeof createCore>;
 function createCore(post: (msg: FromEngine) => void, now: () => number) {
@@ -162,6 +144,7 @@ export function createMockEngine(post: (msg: FromEngine) => void, now = Date.now
   const core = createCore(post, now);
   const { world, subs, later } = core;
   const act = createActions(core);
+  const dm = createPrivateMock(core);
   let config: EngineConfig = { language: 'en', heuristics: true, prefetch: true };
   let liveTimer: ReturnType<typeof setInterval> | undefined;
   let started = false;
@@ -181,6 +164,7 @@ export function createMockEngine(post: (msg: FromEngine) => void, now = Date.now
   later(40, start);
   return {
     handle(msg) {
+      if (dm.handle(msg)) return;
       if (msg.t === 'stats') post({ t: 'stats', req: msg.req, stats: mockStats(core) });
       else if (msg.t === 'rowAtTime') {
         const row = subs
@@ -290,6 +274,7 @@ export function createMockEngine(post: (msg: FromEngine) => void, now = Date.now
       } else if (msg.t === 'act') act.run(msg.req, msg.action);
     },
     dispose() {
+      dm.dispose();
       clearInterval(liveTimer);
       core.dispose();
     },

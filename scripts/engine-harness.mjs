@@ -54,7 +54,7 @@ const historyRelay=fakeRelay({request(ws,sub,filters){
   }
   ws.send(JSON.stringify(['EOSE',sub]));return true;
 }});
-const fake = fakeRelay(), errors = [], checks = {};
+const fake = fakeRelay(), authFake = fakeRelay({requireAuth:true}), errors = [], checks = {};
 const channelRequests=[];
 const channelFake=fakeRelay({request(ws,sub,filters){
   for(const f of filters){
@@ -68,7 +68,7 @@ channelFake.requests=channelRequests;
 const bunker=await fakeBunker();
 const bunkerKey=bunker.pubkey;
 const wsServer=new bundle.wsServer({server});
-wsServer.on('connection',(ws,req)=>{if(req.url==='/bunker'){return bunker.route(ws);}const target=req.url==='/continuity'?historyRelay:req.url==='/channels'?channelFake:fake;target.route({send:(text)=>{if(req.url==='/channels'&&JSON.parse(text)[0]==='OK')setTimeout(()=>{if(ws.readyState===1)ws.send(text);},250);else ws.send(text);},onMessage:(fn)=>ws.on('message',fn),onClose:(fn)=>ws.on('close',fn)});});
+wsServer.on('connection',(ws,req)=>{if(req.url==='/bunker'){return bunker.route(ws);}const target=req.url.startsWith('/auth-')?authFake:req.url==='/continuity'?historyRelay:req.url==='/channels'?channelFake:fake;target.route({send:(text)=>{if(req.url==='/channels'&&JSON.parse(text)[0]==='OK')setTimeout(()=>{if(ws.readyState===1)ws.send(text);},250);else ws.send(text);},onMessage:(fn)=>ws.on('message',fn),onClose:(fn)=>ws.on('close',fn)});});
 await context.route('**/*', (r) => {
   if(r.request().url().startsWith('https://nip96.engine.test/')) {
     if(r.request().url().endsWith('/upload'))return r.fulfill({status:404,body:''});
@@ -172,12 +172,12 @@ try {
   check('NIP-07 bridge verifies and publishes with per-relay delivery',result.ok&&result.delivery[0]?.state==='ok'&&fake.published.some((e)=>e.id===signed.id));
   fake.setReading(true);
   await ownerRelays({page,send,wait,check,note,signer,lines,fake,origin});
-  await conformance({page,send,wait,check,note,signer,lines,origin,bunkerKey,bunker,fake,channelFake});
+  await conformance({page,send,wait,check,note,signer,lines,origin,bunkerKey,bunker,fake,channelFake,authFake});
   await uploadReview({page,send,wait,check,note,signer,lines});
   await rich({page,send,wait,check,note,signer,lines,fake});
   await timeRail({page,send,wait,check,note,signer,lines,fake});
   validateReplies(await page.evaluate(()=>window.messages));
-  check('protocol 5 replies satisfy the frontend contract',true);
+  check('protocol 6 replies satisfy the frontend contract',true);
   await localDiscovery({page,send,wait,check,start,origin});
   const isolated=await browser.newContext();
   await isolated.route('**/*',r=>r.request().url().startsWith(origin)?r.continue():r.abort());

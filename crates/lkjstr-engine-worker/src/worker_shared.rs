@@ -78,6 +78,8 @@ pub fn start_shared() -> Result<SharedWorkerHandle, JsValue> {
         relay_owner: None,
         upload_tasks: vec![],
         upload_inflight: 0,
+        relay_auth_inflight: 0,
+        dm: Default::default(),
         server_checks: vec![],
         auth_next: 0,
         upload_auth: BTreeMap::new(),

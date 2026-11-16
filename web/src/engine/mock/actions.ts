@@ -16,6 +16,7 @@ import type { Core } from './engine.ts';
 import { FILLER } from './fixtures-notes.ts';
 import { byHandle, byPubkey, SELF } from './people.ts';
 import { answers, isKnown, relayUrl } from './relays.ts';
+import { vaultAct } from './vault.ts';
 
 /** How the mock's write relays answer a publish: two at once, one slowly, one with a refusal. */
 const RELAYS: readonly (readonly [
@@ -84,7 +85,10 @@ export function createActions(core: Core) {
   function run(req: string, a: Action): void {
     const me = core.me();
     if (!a.a.startsWith('account.') && !me) return fail(req, 'signed-out');
-    const signer = core.who.list().find((x) => x.author.pubkey === me)?.signer;
+    const account = core.who.list().find((x) => x.author.pubkey === me);
+    const signer = account?.signer;
+    if (!a.a.startsWith('account.') && a.a !== 'seen' && account?.locked)
+      return fail(req, 'signer-missing');
     if (!a.a.startsWith('account.') && a.a !== 'seen' && signer === 'none')
       return fail(req, 'read-only');
     switch (a.a) {
@@ -220,6 +224,16 @@ export function createActions(core: Core) {
         core.setUnread(0);
         core.accounts();
         return done(req);
+      case 'account.importEncrypted':
+      case 'account.unlock':
+      case 'account.lock':
+      case 'account.exportEncrypted':
+        return vaultAct(
+          core,
+          a,
+          (extra) => done(req, extra),
+          (code) => fail(req, code),
+        );
       case 'account.use':
         return signedIn(req, core.who.use(a.pubkey));
       case 'account.remove':
@@ -231,6 +245,8 @@ export function createActions(core: Core) {
           signedIn(req, core.who.add(a)),
         );
       case 'account.key': {
+        if (core.who.list().find((x) => x.author.pubkey === a.pubkey)?.locked)
+          return fail(req, 'signer-missing');
         const key = core.who.key(a.pubkey);
         return key ? done(req, { key }) : fail(req, 'unsupported');
       }

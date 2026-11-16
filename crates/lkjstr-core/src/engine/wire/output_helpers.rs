@@ -29,6 +29,7 @@ impl Session {
             id: None,
             uploaded: None,
             key: None,
+            encrypted_key: None,
         }
     }
     pub(super) fn rows(

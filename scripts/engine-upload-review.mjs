@@ -5,14 +5,15 @@ export async function uploadReview({ page, send, wait, check, note, signer, line
   const bytes = [1, 2, 3, 4];
   const hash = createHash('sha256').update(Buffer.from(bytes)).digest('hex');
   const requests = [], held = [], used = new Set();
+  const messageStart = await page.evaluate(() => window.messages.length);
   let mode = 'ok', serial = 0;
-  const all = () => page.evaluate(() => window.messages);
+  const all = () => page.evaluate(start => window.messages.slice(start), messageStart);
   const result = async (req) => {
     await wait(r => window.messages.some(m => m.t === 'result' && m.req === r), req);
     return (await all()).find(m => m.t === 'result' && m.req === req);
   };
   const nextSign = async () => {
-    await wait(used => window.messages.some(m => m.t === 'sign' && m.req.startsWith('upload-auth-') && !used.includes(m.req)), [...used]);
+    await wait(({used,start}) => window.messages.slice(start).some(m => m.t === 'sign' && m.req.startsWith('upload-auth-') && !used.includes(m.req)), {used:[...used],start:messageStart});
     const request = (await all()).find(m => m.t === 'sign' && m.req.startsWith('upload-auth-') && !used.has(m.req));
     used.add(request.req);
     return request;

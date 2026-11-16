@@ -36,6 +36,12 @@ impl Host {
             }
             return;
         }
+        let Some(input) = keys::receive(self, id, input) else {
+            return;
+        };
+        if direct_messages::input(self, id, &input) {
+            return;
+        }
         if let W::Configure { config } = &input {
             self.engine.client_tag = config.client_tag.unwrap_or(true);
         }
@@ -103,25 +109,6 @@ impl Host {
                     server,
                 });
                 self.upload_inflight += 1;
-                return;
-            }
-            W::Act {
-                req,
-                action: A::AccountKey { pubkey },
-            } => {
-                let result = match self.accounts.backup_key(&pubkey) {
-                    Ok(key) => O::Result {
-                        req,
-                        ok: true,
-                        error: None,
-                        delivery: None,
-                        id: None,
-                        uploaded: None,
-                        key: Some(key),
-                    },
-                    Err(code) => Session::failure(req, code),
-                };
-                self.scope.direct(id, &result);
                 return;
             }
             W::Act {

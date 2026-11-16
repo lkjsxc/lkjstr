@@ -2,6 +2,24 @@ use serde::Deserialize;
 #[derive(Deserialize)]
 #[serde(tag = "a", rename_all = "camelCase")]
 pub enum Action {
+    #[serde(rename = "dm.send")]
+    DmSend {
+        #[serde(rename = "as")]
+        account: String,
+        draft: crate::engine::dm::Draft,
+    },
+    #[serde(rename = "dm.seen")]
+    DmSeen {
+        #[serde(rename = "as")]
+        account: String,
+        conversation: String,
+    },
+    #[serde(rename = "dm.relays.save")]
+    DmRelaysSave {
+        #[serde(rename = "as")]
+        account: String,
+        relays: Vec<String>,
+    },
     Publish {
         #[serde(rename = "as")]
         account: String,
@@ -71,6 +89,25 @@ pub enum Action {
     },
     #[serde(rename = "account.add")]
     AccountAdd { how: String, key: Option<String> },
+    #[serde(rename = "account.importEncrypted")]
+    AccountImportEncrypted {
+        key: String,
+        password: crate::engine::accounts::secret::SecretText,
+    },
+    #[serde(rename = "account.unlock")]
+    AccountUnlock {
+        pubkey: String,
+        password: crate::engine::accounts::secret::SecretText,
+    },
+    #[serde(rename = "account.lock")]
+    AccountLock { pubkey: String },
+    #[serde(rename = "account.exportEncrypted")]
+    AccountExportEncrypted {
+        pubkey: String,
+        password: crate::engine::accounts::secret::SecretText,
+        #[serde(rename = "logN")]
+        log_n: Option<u8>,
+    },
     #[serde(rename = "account.key")]
     AccountKey { pubkey: String },
     #[serde(rename = "account.use")]

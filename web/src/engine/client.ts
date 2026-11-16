@@ -1,8 +1,11 @@
 // The interface's side of the protocol: subscriptions with their handlers, actions as promises, and the hints the
 // engine cannot see for itself. One client per page; the engine behind it is a Worker (real or mock).
+
 import { learnPerson, learnRows, onPerson } from '../shared/people.ts';
 import { createSignal, type Signal } from '../shared/signal.ts';
+import { answerCrypt, answerPublicKey } from './client-crypto.ts';
 import { createDeliveryWatches } from './client-delivery.ts';
+import { createDmClient } from './client-dm.ts';
 import type {
   Account,
   Action,
@@ -56,6 +59,7 @@ export type ActWatch = {
 };
 export type Accounts = { readonly accounts: readonly Account[]; readonly active?: Pubkey };
 export type Engine = {
+  readonly dm?: ReturnType<typeof createDmClient>;
   readonly accounts: Signal<Accounts>;
   readonly status: Signal<{ connected: number; wanted: number; offline: boolean }>;
   /** Which engine answered (`null` until it is ready). */
@@ -75,6 +79,7 @@ const IDLE_MS = 180_000;
 const STATS_MS = 4000;
 
 export function createEngine(transport: Transport): Engine {
+  const dm = createDmClient(transport);
   const subs = new Map<string, SubHandlers>(); // bound: open subscriptions (one per mounted list)
   const pending = new Map<string, { done(r: ActResult): void; watch?: ActWatch }>(); // bound: actions in flight
   const owners = new Map<string, HTMLElement>(); // bound: open subscriptions
@@ -135,17 +140,6 @@ export function createEngine(transport: Transport): Engine {
     }
   };
 
-  /** The real engine's transport answers this itself; the mock asks through here. */
-  const publicKey = async (req: string): Promise<void> => {
-    const ext = (window as { nostr?: Nip07 }).nostr;
-    if (!ext?.getPublicKey) return transport.post({ t: 'publicKey', req, error: 'signer-missing' });
-    try {
-      transport.post({ t: 'publicKey', req, pubkey: String(await ext.getPublicKey()) });
-    } catch {
-      transport.post({ t: 'publicKey', req, error: 'signer-refused' });
-    }
-  };
-
   const offPeople = onPerson((author) => {
     const value = accounts.get();
     if (
@@ -191,11 +185,14 @@ export function createEngine(transport: Transport): Engine {
       status.set({ connected: msg.connected, wanted: msg.wanted, offline: msg.offline });
     else if (msg.t === 'ready') info.set({ engine: msg.engine, version: msg.version });
     else if (msg.t === 'stats') asked.get(msg.req)?.(msg.stats);
+    else if (msg.t === 'dm') dm.receive(msg);
+    else if (msg.t === 'crypt') void answerCrypt(msg, (m) => transport.post(m));
     else if (msg.t === 'sign') void sign(msg);
-    else if (msg.t === 'getPublicKey') void publicKey(msg.req);
+    else if (msg.t === 'getPublicKey') void answerPublicKey(msg.req, (m) => transport.post(m));
   });
 
   return {
+    dm,
     accounts,
     status,
     info,
@@ -287,6 +284,7 @@ export function createEngine(transport: Transport): Engine {
       window.removeEventListener('keydown', active, true);
       clearTimeout(idleTimer);
       offPeople();
+      dm.dispose();
       for (const [req, action] of pending)
         action.done({ t: 'result', req, ok: false, error: { code: 'offline' } });
       pending.clear();

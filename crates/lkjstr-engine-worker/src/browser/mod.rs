@@ -6,4 +6,6 @@ pub mod promise;
 pub mod socket;
 pub mod timer;
 
+mod random;
 pub mod remote;
+pub use random::random_bytes;
