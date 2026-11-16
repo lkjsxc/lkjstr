@@ -114,6 +114,9 @@ batches. Followers, thread descendants, bookmarks and joined channels page full
 replies; settings collects finite pages beyond 500 before replacing a snapshot.
 Muted windows refill themselves; only visible rows request references/counts.
 Unavailable references distinguish a failed lookup from a completed absence.
+Named-list queries and profile hydration include cached private members only
+when the query names the signed list owner; other readers keep public tags.
+The reproduced isolation fix is documented in [private-list-scope.md](private-list-scope.md).
 
 Windows retain keys and reading anchors. Ordinary sides cap at 800 rows;
 retainAbove caps at 6000. Time rails and ordinal seeks describe retained cache
@@ -158,9 +161,8 @@ failure stays unknown. See [media-uploads.md](media-uploads.md).
 These are concrete runtime limits, not permission to fake a successful answer.
 
 - Private lists: local NIP-44 works; external signers and historical NIP-04
-  remain incomplete. Named-list queries can merge another saved account's
-  private tags; no named-list surface exists. Public edits preserve ciphertext;
-  encrypted private editing is unavailable.
+  remain incomplete. Public edits preserve ciphertext; private editing is
+  unavailable. Named-list private projection and hydration are owner-scoped.
 - Emoji: own kind-10030 entries work; referenced kind-30030 sets are not fetched.
 - Search: matching people are not placed ahead of notes; multi-language arrays
   use the first language. Bounded verified NIP-05 from-query lookup exists.
@@ -181,11 +183,10 @@ Required gates are the root repo/native/WASM/verify commands and web check,
 build and smoke. Protocol conformance adds DM, vault and AUTH cases to the real
 Worker harness; native cases cover pure decisions and failure races. Public
 measurements retain UTC date, host load, selected relays and limitations.
-The first shipped tree passed all required gates and 287 real Worker checks.
-Dates, load and concrete scope are in [engine-stream-verification.md](engine-stream-verification.md).
-Current UI evidence, including 34 focused key tests, the 468-state matrix and
-fresh real key/message flows, is in [interface-verification.md](interface-verification.md).
-The specification index marks these items built, with the recorded K2 differences.
+Shipped `541e4a1e` passed all required gates and 545 real interface checks.
+[interface-verification.md](interface-verification.md) records dates, load,
+the 468-state matrix and K2 differences. The new public hour is still running.
+The private-list scope follow-up has its own focused and integration evidence.
 
 The owner's 2026-11-16 delegation authorizes rebased pushes and the prescribed
 ship script. Tests use fresh ports and fixture data, clean their processes and

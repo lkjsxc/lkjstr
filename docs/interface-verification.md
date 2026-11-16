@@ -109,7 +109,15 @@ expectation passed 8/8 focused checks at 11:28:53 in 60.902 s, load 2.10/1.95/2.
 the actual deadline was 60.009 s, with no publications or page errors.
 All 34 production asset hashes remained identical. Draft, Retry and reload
 recovery passed; this focused correction is not a second full-UI run.
-See `tmp/smoke-real-hang-sign-{before,after}/`; shipping repeats the full UI gate.
+See `tmp/smoke-real-hang-sign-{before,after}/`. The corrected full UI gate then
+passed all 545 checks with zero page errors during shipping, completing at
+12:10:37 UTC. The entire ship took 551.593 s including builds/deployment/checks,
+not just UI execution. `tmp/third-ship-evidence/` in the canonical worktree keeps
+the report, archive hash and served-page verification. Main was already pushed;
+the redundant final push failed authentication and its misleading desk label
+was corrected after independently verifying the remote ref.
+Public HTTPS timed out from this workspace at 12:27:50 UTC; a separate fetch
+also failed. External reachability is unconfirmed; host edge/index checks passed.
 
 ## Reproduced defects and focused proofs
 
@@ -186,7 +194,7 @@ Public relays are never used by these key/message tests, and no payment occurs.
 
 Private body models, mounted rows, conversations, failed sends, draft bytes,
 signer calls and editors are bounded as documented in their owning modules.
-The previous public hour predates this integration. A new read-only hour is
-required after this third landing, with current helpers and frozen build bytes.
+The third read-only hour started at 12:13:43 UTC on shipped `541e4a1e`, with
+fresh helpers and frozen build bytes; its full hour and fault phases are ongoing.
 Firefox, Safari, physical laptop sleep and browser-process crashes remain
 unmeasured; mock captures and loopback tests do not establish those behaviors.

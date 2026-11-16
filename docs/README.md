@@ -56,6 +56,7 @@ Engine (`crates/`):
 - [Encrypted private drafts and failed sends](dm-drafts.md)
 - [Private editor coordination before locking](dm-editor-locks.md)
 - [Private signer lifetime and failure bounds](dm-signers.md)
+- [Private list query ownership and hydration](private-list-scope.md)
 - [Specified private-message interface wiring](frontend-dm.md)
 - [Encrypted local keys and session access](keys.md)
 - [Engine capabilities awaiting interface specifications](interface-needs.md)

@@ -28,8 +28,8 @@ Evidence prefixes: `E/` = `crates/lkjstr-core/src/engine/`,
 1. Repeat the read-only public hour on the new build after this third landing.
    Verify route recovery and missed-note coverage after the measured fixes;
    extend weak notification/thread controls and separate observer memory.
-2. Scope named-list private projection to its query account, then complete
-   external/older private-list decryption, trusted zap receipts and LNURL invoices.
+2. Complete private-list decryption for external signers and older ciphertext;
+   then trusted zap provider/receipt validation and the LNURL invoice flow.
 3. Finish existing controls: referenced emoji sets, people/language search,
    bunker authorization challenges and measured upload progress. Upload
    cancellation and relay AUTH are already implemented.
@@ -81,7 +81,7 @@ Evidence prefixes: `E/` = `crates/lkjstr-core/src/engine/`,
 | Public mute people/words/tags/threads | done | Existing settings and note actions, with feed/notification hiding; E/settings.rs, V/settings-lists.ts, V/note-actions.ts. |
 | Encrypted private list reading | partial | Local-key NIP-44 entries work; extension/bunker decrypt and historical NIP-04 do not; E/accounts.rs, N/list_crypto.rs. |
 | Encrypted private list edits | missing | Public edits preserve ciphertext; removing private entries is refused. No encrypt/edit flow for any signer. |
-| People/follow-set reading | partial | `open source:list` projects members, but cached private tags are not constrained to the query account. No list tile exists; E/wire/sources.rs, E/wire/query_translate.rs. |
+| People/follow-set reading | engine ready, no surface | `open source:list` projects public members and owner-scoped private entries; hydration follows the same boundary. No list tile exists; E/wire/sources.rs, E/hydration.rs, docs/private-list-scope.md. |
 | People-set creation/edit and feed subscription | missing | No list-edit action or dedicated saved-set feed workflow. |
 | User status and external identity proofs | missing | NIP-38/39 have no runtime projection or action. |
 
