@@ -1,10 +1,11 @@
 // Real loopback TLS/CORS fixture. Nothing is proxied to public media hosts.
 import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
-import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm } from 'node:fs/promises';
 import { createServer } from 'node:https';
 import { resolve } from 'node:path';
 export async function fakeMedia() {
+  await mkdir(resolve('tmp/temp'), { recursive: true });
   const dir = await mkdtemp(resolve('tmp/temp/media-'));
   const servers = [];
   const close = async () => {
