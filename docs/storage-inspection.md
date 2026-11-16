@@ -3,8 +3,8 @@
 ## Purpose
 
 Protocol 12 adds finite, read-only storage observations for a future surface.
-Client and mock checks have passed; native and browser effects remain untested.
-This candidate does not clear data, export settings or reinterpret Stats fields.
+Focused native, client and production Worker checks pass; full merged gates
+remain pending. This does not clear data, export settings or reinterpret Stats.
 
 ## Contract and scope
 
@@ -82,45 +82,57 @@ replays an observation into a different monotonic clock domain. The mock has
 no signed-event store and reports zero retained events, with unsupported
 physical/origin observations instead of fabricated disk evidence.
 
-## Verification status and authored cases
+## Focused verification and remaining gates
 
-The 2026-11-16 Node preflight passed at 19:47:00 UTC in 7.177 seconds, with
-load 2.32 / 1.52 / 1.20. `pnpm --dir web check` includes TypeScript, Biome and
-Vitest; the nine client/mock inspection cases passed in that gate. Changed
-Rust files were formatted individually. The already-compiled xtask passed
-`check-docs` and `check-lines`; no Cargo invocation was used.
+The original isolated preflight passed `pnpm --dir web check` on 2026-11-16
+at 19:47:00 UTC in 7.177 seconds, load 2.32 / 1.52 / 1.20. It includes
+TypeScript, Biome and the nine client/mock cases. Two transport/contract cases
+passed at 19:49:07 UTC in 0.214 seconds. Initial missing links, formatting and
+an invalid watchdog failure code were corrected; the watchdog uses `offline`.
+Those original logs remain in storage-inspection-tree's tmp/storage-preflight.
 
-The first preflight caught missing documentation links, formatting and an
-unknown client failure code. The watchdog now uses existing `offline` instead
-of the invalid code. Initial failures and final results remain in
-`tmp/storage-preflight/{initial,after}.json` and their adjacent logs.
+The device integration compiled source `6ba4b526` with four build jobs/test
+threads and refreshed/hash-recorded Rust sources before each Cargo stage:
 
-The two pure Node transport/contract cases also passed at 19:49:07 UTC in
-0.214 seconds, load 2.21 / 1.80 / 1.35. The exact command was
-`node --test scripts/engine-transport-storage.test.mjs`; evidence is
-`tmp/storage-preflight/transport-contract-1.{json,log}`.
+- Fourteen native policy/wire cases passed at 20:13:36 UTC in 9.999 seconds,
+  load 1.08 / 1.59 / 2.11. They cover outcomes, safe numbers/times, caps,
+  duplicate admission, deadline ties, owner isolation and revoked generations.
+- Focused native Clippy and Worker wasm32 check/strict Clippy passed, taking
+  4.005 / 4.408 / 4.545 seconds respectively.
+- Production WASM and its export guard passed at 20:14:01 UTC in 24.672 seconds,
+  load 1.45 / 1.64 / 2.11. The frozen package is
+  `tmp/device-artifacts/af100217510e010cad3f/tmp/engine-pkg`.
+- The integrated nine client and two transport cases passed at 20:15:02 UTC
+  in 0.791 / 0.233 seconds, load 1.80 / 1.74 / 2.11.
 
-No native/WASM compile, native test, real Worker fixture or build has run for
-this candidate. The following coverage boundaries remain explicit:
+The production WASM SHA-256 is:
 
-- Fourteen authored, unrun native policy/wire cases cover outcomes, numeric/time
-  validation, caps, duplicate admission, deadline ties, owner isolation,
-  cancellation/reuse, hidden/detached/cleared leases and additive messages.
-- Nine passing client/mock cases cover capability, ownership, cancellation,
-  late/reconnected replies, failure delivery and no invented physical size.
-- Two passing transport/contract cases cover no replay, old connections and
-  the literal true marker, including rejection of a false marker.
-- The unrun `scripts/engine-storage.mjs` uses two ports, fresh contexts and
-  three synthetic invalid public cache rows. It checks exact physical count
-  versus empty hydrated memory, unchanged Stats, no private reads, independent
-  browser failures, deadline/late callback order, hidden/detached/stop cleanup
-  and missing IndexedDB. Its browser estimator and clock are controlled test
-  effects; it does not measure the host's actual disk usage or real latency.
+```text
+9088e280584f9c35372b96b6fbd2a07b4ee6e14b3c276b4f45f5f44b0ebe6aef
+```
 
-The finite fixture is registered in `engine-check.sh`, uses no accounts or
-external sockets, records package hash/UTC/load and cleans browser/server on
-failure. Native and real Worker execution evidence is still required before
-landing. No production test-control export was introduced.
+The first two finite Worker attempts reached all 18 assertions but failed
+whole-Host read attribution: normal DM marks loading begins after ready and
+overlapped the inspection trace. A test-only completion witness now waits for
+that known startup transaction before resetting the trace. The original exact
+one-public-count/no-private-read assertion is unchanged. Product Rust/WASM did
+not change. The bounded diagnostic retains store/method/role, never key values
+or stored bodies. Both failed attempts remain under tmp/storage-focused-try1/2.
+
+The corrected fixture passed 19/19 checks on the same production bytes at
+20:18:03 UTC in 0.763 seconds, load 4.28 / 2.45 / 2.29. Its two MessagePorts
+and two fresh contexts cover exact physical row count versus empty hydrated
+memory, unchanged Stats, independent failures, cancellation/reused requests,
+hide/detach/stop, missing IndexedDB and the startup measurement boundary.
+The estimator, deadline and callback order are controlled test effects; this
+is not a measurement of actual disk usage or wall-clock deadline precision.
+
+The final report is `tmp/storage-focused-try3/report.json`; all stage logs,
+source maps and cleanup results are in tmp/device-gates.json and adjacent
+files. No owned descendant or short temporary alias remained. The fixture
+opens no account or external socket and is registered in engine-check.sh.
+Full required merged gates, a reachable interface and a public deployment are
+still pending. No production test-control export was introduced.
 
 ## Separately planned work
 

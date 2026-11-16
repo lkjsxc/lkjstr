@@ -128,10 +128,10 @@ A receive/evidence audit found the shared-ID cache-credit defect above. Three
 new pure assertions failed against the prior comparator/selection at 20:03:47 UTC
 (15 controls passed), then all 18 passed at 20:04:38 UTC in 0.166 seconds, load
 2.21/2.40/2.61 before and after. These tests supply synthetic native decisions;
-they prove JavaScript evidence handling, not the unexecuted native correction.
+they prove JavaScript evidence handling; the native correction was verified later.
 Logs are `tmp/history-witness-proof/control-body-{before,after}.{json,log}`.
 The authored native/finite fixture now also checks an invalid control against a
-valid cached body with the same ID; that case remains pending execution.
+valid cached body with the same ID; that case passed in the finite proof below.
 
 The standalone finite proof uses owned loopback controls, a native signer that
 never exports its keys, the actual verification helper and Chromium DOM
@@ -140,15 +140,24 @@ muted, invalid, outside-span, quote, other-tile, group and wire-only cases. It
 also exercises control-socket cancellation and the exact direct-note action.
 It proves measurement semantics, not a production application or public run.
 
-Native and finite browser commands await the shared gate/build slot:
+Device source `6ba4b526` built both helpers at 20:13:59 UTC in 1.540 seconds,
+load 1.45 / 1.64 / 2.11, with four jobs/test threads and refreshed source mtimes.
+The helper copies are frozen in `tmp/device-native/623bb3549df59769e34f`.
+Their SHA-256 hashes are:
 
-```sh
-cargo build -p lkjstr-core --example engine-public-verify --example engine-fixtures
-node scripts/real-hour-history-proof.mjs
+```text
+engine-fixtures: 1fd9b73195250ad6d9fdea17fb83486f557f94c4ed82095d8c88e3d2c5f4bad2
+engine-public-verify: dafe16a9e55d95f650daa4a4370a616200fc6be4b3a60cdf47e2be762cf59ad5
 ```
 
-Use four build jobs/test threads, the canonical owned Cargo cache/target and a
-short owned `LKJSTR_TEST_TMPDIR`. Native helper compilation and behavior, the
-finite loopback/browser proof, default gate integration and the actual real-build
-historical phase remain unexecuted. No public measurement was started for this
-change. The authored fixture is not evidence of production or public success.
+The integrated 18 Node cases passed at 20:15:03 UTC in 0.232 seconds, load
+1.80 / 1.74 / 2.11. The finite `node scripts/real-hour-history-proof.mjs` passed
+11/11 named checks at 20:18:04 UTC in 0.652 seconds, load 5.38 / 2.71 / 2.37.
+It used those exact helpers, including the real control/cache collision case,
+and recorded zero external requests, forbidden frames or page errors. Browser,
+server, sockets, profile and temporary-data cleanup completed. Exact evidence:
+`tmp/historical-witness-proof-s8XWz0/report.json` and tmp/device-gates.json.
+
+The default gate integration and actual real-build historical phase remain
+unexecuted. No public measurement was started for this change. This finite
+instrumentation proof is not evidence of a production application/public run.
