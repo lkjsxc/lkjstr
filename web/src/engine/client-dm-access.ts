@@ -157,11 +157,21 @@ export function createDmAccess(post: (message: ToEngine) => void) {
             60_000,
           );
           waits.add(cancel);
-          void answerCrypt(message, (reply) => {
-            if (currentEpoch() !== lease)
-              finish({ t: 'crypted', req: message.req, error: 'signer-refused' }, false);
-            else if (reply.t === 'crypted') finish(reply);
-          });
+          const current = (): boolean => {
+            if (!accepting || stopped || control.cancelled) return false;
+            if (currentEpoch() === lease) return true;
+            finish({ t: 'crypted', req: message.req, error: 'signer-refused' }, false);
+            return false;
+          };
+          void answerCrypt(
+            message,
+            (reply) => {
+              if (currentEpoch() !== lease)
+                finish({ t: 'crypted', req: message.req, error: 'signer-refused' }, false);
+              else if (reply.t === 'crypted') finish(reply);
+            },
+            current,
+          );
         });
       });
       chain.tail = run.catch(() => {
