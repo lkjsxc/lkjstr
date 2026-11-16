@@ -146,9 +146,9 @@ at 14:09:32 UTC in 10.463 seconds, load 2.74/2.89/2.80. Evidence is under
 `tmp/private-state-{before,after}.{log,json}` in the integration worktree.
 The merged frontend check passed at 14:08:09 UTC in 6.168 seconds. Repository,
 native and rust-wasm gates then passed before the upstream startup packaging
-rebase. The merged protocol-10 browser suite and remaining release gates are
-pending; [engine-private-verification.md](engine-private-verification.md)
-records exact timings, artifact boundaries and the remaining commands.
+rebase. The merged protocol-10 Worker suites and all required release gates now pass;
+[engine-private-verification.md](engine-private-verification.md) records exact
+timings, corrections and artifact boundaries.
 
 The first merged Worker attempt exposed a same-sub replacement hole: clearing
 query metadata without resetting relay observation suppressed the next State.
@@ -164,7 +164,8 @@ and a fresh named-list lookup for the removal flight. The earlier removal
 fixture had broadcast a mute replacement after its finite lookup closed;
 that timeout was a fixture delivery error, separate from the observer bug.
 The valid late plaintext and exact sub/event revocation assertions remain.
-Evidence: `tmp/sixth-private-fixture-try3/report.json`; full gates are pending.
+Evidence: `tmp/sixth-private-fixture-try3/report.json`; final merged gate results
+are recorded in [engine-private-verification.md](engine-private-verification.md).
 
 Primary contracts: [NIP-51](https://github.com/nostr-protocol/nips/blob/master/51.md),
 [NIP-07](https://github.com/nostr-protocol/nips/blob/master/07.md),
