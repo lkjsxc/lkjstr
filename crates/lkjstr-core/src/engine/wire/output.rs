@@ -10,7 +10,7 @@ impl Session {
                 at_top,
                 at_bottom,
             } => {
-                let (at_top, at_bottom) = if self.queries.get(&sub).is_some_and(|q| q.source == "channels" || q.source == "channel" || q.source == "profile" || q.source == "notifications" || q.notifications == Some(true)) {
+                let (at_top, at_bottom) = if self.queries.get(&sub).is_some_and(|q| q.convert().is_some_and(|q| super::list_edges::projected(q.source)) || q.notifications == Some(true)) {
                     let edges = self.source_edges(&sub, engine);
                     (edges.0, at_bottom && edges.1)
                 } else { (at_top, at_bottom) };
@@ -44,7 +44,6 @@ impl Session {
                         next.insert(at, row);
                     }
                 }
-                // Specialized sources are recalculated from the store as one typed window.
                 if self.queries.get(&sub).is_some_and(|q| {
                     q.notifications == Some(true) || matches!(
                         q.source.as_str(),
@@ -57,7 +56,10 @@ impl Session {
                         .insert(sub.clone(), next.clone())
                         .unwrap_or_default();
                     let ops = diff(&previous, &next);
-                    return if ops.is_empty() {
+                    return if super::list_edges::finite(self.queries.get(&sub).and_then(|q| q.convert()).map(|q| q.source)) {
+                        let (at_top, at_bottom) = self.source_edges(&sub, engine);
+                        vec![Output::Rows {sub, rows:next, at_top, at_bottom}]
+                    } else if ops.is_empty() {
                         vec![]
                     } else {
                         vec![Output::Patch { sub, ops }]

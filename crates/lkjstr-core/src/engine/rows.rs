@@ -107,7 +107,26 @@ pub fn row_with_lists(
             Part::Audio(url) => media(event, url, "audio"),
         })
         .collect();
-    let (replies, repost_count, reaction_count) = store.counts(&event.id);
+    let (_, repost_count, reaction_count) = store.counts(&event.id);
+    let replies = super::thread::positions(store, &event.id)
+        .into_iter()
+        .filter(|(_, (role, _))| *role == "reply")
+        .filter_map(|(id, _)| store.get(&id))
+        .filter(|reply| {
+            super::query::hidden_with_lists(
+                store,
+                &super::protocol::Query {
+                    source: super::protocol::Source::Thread,
+                    account: account.map(str::to_owned),
+                    target: Some(event.id.clone()),
+                    ..Default::default()
+                },
+                reply,
+                private,
+            )
+            .is_none()
+        })
+        .count();
     let mut reactions: BTreeMap<(String, Option<String>), Reaction> = BTreeMap::new();
     for e in store.reactions(&event.id) {
         let url = custom_emojis(&e)

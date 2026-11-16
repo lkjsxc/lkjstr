@@ -5,7 +5,9 @@ use crate::store::Store;
 fn paged(v: &View) -> bool {
     matches!(
         v.query.source,
-        Source::Channel
+        Source::Thread
+            | Source::Followers
+            | Source::Channel
             | Source::Global
             | Source::Home
             | Source::TheirHome
@@ -47,13 +49,14 @@ impl Engine {
         if !v.visible || !paged(v) || exhausted(&self.network, &self.store, v) {
             return false;
         }
-        let events = query::events(&self.store, &v.query);
+        let events = super::list_events::events(&self.store, &v.query, &self.private_lists);
         if windows::selection(
             &self.store,
             &self.network,
             v,
             self.signed_out_global_filter,
             &events,
+            &self.private_lists,
         )
         .0
         .end < events.len()
@@ -115,13 +118,14 @@ impl Engine {
                     )
             })
             .filter_map(|(sub, v)| {
-                let events = query::events(&self.store, &v.query);
+                let events = super::list_events::events(&self.store, &v.query, &self.private_lists);
                 let (raw, held) = windows::selection(
                     &self.store,
                     &self.network,
                     v,
                     self.signed_out_global_filter,
                     &events,
+                    &self.private_lists,
                 );
                 let at = v
                     .anchor
@@ -133,9 +137,7 @@ impl Engine {
                     })
                     .unwrap_or(0);
                 let needed = at.saturating_add(v.after).saturating_add(1).min(6000);
-                let filtered = self.signed_out_global_filter
-                    && v.query.account.is_none()
-                    && v.query.source == Source::Global
+                let filtered = held.iter().any(Option::is_some)
                     && held.iter().filter(|h| h.is_none()).count()
                         < windows::range(v, &events).len();
                 (raw.end == events.len() && (events.len() < needed || filtered))

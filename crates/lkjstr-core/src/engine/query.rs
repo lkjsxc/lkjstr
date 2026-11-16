@@ -120,11 +120,13 @@ pub fn events(store: &Store, q: &Query) -> Vec<Event> {
         return vec![];
     }
     if q.source == Source::Thread {
+        let positions = super::thread::positions(store, q.target.as_deref().unwrap_or(""));
         return store
             .thread(q.target.as_deref().unwrap_or(""))
             .into_iter()
             .filter(|e| {
-                matches_extra(e, q)
+                positions.contains_key(&e.id)
+                    && matches_extra(e, q)
                     && super::rich::authors(store, q)
                         .as_ref()
                         .is_none_or(|a| a.contains(&e.pubkey))

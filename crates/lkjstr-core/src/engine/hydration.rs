@@ -10,11 +10,20 @@ use crate::{
 use lkjstr_protocol::{NostrFilter, event_references, tags::tag_values};
 use std::collections::{BTreeMap, BTreeSet};
 
+// Retained history keeps its rows without hydrating every retained person at once.
+fn person_window(view: &View, at: usize, len: usize) -> std::ops::Range<usize> {
+    let end = at
+        .saturating_add(view.after.saturating_add(1).min(60))
+        .min(len);
+    at.saturating_sub(view.before.min(60)).min(end)..end
+}
+
 pub(super) fn authors(
     store: &Store,
     view: &View,
     network: &super::network::Network,
     enabled: bool,
+    private: &super::settings::PrivateLists,
 ) -> BTreeMap<String, BTreeSet<String>> {
     fn visit(store: &Store, e: &Event, depth: usize, out: &mut BTreeMap<String, BTreeSet<String>>) {
         let relays: BTreeSet<_> = store.seen_on(&e.id).iter().cloned().collect();
@@ -53,17 +62,69 @@ pub(super) fn authors(
             }
         }
     }
-    let events = super::query::events(store, &view.query);
+    if matches!(view.query.source, Source::Following | Source::List) {
+        let keys = if view.query.source == Source::Following {
+            store
+                .follows(view.query.target.as_deref().unwrap_or(""))
+                .unwrap_or_default()
+        } else {
+            super::list_events::events(store, &view.query, private)
+                .first()
+                .map(|e| {
+                    let mut seen = BTreeSet::new();
+                    super::settings::list_tags(e, private)
+                        .into_iter()
+                        .filter(|t| t.first().is_some_and(|k| k == "p"))
+                        .filter_map(|t| t.get(1).cloned())
+                        .filter(|p| lkjstr_protocol::is_pubkey(p) && seen.insert(p.clone()))
+                        .collect()
+                })
+                .unwrap_or_default()
+        };
+        let at = view
+            .anchor
+            .as_ref()
+            .and_then(|key| keys.iter().position(|p| p == key))
+            .unwrap_or(0);
+        return keys[person_window(view, at, keys.len())]
+            .iter()
+            .cloned()
+            .map(|p| (p, BTreeSet::new()))
+            .collect();
+    }
+    let events = super::list_events::events(store, &view.query, private);
     let mut out: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
-    let window = &events[super::windows::selection(store, network, view, enabled, &events).0];
+    let range = if view.query.source == Source::Followers {
+        let at = view
+            .anchor
+            .as_ref()
+            .and_then(|key| {
+                events
+                    .iter()
+                    .position(|e| super::rich::anchored(e, key, &view.query))
+            })
+            .unwrap_or(0);
+        person_window(view, at, events.len())
+    } else {
+        super::windows::selection(store, network, view, enabled, &events, private).0
+    };
+    let window: Vec<_> = events[range]
+        .iter()
+        .filter(|event| {
+            view.query.source == Source::Followers
+                || super::query::hidden_with_lists(store, &view.query, event, private).is_none()
+        })
+        .collect();
     // Reserve every row author before bounded recursive context hydration.
-    for e in window {
+    for e in &window {
         out.entry(e.pubkey.clone())
             .or_default()
             .extend(store.seen_on(&e.id).iter().cloned());
     }
-    for e in window {
-        visit(store, e, 0, &mut out);
+    if view.query.source != Source::Followers {
+        for e in &window {
+            visit(store, e, 0, &mut out);
+        }
     }
     if matches!(
         view.query.source,
@@ -97,9 +158,15 @@ impl Engine {
                 view,
                 &self.network,
                 self.signed_out_global_filter,
+                &self.private_lists,
             )
             .into_iter()
-            .filter(|(author, _)| weights.person(author) > 0)
+            .filter(|(author, _)| {
+                matches!(
+                    view.query.source,
+                    Source::Following | Source::Followers | Source::List
+                ) || weights.person(author) > 0
+            })
             .collect();
             people.sort_by_key(|(author, _)| {
                 (std::cmp::Reverse(weights.person(author)), author.clone())

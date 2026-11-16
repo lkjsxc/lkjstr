@@ -3,6 +3,7 @@ use crate::store::{Event, Store};
 use std::collections::{BTreeMap, BTreeSet};
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Held {
+    Filtered,
     NoProfile,
     AuthorCap,
     Duplicate,

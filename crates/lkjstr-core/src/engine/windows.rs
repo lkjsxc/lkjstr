@@ -21,13 +21,14 @@ impl Engine {
             });
             return;
         }
-        let events = query::events(&self.store, &v.query);
+        let events = super::list_events::events(&self.store, &v.query, &self.private_lists);
         let (range, held) = selection(
             &self.store,
             &self.network,
             v,
             self.signed_out_global_filter,
             &events,
+            &self.private_lists,
         );
         let (start, end) = (range.start, range.end);
         let window = &events[start..end];
@@ -140,6 +141,7 @@ pub(super) fn selection(
     v: &super::View,
     enabled: bool,
     events: &[crate::store::Event],
+    private: &super::settings::PrivateLists,
 ) -> (std::ops::Range<usize>, Vec<Option<super::global::Held>>) {
     let raw = range(v, events);
     if enabled && v.query.account.is_none() && v.query.source == Source::Global {
@@ -151,7 +153,20 @@ pub(super) fn selection(
         );
         (raw.start..raw.start + held.len(), held)
     } else {
-        let held = vec![None; raw.len()];
-        (raw, held)
+        let mut visible = 0;
+        let held: Vec<_> = events[raw.start..]
+            .iter()
+            .scan((), |_, event| {
+                if visible >= raw.len() {
+                    return None;
+                }
+                let hidden = query::hidden_with_lists(store, &v.query, event, private).is_some();
+                if !hidden {
+                    visible += 1;
+                }
+                Some(hidden.then_some(super::global::Held::Filtered))
+            })
+            .collect();
+        (raw.start..raw.start + held.len(), held)
     }
 }

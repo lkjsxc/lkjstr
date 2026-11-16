@@ -10,7 +10,9 @@ impl Engine {
                     return;
                 }
                 self.metrics.served_from_cache +=
-                    super::query::events(&self.store, &query).len().min(50) as u64;
+                    super::list_events::events(&self.store, &query, &self.private_lists)
+                        .len()
+                        .min(50) as u64;
                 self.views.insert(
                     sub.clone(),
                     View {

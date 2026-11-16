@@ -44,7 +44,10 @@ impl Session {
                 (at.saturating_sub(*before), at.saturating_add(*after))
             })
             .unwrap_or((0, 50));
-        (start == 0, end >= all.len())
+        (
+            start == 0,
+            end >= all.len() && super::list_edges::settled(self.queries.get(sub), e),
+        )
     }
     fn project_source(&self, sub: &str, e: &Engine, windowed: bool) -> Vec<Value> {
         let Some(q) = self.queries.get(sub) else {
@@ -64,7 +67,7 @@ impl Session {
             "people"=>super::people::people(e,q),
             "channels"=>super::channels::list(e,q),
             "following"=>store.follows(target).unwrap_or_default().iter().map(|p|person(e,p,q.account.as_deref(), weights.person(p))).collect(),
-            "followers"=>store.feed(&crate::store::Query{kinds:vec![3],mention:Some(target.into()),limit:6000,..Default::default()})
+            "followers"=>store.feed(&crate::store::Query{kinds:vec![3],mention:Some(target.into()),limit:store.len(),..Default::default()})
                 .iter().map(|v|person(e,&v.pubkey,q.account.as_deref(), weights.person(&v.pubkey))).collect(),
             "mutes"=>q.account.as_deref().and_then(|a|store.replaceable(a,10000)).map(|event|e.list_tags(&event).iter().filter_map(|tag|{
                 let value=tag.get(1)?;let target=match tag.first()?.as_str(){"p"=>json!({"k":"person","pubkey":value}),"word"=>json!({"k":"word","word":value}),"t"=>json!({"k":"hashtag","tag":value}),"e"=>json!({"k":"thread","id":value}),_=>return None};
@@ -78,9 +81,9 @@ impl Session {
             "media-servers"=>q.account.as_deref().map(|a|e.upload_servers(a).into_iter().map(|url|e.server_row(&url)).collect()).unwrap_or_default(),
             "emoji"=>q.account.as_deref().and_then(|a|store.replaceable(a,10030)).map(|event|lkjstr_protocol::custom_emojis(&event).into_iter().map(|e|json!({"kind":"emoji","key":format!("emoji:{}",e.shortcode),"set":"","code":e.shortcode,"url":e.url})).collect()).unwrap_or_default(),
             "notifications"=>super::notifications::notifications(q,e),
-            "bookmarks"=>q.account.as_deref().and_then(|a|store.replaceable(a,10003)).map(|list|e.list_tags(&list).iter().filter(|t|t.first().is_some_and(|k|k=="e")).filter_map(|t|store.get(t.get(1)?)).filter(|event|converted.as_ref().is_some_and(|q|query::matches_note(store,q,event))).map(|event|super::note::note(&rows::row_with_lists(store,&event,q.account.as_deref(),0,&e.private_lists),store,q.account.as_deref())).collect()).unwrap_or_default(),
+            "bookmarks"=>converted.as_ref().map(|q|crate::engine::list_events::events(store,q,&e.private_lists).iter().map(|event|super::note::note(&rows::row_with_lists(store,event,q.account.as_deref(),0,&e.private_lists),store,q.account.as_deref())).collect()).unwrap_or_default(),
             "list"=>{
-                q.convert().map(|converted|query::events(store,&converted).into_iter().next().map(|event|e.list_tags(&event).iter().filter(|t|t.first().is_some_and(|k|k=="p")).filter_map(|t|t.get(1)).map(|p|person(e,p,q.account.as_deref(), weights.person(p))).collect()).unwrap_or_default()).unwrap_or_default()
+                q.convert().map(|converted|query::events(store,&converted).into_iter().next().map(|event|e.list_tags(&event).iter().filter(|t|t.first().is_some_and(|k|k=="p")).filter_map(|t|t.get(1)).filter(|p|lkjstr_protocol::is_pubkey(p)).map(|p|person(e,p,q.account.as_deref(), weights.person(p))).collect()).unwrap_or_default()).unwrap_or_default()
             }
             _ => converted.as_ref().map(|converted| {
                 query::events(store, converted).into_iter()

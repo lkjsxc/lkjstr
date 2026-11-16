@@ -28,7 +28,6 @@ pub fn joined(store: &Store, account: Option<&str>) -> Vec<String> {
             tag_values(&e, "e")
                 .into_iter()
                 .filter(|id| is_event_id(id))
-                .take(1000)
                 .collect()
         })
         .unwrap_or_default()
@@ -110,7 +109,7 @@ pub(super) fn wants(store: &Store, q: &super::Query) -> Vec<NostrFilter> {
                 store
                     .feed(&crate::store::Query {
                         kinds: vec![40, 41],
-                        limit: 1000,
+                        limit: store.len(),
                         ..Default::default()
                     })
                     .iter()
@@ -126,13 +125,10 @@ pub(super) fn wants(store: &Store, q: &super::Query) -> Vec<NostrFilter> {
     };
     ids.sort();
     ids.dedup();
-    // Reserve one of the 1000 discovery ids for the explicitly opened channel.
-    if let Some(target) = &q.target {
-        ids.retain(|id| id != target);
-        ids.truncate(999);
+    if let Some(target) = &q.target
+        && !ids.contains(target)
+    {
         ids.push(target.clone());
-    } else {
-        ids.truncate(1000);
     }
     let mut out = vec![];
     if q.source == Source::Channels && q.target.is_none() {
@@ -181,11 +177,11 @@ pub(super) fn wants(store: &Store, q: &super::Query) -> Vec<NostrFilter> {
 mod tests {
     use super::*;
     #[test]
-    fn opened_channel_keeps_creation_and_metadata_capacity_at_discovery_bound() {
+    fn opened_channel_keeps_all_joined_members_and_target() {
         let mut store = Store::with_caps(2000, 2000);
         let owner = "a".repeat(64);
         let target = "f".repeat(64);
-        let tags = (0..1000)
+        let tags = (0..1200)
             .map(|i| vec!["e".into(), format!("{i:064x}")])
             .collect();
         store.insert(
@@ -212,7 +208,7 @@ mod tests {
             .filter_map(|f| f.ids.as_ref())
             .flatten()
             .collect();
-        assert_eq!(creations.len(), 1000);
+        assert_eq!(creations.len(), 1201);
         assert!(creations.contains(&&target));
         assert!(filters.iter().any(|f| f.kinds.as_deref() == Some(&[41])
             && f.tags.get("e").is_some_and(|ids| ids.contains(&target))));

@@ -56,7 +56,7 @@ pub(super) fn has(e: &NostrEvent, kind: &str) -> bool {
 }
 
 pub(super) fn anchored(e: &NostrEvent, key: &str, q: &Query) -> bool {
-    if e.id == key {
+    if e.id == key || (q.source == super::protocol::Source::Followers && e.pubkey == key) {
         return true;
     }
     if q.source == super::protocol::Source::Profile

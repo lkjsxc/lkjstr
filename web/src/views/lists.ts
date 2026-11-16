@@ -1,12 +1,11 @@
 // The short lists of the Relays tab and of Settings (relays, mutes, media servers): the rows of one subscription,
 // drawn so that a row that did not change keeps its node and the keyboard stays on the control it was on.
 import type { Subscription } from '../engine/client.ts';
-import { applyOps } from '../engine/ops.ts';
 import type { Row, Source } from '../engine/protocol.ts';
 import type { Disposer } from '../shared/signal.ts';
 import type { ViewEnv } from './registry.ts';
 
-const MOST = 500; // bound: rows of one short list
+const MOST = 500; // Batch size; collect until the source reports exhaustion.
 
 /** Follows a finite source as the active account. `draw` gets every state of the list; `loaded` is false until
  * the engine has answered once. */
@@ -18,21 +17,48 @@ export function watchList(
   let sub: Subscription | undefined;
   let rows: readonly Row[] = [];
   let as: string | undefined;
+  let pending = true;
+  let initial = true;
+  const collected = new Map<string, Row>();
+  let generation = 0;
+  const request = (anchor: 'top' | { key: string }): void => {
+    pending = true;
+    const current = generation;
+    queueMicrotask(() => {
+      if (current === generation) sub?.window(anchor, 0, MOST);
+    });
+  };
   const open = (): void => {
     const me = env.engine.me();
     if (sub && me === as) return;
     sub?.close();
+    generation++;
+    pending = initial = true;
     as = me;
     rows = [];
+    collected.clear();
     draw(rows, false);
     sub = env.engine.open(
       { source, account: me || undefined },
       {
-        rows: (r) => draw((rows = r), true),
-        patch: (ops) => draw((rows = applyOps(rows, ops)), true),
+        rows: (r, top = true, bottom = true) => {
+          // The real engine also sends its default 50-row open response before our window.
+          if (initial && top && r.length === 50 && !bottom) return;
+          initial = false;
+          if (!pending && !(top && bottom)) return request('top');
+          pending = false;
+          if (top) collected.clear();
+          for (const row of r) collected.set(row.key, row);
+          // Bound: membership of the finite source on this device. Swap complete snapshots
+          // so refreshing a later page never removes the row holding the keyboard.
+          if (bottom) draw((rows = [...collected.values()]), true);
+          const last = r.at(-1);
+          if (!bottom && last) request({ key: last.key });
+        },
+        patch: () => request('top'),
       },
     );
-    sub.window('top', 0, MOST);
+    request('top');
     sub.visible(env.visible.get());
   };
   const offs = [
@@ -41,6 +67,7 @@ export function watchList(
   ];
   open();
   return () => {
+    generation++;
     for (const off of offs) off();
     sub?.close();
   };

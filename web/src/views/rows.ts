@@ -48,11 +48,10 @@ export function renderProfile(row: ProfileRow, env: ViewEnv): HTMLElement {
   // A count is shown once it is known. Absent, or a lower bound of nothing ("0+"), is not a count: the label
   // stands alone (it still opens the list) and the number takes its place when it arrives.
   const stat = (kind: string | null, n: number | undefined, label: Key): HTMLElement | null => {
-    const known = typeof n === 'number' && !(n === 0 && row.partial);
+    const partial = kind === 'following' || kind === 'followers' ? false : row.partial;
+    const known = typeof n === 'number' && !(n === 0 && partial);
     if (!known && !kind) return null;
-    const inner = known
-      ? [h('b', null, countText(n, row.partial, lang)), ' ', t(label)]
-      : [t(label)];
+    const inner = known ? [h('b', null, countText(n, partial, lang)), ' ', t(label)] : [t(label)];
     return kind
       ? h(
           'button',

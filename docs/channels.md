@@ -34,9 +34,10 @@ The frontend protocol and mock remain unchanged.
 
 Events use the existing 16000 regular / 4000 replaceable memory caps and
 20000-event physical retention. Channel metadata is derived from that store,
-without a separate unbounded cache. List projection uses at most 6000 creations;
-metadata/message discovery targets at most 1000 channel ids in 120-id batches,
-reserving capacity for the explicitly opened channel.
+without a separate unbounded cache. List projection covers all retained creations
+and valid joined-list members; metadata/message discovery keeps every target in
+120-id batches, including the explicitly opened channel. Membership is bounded by
+the retained store and event payload limits, rather than a silent 1000-id cutoff.
 Metadata and messages use separate requests, each limited to 200 events, so
 newer messages cannot displace metadata. Notification repost filters include
 both kind 6 and generic kind 16 reposts. Pending visible-count lookups can

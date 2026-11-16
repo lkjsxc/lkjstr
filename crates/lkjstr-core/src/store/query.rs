@@ -18,9 +18,6 @@ pub struct Query {
     pub limit: usize,
 }
 
-/// Upper bound on events one thread walk visits.
-const MAX_THREAD: usize = 500;
-
 impl Store {
     /// Indexed, tie-stable scan; exclusive cursor survives equal timestamps. At most `limit` clones.
     pub fn scan(&self, before: Option<&(u64, String)>, limit: usize) -> Vec<Event> {
@@ -86,7 +83,7 @@ impl Store {
         let mut queue = VecDeque::from([root.to_owned()]);
         let mut out = Vec::new();
         while let Some(id) = queue.pop_front() {
-            if out.len() >= MAX_THREAD || !seen.insert(id.clone()) {
+            if !seen.insert(id.clone()) {
                 continue;
             }
             if let Some(event) = self.get(&id).filter(|event| matches!(event.kind, 1 | 42)) {

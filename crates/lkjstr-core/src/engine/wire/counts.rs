@@ -4,9 +4,18 @@ use crate::{
     store::Query,
 };
 use serde_json::{Value, json};
-pub(super) fn note(row: &Row) -> Value {
+pub(super) fn note(row: &Row, store: &crate::store::Store) -> Value {
+    let zaps = store
+        .referencing(&row.id)
+        .iter()
+        .filter(|e| {
+            e.kind == 9735 && lkjstr_protocol::zap_target_event_id(e).as_deref() == Some(&row.id)
+        })
+        .filter_map(|e| lkjstr_protocol::zap_receipt_amount_msats(e))
+        .fold(0u64, u64::saturating_add)
+        / 1000;
     json!({"replies":row.counts.replies,"reposts":row.counts.reposts,
-        "reactions":row.counts.reactions,"zaps":0,"partial":false})
+        "reactions":row.counts.reactions,"zaps":zaps,"partial":false})
 }
 pub(super) fn settle(row: &mut Value, e: &Engine) {
     if row["kind"] == "note" {
@@ -51,7 +60,7 @@ pub(super) fn profile(result: &mut Value, e: &Engine, p: &str) {
                 kinds: kinds.clone(),
                 authors: authors.clone(),
                 mention: mention.clone(),
-                limit: 6000,
+                limit: e.store.len(),
                 ..Default::default()
             })
             .len();

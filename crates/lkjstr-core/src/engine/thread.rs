@@ -6,7 +6,7 @@ fn parent(event: &NostrEvent) -> Option<String> {
     reply_parent(event).or_else(|| (event.kind != 42).then(|| reply_root(event)).flatten())
 }
 
-/// Temporary indexes bounded by Store::thread's 500-note walk. Build before
+/// Temporary indexes bounded by the retained event store. Build before
 /// filtering/windowing so hidden parents still contribute to reply depth.
 pub(super) fn positions(store: &Store, focus: &str) -> HashMap<String, (&'static str, usize)> {
     let events = store.thread(focus);

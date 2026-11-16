@@ -89,6 +89,7 @@ export async function railSmoke(
       const narrow = mobile.locator(`${feed} .time-rail`);
       await narrow.waitFor({ state: 'visible' });
       await mobile.evaluate(() => (document.documentElement.dataset.theme = 'dark'));
+      await mobile.mouse.move(20, 20);
       check('narrow time rail is 16px', (await narrow.boundingBox())?.width === 16);
       check(
         'narrow rail shows year numbers on hover',

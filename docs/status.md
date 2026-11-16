@@ -1,10 +1,20 @@
 # Status
-
 ## Purpose
 Current engine behavior and unfinished variants. Traffic work: [cover.md](cover.md).
-
+## List integrity (2026-11-16)
+Following counts and rows share the newest stored kind-3 valid distinct p tags.
+Projected lists use their row membership for window edges, including live updates.
+Person lists hydrate at most 60 rows either side of the window cursor in batches;
+missing metadata never removes a row or changes follow-list order.
+Followers and threads page full relay replies. Thread walks use the retained store
+bound rather than stopping at 500. Public/private bookmark IDs and joined channels keep all batches.
+Reply numbers use visible thread descendants; zap totals use known receipts.
+Settings collects finite pages past 500 and swaps complete snapshots to keep focus.
+Muted windows refill without scrolling; follower pubkeys anchor contact events.
+Tests: engine_list_{integrity,history,counts}_test.rs and web/tests/lists.test.ts.
+Unavailable bookmark placeholders, pins and note-action detail views need interface
+work; this change adds no strings, CSS or layout.
 ## Protocol 4 channels (2026-11-15)
-
 Protocol 4 channels use the existing store, signer, scheduler and paging for
 creator-only metadata, messages, joined lists and unread marks. Channel messages
 stay out of ordinary feeds. Early edits wait for the joined list; Stats and
@@ -12,9 +22,7 @@ client-tag settings use the real engine. Opened targets retain discovery capacit
 Channel work rotates alongside feeds; the UI tracks discovery and full retry
 drafts. Separate metadata requests protect busy channels; reposts accept kinds
 6 and 16. Native and UI checks: [channels.md](channels.md).
-
 ## Protocol 3 integration (2026-11-15)
-
 Protocol 3 added all-word text, phrases, exclusions, media/link filters, author
 unions, known-profile names and bounded verified NIP-05 query lookups. Millisecond date
 bounds round inward to Nostr seconds. Inclusive end dates follow local calendar
@@ -23,9 +31,7 @@ target content. Home/Global can mix notification rows;
 profile kinds project posts, replies, reposts (6/16), reactions and image/video
 notes. Ordinary windows accept 800 rows on either side; retainAbove remains
 bounded at 6000. Existing account discovery adopts verified NIP-65 relay lists.
-
 ## Owner feedback (2026-11-15)
-
 Account discovery follows active signers independently of account views, retains
 indexer/hint lookups after NIP-65 adoption, follows updates and falls back to
 kind 3 relay JSON. Separate per-kind requests handle max_limit=1; settled
@@ -34,11 +40,8 @@ Authored events default to the lkjstr client tag; clientTag
 can disable it. Blossom defaults respect kind 10063; NIP-96 remains a fallback.
 Additive stats, retained windows and cached rowAtTime lookup are implemented.
 Bounds, counter meanings, conformance and limitations: [owner-feedback.md](owner-feedback.md).
-
 ## Frontend integration (2026-11-15)
-
 Release candidate, gates and UI gaps: [integration-release.md](integration-release.md).
-
 web/ pnpm build:real packages the real SharedWorker with immutable hashed URLs.
 The frontend owns saved/bootstrap relay choice; verified owner NIP-65 lists
 then take over. Search-only relays receive requests independently of ordinary read usage. Thread focus and decoded profile deep-link headers
@@ -46,18 +49,14 @@ cross the wire correctly. Native integration regressions cover these
 projection and relay policies. Thread rows distinguish ancestors from the focus
 and descendants; reply depth follows parent links before filtering/windowing.
 Sibling branches are not projected as replies to the focus.
-
 Quote lookup errors now have English/Japanese failure text, with a rendering
 regression test. Two native thread regressions cover ancestors, nested replies,
 root-only replies, missing parents, filters, windows and public references.
 Accounts can be created/imported through the Accounts tab. Protocol 2 supports
 explicit local nsec backup; external signers and read-only accounts refuse it.
 Secret-bearing input/output debug representations are redacted.
-
 Conformance uses this worktree's contract; commands/artifacts: engine-package.md.
-
 ## Engine polish (2026-11-15)
-
 Visible windows batch up to 6000 authors per view, including nested quotes,
 reply context and repost actors. Profile batches share relay work in 75 ms windows,
 prefer note-delivering read relays, fall back after completion and release on hiding.
@@ -69,7 +68,6 @@ Completed coverage and cursors survive live resumption without exhausting histor
 Native regressions cover delayed hydration, interruption and pagination.
 Six native regressions cover routing, batching, context, refresh and release.
 The earlier 240 ms probe improved note-to-name from 1893.7 to 232.5 ms. Current coalescing results and remaining gaps: [cover.md](cover.md).
-
 Protocol 2 uses absent profile fields for unknown counts; note partial flags mark observed relay-limit lower bounds (pending requests have no suffix).
 Count requests are bounded and exact only after successful, untruncated, verified replies. No alternate estimate shape remains.
 Count deferral ends at the first 15-second page deadline; retries do not renew it.

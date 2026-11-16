@@ -11,7 +11,13 @@ impl Engine {
             if matches!(v.query.source, Source::Relays | Source::Diagnostics) {
                 continue;
             }
-            for f in requests(&self.store, &self.network, v, self.signed_out_global_filter) {
+            for f in requests(
+                &self.store,
+                &self.network,
+                v,
+                self.signed_out_global_filter,
+                &self.private_lists,
+            ) {
                 let mut q = v.query.clone();
                 if matches!(q.source, Source::Channels | Source::Channel) {
                     let ids = q
@@ -64,6 +70,7 @@ fn requests(
     network: &super::network::Network,
     v: &super::View,
     enabled: bool,
+    private: &super::settings::PrivateLists,
 ) -> Vec<NostrFilter> {
     let q = &v.query;
     if query::signed_out(q) {
@@ -120,8 +127,8 @@ fn requests(
             });
         }
     }
-    let events = query::events(store, q);
-    let range = super::windows::selection(store, network, v, enabled, &events).0;
+    let events = super::list_events::events(store, q, private);
+    let range = super::windows::selection(store, network, v, enabled, &events, private).0;
     // Batch visible note counts; released with the view and bounded by its window.
     for events in events[range.clone()].chunks(120) {
         let mut f = NostrFilter {
@@ -186,18 +193,18 @@ fn requests(
             .and_then(|a| store.replaceable(a, 10003))
     {
         ids.extend(
-            tag_values(&list, "e")
+            super::settings::list_tags(&list, private)
                 .into_iter()
-                .filter(|id| store.get(id).is_none())
-                .take(120),
+                .filter(|t| t.first().is_some_and(|k| k == "e"))
+                .filter_map(|t| t.get(1).cloned())
+                .filter(|id| lkjstr_protocol::is_event_id(id) && store.get(id).is_none()),
         );
     }
     ids.sort();
     ids.dedup();
-    ids.truncate(120);
-    if !ids.is_empty() {
+    for chunk in ids.chunks(120) {
         result.push(NostrFilter {
-            ids: Some(ids),
+            ids: Some(chunk.to_vec()),
             limit: Some(120),
             ..Default::default()
         });

@@ -61,7 +61,7 @@ pub(super) fn list(e: &Engine, q: &Query) -> Vec<Value> {
                 e.store
                     .feed(&crate::store::Query {
                         kinds: vec![40],
-                        limit: 6000,
+                        limit: e.store.len(),
                         ..Default::default()
                     })
                     .iter()
