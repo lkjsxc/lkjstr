@@ -7,7 +7,8 @@ self.WebSocket=class extends Socket{constructor(url,...rest){
   if(new URL(url).hostname!=='127.0.0.1')throw new DOMException('Fixture blocked relay','SecurityError');
   super(url,...rest);
 }};
-const queued=[];self.onmessage=e=>queued.push(e);let after,failWrite=false,input;
+const queued=[];self.onmessage=e=>queued.push(e);let after,failRead=false,input;
+let failureTrace={consumed:0,aborted:0};
 const post=self.postMessage.bind(self);
 self.postMessage=(message,...rest)=>{
   post(message,...rest);
@@ -16,17 +17,22 @@ self.postMessage=(message,...rest)=>{
     queueMicrotask(()=>input({data:query}));
   }
 };
-const put=IDBObjectStore.prototype.put;
-IDBObjectStore.prototype.put=function(...args){
-  if(failWrite&&this.name==='kv'&&args[1]==='engine-accounts'){
-    failWrite=false;this.transaction.abort();
+const get=IDBObjectStore.prototype.get;
+IDBObjectStore.prototype.get=function(...args){
+  const request=get.apply(this,args);
+  if(failRead&&this.name==='kv'&&this.transaction.mode==='readwrite'&&args[0]==='engine-accounts'){
+    failRead=false;failureTrace.consumed++;
+    const tx=this.transaction;
+    tx.addEventListener('abort',()=>failureTrace.aborted++,{once:true});
+    request.addEventListener('success',()=>tx.abort(),{once:true});
   }
-  return put.apply(this,args);
+  return request;
 };
 await init();self.engineHandle=start();input=self.onmessage;
 self.onmessage=e=>{
   if(e.data.t==='test.afterResult')after=e.data;
-  else if(e.data.t==='test.failAccountWrite')failWrite=true;
+  else if(e.data.t==='test.failAccountTransaction'){failRead=true;failureTrace={consumed:0,aborted:0};}
+  else if(e.data.t==='test.accountFailureTrace')post({t:e.data.t,req:e.data.req,trace:{...failureTrace,armed:failRead}});
   else if(e.data.t==='test.relays'){
     if(typeof self.engineHandle.set_test_relays==='function')self.engineHandle.set_test_relays(e.data.relays);
     else input({data:{t:'relays',relays:e.data.relays.map(url=>({url,read:true,write:true,search:true}))}});
@@ -83,12 +89,17 @@ export async function privateRevocation({page,origin,check}) {
     const action=async(action,probe,fail=false)=>{
       const req='private-revoke-'+(++serial),sub='post-ack-'+serial;
       if(probe)await send({t:'test.afterResult',req,message:{t:'open',sub,query:{source:'mutes',account:probe.pubkey}}});
-      if(fail)await send({t:'test.failAccountWrite'});
+      if(fail)await send({t:'test.failAccountTransaction'});
       await send({t:'act',req,action});
       await until(p,async()=> (await all()).some(m=>m.t==='result'&&m.req===req));
       if(probe)await until(p,async()=> (await all()).some(m=>m.t==='rows'&&m.sub===sub));
+      if(fail){
+        await send({t:'test.accountFailureTrace',req});
+        await until(p,async()=> (await all()).some(m=>m.t==='test.accountFailureTrace'&&m.req===req));
+      }
       const rows=await all(),result=rows.find(m=>m.t==='result'&&m.req===req);
-      return {req,sub,result,rows,probe:rows.find(m=>m.t==='rows'&&m.sub===sub)};
+      const failure=rows.find(m=>m.t==='test.accountFailureTrace'&&m.req===req)?.trace;
+      return {req,sub,result,rows,failure,probe:rows.find(m=>m.t==='rows'&&m.sub===sub)};
     };
     await until(p,async()=> (await all()).some(m=>m.t==='ready'));
     for(const [index,account] of accounts.entries()) {
@@ -103,6 +114,7 @@ export async function privateRevocation({page,origin,check}) {
     await send({t:'hint',hint:{visibleSubs:['held-1'],pageHidden:false,idle:false,saveData:false}});
     const failed=await action({a:'account.lock',pubkey:a.pubkey},a,true);
     check('failed lock transaction preserves authorized private projection',!failed.result.ok
+      &&failed.failure?.consumed===1&&failed.failure.aborted===1&&!failed.failure.armed
       &&JSON.stringify(failed.probe.rows).includes(a.word));
     const locked=await action({a:'account.lock',pubkey:a.pubkey},a);
     check('post-lock acknowledgement query cannot see revoked private entries',locked.result.ok
@@ -122,6 +134,7 @@ export async function privateRevocation({page,origin,check}) {
       &&!JSON.stringify(removed.probe.rows).includes(a.word)&&JSON.stringify(removed.probe.rows).includes(a.public));
     const failedRemove=await action({a:'account.remove',pubkey:b.pubkey},b,true);
     check('failed removal transaction retains the account private policy',!failedRemove.result.ok
+      &&failedRemove.failure?.consumed===1&&failedRemove.failure.aborted===1&&!failedRemove.failure.armed
       &&JSON.stringify(failedRemove.probe.rows).includes(b.word));
     const remaining=await action({a:'account.remove',pubkey:b.pubkey},b);
     check('second account removal clears only its private entries',remaining.result.ok
