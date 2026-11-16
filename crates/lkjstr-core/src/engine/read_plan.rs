@@ -1,6 +1,8 @@
 //! Pure request routing within the reader's configured transports.
 //! Inputs are observations and verified outbox lists, never timeline order.
 use std::collections::{BTreeMap, BTreeSet};
+#[path = "read_recovery.rs"]
+mod recovery;
 
 #[derive(Clone, Debug)]
 pub struct Candidate {
@@ -207,6 +209,15 @@ impl super::Network {
             if routes.len() < limit && !routes.contains(&url) {
                 routes.push(url);
             }
+        }
+        if limit == 2 && f.until.is_none() {
+            recovery::promote(
+                &mut routes,
+                &candidates,
+                &current,
+                &unavailable,
+                &q.filters.relay_hints,
+            );
         }
         let primary = routes.iter().cloned().collect();
         // Keep failed-page uncertainty outside those slots. Historical evidence

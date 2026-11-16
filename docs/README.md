@@ -85,3 +85,4 @@ Engine (`crates/`):
 - [engine-history-route.md](engine-history-route.md): inclusive history route continuity and bounded verification evidence.
 - [emoji-sets.md](emoji-sets.md): bounded owner-selected emoji discovery, native
   evidence and pending real Worker verification.
+- [engine-live-route.md](engine-live-route.md): productive live recovery, bounded slot ownership and verification evidence.
