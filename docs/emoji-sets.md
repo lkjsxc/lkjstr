@@ -17,7 +17,9 @@ Discovery requests each exact author and identifier with kind 30030. An optional
 validated relay hint belongs only to that coordinate. It does not change saved
 read/write permissions. Existing configured routes, transport limits, verification,
 deadlines and cancellation perform the effects. Hiding or closing the picker
-releases its wants; a newer owner list immediately withdraws removed references.
+releases its wants. Once a newer owner list is verified locally, it immediately
+withdraws removed references. Both lookups remain finite: closing and reopening
+the picker refreshes them; this is not a live cross-device list watcher.
 An old cancelled wire response cannot restore membership.
 
 One indexed retained-store scan selects the newest event for each requested
@@ -54,8 +56,11 @@ Unavailable sets contribute no invented rows. Successful empty EOSE can finish
 an absent reference only after verification drains. Refusal, timeout, an invalid
 event occupying a response slot or verification debt cannot establish completed
 empty membership. A cached valid set remains usable despite a route failure.
-A full row budget, excess references or a tag-scan cutoff keeps exhaustion
-unknown. The existing picker consumes rows but has no per-set failure/retry surface.
+A full row budget, excess references, a tag-scan cutoff or an over-budget
+identifier/shortcode/image URL keeps exhaustion unknown. A lone skipped value
+cannot become a completed empty result. Invalid small values and recursive set
+references remain ignored. The existing picker consumes rows but has no per-set
+failure/retry surface.
 
 Encrypted list/set tags, set browsing/editing, recursive references and propagation
 of a selected set address into outgoing emoji tags are outside this change.
@@ -73,6 +78,11 @@ four build jobs and test threads were used.
 Two old protocol assertions rejected outgoing hyphens. They now assert acceptance
 because the current NIP-30 permits hyphens, rather than weakening valid-name checks.
 The new note/reaction/private-rumor case proves the selected code retains its tag.
+
+A source-only follow-up adds seven native completeness cases: five isolated
+over-budget coordinate/code/URL cases, accepted exact boundaries and ignored
+invalid small values/recursive references. Those cases and their baseline proof
+have not run yet; the earlier 13-test evidence does not cover this follow-up.
 
 The authored real Worker fixture is registered in `scripts/engine-check.sh` but
 has not run. WASM, full integration gates and a public post-change measurement

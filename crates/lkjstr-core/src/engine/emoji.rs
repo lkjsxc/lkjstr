@@ -1,4 +1,6 @@
 //! Current public owner-list membership, bounded set discovery and picker projection.
+#[path = "emoji_limits.rs"]
+mod limits;
 use super::{Engine, protocol::Query};
 use crate::store::{Event, Query as StoreQuery, Store};
 use lkjstr_nips::address::Coordinate;
@@ -204,13 +206,13 @@ pub(super) fn settled(engine: &Engine, account: Option<&str>) -> bool {
     };
     let references = references(&list);
     if references.len() > MAX_SETS
-        || list.tags.len() > MAX_TAGS
+        || limits::limited(&list)
         || rows(&engine.store, Some(account)).len() >= MAX_ROWS
     {
         return false;
     }
     let selected = selected(&engine.store, &references);
-    if selected.values().any(|event| event.tags.len() > MAX_TAGS) {
+    if selected.values().any(|event| limits::limited(event)) {
         return false;
     }
     references.iter().all(|reference| {
