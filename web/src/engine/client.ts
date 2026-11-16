@@ -8,6 +8,7 @@ import { createDeliveryWatches } from './client-delivery.ts';
 import { createDmClient } from './client-dm.ts';
 import { createPrivateListClient } from './client-private-lists.ts';
 import { createSignerAuthClient } from './client-signer-auth.ts';
+import { createStorageClient } from './client-storage.ts';
 import type { Transport } from './client-transport.ts';
 import { createZapClient } from './client-zaps.ts';
 import type { EngineStats, Hint } from './protocol.ts';
@@ -29,6 +30,8 @@ export function createEngine(transport: Transport): Engine {
   const dm = createDmClient(transport);
   const signerAuth = createSignerAuthClient(transport);
   const zaps = createZapClient(transport);
+  const storage = createStorageClient(transport);
+  storage.visible(document.visibilityState !== 'hidden');
   const lists = createPrivateListClient(dm.access, (message) => transport.post(message));
   const subs = new Map<string, SubHandlers>(); // bound: open subscriptions (one per mounted list)
   const owners = new Map<string, HTMLElement>(); // bound: open subscriptions
@@ -78,6 +81,7 @@ export function createEngine(transport: Transport): Engine {
     idleTimer = setTimeout(() => ((idle = true), hint()), IDLE_MS);
   };
   const resumed = (): void => {
+    storage.visible(document.visibilityState !== 'hidden');
     if (document.visibilityState !== 'hidden') dm.flushers.resume(info.get()?.version ?? 0);
     else lists.hidden();
     hint();
@@ -106,7 +110,7 @@ export function createEngine(transport: Transport): Engine {
     });
   });
   transport.listen((msg) => {
-    if (signerAuth.receive(msg)) return;
+    if (storage.receive(msg) || signerAuth.receive(msg)) return;
     if (msg.t === 'rows') {
       learnRows(msg.rows);
       subs.get(msg.sub)?.rows(msg.rows, msg.atTop, msg.atBottom);
@@ -152,6 +156,7 @@ export function createEngine(transport: Transport): Engine {
   return {
     dm,
     signerAuth,
+    storage,
     zaps,
     accounts,
     status,
@@ -244,6 +249,7 @@ export function createEngine(transport: Transport): Engine {
       window.removeEventListener('keydown', active, true);
       clearTimeout(idleTimer);
       offPeople();
+      storage.dispose();
       signerAuth.dispose();
       lists.dispose();
       dm.dispose();

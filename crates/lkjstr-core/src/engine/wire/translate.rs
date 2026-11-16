@@ -13,7 +13,9 @@ impl Session {
                 self.preview_near(sub, ids);
                 vec![]
             }
-            Input::SignerAuthCancel { .. }
+            Input::StorageInspect { .. }
+            | Input::StorageClose { .. }
+            | Input::SignerAuthCancel { .. }
             | Input::ZapQuote { .. }
             | Input::ZapReceipts { .. }
             | Input::ZapClose { .. }

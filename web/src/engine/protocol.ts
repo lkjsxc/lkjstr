@@ -30,7 +30,9 @@
 /** 8: private conversation identities, display models, inbox lists and private draft storage. */
 /** 9: provider-authorized zaps, unpaid invoice intents and current reading hints. */
 /** 10: account-scoped private lists with owned signer cancellation. */
-export const PROTOCOL_VERSION = 11;
+/** 11: owner-bound ephemeral bunker authorization challenges. */
+/** 12: finite storage inspection; no storage mutation. */
+export const PROTOCOL_VERSION = 12;
 
 /** Chosen by the interface, unique among its open subscriptions. */
 export type SubId = string;
@@ -745,6 +747,8 @@ export type SignerAuthorization = {
 };
 
 export type ToEngine =
+  | { readonly t: 'storage.inspect'; readonly req: ReqId }
+  | { readonly t: 'storage.close'; readonly req: ReqId }
   | { readonly t: 'signer.auth.cancel'; readonly id: string; readonly reason?: 'unsupported' }
   | { readonly t: 'zap.quote'; readonly req: ReqId; readonly query: ZapQuoteInput }
   | { readonly t: 'zap.receipts'; readonly req: ReqId; readonly query: ZapReceiptInput }
@@ -909,6 +913,7 @@ export type Timeline = {
   readonly older: boolean;
 };
 export type FromEngine =
+  | { readonly t: 'storage'; readonly req: ReqId; readonly report: StorageReport }
   | ({ readonly t: 'signer.auth' } & SignerAuthorization)
   | { readonly t: 'signer.auth.clear'; readonly id: string }
   | { readonly t: 'zap.quote'; readonly req: ReqId; readonly quote: ZapQuote }
@@ -1216,4 +1221,31 @@ export type ZapReceiptView = {
   /** These requested relay pages only; observed is not a claim about the whole network. */
   readonly coverage: 'loading' | 'observed' | 'truncated' | 'failed';
   readonly page: ZapReceiptPage | null;
+};
+
+/** Floored milliseconds since this Worker's performance time origin, not UTC.
+ * Values from different Worker lifetimes are not comparable. */
+export type StorageTime = number;
+export type StorageUnknown = { readonly phase: 'unsupported' | 'failed' | 'timeout' };
+/** Exact row count observed by one successful readonly events transaction.
+ * `at` records its completion callback; live writes may continue afterward. */
+export type StoredEventCount = StorageUnknown | {
+  readonly phase: 'ready'; readonly count: number; readonly at: StorageTime;
+};
+/** Approximate browser estimate across this origin, including other stores.
+ * Neither physical disk bytes nor the size of just the public event cache. */
+export type OriginStorage = StorageUnknown | {
+  readonly phase: 'ready'; readonly usage: number; readonly quota: number;
+  readonly approximate: true; readonly at: StorageTime;
+};
+export type StorageReport = {
+  readonly startedAt: StorageTime; readonly finishedAt: StorageTime;
+  readonly memory: {
+    readonly events: number;
+    /** Sum of retained event string bytes; excludes allocation/serialization overhead. */
+    readonly eventPayloadBytes: number;
+    readonly at: StorageTime;
+  };
+  readonly persistedEvents: StoredEventCount;
+  readonly origin: OriginStorage;
 };

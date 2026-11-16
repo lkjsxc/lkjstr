@@ -44,6 +44,8 @@ mod relay_config;
 mod signing;
 #[path = "worker_upload.rs"]
 mod uploads;
+#[path = "worker_storage.rs"]
+mod storage;
 #[path = "worker_zaps.rs"]
 mod zaps;
 use effects::pump;
@@ -60,6 +62,7 @@ struct Host {
     dm: direct_messages::State,
     zaps: zaps::State,
     private_lists: private_lists::Book,
+    storage: storage::State,
     bunker: bunker::State,
     server_checks: Vec<(u64, String, String, String, u64)>, // shared four-request bound
     auth_next: u64,
@@ -111,6 +114,7 @@ pub fn start() -> Result<WorkerHandle, JsValue> {
         dm: Default::default(),
         zaps: Default::default(),
         private_lists: Default::default(),
+        storage: Default::default(),
         bunker: Default::default(),
         server_checks: vec![],
         auth_next: 0,

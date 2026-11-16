@@ -45,9 +45,12 @@ pub(super) fn load(host: &Rc<RefCell<Host>>) {
                         accounts::ready(&mut h, id, shared);
                     }
                     let queued = std::mem::take(&mut h.startup);
+                    // Inspection already observed pre-boot visibility/detach input.
+                    h.storage.replaying_startup = true;
                     for (id, input) in queued {
                         h.receive(id, input);
                     }
+                    h.storage.replaying_startup = false;
                     match cached {
                         Ok(rows) => {
                             let dropped = h.engine.dropped;
@@ -72,6 +75,7 @@ pub(super) fn load(host: &Rc<RefCell<Host>>) {
             }
             Err(_) => {
                 if let Some(h) = weak.upgrade() {
+                    h.borrow_mut().storage.database_failed = true;
                     post(
                         &h.borrow(),
                         &Output::Error {

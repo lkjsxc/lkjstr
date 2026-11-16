@@ -40,7 +40,7 @@ passed required gates and 338 real Worker checks; [engine-lifetime-verification.
 
 ## Engine stream (2026-11-16)
 
-Protocol 6 introduced DM, encrypted-key and relay authentication operations. Protocols 7/8/9/10/11 are additive; exact shapes are in
+Protocol 6 introduced DM, encrypted-key and relay authentication operations. Protocols 7/8/9/10/11/12 are additive; exact shapes are in
 [engine-proposals.md](engine-proposals.md). Unreached operations remain in [interface-needs.md](interface-needs.md).
 
 - Core/Worker DM supports local, NIP-07 and NIP-46 signers. NIP-17 text/group
@@ -163,8 +163,10 @@ These are concrete runtime limits, not permission to fake a successful answer.
   Without a registered authorization presenter, the current client returns unsupported promptly; no new surface exists.
 - Uploads: phases, zero/validated completion and cancellation work; actual byte
   progress is unavailable without weakening redirect/body limits. NIP-96 processing remains bounded.
-- Device: physical IndexedDB size, cache clearing, settings archive import/export
-  and encrypted cross-device setup sync are absent. Payload bytes are not disk size.
+- Device: protocol12 inspection source separates payload bytes, exact stored row
+  counts and approximate origin estimates; validation is unrun and no surface
+  exists. Exact disk bytes, clearing, settings archives and setup sync remain
+  absent. See [storage-inspection.md](storage-inspection.md).
 - Followed hashtags, parsed article documents, reports and complete NIP-11 detail
   projection remain missing. Full inventory and new protocol families: parity.md.
 

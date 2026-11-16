@@ -62,7 +62,7 @@ New written Claude specifications take priority when present.
 | Public-network completeness and hour-long use | partial | Sixth live interval completed 3600.172 seconds; scrolling reached 1903/2000 distinct Home notes, with a 13.963-second maximum automation step. Seven Home candidates remain unresolved; notification/thread controls are uninformative. docs/engine-performance-sixth.md, docs/engine-live-route.md. |
 | Shared Worker, two tabs and leader loss | done | SharedWorker continuity and fallback leader replacement were measured; 30-second/10-minute cuts include one delivered Home recovery witness. Later stale-callback and retained-history fixes have transport regressions; engine/transport.js, docs/engine-performance-hour.md. |
 | Bounded cache and cold boot | partial | 16000 regular/4000 replaceable in memory; newest 2000 indexed on boot, disk pruned to 20000 after live writes. Sixth-hour WASM capacity stayed 77.07 MB after history; physical 20000-event boot reached a profile note in 230 ms. Probes and indefinite growth remain qualified. W/worker_persist.rs, docs/engine-performance-sixth.md. |
-| Physical cache size and clearing | missing | Stats `cacheBytes` is stored payload bytes, not actual IndexedDB usage; no clear-cache operation; E/feedback.rs. |
+| Storage inspection and clearing | partial | Protocol12 source separates memory payloads, exact stored-event row count and approximate origin usage; tests remain unrun and no surface exists. Exact physical disk size and clear remain absent. docs/storage-inspection.md. |
 
 ## Identity, signers and private data
 

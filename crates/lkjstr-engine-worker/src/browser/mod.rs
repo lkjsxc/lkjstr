@@ -7,6 +7,7 @@ mod idb_commit;
 pub mod idb_drafts;
 pub mod promise;
 pub mod socket;
+pub mod storage_inspection;
 pub mod timer;
 
 mod random;

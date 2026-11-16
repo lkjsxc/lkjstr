@@ -12,6 +12,7 @@ import { select } from './query.ts';
 import { searchWindow } from './search-window.ts';
 import { createSignerAuthMock } from './signer-auth.ts';
 import { mockStats } from './stats.ts';
+import { createStorageMock } from './storage.ts';
 import type { Sub } from './subscription.ts';
 import { timeKey } from './timeline.ts';
 import { createZapMock, MOCK_ZAP_EVIDENCE } from './zaps.ts';
@@ -36,6 +37,7 @@ export function createMockEngine(post: (msg: FromEngine) => void, now = Date.now
   const authorization = createSignerAuthMock(post, now);
   authObserve = authorization.observe;
   const dm = createPrivateMock(core);
+  const storage = createStorageMock(post);
   const zaps = createZapMock(core);
   zapObserve = zaps.observe;
   let config: EngineConfig = { language: 'en', heuristics: true, prefetch: true };
@@ -58,7 +60,7 @@ export function createMockEngine(post: (msg: FromEngine) => void, now = Date.now
   return {
     authorization,
     handle(msg) {
-      if (authorization.handle(msg)) return;
+      if (storage.handle(msg) || authorization.handle(msg)) return;
       if (zaps.handle(msg)) return;
       if (dm.handle(msg)) return;
       if (msg.t === 'upload.cancel') return act.cancelUpload(msg.req);
@@ -185,6 +187,7 @@ export function createMockEngine(post: (msg: FromEngine) => void, now = Date.now
       } else if (msg.t === 'act') act.run(msg.req, msg.action);
     },
     dispose() {
+      storage.dispose();
       authorization.dispose();
       act.dispose();
       dm.dispose();

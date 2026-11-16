@@ -1,6 +1,13 @@
 //! Engine input dispatch, separate from bounded ingestion.
 use super::*;
 impl Engine {
+    pub(super) fn error(&mut self, req: Option<String>, code: &str) {
+        self.outgoing.push(Output::Error {
+            req,
+            code: code.into(),
+        });
+    }
+
     pub fn input(&mut self, input: Input, now: u64) {
         match input {
             Input::Open { sub, query } => self.open_view(sub, query, true, now),

@@ -2,6 +2,7 @@
 import type { Signal } from '../shared/signal.ts';
 import type { createDmClient } from './client-dm.ts';
 import type { createSignerAuthClient } from './client-signer-auth.ts';
+import type { createStorageClient } from './client-storage.ts';
 import type { createZapClient } from './client-zaps.ts';
 import type {
   Account,
@@ -47,6 +48,7 @@ export type Engine = {
   readonly dm?: ReturnType<typeof createDmClient>;
   readonly zaps?: ReturnType<typeof createZapClient>;
   readonly signerAuth?: ReturnType<typeof createSignerAuthClient>;
+  readonly storage?: ReturnType<typeof createStorageClient>;
   readonly accounts: Signal<Accounts>;
   readonly status: Signal<{ connected: number; wanted: number; offline: boolean }>;
   /** Which engine answered (`null` until it is ready). */

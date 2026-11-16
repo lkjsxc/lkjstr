@@ -26,6 +26,8 @@ function shape(node) {
   if (ts.isArrayTypeNode(node)) return { array: shape(node.elementType) };
   if (ts.isTypeLiteralNode(node)) return { object: Object.fromEntries(node.members.map((m) => [m.name.text, { optional: !!m.questionToken, shape: shape(m.type) }])) };
   if (ts.isLiteralTypeNode(node)) {
+    if (node.literal.kind === ts.SyntaxKind.TrueKeyword) return { literal: true };
+    if (node.literal.kind === ts.SyntaxKind.FalseKeyword) return { literal: false };
     if (node.literal.kind === ts.SyntaxKind.NullKeyword) return { literal: null };
     return { literal: node.literal.text };
   }

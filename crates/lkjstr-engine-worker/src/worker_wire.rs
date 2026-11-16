@@ -36,6 +36,7 @@ impl Host {
         if self.stopped {
             return;
         }
+        if storage::input(self, id, &input) { return; }
         if !self.loaded {
             if self.startup.len() < 256 {
                 self.startup.push((id, input));

@@ -88,6 +88,7 @@ pub fn start_shared() -> Result<SharedWorkerHandle, JsValue> {
         dm: Default::default(),
         zaps: Default::default(),
         private_lists: Default::default(),
+        storage: Default::default(),
         bunker: Default::default(),
         server_checks: vec![],
         auth_next: 0,
@@ -219,6 +220,7 @@ pub(super) fn expire(host: &Rc<RefCell<Host>>) {
     }
 }
 pub(super) fn detach(h: &mut Host, id: u64) {
+    storage::detach(h, id);
     zaps::detach(h, id);
     direct_messages::editors::detach(h, id);
     uploads::control::detach(h, id);

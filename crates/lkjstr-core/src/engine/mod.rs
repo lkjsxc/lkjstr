@@ -39,6 +39,7 @@ mod row_media;
 mod row_model;
 pub mod rows;
 pub mod settings;
+pub mod storage_inspection;
 mod thread;
 pub mod upload;
 pub mod upload_jobs;
@@ -240,11 +241,5 @@ impl Engine {
         let mut result = std::mem::take(&mut self.outgoing);
         result.extend(self.network.drain_output());
         self.channel_outputs(result)
-    }
-    fn error(&mut self, req: Option<String>, code: &str) {
-        self.outgoing.push(Output::Error {
-            req,
-            code: code.into(),
-        });
     }
 }

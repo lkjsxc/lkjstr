@@ -80,3 +80,14 @@ SharedWorker/direct ports and the fallback leader's own port are supported;
 a fallback follower returns unsupported because its BroadcastChannel is not
 private. Background relay authentication also cannot choose a page on behalf
 of the user. Details and current verification status: [bunker-auth.md](bunker-auth.md).
+
+## Finite storage observations
+
+`storage.inspect {req}` / `storage.close {req}` and `storage {req,report}` expose
+separate memory event-payload counts, exact public-event transaction row counts
+and approximate origin usage/quota, with independent ready/unsupported/failed/
+timeout states and Worker-monotonic observation times. `engine.storage.inspect`
+provides the finite client helper. The user needs a way to inspect these
+limits without labeling payload bytes or origin estimates as physical cache
+size. No inspection/clear control exists; clear remains unimplemented.
+Source and verification limits are in [storage-inspection.md](storage-inspection.md).
