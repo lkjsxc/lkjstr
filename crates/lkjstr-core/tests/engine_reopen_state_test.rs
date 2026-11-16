@@ -1,4 +1,4 @@
-#![allow(clippy::unwrap_used)]
+#![allow(clippy::unwrap_used, clippy::expect_used)]
 // Reopening a logical view must observe completion independently of retained relay work.
 mod engine_review_support;
 use engine_review_support::{RELAY, accept, output};
