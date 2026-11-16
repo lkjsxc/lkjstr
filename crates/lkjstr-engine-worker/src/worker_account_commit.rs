@@ -160,7 +160,7 @@ pub(in crate::worker) fn pump_accounts(host: &Rc<RefCell<Host>>) {
                     for id in h.sessions.keys() {
                         send_accounts(&h, *id);
                     }
-                    if h.sessions.contains_key(&id) {
+                    if h.sessions.contains_key(&id) && !signal.aborted() {
                         let exported = exported.map(|value| value.to_string());
                         let (key, encrypted_key) = if raw_backup {
                             (exported, None)
@@ -187,7 +187,10 @@ pub(in crate::worker) fn pump_accounts(host: &Rc<RefCell<Host>>) {
                         );
                     }
                 }
-                Err(code) => h.scope.direct(id, &Session::failure(req, code)),
+                Err(code) if h.sessions.contains_key(&id) && !signal.aborted() => {
+                    h.scope.direct(id, &Session::failure(req, code));
+                }
+                Err(_) => {}
             }
             if let Some(Ok(ticket)) = lock {
                 direct_messages::editors::finish(&mut h, &ticket.req);
