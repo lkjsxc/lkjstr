@@ -12,6 +12,7 @@ Frontend (`web/`):
 - [time-rail.md](time-rail.md): cache-wide month scale, native fallbacks and verification.
 - [interface-verification.md](interface-verification.md): specified keys/messages, captures and runtime gate evidence.
 - [frontend.md](frontend.md): structure of `web/`, the engine boundary, gates.
+- [frontend-layout.md](frontend-layout.md): batched overflow measurement and retained-row layout evidence.
 - [integration-release.md](integration-release.md): real-engine release candidate and UI gaps.
 - [hosting-needs.md](hosting-needs.md): what the static host must serve.
 - [offline-shell.md](offline-shell.md): verified shell storage, update lifetimes and bounds.
