@@ -158,7 +158,13 @@ all five new and sixteen adjacent cases passed at 15:13:41 UTC in 4.764
 seconds, load 1.38/1.60/1.94. The signer remains unanswered while the browser
 fixture waits for the independent relay State. It cannot certify loading
 from a fabricated phase or a completed decrypt. Evidence:
-`tmp/sixth-reopen-{before,after}.{log,json}`. The merged rerun is pending.
+`tmp/sixth-reopen-{before,after}.{log,json}`.
+The merged private Worker suite now passes 31/31 using the corrected observer
+and a fresh named-list lookup for the removal flight. The earlier removal
+fixture had broadcast a mute replacement after its finite lookup closed;
+that timeout was a fixture delivery error, separate from the observer bug.
+The valid late plaintext and exact sub/event revocation assertions remain.
+Evidence: `tmp/sixth-private-fixture-try3/report.json`; full gates are pending.
 
 Primary contracts: [NIP-51](https://github.com/nostr-protocol/nips/blob/master/51.md),
 [NIP-07](https://github.com/nostr-protocol/nips/blob/master/07.md),

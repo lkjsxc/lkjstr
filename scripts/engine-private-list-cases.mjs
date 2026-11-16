@@ -85,15 +85,21 @@ export async function commonListCases(c,fixture,fake,kind,check){
 }
 export async function removedListCase(c,fixture,fake,check){
   const count=c.crypts(await c.all()).length;
-  const replacement=await fixture.call({list:{kind:10000,at:fixture.first.at+2,
-    tags:[['word','public-list-fixture']],entries:[['word','private-replacement-marker']]}});
-  fake.add(replacement);
+  // A fresh address owns a real lookup; an already-finished mute lookup is finite.
+  const event=await fixture.call({list:{kind:30000,at:fixture.first.at+2,
+    tags:[['d','remove-flight']],entries:[['p',fixture.first.peer]]}});
+  fake.add(event);
+  await c.send({t:'open',sub:'remove-flight',visible:true,query:{source:'list',
+    account:c.pubkey,privateLists:true,tag:'30000:'+c.pubkey+':remove-flight'}});
   const all=await c.until(ms=>c.crypts(ms).length>count);
   const pending=c.crypts(all).at(-1);c.handled.add(pending.req);
+  check('removal fixture owns the fresh named-list decrypt',
+    pending.context.sub==='remove-flight'&&pending.context.event===event.id);
   const removed=await c.act({a:'account.remove',pubkey:c.pubkey});
-  await c.send({t:'crypted',req:pending.req,value:'[["word","private-replacement-marker"]]'});
+  await c.send({t:'crypted',req:pending.req,value:JSON.stringify([['p',fixture.first.peer]])});
   await c.open('removed');await c.barrier();
   const later=await c.all();
   check('account removal consumes an in-flight list reply before any later projection',
-    removed.ok&&!contains(c.rows(later,'m'),privateWord)&&!contains(c.rows(later,'removed'),'private-replacement-marker'));
+    removed.ok&&!contains(c.rows(later,'m'),privateWord)
+    &&!contains(c.rows(later,'removed'),privateWord)&&c.rows(later,'remove-flight').length===0);
 }
