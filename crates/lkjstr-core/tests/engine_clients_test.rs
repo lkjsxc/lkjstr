@@ -51,3 +51,38 @@ fn clients_have_isolated_ids_visibility_and_signing_responses() {
     );
     assert_eq!(c.expire(200000), vec![b]);
 }
+#[test]
+fn displayed_deliveries_are_namespaced_bounded_and_released_on_detach() {
+    let mut c = Clients::default();
+    let a = c.connect(0).expect("a");
+    let b = c.connect(0).expect("b");
+    c.input(
+        a,
+        Input::DeliveryWatch {
+            reqs: vec!["post".into()],
+        },
+        1,
+    );
+    let inputs = c.input(
+        b,
+        Input::DeliveryWatch {
+            reqs: vec!["post".into()],
+        },
+        1,
+    );
+    assert!(
+        matches!(&inputs[0],Input::DeliveryWatch{reqs} if reqs==&vec![format!("{a}:post"),format!("{b}:post")])
+    );
+    let inputs = c.disconnect(a);
+    assert!(
+        matches!(inputs.last(),Some(Input::DeliveryWatch{reqs}) if reqs==&vec![format!("{b}:post")])
+    );
+    let inputs = c.input(
+        b,
+        Input::DeliveryWatch {
+            reqs: (0..200).map(|i| i.to_string()).collect(),
+        },
+        2,
+    );
+    assert!(matches!(&inputs[0],Input::DeliveryWatch{reqs} if reqs.len()==128));
+}

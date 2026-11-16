@@ -137,15 +137,7 @@ impl Network {
         if added && let Some(p) = self.publications.get(id) {
             self.output.push(super::protocol::Output::Delivery {
                 req: p.req.clone(),
-                deliveries: p
-                    .deliveries
-                    .iter()
-                    .map(|(relay, state)| super::protocol::Delivery {
-                        relay: relay.clone(),
-                        state: state.clone(),
-                        message: None,
-                    })
-                    .collect(),
+                deliveries: p.delivery(),
             });
         }
     }

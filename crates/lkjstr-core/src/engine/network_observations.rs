@@ -81,6 +81,11 @@ impl Network {
     }
     pub fn open_wires(&self) -> BTreeMap<&str, usize> {
         let mut out = BTreeMap::new();
+        for r in self.receipts.values() {
+            for url in r.checks.keys() {
+                *out.entry(url.as_str()).or_default() += 1;
+            }
+        }
         let mut seen = BTreeSet::new();
         for r in self.requests.values().filter(|r| r.sent) {
             if seen.insert((&r.relay, &r.wire_id)) {

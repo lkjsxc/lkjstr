@@ -31,7 +31,7 @@ test double. The Rust/WASM engine replaces it at build time with
 | `src/views/` | One file per kind of tab or piece of one; `registry.ts` lists the kinds |
 | `src/shared/` | `h`, signals, settings, storage, i18n and the two string tables, key table, formats, icons |
 | `src/ui/*.css` | All styles: `ui.css` (frame, WM), `notes.css`, `views.css`, `people.css`, `pages.css` |
-| `src/static/privacy.html` | The static privacy policy page |
+| `src/static/` | Static privacy policy and public-page stylesheet |
 | `scripts/` | `build.ts`, `serve.ts`, `check.ts`, `smoke.ts`, `shots.ts` |
 | `tests/` | vitest: layout, words, keys, formats, undo, the mock engine |
 
@@ -70,7 +70,11 @@ Seams worth knowing inside `src/views/`:
   from the interface; `rows`, batched `patch`, `fresh` and `state` back. A row
   is a finished view model; the interface virtualises and never reorders.
 - `act {req, action}` with a `result`, plus `progress` and per-relay
-  `delivery` for publishes and uploads.
+  `delivery` for publishes and uploads. A publication result can settle before
+  the remaining relay answers. The composer retains delivery callbacks while its
+  result is displayed; unsettled sends can survive a remount. When the last send
+  settles without a mounted composer, the current delivery watch is released.
+  Optional `hint.deliveryWatches` names retained action requests, at most 128 per client.
 - `sign` from the engine when the account uses a browser extension, answered
   with `signed` (NIP-07 exists only on the main thread). `getPublicKey` is
   answered by the real transport itself, and by `client.ts` for the mock.
@@ -131,7 +135,11 @@ pnpm fix            # biome --write
 `pnpm build -- --engine=<dir>` consumes the package described in
 [engine-package.md](engine-package.md). All engine imports, worker entries and
 WASM assets receive hashed names in place of the mock. Startup loads the
-package Transport adapter. `pnpm package` never rebuilds dist.
+package Transport adapter. `pnpm package` never rebuilds dist. It requires Python 3 for archive preflight:
+allowed file suffixes, safe paths, at most 4096 entries, nonempty regular files,
+local index references and external scripts under the edge CSP. Network-path
+references are rejected for index links and all scripts, and base elements are
+rejected in every HTML file. Errors name the file.
 
 `pnpm shots` takes `--only=<width>-<theme>-<lang>` and `--scenes=home,thread`.
 `LKJSTR_CHROME=<path>` picks the browser for `smoke` and `shots`.
@@ -154,3 +162,16 @@ web/ is the only interface. The Rust Worker lives in
 crates/lkjstr-engine-worker; the root Cargo.toml is a virtual workspace.
 Root pnpm build and quiet release gates build this frontend with that Worker.
 workspace.md describes historical layout behavior; design.md describes web/.
+
+## Public pages
+
+Build-time scripts/site.ts emits seven page pairs at /en/*.html and /ja/*.html,
+sitemap.txt (one absolute URL per line, including / and privacy.html), and robots.txt. Public copy lives in
+the paired site-words-en.ts and site-words-ja.ts tables. Shared About, Docs prose
+and shortcuts come from the app string tables and key definitions. The shared
+card image is icon-512.png. No reading script or new dependency is needed.
+
+The About page of Docs links to every public page and the static privacy policy.
+The app shell supplies crawler metadata and bilingual noscript links.
+Run pnpm shots -- --scenes=site-about,site-features,site-guide for dark shots at
+1440 and 390 pixels in tmp/shots/site-{about,features,guide}-{1440,390}-{en,ja}.png.

@@ -1,5 +1,4 @@
 use super::*;
-use crate::engine::protocol::Delivery;
 impl Network {
     /// Frame parsing and signature verification remain in protocol/core.
     pub fn message(&mut self, relay: &str, text: &str, now: u64) -> Option<NostrEvent> {
@@ -21,6 +20,9 @@ impl Network {
                 if let Some(r) = self.relays.get_mut(relay) {
                     r.received += 1;
                     self.quality_revision = self.quality_revision.wrapping_add(1);
+                }
+                if self.delivery_event(relay, &subscription_id, &event) {
+                    return Some(event);
                 }
                 let mut accepted = false;
                 for r in self.requests.values_mut().filter(|r| {
@@ -45,6 +47,7 @@ impl Network {
                 }
             }
             lkjstr_protocol::RelayMessage::Eose(subscription_id) => {
+                self.close_delivery_check(relay, &subscription_id);
                 let mut close = false;
                 for r in self
                     .requests
@@ -78,6 +81,7 @@ impl Network {
                 subscription_id,
                 message,
             } => {
+                self.close_delivery_check(relay, &subscription_id);
                 let split = !quality::limited(&message)
                     && self
                         .requests
@@ -118,47 +122,7 @@ impl Network {
                 accepted,
                 message,
             } => {
-                if let Some(p) = self.publications.get_mut(&event_id)
-                    && p.deliveries.get(relay).is_some_and(|s| s == "pending")
-                    && p.sent.contains_key(relay)
-                    && now < p.deadline
-                {
-                    let retry = !accepted && quality::limited(&message);
-                    if !retry {
-                        p.deliveries.insert(
-                            relay.into(),
-                            if accepted { "accepted" } else { "rejected" }.into(),
-                        );
-                    }
-                    let deliveries = p
-                        .deliveries
-                        .iter()
-                        .map(|(relay, state)| Delivery {
-                            relay: relay.clone(),
-                            state: state.clone(),
-                            message: None,
-                        })
-                        .collect::<Vec<_>>();
-                    self.output.push(Output::Delivery {
-                        req: p.req.clone(),
-                        deliveries: deliveries.clone(),
-                    });
-                    if accepted && !p.reported_success {
-                        p.reported_success = true;
-                        self.output.push(Output::Result {
-                            req: p.req.clone(),
-                            id: Some(event_id.clone()),
-                            deliveries: deliveries.clone(),
-                            error: None,
-                        });
-                    }
-                    self.profiles_changed = true;
-                    self.quality_revision = self.quality_revision.wrapping_add(1);
-                    self.update_publication(&event_id, &deliveries);
-                    if retry {
-                        self.cool_down(relay, now);
-                    }
-                }
+                self.answer_delivery(&event_id, relay, accepted, &message, now);
             }
             lkjstr_protocol::RelayMessage::Notice(message) if quality::limited(&message) => {
                 self.cool_down(relay, now);

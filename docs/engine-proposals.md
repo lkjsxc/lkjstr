@@ -94,3 +94,15 @@ failures stay unknown. Evidence is session-only and shared across subscribers.
 Frontend protocol 5 adds optional Stats relay `route` words (reading, writing, both, search, own, unused). The engine derives these from configured relay usage.
 Note `Counts.partial` now means an observed full relay page, not an unanswered request; the wire shape is unchanged. Preview failures and
 untitled answers project no cards until cache expiry.
+
+
+## Composer delivery lifetime (2026-11-15)
+
+The frontend-owned Hint gains optional deliveryWatches, at most 128 action req
+IDs per client. Existing delivery/result shapes stay unchanged. First success
+resolves the action; delivery updates continue while that result is displayed.
+Replacing the result or unmounting after settlement releases the listener; detach releases
+its namespaced watches. Engine receipts retain the last 32 publications plus
+watched results, bounded by 32 clients. Wire delivery includes only attempted
+routes and retains relay refusal messages. Timeout means unknown; no protocol
+contract number change or new user-facing state is needed.

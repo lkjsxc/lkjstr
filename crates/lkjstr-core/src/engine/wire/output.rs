@@ -1,6 +1,7 @@
+use super::output_diff::diff;
 use super::*;
 use crate::engine::{Engine, protocol as p};
-use serde_json::{Value, json};
+use serde_json::json;
 impl Session {
     pub(super) fn output_inner(&mut self, out: p::Output, engine: &Engine) -> Vec<Output> {
         match out {
@@ -10,16 +11,37 @@ impl Session {
                 at_top,
                 at_bottom,
             } => {
-                let (at_top, at_bottom) = if self.queries.get(&sub).is_some_and(|q| q.convert().is_some_and(|q| super::list_edges::projected(q.source)) || q.notifications == Some(true)) {
+                let (at_top, at_bottom) = if self.queries.get(&sub).is_some_and(|q| {
+                    q.convert()
+                        .is_some_and(|q| super::list_edges::projected(q.source))
+                        || q.notifications == Some(true)
+                }) {
                     let edges = self.source_edges(&sub, engine);
                     (edges.0, at_bottom && edges.1)
-                } else { (at_top, at_bottom) };
+                } else {
+                    (at_top, at_bottom)
+                };
                 let mut rows = self.rows(&sub, &items, engine);
-                for row in &mut rows { super::quote_state::settle(row, engine); }
+                for row in &mut rows {
+                    super::quote_state::settle(row, engine);
+                }
                 self.delivered.insert(sub.clone(), rows.clone());
-                let mut out=vec![Output::Rows { sub:sub.clone(), rows, at_top, at_bottom }];
-                if self.queries.get(&sub).is_some_and(|q|matches!(q.source.as_str(),"channels"|"channel")) && engine.network.request_progress(&sub).1==0 {
-                    out.push(Output::State{sub,state:json!({"phase":"cache","relaysAsked":0,"relaysAnswered":0})});
+                let mut out = vec![Output::Rows {
+                    sub: sub.clone(),
+                    rows,
+                    at_top,
+                    at_bottom,
+                }];
+                if self
+                    .queries
+                    .get(&sub)
+                    .is_some_and(|q| matches!(q.source.as_str(), "channels" | "channel"))
+                    && engine.network.request_progress(&sub).1 == 0
+                {
+                    out.push(Output::State {
+                        sub,
+                        state: json!({"phase":"cache","relaysAsked":0,"relaysAnswered":0}),
+                    });
                 }
                 out
             }
@@ -45,10 +67,24 @@ impl Session {
                     }
                 }
                 if self.queries.get(&sub).is_some_and(|q| {
-                    q.notifications == Some(true) || matches!(
-                        q.source.as_str(),
-                        "people" | "channels" | "channel" | "thread" | "profile" | "followers" | "following" | "mutes" | "list" | "notifications" | "bookmarks" | "relays" | "media-servers" | "emoji"
-                    )
+                    q.notifications == Some(true)
+                        || matches!(
+                            q.source.as_str(),
+                            "people"
+                                | "channels"
+                                | "channel"
+                                | "thread"
+                                | "profile"
+                                | "followers"
+                                | "following"
+                                | "mutes"
+                                | "list"
+                                | "notifications"
+                                | "bookmarks"
+                                | "relays"
+                                | "media-servers"
+                                | "emoji"
+                        )
                 }) {
                     let next = self.source_rows(&sub, engine);
                     let previous = self
@@ -56,9 +92,19 @@ impl Session {
                         .insert(sub.clone(), next.clone())
                         .unwrap_or_default();
                     let ops = diff(&previous, &next);
-                    return if super::list_edges::finite(self.queries.get(&sub).and_then(|q| q.convert()).map(|q| q.source)) {
+                    return if super::list_edges::finite(
+                        self.queries
+                            .get(&sub)
+                            .and_then(|q| q.convert())
+                            .map(|q| q.source),
+                    ) {
                         let (at_top, at_bottom) = self.source_edges(&sub, engine);
-                        vec![Output::Rows {sub, rows:next, at_top, at_bottom}]
+                        vec![Output::Rows {
+                            sub,
+                            rows: next,
+                            at_top,
+                            at_bottom,
+                        }]
                     } else if ops.is_empty() {
                         vec![]
                     } else {
@@ -77,32 +123,49 @@ impl Session {
                 }
             }
             p::Output::Fresh { sub, count } => {
-                let count = if self.queries.get(&sub).is_some_and(|q| q.notifications == Some(true) || q.source == "notifications") {
-                    self.source_fresh(&sub, engine)
-                } else { count };
-                let ops = self.settled_quote_patch(&sub,engine);
-                let mut out = vec![Output::Fresh { sub:sub.clone(), count }];
-                if !ops.is_empty() { out.push(Output::Patch {sub,ops}); }
+                let count =
+                    if self.queries.get(&sub).is_some_and(|q| {
+                        q.notifications == Some(true) || q.source == "notifications"
+                    }) {
+                        self.source_fresh(&sub, engine)
+                    } else {
+                        count
+                    };
+                let ops = self.settled_quote_patch(&sub, engine);
+                let mut out = vec![Output::Fresh {
+                    sub: sub.clone(),
+                    count,
+                }];
+                if !ops.is_empty() {
+                    out.push(Output::Patch { sub, ops });
+                }
                 out
-            },
+            }
             p::Output::Sign { req, event } => vec![Output::Sign {
                 req,
                 pubkey: event.pubkey.clone(),
                 event: serde_json::to_string(&event).unwrap_or_default(),
             }],
-            p::Output::Delivery{req,deliveries}=>vec![Output::Delivery{req,relays:deliveries.into_iter().map(|d|json!({"url":d.relay,"state":match d.state.as_str(){"accepted"=>"ok","rejected"=>"failed",other=>other}})).collect()}],
+            p::Output::Delivery { req, deliveries } => vec![Output::Delivery {
+                req,
+                relays: deliveries.into_iter().map(super::delivery::value).collect(),
+            }],
             p::Output::Result {
                 req,
                 id,
                 deliveries,
                 error,
             } => {
-                let delivery=deliveries.into_iter().map(|d|json!({"url":d.relay,"state":match d.state.as_str(){"accepted"=>"ok","rejected"=>"failed",other=>other}})).collect::<Vec<_>>();
+                let delivery = deliveries
+                    .into_iter()
+                    .map(super::delivery::value)
+                    .collect::<Vec<_>>();
                 let ok = error.is_none() && delivery.iter().any(|d| d["state"] == "ok");
+                let unknown = error.is_none() && delivery.iter().any(|d| d["state"] == "timeout");
                 vec![Output::Result {
                     req,
                     ok,
-                    error: if ok {
+                    error: if ok || unknown {
                         None
                     } else {
                         Some(Failure {
@@ -122,15 +185,33 @@ impl Session {
                 asked_relays,
                 answered_relays,
             } => {
-                let ops=self.settled_quote_patch(&sub,engine);
+                let ops = self.settled_quote_patch(&sub, engine);
                 let answered = answered_relays;
-                let empty_profile = self.queries.get(&sub).is_some_and(|q| q.source == "profile")
-                    && self.delivered.get(&sub).is_some_and(|r| r.iter().all(|r| r["kind"] == "profile"))
+                let empty_profile = self
+                    .queries
+                    .get(&sub)
+                    .is_some_and(|q| q.source == "profile")
+                    && self
+                        .delivered
+                        .get(&sub)
+                        .is_some_and(|r| r.iter().all(|r| r["kind"] == "profile"))
                     && engine.views.get(&sub).is_some_and(|v| v.source_exhausted);
-                let known_channel=self.queries.get(&sub).is_some_and(|q|q.source=="channel" && q.convert().and_then(|q|q.target).and_then(|id|engine.store.get(&id)).is_some_and(|e|e.kind==40));
-                let mut out=vec![Output::State{sub:sub.clone(),state:json!({"phase":match state.as_str(){"data"=>if self.queries.get(&sub).is_some_and(|q| q.source=="channels") || empty_profile {"done"} else {"live"},"not-found"=>if known_channel {"live"} else {"done"},_=>"failed"},"relaysAsked":asked_relays,"relaysAnswered":answered})}];
-                if !ops.is_empty(){out.push(Output::Patch{sub,ops});}out
-            },
+                let known_channel = self.queries.get(&sub).is_some_and(|q| {
+                    q.source == "channel"
+                        && q.convert()
+                            .and_then(|q| q.target)
+                            .and_then(|id| engine.store.get(&id))
+                            .is_some_and(|e| e.kind == 40)
+                });
+                let mut out = vec![Output::State {
+                    sub: sub.clone(),
+                    state: json!({"phase":match state.as_str(){"data"=>if self.queries.get(&sub).is_some_and(|q| q.source=="channels") || empty_profile {"done"} else {"live"},"not-found"=>if known_channel {"live"} else {"done"},_=>"failed"},"relaysAsked":asked_relays,"relaysAnswered":answered}),
+                }];
+                if !ops.is_empty() {
+                    out.push(Output::Patch { sub, ops });
+                }
+                out
+            }
             p::Output::Diagnostics { sub, .. } => {
                 let rows = self.source_rows(&sub, engine);
                 self.delivered.insert(sub.clone(), rows.clone());
@@ -148,103 +229,4 @@ impl Session {
             _ => vec![],
         }
     }
-    pub fn failure(req: String, code: &str) -> Output {
-        let mapped = match code {
-            "list-not-loaded" | "target-unavailable" => "not-found",
-            "signer-rejected" => "signer-refused",
-            "signer-timeout" => "signer-missing",
-            "event-too-large" => "too-large",
-            "invalid-account" => "signed-out",
-            "no-relays" => "no-relays",
-            "invalid-relay" | "invalid-server" => "rejected",
-            "signed-out" | "read-only" | "signer-refused" | "signer-missing" | "rejected"
-            | "too-large" | "offline" | "not-found" => code,
-            "unsupported" | "upload-not-implemented" | "private-list-edit-unsupported" => {
-                "unsupported"
-            }
-            _ => "internal",
-        };
-        Output::Result {
-            req,
-            ok: false,
-            error: Some(Failure {
-                code: mapped.into(),
-                message: Some(code.into()),
-            }),
-            delivery: None,
-            id: None,
-            uploaded: None,
-            key: None,
-        }
-    }
-    fn rows(&self, sub: &str, items: &[crate::engine::rows::Row], engine: &Engine) -> Vec<Value> {
-        let q = self.queries.get(sub);
-        if q.is_some_and(|q| {
-            q.notifications == Some(true)
-                || matches!(
-                    q.source.as_str(),
-                    "people"
-                        | "channels"
-                        | "channel"
-                        | "thread"
-                        | "profile"
-                        | "followers"
-                        | "following"
-                        | "mutes"
-                        | "list"
-                        | "notifications"
-                        | "bookmarks"
-                        | "relays"
-                        | "media-servers"
-                        | "emoji"
-                )
-        }) {
-            return self.source_rows(sub, engine);
-        }
-        items
-            .iter()
-            .filter(|r| !r.own.muted && !matches!(r.kind, 6 | 16))
-            .map(|r| {
-                let mut row =
-                    super::note::note(r, &engine.store, q.and_then(|q| q.account.as_deref()));
-                super::quote_state::settle(&mut row, engine);
-                row
-            })
-            .collect()
-    }
-}
-fn diff(old: &[Value], next: &[Value]) -> Vec<Value> {
-    let mut ops = Vec::new();
-    let mut order = old.iter().map(|r| r["key"].clone()).collect::<Vec<_>>();
-    for row in old {
-        if !next.iter().any(|r| r["key"] == row["key"]) {
-            ops.push(json!({"op":"remove","key":row["key"]}));
-            order.retain(|k| *k != row["key"]);
-        }
-    }
-    for (i, row) in next.iter().enumerate().rev() {
-        let key = row["key"].clone();
-        let before = next
-            .get(i + 1)
-            .map(|r| r["key"].clone())
-            .unwrap_or(Value::Null);
-        let old_at = order.iter().position(|k| *k == key);
-        let follows =
-            old_at.is_some_and(|at| order.get(at + 1).cloned().unwrap_or(Value::Null) == before);
-        if !follows {
-            if old_at.is_some() {
-                ops.push(json!({"op":"remove","key":key}));
-                order.retain(|k| *k != key);
-            }
-            ops.push(json!({"op":"insert","before":before,"rows":[row]}));
-            let at = order
-                .iter()
-                .position(|k| *k == before)
-                .unwrap_or(order.len());
-            order.insert(at, key);
-        } else if old.iter().find(|r| r["key"] == key) != Some(row) {
-            ops.push(json!({"op":"update","row":row}));
-        }
-    }
-    ops
 }

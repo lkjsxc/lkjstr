@@ -76,6 +76,7 @@ impl Engine {
                 }
                 self.replan(now);
             }
+            Input::DeliveryWatch { reqs } => self.network.watch_deliveries(reqs),
             Input::Action {
                 req,
                 account,

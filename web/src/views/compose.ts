@@ -29,12 +29,10 @@ type State = {
   media?: Uploaded[];
   mentions?: Mention[];
 };
-
 /** `channel`: the composer of a channel tab; what it sends is a message in that channel. */
 export function mountCompose(el: HTMLElement, env: ViewEnv, channel?: string): () => void {
   const state: State = loadViewState<State>(env.instance);
   const save = (): void => saveViewState(env.instance, state);
-
   const area = h('textarea', {
     class: 'ctext',
     rows: channel ? 2 : 4,
@@ -199,16 +197,21 @@ export function mountCompose(el: HTMLElement, env: ViewEnv, channel?: string): (
   function showDelivery(relays: readonly Delivery[], final: boolean, error?: Failure): void {
     if (error) return replaceChildren(result, h('div', { class: 'error' }, failureText(error)));
     const ok = relays.filter((r) => r.state === 'ok').length;
-    const failed = relays.filter((r) => r.state === 'failed' || r.state === 'timeout');
+    const failed = relays.filter((r) => r.state === 'failed');
+    const unanswered = relays.filter((r) => r.state === 'pending' || r.state === 'timeout');
     replaceChildren(
       result,
       h(
         'div',
-        { class: final && !ok ? 'error' : '' },
+        { class: final && relays.length > 0 && failed.length === relays.length ? 'error' : '' },
         t(final ? 'compose.delivered' : 'compose.sending', { ok, all: relays.length }),
       ),
-      failed.map((r) =>
-        h('div', { class: 'muted' }, `${r.url.replace(/^wss:\/\//, '')}: ${r.message ?? r.state}`),
+      [...failed, ...unanswered].map((r) =>
+        h(
+          'div',
+          { class: 'muted' },
+          `${r.url.replace(/^wss:\/\//, '')}: ${r.state === 'failed' ? (r.message ?? '') : t('compose.noAnswer')}`,
+        ),
       ),
     );
   }

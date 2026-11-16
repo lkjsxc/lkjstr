@@ -15,6 +15,7 @@ import {
 import { join } from 'node:path';
 import * as esbuild from 'esbuild';
 import { engineAssets } from './engine-assets.ts';
+import { buildPublicPages } from './site.ts';
 
 process.env.GOMAXPROCS ??= '4';
 const here = new URL('..', import.meta.url).pathname;
@@ -106,6 +107,7 @@ async function build(): Promise<void> {
   for (const f of STATIC) copyFileSync(join(here, '..', 'static', f), join(out, f));
   copyFileSync(join(here, 'src/static/privacy.html'), join(out, 'privacy.html'));
   copyFileSync(join(here, '..', 'LICENSE'), join(out, 'LICENSE.txt'));
+  buildPublicPages(out);
 }
 
 await build();

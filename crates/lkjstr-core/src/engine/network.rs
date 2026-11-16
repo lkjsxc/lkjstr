@@ -9,6 +9,10 @@ mod batch;
 mod cancellation;
 #[path = "network_config.rs"]
 mod configuration;
+#[path = "network_delivery.rs"]
+mod delivery;
+#[path = "network_delivery_checks.rs"]
+mod delivery_checks;
 #[path = "network_lifecycle.rs"]
 mod lifecycle;
 #[path = "network_lists.rs"]
@@ -107,6 +111,11 @@ pub(super) struct Publication {
     pub deadline: u64,
     pub deliveries: BTreeMap<String, String>,
     pub sent: BTreeMap<String, u64>,
+    // Ever attempted, independent of reconnect/retry markers; <= 20 planned routes.
+    pub attempted: BTreeSet<String>,
+    pub messages: BTreeMap<String, String>,
+    pub observed: BTreeSet<String>,
+    pub transport_confirmed: BTreeSet<String>,
     pub reported_success: bool,
     pub recipients: Vec<String>,
     pub inbox_routes: BTreeSet<String>,
@@ -127,6 +136,9 @@ pub struct Network {
     pub(super) effects: Vec<Effect>,
     pub(super) output: Vec<Output>,
     pub(super) publications: BTreeMap<String, Publication>,
+    // Last 32 receipts plus results still displayed (<= 128 per client, 32 clients).
+    receipts: BTreeMap<String, delivery::Receipt>,
+    delivery_watches: BTreeSet<String>,
     // Last 32 plans (<= 2240 destinations each); no event bodies.
     publication_history: std::collections::VecDeque<publication_history::Record>,
     // At most 2048 authored events, <= 64 destinations each; persisted by Worker.

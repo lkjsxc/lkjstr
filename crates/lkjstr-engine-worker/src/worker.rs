@@ -218,9 +218,15 @@ fn pump(host: &Rc<RefCell<Host>>) {
                 host.borrow_mut().sockets.remove(&url);
             }
             Effect::Send(url, text) => {
-                if let Some(s) = host.borrow().sockets.get(&url) {
-                    s.send(&text);
-                }
+                let sent = host
+                    .borrow()
+                    .sockets
+                    .get(&url)
+                    .is_some_and(|s| s.send(&text));
+                host.borrow_mut()
+                    .engine
+                    .network
+                    .publication_frame_sent(&url, &text, sent);
             }
         }
     }

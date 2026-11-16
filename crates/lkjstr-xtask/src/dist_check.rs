@@ -28,6 +28,30 @@ pub fn check(root: &Path) -> Result<(), String> {
     let dist = root.join("dist");
     let html = fs::read_to_string(dist.join("index.html"))
         .map_err(|error| format!("dist/index.html: {error} (run pnpm build first)"))?;
+    for lang in ["en", "ja"] {
+        for page in [
+            "about",
+            "features",
+            "guide",
+            "shortcuts",
+            "faq",
+            "nips",
+            "changelog",
+        ] {
+            let path = format!("{lang}/{page}.html");
+            let body = fs::read_to_string(dist.join(&path))
+                .map_err(|error| format!("dist/{path}: {error}"))?;
+            let canonical = format!("https://lkjstr.lkjsxc.com/{path}");
+            if !body.contains(&format!("rel=\"canonical\" href=\"{canonical}\"")) {
+                return Err(format!("dist/{path}: missing canonical"));
+            }
+        }
+    }
+    for path in ["sitemap.txt", "robots.txt", "site.css", "icon-512.png"] {
+        if fs::metadata(dist.join(path)).map_or(true, |meta| meta.len() == 0) {
+            return Err(format!("dist/{path}: missing or empty public asset"));
+        }
+    }
     let assets = referenced(&html);
     if !assets.iter().any(|a| a.ends_with(".wasm")) || !assets.iter().any(|a| a.ends_with(".js")) {
         return Err("dist/index.html does not reference the app's .js and .wasm".to_owned());

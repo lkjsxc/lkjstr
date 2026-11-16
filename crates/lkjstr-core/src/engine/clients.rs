@@ -4,6 +4,7 @@ use std::collections::{BTreeMap, BTreeSet};
 #[derive(Default)]
 struct Client {
     subs: BTreeSet<String>,
+    deliveries: BTreeSet<String>,
     visible: BTreeSet<String>,
     last_seen: u64,
     page_hidden: bool,
@@ -36,6 +37,16 @@ impl Clients {
         c.last_seen = now;
         let ns = |s: String| format!("{id}:{s}");
         let input = match input {
+            Input::DeliveryWatch { reqs } => {
+                c.deliveries = reqs.into_iter().take(128).map(ns).collect();
+                return vec![Input::DeliveryWatch {
+                    reqs: self
+                        .clients
+                        .values()
+                        .flat_map(|c| c.deliveries.iter().cloned())
+                        .collect(),
+                }];
+            }
             Input::Open { sub, query } => {
                 let sub = ns(sub);
                 c.subs.insert(sub.clone());
@@ -119,7 +130,18 @@ impl Clients {
     pub fn disconnect(&mut self, id: u64) -> Vec<Input> {
         self.clients
             .remove(&id)
-            .map(|c| c.subs.into_iter().map(|sub| Input::Close { sub }).collect())
+            .map(|c| {
+                let mut inputs: Vec<_> =
+                    c.subs.into_iter().map(|sub| Input::Close { sub }).collect();
+                inputs.push(Input::DeliveryWatch {
+                    reqs: self
+                        .clients
+                        .values()
+                        .flat_map(|c| c.deliveries.iter().cloned())
+                        .collect(),
+                });
+                inputs
+            })
             .unwrap_or_default()
     }
     pub fn heartbeat(&mut self, id: u64, now: u64) {

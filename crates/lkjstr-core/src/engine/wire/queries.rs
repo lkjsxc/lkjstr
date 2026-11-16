@@ -43,6 +43,7 @@ pub enum Anchor {
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Hint {
+    pub delivery_watches: Option<Vec<String>>,
     pub visible_subs: Vec<String>,
     pub focused_sub: Option<String>,
     pub page_hidden: bool,

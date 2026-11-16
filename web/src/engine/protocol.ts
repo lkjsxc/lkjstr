@@ -622,6 +622,8 @@ export type Account = {
 
 /** Network and device facts the interface can see and the engine cannot. */
 export type Hint = {
+  /** Action request IDs whose composer results are still displayed. At most 128. */
+  readonly deliveryWatches?: readonly ReqId[];
   /** Subscriptions whose tab is in front; the others may be paused. */
   readonly visibleSubs: readonly SubId[];
   /** Subscription in the tile receiving keyboard input, when it has one. */

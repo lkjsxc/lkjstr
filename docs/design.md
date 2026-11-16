@@ -3,7 +3,6 @@
 ## Purpose
 How lkjstr looks and behaves, as built in `web/`. This document and the owner's brief decide questions of look and feel; change it in the same change
 as the code. Structure and commands are in [frontend.md](frontend.md).
-
 ## Character
 A calm reading and writing tool that stays open all day beside other work. It is the same family as ytenrich: the same window manager, tab bars, menus,
 launcher, workspaces and settings page, with lkjstr's own colours. When in doubt, do what ytenrich does.
@@ -169,6 +168,7 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
   that switches accounts), emoji, media, Post. A primary button that cannot
   act yet is neutral. Sending and failed drafts stay below the field; failed Edit swaps keep both drafts.
   Reopened tabs restore drafts; fresh tabs start empty. Hidden composers release mention lookups.
+  Delivery counts follow late answers; unanswered rows are neutral and disappear on confirmation. Only final all-refused delivery is red.
 - Pressing Post empties the field and leaves the caret in it at once, whatever the signer; what is being sent is shown below, and a failure keeps its text.
 - `@` and letters offer people under the caret: follows first; Enter takes one.
 - Every wrong click can be taken back. A like or a repost is drawn at once
@@ -198,3 +198,11 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
 Every visible string comes from the two tables in `web/src/shared/`. Japanese is written as Japanese, with no space before particles after a
 name. Searching views works in both languages. `pnpm shots` in `web/` writes every scene at 1440, 1024 and 390, in both themes and languages, to
 `tmp/screens/`: judge a visual change there (a host without Japanese fonts shows names in the wrong weight).
+
+## Public documentation
+
+The script-free English and Japanese pages at /en/*.html and /ja/*.html use
+the same paper, background, ink and action tokens. A plain header offers the
+name, a language switch and Open lkjstr. Navigation wraps at phone width; prose
+keeps a readable measure. System light/dark preference chooses the palette.
+The app remains at /; the public pages never replace its workspace.

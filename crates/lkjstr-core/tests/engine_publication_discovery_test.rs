@@ -21,7 +21,7 @@ fn event(seed: u8, kind: u64, tags: Vec<Vec<String>>) -> lkjstr_protocol::NostrE
     .expect("event")
 }
 #[test]
-fn missing_inbox_is_discovered_after_first_success_and_released_at_deadline() {
+fn missing_inbox_is_discovered_after_first_success_and_unanswered_delivery_stays_unknown() {
     let mut e = Engine::new();
     let own = "wss://own.test/";
     // Write-only configuration still supplies a chosen lookup route.
@@ -131,6 +131,10 @@ fn missing_inbox_is_discovered_after_first_success_and_released_at_deadline() {
     e.tick(130002);
     assert_eq!(
         e.network.publication_stats()["wss://inbox.test/"].publish_failed,
+        0
+    );
+    assert_eq!(
+        e.network.publication_stats()["wss://inbox.test/"].publish_pending,
         1
     );
     assert_eq!(e.stats()["totals"]["subscriptions"], 0);
