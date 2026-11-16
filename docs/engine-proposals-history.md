@@ -83,4 +83,3 @@ success resolves the action; delivery updates continue while that result is disp
 the listener; detach releases its namespaced watches. Engine receipts retain the last 32 publications plus watched results, bounded by 32 clients.
 Wire delivery includes only attempted routes and retains relay refusal messages. Timeout means unknown; no protocol contract number change or new
 user-facing state is needed.
-
