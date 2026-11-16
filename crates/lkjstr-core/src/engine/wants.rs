@@ -204,7 +204,7 @@ fn requests(
         }
     }
     let mut ids = prefetch.notes;
-    // A separate 120-target budget preserves visible reference priority.
+    // A separate 120-target budget preserves visible reference capacity.
     ids.extend(super::windows::projection::targets(
         &events[selected.raw],
         &selected.held,
