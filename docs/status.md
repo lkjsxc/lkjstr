@@ -159,7 +159,7 @@ These are concrete runtime limits, not permission to fake a successful answer.
 - Search: retained people/language OR pass native and Worker proof. Remote people
   discovery remains absent; bounded verified NIP-05 from-query lookup exists.
   Combined gates/deployment remain pending. See [search.md](search.md).
-- Bunkers: auth_url is a candidate without controls; verification and routing limits: [bunker-auth.md](bunker-auth.md). Relay switching is unsupported.
+- Bunkers: auth_url passes focused native/52 Worker checks, without controls; routing limits: [bunker-auth.md](bunker-auth.md). Relay switching is unsupported.
   Without a registered authorization presenter, the current client returns unsupported promptly; no new surface exists.
 - Uploads: phases, zero/validated completion and cancellation work; actual byte
   progress is unavailable without weakening redirect/body limits. NIP-96 processing remains bounded.

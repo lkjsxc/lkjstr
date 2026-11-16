@@ -5,7 +5,7 @@
 Implement NIP-46 intermediate authorization challenges without transferring
 signer tokens to unrelated pages or interpreting them as completed RPCs.
 The primary contract is [NIP-46](https://github.com/nostr-protocol/nips/blob/master/46.md).
-This is an integration candidate; verification remains pending below.
+This is an integration candidate. Focused proofs passed; merged gates remain pending.
 
 ## Verified intermediate responses
 
@@ -52,8 +52,9 @@ work. Late messages cannot restore a removed lease. Public signing captures its
 authority before scheduling the async task; identical replacement credentials
 cannot grant that old task a new account generation. Split-zap challenges
 inherit the remaining original 90-second operation budget as well as the RPC
-limit. Clear precedes an ordinary terminal reply. Permanent Host stop first closes output ports, then drops the
-book and aborts sockets, so it produces no new client messages.
+limit. Clear precedes an ordinary terminal reply. Permanent Host stop first
+closes output ports, then drops the book and aborts sockets, so it produces no
+new client messages.
 
 The book is never serialized. URLs are omitted from event storage, accounts,
 diagnostics and measurement reports. Native debug representations redact the
@@ -89,8 +90,15 @@ The follower-URL regression fails on unchanged transport and passes with
 interception. The four new transport cases prove direct ownership, follower
 redaction, the leader's private route and retired-connection rejection.
 Evidence is in `tmp/auth-web-proof/` including the failing-before log.
-Native compatibility, verified response, bounded lifetime and real Worker
-regressions remain unrun in this candidate.
+On 2026-11-16 the original response implementation compiled and failed the
+intermediate-response assertion. The candidate passed five protocol and nine
+core policy tests plus both focused strict Clippy checks in 14.860 seconds at
+17:56:54 UTC, load 1.62/2.28/3.10. Production and harness Worker WASM strict
+Clippy passed in 6.297 seconds at 17:57:23, load 2.05/2.32/3.08.
+Evidence: `tmp/auth-native-20261116T175654Z/` and
+`tmp/auth-wasm-20261116T175723Z/`. Every source build refreshed and recorded
+this worktree's Rust source and manifest mtimes/content hashes before using
+the shared target; no stale other-worktree artifact was accepted.
 `scripts/engine-bunker-auth.mjs` is a finite two-port real-WASM fixture using
 fresh native keys, one loopback origin and a strict public-network guard.
 It covers discovery, public/private signing, private NIP-44/NIP-04 reads,
@@ -108,22 +116,49 @@ assertion counted the mock engine's independent startup timer; the final
 comparison checks its unchanged baseline and zero timers after disposal.
 Original source, all attempts and hashes are in
 `tmp/auth-presenter-proof/` in the combined variants worktree.
-This client-only proof does not replace pending native or actual Worker checks.
+This client-only proof is separate from the native and Worker checks below.
 
-The authored `--boundaries` variant uses a harness-only single-task scheduling
+The `--boundaries` variant uses a harness-only single-task scheduling
 barrier. It clones an existing saved Remote only inside Rust and runs the normal
 account replacement policy, then authority synchronization. This deliberately
 simulates identical device credentials with a renewed generation; ordinary
 bunker import generates new device credentials. The queued action and original
 deadline remain intact. A current-generation control must still sign normally,
 and client detach or Host stop must release the barrier without remote work.
-These controls and exports are absent in production builds.
+The controls compile only with the harness feature. Final packaged production
+export inspection remains part of the pending merged build.
 
 A separate split-zap case preflights two providers, advances both fixture clocks
 by 55 seconds while the first 60-second signature remains pending, then inspects
 the later authorization. Its expiry must retain only the original 90-second
 parent budget. An identical challenge cannot extend it; the parent deadline
 must discard the partial invoice. HTTP responses are locally fulfilled and no
-request is published or invoice paid. Both boundary cases remain unrun.
+request is published or invoice paid.
 
+The raw fixture passed 30 authorization/lifetime checks and 22 boundary checks
+at 18:01:40 UTC in 11.478 seconds, load 1.92/2.37/2.95. The separate package
+with only dispatch capture and inherited zap deadline disabled completed all
+22 boundary checks: exactly the two product assertions failed, while 20
+controls passed. That before run took 5.504 seconds at 18:01:34 UTC, load
+1.83/2.36/2.94. Both use the same final fixture source; no threshold or assertion
+was weakened. Browsers, sockets, native helpers and servers were reaped.
+
+| Frozen harness package | SHA-256 |
+| --- | --- |
+| Corrected | `c435d9a6b589d7454244e9363d4f65c55409549080658040f69a5a4cd3af5a68` |
+| Boundary guards disabled | `020c0a994c1a8afa6642dc5ee65b353e91159a511e537fa6638551e1fcaa1585` |
+
+Package manifests and copied native helpers are under
+`tmp/auth-freeze-20261116T175745Z/` and `tmp/auth-freeze-20261116T175819Z/`.
+Final before/after reports are `tmp/auth-worker-20261116T180134Z/` and
+`tmp/auth-worker-20261116T180140Z/`. Two earlier attempts are retained:
+`tmp/auth-worker-20261116T175905Z/` correctly rejected missing LNURL address
+metadata, and `tmp/auth-worker-20261116T180043Z/` queried a handler already
+removed by Host stop. They are fixture failures, not complete product proofs.
+Only the fixtures changed afterward; frozen runtime/helper hashes still match.
+Four current auth transport cases also passed at 18:01 UTC.
+
+The lasting `engine-check.sh` gate runs auth transport coverage plus both raw
+Worker modes using its existing package and native fixtures. The combined
+repository, main Worker, UI and deployment gates have not run for this candidate.
 No new visible words, layout or styles are part of this capability.
