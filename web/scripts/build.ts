@@ -79,9 +79,8 @@ async function build(): Promise<void> {
   const define = { __VERSION__: JSON.stringify(version), __COMMIT__: JSON.stringify(git()) };
 
   let engine: string;
-  let wasm = '';
   if (engineDir) {
-    ({ engine, wasm } = engineAssets(engineDir, out));
+    ({ engine } = engineAssets(engineDir, out));
   } else {
     const js = await bundle('src/engine/mock/worker.ts', define);
     engine = emit(hashed('engine', 'js', js), js);
@@ -101,9 +100,8 @@ async function build(): Promise<void> {
     .replace('__APP__', emit(hashed('app', 'js', app), app))
     .replace(
       '__PRELOAD__',
-      wasm
-        ? `<link rel="modulepreload" href="${engine}" /><link rel="preload" href="${wasm}" as="fetch" type="application/wasm" crossorigin />`
-        : '',
+      // The Worker owns its streaming WASM response; a page fetch preload can abort it.
+      engineDir ? `<link rel="modulepreload" href="${engine}" />` : '',
     );
   writeFileSync(join(out, 'index.html'), html);
   for (const f of STATIC) copyFileSync(join(here, '..', 'static', f), join(out, f));

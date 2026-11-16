@@ -12,6 +12,7 @@ export async function uploadScenarios(options) {
         mode: 'upload',
         mediaOrigins: Object.values(media.origins),
       });
+      check(`parallel ${signer} startup renders a real Global note`);
       let phase = 'account setup';
       try {
         await page.locator('.acct.out').click();
