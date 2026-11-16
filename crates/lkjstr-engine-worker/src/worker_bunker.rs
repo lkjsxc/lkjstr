@@ -25,7 +25,7 @@ struct Flight {
     controller: web_sys::AbortController,
     reason: Rc<Cell<Option<policy::Reason>>>,
 }
-fn authority(h: &Host, account: &str) -> Option<policy::Authority> {
+pub(super) fn authority(h: &Host, account: &str) -> Option<policy::Authority> {
     h.accounts.require_signer(account).ok()?;
     let entry = h.accounts.entries.iter().find(|a| a.pubkey == account)?;
     let remote = h.accounts.remote(account)?;

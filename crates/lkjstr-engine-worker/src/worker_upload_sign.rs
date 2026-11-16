@@ -69,6 +69,7 @@ async fn sign_mode(
                 bunker::Call {
                     client: id,
                     account: Some(&event.pubkey),
+                    captured: None,
                     action_req,
                     method: "sign_event",
                     ms,

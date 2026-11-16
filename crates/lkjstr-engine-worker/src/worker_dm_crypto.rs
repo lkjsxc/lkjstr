@@ -185,6 +185,7 @@ async fn crypt_for(
             bunker::Call {
                 client: call.client,
                 account: Some(call.account),
+                captured: None,
                 action_req: None,
                 method,
                 ms,

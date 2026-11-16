@@ -3,6 +3,13 @@ pub(super) fn process(host: &Rc<RefCell<Host>>, o: &Output) -> bool {
     if let Output::Sign { req, event } = &o {
         let remote = host.borrow().accounts.remote(&event.pubkey);
         if let Some(remote) = remote {
+            let captured = bunker::authority(&host.borrow(), &event.pubkey);
+            let Some(captured) = captured else {
+                host.borrow_mut()
+                    .engine
+                    .refuse_sign(req.clone(), "signer-missing");
+                return true;
+            };
             let owner = match &host.borrow().scope {
                 Sink::Dedicated(_) => Some((0, req.clone())),
                 Sink::Shared { clients, .. } => {
@@ -31,6 +38,7 @@ pub(super) fn process(host: &Rc<RefCell<Host>>, o: &Output) -> bool {
                     bunker::Call {
                         client,
                         account: Some(&event.pubkey),
+                        captured: Some(&captured),
                         action_req: Some(&action_req),
                         method: "sign_event",
                         ms,

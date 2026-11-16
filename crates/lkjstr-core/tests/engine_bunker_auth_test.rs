@@ -189,3 +189,23 @@ fn parent_deadline_can_shorten_but_never_extend_the_rpc_budget() -> Result {
     assert_eq!(book.get(lease).map(|t| t.expires_at), Some(60001));
     Ok(())
 }
+
+#[test]
+fn queued_dispatch_cannot_borrow_replacement_authority_with_identical_keys() -> Result {
+    let mut book = Book::default();
+    let clients = BTreeSet::from([1]);
+    let queued = start(1);
+    let mut replaced = authority();
+    replaced.generation += 1;
+    let accounts = BTreeMap::from([("c".repeat(64), replaced.clone())]);
+    assert_eq!(
+        book.start(queued, 2, &context(&clients, &accounts)).err(),
+        Some("offline")
+    );
+    assert!(book.is_empty());
+    let mut current = start(1);
+    current.owner.account = Some(("c".repeat(64), replaced));
+    let lease = book.start(current, 2, &context(&clients, &accounts))?;
+    assert!(book.get(lease).is_some());
+    Ok(())
+}

@@ -27,6 +27,9 @@ Core policy admits at most 64 pending calls, with at most 16 per client. Each
 call permits four distinct URL challenges; an identical URL has no additional
 output. Calls retain the earlier of their operation deadline and the existing
 60-second RPC limit. Every socket and abort listener has a completion path.
+Discovery preserves its two pre-existing sequential budgets: connect may use
+60 seconds, then get_public_key may use another 60 seconds. An intermediate
+challenge never restarts either budget; there is no new account-action timer.
 
 Opaque UI handles combine a checked job counter and 128 fresh random bits.
 Raw RPC identifiers, client secrets and bunker connection credentials are not
@@ -43,8 +46,11 @@ The optional action request is the caller's existing public correlation.
 
 An account removal or credential replacement, a detached/expired client,
 private read close/hide, explicit cancellation and Host stop revoke pending
-work. Late messages cannot restore a removed lease. Clear precedes an ordinary
-terminal reply. Permanent Host stop first closes output ports, then drops the
+work. Late messages cannot restore a removed lease. Public signing captures its
+authority before scheduling the async task; identical replacement credentials
+cannot grant that old task a new account generation. Split-zap challenges
+inherit the remaining original 90-second operation budget as well as the RPC
+limit. Clear precedes an ordinary terminal reply. Permanent Host stop first closes output ports, then drops the
 book and aborts sockets, so it produces no new client messages.
 
 The book is never serialized. URLs are omitted from event storage, accounts,

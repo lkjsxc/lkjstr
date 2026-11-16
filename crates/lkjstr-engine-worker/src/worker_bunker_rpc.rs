@@ -3,6 +3,7 @@ use lkjstr_protocol::remote::Remote;
 pub(in crate::worker) struct Call<'a> {
     pub client: u64,
     pub account: Option<&'a str>,
+    pub captured: Option<&'a policy::Authority>,
     pub action_req: Option<&'a str>,
     pub method: &'a str,
     pub ms: u32,
@@ -26,7 +27,9 @@ pub(in crate::worker) async fn call(
         let account = call
             .account
             .map(|account| {
-                authority(&h, account)
+                call.captured
+                    .cloned()
+                    .or_else(|| authority(&h, account))
                     .map(|a| (account.to_string(), a))
                     .ok_or("signer-missing")
             })

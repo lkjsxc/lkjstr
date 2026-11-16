@@ -59,10 +59,10 @@ async fn run(
     if remaining == 0 {
         return Err(Failure::Network);
     }
+    let deadline = Deadline::within(uploads::clock(), u64::from(remaining));
     let cancel = controller.clone();
     let _deadline = crate::browser::timer::Timer::after(remaining, move || cancel.abort())
         .map_err(|_| Failure::Network)?;
-    let deadline = Deadline::new(uploads::clock());
     for (index, request) in job.requests.iter().enumerate() {
         {
             let h = host.borrow();

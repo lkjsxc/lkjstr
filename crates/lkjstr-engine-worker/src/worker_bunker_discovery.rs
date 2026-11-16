@@ -16,6 +16,7 @@ pub(in crate::worker) async fn discover(
         Call {
             client: caller.client,
             account: None,
+            captured: None,
             action_req: Some(&caller.req),
             method: "connect",
             ms: 60_000,
@@ -31,6 +32,7 @@ pub(in crate::worker) async fn discover(
         Call {
             client: caller.client,
             account: None,
+            captured: None,
             action_req: Some(&caller.req),
             method: "get_public_key",
             ms: 60_000,
