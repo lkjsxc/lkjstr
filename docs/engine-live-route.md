@@ -73,9 +73,48 @@ All 23 new and adjacent recovery/stability/history cases then passed in
 18:00:19.017-18:00:23.878 UTC, load 2.63/2.63/3.08 to 2.58/2.62/3.07.
 Commands and full results are in `supplemental.json` and its two logs.
 
+## Production Worker before and after
+
+The finite `scripts/engine-live-route.mjs` fixture now runs beside the history
+fixture in `scripts/engine-check.sh`. It uses the actual generated module and
+Worker, three owned loopback readers, a fresh browser context and locally signed
+synthetic notes. Socket and HTTP guards allow only the owned origin; outgoing
+relay frames are limited to REQ/CLOSE. An actual B socket closes, C answers
+empty, and recovered B replays the old signed note before EOSE. A distinct
+B-only note becomes available after that recovery decision. No public network
+or saved account is used.
+
+The exact prior production package is from `ce05e292`, including the historical
+route correction but neither live-recovery change. Its WASM SHA256 is
+`c7c7a7dd5d9fd30f0f768e9e523ad661b9646a465024b98add368b6bd6c5a46b`.
+The raw generated glue matches that release's dist after the exact absolute
+hashed-WASM URL substitution in `engine-assets.ts`. An initial provenance
+assertion omitted that URL's leading slash and stopped before copy or build;
+its failure and correction are retained separately.
+
+The corrected production package is source `6534c737`, WASM SHA256
+`da5dd4299fe10e59b5d2ad77c6b59cd8837e2cd9bff10d128dfdb2080a3efbc8`.
+All 602 owned Rust source timestamps were refreshed before compiling. Production
+WASM built in 22.586 s, 2026-11-16 18:16:56.327-18:17:18.914 UTC, load
+1.24/1.60/2.09 to 1.91/1.74/2.13, with four jobs and no harness feature.
+Both packages, the same actual signing-helper binary and all three imported
+fixture sources were copied before execution; each run creates new synthetic
+keys. Package, glue, helper and executed-source hashes are in `build-freeze.json`.
+
+Before ran 18:17:38.226-18:17:47.143 UTC, 8.917 s, load 1.45/1.65/2.09 to
+1.33/1.62/2.07. Six controls passed; two assertions failed because B closed
+1 ms after recovery EOSE and could not deliver the later note. After ran
+18:17:53.110-18:17:57.092, 3.982 s, load 1.44/1.63/2.07 at both ends; all eight
+checks passed. B remained with C, A yielded, and both notes were projected
+without duplicates. Closing the last view released every Home request.
+Both runs recorded zero page/fixture errors and completed browser, server,
+socket and temporary-directory cleanup. Reports and exact REQ/EOSE/CLOSE/event-ID
+traces are `tmp/live-route-proof/worker-{before,after}/report.json` in the isolated
+live-route worktree; immutable packages and source copies remain beside them.
+
 ## Remaining checks
 
-A production Worker replay and the full integration gates remain pending.
+The full combined integration gates remain pending.
 
 The fixed number of primary routes remains a coverage tradeoff. This change
 cannot establish all-relay completeness, future productivity, or causal
