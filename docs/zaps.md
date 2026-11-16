@@ -4,7 +4,8 @@
 
 The protocol-9 integration adds provider discovery, authorized receipt projection
 and explicit unpaid invoice preparation. Native policy, Worker wasm32 clippy,
-frontend checks and 40 real Worker fixture checks pass; full gates remain pending.
+frontend checks, 40 finite Worker checks and required integration gates pass.
+[Integration evidence](engine-zap-verification.md) records their source boundaries.
 The existing zap control remains unavailable until Claude specifies its surface.
 There is no wallet call, payment action or publication of a kind-9734 request.
 
@@ -160,8 +161,9 @@ Report: tmp/zap-harness-20261116-02/report.json, SHA-256
 27eb3255088b1e6f11de58c47fa54870eef984472c6b9ea32ce12010c01de61d.
 The first runner omitted the fixture getPublicKey answer and timed out during
 setup; its failed report is retained in tmp/zap-harness-20261116/report.json.
-Full integration gates remain pending. No public relay, owner account or payment
-was used. All owned browser/server/helper processes were closed.
+Full integration gates passed after the notification, startup and distribution
+corrections; their dated record is linked above. No public relay, owner account
+or payment was used. All owned browser/server/helper processes were closed.
 
 Primary references:
 https://github.com/nostr-protocol/nips/blob/master/57.md

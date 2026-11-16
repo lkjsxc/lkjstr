@@ -3,8 +3,9 @@
 ## Purpose
 
 Source audit refreshed on 2026-11-16 against the protocol-9 zap integration tree.
-The K1-K4/M1-M6 base passed its gates and is built. Zap native, strict clippy,
-frontend and 40 guarded Worker checks pass; required integration gates remain pending.
+The K1-K4/M1-M6 base passed its gates and is built. Protocol-9 required gates,
+451 main Worker checks and 40 finite zap checks passed; exact source boundaries
+and failures are recorded in [engine-zap-verification.md](engine-zap-verification.md).
 Source status alone does not establish the deployed build.
 Unregistered staging under tmp/ is excluded. This replaces the 11-14 inventory.
 Rows describe lkjstr's real Worker and reachable interface, not mock capability.
@@ -29,9 +30,9 @@ Evidence prefixes: `E/` = `crates/lkjstr-core/src/engine/`,
 1. Fix measured scrolling stalls and retain complete bounded public delivery
    evidence; the third-landing hour finished with an unresolved late Home note.
    Strengthen notification/thread controls and keep observer memory separate.
-2. Finish the registered zap and external/older private-list integration gates.
-   Named-list account isolation is already fixed. Measure trusted zap providers
-   before treating intercepted loopback checks as public interoperability.
+2. Integrate external/older private-list reads; named-list account isolation
+   is already fixed. Measure trusted zap providers before treating intercepted
+   loopback checks as public interoperability.
 3. Finish existing controls: referenced emoji sets, people/language search,
    bunker authorization challenges and measured upload progress. Upload
    cancellation and relay AUTH are already implemented.
@@ -59,9 +60,9 @@ Evidence prefixes: `E/` = `crates/lkjstr-core/src/engine/`,
 | Hashtag timelines | done | `hashtag` filter and linked tile exist; E/query.rs, V/registry.ts, V/note.ts. |
 | Followed hashtags | missing | No kind-10015 discovery/edit or Home integration; list codecs alone do not supply it. |
 | One-relay timeline | partial | `source:relay` targets requests, but cached membership is not relay-scoped and no feed tile is registered; E/network_plan.rs, E/query.rs, V/registry.ts. |
-| Public-network completeness and hour-long use | partial | Baseline and corrected 3600-second read-only runs completed; corrected scroll reached 2004 notes. Home controls saw five eligible notes, three rendered and two coverage candidates; later route fixes have loopback proof, not a new public hour. docs/engine-performance-hour.md. |
+| Public-network completeness and hour-long use | partial | Third shipped build completed 3600.072 seconds and 2082 notes/79.159 seconds, with a 12.358-second maximum scroll step. One late Home candidate remains unresolved; query caps and the subsequently found startup guard gap limit completeness. docs/engine-performance-third.md. |
 | Shared Worker, two tabs and leader loss | done | SharedWorker continuity and fallback leader replacement were measured; 30-second/10-minute cuts include one delivered Home recovery witness. Later stale-callback and retained-history fixes have transport regressions; engine/transport.js, docs/engine-performance-hour.md. |
-| Bounded cache and cold boot | partial | 16000 regular/4000 replaceable in memory; newest 2000 indexed on boot, disk pruned to 20000 after live writes. A physical 20000-event boot and an hour of page/Worker/WASM memory were measured; observer overhead and indefinite growth remain unproven. W/worker_persist.rs, docs/engine-performance-hour.md. |
+| Bounded cache and cold boot | partial | 16000 regular/4000 replaceable in memory; newest 2000 indexed on boot, disk pruned to 20000 after live writes. Third hour WASM stayed 79.954 MB after history load; a physical 20000-event boot took 352 ms to first profile note. Observer overhead and indefinite growth remain unproven. W/worker_persist.rs, docs/engine-performance-third.md. |
 | Physical cache size and clearing | missing | Stats `cacheBytes` is stored payload bytes, not actual IndexedDB usage; no clear-cache operation; E/feedback.rs. |
 
 ## Identity, signers and private data
@@ -107,7 +108,7 @@ Evidence prefixes: `E/` = `crates/lkjstr-core/src/engine/`,
 | NIP-42 relay authentication | done | Explicit auth-required reads/writes use all signer kinds with current demand/owner checks. Optional NIP-67 EOSE hints remain unsupported; docs/relay-auth.md. |
 | Relay health, request and delivery diagnostics | done | Real counters, errors, request purposes and attempted publication routes; E/feedback.rs, V/relays.ts, V/stats.ts. |
 | Zap receipt display and totals | partial | Provider-authorized, signed and globally deduplicated receipts supply exact amounts, existing lower-bound counts and notification actors. Unresolved evidence stays separate; historical provider authorization is session-only and is not independent payment proof. E/zaps/, E/wire/counts.rs, docs/zaps.md. |
-| LNURL discovery, zap signing and invoice retrieval | engine ready, no surface | Finite zap.quote and explicit zap.invoice use local/extension/bunker signers, bounded HTTPS and exact invoice commitments, returning only unpaid intents. Forty guarded Worker checks pass; required integration gates remain pending and the existing zap control stays unavailable. W/worker_zap*.rs, docs/zaps.md. |
+| LNURL discovery, zap signing and invoice retrieval | engine ready, no surface | Finite zap.quote and explicit zap.invoice use local/extension/bunker signers, bounded HTTPS and exact invoice commitments, returning only unpaid intents. Forty guarded Worker checks and the required integration gates passed; the existing zap control stays unavailable. W/worker_zap*.rs, docs/zaps.md. |
 | WebLN, invoice payment/QR and NWC | missing | No payment contract or provider integration; V/note-actions.ts. NIP-47 is a separate missing wallet capability. |
 | Per-note reactors and reposters | partial | Verified stored events retain authors; repost rows expose bounded actors and reaction rows expose counts. A complete actor-detail query and its specified view are missing; E/rows.rs, web/src/engine/protocol.ts. |
 | Trusted zapper list | engine ready, no surface | zap.receipts returns at most 200 provider-authorized rows with exact millisatoshis, public/anonymous/private sender distinction and provenance. Its cursor traverses retained verified cache, not complete relay history; E/zaps/receipt_list.rs, docs/interface-needs.md. |

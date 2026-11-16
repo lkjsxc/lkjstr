@@ -75,5 +75,6 @@ transport cases pass after the addition; full frontend `pnpm check` passed.
 The finite real Worker HTTPS/signing run then passed 40/40 checks in 64.148
 seconds at 13:23:53.643-13:24:57.791 UTC, load 2.61/2.13/2.03 to 1.16/1.80/1.92.
 An observed signer timeout lasted 60018 ms; its clock was not advanced. The
-remaining default/full integration gates are separate. No owner account,
-public publication or payment was used in these measurements.
+subsequent required gates passed; [the integration record](engine-zap-verification.md)
+keeps their dates and artifact boundaries separate. No owner account, public
+publication or payment was used in these measurements.

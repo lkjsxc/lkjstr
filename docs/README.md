@@ -22,6 +22,7 @@ Engine (`crates/`):
 - [media-uploads.md](media-uploads.md): destinations, failure/retry, bounds and proof.
 - [channels.md](channels.md): NIP-28 sources, actions, bounds and verification.
 - [zaps.md](zaps.md): provider-authorized receipts, unpaid invoice intents, lifetime and bounds.
+- [engine-zap-verification.md](engine-zap-verification.md): zap integration gates and runtime regressions.
 - [protocol3.md](protocol3.md): rich filters, notifications, profile kinds and gates.
 - [status.md](status.md): what works, what does not, next steps in order.
 - [outbox.md](outbox.md): read cursors, durable quality, focus, weights and purposes.
@@ -35,6 +36,7 @@ Engine (`crates/`):
 - [engine.md](engine.md): the engine Worker and how it serves the protocol.
 - [engine-package.md](engine-package.md): building the Worker assets for `web/`.
 - [engine-polish.md](engine-polish.md): author hydration, count estimates and Global sample.
+- [engine-startup.md](engine-startup.md): real-build WASM preload regression and scoped correction.
 - [engine-performance.md](engine-performance.md): measurements.
 - [engine-performance-zaps.md](engine-performance-zaps.md): bounded receipt projection and scheduling proofs.
 - [engine-performance-public.md](engine-performance-public.md): public controls, attribution and limits.
