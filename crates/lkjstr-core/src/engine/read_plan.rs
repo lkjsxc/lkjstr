@@ -210,7 +210,7 @@ impl super::Network {
                 routes.push(url);
             }
         }
-        if limit == 2 && f.until.is_none() {
+        if limit == 2 && f.until.is_none() && !self.verifying {
             recovery::promote(
                 &mut routes,
                 &candidates,
@@ -227,9 +227,9 @@ impl super::Network {
             if current.get(candidate.url.as_str()).is_some_and(|r| {
                 f.until.is_some()
                     || unavailable.contains(&candidate.url)
-                    // A demoted live route must answer its own resumed gap before
-                    // retirement. Its old page EOSE cannot prove reconnection complete.
-                    || (r.live && !r.read_slot && !r.eose && !r.complete)
+                    // A demoted live route must answer and verify its resumed gap
+                    // before retirement. Raw EOSE cannot decide queued data.
+                    || (r.live && !r.read_slot && (!r.eose || self.verifying) && !r.complete)
             }) && !routes.contains(&candidate.url)
             {
                 routes.push(candidate.url.clone());

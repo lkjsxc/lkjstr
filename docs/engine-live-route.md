@@ -50,15 +50,32 @@ Artifacts are in the isolated live-route worktree at
 source hashes, timestamps and load. The test uses signed synthetic data only;
 no public relay, owner key or browser was involved.
 
+## Verification boundary
+
+Raw EOSE does not make a route's pending EVENT an empty verified answer.
+The planner defers promotion while its verification queue is nonempty and
+retains the recovered request until that decision is available. Once the
+queue drains, productive ordinary routes remain; a truly empty route can
+yield. Permission removal and final-view closure still release pending work.
+This reuses existing bounded recovery ownership and adds no stored state.
+
+The separate `engine_live_route_verification_test` compiled against the first
+fix and failed two assertions: pending A data was treated as empty, and B's
+first pending recovery data lost its request before verification. The explicit
+revocation control passed. Before ran 17:59:42.067-17:59:51.187 UTC, 9.120 s,
+load 2.93/2.69/3.12 to 2.86/2.69/3.11. The unchanged three-case source passed
+after the guard at 17:59:54.892-17:59:56.498, 1.606 s, load 2.63/2.64/3.10.
+Artifacts are `verification-before` and `verification-after` in the same proof
+directory; original four-case evidence remains untouched.
+
+All 23 new and adjacent recovery/stability/history cases then passed in
+1.105 s; strict targeted Clippy passed in 3.756 s. The combined interval was
+18:00:19.017-18:00:23.878 UTC, load 2.63/2.63/3.08 to 2.58/2.62/3.07.
+Commands and full results are in `supplemental.json` and its two logs.
+
 ## Remaining checks
 
-This checkpoint has not passed adjacent routing tests, strict Clippy, a
-production Worker replay or the full integration gates. A queued-verification
-boundary also needs a separate regression: an EOSE-complete route with no
-verified watermark can still have an EVENT awaiting verification. Promotion
-must not retire that unresolved data, and recovered ownership must survive
-until the verification decision is available. The four-case proof above does
-not claim that boundary is covered.
+A production Worker replay and the full integration gates remain pending.
 
 The fixed number of primary routes remains a coverage tradeoff. This change
 cannot establish all-relay completeness, future productivity, or causal
