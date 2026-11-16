@@ -1,33 +1,16 @@
-//! `check-dist`: the real frontend output is complete without a browser:
-//! every script, stylesheet and WASM module that `index.html` names exists,
-//! and the WASM modules carry the WebAssembly header.
-
+//! Check generated frontend dependencies from HTML through modules, Worker URLs
+//! and the WASM loader, retaining the public-page and static-asset checks.
 use std::{fs, path::Path};
-
+#[path = "dist_graph.rs"]
+mod graph;
+#[path = "dist_refs.rs"]
+mod refs;
 const WASM_MAGIC: &[u8; 8] = b"\0asm\x01\0\0\0";
 
-fn referenced(html: &str) -> Vec<String> {
-    let mut out = Vec::new();
-    for attr in ["href=\"", "src=\"", "from '", "init('"] {
-        for part in html.split(attr).skip(1) {
-            let end = part.find(['"', '\'']).unwrap_or(part.len());
-            let target = part[..end].trim_start_matches('/').to_owned();
-            let local = !target.contains("://") && !target.is_empty();
-            let asset = [".js", ".wasm", ".css"]
-                .iter()
-                .any(|ext| target.ends_with(ext));
-            if local && asset && !out.contains(&target) {
-                out.push(target);
-            }
-        }
-    }
-    out
-}
-
 pub fn check(root: &Path) -> Result<(), String> {
-    let dist = root.join("dist");
-    let html = fs::read_to_string(dist.join("index.html"))
-        .map_err(|error| format!("dist/index.html: {error} (run pnpm build first)"))?;
+    let dist = fs::canonicalize(root.join("dist"))
+        .map_err(|error| format!("dist: {error} (run pnpm build first)"))?;
+    let html = graph::text(&dist, Path::new("index.html"))?;
     for lang in ["en", "ja"] {
         for page in [
             "about",
@@ -39,8 +22,7 @@ pub fn check(root: &Path) -> Result<(), String> {
             "changelog",
         ] {
             let path = format!("{lang}/{page}.html");
-            let body = fs::read_to_string(dist.join(&path))
-                .map_err(|error| format!("dist/{path}: {error}"))?;
+            let body = graph::text(&dist, Path::new(&path))?;
             let canonical = format!("https://lkjstr.lkjsxc.com/{path}");
             if !body.contains(&format!("rel=\"canonical\" href=\"{canonical}\"")) {
                 return Err(format!("dist/{path}: missing canonical"));
@@ -48,22 +30,11 @@ pub fn check(root: &Path) -> Result<(), String> {
         }
     }
     for path in ["sitemap.txt", "robots.txt", "site.css", "icon-512.png"] {
-        if fs::metadata(dist.join(path)).map_or(true, |meta| meta.len() == 0) {
-            return Err(format!("dist/{path}: missing or empty public asset"));
-        }
+        graph::read(&dist, Path::new(path))?;
     }
-    let assets = referenced(&html);
-    if !assets.iter().any(|a| a.ends_with(".wasm")) || !assets.iter().any(|a| a.ends_with(".js")) {
-        return Err("dist/index.html does not reference the app's .js and .wasm".to_owned());
-    }
-    for asset in &assets {
-        let bytes = fs::read(dist.join(asset)).map_err(|error| format!("dist/{asset}: {error}"))?;
-        if asset.ends_with(".wasm") && !bytes.starts_with(WASM_MAGIC) {
-            return Err(format!("dist/{asset}: not a WebAssembly module"));
-        }
-        if bytes.is_empty() {
-            return Err(format!("dist/{asset}: empty"));
-        }
-    }
-    Ok(())
+    graph::check(&dist, &html)
 }
+
+#[cfg(test)]
+#[path = "dist_check_test.rs"]
+mod tests;
