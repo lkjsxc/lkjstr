@@ -43,6 +43,8 @@ Engine (`crates/`):
 - [engine-performance-zaps.md](engine-performance-zaps.md): bounded receipt projection and scheduling proofs.
 - [engine-performance-public.md](engine-performance-public.md): public controls, attribution and limits.
 - [engine-performance-third.md](engine-performance-third.md): shipped third-landing hour and faults.
+- [engine-performance-sixth.md](engine-performance-sixth.md): sixth candidate hour, memory and complete fault phases.
+- [engine-performance-sixth-coverage.md](engine-performance-sixth-coverage.md): exact receipts, route transitions and seven unresolved Home candidates.
 - [engine-performance-evidence.md](engine-performance-evidence.md): bounded host delivery evidence and its limits.
 - [engine-performance-hour.md](engine-performance-hour.md): corrected hour, memory and coverage gaps.
 - [engine-verification-pressure.md](engine-verification-pressure.md): bounded acquisition and dropped-page replay.

@@ -5,6 +5,13 @@
 Record runtime measurements and reproducible workloads. Synthetic index fixtures never enter the product or a public relay. Timing is elapsed wall
 time on this shared Linux host, not a throughput promise for another device.
 
+## Sixth-landing hour (2026-11-16)
+
+The frozen real candidate ran 16:25:30.595-17:25:30.767 UTC, 3600.172 s, at live load 4.77/3.78/2.62 to 7.54/6.43/3.81. Scrolling reached
+1903 of 2000 requested notes in 162.916 s; the maximum polling step was 13.963 s. Seven of 31 eligible Home controls lacked DOM membership by
+cutoff. Exact receipt/route evidence, memory, all completed fault phases and limits are in [the sixth hour](engine-performance-sixth.md) and
+[its coverage audit](engine-performance-sixth-coverage.md). This Home used the native-scrollbar fallback, so it does not measure the batched rail.
+
 ## Time-rail note fitting (2026-11-16)
 
 The paired 2000-note Chromium draw at 13:54:36-13:54:39 UTC fell from 1569.8 to 653.8 ms and from 4002 to four layouts. Load was 1.94/2.80/3.00 to

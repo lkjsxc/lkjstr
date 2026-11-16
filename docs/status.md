@@ -176,7 +176,8 @@ records dates, load, the 468-state matrix and K2 differences. The completed thir
 private-list scope follow-up has separate evidence. Protocol 9 and its startup/distribution corrections passed all required gates;
 [engine-zap-verification.md](engine-zap-verification.md) records the runtime and measurement evidence. Protocol-10 private-list and layout integration
 passed all required gates, 452 main Worker checks and 31 private-list checks; the dated record is
-[engine-private-verification.md](engine-private-verification.md). The next required public hour will use the completed sixth landing.
+[engine-private-verification.md](engine-private-verification.md). The [sixth public hour](engine-performance-sixth.md) and faults are complete: 1903
+of 2000 requested notes and seven unresolved Home coverage candidates; the productive-route recovery transition is under investigation.
 The sixth prescribed ship stopped before deployment at 16:35:57 UTC: separate package validators still required a direct HTML WASM preload.
 The archive graph and numeric-token corrections pass 80 package cases and 19 xtask tests; all required combined gates and exact packaging passed.
 The corrected prescribed ship and served-site verification remain pending.
