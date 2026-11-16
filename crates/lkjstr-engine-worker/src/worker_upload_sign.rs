@@ -8,7 +8,7 @@ pub(in crate::worker) async fn sign(
     deadline: Deadline,
     event: UnsignedNostrEvent,
 ) -> Result<lkjstr_protocol::NostrEvent, &'static str> {
-    sign_for(host, id, deadline, event, None, None).await
+    sign_mode(host, id, deadline, event, None, None, Mode::Background).await
 }
 pub(in crate::worker) async fn sign_for(
     host: &Rc<RefCell<Host>>,
@@ -18,7 +18,7 @@ pub(in crate::worker) async fn sign_for(
     signal: Option<&web_sys::AbortSignal>,
     action_req: Option<&str>,
 ) -> Result<lkjstr_protocol::NostrEvent, &'static str> {
-    sign_mode(host, id, deadline, event, signal, action_req, false).await
+    sign_mode(host, id, deadline, event, signal, action_req, Mode::Public).await
 }
 pub(in crate::worker) async fn sign_detailed_for(
     host: &Rc<RefCell<Host>>,
@@ -28,7 +28,7 @@ pub(in crate::worker) async fn sign_detailed_for(
     signal: Option<&web_sys::AbortSignal>,
     action_req: Option<&str>,
 ) -> Result<lkjstr_protocol::NostrEvent, &'static str> {
-    sign_mode(host, id, deadline, event, signal, action_req, true).await
+    sign_mode(host, id, deadline, event, signal, action_req, Mode::Private).await
 }
 pub(in crate::worker) async fn private_sign(
     host: &Rc<RefCell<Host>>,
@@ -36,7 +36,12 @@ pub(in crate::worker) async fn private_sign(
     deadline: Deadline,
     event: UnsignedNostrEvent,
 ) -> Result<lkjstr_protocol::NostrEvent, &'static str> {
-    sign_mode(host, id, deadline, event, None, None, true).await
+    sign_mode(host, id, deadline, event, None, None, Mode::Private).await
+}
+enum Mode {
+    Background,
+    Public,
+    Private,
 }
 async fn sign_mode(
     host: &Rc<RefCell<Host>>,
@@ -45,17 +50,34 @@ async fn sign_mode(
     event: UnsignedNostrEvent,
     signal: Option<&web_sys::AbortSignal>,
     action_req: Option<&str>,
-    private: bool,
+    mode: Mode,
 ) -> Result<lkjstr_protocol::NostrEvent, &'static str> {
+    let private = matches!(mode, Mode::Private);
     crate::browser::abort::check(signal).map_err(|_| crate::browser::abort::CANCELLED)?;
     let remote = host.borrow().accounts.remote(&event.pubkey);
     if let Some(remote) = remote {
         let params = vec![serde_json::to_string(&event).map_err(|_| "internal")?];
         let ms = deadline.wait(clock(), 60_000)?;
-        let raw = if private {
-            crate::browser::remote::rpc_private(&remote, "sign_event", params, ms, signal).await
-        } else {
+        let raw = if matches!(mode, Mode::Background) {
+            // Relay AUTH has no proven initiating page. Preauthorized signing still works;
+            // an interactive auth URL is refused rather than disclosed to an arbitrary tab.
             crate::browser::remote::rpc_for_signal(&remote, "sign_event", params, ms, signal).await
+        } else {
+            bunker::call(
+                host,
+                &remote,
+                bunker::Call {
+                    client: id,
+                    account: Some(&event.pubkey),
+                    action_req,
+                    method: "sign_event",
+                    ms,
+                    private,
+                    signal,
+                },
+                params,
+            )
+            .await
         }?;
         let signed =
             lkjstr_protocol::parse_nostr_event_json(&raw, None).map_err(|_| "signer-refused")?;

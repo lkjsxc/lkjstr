@@ -88,6 +88,7 @@ pub fn start_shared() -> Result<SharedWorkerHandle, JsValue> {
         dm: Default::default(),
         zaps: Default::default(),
         private_lists: Default::default(),
+        bunker: Default::default(),
         server_checks: vec![],
         auth_next: 0,
         upload_auth: BTreeMap::new(),
@@ -237,6 +238,7 @@ pub(super) fn detach(h: &mut Host, id: u64) {
         }
     }
     h.sessions.remove(&id);
+    bunker::sync(h);
     direct_messages::sync(h);
     h.discovery.retain(|(client, _), _| *client != id);
 }

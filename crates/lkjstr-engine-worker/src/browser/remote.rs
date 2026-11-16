@@ -3,13 +3,17 @@ use super::{
     promise,
     socket::{Socket, SocketEvent},
 };
-use lkjstr_protocol::{RelayMessage, remote::Remote};
+use lkjstr_protocol::{
+    RelayMessage,
+    remote::{AuthUrl, Remote, Response},
+};
 use serde_json::json;
 use std::{
     cell::{Cell, RefCell},
     rc::Rc,
 };
 use wasm_bindgen::JsValue;
+pub type ChallengeHandler = Rc<dyn Fn(AuthUrl) -> Result<(), &'static str>>;
 type SocketSlot = Rc<RefCell<Option<Socket>>>;
 struct Cleanup(Rc<RefCell<Vec<SocketSlot>>>);
 impl Drop for Cleanup {
@@ -19,21 +23,6 @@ impl Drop for Cleanup {
         }
     }
 }
-pub async fn rpc(
-    remote: &Remote,
-    method: &str,
-    params: Vec<String>,
-) -> Result<String, &'static str> {
-    rpc_for(remote, method, params, 60_000).await
-}
-pub async fn rpc_for(
-    remote: &Remote,
-    method: &str,
-    params: Vec<String>,
-    ms: u32,
-) -> Result<String, &'static str> {
-    rpc_for_signal(remote, method, params, ms, None).await
-}
 pub async fn rpc_for_signal(
     remote: &Remote,
     method: &str,
@@ -41,17 +30,18 @@ pub async fn rpc_for_signal(
     ms: u32,
     signal: Option<&web_sys::AbortSignal>,
 ) -> Result<String, &'static str> {
-    rpc_mode(remote, method, params, ms, signal, false).await
+    rpc_mode(remote, method, params, ms, signal, false, None).await
 }
-/// Private crypto preserves actual signer deadlines without changing other RPC callers.
-pub async fn rpc_private(
+pub async fn rpc_owned(
     remote: &Remote,
     method: &str,
     params: Vec<String>,
     ms: u32,
     signal: Option<&web_sys::AbortSignal>,
+    private: bool,
+    challenge: ChallengeHandler,
 ) -> Result<String, &'static str> {
-    rpc_mode(remote, method, params, ms, signal, true).await
+    rpc_mode(remote, method, params, ms, signal, private, Some(challenge)).await
 }
 async fn rpc_mode(
     remote: &Remote,
@@ -60,6 +50,7 @@ async fn rpc_mode(
     ms: u32,
     signal: Option<&web_sys::AbortSignal>,
     private: bool,
+    challenge: Option<ChallengeHandler>,
 ) -> Result<String, &'static str> {
     super::abort::check(signal).map_err(|_| super::abort::CANCELLED)?;
     let id = lkjstr_protocol::upload::hash(lkjstr_protocol::generate_secret_key().as_bytes());
@@ -71,9 +62,12 @@ async fn rpc_mode(
     let request=json!(["REQ",id,{"kinds":[24133],"authors":[remote.peer],"#p":[remote.client().ok_or("internal")?],"since":event.created_at.saturating_sub(60)}]).to_string();
     let publication = json!(["EVENT", event]).to_string();
     let remaining = Rc::new(Cell::new(remote.relays.len()));
+    let settled = Rc::new(Cell::new(false));
     let done = js_sys::Promise::new(&mut |resolve, reject| {
         for url in &remote.relays {
             let session = remote.clone();
+            let challenge = challenge.clone();
+            let settled = settled.clone();
             let remaining = remaining.clone();
             let closed = Cell::new(false);
             let id = id.clone();
@@ -98,18 +92,36 @@ async fn rpc_mode(
                     }
                     if let Ok(RelayMessage::Event { event, .. }) =
                         lkjstr_protocol::parse_relay_message(&raw, None)
-                        && let Some(result) = if private {
-                            session.response_private(&event, &id)
-                        } else {
-                            session.response(&event, &id)
-                        }
+                        && !settled.get()
+                        && let Some(result) = session.classify_response(&event, &id, private)
                     {
                         match result {
-                            Ok(value) => {
-                                let _ = resolve.call1(&JsValue::NULL, &value.into());
+                            Response::Authenticate(url) => {
+                                let result = challenge
+                                    .as_ref()
+                                    .map_or(Err("unsupported"), |callback| callback(url));
+                                if let Err(code) = result {
+                                    settled.set(true);
+                                    let value = match code {
+                                        "unsupported" => "bunker-auth-unsupported",
+                                        "too-large" => "bunker-auth-limited",
+                                        "offline" => "bunker-auth-revoked",
+                                        "signer-timeout" => "bunker-auth-timeout",
+                                        _ => "signer-refused",
+                                    };
+                                    let _ = reject.call1(&JsValue::NULL, &value.into());
+                                }
                             }
-                            Err(code) => {
-                                let _ = reject.call1(&JsValue::NULL, &code.into());
+                            Response::Complete(result) => {
+                                settled.set(true);
+                                match result {
+                                    Ok(value) => {
+                                        let _ = resolve.call1(&JsValue::NULL, &value.into());
+                                    }
+                                    Err(code) => {
+                                        let _ = reject.call1(&JsValue::NULL, &code.into());
+                                    }
+                                }
                             }
                         }
                     }
@@ -162,7 +174,19 @@ async fn rpc_mode(
     }
     result
         .map_err(|e| {
-            if e.as_string().as_deref() == Some(super::abort::CANCELLED) {
+            if e.as_string().as_deref() == Some("bunker-auth-unsupported") {
+                "unsupported"
+            } else if e.as_string().as_deref() == Some("bunker-auth-limited") {
+                "too-large"
+            } else if e.as_string().as_deref() == Some("bunker-auth-revoked") {
+                "offline"
+            } else if e.as_string().as_deref() == Some("bunker-auth-timeout") {
+                if private {
+                    "signer-timeout"
+                } else {
+                    "signer-missing"
+                }
+            } else if e.as_string().as_deref() == Some(super::abort::CANCELLED) {
                 super::abort::CANCELLED
             } else if private && e.as_string().as_deref() == Some("signer-timeout") {
                 "signer-timeout"

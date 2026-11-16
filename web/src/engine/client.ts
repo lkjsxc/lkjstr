@@ -1,78 +1,33 @@
 // One page's subscriptions, actions and private writer leases behind the real or mock Worker.
 import { learnPerson, learnRows, onPerson } from '../shared/people.ts';
-import { createSignal, type Signal } from '../shared/signal.ts';
+import { createSignal } from '../shared/signal.ts';
 import { createActionRequests } from './client-actions.ts';
+import type { Accounts, Engine, SubHandlers } from './client-api.ts';
 import { answerPublicKey, answerSign } from './client-crypto.ts';
 import { createDeliveryWatches } from './client-delivery.ts';
 import { createDmClient } from './client-dm.ts';
 import { createPrivateListClient } from './client-private-lists.ts';
+import { createSignerAuthClient } from './client-signer-auth.ts';
 import type { Transport } from './client-transport.ts';
 import { createZapClient } from './client-zaps.ts';
-import type {
-  Account,
-  Action,
-  Anchor,
-  Delivery,
-  EngineConfig,
-  EngineStats,
-  FromEngine,
-  Hint,
-  PatchOp,
-  Pubkey,
-  Query,
-  Row,
-  SubState,
-  Timeline,
-} from './protocol.ts';
+import type { EngineStats, Hint } from './protocol.ts';
 
+export type {
+  Accounts,
+  ActResult,
+  ActWatch,
+  Engine,
+  SubHandlers,
+  Subscription,
+} from './client-api.ts';
 export { type Transport, workerTransport } from './client-transport.ts';
-export type SubHandlers = {
-  rows(rows: readonly Row[], atTop: boolean, atBottom: boolean): void;
-  patch(ops: readonly PatchOp[]): void;
-  fresh?(count: number): void;
-  timeline?(timeline: Timeline): void;
-  state?(state: SubState): void;
-};
-export type Subscription = {
-  readonly id: string;
-  near(ids: readonly string[]): void;
-  reading?(key: string | null): void;
-  window(anchor: Anchor, before: number, after: number): void;
-  /** Whether its tab is in front (the engine may pause what is not). */
-  visible(on: boolean): void;
-  close(): void;
-};
-export type ActResult = Extract<FromEngine, { t: 'result' }>;
-export type ActWatch = {
-  uploadSignal?: AbortSignal;
-  zapSignal?: AbortSignal;
-  deliverySignal?: AbortSignal;
-  progress?(sent: number, total: number, detail?: Extract<FromEngine, { t: 'progress' }>): void;
-  delivery?(relays: readonly Delivery[]): void;
-};
-export type Accounts = { readonly accounts: readonly Account[]; readonly active?: Pubkey };
-export type Engine = {
-  readonly dm?: ReturnType<typeof createDmClient>;
-  readonly zaps?: ReturnType<typeof createZapClient>;
-  readonly accounts: Signal<Accounts>;
-  readonly status: Signal<{ connected: number; wanted: number; offline: boolean }>;
-  /** Which engine answered (`null` until it is ready). */
-  readonly info: Signal<{ engine: string; version: number } | null>;
-  /** The active account's pubkey ('' when signed out). */
-  me(): Pubkey;
-  open(query: Query, handlers: SubHandlers, owner?: HTMLElement): Subscription;
-  act(action: Action, watch?: ActWatch): Promise<ActResult>;
-  /** What the engine measured about itself, now. Undefined: this engine did not answer (it keeps no statistics). */
-  stats(): Promise<EngineStats | undefined>;
-  configure(config: EngineConfig): void;
-  dispose(): void;
-};
 
 const IDLE_MS = 180_000;
 const STATS_MS = 4000;
 
 export function createEngine(transport: Transport): Engine {
   const dm = createDmClient(transport);
+  const signerAuth = createSignerAuthClient(transport);
   const zaps = createZapClient(transport);
   const lists = createPrivateListClient(dm.access, (message) => transport.post(message));
   const subs = new Map<string, SubHandlers>(); // bound: open subscriptions (one per mounted list)
@@ -151,6 +106,7 @@ export function createEngine(transport: Transport): Engine {
     });
   });
   transport.listen((msg) => {
+    if (signerAuth.receive(msg)) return;
     if (msg.t === 'rows') {
       learnRows(msg.rows);
       subs.get(msg.sub)?.rows(msg.rows, msg.atTop, msg.atBottom);
@@ -195,6 +151,7 @@ export function createEngine(transport: Transport): Engine {
   });
   return {
     dm,
+    signerAuth,
     zaps,
     accounts,
     status,
@@ -287,6 +244,7 @@ export function createEngine(transport: Transport): Engine {
       window.removeEventListener('keydown', active, true);
       clearTimeout(idleTimer);
       offPeople();
+      signerAuth.dispose();
       lists.dispose();
       dm.dispose();
       zaps.dispose();

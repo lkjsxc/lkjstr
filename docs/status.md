@@ -155,7 +155,7 @@ These are concrete runtime limits, not permission to fake a successful answer.
 - Emoji: own kind-10030 entries work; referenced kind-30030 sets are not fetched.
 - Search: matching people are not placed ahead of notes; multi-language arrays
   use the first language. Bounded verified NIP-05 from-query lookup exists.
-- Bunkers: auth_url challenges and relay-switch negotiation are unsupported.
+- Bunkers: auth_url is a candidate without controls; verification and routing limits: [bunker-auth.md](bunker-auth.md). Relay switching is unsupported.
 - Uploads: intermediate transmitted-byte progress remains missing; zero and
   validated completion are reported, with bounded NIP-96 processing.
 - Device: physical IndexedDB size, cache clearing, settings archive import/export

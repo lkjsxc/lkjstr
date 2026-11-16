@@ -4,6 +4,7 @@ use crate::browser::socket::SocketEvent;
 use lkjstr_core::engine::network::Effect;
 use std::rc::Weak;
 pub(super) fn pump(host: &Rc<RefCell<Host>>) {
+    bunker::sync(&mut host.borrow_mut());
     let (effects, outputs) = {
         let mut h = host.borrow_mut();
         (h.engine.network.drain_effects(), h.engine.drain())

@@ -186,3 +186,11 @@ Bounds, atomic removal, conflicts and the Worker-scoped unlock limit are in [dm-
 - Add `SubState.privateLists?` with phase, pending/failed container counts and optional error.
 - Add `lists.retry {as}` to reset only this account's private-list refusal/capability failures.
 - Add `Account.privateLists?` to qualify unread policy, including unknown without admitted work.
+
+## Protocol 11 signer authorization additions (2026-11-16, integration candidate)
+
+- `signer.auth {id,peer,method,url,expiresAt,account?,actionReq?}` exposes one verified, ephemeral challenge only to its initiating client.
+- `signer.auth.clear {id}` withdraws that challenge on completion, cancellation, expiry or revoked authority.
+- `signer.auth.cancel {id,reason?:'unsupported'}` cancels only the originating client's exact opaque handle.
+- `Engine.signerAuth?` exposes an in-memory pending signal and explicit cancellation; it never opens, fetches or persists URLs.
+- Current method names, deadlines, recipient ownership and unsupported fallback paths are specified in [bunker-auth.md](bunker-auth.md).

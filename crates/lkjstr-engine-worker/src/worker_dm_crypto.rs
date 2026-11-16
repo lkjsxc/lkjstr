@@ -179,8 +179,21 @@ async fn crypt_for(
         };
         let params = vec![call.peer.into(), data.to_string()];
         drop(data);
-        crate::browser::remote::rpc_private(&remote, method, params, ms, Some(&pending.signal))
-            .await
+        bunker::call(
+            host,
+            &remote,
+            bunker::Call {
+                client: call.client,
+                account: Some(call.account),
+                action_req: None,
+                method,
+                ms,
+                private: true,
+                signal: Some(&pending.signal),
+            },
+            params,
+        )
+        .await
     } else {
         let request = extension::begin(&mut host.borrow_mut(), &call, &data, &pending.lease);
         drop(data);

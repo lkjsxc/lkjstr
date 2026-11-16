@@ -119,6 +119,11 @@ export function workerTransport(options = {}) {
         peers.set(id, pair.port1);
         pair.port1.onmessage = (e) => {
           if (closed || worker !== owner || epoch !== ownerEpoch || peers.get(id) !== pair.port1) return;
+          // Authorization URLs may carry tokens. A BroadcastChannel is not a private port.
+          if (e.data.t === 'signer.auth') {
+            pair.port1.postMessage({ t: 'signer.auth.cancel', id: e.data.id, reason: 'unsupported' });
+            return;
+          }
           channel.postMessage({ to: id, epoch: ownerEpoch, msg: e.data });
           if(e.data.t==='reconnect') {pair.port1.close();peers.delete(id);}
         };

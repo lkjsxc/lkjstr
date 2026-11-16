@@ -30,7 +30,7 @@
 /** 8: private conversation identities, display models, inbox lists and private draft storage. */
 /** 9: provider-authorized zaps, unpaid invoice intents and current reading hints. */
 /** 10: account-scoped private lists with owned signer cancellation. */
-export const PROTOCOL_VERSION = 10;
+export const PROTOCOL_VERSION = 11;
 
 /** Chosen by the interface, unique among its open subscriptions. */
 export type SubId = string;
@@ -728,7 +728,24 @@ export type EngineConfig = {
 
 // ───────────────────────────────────────── messages ─────────────────────────────────────────
 
+export type SignerAuthorization = {
+  readonly id: string;
+  readonly peer: Pubkey;
+  readonly method:
+    | 'connect'
+    | 'get_public_key'
+    | 'sign_event'
+    | 'nip44_encrypt'
+    | 'nip44_decrypt'
+    | 'nip04_decrypt';
+  readonly url: string;
+  readonly expiresAt: number;
+  readonly account?: Pubkey;
+  readonly actionReq?: ReqId;
+};
+
 export type ToEngine =
+  | { readonly t: 'signer.auth.cancel'; readonly id: string; readonly reason?: 'unsupported' }
   | { readonly t: 'zap.quote'; readonly req: ReqId; readonly query: ZapQuoteInput }
   | { readonly t: 'zap.receipts'; readonly req: ReqId; readonly query: ZapReceiptInput }
   | { readonly t: 'zap.close'; readonly req: ReqId }
@@ -892,6 +909,8 @@ export type Timeline = {
   readonly older: boolean;
 };
 export type FromEngine =
+  | ({ readonly t: 'signer.auth' } & SignerAuthorization)
+  | { readonly t: 'signer.auth.clear'; readonly id: string }
   | { readonly t: 'zap.quote'; readonly req: ReqId; readonly quote: ZapQuote }
   | { readonly t: 'zap.receipts'; readonly req: ReqId; readonly page: ZapReceiptView }
   | { readonly t: 'crypt.cancel'; readonly req: ReqId }

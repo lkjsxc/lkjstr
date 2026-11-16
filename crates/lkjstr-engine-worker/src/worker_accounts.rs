@@ -123,9 +123,14 @@ pub(super) fn pump_accounts(host: &Rc<RefCell<Host>>) {
             None
         };
         let zap_change = zaps::account_change(&action);
+        let caller = bunker::Caller {
+            host: weak.clone(),
+            client: id,
+            req: req.clone(),
+        };
         let result = match &lock {
             Some(Err(code)) => Err(*code),
-            _ => mutation::apply(action, &mut next, watermark).await,
+            _ => mutation::apply(action, &mut next, watermark, &caller).await,
         };
         let result = match (result, db) {
             (Ok(exported), Some(db)) => match serde_json::to_string(&next) {
@@ -147,6 +152,7 @@ pub(super) fn pump_accounts(host: &Rc<RefCell<Host>>) {
                 Ok(exported) => {
                     let private_revoked = private_cache::decreased(&h.accounts, &next);
                     h.accounts = next;
+                    bunker::sync(&mut h);
                     zaps::committed(&mut h, zap_change);
                     relay_auth::sync(&mut h);
                     direct_messages::sync(&mut h);

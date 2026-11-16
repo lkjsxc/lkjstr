@@ -22,6 +22,8 @@ mod defaults;
 use defaults::initial_engine;
 #[path = "worker_accounts.rs"]
 mod accounts;
+#[path = "worker_bunker.rs"]
+mod bunker;
 #[path = "worker_dm.rs"]
 mod direct_messages;
 #[path = "worker_pump.rs"]
@@ -58,6 +60,7 @@ struct Host {
     dm: direct_messages::State,
     zaps: zaps::State,
     private_lists: private_lists::Book,
+    bunker: bunker::State,
     server_checks: Vec<(u64, String, String, String, u64)>, // shared four-request bound
     auth_next: u64,
     upload_auth: BTreeMap<(u64, String), (lkjstr_protocol::UnsignedNostrEvent, js_sys::Function)>,
@@ -108,6 +111,7 @@ pub fn start() -> Result<WorkerHandle, JsValue> {
         dm: Default::default(),
         zaps: Default::default(),
         private_lists: Default::default(),
+        bunker: Default::default(),
         server_checks: vec![],
         auth_next: 0,
         upload_auth: BTreeMap::new(),

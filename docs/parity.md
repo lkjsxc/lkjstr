@@ -74,7 +74,7 @@ Evidence prefixes: `E/` = `crates/lkjstr-core/src/engine/`,
 | NIP-49 encrypted import/export | done | K1/K3 ciphertext sign-in and encrypted backup use the bounded codec; the real K13 flow verified exact download and same-key recovery. V/account-import.ts, V/account-key.ts, docs/keys.md; required integration gates passed. |
 | Local keys encrypted at rest and session unlock | partial | K2/K4 unlock, lock, cross-page idle lock and explicit protection are reachable. Unlock is Worker-scoped: a sibling can keep a reload unlocked. Existing plaintext accounts convert only by explicit protection/import; strict per-page vault/cache leases are missing. docs/keys.md. |
 | NIP-07 extension signing | done | Correlated public-key discovery, exact-event validation and deadlines; W/worker_sign.rs, web/src/engine/client.ts. Encryption/decryption is separate below. |
-| NIP-46 bunker signing | partial | Pasted preauthorized bunker URI, durable session and verified signing work; auth_url challenges and relay-switch negotiation do not; V/account-add.ts, W/browser/remote.rs. |
+| NIP-46 bunker signing | partial | Pasted preauthorized bunker URI, durable session and verified signing work. Owner-bound auth_url is an unverified protocol-11 candidate without a surface; fallback followers/background relay AUTH remain unsupported, as does relay-switch negotiation. docs/bunker-auth.md. |
 | QR/nostrconnect connection workflow | missing | Current input accepts bunker text; no connection-QR generation/scanning flow. |
 | Read-only npub account | done | Imported public account cannot sign; E/accounts.rs, V/account-add.ts. |
 | Multiple saved accounts and switch | done | Global active account, removal and per-account draft/outbox isolation; E/accounts.rs, V/compose-who.ts. |

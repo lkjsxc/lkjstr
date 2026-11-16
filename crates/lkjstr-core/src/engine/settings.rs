@@ -31,6 +31,16 @@ impl Engine {
         list_tags(event, &self.private_lists)
     }
 
+    pub fn signing_deadline(
+        &self,
+        req: &str,
+        event: &lkjstr_protocol::UnsignedNostrEvent,
+    ) -> Option<u64> {
+        self.signing
+            .get(req)
+            .filter(|pending| pending.event == *event)
+            .map(|pending| pending.deadline)
+    }
     pub fn refuse_sign(&mut self, req: String, code: &str) {
         if self.signing.remove(&req).is_some() {
             self.error(Some(req), code);

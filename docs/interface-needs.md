@@ -64,3 +64,15 @@ and lack a complete runtime operation.
   current shared failure wording does not explain that distinction.
 - `Account.privateLists` qualifies `unread`; unknown dependencies need treatment wherever a future badge uses that number.
 - Private-list editing remains outside this read feature. Contract and bounds: [private-lists.md](private-lists.md).
+
+## Remote signer authorization
+
+`signer.auth {id,peer,method,url,expiresAt,account?,actionReq?}` and
+`signer.auth.clear {id}` expose a verified, temporary request through
+`engine.signerAuth.pending`; `cancel(id)` sends the owned cancellation.
+The user needs to identify the signer and explicitly open or cancel its URL.
+No URL is opened automatically. No current surface handles this intent.
+SharedWorker/direct ports and the fallback leader's own port are supported;
+a fallback follower returns unsupported because its BroadcastChannel is not
+private. Background relay authentication also cannot choose a page on behalf
+of the user. Details and current verification status: [bunker-auth.md](bunker-auth.md).

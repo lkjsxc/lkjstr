@@ -42,6 +42,9 @@ impl Host {
             }
             return;
         }
+        if bunker::input(self, id, &input) {
+            return;
+        }
         let Some(input) = keys::receive(self, id, input) else {
             return;
         };
@@ -52,6 +55,7 @@ impl Host {
             return;
         }
         if direct_messages::input(self, id, &input) {
+            bunker::sync(self);
             return;
         }
         if let W::Configure { config } = &input {
@@ -226,6 +230,7 @@ impl Host {
             _ => {}
         }
         private_lists::sync(self);
+        bunker::sync(self);
         if refresh_previews {
             previews::refresh(self);
         }

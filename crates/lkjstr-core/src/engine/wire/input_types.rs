@@ -7,6 +7,11 @@ use serde::Deserialize;
 #[derive(Deserialize)]
 #[serde(tag = "t", rename_all = "camelCase")]
 pub enum Input {
+    #[serde(rename = "signer.auth.cancel")]
+    SignerAuthCancel {
+        id: String,
+        reason: Option<String>,
+    },
     #[serde(rename = "zap.quote")]
     ZapQuote {
         req: String,

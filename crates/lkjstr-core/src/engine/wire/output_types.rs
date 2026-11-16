@@ -2,6 +2,23 @@ use serde::Serialize;
 #[derive(Serialize)]
 #[serde(tag = "t", rename_all = "camelCase")]
 pub enum Output {
+    #[serde(rename = "signer.auth")]
+    SignerAuth {
+        id: String,
+        peer: String,
+        method: String,
+        url: crate::engine::accounts::secret::SecretText,
+        #[serde(rename = "expiresAt")]
+        expires_at: u64,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        account: Option<String>,
+        #[serde(rename = "actionReq", skip_serializing_if = "Option::is_none")]
+        action_req: Option<String>,
+    },
+    #[serde(rename = "signer.auth.clear")]
+    SignerAuthClear {
+        id: String,
+    },
     #[serde(rename = "zap.quote")]
     ZapQuote {
         req: String,

@@ -3,13 +3,40 @@ pub(super) fn process(host: &Rc<RefCell<Host>>, o: &Output) -> bool {
     if let Output::Sign { req, event } = &o {
         let remote = host.borrow().accounts.remote(&event.pubkey);
         if let Some(remote) = remote {
+            let owner = match &host.borrow().scope {
+                Sink::Dedicated(_) => Some((0, req.clone())),
+                Sink::Shared { clients, .. } => {
+                    clients.output(o.clone()).into_iter().find_map(|(id, out)| {
+                        if let Output::Sign { req, .. } = out {
+                            Some((id, req))
+                        } else {
+                            None
+                        }
+                    })
+                }
+                Sink::Closed => None,
+            };
+            let deadline = host.borrow().engine.signing_deadline(req, event);
+            let (Some((client, action_req)), Some(deadline)) = (owner, deadline) else {
+                return true;
+            };
             let host = host.clone();
             let req = req.clone();
             let event = event.clone();
             wasm_bindgen_futures::spawn_local(async move {
-                let raw = crate::browser::remote::rpc(
+                let ms = deadline.saturating_sub(host.borrow().time()).min(60_000) as u32;
+                let raw = bunker::call(
+                    &host,
                     &remote,
-                    "sign_event",
+                    bunker::Call {
+                        client,
+                        account: Some(&event.pubkey),
+                        action_req: Some(&action_req),
+                        method: "sign_event",
+                        ms,
+                        private: false,
+                        signal: None,
+                    },
                     vec![serde_json::to_string(&event).unwrap_or_default()],
                 )
                 .await;
@@ -17,7 +44,7 @@ pub(super) fn process(host: &Rc<RefCell<Host>>, o: &Output) -> bool {
                     lkjstr_protocol::parse_nostr_event_json(&s, None).map_err(|_| "signer-refused")
                 });
                 let mut h = host.borrow_mut();
-                if !h.stopped {
+                if !h.stopped && h.engine.signing_deadline(&req, &event) == Some(deadline) {
                     let at = h.time();
                     if let Err(code) = signed {
                         h.engine.refuse_sign(req, code);

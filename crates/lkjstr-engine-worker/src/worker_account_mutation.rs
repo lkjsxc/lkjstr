@@ -5,6 +5,7 @@ pub(super) async fn apply(
     action: A,
     next: &mut lkjstr_core::engine::accounts::Accounts,
     watermark: Option<lkjstr_core::engine::wire::NotificationMark>,
+    caller: &bunker::Caller,
 ) -> Result<Option<String>, &'static str> {
     if keys::is_vault(&action) {
         return keys::apply(next, &action);
@@ -14,22 +15,8 @@ pub(super) async fn apply(
             if how == "key" && key.as_deref().is_some_and(|v| v.starts_with("bunker://")) {
                 match lkjstr_protocol::remote::Remote::parse(key.as_deref().unwrap_or("")) {
                     Some((session, token)) => {
-                        let connect = crate::browser::remote::rpc(
-                            &session,
-                            "connect",
-                            vec![session.peer.clone(), token.unwrap_or_default()],
-                        )
-                        .await;
-                        if connect.is_ok() {
-                            match crate::browser::remote::rpc(&session, "get_public_key", vec![])
-                                .await
-                            {
-                                Ok(pubkey) => next.add_remote(pubkey, session),
-                                Err(code) => Err(code),
-                            }
-                        } else {
-                            Err(connect.err().unwrap_or("signer-refused"))
-                        }
+                        let pubkey = bunker::discover(caller, &session, token).await?;
+                        next.add_remote(pubkey, session)
                     }
                     None => Err("rejected"),
                 }

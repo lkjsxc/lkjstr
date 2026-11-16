@@ -13,7 +13,8 @@ impl Session {
                 self.preview_near(sub, ids);
                 vec![]
             }
-            Input::ZapQuote { .. }
+            Input::SignerAuthCancel { .. }
+            | Input::ZapQuote { .. }
             | Input::ZapReceipts { .. }
             | Input::ZapClose { .. }
             | Input::DmFlushed { .. }

@@ -105,7 +105,9 @@ fn rpc(key: &SecretKey, input: &Value) -> Result<Value> {
         }
         _ => return Err("unknown fixture method".into()),
     };
-    let reply = if let Some(error) = error {
+    let reply = if let Some(url) = input["auth_url"].as_str() {
+        json!({"id":request["id"],"result":"auth_url","error":url})
+    } else if let Some(error) = error {
         json!({"id":request["id"],"error":error})
     } else {
         json!({"id":request["id"],"result":value})

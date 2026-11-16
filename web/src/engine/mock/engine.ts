@@ -9,22 +9,31 @@ import { createCore } from './core.ts';
 import { createPrivateMock } from './dm.ts';
 import { privateListState } from './private-lists.ts';
 import { select } from './query.ts';
+import { createSignerAuthMock } from './signer-auth.ts';
 import { mockStats } from './stats.ts';
 import type { Sub } from './subscription.ts';
 import { timeKey } from './timeline.ts';
 import { createZapMock, MOCK_ZAP_EVIDENCE } from './zaps.ts';
 
-export type MockEngine = { handle(msg: ToEngine): void; dispose(): void };
+export type MockEngine = {
+  handle(msg: ToEngine): void;
+  dispose(): void;
+  readonly authorization: ReturnType<typeof createSignerAuthMock>;
+};
 export type Core = ReturnType<typeof createCore>;
 
 export function createMockEngine(post: (msg: FromEngine) => void, now = Date.now): MockEngine {
   let zapObserve: ((msg: FromEngine) => void) | undefined;
+  let authObserve: ((msg: FromEngine) => void) | undefined;
   const core = createCore((msg) => {
     zapObserve?.(msg);
+    authObserve?.(msg);
     post(msg);
   }, now);
   const { world, subs, later } = core;
   const act = createActions(core);
+  const authorization = createSignerAuthMock(post, now);
+  authObserve = authorization.observe;
   const dm = createPrivateMock(core);
   const zaps = createZapMock(core);
   zapObserve = zaps.observe;
@@ -46,7 +55,9 @@ export function createMockEngine(post: (msg: FromEngine) => void, now = Date.now
   };
   later(40, start);
   return {
+    authorization,
     handle(msg) {
+      if (authorization.handle(msg)) return;
       if (zaps.handle(msg)) return;
       if (dm.handle(msg)) return;
       if (msg.t === 'upload.cancel') return act.cancelUpload(msg.req);
@@ -66,6 +77,7 @@ export function createMockEngine(post: (msg: FromEngine) => void, now = Date.now
         });
       } else if (msg.t === 'heartbeat') post({ t: 'heartbeat' });
       else if (msg.t === 'detach') {
+        authorization.dispose();
         act.dispose();
         clearInterval(liveTimer);
         core.dispose();
@@ -169,6 +181,7 @@ export function createMockEngine(post: (msg: FromEngine) => void, now = Date.now
       } else if (msg.t === 'act') act.run(msg.req, msg.action);
     },
     dispose() {
+      authorization.dispose();
       act.dispose();
       dm.dispose();
       zaps.dispose();
