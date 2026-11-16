@@ -152,7 +152,7 @@ These are concrete runtime limits, not permission to fake a successful answer.
 - Private lists: supported local/extension/bunker reads cover NIP-44 and older
   NIP-04. Public edits preserve ciphertext; private editing, named-set navigation
   and list-specific Retry controls remain absent. Rows/hydration are owner-scoped.
-- Emoji: own kind-10030 entries work; referenced kind-30030 sets are not fetched.
+- Emoji: referenced sets pass native tests; Worker/full gates pending. Limits: [emoji-sets.md](emoji-sets.md).
 - Search: matching people are not placed ahead of notes; multi-language arrays
   use the first language. Bounded verified NIP-05 from-query lookup exists.
 - Bunkers: auth_url is a candidate without controls; verification and routing limits: [bunker-auth.md](bunker-auth.md). Relay switching is unsupported.

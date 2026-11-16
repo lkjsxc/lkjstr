@@ -79,3 +79,5 @@ Engine (`crates/`):
 - [engine-performance-dom.md](engine-performance-dom.md): bounded source DOM membership, wire/cutoff separation and evidence limits.
 
 - [engine-history-route.md](engine-history-route.md): inclusive history route continuity and bounded verification evidence.
+- [emoji-sets.md](emoji-sets.md): bounded owner-selected emoji discovery, native
+  evidence and pending real Worker verification.

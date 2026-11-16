@@ -22,6 +22,7 @@ if [ "${LKJSTR_COLD_START:-0}" = "1" ]; then
 fi
 cargo build -q -p lkjstr-nips --example list-fixtures > tmp/engine-list-helper.log 2>&1 || { tail -20 tmp/engine-list-helper.log; exit 1; }
 LKJSTR_ENGINE_REPORT=tmp/engine-private-lists node scripts/engine-private-lists.mjs > tmp/engine-private-lists.log 2>&1 || { tail -20 tmp/engine-private-lists.log; exit 1; }
+LKJSTR_ENGINE_REPORT=tmp/engine-emoji node scripts/engine-emoji.mjs > tmp/engine-emoji.log 2>&1 || { tail -20 tmp/engine-emoji.log; exit 1; }
 mkdir -p tmp/engine-stop
 rm -f tmp/engine-stop/report.json
 LKJSTR_ENGINE_REPORT=tmp/engine-stop node scripts/engine-stop.mjs > tmp/engine-stop.log 2>&1 || {

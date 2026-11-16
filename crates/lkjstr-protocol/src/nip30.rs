@@ -45,7 +45,7 @@ pub fn valid_custom_emoji_shortcode(value: &str) -> bool {
     !value.is_empty()
         && value
             .bytes()
-            .all(|byte| byte.is_ascii_alphanumeric() || byte == b'_')
+            .all(|byte| byte.is_ascii_alphanumeric() || byte == b'_' || byte == b'-')
 }
 
 pub fn valid_incoming_custom_emoji_shortcode(value: &str) -> bool {

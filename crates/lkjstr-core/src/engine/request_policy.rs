@@ -65,6 +65,8 @@ impl Network {
                     .kinds
                     .as_deref()
                     .is_some_and(|ks| ks == [0] || ks == [3])
+                    || (q.is_some_and(|q| q.source == Source::Emoji)
+                        && r.filter.kinds.as_deref() == Some(&[30030]))
                     || r.filter.ids.is_some()
                     || r.filter.tags.contains_key("e")
                     || r.filter.tags.contains_key("p")

@@ -13,6 +13,14 @@ impl Engine {
             if matches!(v.query.source, Source::Relays | Source::Diagnostics) {
                 continue;
             }
+            if v.query.source == Source::Emoji {
+                wants.extend(
+                    super::emoji::wants(&self.store, &v.query)
+                        .into_iter()
+                        .map(|(filter, query)| (sub.clone(), filter, query)),
+                );
+                continue;
+            }
             for f in requests(
                 &self.store,
                 &self.network,

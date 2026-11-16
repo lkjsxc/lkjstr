@@ -21,7 +21,7 @@ fn parses_https_custom_emoji_input() {
 #[test]
 fn validates_shortcode_and_url_fields() {
     assert!(valid_custom_emoji_shortcode("party_1"));
-    assert!(!valid_custom_emoji_shortcode("party-1"));
+    assert!(valid_custom_emoji_shortcode("party-1"));
     assert!(valid_incoming_custom_emoji_shortcode("party-1"));
     assert!(!valid_custom_emoji_shortcode("party:1"));
     assert!(valid_custom_emoji_url("https://x/p.png"));
@@ -75,7 +75,10 @@ fn parses_manual_input_with_valid_address() {
             address: Some(address),
         })
     );
-    assert_eq!(parse_custom_emoji_input(":party-1:https://x/p.png"), None);
+    assert_eq!(
+        parse_custom_emoji_input(":party-1:https://x/p.png").map(|emoji| emoji.shortcode),
+        Some("party-1".into())
+    );
 }
 
 #[test]

@@ -30,6 +30,9 @@ pub(super) fn projected(source: Source) -> bool {
 
 /// Known bookmark IDs still being resolved are not an exhausted source.
 pub(super) fn settled(q: Option<&super::Query>, e: &crate::engine::Engine) -> bool {
+    if let Some(q) = q.filter(|q| q.source == "emoji") {
+        return crate::engine::emoji::settled(e, q.account.as_deref());
+    }
     let Some(q) = q.filter(|q| q.source == "bookmarks") else {
         return true;
     };

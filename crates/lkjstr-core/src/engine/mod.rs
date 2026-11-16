@@ -11,6 +11,7 @@ mod commands;
 pub mod discovery;
 pub mod dm;
 mod dm_network;
+mod emoji;
 pub mod feedback;
 pub mod global;
 mod history;
@@ -64,8 +65,7 @@ pub struct View {
     rows: Vec<Row>,
     visible: bool,
     dirty: bool,
-    // One current historical request per view; released with visibility/close.
-    history: Option<lkjstr_protocol::NostrFilter>,
+    history: Option<lkjstr_protocol::NostrFilter>, // One per view; released on hide/close.
     notification_history: Option<lkjstr_protocol::NostrFilter>,
     at_bottom: bool,
     source_exhausted: bool,
