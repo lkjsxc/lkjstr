@@ -33,7 +33,13 @@ impl Network {
     pub(super) fn pending_page_routes(&self, sub: &str, logical: &NostrFilter) -> Vec<String> {
         self.requests
             .values()
-            .filter(|r| !r.page_eose && r.members.contains(sub) && self.preceding_page(r, logical))
+            // A full completed page also owes its remaining tail. Another view
+            // may already occupy both ordinary slots at the next cursor.
+            .filter(|r| {
+                (!r.page_eose || r.received.len() >= r.page_limit)
+                    && r.members.contains(sub)
+                    && self.preceding_page(r, logical)
+            })
             .map(|r| r.relay.clone())
             .collect()
     }

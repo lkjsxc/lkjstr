@@ -16,9 +16,11 @@ A newly preferred empty relay could replace it and establish false exhaustion.
 
 The actual inclusive continuation now inherits the full predecessor's ordinary
 read slot. This uses the existing two-primary bound and adds no collection or
-extra primary slot. Only a prior primary route with EOSE and a full response
-qualifies. A short predecessor cannot acquire this continuation protection.
-Already completed short routes consume no new physical request.
+extra primary slot. A still-owned full predecessor is also retained as historical
+debt outside those slots when another view already occupies them at the same
+cursor. This remains true after that route is demoted. Retention is bounded by
+the configured permitted relays and current view/filter membership. A short
+predecessor cannot acquire this protection or consume a new physical request.
 
 The original filter family and cursor must match. A different explicit until
 may rerank normally. Changed authors, read-permission removal and last-view
@@ -38,6 +40,17 @@ jobs and four test threads. Load was 1.81/1.85/2.02 to 1.93/1.88/2.03. Workspace
 Rust/manifest mtimes were refreshed before each command to reject stale shared
 target reuse. Original source, logs and metadata remain under
 `tmp/history-route-proof/`. The initial five-case failure is retained separately.
+
+A further two-view case compiled and failed against the first correction: a
+second view's completed-short routes occupied both ordinary slots and discarded
+the first view's full predecessor. The corrected debt guard passes that case,
+including the next page after demotion. A disconnect control confirms a healthy
+fallback can progress while the recovered route resumes its original span.
+Eight focused and twelve adjacent tests, plus strict focused Clippy, passed at
+17:09:02-17:09:16 UTC in 13.808 seconds; load was 2.06/1.50/1.58 to
+1.97/1.50/1.58. Evidence is in `shared-before.log`, `shared-after.log` and
+`shared-after.json` in the same directory. Earlier fixture-pacing attempts are
+retained separately and are not counted as product regressions.
 
 The corrected read planner SHA-256 is:
 

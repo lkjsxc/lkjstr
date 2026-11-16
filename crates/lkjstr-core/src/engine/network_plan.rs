@@ -56,8 +56,8 @@ impl Network {
                 self.read_route_plan(f, q, store, &mut weights, now)
             };
             let mut routes = selected.routes;
-            // Keep unfinished, still-permitted routes when a healthy route
-            // advances. Quality reranking must not abandon their missing span.
+            // Keep unfinished or full preceding, still-permitted routes when a
+            // healthy route advances. Their remaining span is still owed.
             routes.extend(self.pending_page_routes(sub, f).into_iter().filter(|url| {
                 self.relays.contains_key(url)
                     && (q.filters.relay_hints.contains(url)
