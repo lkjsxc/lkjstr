@@ -43,3 +43,26 @@ export async function answerPublicKey(
     post({ t: 'publicKey', req, error: 'signer-refused' });
   }
 }
+
+type Nip07 = { signEvent(event: unknown): Promise<unknown>; getPublicKey?(): Promise<unknown> };
+
+export async function answerSign(
+  msg: Extract<FromEngine, { t: 'sign' }>,
+  post: (message: ToEngine) => void,
+  wantsSign: (req: string | undefined) => boolean,
+): Promise<void> {
+  if (!wantsSign(msg.actionReq)) {
+    post({ t: 'signed', req: msg.req, error: 'signer-refused' });
+    return;
+  }
+  const ext = (window as { nostr?: Nip07 }).nostr;
+  try {
+    if (!ext) throw new Error('no signer extension');
+    const event = JSON.stringify(await ext.signEvent(JSON.parse(msg.event)));
+    if (!wantsSign(msg.actionReq)) return;
+    post({ t: 'signed', req: msg.req, event });
+  } catch (e) {
+    if (!wantsSign(msg.actionReq)) return;
+    post({ t: 'signed', req: msg.req, error: String((e as Error).message ?? e) });
+  }
+}

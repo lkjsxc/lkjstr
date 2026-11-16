@@ -19,6 +19,17 @@ export function createDmAccess(post: (message: ToEngine) => void) {
   const changed = createSignal(0);
   const failures = new Map<string, 'refused' | 'unsupported' | 'timeout'>(); // bounded by the accounts owned by this client
   const epochs = new Map<string, number>();
+  const listEpochs = new Map<string, number>();
+  const requests = new Map<
+    string,
+    { account: string; list: boolean; cancelled: boolean; stop: () => void }
+  >();
+  const cancelRequest = (req: string): void => {
+    const request = requests.get(req);
+    if (!request) return;
+    request.cancelled = true;
+    request.stop();
+  };
   const accounts = new Map<string, Account>();
   const waits = new Set<() => void>(); // <=16 bounded crypto calls; released on dispose or deadline
   const chains = new Map<string, { tail: Promise<void>; count: number }>(); // <=16 queued requests overall
@@ -68,8 +79,12 @@ export function createDmAccess(post: (message: ToEngine) => void) {
       const keys = new Set(next.map((a) => a.author.pubkey));
       for (const [pubkey, old] of accounts) {
         const current = next.find((a) => a.author.pubkey === pubkey);
-        if (!current || current.locked !== old.locked || current.signer !== old.signer)
+        if (!current || current.locked !== old.locked || current.signer !== old.signer) {
           revoke(pubkey);
+          listEpochs.set(pubkey, ++sequence);
+          for (const [req, request] of requests)
+            if (request.list && request.account === pubkey) cancelRequest(req);
+        }
         if (!keys.has(pubkey)) {
           accounts.delete(pubkey);
           failures.delete(pubkey);
@@ -77,24 +92,33 @@ export function createDmAccess(post: (message: ToEngine) => void) {
       }
       for (const account of next) accounts.set(account.author.pubkey, account);
       for (const pubkey of epochs.keys())
-        if (!keys.has(pubkey) && !chains.has(pubkey)) epochs.delete(pubkey);
+        if (!keys.has(pubkey) && !chains.has(pubkey)) {
+          epochs.delete(pubkey);
+          listEpochs.delete(pubkey);
+        }
     },
+    cancel: cancelRequest,
     async crypt(message: Crypt): Promise<void> {
-      if (stopped) return;
+      if (stopped || requests.has(message.req)) return;
+      const list = message.context?.kind === 'private-list';
+      const currentEpoch = (): number =>
+        list ? (listEpochs.get(message.pubkey) ?? 0) : epoch(message.pubkey);
+      const control = { account: message.pubkey, list, cancelled: false, stop: () => {} };
       const failure = (error: CryptError): void => {
-        if (!stopped) post({ t: 'crypted', req: message.req, error });
+        if (!stopped && !control.cancelled) post({ t: 'crypted', req: message.req, error });
       };
       if (pending >= 16 || bytes + message.data.length > 2_800_000) return failure('too-large');
-      const lease = epoch(message.pubkey);
+      const lease = currentEpoch();
+      requests.set(message.req, control);
       const chain = chains.get(message.pubkey) ?? { tail: Promise.resolve(), count: 0 };
       chains.set(message.pubkey, chain);
       chain.count++;
       pending++;
       bytes += message.data.length;
       const run = chain.tail.then(async () => {
-        if (stopped) return;
-        if (epoch(message.pubkey) !== lease) return failure('signer-refused');
-        const denied = failures.get(message.pubkey);
+        if (stopped || control.cancelled) return;
+        if (currentEpoch() !== lease) return failure('signer-refused');
+        const denied = list ? undefined : failures.get(message.pubkey);
         if (denied)
           return failure(
             denied === 'unsupported'
@@ -106,7 +130,7 @@ export function createDmAccess(post: (message: ToEngine) => void) {
         const account = accounts.get(message.pubkey);
         if (!account || account.locked || account.signer === 'none')
           return failure('signer-missing');
-        if (status(account) === 'ask') return failure('signer-refused');
+        if (!list && status(account) === 'ask') return failure('signer-refused');
         await new Promise<void>((resolve) => {
           let accepting = true;
           const finish = (reply?: Extract<ToEngine, { t: 'crypted' }>, latch = true): void => {
@@ -114,26 +138,27 @@ export function createDmAccess(post: (message: ToEngine) => void) {
             accepting = false;
             clearTimeout(timer);
             waits.delete(cancel);
-            if (reply && !stopped) {
+            if (reply && !stopped && !control.cancelled) {
               post(reply);
-              if (latch && reply.error && epoch(message.pubkey) === lease)
+              if (!list && latch && reply.error && currentEpoch() === lease)
                 block(message.pubkey, reply.error);
             }
             resolve();
           };
           const cancel = (): void => finish();
+          control.stop = cancel;
           const timer = setTimeout(
             () =>
               finish({
                 t: 'crypted',
                 req: message.req,
-                error: epoch(message.pubkey) === lease ? 'signer-timeout' : 'signer-refused',
+                error: currentEpoch() === lease ? 'signer-timeout' : 'signer-refused',
               }),
             60_000,
           );
           waits.add(cancel);
           void answerCrypt(message, (reply) => {
-            if (epoch(message.pubkey) !== lease)
+            if (currentEpoch() !== lease)
               finish({ t: 'crypted', req: message.req, error: 'signer-refused' }, false);
             else if (reply.t === 'crypted') finish(reply);
           });
@@ -141,17 +166,22 @@ export function createDmAccess(post: (message: ToEngine) => void) {
       });
       chain.tail = run.catch(() => {
         failure('signer-refused');
-        if (!stopped && epoch(message.pubkey) === lease) block(message.pubkey, 'signer-refused');
+        if (!list && !stopped && !control.cancelled && currentEpoch() === lease)
+          block(message.pubkey, 'signer-refused');
       });
       try {
         await chain.tail;
       } finally {
+        if (requests.get(message.req) === control) requests.delete(message.req);
         chain.count--;
         pending--;
         bytes -= message.data.length;
         if (!chain.count && chains.get(message.pubkey) === chain) {
           chains.delete(message.pubkey);
-          if (!accounts.has(message.pubkey)) epochs.delete(message.pubkey);
+          if (!accounts.has(message.pubkey)) {
+            epochs.delete(message.pubkey);
+            listEpochs.delete(message.pubkey);
+          }
         }
       }
     },
@@ -161,6 +191,8 @@ export function createDmAccess(post: (message: ToEngine) => void) {
       failures.clear();
       accounts.clear();
       epochs.clear();
+      listEpochs.clear();
+      requests.clear();
     },
   };
 }

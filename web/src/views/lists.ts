@@ -1,7 +1,7 @@
 // The short lists of the Relays tab and of Settings (relays, mutes, media servers): the rows of one subscription,
 // drawn so that a row that did not change keeps its node and the keyboard stays on the control it was on.
 import type { Subscription } from '../engine/client.ts';
-import type { Row, Source } from '../engine/protocol.ts';
+import type { Row, Source, SubState } from '../engine/protocol.ts';
 import type { Disposer } from '../shared/signal.ts';
 import type { ViewEnv } from './registry.ts';
 
@@ -12,13 +12,15 @@ const MOST = 500; // Batch size; collect until the source reports exhaustion.
 export function watchList(
   env: ViewEnv,
   source: Source,
-  draw: (rows: readonly Row[], loaded: boolean) => void,
+  draw: (rows: readonly Row[], loaded: boolean, state?: SubState) => void,
 ): Disposer {
   let sub: Subscription | undefined;
   let rows: readonly Row[] = [];
   let as: string | undefined;
   let pending = true;
   let initial = true;
+  let state: SubState | undefined;
+  let ended = false;
   const collected = new Map<string, Row>();
   let generation = 0;
   let requestSerial = 0;
@@ -36,12 +38,14 @@ export function watchList(
     sub?.close();
     generation++;
     pending = initial = true;
+    state = undefined;
+    ended = false;
     as = me;
     rows = [];
     collected.clear();
     draw(rows, false);
     sub = env.engine.open(
-      { source, account: me || undefined },
+      { source, account: me || undefined, privateLists: source === 'mutes' && !!me },
       {
         rows: (r, top = true, bottom = true) => {
           // The real engine also sends its default 50-row open response before our window.
@@ -50,14 +54,25 @@ export function watchList(
           if (!pending && !(top && bottom)) return request('top');
           pending = false;
           if (top) collected.clear();
+          const before = collected.size;
           for (const row of r) collected.set(row.key, row);
+          const added = collected.size > before;
+          ended = bottom;
           // Bound: membership of the finite source on this device. Swap complete snapshots
           // so refreshing a later page never removes the row holding the keyboard.
-          if (bottom) draw((rows = [...collected.values()]), true);
+          if (bottom || !rows.length) draw((rows = [...collected.values()]), bottom, state);
           const last = r.at(-1);
-          if (!bottom && last) request({ key: last.key });
+          if (!bottom && last && (top || added) && state?.privateLists?.phase !== 'loading')
+            request({ key: last.key });
         },
         patch: () => request('top'),
+        state(next) {
+          const previous = state?.privateLists?.phase;
+          state = next;
+          draw(rows, ended && next.privateLists?.phase !== 'loading', next);
+          if (!pending && previous === 'loading' && next.privateLists?.phase === 'ready')
+            request('top');
+        },
       },
     );
     request('top');

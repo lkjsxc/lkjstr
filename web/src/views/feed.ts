@@ -3,7 +3,7 @@ import { applyOps } from '../engine/ops.ts';
 import type { Anchor, Query, Row, Source, SubState } from '../engine/protocol.ts';
 import { fullTime } from '../shared/format.ts';
 import { h } from '../shared/h.ts';
-import { type Key, t } from '../shared/i18n.ts';
+import { t } from '../shared/i18n.ts';
 import { loadViewState, saveViewState } from '../shared/view-state.ts';
 import { ability, rich } from './can.ts';
 import { mountChannelDesk } from './channel-desk.ts';
@@ -14,6 +14,7 @@ import { mountFeedKeys } from './feed-keys.ts';
 import { createKeeper, type Place } from './feed-place.ts';
 import { mountScrub } from './feed-scrub.ts';
 import { CHILD, DATED, FILTERED, hasDaySeparators, OWN } from './feed-sources.ts';
+import { feedState } from './feed-state.ts';
 import { feedTitle } from './feed-title.ts';
 import { filterQuery } from './filter-bar.ts';
 import { onHeld } from './held.ts';
@@ -75,6 +76,7 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
   const query = (): Query => ({
     source: kind as Source,
     account: account || undefined,
+    privateLists: !!account,
     pubkey: state.pubkey,
     id: state.id,
     ref: state.ref,
@@ -125,20 +127,7 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
     if (rows[0] !== focus) keeper.set({ key: focus.key, off: 0 });
   };
   const showState = (): void => {
-    const empty = rows.every((r) => r.kind === 'profile' || r.kind === 'channel');
-    const phase = sstate?.phase ?? 'cache';
-    const zapPhase = sstate?.zapEvidence?.phase;
-    const key: Key | null = !empty
-      ? atBottom && rows.length > 8 && (zapPhase === undefined || zapPhase === 'ready')
-        ? 'feed.end'
-        : null
-      : kind === 'search' && !state.text
-        ? 'feed.searchHint'
-        : phase === 'cache' || zapPhase === 'loading'
-          ? 'feed.loading'
-          : phase === 'failed' || zapPhase === 'failed' || zapPhase === 'unsupported'
-            ? 'feed.failed'
-            : 'feed.empty';
+    const { empty, key } = feedState(rows, sstate, atBottom, kind === 'search' && !state.text);
     if (empty && !account && OWN.has(kind)) status.replaceChildren(signIn);
     else status.textContent = key ? t(key) : '';
     status.title = sstate?.lastArrival
@@ -148,6 +137,7 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
   const follow = (): void => {
     if (env.visible.get()) sub?.reading?.(keeper.get()?.key ?? rows[0]?.key ?? null);
     if (waiting || rail.busy() || !sub || !env.visible.get()) return;
+    if (kind === 'bookmarks' && sstate?.privateLists?.phase === 'loading') return;
     const top = el.scrollTop;
     const room = el.scrollHeight - top - el.clientHeight;
     const first = rows[0]?.key;
@@ -209,6 +199,7 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
       state(s) {
         sstate = s;
         showState();
+        if (s.privateLists?.phase === 'ready') follow();
       },
     });
     sub.visible(env.visible.get());

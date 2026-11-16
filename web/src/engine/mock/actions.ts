@@ -7,6 +7,7 @@ import { channelAct, channelTouched, chatter } from './channels.ts';
 import type { Core } from './engine.ts';
 import { FILLER } from './fixtures-notes.ts';
 import { byHandle, byPubkey, SELF } from './people.ts';
+import { retryLists } from './private-lists.ts';
 import { answers, isKnown, relayUrl } from './relays.ts';
 import { createUploads } from './uploads.ts';
 import { vaultAct } from './vault.ts';
@@ -49,6 +50,7 @@ export function createActions(core: Core) {
   const uploads = createUploads(core);
 
   function run(req: string, a: Action): void {
+    if (a.a === 'lists.retry') return retryLists(core, req, a.as);
     const me = core.me();
     if (!a.a.startsWith('account.') && !me) return fail(req, 'signed-out');
     const account = core.who.list().find((x) => x.author.pubkey === me);

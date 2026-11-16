@@ -7,6 +7,7 @@ import {
 import { createActions } from './actions.ts';
 import { createCore } from './core.ts';
 import { createPrivateMock } from './dm.ts';
+import { privateListState } from './private-lists.ts';
 import { select } from './query.ts';
 import { mockStats } from './stats.ts';
 import type { Sub } from './subscription.ts';
@@ -121,6 +122,7 @@ export function createMockEngine(post: (msg: FromEngine) => void, now = Date.now
             relaysAsked: done ? 0 : 6,
             relaysAnswered: 0,
             zapEvidence: MOCK_ZAP_EVIDENCE,
+            ...privateListState(s.query),
           },
         });
         if (!done)
@@ -137,6 +139,7 @@ export function createMockEngine(post: (msg: FromEngine) => void, now = Date.now
                   relaysAsked: 6,
                   relaysAnswered: 5,
                   lastArrival: world.notes[0]?.at,
+                  ...privateListState(s.query),
                 },
               }),
           );

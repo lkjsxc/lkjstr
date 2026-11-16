@@ -1,6 +1,7 @@
 // Shared mock policy and bounded fixture subscriptions.
-import type { Account, FromEngine, PatchOp, Query } from '../protocol.ts';
+import type { FromEngine, PatchOp, Query } from '../protocol.ts';
 import { createAccounts } from './accounts.ts';
+import { privateListAccountSnapshot, privateListState } from './private-lists.ts';
 import { entry, matches, select } from './query.ts';
 import { relays } from './relays.ts';
 import type { Sub } from './subscription.ts';
@@ -42,12 +43,7 @@ export function createCore(post: (msg: FromEngine) => void, now: () => number) {
     if (!flushing) (flushing = true), later(PATCH_MS, flush);
   };
   const inWindow = (s: Sub, i: number): boolean => s.windowed && i >= s.start && i < s.end;
-  const accounts = (): void => {
-    const list: Account[] = who
-      .list()
-      .map((a, i) => ({ ...a, unread: i === 0 ? unread : 0, unreadZap: MOCK_ZAP_EVIDENCE }));
-    post({ t: 'accounts', accounts: list, active: who.active() });
-  };
+  const accounts = (): void => post(privateListAccountSnapshot(who, unread));
   return {
     world,
     timelines,
@@ -94,7 +90,14 @@ export function createCore(post: (msg: FromEngine) => void, now: () => number) {
         post({
           t: 'state',
           sub: s.id,
-          state: { phase: 'live', relaysAsked: 6, relaysAnswered: 5, lastArrival: n.at },
+          state: {
+            phase: 'live',
+            relaysAsked: 6,
+            relaysAnswered: 5,
+            lastArrival: n.at,
+            zapEvidence: MOCK_ZAP_EVIDENCE,
+            ...privateListState(s.query),
+          },
         });
       }
     },

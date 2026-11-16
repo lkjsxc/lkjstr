@@ -2,9 +2,10 @@
 import { learnPerson, learnRows, onPerson } from '../shared/people.ts';
 import { createSignal, type Signal } from '../shared/signal.ts';
 import { createActionRequests } from './client-actions.ts';
-import { answerPublicKey } from './client-crypto.ts';
+import { answerPublicKey, answerSign } from './client-crypto.ts';
 import { createDeliveryWatches } from './client-delivery.ts';
 import { createDmClient } from './client-dm.ts';
+import { createPrivateListClient } from './client-private-lists.ts';
 import type { Transport } from './client-transport.ts';
 import { createZapClient } from './client-zaps.ts';
 import type {
@@ -67,13 +68,13 @@ export type Engine = {
   dispose(): void;
 };
 
-type Nip07 = { signEvent(event: unknown): Promise<unknown>; getPublicKey?(): Promise<unknown> };
 const IDLE_MS = 180_000;
 const STATS_MS = 4000;
 
 export function createEngine(transport: Transport): Engine {
   const dm = createDmClient(transport);
   const zaps = createZapClient(transport);
+  const lists = createPrivateListClient(dm.access, (message) => transport.post(message));
   const subs = new Map<string, SubHandlers>(); // bound: open subscriptions (one per mounted list)
   const owners = new Map<string, HTMLElement>(); // bound: open subscriptions
   const visible = new Set<string>(); // bound: as `subs`
@@ -112,7 +113,7 @@ export function createEngine(transport: Transport): Engine {
   const deliveries = createDeliveryWatches(hint);
   const actions = createActionRequests(
     transport,
-    () => 'r' + String(++serial),
+    () => `r${++serial}`,
     (req, watch) => deliveries.add(req, watch),
   );
   const active = (): void => {
@@ -123,6 +124,7 @@ export function createEngine(transport: Transport): Engine {
   };
   const resumed = (): void => {
     if (document.visibilityState !== 'hidden') dm.flushers.resume(info.get()?.version ?? 0);
+    else lists.hidden();
     hint();
   };
   document.addEventListener('visibilitychange', resumed);
@@ -131,22 +133,6 @@ export function createEngine(transport: Transport): Engine {
   window.addEventListener('pointerdown', active, { passive: true, capture: true });
   window.addEventListener('keydown', active, { passive: true, capture: true });
   active();
-  const sign = async (msg: Extract<FromEngine, { t: 'sign' }>): Promise<void> => {
-    if (!actions.wantsSign(msg.actionReq)) {
-      transport.post({ t: 'signed', req: msg.req, error: 'signer-refused' });
-      return;
-    }
-    const ext = (window as { nostr?: Nip07 }).nostr;
-    try {
-      if (!ext) throw new Error('no signer extension');
-      const event = JSON.stringify(await ext.signEvent(JSON.parse(msg.event)));
-      if (!actions.wantsSign(msg.actionReq)) return;
-      transport.post({ t: 'signed', req: msg.req, event });
-    } catch (e) {
-      if (!actions.wantsSign(msg.actionReq)) return;
-      transport.post({ t: 'signed', req: msg.req, error: String((e as Error).message ?? e) });
-    }
-  };
 
   const offPeople = onPerson((author) => {
     const value = accounts.get();
@@ -190,16 +176,21 @@ export function createEngine(transport: Transport): Engine {
       });
     } else if (msg.t === 'status')
       status.set({ connected: msg.connected, wanted: msg.wanted, offline: msg.offline });
-    else if (msg.t === 'reconnect') dm.flushers.suspend();
-    else if (msg.t === 'ready') {
+    else if (msg.t === 'reconnect') {
+      dm.flushers.suspend();
+      lists.hidden();
+    } else if (msg.t === 'ready') {
       dm.flushers.ready(msg.version);
       info.set({ engine: msg.engine, version: msg.version });
     } else if (msg.t === 'stats') asked.get(msg.req)?.(msg.stats);
     else if (msg.t === 'dm') dm.receive(msg);
     else if (msg.t === 'zap.quote' || msg.t === 'zap.receipts') zaps.receive(msg);
     else if (msg.t === 'dm.flush') dm.flushers.receive(msg);
-    else if (msg.t === 'crypt') void dm.access.crypt(msg);
-    else if (msg.t === 'sign') void sign(msg);
+    else if (msg.t === 'crypt.cancel') lists.cancel(msg.req);
+    else if (msg.t === 'crypt') {
+      if (msg.context) void lists.crypt(msg);
+      else void dm.access.crypt(msg);
+    } else if (msg.t === 'sign') void answerSign(msg, (m) => transport.post(m), actions.wantsSign);
     else if (msg.t === 'getPublicKey') void answerPublicKey(msg.req, (m) => transport.post(m));
   });
   return {
@@ -214,7 +205,13 @@ export function createEngine(transport: Transport): Engine {
       let reading: string | null | undefined;
       subs.set(id, handlers);
       if (owner) owners.set(id, owner);
-      transport.post({ t: 'open', sub: id, query });
+      lists.open(id, query);
+      transport.post({
+        t: 'open',
+        sub: id,
+        query,
+        ...(query.privateLists ? { visible: false } : {}),
+      });
       return {
         id,
         near: (ids) => {
@@ -238,6 +235,7 @@ export function createEngine(transport: Transport): Engine {
               : {}),
           }),
         visible(on) {
+          lists.visible(id, on);
           if (on === visible.has(id)) return;
           if (on) visible.add(id);
           else visible.delete(id);
@@ -245,6 +243,7 @@ export function createEngine(transport: Transport): Engine {
         },
         close() {
           if (!subs.delete(id)) return;
+          lists.close(id);
           visible.delete(id);
           owners.delete(id);
           hint();
@@ -288,6 +287,7 @@ export function createEngine(transport: Transport): Engine {
       window.removeEventListener('keydown', active, true);
       clearTimeout(idleTimer);
       offPeople();
+      lists.dispose();
       dm.dispose();
       zaps.dispose();
       actions.dispose();

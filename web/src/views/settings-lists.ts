@@ -38,9 +38,15 @@ export function listBox<R extends { readonly key: string }>(
   const cache: Keyed = new Map(); // bound: the rows of this list
   return {
     el: h('div', { class: 'sbox', tabindex: -1 }, list, none),
-    draw(rows: readonly R[], loaded: boolean): void {
+    draw(rows: readonly R[], loaded: boolean, failed = false): void {
       reconcile(list, cache, rows, render);
-      none.textContent = !loaded ? t('feed.loading') : rows.length ? '' : t(empty);
+      none.textContent = failed
+        ? t('feed.failed')
+        : !loaded
+          ? t('feed.loading')
+          : rows.length
+            ? ''
+            : t(empty);
     },
   };
 }
@@ -221,12 +227,13 @@ export function listEntries(env: ViewEnv): { entries: Entry[]; dispose: Disposer
   };
 
   const offs = [
-    watchList(env, 'mutes', (rows: readonly Row[], loaded) => {
+    watchList(env, 'mutes', (rows: readonly Row[], loaded, state) => {
       muted = rows.filter((r): r is MuteRow => r.kind === 'mute');
       for (const m of mutes)
         m.box.draw(
           muted.filter((r) => r.target.k === m.k),
           loaded,
+          state?.privateLists?.phase === 'failed' || state?.privateLists?.phase === 'unsupported',
         );
     }),
     watchList(env, 'media-servers', (rows: readonly Row[], loaded) => {

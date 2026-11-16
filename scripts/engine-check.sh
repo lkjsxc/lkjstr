@@ -9,7 +9,7 @@ export XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$PWD/tmp/config}"
 export XDG_DATA_HOME="${XDG_DATA_HOME:-$PWD/tmp/data}"
 export TMPDIR="${LKJSTR_ENGINE_TMPDIR:-$PWD/tmp/temp}"
 mkdir -p "$TMPDIR"
-node --test scripts/engine-transport-private.test.mjs scripts/engine-transport-history.test.mjs scripts/engine-transport-zaps.test.mjs scripts/engine-transport-reading.test.mjs > tmp/engine-transport.log 2>&1 || { tail -20 tmp/engine-transport.log; exit 1; }
+node --test scripts/engine-transport-private.test.mjs scripts/engine-transport-history.test.mjs scripts/engine-transport-zaps.test.mjs scripts/engine-transport-reading.test.mjs scripts/engine-transport-lists.test.mjs > tmp/engine-transport.log 2>&1 || { tail -20 tmp/engine-transport.log; exit 1; }
 node --test scripts/real-hour-test.mjs scripts/real-hour-network-test.mjs scripts/real-hour-owned-test.mjs > tmp/real-hour-observer.log 2>&1 || { tail -20 tmp/real-hour-observer.log; exit 1; }
 sh scripts/engine-contract-prepare.sh > tmp/engine-contract.log 2>&1 || { tail -20 tmp/engine-contract.log; exit 1; }
 cargo build -q -p lkjstr-nips --example zap-fixtures > tmp/zap-fixtures-build.log 2>&1 || { tail -20 tmp/zap-fixtures-build.log; exit 1; }
@@ -18,6 +18,8 @@ cargo build -q -p lkjstr-core --example engine-fixtures --example engine-bunker 
 if [ "${LKJSTR_COLD_START:-0}" = "1" ]; then
   cargo run -q --release -p lkjstr-core --example engine-cold-fixtures > tmp/engine-pkg/cold-fixtures.json 2> tmp/cold-fixtures.log || { tail -10 tmp/cold-fixtures.log; exit 1; }
 fi
+cargo build -q -p lkjstr-nips --example list-fixtures > tmp/engine-list-helper.log 2>&1 || { tail -20 tmp/engine-list-helper.log; exit 1; }
+LKJSTR_ENGINE_REPORT=tmp/engine-private-lists node scripts/engine-private-lists.mjs > tmp/engine-private-lists.log 2>&1 || { tail -20 tmp/engine-private-lists.log; exit 1; }
 mkdir -p tmp/engine-stop
 rm -f tmp/engine-stop/report.json
 LKJSTR_ENGINE_REPORT=tmp/engine-stop node scripts/engine-stop.mjs > tmp/engine-stop.log 2>&1 || {

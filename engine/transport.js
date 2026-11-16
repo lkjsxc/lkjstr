@@ -19,13 +19,18 @@ export function workerTransport(options = {}) {
   const replay = () => {
     if (config) send(config);
     if (relays) send(relays);
+    // Read the actual document too: a frozen page may retain its last visible hint.
+    const hidden = document.visibilityState === 'hidden' || hint?.hint.pageHidden;
+    const restoredHint = hidden ? { t: 'hint', hint: { visibleSubs: [], idle: false, saveData: false, ...hint?.hint, pageHidden: true } } : hint;
+    if (restoredHint) send(restoredHint);
     for (const state of subs.values()) {
-      send(state.open);
+      const visible = !hidden && (hint ? hint.hint.visibleSubs.includes(state.open.sub) : state.open.visible ?? true);
+      send(state.open.query.privateLists ? { ...state.open, visible } : state.open);
       state.seekPending = state.window?.anchor?.month !== undefined;
       if (state.window && !state.seekPending) send(state.window);
     }
-    // Set the page state before a private open can schedule a signer call.
-    if (hint) send(hint);
+    if (restoredHint && subs.size) send(restoredHint); // reopened subscriptions now exist for focus routing
+    // Direct-message opens retain the same atomic visibility boundary.
     for (const state of privateSubs.values()) {
       send({ ...state.open, visible: state.visible?.visible ?? state.open.visible ?? true });
     }
