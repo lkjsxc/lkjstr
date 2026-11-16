@@ -53,7 +53,7 @@ The preceding landing passed required gates and 338 real Worker checks;
 ## Engine stream (2026-11-16)
 
 Protocol 6 introduced DM, encrypted-key and relay authentication operations.
-Protocols 7/8 are additive; exact shapes are in
+Protocols 7/8/9 are additive; exact shapes are in
 [engine-proposals.md](engine-proposals.md). Unreached operations remain in
 [interface-needs.md](interface-needs.md).
 
@@ -73,6 +73,9 @@ Protocols 7/8 are additive; exact shapes are in
   signature. Demand, original owner and authority are checked on asynchronous
   completion. AUTH never enters public history. Optional NIP-67 hints remain
   unsupported; see [relay-auth.md](relay-auth.md).
+- NIP-57 providers authorize receipt actors/totals and finite zapper queries.
+  Explicit local/extension/bunker invoice requests are HTTPS-only and return
+  unpaid intents; no payment control exists. Bounds/evidence: [zaps.md](zaps.md).
 - Failed/silent relays do not veto healthy history forever. Paging waits for
   completion or the original deadline, advances successful pages and preserves
   failed-route cursors. Failure never establishes empty history.
@@ -169,9 +172,6 @@ These are concrete runtime limits, not permission to fake a successful answer.
 - Bunkers: auth_url challenges and relay-switch negotiation are unsupported.
 - Uploads: intermediate transmitted-byte progress remains missing; zero and
   validated completion are reported, with bounded NIP-96 processing.
-- Zaps: provider nostrPubkey discovery is not integrated. Current receipt-derived
-  rows/totals are not trusted payment totals. LNURL zap signing/invoice flow,
-  payment UI and a trusted zapper-detail query are absent.
 - Device: physical IndexedDB size, cache clearing, settings archive import/export
   and encrypted cross-device setup sync are absent. Payload bytes are not disk size.
 - Followed hashtags, parsed article documents, reports and complete NIP-11 detail

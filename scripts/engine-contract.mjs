@@ -55,4 +55,5 @@ export function assertCoverage(actual, expected, name) {
 const mock = await readFile('web/src/engine/mock/engine.ts','utf8');
 export const mockMessageKinds=[...new Set([...mock.matchAll(/msg\.t\s*===\s*'([^']+)'/g)].map(m=>m[1]))];
 const actions=await readFile('web/src/engine/mock/actions.ts','utf8');
-export const mockActionKinds=[...new Set([...actions.matchAll(/case\s+'([^']+)'/g)].map(m=>m[1]))];
+const zaps=await readFile('web/src/engine/mock/zaps.ts','utf8');
+export const mockActionKinds=[...new Set([...actions.matchAll(/case\s+'([^']+)'/g)].map(m=>m[1]).concat(/action\.a\s*!==\s*'zap\.invoice'/.test(zaps)?['zap.invoice']:[]))];

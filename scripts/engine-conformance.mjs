@@ -2,6 +2,7 @@ import { relayAuth } from './engine-relay-auth.mjs';
 import { directMessages } from './engine-dm.mjs';
 import { hiddenDirectMessages } from './engine-dm-hidden.mjs';
 import { vault } from './engine-vault.mjs';
+import { zaps } from './engine-zaps.mjs';
 import { channels } from './engine-channels.mjs';
 // Runs within the real Worker harness; all fixture keys stay in the native signer.
 import { validateReplies, actionKinds, sourceKinds, assertCoverage, mockActionKinds } from './engine-contract.mjs';
@@ -117,6 +118,7 @@ export async function conformance({page,send,wait,check,note,signer,lines,origin
   await channels({page,send,wait,check,note,signer,lines,fake:channelFake,origin,act,kinds,bunker});
   await directMessages({page,send,wait,check,note,signer,lines,origin,bunker,fake,act,kinds});
   await hiddenDirectMessages({page,origin,note,signer,lines,fake,check});
+  await zaps({page,send,check,note,signer,lines,origin,bunker,fake,act,kinds});
   await vault({page,send,wait,check,act,kinds,origin});
   assertCoverage(kinds,actionKinds,'action');
   assertCoverage(kinds,mockActionKinds,'mock action');

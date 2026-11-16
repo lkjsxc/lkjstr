@@ -2,9 +2,10 @@
 
 ## Purpose
 
-Source audit refreshed on 2026-11-16 against the current protocol-8 integration
-tree, including K1-K4 and M1-M6. Required gates passed and spec items are built;
-source status alone does not establish the deployed build.
+Source audit refreshed on 2026-11-16 against the protocol-9 zap integration tree.
+The K1-K4/M1-M6 base passed its gates and is built. Zap native, strict clippy,
+frontend and 40 guarded Worker checks pass; required integration gates remain pending.
+Source status alone does not establish the deployed build.
 Unregistered staging under tmp/ is excluded. This replaces the 11-14 inventory.
 Rows describe lkjstr's real Worker and reachable interface, not mock capability.
 `done` means implemented for the stated scope; it does not establish public-network
@@ -25,11 +26,12 @@ Evidence prefixes: `E/` = `crates/lkjstr-core/src/engine/`,
 
 ## Work order by daily impact
 
-1. Repeat the read-only public hour on the new build after this third landing.
-   Verify route recovery and missed-note coverage after the measured fixes;
-   extend weak notification/thread controls and separate observer memory.
-2. Complete private-list decryption for external signers and older ciphertext;
-   then trusted zap provider/receipt validation and the LNURL invoice flow.
+1. Fix measured scrolling stalls and retain complete bounded public delivery
+   evidence; the third-landing hour finished with an unresolved late Home note.
+   Strengthen notification/thread controls and keep observer memory separate.
+2. Finish the registered zap and external/older private-list integration gates.
+   Named-list account isolation is already fixed. Measure trusted zap providers
+   before treating intercepted loopback checks as public interoperability.
 3. Finish existing controls: referenced emoji sets, people/language search,
    bunker authorization challenges and measured upload progress. Upload
    cancellation and relay AUTH are already implemented.
@@ -104,11 +106,11 @@ Evidence prefixes: `E/` = `crates/lkjstr-core/src/engine/`,
 | NIP-11 relay information surface | partial | Engine consumes limits but does not retain/project the complete information document; no detail view. |
 | NIP-42 relay authentication | done | Explicit auth-required reads/writes use all signer kinds with current demand/owner checks. Optional NIP-67 EOSE hints remain unsupported; docs/relay-auth.md. |
 | Relay health, request and delivery diagnostics | done | Real counters, errors, request purposes and attempted publication routes; E/feedback.rs, V/relays.ts, V/stats.ts. |
-| Zap receipt display and totals | partial | Amounts come from receipt/description tags without trusted provider discovery; E/wire/note.rs, E/wire/notifications.rs, P/nip57.rs. Not verified payment totals. |
-| LNURL discovery, zap signing and invoice retrieval | missing | N/zap.rs and N/invoice.rs validate structures but have no Worker flow. Existing zap button only explains unavailability. |
+| Zap receipt display and totals | partial | Provider-authorized, signed and globally deduplicated receipts supply exact amounts, existing lower-bound counts and notification actors. Unresolved evidence stays separate; historical provider authorization is session-only and is not independent payment proof. E/zaps/, E/wire/counts.rs, docs/zaps.md. |
+| LNURL discovery, zap signing and invoice retrieval | engine ready, no surface | Finite zap.quote and explicit zap.invoice use local/extension/bunker signers, bounded HTTPS and exact invoice commitments, returning only unpaid intents. Forty guarded Worker checks pass; required integration gates remain pending and the existing zap control stays unavailable. W/worker_zap*.rs, docs/zaps.md. |
 | WebLN, invoice payment/QR and NWC | missing | No payment contract or provider integration; V/note-actions.ts. NIP-47 is a separate missing wallet capability. |
 | Per-note reactors and reposters | partial | Verified stored events retain authors; repost rows expose bounded actors and reaction rows expose counts. A complete actor-detail query and its specified view are missing; E/rows.rs, web/src/engine/protocol.ts. |
-| Trusted zapper list | partial | Stored receipts and actor parsing exist; provider validation and a detail-query shape are missing. |
+| Trusted zapper list | engine ready, no surface | zap.receipts returns at most 200 provider-authorized rows with exact millisatoshis, public/anonymous/private sender distinction and provenance. Its cursor traverses retained verified cache, not complete relay history; E/zaps/receipt_list.rs, docs/interface-needs.md. |
 | Reliable publication feedback and retry | done | Early success, bounded retries, late confirmations and retained composer drafts; E/network_delivery.rs, V/compose-outbox.ts. |
 
 ## Composition, saved material and content kinds

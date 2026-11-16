@@ -32,6 +32,12 @@ cannot provide the required isolation.
 | People lists | `open {sub,query:{source:"list",target,...}}` projects stored list members. The user wants to open a saved people list without treating it as a feed. |
 | Article publishing | `publish` with `Draft.longForm` emits kind 30023. The user wants to write a long-form article; a parsed article reader is still missing. |
 | Group subjects | `dm.send {as,draft:{recipients,text,subject?}}` and private snapshots support the subject field. A subject-editing surface remains deliberately unspecified. |
+| Zap quote/invoice | `zap.quote {req,query:{target,amountMsat?}}` returns provider/split evidence; `zap.invoice {as,intent:{target,amountMsat,comment}}` returns `result.zapIntent` with validated unpaid invoices. The user wants to choose an amount/comment, inspect recipients and decide what to do with an invoice. No payment control or wallet call exists. |
+| Trusted zappers | `zap.receipts {req,query:{target,before?,limit}}` returns bounded provider-authorized receipt rows with sender/anonymous/private distinction, recipient, exact millisatoshis, target and provenance. The user wants to inspect who zapped without treating unresolved receipts as verified amounts. `zap.close {req}` releases either finite query. |
+
+Existing nonzero zap totals use the current plus marker for unresolved evidence.
+The zero/blank zap control cannot show pending or untrusted zero amounts;
+`Counts.zapState` and `Counts.zapUnverified` expose that state for Claude's design.
 
 Stored reaction/repost actors still lack a detail-query shape. Missing bookmark
 IDs lack placeholder rows; pins lack dedicated discovery/projection/editing.

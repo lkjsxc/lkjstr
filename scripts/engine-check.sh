@@ -9,8 +9,9 @@ export XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$PWD/tmp/config}"
 export XDG_DATA_HOME="${XDG_DATA_HOME:-$PWD/tmp/data}"
 export TMPDIR="${LKJSTR_ENGINE_TMPDIR:-$PWD/tmp/temp}"
 mkdir -p "$TMPDIR"
-node --test scripts/engine-transport-private.test.mjs scripts/engine-transport-history.test.mjs > tmp/engine-transport.log 2>&1 || { tail -20 tmp/engine-transport.log; exit 1; }
+node --test scripts/engine-transport-private.test.mjs scripts/engine-transport-history.test.mjs scripts/engine-transport-zaps.test.mjs scripts/engine-transport-reading.test.mjs > tmp/engine-transport.log 2>&1 || { tail -20 tmp/engine-transport.log; exit 1; }
 sh scripts/engine-contract-prepare.sh > tmp/engine-contract.log 2>&1 || { tail -20 tmp/engine-contract.log; exit 1; }
+cargo build -q -p lkjstr-nips --example zap-fixtures > tmp/zap-fixtures-build.log 2>&1 || { tail -20 tmp/zap-fixtures-build.log; exit 1; }
 LKJSTR_ENGINE_HARNESS=1 sh scripts/engine-build.sh > tmp/engine-build.log 2>&1 || { tail -30 tmp/engine-build.log; exit 1; }
 cargo build -q -p lkjstr-core --example engine-fixtures --example engine-bunker > tmp/engine-helper-build.log 2>&1 || { tail -20 tmp/engine-helper-build.log; exit 1; }
 if [ "${LKJSTR_COLD_START:-0}" = "1" ]; then

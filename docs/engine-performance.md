@@ -6,6 +6,12 @@ Record runtime measurements and reproducible workloads. Synthetic index fixtures
 product or a public relay. Timing is elapsed wall time on this shared Linux host, not a throughput
 promise for another device.
 
+## Zap receipt projection (2026-11-16)
+
+The bounded native target-index workload improved from 462.144 to 23.566 ms per
+800 totals. Date/load, controlled before proofs and limits are recorded in
+[engine-performance-zaps.md](engine-performance-zaps.md).
+
 ## Retained-history follow-up (2026-11-16)
 
 The normal loopback Worker gate at 08:51:36 UTC reached all 5,000 notes in 52.073 seconds; the
