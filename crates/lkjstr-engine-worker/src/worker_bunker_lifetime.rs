@@ -1,6 +1,8 @@
 use super::*;
 /// Called before every challenge, at account commit, input, detach, stop and every pump.
 pub(in crate::worker) fn sync(h: &mut Host) {
+    #[cfg(feature = "harness")]
+    super::probe::sync(h);
     if h.bunker.book.is_empty() && h.bunker.flights.is_empty() {
         return;
     }

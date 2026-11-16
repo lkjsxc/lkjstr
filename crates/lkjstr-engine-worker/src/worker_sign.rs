@@ -31,6 +31,8 @@ pub(super) fn process(host: &Rc<RefCell<Host>>, o: &Output) -> bool {
             let req = req.clone();
             let event = event.clone();
             wasm_bindgen_futures::spawn_local(async move {
+                #[cfg(feature = "harness")]
+                bunker::probe::wait(&host, client, &event.pubkey, deadline).await;
                 let ms = deadline.saturating_sub(host.borrow().time()).min(60_000) as u32;
                 let raw = bunker::call(
                     &host,

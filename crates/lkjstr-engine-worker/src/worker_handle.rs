@@ -63,3 +63,20 @@ impl WorkerHandle {
         direct_messages::stop_probe::counts(&self.host.borrow(), account)
     }
 }
+
+#[cfg(feature = "harness")]
+#[wasm_bindgen]
+impl WorkerHandle {
+    pub fn hold_public_sign(&mut self, account: &str) -> bool {
+        bunker::probe::arm(&mut self.host.borrow_mut(), account)
+    }
+    pub fn public_sign_queued(&self) -> bool {
+        bunker::probe::queued(&self.host.borrow())
+    }
+    pub fn release_public_sign(&mut self) -> bool {
+        bunker::probe::release(&mut self.host.borrow_mut())
+    }
+    pub fn renew_queued_bunker(&mut self, account: &str) -> bool {
+        bunker::probe::renew(&mut self.host.borrow_mut(), account)
+    }
+}

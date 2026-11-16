@@ -28,18 +28,18 @@ export async function authorizationClient(context, origin) {
       results:messages.filter(m=>m.t==='result').slice(-3).map(m=>({ok:m.ok,code:m.error?.code}))}));
   }
   await until(ms=>ms.some(m=>m.t==='ready'),0);await until(ms=>ms.some(m=>m.t==='ready'),1);
-  let serial=0;
+  let serial=0,controlSerial=0;
   const begin=async(action,client=0)=>{const req='owned-auth-'+(++serial);await send(client,{t:'act',req,action});return req;};
   const result=async(req,client=0)=>(await until(ms=>ms.some(m=>m.t==='result'&&m.req===req),client))
     .find(m=>m.t==='result'&&m.req===req);
   const act=async(action,client=0)=>result(await begin(action,client),client);
   const latest=ms=>ms.filter(m=>m.t==='signer.auth').at(-1);
   const challenge=async(after=0,client=0)=>latest(await until(ms=>ms.filter(m=>m.t==='signer.auth').length>after,client));
-  const control=async(t)=>{
-    const before=await page.evaluate(()=>window.authControls.length);
-    await page.evaluate(t=>window.authWorker.postMessage({t}),t);
-    await page.waitForFunction(n=>window.authControls.length>n,before,{timeout:5000});
-    return page.evaluate(()=>window.authControls.at(-1));
+  const control=async(t,fields={})=>{
+    const fixtureRequest=++controlSerial;
+    await page.evaluate(message=>window.authWorker.postMessage(message),{t,...fields,fixtureRequest});
+    await page.waitForFunction(id=>window.authControls.some(m=>m.fixtureRequest===id),fixtureRequest,{timeout:5000});
+    return page.evaluate(id=>window.authControls.find(m=>m.fixtureRequest===id),fixtureRequest);
   };
   return {page,all,send,until,begin,result,act,latest,challenge,control,
     async close(){await page.evaluate(()=>{for(const p of window.authPorts)p.close();window.authWorker.terminate();});await page.close();}};

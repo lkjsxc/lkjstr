@@ -110,4 +110,20 @@ Original source, all attempts and hashes are in
 `tmp/auth-presenter-proof/` in the combined variants worktree.
 This client-only proof does not replace pending native or actual Worker checks.
 
+The authored `--boundaries` variant uses a harness-only single-task scheduling
+barrier. It clones an existing saved Remote only inside Rust and runs the normal
+account replacement policy, then authority synchronization. This deliberately
+simulates identical device credentials with a renewed generation; ordinary
+bunker import generates new device credentials. The queued action and original
+deadline remain intact. A current-generation control must still sign normally,
+and client detach or Host stop must release the barrier without remote work.
+These controls and exports are absent in production builds.
+
+A separate split-zap case preflights two providers, advances both fixture clocks
+by 55 seconds while the first 60-second signature remains pending, then inspects
+the later authorization. Its expiry must retain only the original 90-second
+parent budget. An identical challenge cannot extend it; the parent deadline
+must discard the partial invoice. HTTP responses are locally fulfilled and no
+request is published or invoice paid. Both boundary cases remain unrun.
+
 No new visible words, layout or styles are part of this capability.

@@ -13,10 +13,15 @@ pub(super) use lifetime::{input, sync};
 pub(super) use rpc::{Call, call};
 #[path = "worker_bunker_discovery.rs"]
 mod discovery;
+#[cfg(feature = "harness")]
+#[path = "worker_bunker_probe.rs"]
+pub(super) mod probe;
 pub(super) use discovery::{Caller, discover};
 #[derive(Default)]
 pub(super) struct State {
     book: policy::Book,
+    #[cfg(feature = "harness")]
+    probe: probe::Queue,
     // Same 64-total / 16-per-client admission bound as the core book.
     flights: BTreeMap<policy::Lease, Flight>,
 }
