@@ -27,13 +27,18 @@ Engine (`crates/`):
 - [orchestration.md](orchestration.md): publication routing, freshness, weights and limits.
 - [architecture.md](architecture.md): crates, runtime, orchestration, storage.
 - [verification.md](verification.md): gates, browser checks and their results.
-- [engine-stream-verification.md](engine-stream-verification.md): current stream gate evidence and limits.
+- [engine-stream-verification.md](engine-stream-verification.md): first stream gate evidence and limits.
+- [engine-lifetime-verification.md](engine-lifetime-verification.md): ownership, queue and retained-history follow-up gates.
 - [decisions.md](decisions.md): durable decisions and why.
 - [engine.md](engine.md): the engine Worker and how it serves the protocol.
 - [engine-package.md](engine-package.md): building the Worker assets for `web/`.
 - [engine-polish.md](engine-polish.md): author hydration, count estimates and Global sample.
 - [engine-performance.md](engine-performance.md): measurements.
 - [engine-performance-public.md](engine-performance-public.md): public controls, attribution and limits.
+- [engine-performance-hour.md](engine-performance-hour.md): corrected hour, memory and coverage gaps.
+- [engine-verification-pressure.md](engine-verification-pressure.md): bounded acquisition and dropped-page replay.
+- [engine-retained-diff.md](engine-retained-diff.md): retained-window diff cost and bounded key lookup.
+- [engine-thread-order.md](engine-thread-order.md): relationship order across timestamp ties and clock skew.
 - [engine-proposals.md](engine-proposals.md): protocol proposals and their outcome.
 - [parity.md](parity.md): audited client capability inventory.
 - [details.md](details.md): observed frictions and fixes.

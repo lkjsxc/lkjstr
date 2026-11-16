@@ -17,7 +17,7 @@ Both sections below are specified in [interface-specs.md](interface-specs.md) (i
 | Inbox settings | `dm.relays.save {as,relays}` signs kind 10050; sending requires every participant's advertised inbox. The user wants to choose where private messages arrive and understand a recipient with no usable inbox. |
 | Extension permissions | `crypt {req,pubkey,peer,operation,data}` / `crypted {req,value?,error?}` supports NIP-44 encrypt/decrypt and older decrypt. The user wants understandable signer access and retry without repeated unsolicited prompts. |
 
-The existing engine client exposes `Engine.dm?.open(query, receive)` returning
+The existing engine client exposes `Engine.dm?.open(query, receive, {visible?})` returning
 `id`, `visible`, `more` and `close`. Private snapshots stay out of public row and
 profile caches. Read [dm.md](dm.md) for bounds and current history limits.
 
@@ -29,3 +29,16 @@ profile caches. Read [dm.md](dm.md) for bounds and current history limits.
 | Session | `account.unlock {pubkey,password}` and `account.lock {pubkey}` control session access. The user wants to unlock once per session, understand a locked account, and clear decrypted message memory on lock. |
 | Backup | `account.exportEncrypted {pubkey,password,logN?}` returns `result.encryptedKey?` only for an explicit export. The user wants a password-protected backup and verified recovery instructions. |
 | Migration | existing plaintext accounts remain usable. The user needs a specified password/unlock/backup flow before converting storage; never silently replace a working key. See [keys.md](keys.md) for the ciphertext transaction and limits. |
+
+## Background work and cancellation
+
+`dm.open.visible?` lets a future hidden conversation start without a transient
+signer prompt; page visibility is replayed before private openings.
+The existing compose removal and clear controls now own upload cancellation.
+`upload.cancel {req}` returns `result.cancelled:true` when the owning queue or Worker
+confirms cancellation with no pending effect. Dispatched uploads wait for Worker
+acknowledgement. A remote blob already accepted by a server is not deleted by cancellation.
+
+Measured transmitted-byte progress still needs a suitable transport or a specified
+wording for a distinct queued/processing state. Fetch queueing is not evidence of
+transmitted bytes. No new visible progress wording has been introduced.

@@ -58,7 +58,7 @@ Evidence prefixes: `E/` = `crates/lkjstr-core/src/engine/`,
 | One-relay timeline | partial | `source:relay` targets requests, but cached membership is not relay-scoped and no feed tile is registered; E/network_plan.rs, E/query.rs, V/registry.ts. |
 | Public-network completeness and hour-long use | partial | Loopback coverage exists; no controlled hour-long public comparison in this snapshot; scripts/engine-harness.mjs. |
 | Shared Worker, two tabs and leader loss | done | SharedWorker plus Web Locks/BroadcastChannel fallback; engine/transport.js and existing harness. Real sleep/wake and public recovery remain unmeasured. |
-| Bounded cache and cold boot | partial | 16000 regular/4000 replaceable in memory; newest 2000 indexed on boot, disk pruned to 20000 after live writes. No real 20000-event boot/recovery sample yet; W/worker_persist.rs. |
+| Bounded cache and cold boot | partial | 16000 regular/4000 replaceable in memory; newest 2000 indexed on boot, disk pruned to 20000 after live writes. Physical 20000-event fixture boot measured; see engine-performance-hour.md and W/worker_persist.rs. |
 | Physical cache size and clearing | missing | Stats `cacheBytes` is stored payload bytes, not actual IndexedDB usage; no clear-cache operation; E/feedback.rs. |
 
 ## Identity, signers and private data
@@ -114,7 +114,7 @@ Evidence prefixes: `E/` = `crates/lkjstr-core/src/engine/`,
 | Notes, replies, reposts and quotes | done | Read and publish through all existing signer types; E/wire/publish.rs, V/note-actions.ts, V/compose.ts. |
 | Unicode/custom reaction picker | partial | Unicode/recent/own kind-10030 emoji work; referenced kind-30030 sets are not fetched; E/wire/sources.rs, V/emoji-picker.ts. |
 | Selected mentions and custom emoji in text | done | Engine expands selected ranges and preserves emoji tags; E/wire/mentions.rs, V/compose-mentions.ts. |
-| Image/video/audio upload | partial | Blossom and NIP-96 discovery, every signer and retries work; no intermediate byte progress or cancellation; W/worker_upload*.rs, V/compose-media.ts. |
+| Image/video/audio upload | partial | Blossom and NIP-96 discovery, every signer and retries work; cancellation is wired; intermediate transmitted-byte progress is unavailable; W/worker_upload*.rs, V/compose-media.ts. |
 | Media rendering and metadata | done | Notes render image/video/audio, dimensions, alt text and playback state; E/row_media.rs, V/note-media.ts, V/note-audio.ts. Dedicated media event kinds are separate below. |
 | Content warnings | done | Engine projection, covered media and composer warning; P/nip36.rs, V/note.ts, V/compose.ts. |
 | Public bookmarks | done | Add/remove, list membership and fetched-note paging; E/list_events.rs, V/note-actions.ts, V/registry.ts. |

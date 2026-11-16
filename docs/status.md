@@ -6,6 +6,37 @@ Current engine behavior and concrete limits. The source audit is
 [parity.md](parity.md); measured network work is in
 [engine-performance.md](engine-performance.md). Interface work belongs to Claude.
 
+## Follow-up lifetime fixes (2026-11-16)
+
+Protocol 7 adds atomic private-view visibility and acknowledged upload
+cancellation. Existing attachment removal, clear and disposal cancel queued
+authorization, HTTP response/body waits and processing polls. Late signer and
+upload replies cannot settle a replacement job. Accurate intermediate transmitted
+bytes remain unavailable; a remote blob already accepted is not deleted.
+
+Successful account lock/remove now synchronously prunes decrypted private-list
+policy and replaces derived rows, including hidden views, before acknowledgement.
+Previously a query immediately after acknowledgement could use the old policy
+until the next account-status pass. That was a transient memory/projection gap,
+not evidence of durable plaintext. Failed account transactions preserve the prior
+authorized state. Revoked private mute anchors are removed and rejected on replay.
+Loss of signer access forces cache replacement even when a prior status pass
+already cleared the private policy map. Ordinary seen/use actions retain the
+cheap unchanged-authority path. External private-list decryption remains missing.
+
+A recovering relay keeps its own unknown span without displacing a healthy live
+fallback. Profile/count hydration retains its existing stable route behavior.
+History and exhaustion wait for queued verification. Queue loss closes the
+participating wire, revokes completion evidence and retries its unchanged span
+with bounded backoff; hiding or removing the route releases that work. See
+[engine-verification-pressure.md](engine-verification-pressure.md) for evidence.
+
+Retained row diffs now index keys instead of repeatedly scanning the full list;
+the normal real Worker reaches and physically stores all 5,000 loopback notes.
+Thread ancestors precede their focus despite timestamp ties or clock skew.
+All required gates and 338 real Worker checks passed; exact times, host load and
+limits are in [engine-lifetime-verification.md](engine-lifetime-verification.md).
+
 ## Engine stream (2026-11-16)
 
 Protocol 6 adds private messages and encrypted-key operations without changing
@@ -25,8 +56,9 @@ strings, CSS, layout or conversation/unlock view was invented.
 - NIP-49 ncryptsec import/export and explicit session lock/unlock are implemented.
   Encrypted imports persist ciphertext only; session keys do not survive Worker
   restart. Account changes commit transactionally. Existing plaintext accounts
-  remain usable until an explicit conversion; the password/migration interface
-  needs Claude's specification. See [keys.md](keys.md) for KDF bounds and limits.
+  remain usable until an explicit conversion. Claude's password/migration and
+  DM interface specifications now take priority for the next implementation.
+  See [keys.md](keys.md) for KDF bounds and limits.
 - NIP-42 auth-required reads/writes use all three signers. A challenge alone
   causes no signature. Current demand, original publication owner, active read
   account and signer eligibility are rechecked on asynchronous completion.
@@ -128,7 +160,7 @@ These are concrete runtime limits, not permission to fake a successful answer.
 - Search: matching people are not placed ahead of notes; multi-language arrays
   use the first language. Bounded verified NIP-05 from-query lookup exists.
 - Bunkers: auth_url challenges and relay-switch negotiation are unsupported.
-- Uploads: intermediate byte progress and cancellation remain missing; zero and
+- Uploads: intermediate transmitted-byte progress remains missing; zero and
   validated completion are reported, with bounded NIP-96 processing.
 - Zaps: provider nostrPubkey discovery is not integrated. Current receipt-derived
   rows/totals are not trusted payment totals. LNURL zap signing/invoice flow,
@@ -144,7 +176,7 @@ Required gates are the root repo/native/WASM/verify commands and web check,
 build and smoke. Protocol conformance adds DM, vault and AUTH cases to the real
 Worker harness; native cases cover pure decisions and failure races. Public
 measurements retain UTC date, host load, selected relays and limitations.
-All required gates and 287 real Worker checks passed for this landing.
+The first shipped tree passed all required gates and 287 real Worker checks.
 Dates, load and concrete scope are in [engine-stream-verification.md](engine-stream-verification.md).
 
 The owner's 2026-11-16 delegation authorizes rebased pushes and the prescribed
