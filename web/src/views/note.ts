@@ -22,8 +22,6 @@ const timeOf = (row: NoteRow, env: ViewEnv, dated: boolean): string => {
 
 /** Long text folds by whole lines; the button appears only when something is actually cut off. */
 function fold(text: HTMLElement): void {
-  if (text.classList.contains('open')) return;
-  if (text.scrollHeight <= text.clientHeight + 2) return;
   const more = h('button', { class: 'lnk fold' }, t('note.more'));
   more.addEventListener('click', (e) => {
     e.stopPropagation();
@@ -258,10 +256,31 @@ const heldMark = (el: Element | null): string => {
   return act ? `.acts > .${act}` : emoji ? `.chips > [data-emoji="${CSS.escape(emoji)}"]` : '';
 };
 
+const overflowingText = (el: HTMLElement): HTMLElement | undefined => {
+  const text = el.querySelector<HTMLElement>('.content > .text');
+  return text &&
+    !el.querySelector('.fold') &&
+    !text.classList.contains('open') &&
+    text.scrollHeight > text.clientHeight + 2
+    ? text
+    : undefined;
+};
+
 /** After a note is in the document: fold what is too long. */
 export function fitNote(el: HTMLElement): void {
-  const text = el.querySelector<HTMLElement>('.content > .text');
-  if (text && !el.querySelector('.fold')) fold(text);
+  const text = overflowingText(el);
+  if (text) fold(text);
+}
+
+/** Measure the batch before fold controls invalidate another note's layout. */
+export function fitNotes(elements: readonly HTMLElement[]): void {
+  // Native scrollbars can change line widths as folded link cards disappear.
+  if (elements.some((el) => el.closest('.view:not(.has-time-rail)'))) {
+    for (const el of elements) fitNote(el);
+    return;
+  }
+  const overflowing = elements.map(overflowingText);
+  for (const text of overflowing) if (text) fold(text);
 }
 
 export { displayName };

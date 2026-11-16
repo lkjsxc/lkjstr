@@ -6,7 +6,7 @@ import { dayOf } from '../shared/format.ts';
 import { h } from '../shared/h.ts';
 import { withHeld } from './held.ts';
 import { disposeLinkCards } from './link-cards.ts';
-import { bodySig, fitNote, patchNote, renderNote } from './note.ts';
+import { bodySig, fitNotes, patchNote, renderNote } from './note.ts';
 import { disposeNoteAudio, reuseNoteAudio } from './note-audio.ts';
 import type { ViewEnv } from './registry.ts';
 import { renderNotification, renderPerson, renderProfile } from './rows.ts';
@@ -109,7 +109,9 @@ export function createRowList(
           disposeNoteAudio(node.el);
           nodes.delete(key);
         }
-      for (const node of want) if (!node.dataset.fit) (node.dataset.fit = '1'), fitNote(node);
+      const unfitted = want.filter((node) => !node.dataset.fit);
+      for (const node of unfitted) node.dataset.fit = '1';
+      fitNotes(unfitted);
     },
     node: (key) => nodes.get(key)?.el,
     row: (key) => shown.find((r) => r.key === key),
