@@ -18,7 +18,7 @@ const temporary = resolve(process.env.LKJSTR_TEST_TMPDIR ?? join(resolve(process
 await mkdir(output, { recursive: true }); await mkdir(temporary, { recursive: true });
 const owned = await mkdtemp(join(temporary, 'acct-')); process.env.TMPDIR = owned;
 const hash = value => createHash('sha256').update(value).digest('hex');
-const report = { startedAt: new Date().toISOString(), loadStart: loadavg(), package: await realpath(pkg),
+const report = { startedAt: new Date().toISOString(), loadStart: loadavg(), package: resolve(pkg),
   checks: [], cases: [], cleanup: {}, pageErrors: 0, externalRequests: 0, forbiddenSockets: 0 };
 const check = (name, ok) => { report.checks.push({ name, ok: !!ok }); console.log((ok ? 'ok ' : 'FAIL ') + name); };
 let server, browserServer, browser, context, client, stage = 'asset setup';
@@ -27,6 +27,7 @@ async function processIdentity(pid) {
   catch (error) { if (error.code === 'ENOENT') return null; throw Error('owned process observation failed'); }
 }
 try {
+  report.package = await realpath(pkg);
   const assets = new Map();
   for (const name of ['lkjstr_engine.js', 'lkjstr_engine_bg.wasm']) assets.set('/current/' + name, await readFile(join(pkg, name)));
   report.wasmSha256 = hash(assets.get('/current/lkjstr_engine_bg.wasm'));
