@@ -74,6 +74,7 @@ Engine (`crates/`):
 - [Private list query ownership and hydration](private-list-scope.md)
 - [Specified private-message interface wiring](frontend-dm.md)
 - [Encrypted local keys and session access](keys.md)
+- [Account snapshot persistence and schema fence](account-persistence.md)
 - [Engine capabilities awaiting interface specifications](interface-needs.md)
 - [interface-specs.md](interface-specs.md): surfaces to build, item by item, with their state.
 - [interface-keys.md](interface-keys.md): password-protected keys: sign-in, lock, backup, protection.

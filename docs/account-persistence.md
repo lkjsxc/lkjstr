@@ -4,7 +4,8 @@
 
 Protect the durable account record when independent Worker graphs share one
 IndexedDB database. This correction adds no account surface, words or protocol.
-The source is prepared; native and corrected-Worker verification are pending.
+Focused native and production-Worker checks passed; the full release gates
+and additional actual IndexedDB boundary checks remain pending.
 
 ## Observed old behavior
 
@@ -81,12 +82,33 @@ conservative durable no-key-loss boundary, not automatic reconciliation or
 immediate cross-Worker revocation. Lock remains Worker-scoped; a global lock
 would require a separate editor flush quorum before any durable revocation.
 
-## Verification still required
+## Focused verification and remaining gates
 
-Eight authored native policy cases cover strict load, malformed revisions,
-CAS, removal/re-add identity, read-only freshness, terminal conflicts and
-checked overflow. The corrected real-Worker fixture must preserve the original
-12 assertions. Schema blocking, late canceled opens, malformed present values,
-failed-boot request settlement, and removal atomicity need actual IndexedDB
-proofs before a passing correction is claimed. No test-only production export
-is introduced.
+Eight native policy cases passed for strict load, malformed revisions, CAS,
+removal/re-add identity, read-only freshness, terminal conflicts and checked
+overflow. Fifteen adjacent vault/draft cases also passed: 23 total in 20.101
+seconds, including build time, at load 1.32 / 1.61 / 1.78. The first WASM
+preflight found two new glue compile errors; the typed callback and failed-DM
+projection corrections are retained with the original diagnostics.
+Corrected WASM check, core all-target strict Clippy and Worker strict Clippy
+passed in 1.616, 6.826 and 4.973 seconds respectively. Every standalone Cargo
+call recorded exact source hashes and refreshed owned Rust/manifests first.
+
+The production-only package built in 25.209 seconds and passed its generated
+export audit. Its immutable WASM is
+`59e2121a2dfc9c5c2f1e10963edf65f0f18c4fed0d5f86e0f4f0a1869c727cc5`;
+loader `d69b6219eb9201b6b84c6579ff07ff1dd8b0993b026470a92e8351522fc1f179`.
+The exact unchanged frozen before fixture then passed all 12 assertions at
+22:17:52 UTC, load 2.04 / 1.71 / 1.77. Internal fixture elapsed time was 1525 ms;
+outer runner elapsed time was 1.716 seconds. The report is
+`tmp/account-after-proof/try1/report.json`, SHA-256
+`20fdad0832635acbeb6fe53a6684f511fe42362449787271270945e54618cdd6`.
+It observed zero page errors, external HTTP requests or sockets; all owned
+resources were reaped. The public ninth measurement was running independently;
+its source, assets, browser and collected data remained untouched.
+
+Schema blocking, late canceled opens, malformed present values, failed-boot
+request settlement and removal atomicity still need actual IndexedDB proofs.
+The full release gates are also pending. No test-only production export is
+introduced. This evidence does not claim global account reconciliation,
+physical memory zeroization in JavaScript, or an owner-account incident.

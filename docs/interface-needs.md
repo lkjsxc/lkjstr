@@ -91,3 +91,11 @@ provides the finite client helper. The user needs a way to inspect these
 limits without labeling payload bytes or origin estimates as physical cache
 size. No inspection/clear control exists; clear remains unimplemented.
 Source and verification limits are in [storage-inspection.md](storage-inspection.md).
+
+## Account storage conflict recovery
+
+An account action can fail `rejected` after another Worker changes the durable
+account revision. Existing private editors/session keys are retained, and no
+key operation is automatically retried. The user needs safe recovery without
+losing unsaved editors; the current engine requires an explicit reload and
+has no cross-Worker editor quorum or automatic credential reconciliation.

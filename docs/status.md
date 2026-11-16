@@ -2,13 +2,8 @@
 
 ## Purpose
 
-Current engine behavior and concrete limits. The source audit is [parity.md](parity.md); network measurements are in
-[engine-performance.md](engine-performance.md). Interface work belongs to Claude.
-
-## Account snapshot correction under verification
-
-A fresh two-Worker proof reproduced stale Seen overwriting a newer key/protection; see [account-persistence.md](account-persistence.md).
-The schema fence and guarded transaction candidate still needs native and corrected-Worker verification.
+Current behavior and limits: [parity.md](parity.md) audits source; [engine-performance.md](engine-performance.md) records network evidence.
+Claude owns the interface. [Account persistence](account-persistence.md) passed 23 native/12 Worker checks; full gates pending.
 
 ## Specified keys and messages (2026-11-16)
 
