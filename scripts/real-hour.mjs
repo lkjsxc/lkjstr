@@ -31,8 +31,8 @@ const report = { ownership: { kind: 'lkjstr-real-hour', id: randomUUID(), root: 
   worktreeDirty: execFileSync('git', ['status', '--porcelain'], { encoding: 'utf8' }).trim() !== '',
   mode: seconds >= 3600 ? 'hour' : 'short-validation', requestedLiveSeconds: seconds,
   build: await buildIdentity(snapshot), initialLoadAverage: loadavg(), samples: [], errors: [],
-  browserCapabilities: { serviceWorkers: 'blocked: Chromium cannot install a guard before auto-paused service-worker execution; offline-shell behavior excluded' },
-  instrumentation: 'CDP installs read-only REQ/CLOSE guard and bounded probes before target execution; served release bytes are unchanged. JS heap, embedder heap and WASM linear memory are measured separately where supported; not total process RSS.' };
+  browserCapabilities: { workers: 'same-origin modules only; guarded host-release bootstrap; classic/blob/cross-origin rejected', serviceWorkers: 'blocked: Chromium cannot install a guard before auto-paused service-worker execution; offline-shell behavior excluded' },
+  instrumentation: 'A measured Worker bootstrap installs REQ/CLOSE guards and waits for host CDP Network readiness before importing original modules. Extra bootstrap fetch/import time is included; original release files are unchanged. JS heap, embedder heap and WASM linear memory are measured separately where supported; not total process RSS.' };
 const save = async () => { await writeFile(`${directory}/report.json`, JSON.stringify(report, null, 2)); };
 let measured, page;
 const stop = () => { report.interrupted = true; };
@@ -81,7 +81,7 @@ try {
   await save();
   const sample = async () => {
     const data = await samplePage(page);
-    report.samples.push({ elapsedSeconds: (Date.now() - startedAt) / 1000, loadAverage: loadavg(), page: data, targets: await measured.cdp.sample() });
+    report.samples.push({ elapsedSeconds: (Date.now() - startedAt) / 1000, loadAverage: loadavg(), page: data, targets: await measured.cdp.sample(), hostNetwork: measured.cdp.networkEvidence.summary() });
     await save();
     console.log(JSON.stringify({ phase: 'sample', seconds: (Date.now() - startedAt) / 1000, events: data.physicalEvents, load: loadavg() }));
   };
@@ -120,9 +120,23 @@ try {
   process.exitCode = 1;
 } finally {
   report.finished = new Date().toISOString(); report.finalLoadAverage = loadavg();
-  await save();
-  await measured?.close();
-  await rm(`${directory}/profile`, { recursive: true, force: true });
-  for (const folder of ['cache', 'config', 'data']) await rm(`${directory}/${folder}`, { recursive: true, force: true });
+  try {
+    if (measured) {
+      report.networkEvidence = measured.cdp.networkEvidence.summary();
+      await writeFile(`${directory}/network-evidence.json`, JSON.stringify(measured.cdp.networkEvidence.snapshot()));
+    }
+    await save();
+  } catch (error) {
+    report.failure ??= String(error); process.exitCode = 1;
+    console.error('Measurement report could not be saved:', String(error));
+  } finally {
+    try { await measured?.close(); } finally {
+      const cleanup = await Promise.allSettled(['profile', 'cache', 'config', 'data'].map(folder =>
+        rm(`${directory}/${folder}`, { recursive: true, force: true })));
+      for (const result of cleanup) if (result.status === 'rejected') {
+        process.exitCode = 1; console.error('Owned data cleanup failed:', String(result.reason));
+      }
+    }
+  }
   console.log(JSON.stringify({ phase: 'finished', directory, complete: report.complete ?? false, failure: report.failure }));
 }

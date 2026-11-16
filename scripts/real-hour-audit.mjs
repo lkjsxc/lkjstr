@@ -1,5 +1,6 @@
 // Independent public controls use native eligibility over this fresh profile's public cache.
 import { spawnSync } from 'node:child_process';
+import { eventDigest } from './real-hour-network.mjs';
 import { controlPages } from './real-hour-public.mjs';
 import { sourceFilter, controlCoverage, evidenceStatus } from './real-hour-coverage.mjs';
 export async function publicContext(page) {
@@ -59,7 +60,11 @@ export async function routeControls(relays, filter, cap) {
   return { filter, pages, events: [...events.values()], seenOn: Object.fromEntries(seenOn), firstSeenOn: Object.fromEntries(firstSeenOn), capReached: events.size >= cap };
 }
 export async function auditControls({ page, cdp, account, controls, savedSeen, startedAt, endedAt }) {
-  const queries = await cdp.queries();
+  const targets = await cdp.sample();
+  const querySnapshot = cdp.queryEvidence ? await cdp.queryEvidence()
+    : { queries: await cdp.queries(), hostNetwork: cdp.networkEvidence?.summary() };
+  const queries = querySnapshot.queries;
+  const evidence = evidenceStatus(targets, querySnapshot.hostNetwork);
   const routes = sourceRoutes(queries.filter((query) => query.at <= endedAt), account);
   const context = await publicContext(page);
   const latest = (kind) => context.filter((event) => event.kind === kind && event.pubkey === account.pubkey)
@@ -99,7 +104,6 @@ export async function auditControls({ page, cdp, account, controls, savedSeen, s
   const all = [...controls.home.events, ...controls.notifications.events, ...(controls.homeRelayUnion?.events ?? []), ...(controls.notificationsRelayUnion?.events ?? [])];
   const native = nativeEligibility(all, context, wireQueries);
   const currentSeen = await page.evaluate(() => globalThis.__realHour?.seen ?? {});
-  const evidence = evidenceStatus(await cdp.sample());
   const seen = Object.fromEntries(['home', 'notifications'].map((source) =>
     [source, [...new Set([...(savedSeen?.[source] ?? []), ...(currentSeen[source] ?? [])])]]));
   const compare = (source, sample = controls[source]) => {
@@ -110,10 +114,20 @@ export async function auditControls({ page, cdp, account, controls, savedSeen, s
     const coverage = controlCoverage({ events: eligible, sample, queries, source, account, startedAt, endedAt });
     const byId = new Map(coverage.events.map((entry) => [entry.id, entry]));
     const missing = eligible.filter((event) => !displayed.has(event.id));
+    const delivery = (event) => {
+      const received = cdp.networkEvidence?.forEvent(event.id) ?? [];
+      const matching = received.filter(item => item.digest === eventDigest(event));
+      const before = matching.filter(item => item.at <= endedAt);
+      return { matchingPayloads: matching.length, conflictingPayloads: received.length - matching.length,
+        receivedBeforeEnd: before.length, matchingSourceBeforeEnd: before.filter(item =>
+          item.request.filters.some(filter => sourceFilter(filter, source, account))).length,
+        queryReferences: received.slice(0, 100).map(({ request, ...item }) => item), truncated: received.length > 100,
+        limit: 'Exact frame receipt is not verified store acceptance or rendering; host-observed times after the end can include observer delay.' };
+    };
     return { controlEvents: ids.size, verifiedEligible: eligible.length, observedRows: displayed.size,
       excluded: policy.excluded.filter((entry) => ids.has(entry.id)),
       unseenEligible: missing.map((event) => ({ id: event.id, pubkey: event.pubkey, created_at: event.created_at,
-        firstControlSeenOn: sample.firstSeenOn?.[event.id], attribution: byId.get(event.id) })),
+        firstControlSeenOn: sample.firstSeenOn?.[event.id], attribution: byId.get(event.id), delivery: delivery(event) })),
       missingCandidates: missing.filter((event) => byId.get(event.id)?.classification === 'matching-query-with-eose')
         .map((event) => ({ id: event.id, pubkey: event.pubkey, created_at: event.created_at, relays: sample.seenOn?.[event.id] })),
       uncertainCandidates: missing.filter((event) => byId.get(event.id)?.classification !== 'matching-query-with-eose').map((event) => byId.get(event.id)),
@@ -138,5 +152,5 @@ export async function auditControls({ page, cdp, account, controls, savedSeen, s
     routeLifetimeLimit: 'Closed REQ lifetimes do not prove fulfilled Home intent. Every unseen eligible note remains a coverage candidate; route ownership and delivered EVENT loss require separate investigation',
     actualSourceRequestsObserved: { home: routes.home.length > 0, notifications: routes.notifications.length > 0 },
     querySource: views.home?.query ? 'observed wire query' : 'fresh harness default Home/notifications queries; no filter controls changed',
-    queries, controls, seen };
+    querySnapshotAt: querySnapshot.at, queries, controls, seen };
 }

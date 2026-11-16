@@ -46,7 +46,7 @@ export function controlCoverage({ events, sample, queries, source, account, focu
     limit: 'EOSE/lifetime/filter agreement narrows candidates; it does not prove when a backdated note first reached the relay.' };
 }
 
-export function evidenceStatus(targets) {
+export function evidenceStatus(targets, hostNetwork) {
   const relevant = targets.filter((target) => ['page', 'worker', 'shared_worker'].includes(target.type));
   const evidenceDrops = relevant.map(({ type, probe }) => ({ type, queries: probe?.queryLogDropped ?? 0,
     observations: probe?.evidenceDropped ?? {}, idsBySource: probe?.seenDropped ?? {} }));
@@ -55,7 +55,8 @@ export function evidenceStatus(targets) {
   const unobserved = !relevant.length || relevant.some((target) => !target.probe?.evidenceDropped);
   const limitReached = relevant.some(({ probe }) => Object.values(probe?.seenCounts ?? {}).some((count) => count >= 40000));
   return { queryEvidenceDropped, observationEvidenceDropped, evidenceDrops,
+    queryEvidenceSource: hostNetwork?.complete ? "host-CDP" : "Worker probe", hostNetwork,
     completeness: unobserved ? 'unknown: observation counters unavailable'
-      : queryEvidenceDropped || observationEvidenceDropped || limitReached ? 'unknown: bounded observation evidence budget reached'
+      : (queryEvidenceDropped && !hostNetwork?.complete) || observationEvidenceDropped || limitReached ? 'unknown: bounded observation evidence budget reached'
         : 'scoped candidates only; no global relay completeness claim' };
 }
