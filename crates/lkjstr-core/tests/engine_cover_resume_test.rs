@@ -4,6 +4,8 @@ use engine_review_support::event;
 use lkjstr_core::engine::{Engine, network::Effect, protocol::Query};
 use lkjstr_protocol::{NostrFilter, matches_filter, parse_filter_value};
 use serde_json::{Value, json};
+// Scheduler milliseconds are later than the fixture's signed event seconds.
+const BASE_MS: u64 = 200_000;
 const R: &str = "wss://resume.test/";
 fn reqs(e: &mut Engine) -> Vec<Value> {
     e.network
@@ -21,7 +23,7 @@ fn reqs(e: &mut Engine) -> Vec<Value> {
 #[test]
 fn exact_verified_duplicates_advance_resume_without_usefulness_credit() {
     let mut e = Engine::new();
-    e.network.configure(vec![R.into()], 0);
+    e.network.configure(vec![R.into()], BASE_MS);
     e.network.relays.get_mut(R).expect("relay").max_reqs = 1;
     let head = NostrFilter {
         kinds: Some(vec![1, 6]),
@@ -29,8 +31,8 @@ fn exact_verified_duplicates_advance_resume_without_usefulness_credit() {
         ..Default::default()
     };
     let feed = ("feed".into(), head, Query::default());
-    e.network.plan(vec![feed.clone()], &e.store, 0);
-    e.network.connected(R, 0);
+    e.network.plan(vec![feed.clone()], &e.store, BASE_MS);
+    e.network.connected(R, BASE_MS);
     let initial = reqs(&mut e).remove(0);
     let notes: Vec<_> = [1, 50, 100]
         .map(|at| event(at, 1, "already verified", vec![]))
@@ -45,7 +47,7 @@ fn exact_verified_duplicates_advance_resume_without_usefulness_credit() {
     e.enqueue(R.into(), forged);
     assert_eq!(e.network.relays[R].useful, 0);
     e.network
-        .message(R, &json!(["EOSE", initial[1]]).to_string(), 1);
+        .message(R, &json!(["EOSE", initial[1]]).to_string(), BASE_MS + 1);
     let profile = NostrFilter {
         kinds: Some(vec![0]),
         authors: Some(vec!["a".repeat(64)]),
@@ -55,13 +57,13 @@ fn exact_verified_duplicates_advance_resume_without_usefulness_credit() {
     e.network.plan(
         vec![feed, ("name".into(), profile, Query::default())],
         &e.store,
-        100,
+        BASE_MS + 100,
     );
-    e.network.tick(175);
+    e.network.tick(BASE_MS + 175);
     let lookup = reqs(&mut e).remove(0);
     e.network
-        .message(R, &json!(["EOSE", lookup[1]]).to_string(), 176);
-    e.network.tick(275);
+        .message(R, &json!(["EOSE", lookup[1]]).to_string(), BASE_MS + 176);
+    e.network.tick(BASE_MS + 275);
     let resumed = reqs(&mut e).remove(0);
     let f = parse_filter_value(&resumed[2]).expect("filter");
     let duplicates = notes.iter().filter(|n| matches_filter(n, &f)).count();

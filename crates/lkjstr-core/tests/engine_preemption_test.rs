@@ -7,6 +7,8 @@ use lkjstr_core::engine::{
 };
 use lkjstr_protocol::NostrFilter;
 use serde_json::{Value, json};
+// Scheduler milliseconds are later than the fixture's signed event seconds.
+const BASE_MS: u64 = 200_000;
 
 fn requests(n: &mut Network) -> Vec<Value> {
     n.drain_effects()
@@ -22,7 +24,7 @@ fn requests(n: &mut Network) -> Vec<Value> {
 }
 fn setup(until: Option<u64>) -> (Network, NostrFilter, Value) {
     let mut n = Network::default();
-    n.configure(vec![RELAY.into()], 0);
+    n.configure(vec![RELAY.into()], BASE_MS);
     n.relay_information(
         RELAY,
         r#"{"limitation":{"max_subscriptions":1,"max_limit":3}}"#,
@@ -37,21 +39,25 @@ fn setup(until: Option<u64>) -> (Network, NostrFilter, Value) {
     n.plan(
         vec![("feed".into(), filter.clone(), Query::default())],
         &lkjstr_core::store::Store::new(0),
-        0,
+        BASE_MS,
     );
-    n.connected(RELAY, 10);
+    n.connected(RELAY, BASE_MS + 10);
     let head = requests(&mut n).remove(0);
     (n, filter, head)
 }
 fn note(n: &mut Network, req: &Value, at: u64) {
     let event = event(at, 1, "page", vec![]);
     let received = n
-        .message(RELAY, &json!(["EVENT", req[1], event]).to_string(), 20)
+        .message(
+            RELAY,
+            &json!(["EVENT", req[1], event]).to_string(),
+            BASE_MS + 20,
+        )
         .expect("accepted event");
-    n.event(RELAY, &received, 20);
+    n.event(RELAY, &received, BASE_MS + 20);
 }
 fn eose(n: &mut Network, req: &Value, now: u64) {
-    n.message(RELAY, &json!(["EOSE", req[1]]).to_string(), now);
+    n.message(RELAY, &json!(["EOSE", req[1]]).to_string(), BASE_MS + now);
 }
 fn preempt(n: &mut Network, filter: &NostrFilter, head: &Value) {
     let profile = NostrFilter {
@@ -65,9 +71,9 @@ fn preempt(n: &mut Network, filter: &NostrFilter, head: &Value) {
             ("profile".into(), profile, Query::default()),
         ],
         &lkjstr_core::store::Store::new(0),
-        30,
+        BASE_MS + 30,
     );
-    n.tick(105);
+    n.tick(BASE_MS + 105);
     let lookup = requests(n).remove(0);
     assert_eq!(lookup[2]["kinds"], json!([0]));
     // A late response from the closed feed must not finish its page.
@@ -82,7 +88,7 @@ fn interrupted_pages_replay_original_filters_before_claiming_exhaustion() {
         preempt(&mut n, &filter, &head);
         assert!(!n.page_finished(&filter));
         assert!(!n.page_exhausted(&filter));
-        n.tick(110);
+        n.tick(BASE_MS + 110);
         let resumed = requests(&mut n).remove(0);
         assert_eq!(resumed[2], head[2]);
         for at in [100, 90, 80] {
@@ -106,7 +112,7 @@ fn completed_full_head_retains_coverage_across_short_live_resumption() {
     preempt(&mut n, &filter, &head);
     assert!(n.page_finished(&filter));
     assert_eq!(n.page_cursor(&filter), Some(80));
-    n.tick(110);
+    n.tick(BASE_MS + 110);
     let resumed = requests(&mut n).remove(0);
     assert_eq!(resumed[2]["since"], 99);
     note(&mut n, &resumed, 102);
@@ -124,7 +130,7 @@ fn completed_short_head_stays_exhausted_despite_live_arrivals() {
         note(&mut n, &head, at);
     }
     preempt(&mut n, &filter, &head);
-    n.tick(110);
+    n.tick(BASE_MS + 110);
     let resumed = requests(&mut n).remove(0);
     eose(&mut n, &resumed, 120);
     assert!(n.page_exhausted(&filter));
@@ -146,8 +152,12 @@ fn scrolling_after_preemption_still_requests_older_notes() {
         for at in [100, 90, 80] {
             let event = event(at, 1, "page", vec![]);
             oldest = event.id.clone();
-            n.message(RELAY, &json!(["EVENT", head[1], event]).to_string(), 20);
-            n.event(RELAY, &event, 20);
+            n.message(
+                RELAY,
+                &json!(["EVENT", head[1], event]).to_string(),
+                BASE_MS + 20,
+            );
+            n.event(RELAY, &event, BASE_MS + 20);
             notes.push(event.clone());
             e.store.insert(event, None);
         }
@@ -155,11 +165,15 @@ fn scrolling_after_preemption_still_requests_older_notes() {
             eose(&mut n, &head, 25);
         }
         preempt(&mut n, &filter, &head);
-        n.tick(110);
+        n.tick(BASE_MS + 110);
         let resumed = requests(&mut n).remove(0);
         if !completed {
             for event in notes {
-                n.message(RELAY, &json!(["EVENT", resumed[1], event]).to_string(), 115);
+                n.message(
+                    RELAY,
+                    &json!(["EVENT", resumed[1], event]).to_string(),
+                    BASE_MS + 115,
+                );
             }
         }
         eose(&mut n, &resumed, 120);
@@ -172,9 +186,9 @@ fn scrolling_after_preemption_still_requests_older_notes() {
                 before: 0,
                 after: 50,
             },
-            210,
+            BASE_MS + 210,
         );
-        e.network.tick(310);
+        e.network.tick(BASE_MS + 310);
         assert!(requests(&mut e.network).iter().any(|f| f[2]["until"] == 80));
     }
 }
@@ -183,8 +197,8 @@ fn scrolling_after_preemption_still_requests_older_notes() {
 fn disconnected_unfinished_head_replays_filters_instead_of_live_tail() {
     let (mut n, filter, head) = setup(None);
     note(&mut n, &head, 100);
-    n.disconnected(RELAY, 30);
-    n.connected(RELAY, 110);
+    n.disconnected(RELAY, BASE_MS + 30);
+    n.connected(RELAY, BASE_MS + 110);
     let replay = requests(&mut n).remove(0);
     assert_eq!(replay[2], head[2]);
     assert!(!n.page_finished(&filter));
@@ -204,9 +218,9 @@ fn repeated_live_reconnections_preserve_historical_coverage_and_cursor() {
     }
     eose(&mut n, &head, 25);
     for (now, at) in [(200, 101), (400, 102)] {
-        n.disconnected(RELAY, now);
+        n.disconnected(RELAY, BASE_MS + now);
         assert!(n.page_finished(&filter));
-        n.connected(RELAY, now + 110);
+        n.connected(RELAY, BASE_MS + now + 110);
         let replay = requests(&mut n).remove(0);
         assert_eq!(replay[2]["since"], at - 3);
         // A short live response is not evidence that historical notes ran out.

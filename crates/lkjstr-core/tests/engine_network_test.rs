@@ -6,6 +6,8 @@ use lkjstr_core::engine::{
 };
 use lkjstr_protocol::{EventTemplate, finalize_event, generate_secret_key};
 use serde_json::{Value, json};
+// Scheduler milliseconds are later than the fixture's signed event seconds.
+const BASE_MS: u64 = 200_000;
 fn setup() -> Engine {
     let mut e = Engine::new();
     e.input(
@@ -16,18 +18,18 @@ fn setup() -> Engine {
                 "wss://c.test".into(),
             ],
         },
-        0,
+        BASE_MS,
     );
     e.input(
         Input::Open {
             sub: "feed".into(),
             query: Query::default(),
         },
-        0,
+        BASE_MS,
     );
     e.network.drain_effects();
-    e.network.connected("wss://a.test/", 10);
-    e.network.connected("wss://b.test/", 10);
+    e.network.connected("wss://a.test/", BASE_MS + 10);
+    e.network.connected("wss://b.test/", BASE_MS + 10);
     e
 }
 fn reqs(e: &mut Engine) -> Vec<(String, Value)> {
@@ -53,7 +55,7 @@ fn identical_views_share_work_and_visibility_releases_it() {
             sub: "other".into(),
             query: Query::default(),
         },
-        20,
+        BASE_MS + 20,
     );
     assert!(reqs(&mut e).is_empty());
     e.input(
@@ -64,7 +66,7 @@ fn identical_views_share_work_and_visibility_releases_it() {
             idle: false,
             save_data: false,
         },
-        25,
+        BASE_MS + 25,
     );
     assert!(
         e.network
@@ -89,22 +91,22 @@ fn hours_of_silence_reconnect_then_resubscribe_with_since() {
     )
     .expect("fixture");
     e.enqueue("wss://a.test/".into(), event);
-    e.tick(75);
+    e.tick(BASE_MS + 75);
     // Incremental reconnect is safe only after the original history completed.
     for (relay, head) in heads {
         e.network
-            .message(&relay, &json!(["EOSE", head[1]]).to_string(), 76);
+            .message(&relay, &json!(["EOSE", head[1]]).to_string(), BASE_MS + 76);
     }
     e.drain();
     e.network.drain_effects();
-    e.tick(3 * 60 * 60 * 1000);
+    e.tick(BASE_MS + 3 * 60 * 60 * 1000);
     assert!(
         e.network
             .drain_effects()
             .iter()
             .any(|f| matches!(f, Effect::Disconnect(_)))
     );
-    e.tick(3 * 60 * 60 * 1000 + 65000);
+    e.tick(BASE_MS + 3 * 60 * 60 * 1000 + 65000);
     assert!(
         e.network
             .drain_effects()
@@ -112,7 +114,7 @@ fn hours_of_silence_reconnect_then_resubscribe_with_since() {
             .any(|f| matches!(f, Effect::Connect(_)))
     );
     e.network
-        .connected("wss://a.test/", 3 * 60 * 60 * 1000 + 65001);
+        .connected("wss://a.test/", BASE_MS + 3 * 60 * 60 * 1000 + 65001);
     let frames = reqs(&mut e);
     assert!(frames.iter().any(|(_, f)| f[2]["since"] == 98));
     let event = finalize_event(
@@ -127,7 +129,7 @@ fn hours_of_silence_reconnect_then_resubscribe_with_since() {
     )
     .expect("fixture");
     e.enqueue("wss://a.test/".into(), event);
-    e.tick(3 * 60 * 60 * 1000 + 65100);
+    e.tick(BASE_MS + 3 * 60 * 60 * 1000 + 65100);
     assert!(e.drain().iter().any(|o| matches!(o, Output::Patch { .. })));
 }
 #[test]
@@ -137,9 +139,9 @@ fn missing_lookups_settle_after_two_relays_and_silent_peer_errors() {
     for (relay, frame) in frames {
         let id = frame[1].as_str().expect("id");
         e.network
-            .message(&relay, &json!(["EOSE", id]).to_string(), 20);
+            .message(&relay, &json!(["EOSE", id]).to_string(), BASE_MS + 20);
     }
-    e.tick(75);
+    e.tick(BASE_MS + 75);
     assert!(
         e.drain()
             .iter()
@@ -154,11 +156,11 @@ fn missing_lookups_settle_after_two_relays_and_silent_peer_errors() {
                 ..Default::default()
             },
         },
-        100,
+        BASE_MS + 100,
     );
-    e.tick(200);
+    e.tick(BASE_MS + 200);
     reqs(&mut e);
-    e.tick(16000);
+    e.tick(BASE_MS + 16000);
     assert!(
         e.drain()
             .iter()
@@ -179,7 +181,7 @@ fn concurrent_requests_are_capped() {
                     ..Default::default()
                 },
             },
-            20,
+            BASE_MS + 20,
         );
     }
     let stats = e.network.stats();

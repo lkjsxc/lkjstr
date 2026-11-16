@@ -51,6 +51,19 @@ impl Network {
                 self.read_routes(f, q, store, &mut weights, now)
             };
             let mut routes = routes;
+            // Keep unfinished, still-permitted routes when a healthy route
+            // advances. Quality reranking must not abandon their missing span.
+            routes.extend(self.pending_page_routes(sub, f).into_iter().filter(|url| {
+                self.relays.contains_key(url)
+                    && (q.filters.relay_hints.contains(url)
+                        || (q.source == Source::Relay && q.target.as_ref() == Some(url))
+                        || self.known.get(url).is_some_and(|usage| match q.source {
+                            Source::Search => usage.search,
+                            Source::Channels => usage.read || usage.search,
+                            Source::Relay => false,
+                            _ => usage.read,
+                        }))
+            }));
             routes.extend(
                 q.filters
                     .relay_hints
@@ -88,15 +101,33 @@ impl Network {
                     self.close_group(&relay, &wire);
                 }
             } else {
+                let (wire_filter, exhausted, pending) =
+                    self.page_request(&relay, &filter, &members);
+                if let Some(id) = pending.as_ref() {
+                    let previous = &self.requests[id];
+                    let still_wanted = wants.iter().any(|(sub, f, _)| {
+                        previous.members.contains(sub) && *f == previous.page_filter
+                    });
+                    if !still_wanted && let Some(r) = self.requests.get_mut(id) {
+                        r.page_filter = filter;
+                        r.members = members;
+                        r.live = live;
+                        if r.retryable_page_timeout() {
+                            r.complete = false;
+                        }
+                        retained.insert(id.clone());
+                        continue;
+                    }
+                }
                 self.next += 1;
                 let id = format!("e{}", self.next);
                 retained.insert(id.clone());
-                let (wire_filter, exhausted) = self.page_request(&relay, &filter);
                 let ready_at = if list_watch || !members.is_disjoint(&refresh_profiles) {
                     now
                 } else {
                     self.hydration_ready(&filter, &members, now)
                 };
+                let previous = pending.as_ref().and_then(|id| self.requests.get(id));
                 self.requests.insert(
                     id.clone(),
                     Request {
@@ -111,20 +142,21 @@ impl Network {
                         sent: false,
                         eose: exhausted,
                         page_eose: exhausted,
-                        deadline: u64::MAX,
-                        initial_deadline: u64::MAX,
+                        deadline: previous.map_or(u64::MAX, |r| r.deadline),
+                        initial_deadline: previous.map_or(u64::MAX, |r| r.initial_deadline),
                         last_event: None,
                         sent_at: 0,
                         last_rx: now,
-                        complete: exhausted,
+                        complete: exhausted
+                            || previous.is_some_and(|r| r.complete && !r.retryable_page_timeout()),
                         live,
                         list_watch,
-                        asked: false,
-                        ready_at,
-                        received: BTreeSet::new(),
-                        page_limit: 200,
-                        oldest: None,
-                        retry_delay: 1000,
+                        asked: previous.is_some_and(|r| r.asked),
+                        ready_at: previous.map_or(ready_at, |r| r.ready_at),
+                        received: previous.map_or_else(BTreeSet::new, |r| r.received.clone()),
+                        page_limit: previous.map_or(200, |r| r.page_limit),
+                        oldest: previous.and_then(|r| r.oldest),
+                        retry_delay: previous.map_or(1000, |r| r.retry_delay),
                     },
                 );
             }

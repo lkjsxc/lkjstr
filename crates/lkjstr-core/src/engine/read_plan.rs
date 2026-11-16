@@ -89,7 +89,7 @@ impl super::Network {
             .flatten()
             .filter_map(|author| store.relay_list(author).map(|list| (author, list)))
             .collect();
-        let candidates: Vec<_> = self
+        let mut candidates: Vec<_> = self
             .relay_order
             .iter()
             .filter_map(|url| {
@@ -120,18 +120,47 @@ impl super::Network {
         } else {
             2
         };
-        // A route owns page coverage and its cursor, even after EOSE. Keep it
-        // until the filter changes or the route is no longer configured for
-        // this query; quality observations must not discard that evidence.
-        // Explicit hints are appended by plan() and must not displace these slots.
+        let current: BTreeMap<_, _> = self
+            .requests
+            .values()
+            .filter(|r| r.page_filter == *f)
+            .map(|r| (r.relay.as_str(), r))
+            .collect();
+        let unavailable: BTreeSet<_> = candidates
+            .iter()
+            .filter(|c| {
+                let request = current.get(c.url.as_str()).copied().or_else(|| {
+                    self.requests
+                        .values()
+                        .filter(|r| r.relay == c.url && self.preceding_page(r, f))
+                        .min_by_key(|r| r.page_filter.until.unwrap_or(u64::MAX))
+                });
+                let Some(request) = request else {
+                    return false;
+                };
+                // A completed historical page keeps its cursor regardless of later transport quality.
+                if f.until.is_some() && request.page_eose {
+                    return false;
+                }
+                let relay = &self.relays[&c.url];
+                c.weight == 0
+                    || (!relay.online && relay.failures > 0)
+                    || (!request.page_eose
+                        && (request.complete || (request.asked && now >= request.initial_deadline)))
+            })
+            .map(|c| c.url.clone())
+            .collect();
+        for candidate in &mut candidates {
+            if unavailable.contains(&candidate.url) {
+                candidate.weight = 0;
+            }
+        }
+        // Stable, usable routes occupy the ordinary slots. A refusal, timeout or
+        // failed connection must leave room for another permitted reader.
         let mut routes: Vec<_> = candidates
             .iter()
             .filter(|c| !q.filters.relay_hints.contains(&c.url))
-            .filter(|c| {
-                self.requests
-                    .values()
-                    .any(|r| r.relay == c.url && r.page_filter == *f)
-            })
+            .filter(|c| current.contains_key(c.url.as_str()) && !unavailable.contains(&c.url))
             .take(limit)
             .map(|c| c.url.clone())
             .collect();
@@ -144,6 +173,17 @@ impl super::Network {
         for url in selected {
             if routes.len() < limit && !routes.contains(&url) {
                 routes.push(url);
+            }
+        }
+        // Keep failed-page uncertainty outside those slots. Historical evidence
+        // also survives recovery/reranking; bounded by configured read routes and
+        // released when the filter/view or explicit read permission is removed.
+        for candidate in &candidates {
+            if current.contains_key(candidate.url.as_str())
+                && (f.until.is_some() || unavailable.contains(&candidate.url))
+                && !routes.contains(&candidate.url)
+            {
+                routes.push(candidate.url.clone());
             }
         }
         routes

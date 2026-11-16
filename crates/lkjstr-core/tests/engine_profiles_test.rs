@@ -6,6 +6,8 @@ use lkjstr_core::engine::{
 };
 use lkjstr_protocol::{EventTemplate, NostrEvent, finalize_event, generate_secret_key};
 use serde_json::{Value, json};
+// Scheduler milliseconds are later than the fixture's signed event seconds.
+const BASE_MS: u64 = 200_000;
 fn event(kind: u64, content: &str, tags: Vec<Vec<String>>) -> NostrEvent {
     finalize_event(
         &EventTemplate {
@@ -29,7 +31,7 @@ fn setup() -> Engine {
                 "wss://c.test".into(),
             ],
         },
-        0,
+        BASE_MS,
     );
     e
 }
@@ -39,7 +41,7 @@ fn open(e: &mut Engine, sub: &str) {
             sub: sub.into(),
             query: Query::default(),
         },
-        0,
+        BASE_MS,
     );
 }
 fn reqs(e: &mut Engine) -> Vec<(String, Value)> {
@@ -80,8 +82,8 @@ fn cached_name_is_inline_and_needs_no_duplicate_metadata_request() {
     assert!(e.drain().iter().any(
         |o| matches!(o, Output::Rows {items,..} if items.iter().any(|r|r.author.name=="known"))
     ));
-    e.network.connected("wss://c.test/", 1);
-    e.network.tick(75);
+    e.network.connected("wss://c.test/", BASE_MS + 1);
+    e.network.tick(BASE_MS + 75);
     let frames = reqs(&mut e);
     assert!(!frames.iter().any(|(r, f)| r == "wss://c.test/"
         && f[2]["kinds"] == json!([0])
@@ -90,7 +92,7 @@ fn cached_name_is_inline_and_needs_no_duplicate_metadata_request() {
         Input::Close {
             sub: "visible".into(),
         },
-        2,
+        BASE_MS + 2,
     );
     assert!(!e.network.relays["wss://c.test/"].online);
 }
@@ -100,7 +102,7 @@ fn nested_quotes_reply_headers_and_repost_actors_share_one_author_batch() {
     let quoted = event(1, "quoted", vec![]);
     let parent = event(1, "parent", vec![]);
     let root = event(
-        1,
+        BASE_MS + 1,
         "visible",
         vec![
             vec!["q".into(), quoted.id.clone()],
@@ -117,8 +119,8 @@ fn nested_quotes_reply_headers_and_repost_actors_share_one_author_batch() {
     }
     open(&mut e, "one");
     open(&mut e, "two");
-    e.network.connected("wss://c.test/", 1);
-    e.network.tick(75);
+    e.network.connected("wss://c.test/", BASE_MS + 1);
+    e.network.tick(BASE_MS + 75);
     let frames = reqs(&mut e);
     let profiles: Vec<_> = frames
         .iter()
@@ -143,18 +145,18 @@ fn profile_preempts_a_full_relay_then_the_feed_resumes() {
         .get_mut("wss://a.test/")
         .expect("relay")
         .max_reqs = 1;
-    e.network.connected("wss://a.test/", 1);
+    e.network.connected("wss://a.test/", BASE_MS + 1);
     let feed = reqs(&mut e);
     assert_eq!(feed.len(), 1);
     e.network.message(
         "wss://a.test/",
         &json!(["EOSE", feed[0].1[1]]).to_string(),
-        2,
+        BASE_MS + 2,
     );
     let note = event(1, "arrives", vec![]);
     e.enqueue("wss://a.test/".into(), note.clone());
-    e.tick(100);
-    e.tick(175);
+    e.tick(BASE_MS + 100);
+    e.tick(BASE_MS + 175);
     let frames = reqs(&mut e);
     let lookup = &frames
         .iter()
@@ -164,17 +166,17 @@ fn profile_preempts_a_full_relay_then_the_feed_resumes() {
     e.network.message(
         "wss://a.test/",
         &json!(["EOSE", lookup[1]]).to_string(),
-        350,
+        BASE_MS + 350,
     );
-    e.tick(350);
+    e.tick(BASE_MS + 350);
     assert!(
         reqs(&mut e)
             .iter()
             .any(|(_, f)| f[2]["kinds"] == json!([1, 6]) && f[2]["since"] == 98)
     );
     // Absence on the delivering relay now allows fallback, without removing it.
-    e.network.connected("wss://b.test/", 351);
-    e.network.tick(425);
+    e.network.connected("wss://b.test/", BASE_MS + 351);
+    e.network.tick(BASE_MS + 425);
     assert!(
         reqs(&mut e)
             .iter()
@@ -186,17 +188,17 @@ fn profile_preempts_a_full_relay_then_the_feed_resumes() {
 fn arriving_authors_do_not_cancel_a_delayed_batch() {
     let mut e = setup();
     open(&mut e, "feed");
-    e.network.connected("wss://a.test/", 1);
+    e.network.connected("wss://a.test/", BASE_MS + 1);
     reqs(&mut e);
     e.enqueue("wss://a.test/".into(), event(1, "first", vec![]));
-    e.tick(100);
-    e.tick(175);
+    e.tick(BASE_MS + 100);
+    e.tick(BASE_MS + 175);
     let first = reqs(&mut e)
         .into_iter()
         .find(|(_, f)| f[2]["kinds"] == json!([0]))
         .expect("lookup");
     e.enqueue("wss://a.test/".into(), event(1, "second", vec![]));
-    e.tick(200);
+    e.tick(BASE_MS + 200);
     let effects = e.network.drain_effects();
     assert!(!effects.iter().any(
         |f| matches!(f,Effect::Send(_,text) if text == &json!(["CLOSE",first.1[1]]).to_string())
@@ -204,9 +206,9 @@ fn arriving_authors_do_not_cancel_a_delayed_batch() {
     e.network.message(
         "wss://a.test/",
         &json!(["EOSE", first.1[1]]).to_string(),
-        340,
+        BASE_MS + 340,
     );
-    e.tick(350);
+    e.tick(BASE_MS + 350);
     e.input(
         Input::Hint {
             focused_sub: None,
@@ -215,7 +217,7 @@ fn arriving_authors_do_not_cancel_a_delayed_batch() {
             idle: false,
             save_data: false,
         },
-        400,
+        BASE_MS + 400,
     );
     assert!(
         e.network

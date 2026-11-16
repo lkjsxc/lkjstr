@@ -109,17 +109,9 @@ impl Network {
     pub fn page_cursor(&self, filter: &lkjstr_protocol::NostrFilter) -> Option<u64> {
         self.requests
             .values()
-            .filter(|r| r.page_filter == *filter && r.received.len() >= r.page_limit)
+            .filter(|r| r.page_filter == *filter && r.page_eose && r.received.len() >= r.page_limit)
             .filter_map(|r| r.oldest)
             .max()
-    }
-    pub fn page_finished(&self, filter: &lkjstr_protocol::NostrFilter) -> bool {
-        let requests: Vec<_> = self
-            .requests
-            .values()
-            .filter(|r| r.page_filter == *filter)
-            .collect();
-        !requests.is_empty() && requests.iter().all(|r| r.page_eose)
     }
 }
 

@@ -7,16 +7,18 @@ use lkjstr_core::engine::{
 };
 use lkjstr_protocol::{EventTemplate, finalize_event, generate_secret_key};
 use serde_json::{Value, json};
+// Scheduler milliseconds are later than the fixture's signed event seconds.
+const BASE_MS: u64 = 20_100_000;
 
 fn setup(slots: usize, limit: usize) -> Engine {
     let mut e = Engine::new();
-    e.network.configure(vec![RELAY.into()], 0);
+    e.network.configure(vec![RELAY.into()], BASE_MS);
     e.network.relay_information(
         RELAY,
         &json!({"limitation":{"max_subscriptions":slots,"max_limit":limit}}).to_string(),
     );
-    e.discover_account(Some(event(1, 1, "", vec![]).pubkey), vec![], 0);
-    e.network.connected(RELAY, 1);
+    e.discover_account(Some(event(1, 1, "", vec![]).pubkey), vec![], BASE_MS);
+    e.network.connected(RELAY, BASE_MS + 1);
     e
 }
 fn req(e: &mut Engine) -> Value {
@@ -25,8 +27,11 @@ fn req(e: &mut Engine) -> Value {
     requests[0].clone()
 }
 fn eose(e: &mut Engine, request: &Value, now: u64) {
-    e.network
-        .message(RELAY, &json!(["EOSE", request[1]]).to_string(), now);
+    e.network.message(
+        RELAY,
+        &json!(["EOSE", request[1]]).to_string(),
+        BASE_MS + now,
+    );
 }
 
 #[test]
@@ -38,11 +43,11 @@ fn settled_discovery_yields_to_feed_and_resumes_after_close() {
             sub: "feed".into(),
             query: Query::default(),
         },
-        101,
+        BASE_MS + 101,
     );
     assert!(!frames(&mut e).iter().any(|f| f[0] == "REQ"));
     eose(&mut e, &discovery, 102);
-    e.network.tick(201);
+    e.network.tick(BASE_MS + 201);
     let batch = frames(&mut e);
     assert!(batch.iter().any(|f| *f == json!(["CLOSE", discovery[1]])));
     assert!(
@@ -53,9 +58,9 @@ fn settled_discovery_yields_to_feed_and_resumes_after_close() {
     // The feed gets its first page; unfinished own records then get a turn.
     let feed = batch.iter().find(|f| f[0] == "REQ").expect("feed");
     eose(&mut e, feed, 202);
-    e.network.tick(301);
+    e.network.tick(BASE_MS + 301);
     let resumed = req(&mut e);
-    e.input(Input::Close { sub: "feed".into() }, 401);
+    e.input(Input::Close { sub: "feed".into() }, BASE_MS + 401);
     assert_eq!(resumed[2]["authors"], discovery[2]["authors"]);
     assert_eq!(resumed[2]["limit"], 1);
 }
@@ -79,10 +84,10 @@ fn every_list_is_discovered_with_one_slot_and_one_result_without_views() {
             )
             .expect("list")
         });
-        e.discover_account(Some(lists[0].pubkey.clone()), vec![], 101);
+        e.discover_account(Some(lists[0].pubkey.clone()), vec![], BASE_MS + 101);
         let mut found = std::collections::BTreeSet::new();
         for now in [201, 401, 601, 801, 1001] {
-            e.network.tick(now);
+            e.network.tick(BASE_MS + now);
             let request = req(&mut e);
             let kinds = request[2]["kinds"].as_array().expect("kinds");
             assert_eq!(kinds.len(), 1);
@@ -95,10 +100,10 @@ fn every_list_is_discovered_with_one_slot_and_one_result_without_views() {
                 .message(
                     RELAY,
                     &json!(["EVENT", request[1], list]).to_string(),
-                    now + 1,
+                    BASE_MS + now + 1,
                 )
                 .expect("accepted");
-            e.network.event(RELAY, &received, now + 1);
+            e.network.event(RELAY, &received, BASE_MS + now + 1);
             e.store.insert(received, None);
             eose(&mut e, &request, now + 2);
         }
@@ -113,11 +118,11 @@ fn every_list_is_discovered_with_one_slot_and_one_result_without_views() {
         }
         // Independent reconnect cursors cannot skip the older list kinds.
         e.network.relays.get_mut(RELAY).expect("relay").max_reqs = 5;
-        e.network.disconnected(RELAY, 1200);
-        e.network.connected(RELAY, 1301);
+        e.network.disconnected(RELAY, BASE_MS + 1200);
+        e.network.connected(RELAY, BASE_MS + 1301);
         let mut replay = Vec::new();
         for now in [1301, 1401, 1501, 1601, 1701] {
-            e.network.tick(now);
+            e.network.tick(BASE_MS + now);
             replay.extend(frames(&mut e).into_iter().filter(|f| f[0] == "REQ"));
         }
         assert_eq!(replay.len(), 5);
@@ -138,21 +143,21 @@ fn settled_discovery_resumes_without_cycling_after_feed_releases_slot() {
         ids.insert(request[1].clone().to_string());
         eose(&mut e, &request, now);
         if now < 901 {
-            e.network.tick(now + 100);
+            e.network.tick(BASE_MS + now + 100);
         }
     }
-    e.network.tick(1001);
+    e.network.tick(BASE_MS + 1001);
     assert!(!frames(&mut e).iter().any(|f| f[0] == "REQ"));
     e.input(
         Input::Open {
             sub: "feed".into(),
             query: Query::default(),
         },
-        1101,
+        BASE_MS + 1101,
     );
     let feed = req(&mut e);
     assert_eq!(feed[2]["kinds"], json!([1, 6]));
-    e.input(Input::Close { sub: "feed".into() }, 1201);
+    e.input(Input::Close { sub: "feed".into() }, BASE_MS + 1201);
     let resumed = req(&mut e);
     assert!(
         !ids.contains(&resumed[1].to_string()),
@@ -162,6 +167,6 @@ fn settled_discovery_resumes_without_cycling_after_feed_releases_slot() {
         [0, 3, 10000, 10002, 10063].contains(&resumed[2]["kinds"][0].as_u64().expect("owner kind"))
     );
     eose(&mut e, &resumed, 1202);
-    e.network.tick(1301);
+    e.network.tick(BASE_MS + 1301);
     assert!(!frames(&mut e).iter().any(|f| f[0] == "REQ"));
 }
