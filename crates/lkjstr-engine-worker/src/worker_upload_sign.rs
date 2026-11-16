@@ -20,6 +20,16 @@ pub(in crate::worker) async fn sign_for(
 ) -> Result<lkjstr_protocol::NostrEvent, &'static str> {
     sign_mode(host, id, deadline, event, signal, action_req, false).await
 }
+pub(in crate::worker) async fn sign_detailed_for(
+    host: &Rc<RefCell<Host>>,
+    id: u64,
+    deadline: Deadline,
+    event: UnsignedNostrEvent,
+    signal: Option<&web_sys::AbortSignal>,
+    action_req: Option<&str>,
+) -> Result<lkjstr_protocol::NostrEvent, &'static str> {
+    sign_mode(host, id, deadline, event, signal, action_req, true).await
+}
 pub(in crate::worker) async fn private_sign(
     host: &Rc<RefCell<Host>>,
     id: u64,

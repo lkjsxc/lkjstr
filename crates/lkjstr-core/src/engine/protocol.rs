@@ -15,6 +15,10 @@ pub enum Input {
     Close {
         sub: String,
     },
+    Reading {
+        sub: String,
+        id: Option<String>,
+    },
     Window {
         sub: String,
         anchor: Option<String>,

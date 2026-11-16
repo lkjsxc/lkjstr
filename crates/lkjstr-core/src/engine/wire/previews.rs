@@ -4,7 +4,15 @@ use crate::engine::{Engine, preview, protocol as p};
 use serde_json::{Value, json};
 impl Session {
     pub fn output(&mut self, out: p::Output, engine: &Engine) -> Vec<Output> {
+        let sub = match &out {
+            p::Output::Rows { sub, .. }
+            | p::Output::Patch { sub, .. }
+            | p::Output::Fresh { sub, .. }
+            | p::Output::Status { sub, .. } => Some(sub.clone()),
+            _ => None,
+        };
         let mut output = self.output_inner(out, engine);
+        self.notification_state(sub.as_deref(), &mut output, engine);
         for out in &mut output {
             self.preview_output(out, engine);
         }

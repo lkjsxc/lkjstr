@@ -89,7 +89,7 @@ pub(super) fn status(host: &Rc<RefCell<Host>>) {
 fn send_accounts(h: &Host, id: u64) {
     let accounts=h.accounts.entries.iter().map(|a|{
         let author=lkjstr_core::engine::rows::author(&h.engine.store,&a.pubkey);
-        let mut value = serde_json::json!({"author":lkjstr_core::engine::wire::note::author(&author),"signer":a.signer,"encrypted":a.encrypted(),"locked":a.locked(),"unread":lkjstr_core::engine::wire::unread_count(&h.engine,&a.pubkey)});
+        let mut value = serde_json::json!({"author":lkjstr_core::engine::wire::note::author(&author),"signer":a.signer,"encrypted":a.encrypted(),"locked":a.locked(),"unread":lkjstr_core::engine::wire::unread_count(&h.engine,&a.pubkey),"unreadZap":lkjstr_core::engine::wire::unread_zap_evidence(&h.engine,&a.pubkey)});
         if h.engine.store.replaceable(&a.pubkey, 10050).is_some() {
             value["inbox"] = serde_json::json!(lkjstr_core::engine::dm::routing::inboxes(&h.engine.store, &a.pubkey).unwrap_or_default());
         }
@@ -112,7 +112,7 @@ pub(super) fn pump_accounts(host: &Rc<RefCell<Host>>) {
         h.account_busy = true;
         let task = h.account_tasks.remove(0);
         let watermark = if let A::Seen { account } = &task.2 {
-            Some(lkjstr_core::engine::wire::notification_watermark(
+            Some(lkjstr_core::engine::wire::notification_read_mark(
                 &h.engine, account,
             ))
         } else {
@@ -143,6 +143,7 @@ pub(super) fn pump_accounts(host: &Rc<RefCell<Host>>) {
         } else {
             None
         };
+        let zap_change = zaps::account_change(&action);
         let result = match &lock {
             Some(Err(code)) => Err(*code),
             _ => mutation::apply(action, &mut next, watermark).await,
@@ -167,11 +168,13 @@ pub(super) fn pump_accounts(host: &Rc<RefCell<Host>>) {
                 Ok(exported) => {
                     let private_revoked = private_cache::decreased(&h.accounts, &next);
                     h.accounts = next;
+                    zaps::committed(&mut h, zap_change);
                     relay_auth::sync(&mut h);
                     direct_messages::sync(&mut h);
                     uploads::control::prune(&mut h);
                     h.engine.seen = h.accounts.seen.clone();
                     h.engine.notification_ties = h.accounts.notification_ties.clone();
+                    h.engine.notification_zaps = h.accounts.notification_zaps.clone();
                     private_cache::revoke(&mut h, private_revoked);
                     h.account_revision = u64::MAX;
                     h.engine.invalidate();
@@ -194,6 +197,7 @@ pub(super) fn pump_accounts(host: &Rc<RefCell<Host>>) {
                             uploaded: None,
                             key: None,
                             encrypted_key: exported,
+                            zap_intent: None,
                             dm_draft: None,
                             dm_draft_revision: None,
                             dm_delivery: None,

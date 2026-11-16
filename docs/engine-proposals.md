@@ -2,15 +2,12 @@
 
 ## Purpose
 
-Additive protocol ledger and historical choices. The 2026-11-16 owner
-delegation permits additive engine fields/messages with a line here; existing
-contracts stay intact. Earlier sections retain their original proposal context.
-Current behavior and remaining limits are in status.md and parity.md.
+Additive protocol ledger. The 2026-11-16 owner delegation permits additive fields/messages with a line here; existing contracts stay intact.
+Earlier sections retain their original context. Current behavior and limits are in status.md and parity.md.
 
 ## 1. Extension account discovery
 
-Add a correlated main-thread capability request for NIP-07 getPublicKey,
-answered with the public key or a stable failure code. The current sign bridge
+Add a correlated main-thread capability request for NIP-07 getPublicKey, answered with the public key or a stable failure code. The current sign bridge
 already requires a pubkey, so account.add/extension cannot discover the first
 account through that bridge. Keep arbitrary signer error strings out of engine
 logs. The headless harness proves exact-event signing and relay delivery once
@@ -97,7 +94,6 @@ Frontend protocol 5 adds optional Stats relay `route` words (reading, writing, b
 Note `Counts.partial` now means an observed full relay page, not an unanswered request; the wire shape is unchanged. Preview failures and
 untitled answers project no cards until cache expiry.
 
-
 ## Composer delivery lifetime (2026-11-15)
 
 The frontend-owned Hint gains optional deliveryWatches, at most 128 action req
@@ -179,6 +175,25 @@ account/result output. Other authorized accounts and query/window intent remain.
 - `FromEngine.dm.flush {req,account,phase}` holds participating editors during lock preparation and releases them after commit or failure.
 - `ToEngine.dm.flushed {req,ok}` acknowledges only that port's exact lock preparation after its latest encrypted state commits.
 
-The new draft archive is local and encrypted for every signer kind. It is not
-account setup sync or a public list. Bounds, atomic removal, conflicts and the
-Worker-scoped unlock limit are documented in [dm-drafts.md](dm-drafts.md).
+The draft archive is local and encrypted for every signer kind, not account setup sync or a public list.
+Bounds, atomic removal, conflicts and the Worker-scoped unlock limit are in [dm-drafts.md](dm-drafts.md).
+
+## Protocol 9 zap additions (2026-11-16, integration candidate)
+
+- `ToEngine.zap.quote {req,query:{target,amountMsat?}}` requests finite read-only provider/split evidence.
+- `FromEngine.zap.quote {req,quote}` carries loading/ready/failed/unsupported evidence and recipient ranges.
+- `ToEngine.zap.receipts {req,query:{target,before?,limit}}` requests a bounded trusted receipt page.
+- `FromEngine.zap.receipts {req,page}` carries provider-authorized actors, exact amounts, provenance and independent relay coverage.
+- `ToEngine.zap.close {req}` closes that client's finite read or cancels its invoice, including queued pre-ready work.
+- `Action.zap.invoice {as,intent:{target,amountMsat,comment}}` explicitly signs HTTPS-only requests for unpaid invoices.
+- `FromEngine.result.zapIntent?` carries only a validated complete unpaid intent; it never reports payment.
+- `Counts.zapState?` distinguishes unresolved provider authority from relay truncation.
+- `Counts.zapUnverified?` counts retained unresolved receipt candidates.
+- `Counts.zapAmountMsat?` carries the exact decimal millisatoshi sum.
+- `Counts.zapLimited?` marks fractional rounding or the numeric safe-integer cap.
+- `NotificationRow.zapReceipt?` carries the same validated receipt provenance as the detail query.
+- `SubState.zapEvidence?` reports unresolved notification trust separately from existing relay phase.
+- `Account.unreadZap?` adds unread trust evidence and a bounded Seen-exception limit.
+- `Engine.zaps?` exposes finite quote/receipt helpers with explicit close/dispose ownership.
+- `ActWatch.zapSignal?` connects caller cancellation to invoice lifetime without an added control.
+- Protocol 9: `reading {sub,key}` carries one delivered reading anchor independently of retained-window bounds; null restores window-anchor fallback.

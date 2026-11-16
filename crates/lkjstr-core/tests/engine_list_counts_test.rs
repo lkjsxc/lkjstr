@@ -64,7 +64,7 @@ fn reply_count_uses_the_visible_descendants_of_the_thread() {
     );
 }
 #[test]
-fn zap_total_uses_the_receipts_targeting_that_note() {
+fn bare_receipt_amount_claims_never_supply_trusted_zap_totals() {
     use engine_review_support::{accept, output};
     use lkjstr_core::engine::wire::Session;
     use serde_json::json;
@@ -112,5 +112,5 @@ fn zap_total_uses_the_receipts_targeting_that_note() {
         .flatten()
         .find(|r| r["id"] == root.id)
         .expect("note");
-    assert_eq!(note["counts"]["zaps"], 55);
+    assert_eq!(note["counts"]["zaps"], 0);
 }

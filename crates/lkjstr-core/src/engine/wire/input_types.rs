@@ -7,6 +7,20 @@ use serde::Deserialize;
 #[derive(Deserialize)]
 #[serde(tag = "t", rename_all = "camelCase")]
 pub enum Input {
+    #[serde(rename = "zap.quote")]
+    ZapQuote {
+        req: String,
+        query: crate::engine::zaps::QuoteInput,
+    },
+    #[serde(rename = "zap.receipts")]
+    ZapReceipts {
+        req: String,
+        query: crate::engine::zaps::ReceiptInput,
+    },
+    #[serde(rename = "zap.close")]
+    ZapClose {
+        req: String,
+    },
     #[serde(rename = "dm.flushed")]
     DmFlushed {
         req: String,
@@ -39,6 +53,10 @@ pub enum Input {
     #[serde(rename = "upload.cancel")]
     UploadCancel {
         req: String,
+    },
+    Reading {
+        sub: String,
+        key: Option<String>,
     },
     Preview {
         sub: String,

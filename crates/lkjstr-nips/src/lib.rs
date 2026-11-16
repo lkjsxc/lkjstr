@@ -31,6 +31,7 @@ mod invoice_wire;
 pub mod keys;
 pub mod list_crypto;
 pub mod lists;
+pub mod lnurl;
 pub mod metadata;
 pub mod nip04;
 pub mod nip44;

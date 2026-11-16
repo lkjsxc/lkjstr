@@ -2,6 +2,12 @@ use serde::Deserialize;
 #[derive(Deserialize)]
 #[serde(tag = "a", rename_all = "camelCase")]
 pub enum Action {
+    #[serde(rename = "zap.invoice")]
+    ZapInvoice {
+        #[serde(rename = "as")]
+        account: String,
+        intent: crate::engine::zaps::InvoiceInput,
+    },
     #[serde(rename = "dm.editor")]
     DmEditor {
         #[serde(rename = "as")]

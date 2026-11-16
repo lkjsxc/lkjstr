@@ -191,6 +191,7 @@ fn result(req: String, error: Option<&str>, id: Option<String>) -> W {
         uploaded: None,
         key: None,
         encrypted_key: None,
+        zap_intent: None,
         dm_draft: None,
         dm_draft_revision: None,
         dm_delivery: None,

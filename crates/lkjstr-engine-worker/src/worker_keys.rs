@@ -18,6 +18,7 @@ pub(super) fn receive(h: &mut Host, id: u64, input: I) -> Option<I> {
                     uploaded: None,
                     key: Some(key),
                     encrypted_key: None,
+                    zap_intent: None,
                     dm_draft: None,
                     dm_draft_revision: None,
                     dm_delivery: None,

@@ -42,6 +42,10 @@ mod wants;
 pub mod weights;
 mod windows;
 pub mod wire;
+mod zap_runtime;
+mod zap_visible;
+mod zap_wants;
+pub mod zaps;
 use crate::store::Store;
 use lkjstr_protocol::{NostrEvent, UnsignedNostrEvent, VerificationResult, verify_event};
 use network::Network;
@@ -51,6 +55,7 @@ use std::collections::{BTreeMap, VecDeque};
 pub struct View {
     query: Query,
     anchor: Option<String>,
+    reading: Option<String>,
     before: usize,
     after: usize,
     rows: Vec<Row>,
@@ -69,6 +74,8 @@ struct Signing {
 pub struct Engine {
     dm_wants: Vec<dm::routing::Want>,
     pub previews: preview::Previews,
+    pub zaps: zaps::State,
+    zap_demand: zap_visible::Demand,
     pending_publications: usize,
     // At most 64 in-flight two-event creates; removed after both terminal outcomes.
     channel_creates: BTreeMap<String, channel_create::Creation>,
@@ -83,6 +90,7 @@ pub struct Engine {
     pub private_lists: BTreeMap<String, Vec<Vec<String>>>,
     pub seen: BTreeMap<String, u64>,
     pub notification_ties: BTreeMap<String, std::collections::BTreeSet<String>>,
+    pub notification_zaps: BTreeMap<String, zaps::ReadState>,
     pub metrics: metrics::Metrics,
     pub store: Store,
     /// False when persisted history extends beyond the hydrated store: no partial time rail.
@@ -109,6 +117,8 @@ impl Engine {
     pub fn new() -> Self {
         Self {
             previews: Default::default(),
+            zaps: Default::default(),
+            zap_demand: Default::default(),
             dm_wants: vec![],
             pending_publications: 0,
             channel_creates: BTreeMap::new(),
@@ -122,6 +132,7 @@ impl Engine {
             private_lists: BTreeMap::new(),
             seen: BTreeMap::new(),
             notification_ties: BTreeMap::new(),
+            notification_zaps: BTreeMap::new(),
             metrics: Default::default(),
             store: Store::with_caps(16000, 4000),
             cached_history_complete: true,
@@ -192,6 +203,7 @@ impl Engine {
             }
         }
         self.refill_history(now);
+        self.zap_tick(now);
         for v in self.views.values_mut() {
             if v.source_exhausted != history::exhausted(&self.network, &self.store, v) {
                 v.dirty = true;

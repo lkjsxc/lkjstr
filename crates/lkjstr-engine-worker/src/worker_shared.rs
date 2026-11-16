@@ -86,6 +86,7 @@ pub fn start_shared() -> Result<SharedWorkerHandle, JsValue> {
         upload_inflight: 0,
         relay_auth_inflight: 0,
         dm: Default::default(),
+        zaps: Default::default(),
         server_checks: vec![],
         auth_next: 0,
         upload_auth: BTreeMap::new(),
@@ -215,6 +216,7 @@ pub(super) fn expire(host: &Rc<RefCell<Host>>) {
     }
 }
 pub(super) fn detach(h: &mut Host, id: u64) {
+    zaps::detach(h, id);
     direct_messages::editors::detach(h, id);
     uploads::control::detach(h, id);
     let now = h.time();

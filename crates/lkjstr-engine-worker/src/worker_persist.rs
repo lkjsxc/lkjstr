@@ -27,8 +27,12 @@ pub(super) fn load(host: &Rc<RefCell<Host>>) {
                     if let Some(saved) = saved {
                         h.accounts = serde_json::from_str(&saved).unwrap_or_default();
                     }
+                    for state in h.accounts.notification_zaps.values_mut() {
+                        state.normalize();
+                    }
                     h.engine.seen = h.accounts.seen.clone();
                     h.engine.notification_ties = h.accounts.notification_ties.clone();
+                    h.engine.notification_zaps = h.accounts.notification_zaps.clone();
                     if let Some(routes) = routes {
                         h.engine.network.restore_publication_routes(&routes);
                     }

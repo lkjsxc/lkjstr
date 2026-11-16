@@ -4,22 +4,13 @@ use crate::{
     store::Query,
 };
 use serde_json::{Value, json};
-pub(super) fn note(row: &Row, store: &crate::store::Store) -> Value {
-    let zaps = store
-        .referencing(&row.id)
-        .iter()
-        .filter(|e| {
-            e.kind == 9735 && lkjstr_protocol::zap_target_event_id(e).as_deref() == Some(&row.id)
-        })
-        .filter_map(|e| lkjstr_protocol::zap_receipt_amount_msats(e))
-        .fold(0u64, u64::saturating_add)
-        / 1000;
+pub(super) fn note(row: &Row, _store: &crate::store::Store) -> Value {
     json!({"replies":row.counts.replies,"reposts":row.counts.reposts,
-        "reactions":row.counts.reactions,"zaps":zaps,"partial":false})
+        "reactions":row.counts.reactions,"zaps":0,"partial":false})
 }
 pub(super) fn settle(row: &mut Value, e: &Engine) {
     if row["kind"] == "note" {
-        let id = row["id"].as_str().unwrap_or("");
+        let id = row["id"].as_str().unwrap_or("").to_owned();
         let mut f = lkjstr_protocol::NostrFilter {
             kinds: Some(if row["channel"].is_object() {
                 vec![42, 16, 7, 9735]
@@ -29,8 +20,19 @@ pub(super) fn settle(row: &mut Value, e: &Engine) {
             limit: Some(200),
             ..Default::default()
         };
-        f.tags.insert("e".into(), vec![id.into()]);
+        f.tags.insert("e".into(), vec![id.clone()]);
         row["counts"]["partial"] = json!(e.network.count_limited(&f));
+        let total = e.zaps.receipts.total(
+            &e.store,
+            &e.zaps.providers,
+            &crate::engine::zaps::Target::Event { id },
+            e.network.now / 1000,
+        );
+        row["counts"]["zaps"] = json!(total.sats);
+        row["counts"]["zapState"] = json!(total.phase);
+        row["counts"]["zapUnverified"] = json!(total.unverified);
+        row["counts"]["zapAmountMsat"] = json!(total.amount_msat);
+        row["counts"]["zapLimited"] = json!(total.limited);
     }
 }
 pub(super) fn profile(result: &mut Value, e: &Engine, p: &str) {

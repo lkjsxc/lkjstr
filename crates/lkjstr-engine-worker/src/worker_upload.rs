@@ -49,6 +49,7 @@ pub(super) fn pump_uploads(host: &Rc<RefCell<Host>>) {
                         uploaded: Some(uploaded),
                         key: None,
                         encrypted_key: None,
+                        zap_intent: None,
                         dm_draft: None,
                         dm_draft_revision: None,
                         dm_delivery: None,

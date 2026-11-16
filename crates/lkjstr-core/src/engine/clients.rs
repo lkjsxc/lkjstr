@@ -62,6 +62,7 @@ impl Clients {
                 }
                 Input::Close { sub }
             }
+            Input::Reading { sub, id } => Input::Reading { sub: ns(sub), id },
             Input::Window {
                 sub,
                 anchor,

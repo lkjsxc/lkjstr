@@ -5,6 +5,7 @@ pub(super) fn stop(h: &mut Host) {
     h.stopped = true;
     // Mute before revocation: abort callbacks and late effects cannot reply.
     h.scope.close();
+    zaps::stop(h);
     direct_messages::sync(h);
     uploads::control::stop(h);
     h.accounts = Default::default();

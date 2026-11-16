@@ -2,6 +2,16 @@ use serde::Serialize;
 #[derive(Serialize)]
 #[serde(tag = "t", rename_all = "camelCase")]
 pub enum Output {
+    #[serde(rename = "zap.quote")]
+    ZapQuote {
+        req: String,
+        quote: crate::engine::zaps::Quote,
+    },
+    #[serde(rename = "zap.receipts")]
+    ZapReceipts {
+        req: String,
+        page: crate::engine::zaps::ReceiptView,
+    },
     #[serde(rename = "dm.flush")]
     DmFlush {
         req: String,
@@ -107,6 +117,8 @@ pub enum Output {
         key: Option<String>,
         #[serde(rename = "encryptedKey", skip_serializing_if = "Option::is_none")]
         encrypted_key: Option<String>,
+        #[serde(rename = "zapIntent", skip_serializing_if = "Option::is_none")]
+        zap_intent: Option<crate::engine::zaps::InvoiceBatch>,
         #[serde(rename = "dmDraft", skip_serializing_if = "Option::is_none")]
         dm_draft: Option<Box<crate::engine::dm::drafts::State>>,
         #[serde(rename = "dmDraftRevision", skip_serializing_if = "Option::is_none")]

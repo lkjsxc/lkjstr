@@ -7,6 +7,9 @@ mod feedback;
 mod list_edges;
 mod mentions;
 pub mod note;
+mod notification_evidence;
+mod notification_read;
+mod notification_subject;
 mod notifications;
 mod output;
 mod output_diff;
@@ -18,6 +21,7 @@ mod publish;
 pub mod queries;
 mod query_translate;
 mod quote_state;
+mod reading;
 mod sources;
 use super::thread;
 mod timeline;
@@ -28,7 +32,7 @@ mod input_types;
 mod output_types;
 pub use input_types::Input;
 pub use output_types::{Failure, Output};
-pub const PROTOCOL_VERSION: u32 = 8;
+pub const PROTOCOL_VERSION: u32 = 9;
 /// Adapter state is per transport client; the engine remains independent of pixels.
 #[derive(Default)]
 pub struct Session {
@@ -38,6 +42,7 @@ pub struct Session {
     pub preview_hidden: bool,
     pub queries: std::collections::BTreeMap<String, Query>,
     pub config: Config,
+    notification_states: std::collections::BTreeMap<String, notification_evidence::Cached>,
     timelines: std::collections::BTreeMap<String, timeline::Index>,
     timeline_turn: usize,
     return_keys: std::collections::BTreeMap<String, String>,
@@ -83,3 +88,6 @@ pub fn unread_count(engine: &crate::engine::Engine, account: &str) -> usize {
 }
 
 pub use notifications::notification_watermark;
+
+pub use notification_evidence::unread_zap_evidence;
+pub use notification_read::{NotificationMark, notification_read_mark};

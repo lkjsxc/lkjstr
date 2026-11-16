@@ -40,6 +40,8 @@ mod relay_config;
 mod signing;
 #[path = "worker_upload.rs"]
 mod uploads;
+#[path = "worker_zaps.rs"]
+mod zaps;
 use effects::pump;
 struct Host {
     preview_probed: bool,
@@ -52,6 +54,7 @@ struct Host {
     upload_inflight: usize,
     relay_auth_inflight: usize,
     dm: direct_messages::State,
+    zaps: zaps::State,
     server_checks: Vec<(u64, String, String, String, u64)>, // shared four-request bound
     auth_next: u64,
     upload_auth: BTreeMap<(u64, String), (lkjstr_protocol::UnsignedNostrEvent, js_sys::Function)>,
@@ -100,6 +103,7 @@ pub fn start() -> Result<WorkerHandle, JsValue> {
         upload_inflight: 0,
         relay_auth_inflight: 0,
         dm: Default::default(),
+        zaps: Default::default(),
         server_checks: vec![],
         auth_next: 0,
         upload_auth: BTreeMap::new(),

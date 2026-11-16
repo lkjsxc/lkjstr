@@ -990,10 +990,13 @@ checksum = "92daf443525c4cce67b150400bc2316076100ce0b3686209eb8cf3c31612e6f0"
 name = "lkjstr-core"
 version = "0.1.0"
 dependencies = [
+ "bech32",
+ "k256",
  "lkjstr-nips",
  "lkjstr-protocol",
  "serde",
  "serde_json",
+ "sha2",
  "unicode-normalization",
  "url",
  "zeroize",

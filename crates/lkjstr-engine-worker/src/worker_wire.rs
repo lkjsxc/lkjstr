@@ -45,6 +45,9 @@ impl Host {
         let Some(input) = keys::receive(self, id, input) else {
             return;
         };
+        if zaps::input(self, id, &input) {
+            return;
+        }
         if direct_messages::input(self, id, &input) {
             return;
         }

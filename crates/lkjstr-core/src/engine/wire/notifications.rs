@@ -11,13 +11,13 @@ pub(super) fn notifications(q: &Query, e: &Engine) -> Vec<Value> {
         return vec![];
     };
     let seen = e.seen.get(account).copied().unwrap_or(0);
+    let aliases = super::notification_read::aliases(e, account);
     let mut groups: Vec<Value> = vec![];
     for event in query::events(&e.store, &converted) {
-        if event.pubkey == account
-            || query::hidden_with_lists(&e.store, &converted, &event, &e.private_lists).is_some()
-        {
+        let Some(subject) = super::notification_subject::subject(e, &converted, &event, account)
+        else {
             continue;
-        }
+        };
         let parent = p::reply_parent(&event);
         let kind = match event.kind {
             6 | 16 => "repost",
@@ -61,12 +61,13 @@ pub(super) fn notifications(q: &Query, e: &Engine) -> Vec<Value> {
                 && e.notification_ties
                     .get(account)
                     .is_some_and(|ids| !ids.contains(&event.id)));
-        let actor = note::author(&rows::author(&e.store, &event.pubkey));
+        let unread = super::notification_read::unread(e, account, &event, &aliases, unread);
+        let actor = note::author(&rows::author(&e.store, &subject.pubkey));
         if let Some(row) = groups.iter_mut().find(|r| r["key"] == group) {
             let Some(actors) = row["actors"].as_array_mut() else {
                 continue;
             };
-            if !actors.iter().any(|a| a["pubkey"] == event.pubkey) {
+            if !actors.iter().any(|a| a["pubkey"] == subject.pubkey) {
                 if actors.len() < 8 {
                     actors.push(actor);
                 } else {
@@ -97,12 +98,19 @@ pub(super) fn notifications(q: &Query, e: &Engine) -> Vec<Value> {
             row["emoji"] = emoji;
         }
         if event.kind == 9735 {
-            row["sats"] = json!(p::zap_receipt_amount_msats(&event).unwrap_or(0) / 1000);
-            if let Some(description) = p::first_tag_value(&event, "description")
-                .and_then(|raw| p::parse_nostr_event_json(&raw, None).ok())
-            {
-                row["actors"] = json!([note::author(&rows::author(&e.store, &description.pubkey))]);
-                row["comment"] = json!(description.content);
+            let Some(zap) = e.zaps.receipts.get(&e.store, &event.id) else {
+                continue;
+            };
+            row["sats"] = json!(zap.amount_msat / 1000);
+            row["zapReceipt"] = json!(crate::engine::zaps::ReceiptRow::from(zap));
+            row["actors"] = match &zap.payer {
+                crate::engine::zaps::Sender::Public { pubkey } => {
+                    json!([note::author(&rows::author(&e.store, pubkey))])
+                }
+                _ => json!([]),
+            };
+            if let Some(comment) = zap.comment(&e.store) {
+                row["comment"] = json!(comment);
             }
         }
         if let Some(id) = target
@@ -128,14 +136,7 @@ pub fn notification_watermark(
     let events = crate::engine::query::events(&engine.store, &query)
         .into_iter()
         .filter(|event| {
-            event.pubkey != account
-                && crate::engine::query::hidden_with_lists(
-                    &engine.store,
-                    &query,
-                    event,
-                    &engine.private_lists,
-                )
-                .is_none()
+            super::notification_subject::subject(engine, &query, event, account).is_some()
         })
         .collect::<Vec<_>>();
     let at = events

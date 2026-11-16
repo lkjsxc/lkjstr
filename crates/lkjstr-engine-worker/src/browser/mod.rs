@@ -1,6 +1,7 @@
 //! Owned, worker-safe browser effects. Dropping the host releases all work.
 pub mod abort;
 pub mod http;
+pub mod http_public;
 pub mod idb;
 mod idb_commit;
 pub mod idb_drafts;

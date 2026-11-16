@@ -42,9 +42,26 @@ pub fn invoice_with_signature(
     routes: usize,
     high_s: bool,
 ) -> String {
+    invoice_with_time(description, amount, explicit_payee, routes, high_s, 1)
+}
+pub fn invoice_at(description: &str, amount: &str, timestamp: u64) -> String {
+    invoice_with_time(description, amount, false, 0, false, timestamp)
+}
+fn invoice_with_time(
+    description: &str,
+    amount: &str,
+    explicit_payee: bool,
+    routes: usize,
+    high_s: bool,
+    timestamp: u64,
+) -> String {
+    assert!(timestamp < (1 << 35));
     let signer = SigningKey::from_bytes(key(5).as_bytes().into()).unwrap();
     let hrp = Hrp::parse(amount).unwrap();
-    let mut data = vec![0, 0, 0, 0, 0, 0, 1];
+    let mut data: Vec<u8> = (0..7)
+        .rev()
+        .map(|n| ((timestamp >> (n * 5)) & 31) as u8)
+        .collect();
     field(&mut data, 1, &Sha256::digest([7; 32]));
     field(&mut data, 16, &[8; 32]);
     field(&mut data, 23, &Sha256::digest(description.as_bytes()));

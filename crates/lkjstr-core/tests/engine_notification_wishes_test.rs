@@ -101,7 +101,7 @@ fn cached_contact_lists_never_become_notifications_or_unread_counts() {
 }
 
 #[test]
-fn notification_requests_and_rows_preserve_the_five_supported_types() {
+fn notification_requests_preserve_kinds_but_untrusted_zaps_do_not_supply_unread() {
     let me = "aa".repeat(32);
     let mut e = Engine::new();
     let mut parent = event(1, 1, "my post", vec![]);
@@ -136,9 +136,9 @@ fn notification_requests_and_rows_preserve_the_five_supported_types() {
         lkjstr_core::engine::query::filter(&e.store, &q).kinds,
         Some(vec![1, 42, 6, 16, 7, 9735])
     );
-    assert_eq!(lkjstr_core::engine::wire::unread_count(&e, &me), 5);
+    assert_eq!(lkjstr_core::engine::wire::unread_count(&e, &me), 4);
     let (at, ties) = lkjstr_core::engine::wire::notification_watermark(&e, &me);
-    assert_eq!(at, 6000);
+    assert_eq!(at, 5000);
     assert_eq!(ties.len(), 1);
     let mut s = Session::default();
     accept(
@@ -156,5 +156,5 @@ fn notification_requests_and_rows_preserve_the_five_supported_types() {
         .map(|r| r["type"].as_str().expect("type"))
         .collect::<Vec<_>>();
     types.sort();
-    assert_eq!(types, ["mention", "reaction", "reply", "repost", "zap"]);
+    assert_eq!(types, ["mention", "reaction", "reply", "repost"]);
 }

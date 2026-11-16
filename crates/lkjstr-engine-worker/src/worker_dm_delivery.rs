@@ -138,6 +138,7 @@ pub(super) fn output(host: &Rc<RefCell<Host>>, output: &Output) -> bool {
             uploaded: None,
             key: None,
             encrypted_key: None,
+            zap_intent: None,
             cancelled: None,
             dm_draft: None,
             dm_draft_revision: None,

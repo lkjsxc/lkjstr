@@ -4,7 +4,7 @@ use lkjstr_core::engine::wire::actions::Action as A;
 pub(super) async fn apply(
     action: A,
     next: &mut lkjstr_core::engine::accounts::Accounts,
-    watermark: Option<(u64, std::collections::BTreeSet<String>)>,
+    watermark: Option<lkjstr_core::engine::wire::NotificationMark>,
 ) -> Result<Option<String>, &'static str> {
     if keys::is_vault(&action) {
         return keys::apply(next, &action);
@@ -41,9 +41,10 @@ pub(super) async fn apply(
         A::AccountRemove { pubkey } => next.remove(&pubkey),
         A::Seen { account } => {
             if next.entries.iter().any(|a| a.pubkey == account) {
-                let (at, ties) = watermark.unwrap_or_default();
-                next.seen.insert(account.clone(), at);
-                next.notification_ties.insert(account, ties);
+                let mark = watermark.unwrap_or_default();
+                next.seen.insert(account.clone(), mark.at);
+                next.notification_ties.insert(account.clone(), mark.ties);
+                next.notification_zaps.insert(account, mark.zaps);
                 Ok(())
             } else {
                 Err("signed-out")

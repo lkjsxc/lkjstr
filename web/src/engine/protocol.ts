@@ -28,7 +28,8 @@
 /** 6: private messages, external encryption, encrypted key import/export and session locks. */
 /** 7: atomic private visibility, correlated upload cancellation and signer ownership. */
 /** 8: private conversation identities, display models, inbox lists and private draft storage. */
-export const PROTOCOL_VERSION = 8;
+/** 9: provider-authorized zaps, unpaid invoice intents and current reading hints. */
+export const PROTOCOL_VERSION = 9;
 
 /** Chosen by the interface, unique among its open subscriptions. */
 export type SubId = string;
@@ -203,8 +204,14 @@ export type Counts = {
   readonly replies: number;
   readonly reposts: number;
   readonly reactions: number;
-  /** Sum of zap receipts in sats. */
+  /** Sum of provider-authorized receipt amounts in sats, rounded down after summing. */
   readonly zaps: number;
+  /** Trust completeness is separate from observed relay-page truncation. */
+  readonly zapState?: ZapPhase;
+  readonly zapUnverified?: number;
+  readonly zapAmountMsat?: string;
+  /** Fractional sats were rounded down or the numeric value was capped. */
+  readonly zapLimited?: boolean;
   /** A relay request reached its limit: the numbers are lower bounds, drawn as "12+". */
   readonly partial: boolean;
 };
@@ -319,6 +326,7 @@ export type NotificationRow = {
   readonly emoji?: { readonly emoji: string; readonly url?: string };
   /** `zap`: sats, and the comment sent with it. */
   readonly sats?: number;
+  readonly zapReceipt?: ZapReceipt;
   readonly comment?: string;
   /** The reader's note it is about (reaction, repost, zap): opened by a press on the excerpt. */
   readonly target?: { readonly id: string; readonly excerpt: string; readonly media: number };
@@ -450,6 +458,8 @@ export type PatchOp =
 
 /** How a subscription is doing, for honest empty and loading states. */
 export type SubState = {
+  /** Receipt/read evidence is independent of the relay lifecycle below. */
+  readonly zapEvidence?: ZapEvidence;
   /** `cache`: showing what the device has, relays still being asked. `live`: relays answered and it is following.
    * `done`: a finite list was read to its end. `failed`: nobody could be asked; `error` says why. */
   readonly phase: 'cache' | 'live' | 'done' | 'failed';
@@ -534,6 +544,7 @@ export type RelayEntry = { readonly url: string; readonly read: boolean; readonl
 
 /** Everything the reader can do. Every action acts as `as` and is answered by exactly one `result`. */
 export type Action =
+  | { readonly a: 'zap.invoice'; readonly as: Pubkey; readonly intent: ZapInvoiceInput }
   /** Register a mounted private editor before allowing input; closed leases cannot hold a lock. */
   | {
       readonly a: 'dm.editor';
@@ -658,6 +669,8 @@ export type Account = {
   readonly encrypted?: boolean;
   readonly author: Author;
   readonly signer: 'local' | 'extension' | 'remote' | 'none';
+  /** Unknown receipt authorization/read overflow is not a verified empty inbox. */
+  readonly unreadZap?: ZapEvidence;
   /** Notifications that arrived since `seen`. */
   readonly unread: number;
 };
@@ -699,6 +712,9 @@ export type EngineConfig = {
 // ───────────────────────────────────────── messages ─────────────────────────────────────────
 
 export type ToEngine =
+  | { readonly t: 'zap.quote'; readonly req: ReqId; readonly query: ZapQuoteInput }
+  | { readonly t: 'zap.receipts'; readonly req: ReqId; readonly query: ZapReceiptInput }
+  | { readonly t: 'zap.close'; readonly req: ReqId }
   | { readonly t: 'dm.flushed'; readonly req: ReqId; readonly ok: boolean }
   | { readonly t: 'upload.cancel'; readonly req: ReqId }
   | {
@@ -725,6 +741,8 @@ export type ToEngine =
     }
   /** Since version 5. Near, uncovered note ids only, lowest priority; an empty list releases wants. */
   | { readonly t: 'preview'; readonly sub: SubId; readonly ids: readonly string[] }
+  /** Since version 9. Current delivered row key; null restores the window-anchor fallback. */
+  | { readonly t: 'reading'; readonly sub: SubId; readonly key: string | null }
   // engine-added 2026-11-15: 4
   | { readonly t: 'stats'; readonly req: ReqId }
   // end engine-added
@@ -857,6 +875,8 @@ export type Timeline = {
   readonly older: boolean;
 };
 export type FromEngine =
+  | { readonly t: 'zap.quote'; readonly req: ReqId; readonly quote: ZapQuote }
+  | { readonly t: 'zap.receipts'; readonly req: ReqId; readonly page: ZapReceiptView }
   /** Hold edits until release; acknowledge prepare only after encrypted writes have committed. */
   | {
       readonly t: 'dm.flush';
@@ -941,6 +961,7 @@ export type FromEngine =
       readonly key?: string;
       /** Explicit encrypted backup; never logged or stored by the interface. */
       readonly encryptedKey?: string;
+      readonly zapIntent?: ZapIntent;
       /** Distinct participants whose wrapper reached an inbox, including the sender. */
       readonly dmDelivery?: { readonly accepted: number; readonly total: number };
       /** Private draft answers are scoped to the requesting client and never learned as public rows. */
@@ -1035,4 +1056,122 @@ export type DmFailedDraft = {
   readonly error?: Failure;
   readonly dmDelivery?: { readonly accepted: number; readonly total: number };
   readonly id?: string;
+};
+
+/** Protocol 9 zap evidence and unpaid invoice contracts. */
+export type ZapTarget =
+  | { readonly k: 'event'; readonly id: string }
+  | { readonly k: 'profile'; readonly pubkey: Pubkey };
+export type ZapPhase = 'loading' | 'ready' | 'failed' | 'unsupported';
+export type ZapEvidence = {
+  readonly phase: ZapPhase;
+  readonly unverified: number;
+  /** Bounded deferred read history overflowed; ordinary notifications can still be acknowledged. */
+  readonly readLimited?: boolean;
+};
+export type ZapFailure =
+  | 'not-found'
+  | 'unsupported'
+  | 'rejected'
+  | 'too-large'
+  | 'network'
+  | 'untrusted'
+  | 'stale'
+  | 'expired'
+  | 'cancelled'
+  | 'signer-missing'
+  | 'signer-refused'
+  | 'signer-timeout';
+export type ZapQuoteInput = { readonly target: ZapTarget; readonly amountMsat?: number };
+export type ZapQuoteRecipient = {
+  readonly pubkey: Pubkey;
+  readonly phase: ZapPhase;
+  readonly error: ZapFailure | null;
+  readonly amountMsat: number | null;
+  readonly minMsat: number | null;
+  readonly maxMsat: number | null;
+  readonly provider: Pubkey | null;
+  readonly domain: string | null;
+  readonly description: string | null;
+};
+export type ZapQuote = {
+  readonly target: ZapTarget;
+  readonly phase: ZapPhase;
+  readonly error: ZapFailure | null;
+  readonly recipients: readonly ZapQuoteRecipient[];
+};
+export type ZapInvoiceInput = {
+  readonly target: ZapTarget;
+  readonly amountMsat: number;
+  readonly comment: string;
+};
+export type ZapSuccessAction =
+  | { readonly k: 'message'; readonly message: string }
+  | { readonly k: 'url'; readonly description: string; readonly url: string };
+export type ZapInvoice = {
+  readonly state: 'unpaid';
+  readonly recipient: Pubkey;
+  readonly provider: Pubkey;
+  readonly target: ZapTarget;
+  readonly amountMsat: number;
+  readonly invoice: string;
+  readonly paymentHash: string;
+  readonly expiresAt: Millis;
+  readonly successAction: ZapSuccessAction | null;
+};
+/** No wallet action or relay EVENT is performed. Every split invoice succeeds or the whole result fails. */
+export type ZapIntent = {
+  readonly state: 'unpaid';
+  readonly target: ZapTarget;
+  readonly amountMsat: number;
+  readonly invoices: readonly ZapInvoice[];
+};
+export type ZapSender =
+  | { readonly k: 'public'; readonly pubkey: Pubkey }
+  | { readonly k: 'anonymous' }
+  | { readonly k: 'private' };
+export type ZapReceipt = {
+  readonly id: string;
+  readonly createdAt: Millis;
+  readonly target: ZapTarget;
+  readonly sender: ZapSender;
+  readonly recipient: Pubkey;
+  readonly provider: Pubkey;
+  readonly amountMsat: string;
+  readonly verification: 'provider-authorized';
+  readonly recipientProfile: string;
+  readonly providerEndpoint: string;
+  readonly providerObservedAt: Millis;
+  readonly verifiedAt: Millis;
+};
+export type ZapTotal = {
+  /** Exact decimal millisatoshis; sats is rounded down once after the sum. */
+  readonly amountMsat: string;
+  readonly sats: number;
+  readonly receipts: number;
+  readonly unverified: number;
+  readonly phase: ZapPhase;
+  readonly limited: boolean;
+};
+/** Opaque pagination key over retained verified receipts; at is the event's Unix second. */
+export type ZapReceiptCursor = { readonly at: number; readonly id: string };
+export type ZapReceiptInput = {
+  readonly target: ZapTarget;
+  readonly before?: ZapReceiptCursor;
+  readonly limit: number;
+};
+export type ZapReceiptPage = {
+  readonly target: ZapTarget;
+  readonly rows: readonly ZapReceipt[];
+  readonly total: ZapTotal;
+  readonly cursor: ZapReceiptCursor | null;
+  readonly more: boolean;
+};
+export type ZapReceiptView = {
+  readonly target: ZapTarget;
+  readonly phase: ZapPhase;
+  readonly error: ZapFailure | null;
+  /** These requested relay pages only; observed is not a claim about the whole network. */
+  readonly coverage: 'loading' | 'observed' | 'truncated' | 'failed';
+  readonly page: ZapReceiptPage | null;
 };

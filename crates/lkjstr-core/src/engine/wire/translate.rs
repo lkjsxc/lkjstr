@@ -8,11 +8,15 @@ impl Session {
         engine: &Engine,
     ) -> Result<Vec<p::Input>, (Option<String>, &'static str)> {
         Ok(match input {
+            Input::Reading { sub, key } => self.reading(sub, key),
             Input::Preview { sub, ids } => {
                 self.preview_near(sub, ids);
                 vec![]
             }
-            Input::DmFlushed { .. }
+            Input::ZapQuote { .. }
+            | Input::ZapReceipts { .. }
+            | Input::ZapClose { .. }
+            | Input::DmFlushed { .. }
             | Input::DmOpen { .. }
             | Input::DmClose { .. }
             | Input::DmVisible { .. }
@@ -62,6 +66,7 @@ impl Session {
                 }
                 let converted = query.convert().ok_or((None, "unsupported"))?;
                 self.timelines.remove(&sub);
+                self.notification_states.remove(&sub);
                 self.queries.insert(sub.clone(), *query);
                 vec![p::Input::Open {
                     sub,
@@ -69,6 +74,7 @@ impl Session {
                 }]
             }
             Input::Close { sub } => {
+                self.notification_states.remove(&sub);
                 self.queries.remove(&sub);
                 self.delivered.remove(&sub);
                 self.windows.remove(&sub);

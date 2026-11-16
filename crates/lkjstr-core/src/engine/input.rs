@@ -18,6 +18,7 @@ impl Engine {
                     View {
                         query,
                         anchor: None,
+                        reading: None,
                         before: 0,
                         after: 50,
                         rows: vec![],
@@ -54,6 +55,23 @@ impl Engine {
                     self.advance_history(&sub);
                     self.replan(now);
                     self.render(&sub, true);
+                }
+            }
+            Input::Reading { sub, id } => {
+                let Some(view) = self.views.get(&sub) else {
+                    return;
+                };
+                if id.as_ref().is_some_and(|id| {
+                    id.len() > 256
+                        || !view
+                            .rows
+                            .iter()
+                            .any(|r| super::zap_visible::matches_anchor(&self.store, r, id, view))
+                }) {
+                    return;
+                }
+                if let Some(view) = self.views.get_mut(&sub) {
+                    view.reading = id;
                 }
             }
             Input::GlobalPolicy { enabled } => {

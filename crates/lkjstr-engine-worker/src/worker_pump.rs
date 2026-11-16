@@ -82,6 +82,7 @@ pub(super) fn pump(host: &Rc<RefCell<Host>>) {
     persist(host);
     identity::identities(host);
     accounts::pump_accounts(host);
+    zaps::pump(host);
     accounts::status(host);
     relay_auth::pump_auth(host);
     uploads::pump_uploads(host);

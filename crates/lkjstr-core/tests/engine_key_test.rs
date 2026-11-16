@@ -28,6 +28,7 @@ fn backup_is_explicit_and_debug_never_discloses_secrets() {
         uploaded: None,
         key: Some(secret.clone()),
         encrypted_key: None,
+        zap_intent: None,
         dm_draft: None,
         dm_draft_revision: None,
         dm_delivery: None,
