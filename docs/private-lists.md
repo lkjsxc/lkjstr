@@ -141,8 +141,11 @@ control passed before the correction. All four composition cases and ten
 adjacent native cases passed afterward, together with the Worker WASM check,
 at 14:09:32 UTC in 10.463 seconds, load 2.74/2.89/2.80. Evidence is under
 `tmp/private-state-{before,after}.{log,json}` in the integration worktree.
-The merged frontend check passed at 14:08:09 UTC in 6.168 seconds. The merged
-protocol-10 browser suite and complete release gates remain pending.
+The merged frontend check passed at 14:08:09 UTC in 6.168 seconds. Repository,
+native and rust-wasm gates then passed before the upstream startup packaging
+rebase. The merged protocol-10 browser suite and remaining release gates are
+pending; [engine-private-verification.md](engine-private-verification.md)
+records exact timings, artifact boundaries and the remaining commands.
 
 Primary contracts: [NIP-51](https://github.com/nostr-protocol/nips/blob/master/51.md),
 [NIP-07](https://github.com/nostr-protocol/nips/blob/master/07.md),
