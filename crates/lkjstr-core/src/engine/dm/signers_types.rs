@@ -28,8 +28,12 @@ pub struct Lease {
     pub(super) client: u64,
     pub(super) epoch: u64,
     pub(super) read: Option<u64>,
+    pub(super) list: bool,
 }
 impl Lease {
+    pub fn is_list(&self) -> bool {
+        self.list
+    }
     pub fn account(&self) -> &str {
         &self.account
     }

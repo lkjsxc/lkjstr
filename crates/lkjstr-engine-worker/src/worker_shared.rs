@@ -87,6 +87,7 @@ pub fn start_shared() -> Result<SharedWorkerHandle, JsValue> {
         relay_auth_inflight: 0,
         dm: Default::default(),
         zaps: Default::default(),
+        private_lists: Default::default(),
         server_checks: vec![],
         auth_next: 0,
         upload_auth: BTreeMap::new(),
@@ -186,8 +187,9 @@ fn attach(host: &Rc<RefCell<Host>>, port: web_sys::MessagePort) {
             },
         );
     }
-    if host.borrow().loaded {
-        accounts::ready(&host.borrow(), id, true);
+    let loaded = host.borrow().loaded;
+    if loaded {
+        accounts::ready(&mut host.borrow_mut(), id, true);
     }
 }
 #[path = "worker_shared_handle.rs"]

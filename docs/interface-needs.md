@@ -55,3 +55,10 @@ Measured transmitted-byte progress still needs suitable transport support.
 Queueing is not evidence of transmitted bytes; no new progress wording has been
 introduced. Private files, reactions and message deletion remain unspecified
 and lack a complete runtime operation.
+
+## Private list read follow-up
+
+- `lists.retry {as}` resets private-list failures independently of Messages consent; a Retry control needs a specification.
+- `query.privateLists` and `state.privateLists` support existing feeds/Mutes; named people-set navigation still needs a surface.
+- `Account.privateLists` qualifies `unread`; unknown dependencies need treatment wherever a future badge uses that number.
+- Private-list editing remains outside this read feature. Contract and bounds: [private-lists.md](private-lists.md).

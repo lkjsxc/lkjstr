@@ -48,6 +48,9 @@ impl Host {
         if zaps::input(self, id, &input) {
             return;
         }
+        if private_lists::input(self, id, &input) {
+            return;
+        }
         if direct_messages::input(self, id, &input) {
             return;
         }
@@ -222,6 +225,7 @@ impl Host {
             }
             _ => {}
         }
+        private_lists::sync(self);
         if refresh_previews {
             previews::refresh(self);
         }

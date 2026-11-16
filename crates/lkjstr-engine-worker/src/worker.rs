@@ -32,6 +32,8 @@ mod keys;
 mod previews;
 #[path = "worker_private_cache.rs"]
 mod private_cache;
+#[path = "worker_private_lists.rs"]
+mod private_lists;
 #[path = "worker_auth.rs"]
 mod relay_auth;
 #[path = "worker_relays.rs"]
@@ -55,6 +57,7 @@ struct Host {
     relay_auth_inflight: usize,
     dm: direct_messages::State,
     zaps: zaps::State,
+    private_lists: private_lists::Book,
     server_checks: Vec<(u64, String, String, String, u64)>, // shared four-request bound
     auth_next: u64,
     upload_auth: BTreeMap<(u64, String), (lkjstr_protocol::UnsignedNostrEvent, js_sys::Function)>,
@@ -104,6 +107,7 @@ pub fn start() -> Result<WorkerHandle, JsValue> {
         relay_auth_inflight: 0,
         dm: Default::default(),
         zaps: Default::default(),
+        private_lists: Default::default(),
         server_checks: vec![],
         auth_next: 0,
         upload_auth: BTreeMap::new(),

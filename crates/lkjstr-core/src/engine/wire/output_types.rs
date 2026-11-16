@@ -12,6 +12,10 @@ pub enum Output {
         req: String,
         page: crate::engine::zaps::ReceiptView,
     },
+    #[serde(rename = "crypt.cancel")]
+    CryptCancel {
+        req: String,
+    },
     #[serde(rename = "dm.flush")]
     DmFlush {
         req: String,
@@ -28,6 +32,8 @@ pub enum Output {
         peer: String,
         operation: String,
         data: String,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        context: Option<CryptContext>,
     },
     Timeline {
         sub: String,
@@ -143,4 +149,10 @@ impl std::fmt::Debug for Output {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str("Output [redacted]")
     }
+}
+
+#[derive(Clone, Serialize)]
+#[serde(tag = "kind", rename_all = "kebab-case")]
+pub enum CryptContext {
+    PrivateList { sub: String, event: String },
 }

@@ -8,6 +8,11 @@ pub enum Action {
         account: String,
         intent: crate::engine::zaps::InvoiceInput,
     },
+    #[serde(rename = "lists.retry")]
+    ListsRetry {
+        #[serde(rename = "as")]
+        account: String,
+    },
     #[serde(rename = "dm.editor")]
     DmEditor {
         #[serde(rename = "as")]

@@ -17,12 +17,14 @@ mod hydration;
 mod identities;
 mod ingest;
 mod input;
+mod input_open;
 mod list_events;
 pub mod metrics;
 pub mod network;
 mod network_limits;
 pub mod preview;
 mod private_cache;
+pub mod private_lists;
 pub mod protocol;
 mod publication_discovery;
 pub mod publication_plan;
@@ -88,6 +90,7 @@ pub struct Engine {
     pub servers: BTreeMap<String, feedback::ServerVerdict>,
     server_revision: u64,
     pub private_lists: BTreeMap<String, Vec<Vec<String>>>,
+    pub private_reads: private_lists::Reads,
     pub seen: BTreeMap<String, u64>,
     pub notification_ties: BTreeMap<String, std::collections::BTreeSet<String>>,
     pub notification_zaps: BTreeMap<String, zaps::ReadState>,
@@ -130,6 +133,7 @@ impl Engine {
             servers: BTreeMap::new(),
             server_revision: 0,
             private_lists: BTreeMap::new(),
+            private_reads: Default::default(),
             seen: BTreeMap::new(),
             notification_ties: BTreeMap::new(),
             notification_zaps: BTreeMap::new(),

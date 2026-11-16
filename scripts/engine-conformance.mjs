@@ -34,6 +34,7 @@ export async function conformance({page,send,wait,check,note,signer,lines,origin
     return result(req);
   }
   await authenticate(note.pubkey,'extension');
+  check('private-list retry is account-scoped and additive',(await act({a:'lists.retry',as:note.pubkey})).ok);
   await send({t:'configure',config:{language:'en',heuristics:true,prefetch:false}});
   await send({t:'relays',relays:[{url:origin.replace('http:','ws:'),read:true,write:true,search:true}]});
   for (const source of sourceKinds) {

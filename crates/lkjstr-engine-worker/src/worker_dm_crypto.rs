@@ -13,6 +13,7 @@ struct Call<'a> {
     peer: &'a str,
     operation: &'a str,
     read: Option<&'a Read>,
+    list: Option<&'a lkjstr_core::engine::private_lists::Job>,
 }
 pub(super) async fn crypt(
     host: &Rc<RefCell<Host>>,
@@ -31,6 +32,7 @@ pub(super) async fn crypt(
             peer,
             operation,
             read: None,
+            list: None,
         },
         data,
         deadline,
@@ -53,9 +55,30 @@ pub(super) async fn read(
             peer,
             operation,
             read: Some(read),
+            list: None,
         },
         data,
         deadline,
+    )
+    .await
+}
+pub(super) async fn list(
+    host: &Rc<RefCell<Host>>,
+    job: &lkjstr_core::engine::private_lists::Job,
+    data: String,
+) -> Result<String, &'static str> {
+    crypt_for(
+        host,
+        Call {
+            client: job.client,
+            account: &job.account,
+            peer: &job.account,
+            operation: job.format.operation(),
+            read: None,
+            list: Some(job),
+        },
+        data,
+        Deadline::within(uploads::clock(), 90_000),
     )
     .await
 }
@@ -73,7 +96,12 @@ async fn crypt_for(
         let mut h = host.borrow_mut();
         signers::sync(&mut h);
         let epoch = lifetime::lease(&h, call.client, call.account)?;
-        h.dm.signers.gate.allowed(call.account, epoch)?;
+        if call.list.is_none() {
+            h.dm.signers.gate.allowed(call.account, epoch)?;
+        }
+        if let Some(job) = call.list {
+            private_lists::check(&h, job)?;
+        }
         if let Some(read) = call.read {
             signers::check_read(&h, read)?;
         }
@@ -85,14 +113,24 @@ async fn crypt_for(
         }
         epoch
     };
-    let pending = signers::begin(
-        &mut host.borrow_mut(),
-        call.client,
-        call.account,
-        epoch,
-        call.read,
-        data,
-    )?;
+    let pending = if let Some(job) = call.list {
+        let mut h = host.borrow_mut();
+        let pending = signers::begin_list(&mut h, call.client, call.account, epoch, data)?;
+        if let Err(code) = private_lists::bind(&mut h, job, pending.lease.clone()) {
+            signers::cancel_list(&mut h, &pending.lease);
+            return Err(code);
+        }
+        pending
+    } else {
+        signers::begin(
+            &mut host.borrow_mut(),
+            call.client,
+            call.account,
+            epoch,
+            call.read,
+            data,
+        )?
+    };
     let waiting = match deadline.wait(uploads::clock(), u32::MAX) {
         Ok(ms) => crate::browser::promise::bounded_ms_for(
             pending.ready,
@@ -109,6 +147,9 @@ async fn crypt_for(
         return signers::finish(&mut host.borrow_mut(), &pending.lease, Err(code), false);
     }
     signers::check(&host.borrow(), &pending.lease)?;
+    if let Some(job) = call.list {
+        private_lists::check(&host.borrow(), job)?;
+    }
     let ms = match deadline.wait(uploads::clock(), 60_000) {
         Ok(ms) => ms,
         Err(_) => {

@@ -30,6 +30,7 @@ pub mod invoice;
 mod invoice_wire;
 pub mod keys;
 pub mod list_crypto;
+pub mod list_read;
 pub mod lists;
 pub mod lnurl;
 pub mod metadata;

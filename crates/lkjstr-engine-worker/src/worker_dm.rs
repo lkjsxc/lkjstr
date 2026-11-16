@@ -24,12 +24,19 @@ mod receive;
 #[path = "worker_dm_send.rs"]
 mod send;
 #[path = "worker_dm_signers.rs"]
-mod signers;
+pub(super) mod signers;
 #[path = "worker_dm_snapshot.rs"]
 mod snapshot;
 #[cfg(feature = "harness")]
 #[path = "worker_dm_stop_probe.rs"]
 pub(super) mod stop_probe;
+pub(super) async fn list_read(
+    host: &Rc<RefCell<Host>>,
+    job: &lkjstr_core::engine::private_lists::Job,
+    data: String,
+) -> Result<String, &'static str> {
+    crypto::list(host, job, data).await
+}
 pub(super) fn sync(h: &mut Host) {
     lifetime::sync(h);
     signers::sync(h);

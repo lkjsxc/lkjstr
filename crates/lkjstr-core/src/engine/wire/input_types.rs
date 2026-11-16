@@ -89,6 +89,7 @@ pub enum Input {
     Open {
         sub: String,
         query: Box<Query>,
+        visible: Option<bool>,
     },
     Close {
         sub: String,

@@ -176,3 +176,13 @@ Bounds, atomic removal, conflicts and the Worker-scoped unlock limit are in [dm-
 - `Engine.zaps?` exposes finite quote/receipt helpers with explicit close/dispose ownership.
 - `ActWatch.zapSignal?` connects caller cancellation to invoice lifetime without an added control.
 - Protocol 9: `reading {sub,key}` carries one delivered reading anchor independently of retained-window bounds; null restores window-anchor fallback.
+
+## Protocol 10 private list additions (2026-11-16, integration candidate)
+
+- Add `Query.privateLists?` for visible, account-scoped external list-read opt-in.
+- Add `open.visible?` to make initial ordinary subscription visibility atomic.
+- Add `crypt.context?` with `{kind:'private-list',sub,event}` for purpose and view ownership.
+- Add `crypt.cancel {req}` to invalidate a queued or in-flight private-list signer request.
+- Add `SubState.privateLists?` with phase, pending/failed container counts and optional error.
+- Add `lists.retry {as}` to reset only this account's private-list refusal/capability failures.
+- Add `Account.privateLists?` to qualify unread policy, including unknown without admitted work.

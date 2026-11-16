@@ -40,7 +40,7 @@ impl Gate {
             clients.contains(&l.client)
                 && self.accounts.get(&l.account).is_some_and(|a| {
                     a.epoch == l.epoch
-                        && a.failure.is_none()
+                        && (a.failure.is_none() || l.list)
                         && l.read
                             .is_none_or(|n| a.reading.as_ref().is_some_and(|r| r.serial == n))
                 })
@@ -128,7 +128,32 @@ impl Gate {
         epoch: u64,
         read: Option<&Read>,
     ) -> Result<Lease, &'static str> {
-        self.allowed(account, epoch)?;
+        self.admit(account, client, epoch, read, false)
+    }
+    /// Share only the execution permit; list consent/refusal belongs to its coordinator.
+    pub fn begin_list(
+        &mut self,
+        account: &str,
+        client: u64,
+        epoch: u64,
+    ) -> Result<Lease, &'static str> {
+        self.admit(account, client, epoch, None, true)
+    }
+    fn admit(
+        &mut self,
+        account: &str,
+        client: u64,
+        epoch: u64,
+        read: Option<&Read>,
+        list: bool,
+    ) -> Result<Lease, &'static str> {
+        if list {
+            if self.accounts.get(account).is_none_or(|a| a.epoch != epoch) {
+                return Err("signer-missing");
+            }
+        } else {
+            self.allowed(account, epoch)?;
+        }
         if read.is_some_and(|r| {
             r.account != account || r.client != client || r.epoch != epoch || !self.current_read(r)
         }) {
@@ -143,6 +168,7 @@ impl Gate {
             client,
             epoch,
             read: read.map(|r| r.serial),
+            list,
         };
         self.calls.insert(
             lease.serial,
@@ -177,6 +203,9 @@ impl Gate {
         true
     }
     pub fn pause(&mut self, lease: &Lease, failure: Failure) -> bool {
+        if lease.list {
+            return false;
+        }
         if !self
             .calls
             .get(&lease.serial)
@@ -188,7 +217,8 @@ impl Gate {
             a.failure = Some(failure);
             a.reading = None;
         }
-        self.calls.retain(|_, c| c.lease.account != lease.account);
+        self.calls
+            .retain(|_, c| c.lease.account != lease.account || c.lease.list);
         true
     }
 }

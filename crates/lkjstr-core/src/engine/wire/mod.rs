@@ -17,6 +17,7 @@ mod output_helpers;
 mod people;
 mod previews;
 mod private_cache;
+mod private_lists;
 mod publish;
 pub mod queries;
 mod query_translate;
@@ -31,8 +32,8 @@ use serde::Deserialize;
 mod input_types;
 mod output_types;
 pub use input_types::Input;
-pub use output_types::{Failure, Output};
-pub const PROTOCOL_VERSION: u32 = 9;
+pub use output_types::{CryptContext, Failure, Output};
+pub const PROTOCOL_VERSION: u32 = 10;
 /// Adapter state is per transport client; the engine remains independent of pixels.
 #[derive(Default)]
 pub struct Session {
@@ -43,6 +44,7 @@ pub struct Session {
     pub queries: std::collections::BTreeMap<String, Query>,
     pub config: Config,
     notification_states: std::collections::BTreeMap<String, notification_evidence::Cached>,
+    private_states: std::collections::BTreeMap<String, private_lists::Cached>,
     timelines: std::collections::BTreeMap<String, timeline::Index>,
     timeline_turn: usize,
     return_keys: std::collections::BTreeMap<String, String>,

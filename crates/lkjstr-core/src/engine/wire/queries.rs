@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 pub struct Query {
     pub source: String,
+    pub private_lists: Option<bool>,
     pub account: Option<String>,
     pub pubkey: Option<String>,
     pub id: Option<String>,

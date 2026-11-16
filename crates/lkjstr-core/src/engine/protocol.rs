@@ -12,6 +12,11 @@ pub enum Input {
         sub: String,
         query: Query,
     },
+    OpenVisible {
+        sub: String,
+        query: Query,
+        visible: bool,
+    },
     Close {
         sub: String,
     },

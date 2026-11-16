@@ -15,6 +15,7 @@ impl Session {
         self.notification_state(sub.as_deref(), &mut output, engine);
         for out in &mut output {
             self.preview_output(out, engine);
+            self.private_output(out, engine);
         }
         output
     }

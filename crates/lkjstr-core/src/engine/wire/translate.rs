@@ -60,22 +60,37 @@ impl Session {
                 }
                 inputs
             }
-            Input::Open { sub, query } => {
+            Input::Open {
+                sub,
+                query,
+                visible,
+            } => {
                 if self.queries.len() >= 128 && !self.queries.contains_key(&sub) {
                     return Err((None, "subscription-limit"));
                 }
                 let converted = query.convert().ok_or((None, "unsupported"))?;
+                let visible = visible.unwrap_or(true) && !self.preview_hidden;
+                let visible_subs = self
+                    .timeline_visible
+                    .get_or_insert_with(|| self.queries.keys().cloned().collect());
+                if visible {
+                    visible_subs.insert(sub.clone());
+                } else {
+                    visible_subs.remove(&sub);
+                }
                 self.timelines.remove(&sub);
                 self.notification_states.remove(&sub);
                 self.queries.insert(sub.clone(), *query);
-                vec![p::Input::Open {
+                vec![p::Input::OpenVisible {
                     sub,
                     query: converted,
+                    visible,
                 }]
             }
             Input::Close { sub } => {
                 self.notification_states.remove(&sub);
                 self.queries.remove(&sub);
+                self.private_states.remove(&sub);
                 self.delivered.remove(&sub);
                 self.windows.remove(&sub);
                 self.preview_near.remove(&sub);

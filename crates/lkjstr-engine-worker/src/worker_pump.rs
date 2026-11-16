@@ -90,4 +90,5 @@ pub(super) fn pump(host: &Rc<RefCell<Host>>) {
     shared::expire(host);
     previews::pump_previews(host);
     direct_messages::pump(host);
+    private_lists::pump(host);
 }

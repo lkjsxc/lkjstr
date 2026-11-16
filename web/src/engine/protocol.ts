@@ -29,7 +29,8 @@
 /** 7: atomic private visibility, correlated upload cancellation and signer ownership. */
 /** 8: private conversation identities, display models, inbox lists and private draft storage. */
 /** 9: provider-authorized zaps, unpaid invoice intents and current reading hints. */
-export const PROTOCOL_VERSION = 9;
+/** 10: account-scoped private lists with owned signer cancellation. */
+export const PROTOCOL_VERSION = 10;
 
 /** Chosen by the interface, unique among its open subscriptions. */
 export type SubId = string;
@@ -74,6 +75,8 @@ export type NotificationType = 'mention' | 'reply' | 'repost' | 'reaction' | 'za
 
 /** What a subscription shows. Fields that do not apply to a source are ignored. */
 export type Query = {
+  /** Opt in to account-scoped external private-list reads; separate from DM consent. */
+  readonly privateLists?: boolean;
   readonly source: Source;
   /** The acting account (whose follows, mutes and own state apply). Absent: reading signed out. */
   readonly account?: Pubkey;
@@ -460,6 +463,12 @@ export type PatchOp =
 export type SubState = {
   /** Receipt/read evidence is independent of the relay lifecycle below. */
   readonly zapEvidence?: ZapEvidence;
+  readonly privateLists?: {
+    readonly phase: 'loading' | 'ready' | 'failed' | 'unsupported';
+    readonly pending: number;
+    readonly failed: number;
+    readonly error?: Failure['code'];
+  };
   /** `cache`: showing what the device has, relays still being asked. `live`: relays answered and it is following.
    * `done`: a finite list was read to its end. `failed`: nobody could be asked; `error` says why. */
   readonly phase: 'cache' | 'live' | 'done' | 'failed';
@@ -545,6 +554,7 @@ export type RelayEntry = { readonly url: string; readonly read: boolean; readonl
 /** Everything the reader can do. Every action acts as `as` and is answered by exactly one `result`. */
 export type Action =
   | { readonly a: 'zap.invoice'; readonly as: Pubkey; readonly intent: ZapInvoiceInput }
+  | { readonly a: 'lists.retry'; readonly as: Pubkey }
   /** Register a mounted private editor before allowing input; closed leases cannot hold a lock. */
   | {
       readonly a: 'dm.editor';
@@ -663,6 +673,13 @@ export type Failure = {
 };
 
 export type Account = {
+  /** Evidence for observed encrypted mutes used by the compatible unread count. Unknown does not prompt. */
+  readonly privateLists?: {
+    readonly phase: 'unknown' | 'loading' | 'ready' | 'failed' | 'unsupported';
+    readonly pending: number;
+    readonly failed: number;
+    readonly error?: Failure['code'];
+  };
   /** Observed, signature-verified kind-10050 inbox relays; absent while unknown. */
   readonly inbox?: readonly string[];
   readonly locked?: boolean;
@@ -766,7 +783,7 @@ export type ToEngine =
       readonly error?: 'signer-missing' | 'signer-refused';
     }
   | { readonly t: 'hint'; readonly hint: Hint }
-  | { readonly t: 'open'; readonly sub: SubId; readonly query: Query }
+  | { readonly t: 'open'; readonly sub: SubId; readonly query: Query; readonly visible?: boolean }
   | { readonly t: 'close'; readonly sub: SubId }
   /** Asks for the rows around `anchor`: up to `before` rows above it and `after` rows from it downwards (the
    * anchor row itself counts as the first of `after`). Answered by `rows`; replaces any earlier window. */
@@ -877,6 +894,7 @@ export type Timeline = {
 export type FromEngine =
   | { readonly t: 'zap.quote'; readonly req: ReqId; readonly quote: ZapQuote }
   | { readonly t: 'zap.receipts'; readonly req: ReqId; readonly page: ZapReceiptView }
+  | { readonly t: 'crypt.cancel'; readonly req: ReqId }
   /** Hold edits until release; acknowledge prepare only after encrypted writes have committed. */
   | {
       readonly t: 'dm.flush';
@@ -892,6 +910,11 @@ export type FromEngine =
       readonly peer: Pubkey;
       readonly operation: 'nip44.encrypt' | 'nip44.decrypt' | 'nip04.decrypt';
       readonly data: string;
+      readonly context?: {
+        readonly kind: 'private-list';
+        readonly sub: SubId;
+        readonly event: string;
+      };
     }
   | { readonly t: 'timeline'; readonly sub: SubId; readonly timeline: Timeline }
   // engine-added 2026-11-15: 4

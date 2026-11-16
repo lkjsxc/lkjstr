@@ -41,7 +41,8 @@ pub(super) fn load(host: &Rc<RefCell<Host>>) {
                     }
                     h.loaded = true;
                     for id in h.sessions.keys().copied().collect::<Vec<_>>() {
-                        accounts::ready(&h, id, matches!(h.scope, Sink::Shared { .. }));
+                        let shared = matches!(h.scope, Sink::Shared { .. });
+                        accounts::ready(&mut h, id, shared);
                     }
                     let queued = std::mem::take(&mut h.startup);
                     for (id, input) in queued {

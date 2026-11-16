@@ -27,6 +27,12 @@ pub(super) fn begin(
                 peer: call.peer.into(),
                 operation: call.operation.into(),
                 data: data.into(),
+                context: call.list.map(|job| {
+                    lkjstr_core::engine::wire::CryptContext::PrivateList {
+                        sub: job.sub.clone(),
+                        event: job.event.clone(),
+                    }
+                }),
             },
         );
     });

@@ -3,36 +3,12 @@ use super::*;
 impl Engine {
     pub fn input(&mut self, input: Input, now: u64) {
         match input {
-            Input::Open { sub, query } => {
-                self.discovery_paused = false;
-                if self.views.len() >= 128 && !self.views.contains_key(&sub) {
-                    self.error(Some(sub), "subscription-limit");
-                    return;
-                }
-                self.metrics.served_from_cache +=
-                    super::list_events::events(&self.store, &query, &self.private_lists)
-                        .len()
-                        .min(50) as u64;
-                self.views.insert(
-                    sub.clone(),
-                    View {
-                        query,
-                        anchor: None,
-                        reading: None,
-                        before: 0,
-                        after: 50,
-                        rows: vec![],
-                        visible: true,
-                        dirty: true,
-                        history: None,
-                        notification_history: None,
-                        at_bottom: false,
-                        source_exhausted: false,
-                    },
-                );
-                self.render(&sub, true);
-                self.replan(now);
-            }
+            Input::Open { sub, query } => self.open_view(sub, query, true, now),
+            Input::OpenVisible {
+                sub,
+                query,
+                visible,
+            } => self.open_view(sub, query, visible, now),
             Input::Close { sub } => {
                 self.views.remove(&sub);
                 self.replan(now);

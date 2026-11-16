@@ -53,6 +53,25 @@ impl Clients {
                 c.visible.insert(sub.clone());
                 Input::Open { sub, query }
             }
+            Input::OpenVisible {
+                sub,
+                query,
+                visible,
+            } => {
+                let sub = ns(sub);
+                let visible = visible && !c.page_hidden;
+                c.subs.insert(sub.clone());
+                if visible {
+                    c.visible.insert(sub.clone());
+                } else {
+                    c.visible.remove(&sub);
+                }
+                Input::OpenVisible {
+                    sub,
+                    query,
+                    visible,
+                }
+            }
             Input::Close { sub } => {
                 let sub = ns(sub);
                 c.subs.remove(&sub);

@@ -7,6 +7,9 @@ impl Deadline {
     pub fn new(now: u64) -> Self {
         Self(now.saturating_add(UPLOAD_BUDGET_MS))
     }
+    pub fn within(now: u64, budget: u64) -> Self {
+        Self(now.saturating_add(budget))
+    }
     /// Every discovery, signer, HTTP body and processing pause spends one budget.
     pub fn wait(self, now: u64, cap_ms: u32) -> Result<u32, &'static str> {
         let remaining = self.0.saturating_sub(now).min(u64::from(cap_ms)) as u32;

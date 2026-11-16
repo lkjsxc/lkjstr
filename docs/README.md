@@ -71,3 +71,5 @@ Engine (`crates/`):
 - [interface-dm.md](interface-dm.md): private messages: list, conversation, writing, inbox relays.
 
 - [relay-auth.md](relay-auth.md): scoped relay authentication and async identity races.
+
+- [private-lists.md](private-lists.md): account-scoped private reads, cached mute policy and signer lifetimes.

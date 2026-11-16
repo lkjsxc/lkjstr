@@ -7,6 +7,7 @@ pub(super) fn stop(h: &mut Host) {
     h.scope.close();
     zaps::stop(h);
     direct_messages::sync(h);
+    private_lists::sync(h);
     uploads::control::stop(h);
     h.accounts = Default::default();
     h.account_tasks.clear();
