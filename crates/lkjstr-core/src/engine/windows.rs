@@ -60,10 +60,12 @@ impl Engine {
                 at_bottom,
             });
         } else {
+            let present: std::collections::BTreeSet<_> =
+                items.iter().map(|row| row.id.as_str()).collect();
             let mut ops: Vec<_> = v
                 .rows
                 .iter()
-                .filter(|old| !items.iter().any(|r| r.id == old.id))
+                .filter(|old| !present.contains(old.id.as_str()))
                 .map(|r| Patch::Remove { id: r.id.clone() })
                 .collect();
             for (index, item) in items.iter().enumerate() {
