@@ -4,8 +4,8 @@
 
 Protect the durable account record when independent Worker graphs share one
 IndexedDB database. This correction adds no account surface, words or protocol.
-Focused native and production-Worker checks passed; the full release gates
-and additional actual IndexedDB boundary checks remain pending.
+Focused native, production-Worker and actual IndexedDB boundary checks passed.
+The full release gates remain pending.
 
 ## Observed old behavior
 
@@ -107,8 +107,31 @@ It observed zero page errors, external HTTP requests or sockets; all owned
 resources were reaped. The public ninth measurement was running independently;
 its source, assets, browser and collected data remained untouched.
 
-Schema blocking, late canceled opens, malformed present values, failed-boot
-request settlement and removal atomicity still need actual IndexedDB proofs.
-The full release gates are also pending. No test-only production export is
+The actual IndexedDB guard suite passed 105 assertions across 15 fresh contexts
+at 22:25:37 UTC in 33.733 seconds, load 1.55 / 1.61 / 1.73 to
+1.53 / 1.58 / 1.71. It covered schema blocking, late aborted upgrades and
+closed successes, present undefined/malformed records, a real read abort,
+failed boot including later shared clients, and removal conflict/commit/abort.
+Its report `tmp/account-guards-proof/try1/report.json` has SHA-256
+`d191bea4d95d1eb5e076092ddcfdb34da8f4f35bbcd2eda22c31a91f66f3b02f`.
+A source review then strengthened the shared fixture's Worker-error check to
+inspect its root owner. Only that case reran: 10 overlapping assertions passed
+at 22:28:40 UTC in 0.428 seconds, load 3.58 / 2.23 / 1.93. Its report is
+`tmp/account-guards-proof/shared-owner/report.json`, SHA-256
+`b524fdd22ce8e1058f48e9a286e44a21a27fd7d058bfcae49d2dd48427c7fb9b`.
+These are 105 guard assertions plus a strengthened overlapping case, not 115
+unique assertions. Both runs retained the same immutable production bytes,
+observed no outside requests/sockets or page errors, and reaped owned resources.
+
+The maintained `pnpm accounts:check` audits explicit current/older production
+packages then runs the race and guard helpers under separate fresh reports.
+It requires `LKJSTR_ACCOUNT_PACKAGE`, `LKJSTR_ACCOUNT_WASM_SHA256`,
+`LKJSTR_ACCOUNT_LOADER_SHA256` and the matching `LKJSTR_ACCOUNT_LEGACY_*`
+variables. Set a short owned `LKJSTR_TEST_TMPDIR`; `LKJSTR_CHROME` can pin the
+browser. `LKJSTR_ENGINE_REPORT` selects a fresh output directory. The wrapper
+has syntax/control-flow checks; the individual proof helpers have executed as
+recorded above. No Cargo build is implicit in this production-artifact command.
+
+The full release gates are pending. No test-only production export is
 introduced. This evidence does not claim global account reconciliation,
 physical memory zeroization in JavaScript, or an owner-account incident.
