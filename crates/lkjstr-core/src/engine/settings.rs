@@ -142,6 +142,18 @@ pub fn list_tags(event: &lkjstr_protocol::NostrEvent, private: &PrivateLists) ->
     }
     tags
 }
+/// A named list coordinate does not grant access to its owner's cached private tags.
+pub fn list_tags_for(
+    event: &lkjstr_protocol::NostrEvent,
+    private: &PrivateLists,
+    account: Option<&str>,
+) -> Vec<Vec<String>> {
+    if account == Some(event.pubkey.as_str()) {
+        list_tags(event, private)
+    } else {
+        event.tags.clone()
+    }
+}
 pub fn list_has(
     store: &crate::store::Store,
     private: &PrivateLists,

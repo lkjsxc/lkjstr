@@ -83,7 +83,7 @@ impl Session {
             "notifications"=>super::notifications::notifications(q,e),
             "bookmarks"=>converted.as_ref().map(|q|crate::engine::list_events::events(store,q,&e.private_lists).iter().map(|event|super::note::note(&rows::row_with_lists(store,event,q.account.as_deref(),0,&e.private_lists),store,q.account.as_deref())).collect()).unwrap_or_default(),
             "list"=>{
-                q.convert().map(|converted|query::events(store,&converted).into_iter().next().map(|event|e.list_tags(&event).iter().filter(|t|t.first().is_some_and(|k|k=="p")).filter_map(|t|t.get(1)).filter(|p|lkjstr_protocol::is_pubkey(p)).map(|p|person(e,p,q.account.as_deref(), weights.person(p))).collect()).unwrap_or_default()).unwrap_or_default()
+                q.convert().map(|converted|query::events(store,&converted).into_iter().next().map(|event|crate::engine::settings::list_tags_for(&event,&e.private_lists,q.account.as_deref()).iter().filter(|t|t.first().is_some_and(|k|k=="p")).filter_map(|t|t.get(1)).filter(|p|lkjstr_protocol::is_pubkey(p)).map(|p|person(e,p,q.account.as_deref(), weights.person(p))).collect()).unwrap_or_default()).unwrap_or_default()
             }
             _ => converted.as_ref().map(|converted| {
                 query::events(store, converted).into_iter()

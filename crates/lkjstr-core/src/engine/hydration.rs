@@ -72,7 +72,7 @@ pub(super) fn authors(
                 .first()
                 .map(|e| {
                     let mut seen = BTreeSet::new();
-                    super::settings::list_tags(e, private)
+                    super::settings::list_tags_for(e, private, view.query.account.as_deref())
                         .into_iter()
                         .filter(|t| t.first().is_some_and(|k| k == "p"))
                         .filter_map(|t| t.get(1).cloned())
