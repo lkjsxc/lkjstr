@@ -144,12 +144,14 @@ pub(super) fn pump_accounts(host: &Rc<RefCell<Host>>) {
             }
             match result {
                 Ok(exported) => {
+                    let private_revoked = private_cache::decreased(&h.accounts, &next);
                     h.accounts = next;
                     relay_auth::sync(&mut h);
                     direct_messages::sync(&mut h);
                     uploads::control::prune(&mut h);
                     h.engine.seen = h.accounts.seen.clone();
                     h.engine.notification_ties = h.accounts.notification_ties.clone();
+                    private_cache::revoke(&mut h, private_revoked);
                     h.account_revision = u64::MAX;
                     h.engine.invalidate();
                     h.apply_relay_owner(false);

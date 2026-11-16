@@ -42,6 +42,11 @@ impl Engine {
                 before,
                 after,
             } => {
+                let account = self
+                    .views
+                    .get(&sub)
+                    .and_then(|v| v.query.account.as_deref());
+                let anchor = anchor.filter(|key| self.accepts_private_anchor(account, key));
                 if let Some(v) = self.views.get_mut(&sub) {
                     v.anchor = anchor;
                     v.before = before.min(6000);

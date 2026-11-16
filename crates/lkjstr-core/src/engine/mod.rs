@@ -22,6 +22,7 @@ pub mod metrics;
 pub mod network;
 mod network_limits;
 pub mod preview;
+mod private_cache;
 pub mod protocol;
 mod publication_discovery;
 pub mod publication_plan;

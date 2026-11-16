@@ -30,6 +30,8 @@ mod effects;
 mod keys;
 #[path = "worker_preview.rs"]
 mod previews;
+#[path = "worker_private_cache.rs"]
+mod private_cache;
 #[path = "worker_auth.rs"]
 mod relay_auth;
 #[path = "worker_relays.rs"]

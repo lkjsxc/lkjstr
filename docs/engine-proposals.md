@@ -146,3 +146,7 @@ and [interface-needs.md](interface-needs.md) for contracts and remaining design.
 - `FromEngine.sign.actionReq?` identifies the originating upload so cancelled authorization cannot start or consume a later signer request.
 - `Engine.dm.open(query,receive,{visible?})` supplies the optional initial private visibility through the existing client API.
 - `ActWatch.uploadSignal?` connects the existing attachment removal/clear/dispose controls to upload cancellation.
+
+Private-list revocation adds no wire message: successful lock/remove commits
+clear unauthorized decrypted list policy and replace derived row caches before
+account/result output. Other authorized accounts and query/window intent remain.

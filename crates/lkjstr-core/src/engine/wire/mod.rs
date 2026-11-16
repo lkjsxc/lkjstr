@@ -13,6 +13,7 @@ mod output_diff;
 mod output_helpers;
 mod people;
 mod previews;
+mod private_cache;
 mod publish;
 pub mod queries;
 mod query_translate;

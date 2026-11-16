@@ -86,6 +86,7 @@ impl Session {
                 if !self.queries.contains_key(&sub) {
                     return Err((None, "unknown-subscription"));
                 }
+                let account = self.queries.get(&sub).and_then(|q| q.account.as_deref());
                 let anchor = match anchor {
                     Anchor::Top(_) => None,
                     Anchor::Key { key } => Some(key),
@@ -94,7 +95,9 @@ impl Session {
                         offset,
                         return_key,
                     } => {
-                        if let Some(key) = return_key {
+                        if let Some(key) =
+                            return_key.filter(|key| engine.accepts_private_anchor(account, key))
+                        {
                             self.return_keys.insert(sub.clone(), key);
                         }
                         Some(
@@ -105,6 +108,7 @@ impl Session {
                         )
                     }
                 };
+                let anchor = anchor.filter(|key| engine.accepts_private_anchor(account, key));
                 let mut before = if retain_above { 6000 } else { before.min(800) };
                 if self
                     .queries
