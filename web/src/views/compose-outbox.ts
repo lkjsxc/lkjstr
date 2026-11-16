@@ -49,7 +49,9 @@ export function createChannelOutbox(
   const currentBox = box;
   const { id, drafts, busy, listeners } = currentBox;
   const release = (): void => {
-    if (!busy.size && !listeners.size && boxes.get(key) === box) boxes.delete(key);
+    if (busy.size || listeners.size) return;
+    currentBox.deliveryWatch?.abort();
+    if (boxes.get(key) === box) boxes.delete(key);
   };
   const el = h('div', { class: 'outbox' });
   const notify = (): void => {
@@ -154,7 +156,6 @@ export function createChannelOutbox(
       else show([], true, r.error ?? { code: 'internal' });
       notify();
     }
-    if (!listeners.size) watch.abort();
   }
   const watch = { draw, delivery };
   listeners.add(watch);
@@ -190,7 +191,6 @@ export function createChannelOutbox(
     },
     dispose() {
       listeners.delete(watch);
-      if (!listeners.size && !busy.size) currentBox.deliveryWatch?.abort();
       release();
     },
   };

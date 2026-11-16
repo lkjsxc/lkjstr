@@ -72,8 +72,9 @@ Seams worth knowing inside `src/views/`:
 - `act {req, action}` with a `result`, plus `progress` and per-relay
   `delivery` for publishes and uploads. A publication result can settle before
   the remaining relay answers. The composer retains delivery callbacks while its
-  result is displayed; unsettled sends can survive a remount. Optional
-  `hint.deliveryWatches` names retained action requests, at most 128 per client.
+  result is displayed; unsettled sends can survive a remount. When the last send
+  settles without a mounted composer, the current delivery watch is released.
+  Optional `hint.deliveryWatches` names retained action requests, at most 128 per client.
 - `sign` from the engine when the account uses a browser extension, answered
   with `signed` (NIP-07 exists only on the main thread). `getPublicKey` is
   answered by the real transport itself, and by `client.ts` for the mock.
