@@ -11,6 +11,7 @@ export TMPDIR="${LKJSTR_ENGINE_TMPDIR:-$PWD/tmp/temp}"
 mkdir -p "$TMPDIR"
 node --test scripts/engine-transport-private.test.mjs scripts/engine-transport-history.test.mjs scripts/engine-transport-zaps.test.mjs scripts/engine-transport-reading.test.mjs scripts/engine-transport-lists.test.mjs > tmp/engine-transport.log 2>&1 || { tail -20 tmp/engine-transport.log; exit 1; }
 node --test scripts/real-hour-test.mjs scripts/real-hour-network-test.mjs scripts/real-hour-owned-test.mjs > tmp/real-hour-observer.log 2>&1 || { tail -20 tmp/real-hour-observer.log; exit 1; }
+node --test scripts/engine-contract.test.mjs > tmp/engine-contract-tests.log 2>&1 || { tail -20 tmp/engine-contract-tests.log; exit 1; }
 sh scripts/engine-contract-prepare.sh > tmp/engine-contract.log 2>&1 || { tail -20 tmp/engine-contract.log; exit 1; }
 cargo build -q -p lkjstr-nips --example zap-fixtures > tmp/zap-fixtures-build.log 2>&1 || { tail -20 tmp/zap-fixtures-build.log; exit 1; }
 LKJSTR_ENGINE_HARNESS=1 sh scripts/engine-build.sh > tmp/engine-build.log 2>&1 || { tail -30 tmp/engine-build.log; exit 1; }
@@ -27,8 +28,12 @@ LKJSTR_ENGINE_REPORT=tmp/engine-stop node scripts/engine-stop.mjs > tmp/engine-s
   exit 1
 }
 LKJSTR_ENGINE_REPORT=tmp/engine-dm-sign-deadlines node scripts/engine-dm-sign-deadline-harness.mjs > tmp/engine-dm-sign-deadlines.log 2>&1 || { tail -20 tmp/engine-dm-sign-deadlines.log; exit 1; }
+mkdir -p tmp/engine-harness
+rm -f tmp/engine-harness/report.json
 node scripts/engine-harness.mjs > tmp/engine-harness.log 2>&1 || {
-  node -e 'const r=require("./tmp/engine-harness/report.json");console.error(r.checks.failure??r.errors)'; exit 1;
+  node -e 'try { const r=JSON.parse(require("fs").readFileSync("tmp/engine-harness/report.json","utf8")); console.error(String(r.checks?.failure??JSON.stringify(r.errors)).slice(0,400)); } catch { console.error("No completed main harness report; original log follows."); }'
+  tail -c 4000 tmp/engine-harness.log >&2 || true
+  exit 1
 }
 node scripts/engine-profile-latency.mjs > tmp/engine-profile-latency.log 2>&1 || { tail -20 tmp/engine-profile-latency.log; exit 1; }
 echo 'ok engine-conformance'

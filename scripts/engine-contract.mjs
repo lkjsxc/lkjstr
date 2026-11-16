@@ -12,6 +12,15 @@ function shape(node) {
     if (!target) throw new Error(`unhandled type ${node.getText(file)}`);
     return shape(target);
   }
+  if (ts.isIndexedAccessTypeNode(node)) {
+    const index = node.indexType;
+    // Only one short literal property of a known object; never widen to unknown.
+    if (ts.isLiteralTypeNode(index) && ts.isStringLiteral(index.literal) && index.literal.text.length <= 256) {
+      const property = Object.getOwnPropertyDescriptor(shape(node.objectType).object ?? {}, index.literal.text)?.value;
+      if (property && !property.optional) return property.shape;
+    }
+    throw new Error(`unhandled indexed type ${node.getText(file)}`);
+  }
   if (ts.isUnionTypeNode(node)) return { union: node.types.map(shape) };
   if (ts.isIntersectionTypeNode(node)) return { intersection: node.types.map(shape) };
   if (ts.isArrayTypeNode(node)) return { array: shape(node.elementType) };
