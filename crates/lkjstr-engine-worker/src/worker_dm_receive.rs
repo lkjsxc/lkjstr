@@ -50,71 +50,74 @@ pub(super) fn pump(host: &Rc<RefCell<Host>>) {
                 revision
             };
         }
-        while h.dm.receiving < 2 {
-            let Some((account, event)) = h.dm.queue.pop_front() else {
+        while h.dm.signers.gate.reads().len() < 2 {
+            let Some(index) =
+                h.dm.queue
+                    .iter()
+                    .position(|(a, _)| !h.dm.signers.gate.reading(a))
+            else {
+                break;
+            };
+            let Some((account, event)) = h.dm.queue.remove(index) else {
                 break;
             };
             let Some(client) = h.dm.client(&account) else {
                 h.dm.attempted.remove(&(account, event));
                 continue;
             };
-            if h.dm.errors.contains_key(&account) {
-                continue;
-            }
             let Some(event) = h.engine.store.get(&event) else {
                 continue;
             };
             let Ok(epoch) = lifetime::lease(&h, client, &account) else {
                 continue;
             };
-            h.dm.receiving += 1;
-            *h.dm.decrypting.entry(account.clone()).or_default() += 1;
-            jobs.push((client, account, event, epoch));
+            let Ok(read) =
+                h.dm.signers
+                    .gate
+                    .begin_read(&account, client, epoch, &event.id)
+            else {
+                h.dm.attempted.remove(&(account, event.id.clone()));
+                h.dm.last_scan = u64::MAX;
+                continue;
+            };
+            jobs.push((read, event));
         }
     }
-    for (client, account, event, epoch) in jobs {
+    for (read, event) in jobs {
         let host = host.clone();
         wasm_bindgen_futures::spawn_local(async move {
-            let outcome = decrypt(&host, client, &account, &event, epoch).await;
+            let outcome = decrypt(&host, &read, &event).await;
             let mut h = host.borrow_mut();
-            h.dm.receiving = h.dm.receiving.saturating_sub(1);
-            if let Some(n) = h.dm.decrypting.get_mut(&account) {
-                *n = n.saturating_sub(1);
+            if signers::check_read(&h, &read).is_err() {
+                return; // Revocation already released this identity; never touch a replacement.
             }
-            h.dm.decrypting.retain(|_, n| *n > 0);
-            if h.stopped
-                || lifetime::check(&h, client, &account, epoch).is_err()
-                || h.dm.client(&account).is_none()
-            {
-                h.dm.attempted.remove(&(account, event.id.clone()));
-                return;
-            }
+            h.dm.signers.gate.finish_read(&read);
+            let account = read.account();
             match outcome {
                 Ok(Decoded::Modern(rumor)) => {
-                    if h.dm.inbox.insert(&account, rumor).is_err() {
-                        let count = h.dm.failures.entry(account.clone()).or_default();
+                    if h.dm.inbox.insert(account, rumor).is_err() {
+                        let count = h.dm.failures.entry(account.into()).or_default();
                         *count = count.saturating_add(1);
                     }
                 }
                 Ok(Decoded::Legacy(text)) => {
                     let inserted = dm::routing::nips_event(&event)
-                        .and_then(|e| h.dm.inbox.insert_legacy(&account, &e, text));
+                        .and_then(|e| h.dm.inbox.insert_legacy(account, &e, text));
                     if inserted.is_err() {
-                        let count = h.dm.failures.entry(account.clone()).or_default();
+                        let count = h.dm.failures.entry(account.into()).or_default();
                         *count = count.saturating_add(1);
                     }
                 }
-                Err(code)
-                    if matches!(code, "signer-missing" | "signer-refused" | "unsupported") =>
-                {
-                    h.dm.errors.insert(account.clone(), code.into());
-                    h.dm.attempted.remove(&(account, event.id.clone()));
+                Err("rate-limited" | "too-large" | "offline") => {
+                    h.dm.attempted.remove(&(account.into(), event.id.clone()));
+                    h.dm.last_scan = u64::MAX;
                 }
                 Err(_) => {
-                    let count = h.dm.failures.entry(account).or_default();
+                    let count = h.dm.failures.entry(account.into()).or_default();
                     *count = count.saturating_add(1);
                 }
             }
+            h.dm.next_emit = 0;
         });
     }
 }
@@ -124,19 +127,18 @@ enum Decoded {
 }
 async fn decrypt(
     host: &Rc<RefCell<Host>>,
-    client: u64,
-    account: &str,
+    read: &dm::signers::Read,
     event: &lkjstr_protocol::NostrEvent,
-    epoch: u64,
 ) -> Result<Decoded, &'static str> {
+    use lkjstr_core::engine::accounts::secret::SecretText;
     let event = dm::routing::nips_event(event)?;
     let deadline = Deadline::new(uploads::clock());
+    let account = read.account();
     if event.data.kind == 4 {
         let peer = lkjstr_nips::nip04::peer(&event, account).map_err(|_| "rejected")?;
-        return crypto::crypt(
+        return crypto::read(
             host,
-            client,
-            account,
+            read,
             &peer,
             "nip04.decrypt",
             event.data.content,
@@ -146,32 +148,31 @@ async fn decrypt(
         .map(Decoded::Legacy);
     }
     lkjstr_nips::gift_external::outer(&event, account).map_err(|_| "rejected")?;
-    let text = crypto::crypt(
-        host,
-        client,
-        account,
-        &event.data.pubkey,
-        "nip44.decrypt",
-        event.data.content,
-        deadline,
-    )
-    .await?;
-    lifetime::check(&host.borrow(), client, account, epoch)?;
-    if host.borrow().dm.client(account).is_none() {
-        return Err("offline");
-    }
+    let text = SecretText::new(
+        crypto::read(
+            host,
+            read,
+            &event.data.pubkey,
+            "nip44.decrypt",
+            event.data.content,
+            deadline,
+        )
+        .await?,
+    );
+    signers::check_read(&host.borrow(), read)?;
     let seal = lkjstr_nips::gift_external::seal(&text).map_err(|_| "rejected")?;
-    let text = crypto::crypt(
-        host,
-        client,
-        account,
-        &seal.data.pubkey,
-        "nip44.decrypt",
-        seal.data.content.clone(),
-        deadline,
-    )
-    .await?;
-    lifetime::check(&host.borrow(), client, account, epoch)?;
+    let text = SecretText::new(
+        crypto::read(
+            host,
+            read,
+            &seal.data.pubkey,
+            "nip44.decrypt",
+            seal.data.content.clone(),
+            deadline,
+        )
+        .await?,
+    );
+    signers::check_read(&host.borrow(), read)?;
     lkjstr_nips::gift_external::rumor(&seal, &text, account)
         .map(Decoded::Modern)
         .map_err(|_| "rejected")

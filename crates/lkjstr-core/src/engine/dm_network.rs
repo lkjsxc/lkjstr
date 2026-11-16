@@ -13,6 +13,9 @@ impl Engine {
     }
     /// Advance only the current, completed full page, preserving timestamp ties.
     pub fn dm_older(&self, account: &str, cursors: &mut Cursors) -> bool {
+        if self.dm_verifying(account) {
+            return false;
+        }
         let modern = format!("~dm:{account}");
         let legacy = format!("~dm-legacy:{account}");
         let mut next = BTreeMap::new();
@@ -49,6 +52,7 @@ impl Engine {
         changed
     }
     pub fn dm_history_more(&self, account: &str, cursors: &Cursors) -> bool {
+        let verifying = self.dm_verifying(account);
         let modern = format!("~dm:{account}");
         let legacy = format!("~dm-legacy:{account}");
         self.network.requests.values().any(|r| {
@@ -60,7 +64,7 @@ impl Engine {
                 return false;
             };
             r.page_filter.until == cursors.get(&(account.into(), route.into())).copied()
-                && (!r.page_eose || r.received.len() >= r.page_limit)
+                && (verifying || !r.page_eose || r.received.len() >= r.page_limit)
         })
     }
     pub fn dm_publishable(&self, ids: &[String]) -> bool {
@@ -72,6 +76,9 @@ impl Engine {
     }
     /// Empty completion, unavailable transport and pending work remain distinguishable.
     pub fn dm_phase(&self, account: &str) -> (&'static str, Option<&'static str>) {
+        if self.dm_verifying(account) {
+            return ("loading", None);
+        }
         if self.store.replaceable(account, 10050).is_none() {
             if self.network.list_loaded(&self.store, account, 10050) {
                 return ("unsupported", Some("not-found"));
@@ -87,6 +94,22 @@ impl Engine {
             return ("unsupported", Some(code));
         }
         self.dm_read_phase(&format!("~dm:{account}"))
+    }
+    /// Raw EOSE cannot discharge this account's queued envelopes or inbox list.
+    /// Other accounts and ordinary public traffic do not hold private history.
+    fn dm_verifying(&self, account: &str) -> bool {
+        self.network.verifying
+            && self.queue.iter().any(|(_, event)| match event.kind {
+                10050 => event.pubkey == account,
+                4 | 1059 => {
+                    (event.kind == 4 && event.pubkey == account)
+                        || event.tags.iter().any(|tag| {
+                            tag.first().is_some_and(|name| name == "p")
+                                && tag.get(1).is_some_and(|peer| peer == account)
+                        })
+                }
+                _ => false,
+            })
     }
     fn dm_read_phase(&self, sub: &str) -> (&'static str, Option<&'static str>) {
         let requests: Vec<_> = self

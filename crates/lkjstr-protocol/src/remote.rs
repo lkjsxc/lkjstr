@@ -78,6 +78,21 @@ impl Remote {
         .ok()
     }
     pub fn response(&self, event: &NostrEvent, id: &str) -> Option<Result<String, &'static str>> {
+        self.response_mode(event, id, false)
+    }
+    pub fn response_private(
+        &self,
+        event: &NostrEvent,
+        id: &str,
+    ) -> Option<Result<String, &'static str>> {
+        self.response_mode(event, id, true)
+    }
+    fn response_mode(
+        &self,
+        event: &NostrEvent,
+        id: &str,
+        private: bool,
+    ) -> Option<Result<String, &'static str>> {
         if event.kind != 24133
             || event.pubkey != self.peer
             || !matches!(p::verify_event(event), p::VerificationResult::Ok(_))
@@ -94,7 +109,13 @@ impl Remote {
             return None;
         }
         if !value["error"].is_null() {
-            return Some(Err("signer-refused"));
+            return Some(Err(
+                if private && value["error"].as_str() == Some("unsupported") {
+                    "unsupported"
+                } else {
+                    "signer-refused"
+                },
+            ));
         }
         Some(
             value["result"]

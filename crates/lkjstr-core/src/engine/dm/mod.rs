@@ -1,13 +1,17 @@
 //! Account-isolated, bounded private messages; plaintext is never in the event store.
+pub mod delivery;
+pub mod drafts;
+pub mod editors;
 mod projection;
 pub mod routing;
 pub mod types;
+mod view;
 use lkjstr_nips::{
     dm,
     event::{Event, Rumor, unique},
 };
 use std::collections::{BTreeMap, BTreeSet};
-pub use types::{Conversation, Draft, Mark, Message, Query, Snapshot};
+pub use types::{Conversation, Draft, Emoji, Mark, Message, Query, Reply, Snapshot};
 pub const MAX_MESSAGES: usize = 8000;
 pub const MAX_TEXT: usize = 16 * 1024;
 pub const MAX_PARTICIPANTS: usize = 32;
@@ -38,7 +42,7 @@ pub fn draft(account: &str, input: &Draft, now: u64) -> Result<Rumor, &'static s
     {
         return Err("rejected");
     }
-    dm::message(
+    let mut event = dm::message(
         account.into(),
         &input.recipients,
         &input.text,
@@ -46,7 +50,35 @@ pub fn draft(account: &str, input: &Draft, now: u64) -> Result<Rumor, &'static s
         input.reply_to.as_deref(),
         input.subject.as_deref(),
     )
-    .map_err(|_| "rejected")
+    .map_err(|_| "rejected")?
+    .data;
+    if let Some(emoji) = &input.emoji {
+        if emoji.len() > 64
+            || emoji
+                .iter()
+                .map(|e| e.code.len() + e.url.len())
+                .sum::<usize>()
+                > 16384
+        {
+            return Err("too-large");
+        }
+        let mut seen = BTreeSet::new();
+        for e in emoji {
+            if e.code.len() > 64
+                || e.url.len() > 2048
+                || !lkjstr_protocol::valid_custom_emoji_shortcode(&e.code)
+                || !lkjstr_protocol::valid_custom_emoji_url(&e.url)
+            {
+                return Err("rejected");
+            }
+            if input.text.contains(&format!(":{}:", e.code)) && seen.insert(&e.code) {
+                event
+                    .tags
+                    .push(vec!["emoji".into(), e.code.clone(), e.url.clone()]);
+            }
+        }
+    }
+    event.rumor().map_err(|_| "rejected")
 }
 impl Inbox {
     /// Accept only a rumor authenticated by the signature-bound seal pipeline.
@@ -58,6 +90,7 @@ impl Inbox {
         {
             return Err("rejected");
         }
+        let segments = view::segments(&rumor.data.content, &rumor.data.tags);
         let message = Message {
             id: rumor.id,
             conversation: conversation(&peers),
@@ -73,6 +106,8 @@ impl Inbox {
                 .map(str::to_owned),
             legacy: false,
             unread: false,
+            segments: Some(segments),
+            reply: None,
         };
         self.insert_message(account, message)
     }
@@ -88,6 +123,7 @@ impl Inbox {
             return Err("too-large");
         }
         let peers = BTreeSet::from([account.to_owned(), peer]);
+        let segments = view::segments(&text, &event.data.tags);
         let message = Message {
             id: event.id.clone(),
             conversation: conversation(&peers),
@@ -101,6 +137,8 @@ impl Inbox {
             subject: None,
             legacy: true,
             unread: false,
+            segments: Some(segments),
+            reply: None,
         };
         self.insert_message(account, message)
     }
@@ -181,3 +219,5 @@ impl Inbox {
         Ok(())
     }
 }
+
+pub mod signers;

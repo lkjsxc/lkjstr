@@ -7,16 +7,28 @@ use std::collections::BTreeSet;
 pub struct Query {
     pub account: String,
     pub conversation: Option<String>,
+    pub participants: Option<Vec<String>>,
     pub before: Option<String>,
     pub limit: Option<usize>,
+    #[serde(default)]
+    pub unread_only: bool,
 }
-#[derive(Clone, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Draft {
     pub recipients: Vec<String>,
     pub text: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub reply_to: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub subject: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub emoji: Option<Vec<Emoji>>,
+}
+#[derive(Clone, Serialize, Deserialize)]
+pub struct Emoji {
+    pub code: String,
+    pub url: String,
 }
 #[derive(Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -31,10 +43,22 @@ pub struct Message {
     pub subject: Option<String>,
     pub legacy: bool,
     pub unread: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub segments: Option<Vec<serde_json::Value>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub reply: Option<Reply>,
+}
+#[derive(Clone, Serialize)]
+pub struct Reply {
+    pub id: String,
+    pub author: String,
+    pub excerpt: String,
 }
 #[derive(Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Conversation {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub recent_authors: Option<Vec<String>>,
     pub key: String,
     pub participants: Vec<String>,
     pub last: Message,
@@ -48,6 +72,14 @@ pub struct Snapshot {
     pub messages: Vec<Message>,
     pub more: bool,
     pub undecryptable: usize,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub conversation: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub people: Option<Vec<serde_json::Value>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub blocked: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub unread: Option<usize>,
     pub phase: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub error: Option<String>,

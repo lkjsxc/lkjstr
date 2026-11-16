@@ -1,9 +1,14 @@
 // The test double's private stream is separate from its public note world.
 
-import type { DmMessage, DmQuery, DmSnapshot, ToEngine } from '../protocol.ts';
+import type { DmMessage, DmQuery, ToEngine } from '../protocol.ts';
+import { createMockPrivateDrafts } from './dm-drafts.ts';
+import { createMockDmEditors } from './dm-editors.ts';
+import { privateSnapshot } from './dm-view.ts';
 import type { Core } from './engine.ts';
 export function createPrivateMock(core: Core) {
   let serial = 0;
+  const drafts = createMockPrivateDrafts(core);
+  const editors = createMockDmEditors(core, () => refresh());
   const subscriptions = new Map<string, DmQuery>(); // <=32 private views
   const messages: DmMessage[] = []; // <=2000 mock messages
   const seen = new Set<string>(); // <=2000 messages x32 participants
@@ -36,50 +41,17 @@ export function createPrivateMock(core: Core) {
   };
   const emit = (sub: string, query: DmQuery, forced?: string): void => {
     if (!forced && (pageHidden || hidden.has(sub))) return;
-    const error =
-      forced ?? access(query) ?? (!inboxes.has(query.account) ? 'not-found' : undefined);
-    const rows = error
-      ? []
-      : messages
-          .filter((m) => m.participants.includes(query.account))
-          .map((m) => ({
-            ...m,
-            unread: m.author !== query.account && !seen.has(query.account + ':' + m.id),
-          }))
-          .sort((a, b) => b.at - a.at || b.id.localeCompare(a.id));
-    const conversations: DmSnapshot['conversations'][number][] = [];
-    for (const message of rows) {
-      let conversation = conversations.find((c) => c.key === message.conversation);
-      if (!conversation) {
-        conversation = {
-          key: message.conversation,
-          participants: message.participants,
-          last: message,
-          unread: 0,
-        };
-        conversations.push(conversation);
-      }
+    const owner = core.who.list().find((account) => account.author.pubkey === query.account);
+    if (owner && owner.inbox === undefined && !inboxes.has(query.account)) {
+      owner.inbox = [];
+      core.accounts();
     }
-    const selected = rows.filter((m) => m.conversation === query.conversation);
-    const start = query.before
-      ? Math.max(0, selected.findIndex((m) => m.id === query.before) + 1)
-      : 0;
-    const limit = Math.max(1, Math.min(200, query.limit ?? 100));
+    const error =
+      forced ?? access(query) ?? (!inboxes.get(query.account)?.length ? 'not-found' : undefined);
     core.post({
       t: 'dm',
       sub,
-      snapshot: {
-        account: query.account,
-        conversations: conversations.slice(0, 200).map((c) => ({
-          ...c,
-          unread: rows.filter((m) => m.conversation === c.key && m.unread).length,
-        })),
-        messages: selected.slice(start, start + limit),
-        more: selected.length > start + limit,
-        undecryptable: 0,
-        phase: error === 'not-found' ? 'unsupported' : error ? 'failed' : 'live',
-        ...(error ? { error } : {}),
-      },
+      snapshot: privateSnapshot({ query, rows: messages, seen, inboxes, error }),
     });
   };
   const refresh = () => {
@@ -87,6 +59,7 @@ export function createPrivateMock(core: Core) {
   };
   return {
     handle(msg: ToEngine): boolean {
+      if (editors.handle(msg) || drafts.handle(msg)) return true;
       if (msg.t === 'hint') {
         const wasHidden = pageHidden;
         pageHidden = msg.hint.pageHidden;
@@ -112,10 +85,24 @@ export function createPrivateMock(core: Core) {
           emit(msg.sub, msg.query, 'too-large');
           return true;
         }
-        subscriptions.set(msg.sub, msg.query);
+        const participants = msg.query.participants
+          ? [...new Set([msg.query.account, ...msg.query.participants])].sort()
+          : undefined;
+        if (
+          participants &&
+          (participants.length < 2 ||
+            participants.length > 32 ||
+            participants.some((key) => !/^[0-9a-f]{64}$/.test(key)))
+        ) {
+          emit(msg.sub, msg.query, 'rejected');
+          return true;
+        }
+        const conversation = participants ? room(participants) : msg.query.conversation;
+        const query = { ...msg.query, ...(participants ? { participants, conversation } : {}) };
+        subscriptions.set(msg.sub, query);
         if (msg.visible === false) hidden.add(msg.sub);
         else hidden.delete(msg.sub);
-        emit(msg.sub, msg.query);
+        emit(msg.sub, subscriptions.get(msg.sub) ?? msg.query);
         return true;
       }
       if (msg.t === 'dm.close') {
@@ -162,7 +149,7 @@ export function createPrivateMock(core: Core) {
           return true;
         }
         const peers = [...new Set([a.as, ...a.draft.recipients])].sort();
-        if (peers.some((p) => !inboxes.has(p))) {
+        if (peers.some((p) => !inboxes.get(p)?.length)) {
           core.post({ t: 'result', req: msg.req, ok: false, error: { code: 'not-found' } });
           return true;
         }
@@ -186,7 +173,13 @@ export function createPrivateMock(core: Core) {
           const retained = new Set(messages.map((m) => m.conversation));
           for (const [peers, key] of rooms) if (!retained.has(key)) rooms.delete(peers);
         }
-        core.post({ t: 'result', req: msg.req, ok: true, id });
+        core.post({
+          t: 'result',
+          req: msg.req,
+          ok: true,
+          id,
+          dmDelivery: { accepted: peers.length, total: peers.length },
+        });
       } else if (a.a === 'dm.seen') {
         if (
           !messages.some((m) => m.conversation === a.conversation && m.participants.includes(a.as))
@@ -199,11 +192,13 @@ export function createPrivateMock(core: Core) {
             seen.add(a.as + ':' + m.id);
         core.post({ t: 'result', req: msg.req, ok: true });
       } else {
-        const valid =
-          a.relays.length > 0 &&
-          a.relays.length <= 8 &&
-          a.relays.every((url) => /^wss?:\/\/[^/]+/.test(url));
-        if (valid) inboxes.set(a.as, [...a.relays]);
+        const valid = a.relays.length <= 8 && a.relays.every((url) => /^wss?:\/\/[^/]+/.test(url));
+        if (valid) {
+          inboxes.set(a.as, [...a.relays]);
+          const owner = core.who.list().find((account) => account.author.pubkey === a.as);
+          if (owner) owner.inbox = [...a.relays];
+          core.accounts();
+        }
         core.post({
           t: 'result',
           req: msg.req,
@@ -215,6 +210,8 @@ export function createPrivateMock(core: Core) {
       return true;
     },
     dispose() {
+      editors.dispose();
+      drafts.dispose();
       subscriptions.clear();
       messages.length = 0;
       seen.clear();

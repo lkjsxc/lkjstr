@@ -25,13 +25,13 @@ import { createInterface } from 'node:readline';
 const root = resolve(process.env.LKJSTR_ENGINE_PKG ?? 'tmp/engine-pkg'), out = resolve(process.env.LKJSTR_ENGINE_REPORT ?? 'tmp/engine-harness');
 const run = { startedAt: new Date().toISOString(), loadStart: loadavg(), package: root, diagnosticFixtureClock: process.env.LKJSTR_CONTINUITY_DIAGNOSTIC==='1', wasmSha256: createHash('sha256').update(await readFile(join(root, 'lkjstr_engine_bg.wasm'))).digest('hex') };let continuityEvidence;
 await mkdir(out, { recursive: true });
-const boot = `let uploadClock=0;const realNow=performance.now.bind(performance);Object.defineProperty(performance,'now',{value:()=>realNow()+uploadClock});import init,{start} from './lkjstr_engine.js'; const queued=[];self.onmessage=e=>queued.push(e);await init(); self.engineHandle=start();const input=self.onmessage;self.onmessage=e=>{if(e.data.t==='test.uploadClock')uploadClock=e.data.ms;else if(e.data.t==='test.advance')self.engineHandle.advance_time(e.data.ms);else if(e.data.t==='test.relays')self.engineHandle.set_test_relays(e.data.relays);else input(e);};for(const e of queued)self.onmessage(e);`;
+import { workerBoot } from './engine-harness-boot.mjs';
 const server = createServer(async (req, res) => {
   const path = new URL(req.url, 'http://x').pathname;
   if (path === '/') return res.writeHead(200, {'content-type':'text/html'}).end('<!doctype html><title>Engine harness</title>');
   if (path === '/bench.js') return res.writeHead(200, {'content-type':'text/javascript'}).end(`import init,{benchmark} from './lkjstr_engine.js';await init();postMessage(benchmark());`);
   if (path === '/shared.js') return res.writeHead(200, {'content-type':'text/javascript'}).end(`import init,{start_shared} from './lkjstr_engine.js';const queued=[];self.onconnect=e=>queued.push(e);await init();self.engineHandle=start_shared();for(const e of queued)self.onconnect(e);`);
-  if (path === '/worker.js') return res.writeHead(200, {'content-type':'text/javascript'}).end(boot);
+  if (path === '/worker.js' || path === '/archive-worker.js') return res.writeHead(200, {'content-type':'text/javascript'}).end(workerBoot(path, origin));
   if(path.startsWith('/transport/')) {
     const name=path.slice('/transport/'.length);
     const base=['worker.js','shared.js','transport.js'].includes(name)?resolve('engine'):root;

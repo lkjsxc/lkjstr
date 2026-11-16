@@ -150,3 +150,35 @@ and [interface-needs.md](interface-needs.md) for contracts and remaining design.
 Private-list revocation adds no wire message: successful lock/remove commits
 clear unauthorized decrypted list policy and replace derived row caches before
 account/result output. Other authorized accounts and query/window intent remain.
+
+## Protocol 8 interface additions (2026-11-16, owner authorized)
+
+- `Account.inbox?` exposes the verified kind-10050 list; absent means unknown, and an empty array means no usable advertised inbox.
+- `DmQuery.participants?` asks the engine to canonicalize a new conversation including the account, without frontend event hashing.
+- `DmQuery.unreadOnly?` asks for counts without conversation previews, message bodies or people; the frame gates this on protocol 8.
+- `DmMessage.segments?` provides inert engine-parsed text/link/mention/emoji parts without media or link-card requests.
+- `DmMessage.reply?` gives the answered ID, author and first-line excerpt only from the same account and conversation.
+- `DmConversation.recentAuthors?` supplies at most two recent distinct other authors for the specified group faces.
+- `DmSnapshot.conversation?` returns the canonical conversation identity, including a conversation with no messages.
+- `DmSnapshot.people?` provides public author projections needed by the private tab, independently of message bodies.
+- `DmSnapshot.blocked?` names participants with confirmed missing or unusable inboxes; unknown discovery is not a confirmed absence.
+- `DmSnapshot.unread?` reports unread messages across the bounded private inbox before the 200-conversation display cap.
+- `DmDraft.emoji?` supplies used validated custom-emoji tags for the signed rumor and its recipient envelopes.
+- `FromEngine.result.dmDelivery?` reports accepted/total participant envelopes, including self, with duplicate relay replies counted once.
+- `Action.dm.draft.load {as,tab}` loads that account/tab's encrypted private state through its current signer session.
+- `Action.dm.draft.save {as,tab,state,expected?}` saves encrypted state; a supplied stale revision cannot replace another editor's committed state.
+- `Action.dm.draft.clear {as,tab,expected?}` removes only that private tab state, with the same optional revision guard.
+- `DmDraftState {draft,failed}` retains an unsent draft and bounded failed sends without automatic publication or resend.
+- `DmFailedDraft {key,draft,error?,dmDelivery?,id?}` retains retryable private content and observed outcomes inside the encrypted archive.
+- `FromEngine.result.dmDraft?` returns loaded private state only to the requesting client; absence is an empty saved slot.
+- `FromEngine.result.dmDraftRevision?` returns an opaque account/tab/generation revision even for absence and after successful save/clear.
+- `Failure.code:signer-timeout` distinguishes an observed signer deadline from a missing signer or a relay/network timeout.
+- `ToEngine.crypted.error:signer-timeout` lets a bounded extension call release its queue and discard a late reply.
+
+- `Action.dm.editor {as,editor,open,dirty?}` acknowledges bounded private editor admission and tracks pending encrypted writes across page expiry.
+- `FromEngine.dm.flush {req,account,phase}` holds participating editors during lock preparation and releases them after commit or failure.
+- `ToEngine.dm.flushed {req,ok}` acknowledges only that port's exact lock preparation after its latest encrypted state commits.
+
+The new draft archive is local and encrypted for every signer kind. It is not
+account setup sync or a public list. Bounds, atomic removal, conflicts and the
+Worker-scoped unlock limit are documented in [dm-drafts.md](dm-drafts.md).

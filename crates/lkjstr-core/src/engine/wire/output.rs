@@ -179,6 +179,9 @@ impl Session {
                     uploaded: None,
                     key: None,
                     encrypted_key: None,
+                    dm_draft: None,
+                    dm_draft_revision: None,
+                    dm_delivery: None,
                     cancelled: None,
                 }]
             }

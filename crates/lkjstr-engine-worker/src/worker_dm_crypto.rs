@@ -1,8 +1,18 @@
-//! Correlated, bounded external crypto. Only NIP-44 writes; NIP-04 is read-only.
+//! Correlated, serialized private crypto. Only NIP-44 writes; NIP-04 is read-only.
 use super::*;
-use lkjstr_core::engine::upload::Deadline;
+#[path = "worker_dm_extension.rs"]
+mod extension;
+use dm::signers::Read;
+use lkjstr_core::engine::{accounts::secret::SecretText, upload::Deadline};
 pub(super) fn random() -> Result<[u8; 32], &'static str> {
     crate::browser::random_bytes()
+}
+struct Call<'a> {
+    client: u64,
+    account: &'a str,
+    peer: &'a str,
+    operation: &'a str,
+    read: Option<&'a Read>,
 }
 pub(super) async fn crypt(
     host: &Rc<RefCell<Host>>,
@@ -13,74 +23,138 @@ pub(super) async fn crypt(
     data: String,
     deadline: Deadline,
 ) -> Result<String, &'static str> {
-    let epoch = lifetime::lease(&host.borrow(), client, account)?;
+    crypt_for(
+        host,
+        Call {
+            client,
+            account,
+            peer,
+            operation,
+            read: None,
+        },
+        data,
+        deadline,
+    )
+    .await
+}
+pub(super) async fn read(
+    host: &Rc<RefCell<Host>>,
+    read: &Read,
+    peer: &str,
+    operation: &str,
+    data: String,
+    deadline: Deadline,
+) -> Result<String, &'static str> {
+    crypt_for(
+        host,
+        Call {
+            client: read.client(),
+            account: read.account(),
+            peer,
+            operation,
+            read: Some(read),
+        },
+        data,
+        deadline,
+    )
+    .await
+}
+async fn crypt_for(
+    host: &Rc<RefCell<Host>>,
+    call: Call<'_>,
+    data: String,
+    deadline: Deadline,
+) -> Result<String, &'static str> {
+    let data = SecretText::new(data);
     if data.len() > lkjstr_nips::nip44::MAX_PAYLOAD {
         return Err("too-large");
     }
-    let local = host
-        .borrow()
-        .accounts
-        .crypt(account, peer, operation, &data, &random()?)?;
-    if let Some(value) = local {
-        return Ok(value);
+    let epoch = {
+        let mut h = host.borrow_mut();
+        signers::sync(&mut h);
+        let epoch = lifetime::lease(&h, call.client, call.account)?;
+        h.dm.signers.gate.allowed(call.account, epoch)?;
+        if let Some(read) = call.read {
+            signers::check_read(&h, read)?;
+        }
+        if let Some(value) =
+            h.accounts
+                .crypt(call.account, call.peer, call.operation, &data, &random()?)?
+        {
+            return Ok(value);
+        }
+        epoch
+    };
+    let pending = signers::begin(
+        &mut host.borrow_mut(),
+        call.client,
+        call.account,
+        epoch,
+        call.read,
+        data,
+    )?;
+    let waiting = match deadline.wait(uploads::clock(), u32::MAX) {
+        Ok(ms) => crate::browser::promise::bounded_ms_for(
+            pending.ready,
+            ms,
+            "signer-missing",
+            || {},
+            Some(&pending.signal),
+        )
+        .await
+        .map_err(|_| "signer-missing"),
+        Err(_) => Err("signer-missing"),
+    };
+    if let Err(code) = waiting {
+        return signers::finish(&mut host.borrow_mut(), &pending.lease, Err(code), false);
     }
-    let ms = deadline
-        .wait(uploads::clock(), 60_000)
-        .map_err(|_| "signer-missing")?;
-    let remote = host.borrow().accounts.remote(account);
-    if let Some(remote) = remote {
-        let method = match operation {
+    signers::check(&host.borrow(), &pending.lease)?;
+    let ms = match deadline.wait(uploads::clock(), 60_000) {
+        Ok(ms) => ms,
+        Err(_) => {
+            return signers::finish(
+                &mut host.borrow_mut(),
+                &pending.lease,
+                Err("signer-missing"),
+                false,
+            );
+        }
+    };
+    let remote = host.borrow().accounts.remote(call.account);
+    let data = signers::take_input(&mut host.borrow_mut(), &pending.lease)?;
+    let outcome = if let Some(remote) = remote {
+        let method = match call.operation {
             "nip44.encrypt" => "nip44_encrypt",
             "nip44.decrypt" => "nip44_decrypt",
             "nip04.decrypt" => "nip04_decrypt",
-            _ => return Err("unsupported"),
+            _ => {
+                return signers::finish(
+                    &mut host.borrow_mut(),
+                    &pending.lease,
+                    Err("unsupported"),
+                    false,
+                );
+            }
         };
-        let result =
-            crate::browser::remote::rpc_for(&remote, method, vec![peer.into(), data], ms).await;
-        lifetime::check(&host.borrow(), client, account, epoch)?;
-        return result;
-    }
-    let req = {
-        let h = host.borrow();
-        if h.dm.crypto.len() >= 8 {
-            return Err("too-large");
+        let params = vec![call.peer.into(), data.to_string()];
+        drop(data);
+        crate::browser::remote::rpc_private(&remote, method, params, ms, Some(&pending.signal))
+            .await
+    } else {
+        let request = extension::begin(&mut host.borrow_mut(), &call, &data, &pending.lease);
+        drop(data);
+        match request {
+            Ok(request) => extension::finish(host, request, &pending.signal, ms).await,
+            Err(code) => Err(code),
         }
-        format!(
-            "dm-crypto-{}",
-            lkjstr_nips::hex(&crate::browser::random_bytes::<16>()?)
-        )
     };
-    let promise = js_sys::Promise::new(&mut |resolve, _| {
-        let mut h = host.borrow_mut();
-        h.dm.crypto
-            .insert((client, req.clone()), (account.into(), resolve));
-        h.scope.direct(
-            client,
-            &W::Crypt {
-                req: req.clone(),
-                pubkey: account.into(),
-                peer: peer.into(),
-                operation: operation.into(),
-                data: data.clone(),
-            },
-        );
+    let outcome = outcome.and_then(|value| {
+        if value.len() > lkjstr_nips::nip44::MAX_PAYLOAD {
+            drop(SecretText::new(value));
+            Err("too-large")
+        } else {
+            Ok(value)
+        }
     });
-    let result = crate::browser::promise::bounded_ms(promise, ms, "signer-missing", || {}).await;
-    host.borrow_mut().dm.crypto.remove(&(client, req));
-    lifetime::check(&host.borrow(), client, account, epoch)?;
-    let reply = result.map_err(|_| "signer-missing")?;
-    if let Ok(code) = js_sys::Reflect::get(&reply, &"error".into())
-        && let Some(code) = code.as_string()
-    {
-        return Err(match code.as_str() {
-            "unsupported" => "unsupported",
-            "signer-missing" => "signer-missing",
-            _ => "signer-refused",
-        });
-    }
-    let value = reply.as_string().ok_or("signer-refused")?;
-    if value.len() > lkjstr_nips::nip44::MAX_PAYLOAD {
-        return Err("too-large");
-    }
-    Ok(value)
+    signers::finish(&mut host.borrow_mut(), &pending.lease, outcome, true)
 }

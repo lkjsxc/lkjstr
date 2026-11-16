@@ -185,6 +185,9 @@ fn key_actions_results_and_owned_password_debug_are_redacted() {
         uploaded: None,
         key: None,
         encrypted_key: Some(encrypted.clone()),
+        dm_draft: None,
+        dm_draft_revision: None,
+        dm_delivery: None,
         cancelled: None,
     };
     assert!(!format!("{result:?}").contains(&encrypted));

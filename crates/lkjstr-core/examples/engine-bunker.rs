@@ -32,9 +32,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let conversation = nip44::conversation_key(&key, &peer)?;
         let request: Value = serde_json::from_str(&nip44::decrypt(&event.content, &conversation)?)?;
         let method = request["method"].as_str().ok_or("missing method")?;
-        let authorized = (method != "connect"
-            || !input["require_secret"].as_bool().unwrap_or(false)
-            || request["params"][1] == "fixture-authorization")
+        let private_error = input["refuse_sign_error"]
+            .as_str()
+            .filter(|_| method == "sign_event")
+            .or_else(|| {
+                input["refuse_crypto"].as_str().filter(|_| {
+                    matches!(method, "nip44_encrypt" | "nip44_decrypt" | "nip04_decrypt")
+                })
+            });
+        let authorized = private_error.is_none()
+            && (method != "connect"
+                || !input["require_secret"].as_bool().unwrap_or(false)
+                || request["params"][1] == "fixture-authorization")
             && !(method == "sign_event" && input["refuse_sign"].as_bool().unwrap_or(false));
         let result = match Some(method) {
             Some("connect") => "ack".to_owned(),
@@ -60,7 +69,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             &if authorized {
                 json!({"id":request["id"],"result":result})
             } else {
-                json!({"id":request["id"],"error":"not authorized"})
+                json!({"id":request["id"],"error":private_error.unwrap_or("not authorized")})
             }
             .to_string(),
             &conversation,

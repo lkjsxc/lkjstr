@@ -34,7 +34,9 @@ export async function ownerRelays({page,send,wait,check,note,signer,lines,fake,o
   await adopted(first,false,false);
   check('newer owner lists replace old relay usage',true);
   // Leave a both-mode fixture for the rest of the action inventory.
-  fake.add(await sign(10002,[['r',relay]],1700000400));
+  const retained=await sign(10002,[['r',relay]],1700000400);fake.add(retained);
+  // An old bootstrap row already matches these flags; await this exact replacement.
+  await waitForStoredEvent(page,retained.id);
   await adopted(relay,true,true);
   await send({t:'close',sub:'owner-relays'});
 }

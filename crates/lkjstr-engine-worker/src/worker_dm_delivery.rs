@@ -9,8 +9,8 @@ pub(super) struct Sending {
     id: String,
     rumor: Option<lkjstr_nips::event::Rumor>,
     cache: Vec<lkjstr_protocol::NostrEvent>,
-    waiting: BTreeSet<String>,
-    accepted: bool,
+    progress: dm::delivery::Tracker,
+    message: bool,
     deliveries: Vec<protocol::Delivery>,
 }
 pub(super) fn begin(
@@ -48,7 +48,8 @@ pub(super) fn begin(
         })
         .map(|(e, _)| e.clone())
         .collect();
-    let waiting: BTreeSet<_> = (0..packages.len()).map(|i| format!("{job}:{i}")).collect();
+    let progress = dm::delivery::Tracker::new(packages.len())?;
+    let message = rumor.is_some();
     h.dm.sending.insert(
         job.clone(),
         Sending {
@@ -59,8 +60,8 @@ pub(super) fn begin(
             id,
             rumor,
             cache,
-            waiting,
-            accepted: true,
+            progress,
+            message,
             deliveries: vec![],
         },
     );
@@ -81,7 +82,10 @@ pub(super) fn output(host: &Rc<RefCell<Host>>, output: &Output) -> bool {
     if !req.starts_with("~dm-publication-") {
         return false;
     }
-    let Some((job, _)) = req.rsplit_once(':') else {
+    let Some((job, recipient)) = req.rsplit_once(':') else {
+        return true;
+    };
+    let Ok(recipient) = recipient.parse::<usize>() else {
         return true;
     };
     let mut h = host.borrow_mut();
@@ -92,26 +96,26 @@ pub(super) fn output(host: &Rc<RefCell<Host>>, output: &Output) -> bool {
         Output::Result {
             deliveries, error, ..
         } => {
-            if send.waiting.remove(req) {
-                send.accepted &=
-                    error.is_none() && deliveries.iter().any(|d| d.state == "accepted");
+            let accepted = error.is_none() && deliveries.iter().any(|d| d.state == "accepted");
+            if send.progress.settle(recipient, accepted) {
                 send.deliveries.extend(deliveries.iter().cloned());
             }
         }
         Output::Error { .. } => {
-            send.waiting.remove(req);
-            send.accepted = false;
+            send.progress.settle(recipient, false);
         }
         _ => {}
     }
-    if !send.waiting.is_empty() {
+    if !send.progress.complete() {
         return true;
     }
     let Some(send) = h.dm.sending.remove(job) else {
         return true;
     };
     h.dm.running = h.dm.running.saturating_sub(1);
-    if send.accepted && lifetime::check(&h, send.client, &send.account, send.epoch).is_ok() {
+    let accepted = send.progress.accepted();
+    let dm_delivery = send.message.then(|| send.progress.snapshot());
+    if accepted && lifetime::check(&h, send.client, &send.account, send.epoch).is_ok() {
         if let Some(rumor) = send.rumor {
             let _ = h.dm.inbox.insert(&send.account, rumor);
         }
@@ -128,14 +132,17 @@ pub(super) fn output(host: &Rc<RefCell<Host>>, output: &Output) -> bool {
         send.client,
         &W::Result {
             req: send.req,
-            ok: send.accepted,
+            ok: accepted,
             id: Some(send.id),
             delivery: Some(delivery),
             uploaded: None,
             key: None,
             encrypted_key: None,
             cancelled: None,
-            error: (!send.accepted).then(|| lkjstr_core::engine::wire::Failure {
+            dm_draft: None,
+            dm_draft_revision: None,
+            dm_delivery,
+            error: (!accepted).then(|| lkjstr_core::engine::wire::Failure {
                 code: "rejected".into(),
                 message: None,
             }),
@@ -148,4 +155,39 @@ pub(super) fn revoke(h: &mut Host, account: &str) {
     for send in h.dm.sending.values_mut().filter(|s| s.account == account) {
         send.rumor = None;
     }
+}
+
+#[cfg(feature = "harness")]
+pub(super) fn stop_probe(h: &Host) -> usize {
+    h.dm.sending
+        .values()
+        .filter(|send| send.rumor.is_some())
+        .count()
+}
+#[cfg(feature = "harness")]
+pub(super) fn prime_stop_probe(
+    h: &mut Host,
+    client: u64,
+    account: String,
+    epoch: u64,
+    rumor: lkjstr_nips::event::Rumor,
+) -> Result<(), &'static str> {
+    let progress = dm::delivery::Tracker::new(1)?;
+    h.dm.sending.insert(
+        "stop-publication".into(),
+        Sending {
+            client,
+            req: "stop-publication".into(),
+            account,
+            epoch,
+            id: rumor.id.clone(),
+            rumor: Some(rumor),
+            cache: vec![],
+            progress,
+            message: true,
+            deliveries: vec![],
+        },
+    );
+    h.dm.running += 1;
+    Ok(())
 }

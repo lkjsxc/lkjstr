@@ -7,6 +7,7 @@ pub(super) struct Peer {
     _handler: Closure<dyn FnMut(web_sys::MessageEvent)>,
 }
 pub(super) enum Sink {
+    Closed,
     Dedicated(web_sys::DedicatedWorkerGlobalScope),
     Shared {
         clients: Clients,
@@ -21,6 +22,7 @@ impl Sink {
         sessions: &BTreeMap<u64, RefCell<lkjstr_core::engine::wire::Session>>,
     ) {
         match self {
+            Self::Closed => {}
             Self::Dedicated(scope) => {
                 if let Some(session) = sessions.get(&0) {
                     for out in session.borrow_mut().output(out.clone(), engine) {
@@ -41,6 +43,7 @@ impl Sink {
     }
     pub(super) fn direct(&self, id: u64, out: &lkjstr_core::engine::wire::Output) {
         match self {
+            Self::Closed => {}
             Self::Dedicated(scope) => send(scope.as_ref(), out),
             Self::Shared { peers, .. } => {
                 if let Some(peer) = peers.get(&id) {
@@ -51,6 +54,7 @@ impl Sink {
     }
     pub(super) fn close(&mut self) {
         match self {
+            Self::Closed => {}
             Self::Dedicated(scope) => scope.set_onmessage(None),
             Self::Shared { peers, .. } => {
                 for peer in peers.values() {
@@ -60,6 +64,7 @@ impl Sink {
                 peers.clear();
             }
         }
+        *self = Self::Closed;
     }
 }
 #[wasm_bindgen]
@@ -134,6 +139,7 @@ fn attach(host: &Rc<RefCell<Host>>, port: web_sys::MessagePort) {
     let id = {
         let mut h = host.borrow_mut();
         let Sink::Shared { clients, .. } = &mut h.scope else {
+            port.close();
             return;
         };
         clients.connect(now())
@@ -204,10 +210,12 @@ pub(super) fn expire(host: &Rc<RefCell<Host>>) {
         vec![]
     };
     for id in expired {
+        direct_messages::editors::expire(&mut h, id);
         detach(&mut h, id);
     }
 }
 pub(super) fn detach(h: &mut Host, id: u64) {
+    direct_messages::editors::detach(h, id);
     uploads::control::detach(h, id);
     let now = h.time();
     if let Sink::Shared { clients, peers } = &mut h.scope {
@@ -225,6 +233,7 @@ pub(super) fn detach(h: &mut Host, id: u64) {
         }
     }
     h.sessions.remove(&id);
+    direct_messages::sync(h);
     h.discovery.retain(|(client, _), _| *client != id);
 }
 

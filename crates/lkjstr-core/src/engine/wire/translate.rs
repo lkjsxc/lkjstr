@@ -12,7 +12,8 @@ impl Session {
                 self.preview_near(sub, ids);
                 vec![]
             }
-            Input::DmOpen { .. }
+            Input::DmFlushed { .. }
+            | Input::DmOpen { .. }
             | Input::DmClose { .. }
             | Input::DmVisible { .. }
             | Input::DmMore { .. }

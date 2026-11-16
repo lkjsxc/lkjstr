@@ -2,6 +2,35 @@ use serde::Deserialize;
 #[derive(Deserialize)]
 #[serde(tag = "a", rename_all = "camelCase")]
 pub enum Action {
+    #[serde(rename = "dm.editor")]
+    DmEditor {
+        #[serde(rename = "as")]
+        account: String,
+        editor: String,
+        open: bool,
+        dirty: Option<bool>,
+    },
+    #[serde(rename = "dm.draft.load")]
+    DmDraftLoad {
+        #[serde(rename = "as")]
+        account: String,
+        tab: String,
+    },
+    #[serde(rename = "dm.draft.save")]
+    DmDraftSave {
+        #[serde(rename = "as")]
+        account: String,
+        tab: String,
+        state: crate::engine::dm::drafts::State,
+        expected: Option<String>,
+    },
+    #[serde(rename = "dm.draft.clear")]
+    DmDraftClear {
+        #[serde(rename = "as")]
+        account: String,
+        tab: String,
+        expected: Option<String>,
+    },
     #[serde(rename = "dm.send")]
     DmSend {
         #[serde(rename = "as")]

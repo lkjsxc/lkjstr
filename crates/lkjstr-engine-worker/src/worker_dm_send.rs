@@ -163,7 +163,7 @@ async fn prepare(
             .map_err(|_| "rejected")?;
         let unsigned = serde_json::from_value(serde_json::to_value(seal).map_err(|_| "internal")?)
             .map_err(|_| "internal")?;
-        let signed = uploads::signing::sign(host, client, deadline, unsigned).await?;
+        let signed = uploads::signing::private_sign(host, client, deadline, unsigned).await?;
         lifetime::check(&host.borrow(), client, account, epoch)?;
         let seal = dm::routing::nips_event(&signed)?;
         let ephemeral = lkjstr_nips::keys::SecretKey::from_bytes(
@@ -222,6 +222,7 @@ async fn advertise(
         (event, routes)
     };
     let event =
-        uploads::signing::sign(host, client, Deadline::new(uploads::clock()), event).await?;
+        uploads::signing::private_sign(host, client, Deadline::new(uploads::clock()), event)
+            .await?;
     Ok((event, routes))
 }

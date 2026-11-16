@@ -8,6 +8,7 @@ type Entry = {
   signer: Account['signer'];
   encrypted?: boolean;
   locked?: boolean;
+  inbox?: readonly string[];
 };
 type Add = Extract<Action, { a: 'account.add' }>;
 const B32 = 'qpzry9x8gf2tvdw0s3jn54khce6mua7l';

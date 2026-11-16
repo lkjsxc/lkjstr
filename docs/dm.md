@@ -2,115 +2,182 @@
 
 ## Purpose
 
-Describe the private-message engine boundary and the capabilities awaiting
-Claude's conversation, composer and inbox-settings specifications.
+Describe the private-message engine, its implemented interface and its remaining
+limits. [frontend-dm.md](frontend-dm.md) records the M1-M6 surfaces specified in
+[interface-dm.md](interface-dm.md). Draft storage, signer lifetimes and cross-page
+locking have separate contracts linked below.
 
-## Contract
+## Contract and interface
 
-Protocol 6 adds a separate private subscription family. `dm.open` carries a
-`sub` and `query: {account, conversation?, before?, limit?}`. The account must
-have an available signer. A conversation key is the SHA-256 of sorted member
-public keys joined with colons; it is stable across NIP-17 and older messages.
-`before` is a returned message ID and `limit` is clamped to 1..200. Reopening
-with a new cursor changes the local window; `dm.more` requests older encrypted
-relay pages. `dm.visible`, `dm.close`, detach and hidden-tab hints release wants.
-Hiding keeps the query anchor and cached rows, but currently drops network
-history cursors, so reopening can rewalk cached relay pages before extending
-older history. Preserving cursors with account/advertised-route pruning is next.
+Protocol 6 introduced the private callback channel, separate from public rows.
+Protocol 7 made initial `dm.open.visible` atomic. Protocol 8 adds display fields,
+participant queries, encrypted draft recovery and private editor coordination.
+Existing messages and fields remain available.
 
-A `dm` answer contains `sub` and `snapshot`: account, conversations, messages,
-more, undecryptable, phase and optional error. Conversations contain key,
-participants, last and unread. Messages contain id, conversation, author,
-participants, at (milliseconds), text, replyTo, subject, `legacy` and unread.
-replyTo and subject are null when absent. A conversation list is capped at 200;
-conversation previews contain the last message; message windows are returned
-only for the requested conversation. Unread counts
-are local observed counts, not proof that every historical relay event arrived.
+`dm.open` carries a sub and query with account, optional conversation, before
+and limit. `participants` opens a new canonical member set without making the
+interface hash it. The engine's key is SHA-256 of sorted member public keys
+joined with colons and is stable across wrapped and older messages. `before`
+is a returned message ID; limits are clamped to 1..200. `dm.more` requests
+older encrypted relay pages. `dm.visible`, `dm.close`, detach and page hints
+release unused network wants.
 
-`dm.send` takes `as` and `draft: {recipients, text, replyTo?, subject?}`.
-`dm.seen` takes `as` and `conversation`; success follows the read-mark disk
-transaction. `dm.relays.save` takes `as` and `relays` and publishes kind 10050.
-These use the existing correlated `result` with actual delivery information.
+A private snapshot contains account, conversations, messages, more,
+undecryptable, phase and an optional error. Display additions include the
+conversation key, public people, blocked participants and total unread count.
+A list is capped at 200 conversations. Each row contains its participant set,
+last message and observed unread count. Message windows are supplied only for
+the requested conversation. Unread counts do not prove relay completeness.
+
+Messages carry IDs, author, participants, millisecond time, text, replyTo,
+subject, `legacy` and unread. Absent replyTo and subject are null. The engine
+also supplies parsed text segments, known reply excerpts and recent group
+authors. The frontend draws links without private media or link previews.
+`unreadOnly` returns counts without message bodies or conversation previews;
+the frame watch uses it only with protocol 8.
+
+`dm.send` takes an account and a draft containing recipients, text and optional
+replyTo, subject and custom emoji. `dm.seen` succeeds after its read-mark disk
+transaction. `dm.relays.save` publishes the account's kind-10050 inbox list;
+an empty list explicitly withdraws those routes. `Account.inbox` supplies a
+known current list. Omission is not evidence of an empty list; a list query's
+settled unsupported/not-found result separately proves missing own inboxes.
+
+Messages, conversation tabs, the private composer, inbox settings, signer
+consent and the account unread mark now have their prescribed surfaces. An
+existing setup row remains available when a private query proves missing
+inboxes before the account field is populated. Sign-in, read-only, locked,
+loading, failed and unsupported states use the supplied bilingual words.
 
 ## Encryption and routing
 
-The engine creates an unsigned kind-14 rumor, signs a kind-13 seal, and sends
-one distinct kind-1059 gift wrap to every participant, including the sender.
-Seal and outer timestamps each use independent random offsets within 48 hours;
-every outer event uses a fresh ephemeral key and fresh NIP-44 nonce. Only
-verified kind-10050 inbox URLs receive wraps. Missing, invalid, empty or oversized
-inbox lists fail preparation before any wrap is published. Ordinary kind-10002
-outboxes and bootstrap relays are never fallback destinations for private text.
+The engine creates an unsigned kind-14 rumor, signs a kind-13 seal and sends
+one distinct kind-1059 gift wrap to each participant, including the sender.
+Seal and outer timestamps use independent random offsets within 48 hours.
+Every outer event has a fresh ephemeral key and NIP-44 nonce. Only verified
+kind-10050 inbox URLs receive wraps. Missing, invalid, empty or oversized lists
+fail preparation before publication. Public outboxes and bootstrap relays are
+not fallback destinations for private text.
 
-Local keys use Rust NIP-44. NIP-07 and bunker accounts use the same validated
-seal pipeline through their NIP-44 encrypt/decrypt and exact-event signing APIs.
-The additive `crypt` / `crypted` request pair supports extension crypto without
-parsing Nostr events in the interface. The extension public key is checked before
-every operation. Missing capabilities and refusal are explicit failures; they
-never produce a fake empty conversation or silently change encryption formats.
+Local keys use Rust NIP-44. Extension and bunker accounts use the same checked
+seal pipeline through NIP-44 encrypt/decrypt and exact-event signing. The
+`crypt` / `crypted` pair keeps event parsing out of the frontend. Extension
+identity is checked before and after its awaited crypto operation. Missing
+capabilities and refusals are explicit; no encryption downgrade occurs.
 
-The receive pipeline verifies the outer signature and recipient, seal signature,
-rumor ID, unsigned rumor, author equality and participant membership. Duplicate
-wrappers of the same rumor count once. Invalid envelopes increment the bounded
-account's undecryptable count. Older kind-4 messages are readable with local,
-extension or bunker NIP-04 decryption. There is no older write API.
+Receive verifies the outer signature and recipient, seal signature, rumor ID,
+unsigned rumor, author equality and participant membership. Duplicate wraps of
+one rumor count once. Invalid or unprojectable envelopes increment the bounded
+account's undecryptable count. Older kind-4 messages can be read with local,
+extension or bunker decryption. There is no older-format write action.
 
-Sending completes only after at least one listed inbox relay accepts each
-participant's wrapper, including the sender's archive copy. Partial delivery is
-reported as failure with its actual per-relay outcomes. A retry may produce a
-new rumor; the engine does not claim atomic cross-relay delivery.
+Send succeeds only when at least one advertised inbox accepts each person's
+wrap, including the sender's copy. `Result.dmDelivery` counts accepted and total
+participants; relay results never stand in for people. Partial delivery is a
+failure with its actual outcomes. Retry can create a new rumor and never claims
+atomic cross-relay delivery. The interface keeps the failed row even when the
+sender's own copy has arrived, and never retries it automatically.
 
-## Private lifetime and bounds
+## Drafts and account lifetime
 
 Only signed encrypted envelopes and public relay-list events enter the shared
-store and IndexedDB event cache. Decrypted rumors never become public query
-rows, raw-event outputs, cache events or diagnostics. They live in a separate
-account-keyed in-memory inbox and are discarded when the account is locked or
-removed, or when the Worker terminates. Every committed access change invalidates asynchronous account leases, so a
-late signer reply cannot revive a locked session. Read markers store timestamps and IDs,
-not text, under the device-local `dm-seen-v1` key. Lock retains those markers.
-A read-marker load failure stays failed until an explicit reopen retries it;
-unknown durable unread state is never replaced by default counts.
-Existing older unencrypted local keys are unchanged; see [keys.md](keys.md).
+event store. Decrypted messages stay in the account-scoped inbox and private
+view; they never become public query rows, raw-event output or diagnostics.
+Lock, removal, signer replacement and Worker stop invalidate the original
+account/client identities before delayed effects can reuse private state.
+A hidden or closed reading view releases its read jobs and network wants.
 
-Bounds are 32 private views, 32 participants per message, 16 KiB text,
-256 queued envelope IDs, two simultaneous decrypt jobs, four queued/running
-writes, eight crypto requests, 8000 decrypted account/message pairs, 20000
-attempted envelope/account pairs, and 4096 account/conversation read markers.
-Crypto calls have unique random request IDs and a 60-second deadline; signing
-shares the existing 285-second
-signer deadline. Wants disappear with the last visible private subscription.
-Read cursors are per account and inbox relay, plus one shared older cursor;
-public network scheduling and
-connection limits continue to apply. The encrypted cache follows the existing
-16000/4000 memory and 20000 physical-event limits.
+Read markers contain timestamps and IDs under the local `dm-seen-v1` key.
+Lock retains them. A marker-load failure stays failed until explicit reopen;
+unknown durable unread state is not replaced with invented default counts.
+Existing unencrypted local keys keep their explicit migration path in
+[keys.md](keys.md).
 
-## Limits that need design or more work
+The encrypted archive actions load, save and clear per-account, per-tab draft
+state. Initial writable load establishes a wrapped seed before accepting text.
+Save/clear acknowledge committed storage and carry an optional expected
+revision. An unrelated writer's edit is not silently overwritten. Private
+text never enters preference storage or the public composer. Details, segment
+validation, removal generations and concurrent-write limits are in
+[dm-drafts.md](dm-drafts.md).
 
-No conversation surface, DM composer, inbox-settings control or unread badge is
-introduced. `Engine.dm` exposes the private callback channel for a specification.
-Opening an extension inbox can require two decrypt permissions per gift wrap;
-no background extension prompts occur without a visible private subscription.
+A private editor must register before accepting input. Cross-page Lock holds
+all participating editors and prepares them one page at a time, with serialized
+writers. The latest draft and terminal send state must commit before a clean
+acknowledgement. The whole preparation has a 15-second limit; failure retains
+the text and leaves the key unlocked. Unexpected expiry preserves an unresolved
+lease until its original editor returns. See [dm-editor-locks.md](dm-editor-locks.md).
 
-History uses inclusive second boundaries to avoid silently skipping envelopes
-with equal timestamps. A relay page saturated entirely by a single second can
-stall rather than prove completeness. Older archive reads keep separate live
-requests and advance history through the shallowest completed full relay page.
-Group metadata edits, private files, reactions,
-message deletion, read receipts and cross-device read-marker sync are not added.
-Unread markers are a local timestamp watermark with tie IDs, so an older event
-arriving after a newer message was marked read is treated as read.
+Signer refusal hides the private view while retaining its authorized unsaved
+editor and pending send. Retry reattaches that store. Actual account revocation
+purges it. A lost save acknowledgement can refresh a revision only against the
+exact prior confirmed or attempted archive state, preserving newer local text.
+These are lifecycle guarantees, not a claim to zeroize every caller-owned
+JavaScript string.
+
+## Signer scheduling and bounds
+
+Private crypto is serialized per account. The first refusal, unsupported
+operation or actual private crypto deadline pauses that account before another
+queued prompt starts. Explicit reopen/Retry clears that pause. Hidden read
+jobs are cancelled; explicit sends and archive operations have their own
+lifetimes. An already opened extension dialog cannot be dismissed by the page.
+See [dm-signers.md](dm-signers.md) for native decisions and measured proofs.
+
+Each active external crypto or seal-signing wait is capped at 60 seconds,
+within the remaining 285-second operation budget. Queueing spends that same
+budget. Actual private crypto, seal and inbox-advertisement signing deadlines
+report `signer-timeout`. Private bunker signing preserves authenticated
+unsupported/refusal results; socket loss remains `signer-missing`. A signer's
+error text cannot manufacture an actual deadline. Late exact-event signatures
+cannot publish or settle a completed action again.
+
+Engine bounds include 32 private views, 32 participants, 16 KiB send text,
+256 queued envelope IDs, two simultaneous receives, one receive per account,
+four queued/running writes, eight external crypto requests, 8000 decrypted
+account/message pairs, 20000 attempted envelope/account pairs and 4096
+account/conversation read markers. Draft and editor bounds are documented in
+their linked contracts. Public network connection limits continue to apply.
+The encrypted event cache retains the existing 16000/4000 memory and 20000
+physical-event limits.
+
+## Remaining limits
+
+Hiding keeps the view's reading anchor and cached rows, but currently drops
+network history cursors. Reopening may rewalk cached relay pages before older
+history extends. Cursors are scoped by account and inbox relay, plus the shared
+older-format cursor. Preserving them across hiding needs bounded pruning by
+current account and advertised routes.
+
+History uses inclusive second boundaries. A page entirely saturated by one
+second can stall without proving completeness. Older reads retain separate
+live requests and advance through the shallowest completed full relay page.
+A read watermark treats an older event arriving after a newer message was
+marked read as already read.
+
+Group subject/metadata editing, private files, reactions, message deletion,
+remote read receipts and cross-device read-marker synchronization remain
+unimplemented. Displaying a received subject does not add a subject editor.
+Separate dedicated Workers do not provide instant shared unlock authority;
+the archive's removal generation protects its narrower in-flight write race.
 
 ## Evidence
 
-Native tests cover account isolation, deduplication, persisted unread ties,
-older decryption, signer-layer validation, routing refusal and locked-session
-plaintext eviction. The loopback Worker conformance helper exercises local,
-NIP-07 and bunker encryption, receipt routing, group delivery and release of
-private wants. A one-slot scheduler regression fails before DM slot rotation
-and passes after it; separate regressions cover the 48-hour reconnect window
-and future-dated envelope watermark poisoning. Browser public-relay tests never
-send messages or sign broadcasts.
+Native tests cover isolation, deduplication, unread ties, older decryption,
+signer-layer checks, routing refusal, verified-delivery counts, asynchronous
+revocation and encrypted archive concurrency. Loopback Worker tests exercise
+local, extension and bunker encryption, group routing, first-refusal draining,
+actual private crypto deadlines, hidden-read cancellation and shared editor
+locking. Frontend tests and the real UI proof are in [frontend-dm.md](frontend-dm.md).
+The private-signing regression uses the real production Worker and triggers its
+original requested 60000 ms timer callback. It covers extension and bunker seals
+and inbox advertisements, late replies, refusal, unsupported operation and socket
+loss; it does not claim that 60 seconds elapsed in the fixture. On 2026-11-16 at
+10:53 UTC the fixed package passed 22 checks in 2.663 seconds, at load
+1.85 / 2.40 / 3.68. Five checks failed against the earlier frozen package.
+Run `node scripts/engine-dm-sign-deadline-harness.mjs`; the immutable before/after
+reports are under `tmp/dm-sign-deadlines`. Public-relay endurance checks never send
+private messages or sign broadcasts.
 Specifications: [NIP-17](https://github.com/nostr-protocol/nips/blob/master/17.md),
 [NIP-59](https://github.com/nostr-protocol/nips/blob/master/59.md),
 [NIP-44](https://github.com/nostr-protocol/nips/blob/master/44.md), and

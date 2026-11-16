@@ -7,6 +7,11 @@ use serde::Deserialize;
 #[derive(Deserialize)]
 #[serde(tag = "t", rename_all = "camelCase")]
 pub enum Input {
+    #[serde(rename = "dm.flushed")]
+    DmFlushed {
+        req: String,
+        ok: bool,
+    },
     #[serde(rename = "dm.open")]
     DmOpen {
         sub: String,

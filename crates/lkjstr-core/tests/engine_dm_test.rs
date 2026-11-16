@@ -132,6 +132,7 @@ fn a_draft_never_exposes_references_as_public_tags_or_accepts_an_empty_room() ->
     let input = Draft {
         recipients: vec![b.public_key()],
         text: text.clone(),
+        emoji: None,
         reply_to: None,
         subject: None,
     };

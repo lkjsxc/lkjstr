@@ -143,6 +143,9 @@ fn post(host: &Host, out: &Output) {
     host.scope.post(out, &host.engine, &host.sessions);
 }
 fn schedule(host: &Rc<RefCell<Host>>) {
+    if host.borrow().stopped {
+        return;
+    }
     let weak = Rc::downgrade(host);
     let timer = Timer::after(25, move || {
         if let Some(h) = weak.upgrade() {
@@ -168,6 +171,8 @@ fn schedule(host: &Rc<RefCell<Host>>) {
 }
 #[path = "worker_handle.rs"]
 mod handle;
+#[path = "worker_stop.rs"]
+mod shutdown;
 
 #[path = "worker_wire.rs"]
 mod wire_boundary;

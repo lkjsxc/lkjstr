@@ -29,25 +29,47 @@ pub(super) fn sync(h: &mut Host) {
         .iter()
         .map(|a| a.pubkey.clone())
         .collect();
-    let available: BTreeSet<_> = saved
+    let available: BTreeSet<_> = if h.stopped {
+        BTreeSet::new()
+    } else {
+        saved
+            .iter()
+            .filter(|a| h.accounts.require_signer(a).is_ok())
+            .cloned()
+            .collect()
+    };
+    let replaced: BTreeSet<_> = h
+        .accounts
+        .entries
         .iter()
-        .filter(|a| h.accounts.require_signer(a).is_ok())
-        .cloned()
+        .filter(|a| {
+            h.dm.authority
+                .get(&a.pubkey)
+                .is_some_and(|n| *n != a.authority())
+        })
+        .map(|a| a.pubkey.clone())
         .collect();
     let revoked: BTreeSet<_> =
         h.dm.access
             .iter()
-            .filter(|(a, (ok, _))| *ok && !available.contains(*a))
+            .filter(|(a, (ok, _))| *ok && (!available.contains(*a) || replaced.contains(*a)))
             .map(|(a, _)| a.clone())
             .collect();
     let mut changed = !revoked.is_empty();
     h.dm.access.retain(|a, _| saved.contains(a));
+    h.dm.authority = h
+        .accounts
+        .entries
+        .iter()
+        .map(|a| (a.pubkey.clone(), a.authority()))
+        .collect();
     for account in &saved {
         let usable = available.contains(account);
         if h.dm
             .access
             .get(account)
             .is_none_or(|(was, _)| *was != usable)
+            || replaced.contains(account)
         {
             h.dm.serial = h.dm.serial.wrapping_add(1);
             let epoch = h.dm.serial;
@@ -69,9 +91,10 @@ pub(super) fn sync(h: &mut Host) {
     h.dm.last_scan = u64::MAX;
     h.dm.next_emit = 0;
     h.dm.inbox.retain_accounts(&saved);
-    h.dm.inbox.retain_messages(&available);
-    h.dm.queue.retain(|(a, _)| available.contains(a));
-    h.dm.attempted.retain(|(a, _)| available.contains(a));
+    let retained: BTreeSet<_> = available.difference(&revoked).cloned().collect();
+    h.dm.inbox.retain_messages(&retained);
+    h.dm.queue.retain(|(a, _)| retained.contains(a));
+    h.dm.attempted.retain(|(a, _)| retained.contains(a));
     for account in &revoked {
         delivery::revoke(h, account);
     }
@@ -79,24 +102,12 @@ pub(super) fn sync(h: &mut Host) {
     for (task, epoch) in tasks {
         let (client, account, req) = identity(&task);
         if revoked.contains(account) {
-            h.scope
-                .direct(client, &Session::failure(req.into(), "signer-missing"));
+            if !h.stopped {
+                h.scope
+                    .direct(client, &Session::failure(req.into(), "signer-missing"));
+            }
         } else {
             h.dm.tasks.push((task, epoch));
-        }
-    }
-    let pending: Vec<_> =
-        h.dm.crypto
-            .iter()
-            .filter(|(_, (account, _))| revoked.contains(account))
-            .map(|(key, _)| key.clone())
-            .collect();
-    for key in pending {
-        if let Some((_, resolve)) = h.dm.crypto.remove(&key) {
-            let value =
-                serde_wasm_bindgen::to_value(&serde_json::json!({"error":"signer-missing"}))
-                    .unwrap_or(JsValue::NULL);
-            let _ = resolve.call1(&JsValue::NULL, &value);
         }
     }
 }

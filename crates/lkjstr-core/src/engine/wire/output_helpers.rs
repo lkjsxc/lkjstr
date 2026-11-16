@@ -17,13 +17,12 @@ impl Session {
         let mapped = match code {
             "list-not-loaded" | "target-unavailable" => "not-found",
             "signer-rejected" => "signer-refused",
-            "signer-timeout" => "signer-missing",
             "event-too-large" => "too-large",
             "invalid-account" => "signed-out",
             "no-relays" => "no-relays",
             "invalid-relay" | "invalid-server" => "rejected",
             "signed-out" | "read-only" | "signer-refused" | "signer-missing" | "rejected"
-            | "too-large" | "offline" | "not-found" => code,
+            | "signer-timeout" | "too-large" | "offline" | "not-found" => code,
             "unsupported" | "upload-not-implemented" | "private-list-edit-unsupported" => {
                 "unsupported"
             }
@@ -41,6 +40,9 @@ impl Session {
             uploaded: None,
             key: None,
             encrypted_key: None,
+            dm_draft: None,
+            dm_draft_revision: None,
+            dm_delivery: None,
             cancelled: None,
         }
     }

@@ -35,6 +35,7 @@ export function fakeRelay(options = {}) {
   let remote;
   let authRetries = 0, opened = 0;
   let reading = true;
+  let accepts = () => true;
   function send(ws, sub, event) { ws.send(JSON.stringify(['EVENT', sub, event])); }
   function add(event) {
     if (stored.length >= (options.maxEvents ?? 1000) || stored.some((e) => e.id === event.id)) return;
@@ -59,6 +60,10 @@ export function fakeRelay(options = {}) {
       } else if (msg[0] === 'EVENT') {
         if(!authenticated){ws.send(JSON.stringify(['OK',msg[1].id,false,'auth-required: authenticate first']));ws.send(JSON.stringify(['AUTH','local smoke challenge']));return;}
         if (published.length < 1000 && !published.some((e) => e.id === msg[1].id)) published.push(msg[1]);
+        if (!accepts(msg[1])) {
+          ws.send(JSON.stringify(['OK', msg[1].id, false, 'blocked: local fixture recipient']));
+          return;
+        }
         add(msg[1]);
         ws.send(JSON.stringify(['OK', msg[1].id, true, '']));
       } else if (msg[0] === 'REQ') {
@@ -85,5 +90,5 @@ export function fakeRelay(options = {}) {
       } else if (msg[0] === 'CLOSE') subs.delete(msg[1]);
     });
   }
-  return { route, stored, published, searches, authEvents, add, activeFilters:()=>[...clients.values()].flatMap(subs=>[...subs.values()].flat()), connections: () => clients.size, opened: () => opened, authRetries: () => authRetries, setReading: (value) => { reading = value; }, setRemote: (event) => { remote = event; } };
+  return { setAcceptance: (value) => { accepts = value; }, route, stored, published, searches, authEvents, add, activeFilters:()=>[...clients.values()].flatMap(subs=>[...subs.values()].flat()), connections: () => clients.size, opened: () => opened, authRetries: () => authRetries, setReading: (value) => { reading = value; }, setRemote: (event) => { remote = event; } };
 }

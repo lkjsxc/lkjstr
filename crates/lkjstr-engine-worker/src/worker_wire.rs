@@ -2,6 +2,9 @@ use super::*;
 use lkjstr_core::engine::wire::{Input as W, Output as O, Session, actions::Action as A};
 impl Host {
     pub(super) fn receive_value(&mut self, id: u64, value: JsValue) {
+        if self.stopped {
+            return;
+        }
         if let Ok(mut input) = serde_wasm_bindgen::from_value::<W>(value.clone()) {
             if let W::Act {
                 req,
@@ -30,6 +33,9 @@ impl Host {
         }
     }
     pub(super) fn receive(&mut self, id: u64, input: lkjstr_core::engine::wire::Input) {
+        if self.stopped {
+            return;
+        }
         if !self.loaded {
             if self.startup.len() < 256 {
                 self.startup.push((id, input));

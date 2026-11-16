@@ -41,6 +41,26 @@ pub async fn rpc_for_signal(
     ms: u32,
     signal: Option<&web_sys::AbortSignal>,
 ) -> Result<String, &'static str> {
+    rpc_mode(remote, method, params, ms, signal, false).await
+}
+/// Private crypto preserves actual signer deadlines without changing other RPC callers.
+pub async fn rpc_private(
+    remote: &Remote,
+    method: &str,
+    params: Vec<String>,
+    ms: u32,
+    signal: Option<&web_sys::AbortSignal>,
+) -> Result<String, &'static str> {
+    rpc_mode(remote, method, params, ms, signal, true).await
+}
+async fn rpc_mode(
+    remote: &Remote,
+    method: &str,
+    params: Vec<String>,
+    ms: u32,
+    signal: Option<&web_sys::AbortSignal>,
+    private: bool,
+) -> Result<String, &'static str> {
     super::abort::check(signal).map_err(|_| super::abort::CANCELLED)?;
     let id = lkjstr_protocol::upload::hash(lkjstr_protocol::generate_secret_key().as_bytes());
     let event = remote
@@ -78,14 +98,18 @@ pub async fn rpc_for_signal(
                     }
                     if let Ok(RelayMessage::Event { event, .. }) =
                         lkjstr_protocol::parse_relay_message(&raw, None)
-                        && let Some(result) = session.response(&event, &id)
+                        && let Some(result) = if private {
+                            session.response_private(&event, &id)
+                        } else {
+                            session.response(&event, &id)
+                        }
                     {
                         match result {
                             Ok(value) => {
                                 let _ = resolve.call1(&JsValue::NULL, &value.into());
                             }
-                            Err(_) => {
-                                let _ = reject.call1(&JsValue::NULL, &"signer-refused".into());
+                            Err(code) => {
+                                let _ = reject.call1(&JsValue::NULL, &code.into());
                             }
                         }
                     }
@@ -121,7 +145,18 @@ pub async fn rpc_for_signal(
         })
         .transpose()
         .map_err(|_| "internal")?;
-    let result = promise::bounded_ms_for(done, ms, "signer-missing", || {}, signal).await;
+    let result = promise::bounded_ms_for(
+        done,
+        ms,
+        if private {
+            "signer-timeout"
+        } else {
+            "signer-missing"
+        },
+        || {},
+        signal,
+    )
+    .await;
     for slot in slots.borrow_mut().drain(..) {
         slot.borrow_mut().take();
     }
@@ -129,6 +164,10 @@ pub async fn rpc_for_signal(
         .map_err(|e| {
             if e.as_string().as_deref() == Some(super::abort::CANCELLED) {
                 super::abort::CANCELLED
+            } else if private && e.as_string().as_deref() == Some("signer-timeout") {
+                "signer-timeout"
+            } else if private && e.as_string().as_deref() == Some("unsupported") {
+                "unsupported"
             } else if e.as_string().as_deref() == Some("signer-refused") {
                 "signer-refused"
             } else {

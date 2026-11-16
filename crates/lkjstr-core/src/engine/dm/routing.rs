@@ -36,7 +36,7 @@ pub fn advertisement(
     relays: &[String],
     now: u64,
 ) -> Result<lkjstr_protocol::UnsignedNostrEvent, &'static str> {
-    if !lkjstr_protocol::is_pubkey(account) || relays.is_empty() || relays.len() > 8 {
+    if !lkjstr_protocol::is_pubkey(account) || relays.len() > 8 {
         return Err("rejected");
     }
     let mut seen = BTreeSet::new();
@@ -140,4 +140,42 @@ pub fn wants(
         }
     }
     wants
+}
+
+/// Visible private views hydrate public profiles without querying private text.
+pub fn profile_wants(inbox: &Inbox, queries: &[Query]) -> Vec<Want> {
+    let mut people = BTreeSet::new();
+    for query in queries.iter().filter(|query| !query.unread_only) {
+        if query.conversation.is_some() {
+            people.extend(inbox.participants(query));
+        } else {
+            for ((account, _), message) in &inbox.messages {
+                if account == &query.account {
+                    people.extend(message.participants.iter().cloned());
+                    if people.len() >= 2048 {
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    people
+        .into_iter()
+        .take(2048)
+        .collect::<Vec<_>>()
+        .chunks(64)
+        .enumerate()
+        .map(|(index, people)| {
+            (
+                format!("~dm-profile:{index}"),
+                NostrFilter {
+                    authors: Some(people.to_vec()),
+                    kinds: Some(vec![0]),
+                    limit: Some(people.len() as u64),
+                    ..Default::default()
+                },
+                EngineQuery::default(),
+            )
+        })
+        .collect()
 }

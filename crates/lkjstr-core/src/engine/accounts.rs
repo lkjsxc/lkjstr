@@ -1,4 +1,6 @@
 //! At most 32 device accounts. Serialized secrets are only for private storage.
+#[path = "accounts_authority.rs"]
+mod authority;
 #[path = "accounts_crypto.rs"]
 mod crypto;
 use lkjstr_protocol as p;
@@ -19,6 +21,8 @@ pub struct Accounts {
 }
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Account {
+    #[serde(skip)]
+    authority: u64,
     pub pubkey: String,
     pub signer: String,
     #[serde(default)]
@@ -74,6 +78,7 @@ impl Accounts {
         }
         if let Some(old) = self.entries.iter_mut().find(|a| a.pubkey == pubkey) {
             if signer != "none" {
+                old.renew_authority()?;
                 old.signer = signer.into();
                 old.secret = secret;
                 old.remote = None;
@@ -85,6 +90,7 @@ impl Accounts {
             }
         } else {
             self.entries.push(Account {
+                authority: 0,
                 pubkey: pubkey.clone(),
                 signer: signer.into(),
                 secret,
@@ -135,8 +141,14 @@ impl Accounts {
         if self.entries.len() >= 32 && !self.entries.iter().any(|a| a.pubkey == pubkey) {
             return Err("too-large");
         }
+        let authority = self
+            .entries
+            .iter()
+            .find(|a| a.pubkey == pubkey)
+            .map_or(Ok(0), |a| a.authority.checked_add(1).ok_or("internal"))?;
         self.entries.retain(|a| a.pubkey != pubkey);
         self.entries.push(Account {
+            authority,
             pubkey: pubkey.clone(),
             signer: "remote".into(),
             secret: None,

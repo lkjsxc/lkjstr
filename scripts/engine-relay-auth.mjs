@@ -4,7 +4,7 @@ export async function relayAuth({page,send,wait,check,origin,account,signer,line
   check('AUTH '+mode+' account is selected',(await act({a:'account.use',pubkey:account})).ok);
   const before=authFake.authEvents.length, retried=authFake.authRetries();
   await page.evaluate(relays=>window.worker.postMessage({t:'test.relays',relays}),[url]);
-  await send({t:'open',sub:'auth-'+mode,query:{source:'global',account}});
+  await send({t:'open',sub:'auth-'+mode,query:{source:'relay',relay:url,account}});
   if(mode==='extension') {
     await wait(url=>window.messages.some(m=>m.t==='sign'&&JSON.parse(m.event).kind===22242
       &&JSON.parse(m.event).tags.some(t=>t[0]==='relay'&&t[1]===url)),url);

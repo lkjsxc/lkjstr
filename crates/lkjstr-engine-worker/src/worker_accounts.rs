@@ -1,6 +1,8 @@
 //! Commit account changes before exposing them; serialize mutations across ports.
 use super::*;
 use lkjstr_core::engine::wire::{Output as W, Session, actions::Action as A};
+#[path = "worker_account_drafts.rs"]
+mod draft_storage;
 #[path = "worker_account_mutation.rs"]
 mod mutation;
 pub(super) fn ready(h: &Host, id: u64, shared: bool) {
@@ -87,7 +89,11 @@ pub(super) fn status(host: &Rc<RefCell<Host>>) {
 fn send_accounts(h: &Host, id: u64) {
     let accounts=h.accounts.entries.iter().map(|a|{
         let author=lkjstr_core::engine::rows::author(&h.engine.store,&a.pubkey);
-        serde_json::json!({"author":lkjstr_core::engine::wire::note::author(&author),"signer":a.signer,"encrypted":a.encrypted(),"locked":a.locked(),"unread":lkjstr_core::engine::wire::unread_count(&h.engine,&a.pubkey)})
+        let mut value = serde_json::json!({"author":lkjstr_core::engine::wire::note::author(&author),"signer":a.signer,"encrypted":a.encrypted(),"locked":a.locked(),"unread":lkjstr_core::engine::wire::unread_count(&h.engine,&a.pubkey)});
+        if h.engine.store.replaceable(&a.pubkey, 10050).is_some() {
+            value["inbox"] = serde_json::json!(lkjstr_core::engine::dm::routing::inboxes(&h.engine.store, &a.pubkey).unwrap_or_default());
+        }
+        value
     }).collect();
     h.scope.direct(
         id,
@@ -124,13 +130,28 @@ pub(super) fn pump_accounts(host: &Rc<RefCell<Host>>) {
                 | A::AccountImportEncrypted { .. }
                 | A::AccountUnlock { .. }
         );
-        let result = mutation::apply(action, &mut next, watermark).await;
+        let removed = match &action {
+            A::AccountRemove { pubkey } => Some(pubkey.clone()),
+            _ => None,
+        };
+        let lock = if let A::AccountLock { pubkey } = &action {
+            if let Some(host) = weak.upgrade() {
+                Some(direct_messages::editors::prepare(&host, pubkey).await)
+            } else {
+                return;
+            }
+        } else {
+            None
+        };
+        let result = match &lock {
+            Some(Err(code)) => Err(*code),
+            _ => mutation::apply(action, &mut next, watermark).await,
+        };
         let result = match (result, db) {
             (Ok(exported), Some(db)) => match serde_json::to_string(&next) {
-                Ok(saved) => idb::kv_put(&db, "engine-accounts", &saved)
+                Ok(saved) => draft_storage::commit(&db, saved, removed.as_deref())
                     .await
-                    .map(|_| exported)
-                    .map_err(|_| "internal"),
+                    .map(|_| exported),
                 Err(_) => Err("internal"),
             },
             (Err(e), _) => Err(e),
@@ -173,11 +194,17 @@ pub(super) fn pump_accounts(host: &Rc<RefCell<Host>>) {
                             uploaded: None,
                             key: None,
                             encrypted_key: exported,
+                            dm_draft: None,
+                            dm_draft_revision: None,
+                            dm_delivery: None,
                             cancelled: None,
                         },
                     );
                 }
                 Err(code) => h.scope.direct(id, &Session::failure(req, code)),
+            }
+            if let Some(Ok(ticket)) = lock {
+                direct_messages::editors::finish(&mut h, &ticket.req);
             }
         }
     });

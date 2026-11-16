@@ -8,22 +8,12 @@ pub(super) fn input(h: &mut Host, id: u64, input: &I) -> bool {
             query,
             visible,
         } => {
+            let normalized = query.normalized();
             let error = h
                 .accounts
                 .require_signer(&query.account)
                 .err()
-                .or_else(|| {
-                    (!lkjstr_protocol::is_pubkey(&query.account)
-                        || query
-                            .conversation
-                            .as_deref()
-                            .is_some_and(|c| !lkjstr_protocol::is_event_id(c))
-                        || query
-                            .before
-                            .as_deref()
-                            .is_some_and(|c| !lkjstr_protocol::is_event_id(c)))
-                    .then_some("rejected")
-                })
+                .or_else(|| normalized.as_ref().err().copied())
                 .or_else(|| {
                     (h.dm.views.len() >= 32 && !h.dm.views.contains_key(&(id, sub.clone())))
                         .then_some("too-large")
@@ -41,12 +31,19 @@ pub(super) fn input(h: &mut Host, id: u64, input: &I) -> bool {
                 );
                 return true;
             }
+            let Ok(query) = normalized else {
+                return true;
+            };
             if h.dm.marks_error.is_some() {
                 h.dm.marks_started = false;
                 h.dm.marks_ready = false;
                 h.dm.marks_error = None;
             }
-            h.dm.errors.remove(&query.account);
+            if h.dm.errors.contains_key(&query.account)
+                || h.dm.views.contains_key(&(id, sub.clone()))
+            {
+                signers::retry(h, &query.account);
+            }
             h.dm.views.insert(
                 (id, sub.clone()),
                 View {
@@ -80,8 +77,11 @@ pub(super) fn input(h: &mut Host, id: u64, input: &I) -> bool {
         I::Crypted { req, value, error } => {
             if let Some((_, resolve)) = h.dm.crypto.remove(&(id, req.clone())) {
                 let data = if let Some(code) = error {
-                    serde_wasm_bindgen::to_value(&serde_json::json!({"error":code}))
-                        .unwrap_or(JsValue::NULL)
+                    serde::Serialize::serialize(
+                        &serde_json::json!({"error":code}),
+                        &serde_wasm_bindgen::Serializer::json_compatible(),
+                    )
+                    .unwrap_or(JsValue::NULL)
                 } else {
                     value
                         .as_ref()

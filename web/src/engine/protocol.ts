@@ -27,7 +27,8 @@
  * Also adds cache-wide month counts, window ordinals and month/ordinal anchors for time rails. */
 /** 6: private messages, external encryption, encrypted key import/export and session locks. */
 /** 7: atomic private visibility, correlated upload cancellation and signer ownership. */
-export const PROTOCOL_VERSION = 7;
+/** 8: private conversation identities, display models, inbox lists and private draft storage. */
+export const PROTOCOL_VERSION = 8;
 
 /** Chosen by the interface, unique among its open subscriptions. */
 export type SubId = string;
@@ -533,9 +534,31 @@ export type RelayEntry = { readonly url: string; readonly read: boolean; readonl
 
 /** Everything the reader can do. Every action acts as `as` and is answered by exactly one `result`. */
 export type Action =
+  /** Register a mounted private editor before allowing input; closed leases cannot hold a lock. */
+  | {
+      readonly a: 'dm.editor';
+      readonly as: Pubkey;
+      readonly editor: string;
+      readonly open: boolean;
+      readonly dirty?: boolean;
+    }
   | { readonly a: 'dm.send'; readonly as: Pubkey; readonly draft: DmDraft }
   | { readonly a: 'dm.seen'; readonly as: Pubkey; readonly conversation: string }
   | { readonly a: 'dm.relays.save'; readonly as: Pubkey; readonly relays: readonly string[] }
+  | { readonly a: 'dm.draft.load'; readonly as: Pubkey; readonly tab: string }
+  | {
+      readonly a: 'dm.draft.save';
+      readonly as: Pubkey;
+      readonly tab: string;
+      readonly state: DmDraftState;
+      readonly expected?: string;
+    }
+  | {
+      readonly a: 'dm.draft.clear';
+      readonly as: Pubkey;
+      readonly tab: string;
+      readonly expected?: string;
+    }
   | { readonly a: 'account.importEncrypted'; readonly key: string; readonly password: string }
   | { readonly a: 'account.unlock'; readonly pubkey: Pubkey; readonly password: string }
   | { readonly a: 'account.lock'; readonly pubkey: Pubkey }
@@ -611,6 +634,7 @@ export type Failure = {
     | 'signed-out'
     | 'read-only'
     | 'signer-refused'
+    | 'signer-timeout'
     | 'signer-missing'
     | 'no-relays'
     | 'rejected'
@@ -628,6 +652,8 @@ export type Failure = {
 };
 
 export type Account = {
+  /** Observed, signature-verified kind-10050 inbox relays; absent while unknown. */
+  readonly inbox?: readonly string[];
   readonly locked?: boolean;
   readonly encrypted?: boolean;
   readonly author: Author;
@@ -673,6 +699,7 @@ export type EngineConfig = {
 // ───────────────────────────────────────── messages ─────────────────────────────────────────
 
 export type ToEngine =
+  | { readonly t: 'dm.flushed'; readonly req: ReqId; readonly ok: boolean }
   | { readonly t: 'upload.cancel'; readonly req: ReqId }
   | {
       readonly t: 'dm.open';
@@ -691,6 +718,7 @@ export type ToEngine =
       readonly error?:
         | 'signer-missing'
         | 'signer-refused'
+        | 'signer-timeout'
         | 'unsupported'
         | 'rejected'
         | 'too-large';
@@ -829,6 +857,13 @@ export type Timeline = {
   readonly older: boolean;
 };
 export type FromEngine =
+  /** Hold edits until release; acknowledge prepare only after encrypted writes have committed. */
+  | {
+      readonly t: 'dm.flush';
+      readonly req: ReqId;
+      readonly account: Pubkey;
+      readonly phase: 'hold' | 'prepare' | 'release';
+    }
   | { readonly t: 'dm'; readonly sub: SubId; readonly snapshot: DmSnapshot }
   | {
       readonly t: 'crypt';
@@ -906,6 +941,12 @@ export type FromEngine =
       readonly key?: string;
       /** Explicit encrypted backup; never logged or stored by the interface. */
       readonly encryptedKey?: string;
+      /** Distinct participants whose wrapper reached an inbox, including the sender. */
+      readonly dmDelivery?: { readonly accepted: number; readonly total: number };
+      /** Private draft answers are scoped to the requesting client and never learned as public rows. */
+      readonly dmDraft?: DmDraftState;
+      /** Opaque account/tab revision, including a currently absent draft. */
+      readonly dmDraftRevision?: string;
     }
   /** The account signs with a browser extension (NIP-07 exists only on the main thread): sign this unsigned
    * event (JSON text) and answer with `signed`. */
@@ -928,18 +969,26 @@ export type FromEngine =
 
 /** Protocol 6: private data is separate from public rows and never learned by the profile cache. */
 export type DmQuery = {
+  /** Frame watch returns unread counts and states without private message bodies. */
+  readonly unreadOnly?: boolean;
   readonly account: Pubkey;
+  /** The engine canonicalizes this set, adds the account and derives the conversation identity. */
+  readonly participants?: readonly Pubkey[];
   readonly conversation?: string;
   readonly before?: string;
   readonly limit?: number;
 };
 export type DmDraft = {
+  readonly emoji?: readonly Emoji[];
   readonly recipients: readonly Pubkey[];
   readonly text: string;
   readonly replyTo?: string;
   readonly subject?: string;
 };
 export type DmMessage = {
+  /** Inert text/link/emoji display data; media addresses remain links. */
+  readonly segments?: readonly Segment[];
+  readonly reply?: { readonly id: string; readonly author: Pubkey; readonly excerpt: string };
   readonly id: string;
   readonly conversation: string;
   readonly author: Pubkey;
@@ -952,12 +1001,20 @@ export type DmMessage = {
   readonly unread: boolean;
 };
 export type DmConversation = {
+  /** Up to two distinct most recent authors other than the reader. */
+  readonly recentAuthors?: readonly Pubkey[];
   readonly key: string;
   readonly participants: readonly Pubkey[];
   readonly last: DmMessage;
   readonly unread: number;
 };
 export type DmSnapshot = {
+  readonly conversation?: string;
+  readonly people?: readonly Author[];
+  /** Only participants whose inbox absence or invalid list has been established. */
+  readonly blocked?: readonly Pubkey[];
+  /** All observed private unread messages, including conversations beyond the 200-row window. */
+  readonly unread?: number;
   readonly account: Pubkey;
   readonly conversations: readonly DmConversation[];
   readonly messages: readonly DmMessage[];
@@ -965,4 +1022,17 @@ export type DmSnapshot = {
   readonly undecryptable: number;
   readonly phase: 'loading' | 'cache' | 'live' | 'failed' | 'unsupported';
   readonly error?: string;
+};
+
+/** Only encrypted Worker storage retains these private composer records across reload. */
+export type DmDraftState = {
+  readonly draft: DmDraft;
+  readonly failed: readonly DmFailedDraft[];
+};
+export type DmFailedDraft = {
+  readonly key: string;
+  readonly draft: DmDraft;
+  readonly error?: Failure;
+  readonly dmDelivery?: { readonly accepted: number; readonly total: number };
+  readonly id?: string;
 };

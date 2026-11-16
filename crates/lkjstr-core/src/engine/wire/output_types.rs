@@ -2,6 +2,12 @@ use serde::Serialize;
 #[derive(Serialize)]
 #[serde(tag = "t", rename_all = "camelCase")]
 pub enum Output {
+    #[serde(rename = "dm.flush")]
+    DmFlush {
+        req: String,
+        account: String,
+        phase: String,
+    },
     Dm {
         sub: String,
         snapshot: crate::engine::dm::Snapshot,
@@ -101,6 +107,12 @@ pub enum Output {
         key: Option<String>,
         #[serde(rename = "encryptedKey", skip_serializing_if = "Option::is_none")]
         encrypted_key: Option<String>,
+        #[serde(rename = "dmDraft", skip_serializing_if = "Option::is_none")]
+        dm_draft: Option<Box<crate::engine::dm::drafts::State>>,
+        #[serde(rename = "dmDraftRevision", skip_serializing_if = "Option::is_none")]
+        dm_draft_revision: Option<String>,
+        #[serde(rename = "dmDelivery", skip_serializing_if = "Option::is_none")]
+        dm_delivery: Option<crate::engine::dm::drafts::Delivery>,
     },
     Status {
         connected: usize,

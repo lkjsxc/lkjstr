@@ -9,6 +9,10 @@ use std::collections::{BTreeSet, VecDeque};
 mod crypto;
 #[path = "worker_dm_delivery.rs"]
 mod delivery;
+#[path = "worker_dm_drafts.rs"]
+mod drafts;
+#[path = "worker_dm_editors.rs"]
+pub(super) mod editors;
 #[path = "worker_dm_input.rs"]
 mod input;
 #[path = "worker_dm_lifetime.rs"]
@@ -19,11 +23,25 @@ mod marks;
 mod receive;
 #[path = "worker_dm_send.rs"]
 mod send;
+#[path = "worker_dm_signers.rs"]
+mod signers;
+#[path = "worker_dm_snapshot.rs"]
+mod snapshot;
+#[cfg(feature = "harness")]
+#[path = "worker_dm_stop_probe.rs"]
+pub(super) mod stop_probe;
 pub(super) fn sync(h: &mut Host) {
     lifetime::sync(h);
+    signers::sync(h);
+    drafts::sync(h);
+    editors::sync(h);
 }
 pub(super) fn input(h: &mut Host, id: u64, message: &I) -> bool {
-    input::input(h, id, message)
+    let handled = editors::input(h, id, message)
+        || drafts::input(h, id, message)
+        || input::input(h, id, message);
+    signers::sync(h);
+    handled
 }
 pub(super) fn output(h: &Rc<RefCell<Host>>, message: &Output) -> bool {
     delivery::output(h, message)
@@ -31,7 +49,7 @@ pub(super) fn output(h: &Rc<RefCell<Host>>, message: &Output) -> bool {
 pub(super) struct View {
     query: dm::Query,
     visible: bool,
-    last: Option<(u64, String, Option<String>, bool, usize)>,
+    last: Option<snapshot::Signature>,
 }
 pub(super) enum Task {
     Send {
@@ -55,16 +73,18 @@ pub(super) enum Task {
 }
 #[derive(Default)]
 pub(super) struct State {
+    drafts: drafts::Book,
+    editors: editors::Book,
+    signers: signers::Book,
+    authority: BTreeMap<String, u64>, // <=32 nonsecret signer replacement counters
     inbox: dm::Inbox,
     access: BTreeMap<String, (bool, u64)>, // <=32 accounts; each unlock has a distinct lease
     views: BTreeMap<(u64, String), View>,  // <=32 explicit private subscriptions
     hidden: BTreeSet<u64>,                 // <=32 attached clients
     cursors: BTreeMap<(String, String), u64>, // <=32 accounts x (8 inbox relays + legacy cursor)
-    crypto: BTreeMap<(u64, String), (String, js_sys::Function)>, // <=8 crypto calls, removed at deadline
+    crypto: BTreeMap<(u64, String), (dm::signers::Lease, js_sys::Function)>, // <=8 crypto calls, removed at deadline
     queue: VecDeque<(String, String)>, // <=256 account/encrypted event IDs, never body copies
     attempted: BTreeSet<(String, String)>, // <=20000; pruned against bounded event store
-    decrypting: BTreeMap<String, usize>, // <=2 active account counters
-    receiving: usize,                  // <=2, one signer prompt per encrypted layer
     tasks: Vec<(Task, u64)>,           // <=4 combined queued/running writes
     running: usize,
     pending: BTreeMap<(u64, String), BTreeSet<String>>, // <=4 x 32 route discoveries
@@ -87,6 +107,7 @@ impl State {
                 v.visible
                     && !self.hidden.contains(id)
                     && self.access.get(&v.query.account).is_some_and(|(ok, _)| *ok)
+                    && !self.errors.contains_key(&v.query.account)
             })
             .map(|(_, v)| v.query.account.clone())
             .collect()
@@ -131,79 +152,31 @@ pub(super) fn pump(host: &Rc<RefCell<Host>>) {
         h.dm.cursors.retain(|(a, _), _| active.contains(a));
         h.dm.errors.retain(|a, _| saved.contains(a));
         h.dm.failures.retain(|a, _| saved.contains(a));
-        let pending = h.dm.pending.values().flatten().cloned().collect();
-        let wants = dm::routing::wants(&h.engine.store, &active, &pending, &h.dm.cursors);
+        let mut pending: BTreeSet<_> = h.dm.pending.values().flatten().cloned().collect();
+        let visible: Vec<_> =
+            h.dm.views
+                .iter()
+                .filter(|((client, _), view)| {
+                    view.visible
+                        && !h.dm.hidden.contains(client)
+                        && active.contains(&view.query.account)
+                })
+                .map(|(_, view)| view.query.clone())
+                .collect();
+        for query in &visible {
+            if !query.unread_only {
+                pending.extend(h.dm.inbox.participants(query));
+            }
+        }
+        let mut wants = dm::routing::wants(&h.engine.store, &active, &pending, &h.dm.cursors);
+        wants.extend(dm::routing::profile_wants(&h.dm.inbox, &visible));
         let now = h.time();
         h.engine.set_dm_wants(wants, now);
     }
     receive::pump(host);
     send::pump(host);
-    emit(host);
-}
-fn emit(host: &Rc<RefCell<Host>>) {
-    let mut h = host.borrow_mut();
-    let now = h.time();
-    if now < h.dm.next_emit {
-        return;
-    }
-    h.dm.next_emit = now + 250;
-    let keys: Vec<_> = h.dm.views.keys().cloned().collect();
-    for (id, sub) in keys {
-        let Some(view) = h.dm.views.get(&(id, sub.clone())) else {
-            continue;
-        };
-        if !view.visible || h.dm.hidden.contains(&id) {
-            continue;
-        }
-        let query = view.query.clone();
-        let account = &query.account;
-        let mut error = h
-            .accounts
-            .require_signer(account)
-            .err()
-            .map(str::to_owned)
-            .or_else(|| h.dm.marks_error.map(str::to_owned))
-            .or_else(|| h.dm.errors.get(account).cloned());
-        let phase = if h.dm.marks_error.is_some() {
-            "failed"
-        } else if !h.dm.marks_ready {
-            "loading"
-        } else if error.is_some() {
-            if error.as_deref() == Some("unsupported") {
-                "unsupported"
-            } else {
-                "failed"
-            }
-        } else {
-            let (phase, code) = h.engine.dm_phase(account);
-            error = code.map(str::to_owned);
-            let pending = h.dm.queue.iter().any(|(a, _)| a == account)
-                || h.dm.decrypting.get(account).is_some_and(|n| *n > 0);
-            if phase == "live" && pending {
-                "loading"
-            } else {
-                phase
-            }
-        };
-        let more = h.engine.dm_history_more(account, &h.dm.cursors);
-        let failures = h.dm.failures.get(account).copied().unwrap_or_default();
-        let signature = (
-            h.dm.inbox.revision,
-            phase.to_owned(),
-            error.clone(),
-            more,
-            failures,
-        );
-        if view.last.as_ref() == Some(&signature) {
-            continue;
-        }
-        let mut snapshot = h.dm.inbox.snapshot(&query, phase, error, more);
-        snapshot.undecryptable = failures;
-        if let Some(view) = h.dm.views.get_mut(&(id, sub.clone())) {
-            view.last = Some(signature);
-        }
-        h.scope.direct(id, &W::Dm { sub, snapshot });
-    }
+    drafts::pump(host);
+    snapshot::emit(host);
 }
 fn result(req: String, error: Option<&str>, id: Option<String>) -> W {
     W::Result {
@@ -218,6 +191,9 @@ fn result(req: String, error: Option<&str>, id: Option<String>) -> W {
         uploaded: None,
         key: None,
         encrypted_key: None,
+        dm_draft: None,
+        dm_draft_revision: None,
+        dm_delivery: None,
         cancelled: None,
     }
 }

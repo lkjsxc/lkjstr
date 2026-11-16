@@ -37,6 +37,7 @@ impl Accounts {
         }
         let encoded = encrypted.encode().map_err(code)?;
         if let Some(account) = self.entries.iter_mut().find(|a| a.pubkey == pubkey) {
+            account.renew_authority()?;
             account.signer = "local".into();
             account.secret = None;
             account.remote = None;
@@ -44,6 +45,7 @@ impl Accounts {
             account.unlocked_key = Some(key);
         } else {
             self.entries.push(Account {
+                authority: 0,
                 pubkey: pubkey.clone(),
                 signer: "local".into(),
                 relay_hints: vec![],

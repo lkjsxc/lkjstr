@@ -9,4 +9,4 @@ bindgen="${LKJSTR_WASM_BINDGEN:-wasm-bindgen}"
 if ! command -v "$bindgen" >/dev/null 2>&1; then
   bindgen="$PWD/tmp/cache/wasm-bindgen/wasm-bindgen"
 fi
-"$bindgen" --target web --out-dir tmp/engine-pkg target/wasm32-unknown-unknown/release/lkjstr_engine.wasm
+"$bindgen" --target web --out-dir tmp/engine-pkg "${CARGO_TARGET_DIR:-target}/wasm32-unknown-unknown/release/lkjstr_engine.wasm"

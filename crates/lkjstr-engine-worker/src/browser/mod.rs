@@ -3,6 +3,7 @@ pub mod abort;
 pub mod http;
 pub mod idb;
 mod idb_commit;
+pub mod idb_drafts;
 pub mod promise;
 pub mod socket;
 pub mod timer;
