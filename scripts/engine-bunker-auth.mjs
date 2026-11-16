@@ -37,7 +37,7 @@ else if(e.data?.t==='fixture.release')reply({t:'fixture.released',ok:handle.rele
 else if(e.data?.t==='fixture.renew')reply({t:'fixture.renewed',ok:handle.renew_queued_bunker(e.data.account)});
 else if(e.data?.t==='fixture.clock'){if(Number.isInteger(e.data.ms)&&e.data.ms>=0&&e.data.ms<=90_000)fixtureClock+=e.data.ms;reply({t:'fixture.clock',now:Date.now()});}
 else if(e.data?.t==='fixture.expire'){const delays=[];for(const[id,timer]of [...timers]){timers.delete(id);clearTimer(id);delays.push(timer.ms);timer.callback(...timer.args);}reply({t:'fixture.expired',delays});}
-else if(e.data?.t==='fixture.stop'){handle.stop();reply({t:'fixture.stopped'});}else input(e);};for(const e of queued)self.onmessage(e);`;
+else if(e.data?.t==='fixture.stop'){handle.stop();reply({t:'fixture.stopped',queued:handle.public_sign_queued()});}else input(e);};for(const e of queued)self.onmessage(e);`;
 let browser,context,server,sockets,fixture,client,authFetches=0;
 const fake=fakeRelay();
 try {

@@ -49,6 +49,7 @@ export async function authorizationBoundaries({c,fixture,fake,origin,check}) {
   const beforeStop=fixture.calls.length;
   check('stop control arms a fresh bounded barrier',(await c.control('fixture.hold',{account})).ok);
   await c.begin({a:'publish',as:account,what:{k:'note',draft:{text:'stopped queued auth fixture'}}});
-  await queued(c,true);await c.control('fixture.stop');await queued(c,false);
-  check('permanent Host stop releases the queue without reviving remote work',fixture.calls.length===beforeStop);
+  await queued(c,true);const stopped=await c.control('fixture.stop');
+  await c.page.waitForTimeout(60);
+  check('permanent Host stop releases the queue without reviving remote work',stopped.queued===false&&fixture.calls.length===beforeStop);
 }
