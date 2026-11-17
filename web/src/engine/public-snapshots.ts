@@ -9,7 +9,9 @@ import {
   forgetPublicSnapshot,
   type PublicSnapshot,
   readPublicSnapshot,
+  removePublicSnapshotRows,
   snapshotIdentity,
+  withoutPublicRows,
 } from './public-snapshot-store.ts';
 import {
   flushPublicView as flushView,
@@ -114,12 +116,24 @@ export function publicSnapshots(inner: Transport): Transport {
       }
       view.rows = applyOps(view.rows, ops).slice(0, 6400);
       rememberPublicMedia(view.rows);
+      const removals = ops.filter((op) => op.op === 'remove');
+      const removed = new Set(removals.map((op) => op.key));
+      removePublicSnapshotRows(view.identity, removed);
       if (view.held) {
-        const removals = ops.filter((op) => op.op === 'remove');
         if (removals.length) {
-          view.held = { ...view.held, rows: applyOps(view.held.rows, removals) };
+          const oldAnchor = view.held.anchor;
+          view.held = withoutPublicRows(view.held, removed);
           receive({ ...message, ops: removals });
-          if (!view.held.rows.length) view.held = undefined;
+          if (view.held && view.held.anchor !== oldAnchor) {
+            if (view.topAnchor === oldAnchor) view.topAnchor = view.held.anchor;
+            inner.post({
+              t: 'window',
+              sub: message.sub,
+              anchor: { key: view.held.anchor },
+              before: 0,
+              after: Math.max(60, view.held.rows.length),
+            });
+          }
         }
         if (heldRows(message.sub, view, receive)) return;
         receive({

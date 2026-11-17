@@ -42,7 +42,9 @@ navigation still asks for the requested window. Render-setting changes suspend
 capture on existing subscriptions until they reopen, avoiding ambiguous old
 replies. Private policy revocation never turns old private row models into a
 public snapshot. Relay EOSE alone never removes a held public event; an explicit
-engine removal still reaches the reader and invalidates an empty saved window.
+engine removal still reaches the reader and removes its row from both saved
+windows immediately, even during partial hydration. A removed held anchor moves
+to the next retained row without changing the surviving rows' order.
 
 ## Verification
 
@@ -50,7 +52,9 @@ On 2026-11-17, all 27 focused frontend cases and the full frontend check passed.
 This includes private-author/account-face exclusion, EOSE retention, explicit
 removal, count lineage/generation/durability and complete model hydration.
 The 01:31 UTC check completed in 11.729 seconds; real-browser probes remain
-pending behind the initial account-safe shipment.
+pending behind the initial account-safe shipment. A later two-row removal
+regression failed before correction and passed with all 21 relevant snapshot,
+store and count cases at 01:49:18 UTC; type/format checks also passed.
 Three native projection-permission/revocation cases passed at 00:29:49 UTC
 (load 2.44/3.99/6.65). Real Worker/browser and timing evidence remain pending.
 The opening race compares immutable production builds; a local mirror is

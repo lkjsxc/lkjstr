@@ -103,6 +103,50 @@ export function forgetPublicSnapshot(identity: string): void {
   }
 }
 
+export function withoutPublicRows(
+  snapshot: PublicSnapshot,
+  removed: ReadonlySet<string>,
+): PublicSnapshot | undefined {
+  const rows = snapshot.rows.filter((row) => !removed.has(row.key));
+  if (!rows.length) return;
+  const anchor =
+    rows.find((row) => row.key === snapshot.anchor) ??
+    rows.find((row) => row.kind === 'note' || row.kind === 'notification') ??
+    rows[0];
+  return anchor ? { ...snapshot, rows, anchor: anchor.key } : undefined;
+}
+
+/** Positive removals update both durable windows even while hydration is incomplete. */
+export function removePublicSnapshotRows(identity: string, removed: ReadonlySet<string>): void {
+  if (identity.length > 8192 || !removed.size) return;
+  try {
+    const store = backend();
+    if (!store) return;
+    for (const top of [false, true]) {
+      const key = keyFor(identity, top);
+      const raw = store.getItem(key);
+      const snapshot = decode(raw);
+      if (!raw || !snapshot?.rows.some((row) => removed.has(row.key))) continue;
+      const kept = withoutPublicRows(snapshot, removed);
+      if (!kept) {
+        store.removeItem(key);
+        continue;
+      }
+      const envelope = JSON.parse(raw) as Envelope;
+      const body = JSON.stringify(kept);
+      try {
+        // Removing a row does not make an unseen window recently read.
+        store.setItem(key, JSON.stringify({ ...envelope, body, check: fingerprint(body) }));
+      } catch {
+        // Failure to save a smaller window must not resurrect an excluded row.
+        store.removeItem(key);
+      }
+    }
+  } catch {
+    // Unavailable optional storage cannot restore authority to a removed row.
+  }
+}
+
 export function writePublicSnapshot(
   identity: string,
   top: boolean,

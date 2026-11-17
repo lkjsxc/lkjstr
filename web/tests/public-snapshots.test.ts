@@ -207,3 +207,24 @@ it('keeps a stored public event through offline completion and relay EOSE until 
   expect(readPublicSnapshot(snapshotIdentity(query, 'en', true), 'top')).toBeUndefined();
   next.transport.close();
 });
+
+it('durably removes one held row even while another cached row is still missing from the engine', async () => {
+  const second = note('2'.repeat(64));
+  await savePublic([note(), second]);
+  const next = harness();
+  next.open();
+  await vi.advanceTimersByTimeAsync(0);
+  next.emit({ t: 'cache.policy', sub: 'one', allow: true });
+  next.rows([note()]);
+  next.emit({ t: 'patch', sub: 'one', ops: [{ op: 'remove', key: note().key }] });
+  const saved = readPublicSnapshot(snapshotIdentity(query, 'en', true), 'top');
+  expect(saved?.rows.map((row) => row.key)).toEqual([second.key]);
+  expect(saved?.anchor).toBe(second.key);
+  next.transport.close();
+  const reopened = harness();
+  reopened.open();
+  await vi.advanceTimersByTimeAsync(0);
+  const replay = reopened.messages.find((message) => message.t === 'rows');
+  expect(replay?.t === 'rows' && replay.rows.map((row) => row.key)).toEqual([second.key]);
+  reopened.transport.close();
+});
