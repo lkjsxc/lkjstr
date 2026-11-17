@@ -38,7 +38,12 @@ setsid nohup /home/coder/workspace/lkjstr-direction-20261116/ship.sh \
 
 The shared ship lock precedes replacing `tmp/ship.out` and `tmp/ship.log`.
 The helper runs web check, the full real smoke and real build/package, preserves
-the exact archive and checks the clean source revision again. It pushes that
+the exact archive and checks the clean source revision again. A dry-run push
+checks authentication before these expensive gates. Build XDG isolation must
+not hide an existing GitHub login: an explicit GH_CONFIG_DIR is preserved;
+a login in the selected XDG directory is preserved; otherwise the ordinary
+home-directory gh login is selected when it exists. No credential is copied,
+printed or stored in shipment evidence. It pushes the
 tested commit before any host operation, then fetches and requires exact main.
 An authentication or concurrent-main failure cannot produce a deployment.
 There is no best-effort push after activation.
@@ -97,7 +102,8 @@ Keep the shared target below 25 GiB and remove merged integration trees.
 
 `node --test scripts/ship.test.mjs` executes the actual shell against isolated
 Git repositories and a simulated host CLI, never the live host. It covers
-rejected pushes, changed source, exact receipt/hash checks, one owner note,
+rejected pushes, isolated-XDG and explicit authentication, missing credentials
+before expensive gates, changed source, exact receipt/hash checks, one owner note,
 lock-only retries, incomplete-baseline retry, notification failure, the shared
 ship interval, active-build cleanup deferral and unrelated-target refusal.
 Host graph/rollback/HTTPS tests and an exact archived-build proof are separate.

@@ -8,6 +8,7 @@ import test from 'node:test';
 const source = dirname(fileURLToPath(import.meta.url));
 const temporary = join(source, '../tmp');
 mkdirSync(temporary, { recursive: true });
+const realGit = spawnSync('which', ['git'], { encoding: 'utf8' }).stdout.trim();
 const quote = value => `'${value.replaceAll("'", "'\\''")}'`;
 function fixture(t, options = {}) {
   const base = mkdtempSync(join(temporary, 'ship-test-'));
@@ -43,7 +44,19 @@ function fixture(t, options = {}) {
   writeFileSync(join(root, 'tracked.txt'), 'tested candidate');
   git(['commit', '-qam', 'Candidate fixture']);
   if (options.rejectPush) writeFileSync(join(origin, 'reject-push'), 'reject');
-  for (const name of ['pnpm', 'ssh', 'desk', 'cargo', 'sleep']) {
+  const authEnv = {};
+  const authDefault = join(base, 'login/.config/gh');
+  const authXdg = join(base, 'redirected/gh');
+  const authCustom = join(base, 'custom-gh');
+  if (options.auth) {
+    for (const directory of [authDefault, authXdg, authCustom]) mkdirSync(directory, { recursive: true });
+    const chosen = options.auth === 'explicit' ? authCustom : options.auth === 'xdg' ? authXdg : authDefault;
+    if (options.auth !== 'missing') writeFileSync(join(chosen, 'hosts.yml'), 'synthetic credential fixture');
+    Object.assign(authEnv, { HOME: join(base, 'login'), XDG_CONFIG_HOME: join(base, 'redirected'),
+      GH_CONFIG_DIR: options.auth === 'explicit' ? authCustom : '', LKJSTR_SHIP_TEST_REAL_GIT: realGit,
+      GIT_CONFIG_NOSYSTEM: '1', GIT_CONFIG_GLOBAL: '/dev/null' });
+  }
+  for (const name of ['pnpm', 'ssh', 'desk', 'cargo', 'sleep', ...(options.auth ? ['git', 'credential-fixture'] : [])]) {
     writeFileSync(join(root, '.test-bin', name), `#!${process.execPath}\nimport ${JSON.stringify(join(root, 'scripts/ship-fixture.mjs'))};\n`, { mode: 0o755 });
   }
   const events = () => existsSync(join(root, 'tmp/actions.jsonl'))
@@ -52,12 +65,12 @@ function fixture(t, options = {}) {
     const result = spawnSync('bash', ['scripts/ship.sh', '保存した内容を安全に保ちます', ...(mode ? [mode] : [])], {
       cwd: root, encoding: 'utf8', timeout: 30_000,
       env: { ...process.env, PATH: `${join(root, '.test-bin')}:${process.env.PATH}`,
-        LKJSTR_SHIP_STATE_DIR: state, LKJSTR_SHIP_TEST_ROOT: root, ...env },
+        LKJSTR_SHIP_STATE_DIR: state, LKJSTR_SHIP_TEST_ROOT: root, ...authEnv, ...env },
     });
     return { ...result, summary: readFileSync(join(root, 'tmp/ship.out'), 'utf8'),
       log: readFileSync(join(root, 'tmp/ship.log'), 'utf8') };
   };
-  return { root, origin, state, git, events, run };
+  return { root, origin, state, git, events, run, authDefault, authXdg, authCustom };
 }
 const deploys = events => events.filter(row => row.command === 'ssh' && row.action.includes('ops/lkjstr.py deploy'));
 const notices = events => events.filter(row => row.command === 'desk');
@@ -184,4 +197,28 @@ test('debug cleanup refuses a target outside the owned repository', t => {
   assert.match(result.log, /unrelated target directory/);
   assert.equal(readFileSync(join(outside, 'preserve'), 'utf8'), 'unrelated');
   assert.equal(f.events().some(row => row.command === 'cargo'), false);
+});
+
+for (const [mode, directory] of [['fallback', 'authDefault'], ['explicit', 'authCustom'], ['xdg', 'authXdg']]) {
+  test(`Git credentials survive build XDG isolation: ${mode}`, t => {
+    const f = fixture(t, { auth: mode });
+    const result = f.run();
+    assert.equal(result.status, 0, result.log);
+    const events = f.events();
+    const authentication = events.filter(row => row.command === 'authentication');
+    assert.equal(authentication.length, 2);
+    assert.ok(authentication.every(row => row.directory === f[directory]));
+    assert.equal(authentication[0].dryRun, true);
+    assert.equal(authentication[1].dryRun, false);
+    assert.ok(events.indexOf(authentication[0]) < events.findIndex(row => row.command === 'pnpm'));
+    assert.doesNotMatch(result.log + result.summary, /synthetic-password/);
+  });
+}
+
+test('missing authentication stops before any expensive gate or host action', t => {
+  const f = fixture(t, { auth: 'missing' });
+  const result = f.run();
+  assert.equal(result.status, 1);
+  assert.match(result.summary, /cannot authenticate/);
+  assert.equal(f.events().some(row => ['pnpm', 'ssh', 'desk'].includes(row.command)), false);
 });

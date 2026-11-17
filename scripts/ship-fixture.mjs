@@ -14,7 +14,28 @@ const statePath = join(root, 'tmp/host-state.json');
 const state = () => existsSync(statePath) ? JSON.parse(readFileSync(statePath, 'utf8')) : { calls: 0, current: 'a'.repeat(32) };
 const save = value => writeFileSync(statePath, JSON.stringify(value));
 
-if (name === 'pnpm') {
+if (name === 'credential-fixture') {
+  const directory = process.env.GH_CONFIG_DIR || join(process.env.XDG_CONFIG_HOME || join(process.env.HOME, '.config'), 'gh');
+  if (args[0] === 'get' && existsSync(join(directory, 'hosts.yml'))) {
+    process.stdout.write('username=synthetic-user\npassword=synthetic-password\n');
+  }
+} else if (name === 'git') {
+  const executable = process.env.LKJSTR_SHIP_TEST_REAL_GIT;
+  if (!executable) throw new Error('real Git fixture path is required');
+  if (args[0] === 'push') {
+    const quote = value => `'${value.replaceAll("'", "'\\''")}'`;
+    const helper = '!' + quote(process.execPath) + ' ' + quote(join(root, '.test-bin/credential-fixture'));
+    const authenticated = spawnSync(executable, ['-c', 'credential.helper=', '-c', 'credential.helper=' + helper, 'credential', 'fill'], {
+      input: 'protocol=https\nhost=github.com\n\n', encoding: 'utf8', env: process.env,
+    });
+    if (authenticated.status !== 0) process.exit(authenticated.status ?? 1);
+    if (!authenticated.stdout.includes('password=synthetic-password')) process.exit(1);
+    const directory = process.env.GH_CONFIG_DIR || join(process.env.XDG_CONFIG_HOME, 'gh');
+    log({ command: 'authentication', directory, dryRun: args.includes('--dry-run') });
+  }
+  const result = spawnSync(executable, args, { stdio: 'inherit', env: process.env });
+  process.exit(result.status ?? 1);
+} else if (name === 'pnpm') {
   log({ command: name, args });
   if (process.env.LKJSTR_SHIP_TEST_SOURCE_CHANGE) writeFileSync(join(root, 'tracked.txt'), 'changed during build');
   if (args[0] === 'package') {

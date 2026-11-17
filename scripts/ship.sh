@@ -6,6 +6,11 @@ export LKJSTR_WASM_BINDGEN=${LKJSTR_WASM_BINDGEN:-$HOME/.cache/trunk/wasm-bindge
 export CARGO_BUILD_JOBS=4 RUST_TEST_THREADS=4 CARGO_INCREMENTAL=0
 export CARGO_PROFILE_DEV_DEBUG=0 CARGO_PROFILE_TEST_DEBUG=0 GIT_TERMINAL_PROMPT=0
 export PATH="$PATH:$HOME/.cargo/bin"
+# Build XDG directories must not hide the user's existing GitHub login.
+# An explicit GH_CONFIG_DIR or a login in the chosen XDG directory wins.
+if [[ -z "${GH_CONFIG_DIR:-}" && ! -f "${XDG_CONFIG_HOME:-$HOME/.config}/gh/hosts.yml" && -f "$HOME/.config/gh/hosts.yml" ]]; then
+  export GH_CONFIG_DIR="$HOME/.config/gh"
+fi
 NOTE=${1:?one Japanese line for the owner}
 MODE=${2:-}
 [[ $# -le 2 && ( -z "$MODE" || "$MODE" = --establish-rollback-baseline ) ]] || exit 2
@@ -33,6 +38,8 @@ git fetch -q origin main || fail 'cannot fetch main'
 git merge-base --is-ancestor origin/main HEAD || fail 'origin/main is not in HEAD: rebase first'
 REVISION=$(git rev-parse HEAD) || fail 'no revision'
 C=$(git rev-parse --short HEAD) || fail 'no short revision'
+# Authenticate before the costly gates; the real push still follows verification.
+git push --dry-run -q origin HEAD:main || fail 'cannot authenticate the tested-source push; live is unchanged'
 RUN="$W/tmp/ship-$(date -u +%Y%m%dT%H%M%SZ)-$$"
 mkdir -p "$RUN" || fail 'cannot retain ship evidence'
 cd "$W/web" || fail 'no web/'
