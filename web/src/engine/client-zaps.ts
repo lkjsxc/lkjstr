@@ -18,7 +18,7 @@ export function createZapClient(transport: Transport) {
     receive: (message: Reply | undefined) => void,
   ) {
     if (pending.size >= 16) throw new Error('zap query limit');
-    const req = 'zq' + String(++serial);
+    const req = `zq${String(++serial)}`;
     const close = (): void => {
       if (!pending.delete(req)) return;
       clearTimeout(timer);

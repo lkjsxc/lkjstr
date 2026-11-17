@@ -100,7 +100,7 @@ describe('exact package reachable asset graph', () => {
     "/* new URL('/engine.wasm',import.meta.url); */export {};",
     'const text="new URL(\'/engine.wasm\',import.meta.url)";',
     "const text=`new URL('/engine.wasm',import.meta.url)`;",
-    'const match=/new URL\("engine.wasm"\)/;',
+    'const match=/new URL("engine.wasm")/;',
   ])('ignores comments, quoted text, templates and regex decoys: %s', (statement) => {
     rejects(graph(statement), '.wasm');
   });

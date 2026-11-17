@@ -5,7 +5,7 @@ import { compose, setup } from './smoke-signer-support.mjs';
 const entry = '[data-entry="set.servers"]';
 export async function saveServers(page, servers) {
   await page.evaluate((servers) => {
-    const req = 'marks-' + Date.now();
+    const req = `marks-${Date.now()}`;
     window.uploadListResult = undefined;
     window.uploadListReq = req;
     window.uploadPort.postMessage({

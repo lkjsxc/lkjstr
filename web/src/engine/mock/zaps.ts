@@ -228,7 +228,7 @@ export function createZapMock(core: Core) {
                 provider: PROVIDER,
                 target: action.intent.target,
                 amountMsat: action.intent.amountMsat,
-                invoice: 'mock-zap-invoice:' + msg.req,
+                invoice: `mock-zap-invoice:${msg.req}`,
                 paymentHash: 'c'.repeat(64),
                 expiresAt: core.now() + 60_000,
                 successAction: null,

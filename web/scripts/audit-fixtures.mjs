@@ -11,7 +11,7 @@ export async function auditFixtures({ fake, sign, owner, note }) {
   const now = Math.floor(Date.now() / 1000);
   const send = async (kind, content, tags = []) => {
     peer.stdin.write(
-      JSON.stringify({ pubkey: fixture.note.pubkey, created_at: now, kind, content, tags }) + '\n',
+      `${JSON.stringify({ pubkey: fixture.note.pubkey, created_at: now, kind, content, tags })}\n`,
     );
     const event = JSON.parse((await lines.next()).value);
     fake.add(event);
