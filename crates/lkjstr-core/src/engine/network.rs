@@ -13,8 +13,12 @@ mod cancellation;
 mod configuration;
 #[path = "network_count_routes.rs"]
 mod count_routes;
+#[path = "network_coverage.rs"]
+mod coverage;
 #[path = "network_delivery.rs"]
 mod delivery;
+#[path = "network_eviction.rs"]
+mod eviction;
 #[path = "network_frontier.rs"]
 mod frontier;
 use frontier::PageFrontier;

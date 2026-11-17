@@ -132,3 +132,18 @@ another selector remains live. This requires a bounded handover before Q1 is
 complete; no zero-waste or complete-Q1 claim is made by this candidate.
 Twenty focused native planner regressions pass in tmp/q1-planner-focused.log.
 Full combined gates and frozen public/native score comparisons remain required.
+
+## Q1 measured retention and physical eviction
+
+Evict whole transmitted envelopes by their most urgent member, unfinished
+coverage, live status and resend size rather than BTreeMap insertion order.
+An already-sent count bucket is reused when its targets remain a subset of
+current wants. Complete short public follower lookups survive hide/reopen for
+15 seconds on their original relay and exact filter only (256 retained maximum).
+Private, truncated and unfinished replies never create this coverage proof.
+The same signed five-pane/32-relay/300-author fixture now moves cold wire
+requests 53 to 40, duplicate events 214 to 159, total bytes 515907 to 347028.
+Warm bytes move 1116770 to 339094; all seven days move at most 435149 to 352129.
+Recall remains 331/331 and simulated first-screen readiness stays 375 ms.
+The original rejected 576352-byte Q1 candidate is not shipped. A matched-window
+public score and real Worker browser proof remain release gates.

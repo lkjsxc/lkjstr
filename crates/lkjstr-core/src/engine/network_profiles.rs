@@ -96,8 +96,7 @@ impl Network {
                     && (matches!(kind, 0 | 1 | 3)
                         || keys(&r.page_filter, kind)
                             .iter()
-                            .all(|key| wanted_keys.contains(key))
-                            && keys(&r.page_filter, kind).len() == wanted_keys.len())
+                            .all(|key| wanted_keys.contains(key)))
             }) {
                 let mut members = BTreeSet::new();
                 for item in keys(&request.page_filter, kind) {

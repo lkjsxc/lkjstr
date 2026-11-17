@@ -16,6 +16,7 @@ impl Network {
         private: &crate::engine::settings::PrivateLists,
         now: u64,
     ) {
+        self.expire_coverage(now);
         let wants = want_key::gaps(wants, store);
         self.reported
             .retain(|sub, _| wants.iter().any(|(id, _, _)| id == sub));
@@ -187,6 +188,9 @@ impl Network {
             .cloned()
             .collect();
         for id in obsolete {
+            if self.keep_coverage(&id, now) {
+                continue;
+            }
             if let Some(r) = self.requests.remove(&id)
                 && r.sent
                 && !self.requests.iter().any(|(id, q)| {
@@ -196,6 +200,7 @@ impl Network {
                 self.close_group(&r.relay, &r.wire_id);
             }
         }
+        self.bound_coverage();
         self.request_policy(&queries, store, &mut weights);
         self.tick(now);
     }

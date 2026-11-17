@@ -134,7 +134,7 @@ impl Network {
                     let victim = self
                         .requests
                         .iter()
-                        .find(|(_, q)| {
+                        .filter(|(_, q)| {
                             q.relay == r.relay
                                 && q.sent
                                 && !self.requests.values().any(|other| other.sent
@@ -171,6 +171,7 @@ impl Network {
                                                 && (!r.members.contains("~account-discovery")
                                                     || !r.page_eose)))))
                         })
+                        .min_by_key(|(_, q)| eviction::loss(&self.requests, q))
                         .map(|(id, _)| id.clone());
                     if let Some(victim) = victim {
                         let relay = r.relay.clone();

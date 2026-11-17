@@ -182,7 +182,9 @@ impl super::Network {
                 let stable = current_route.is_some_and(|r| {
                     // Hydration rewrites logical filter keys into immutable buckets.
                     // Preserve their existing routing independently of live-slot ownership.
-                    r.read_slot || super::profiles::family(f, &r.members).is_some()
+                    r.read_slot
+                        || super::profiles::family(f, &r.members).is_some()
+                        || (r.members.is_empty() && r.complete && r.page_eose)
                 });
                 // An actual inclusive continuation inherits a full predecessor's
                 // ordinary slot. Reranking must not discard its unqueried tail.

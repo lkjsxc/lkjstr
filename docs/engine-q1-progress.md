@@ -185,3 +185,15 @@ The comparator now refuses a public keep decision when start times differ by
 more than the combined sample lengths (minimum ten minutes). The regression is
 reported, never silently excluded; the deterministic native Q5 still rejects
 this Q1 candidate on cold and daily traffic costs. No deployment occurred.
+
+## Accepted native follow-up (2026-11-17)
+
+Cost-aware whole-envelope eviction, subset reuse of sent count buckets and a
+15-second, 256-entry cache of complete public kind-3 follower lookup coverage
+remove repeated large follow lists on hide/reopen. The identical native fixture
+retains 331/331 recall and a 375 ms simulated first screen.
+Cold requests 53 -> 40, duplicates 214 -> 159, bytes 515907 -> 347028;
+warm requests 145 -> 25, bytes 1116770 -> 339094; each of seven days
+moves 75 -> 30 requests and <=435149 -> 352129 bytes.
+Q5 native comparator: keep=true, problems=[]; three coverage tests pass.
+Public matched-window comparison, real Worker and release gates are pending.
