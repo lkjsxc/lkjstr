@@ -32,6 +32,7 @@ Engine (`crates/`):
 - [outbox.md](outbox.md): read cursors, durable quality, focus, weights and purposes.
 - [cover.md](cover.md): hydration traffic, duplicate resumption, public medians and gaps.
 - [engine-q1-progress.md](engine-q1-progress.md): exact sharing, finite page correctness and read-plan evidence.
+- [q1-public-score-20261117.md](q1-public-score-20261117.md): Q1 matched real-relay score, witness bounds and validation.
 - [engine-q1-localreads.md](engine-q1-localreads.md): bounded optional exact-ID reads before relay fallback.
 - [engine-q1-frontier.md](engine-q1-frontier.md): independent logical quotas in shared finite requests.
 - [engine-filter-identity.md](engine-filter-identity.md): canonical selector identity and preserved ownership.

@@ -4,7 +4,7 @@
 
 Current limits: [parity.md](parity.md), [engine-performance.md](engine-performance.md).
 Claude owns the interface. Account-safe and A1/A2 (972ef776) are live;
-[Q1](engine-q1-progress.md) passes native scoring, not public/Worker gates; Q2-Q5 remain.
+[Q1](engine-q1-progress.md) passes matched public scoring; Worker and ship gates remain. Q2-Q5 remain.
 
 ## Specified keys and messages (2026-11-16)
 
@@ -185,7 +185,7 @@ The archive graph and numeric-token corrections pass 80 package cases and 19 xta
 The seventh ship's stale host validator was corrected through GitOps.
 Account-safe 07e88178 shipped at 02:07 UTC with schema-2 rollback and HTTPS proof;
 A1/A2 shipped at 972ef776. [Receipts and hashes](engine-shipping.md).
-Q1 passes native scoring but awaits public evidence, gates and deployment.
+Q1's public Q5 pair passed: 894 -> 567 requests, 100/100 witnesses. Final Worker and ship gates remain; see [score](q1-public-score-20261117.md).
 
 Protocol-11/12 gate records: [variants](engine-variants-verification.md), [device](engine-device-verification.md).
 The [ninth hour](engine-performance-ninth.md) and [coverage audit](engine-performance-ninth-coverage.md) record hidden quotes and evidence limits.

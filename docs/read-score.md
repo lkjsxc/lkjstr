@@ -169,3 +169,7 @@ Related long-duration probes: [race-open.md](race-open.md),
 [cache-repeat.md](cache-repeat.md), and [cache-repeat-private.md](cache-repeat-private.md).
 They remain separate measurements; the five-minute baseline does not establish
 a full opening matrix, two-hour repeat-cache result or phone performance.
+
+## Q1 accepted public pair
+
+The [2026-11-17 public score](q1-public-score-20261117.md) records 100/100 signed witnesses and a Q5 keep decision.

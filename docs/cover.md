@@ -147,3 +147,23 @@ Warm bytes move 1116770 to 339094; all seven days move at most 435149 to 352129.
 Recall remains 331/331 and simulated first-screen readiness stays 375 ms.
 The original rejected 576352-byte Q1 candidate is not shipped. A matched-window
 public score and real Worker browser proof remain release gates.
+
+## Q1 public result: keep the signed reply, not the retry
+
+On the third matched real-relay run, retaining follower page evidence alone
+still lost the Q5 bytes and first-screen guard. The verification ingress
+capacity was smaller than one legitimately signed 200-event follower reply.
+When its pending queue overflowed, the physical reply could be closed and
+retried on several relays despite the verified store holding most events.
+
+The final candidate retains up to 32 MiB of unverified signed bodies in
+memory, then verifies them in bounded slices. Queue pressure still has a
+hard cap and loss invalidates the affected original reply. Cached follower
+page evidence is per relay and filter and does not claim the list is complete.
+The 200-event native burst and fixed public five-view run both pass.
+
+The 300-second paired public comparison returned keep=true (100/100 signed
+witnesses in each arm): 894 to 567 requests, 3394 to 1905 duplicate events,
+20.56 to 20.17 MB received, and 1664.4 to 753.6 ms first-screen readiness.
+This is a witnessed real-relay improvement, not total public recall or a
+nostter race result. Capture evidence remains in the ignored Q5 tmp reports.
