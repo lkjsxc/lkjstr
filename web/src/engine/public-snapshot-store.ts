@@ -116,9 +116,12 @@ export function withoutPublicRows(
   return anchor ? { ...snapshot, rows, anchor: anchor.key } : undefined;
 }
 
-/** Positive removals update both durable windows even while hydration is incomplete. */
-export function removePublicSnapshotRows(identity: string, removed: ReadonlySet<string>): void {
-  if (identity.length > 8192 || !removed.size) return;
+/** Positive engine evidence rewrites both saved windows without changing their last-read age. */
+export function rewritePublicSnapshots(
+  identity: string,
+  rewrite: (snapshot: PublicSnapshot) => PublicSnapshot | undefined,
+): void {
+  if (identity.length > 8192) return;
   try {
     const store = backend();
     if (!store) return;
@@ -126,25 +129,30 @@ export function removePublicSnapshotRows(identity: string, removed: ReadonlySet<
       const key = keyFor(identity, top);
       const raw = store.getItem(key);
       const snapshot = decode(raw);
-      if (!raw || !snapshot?.rows.some((row) => removed.has(row.key))) continue;
-      const kept = withoutPublicRows(snapshot, removed);
+      if (!raw || !snapshot) continue;
+      const kept = rewrite(snapshot);
       if (!kept) {
         store.removeItem(key);
         continue;
       }
       const envelope = JSON.parse(raw) as Envelope;
       const body = JSON.stringify(kept);
+      if (body === envelope.body) continue;
       try {
-        // Removing a row does not make an unseen window recently read.
         store.setItem(key, JSON.stringify({ ...envelope, body, check: fingerprint(body) }));
       } catch {
-        // Failure to save a smaller window must not resurrect an excluded row.
+        // A failed rewrite cannot preserve content the engine has invalidated.
         store.removeItem(key);
       }
     }
   } catch {
-    // Unavailable optional storage cannot restore authority to a removed row.
+    // Optional storage is never a source of deletion authority.
   }
+}
+
+export function removePublicSnapshotRows(identity: string, removed: ReadonlySet<string>): void {
+  if (removed.size)
+    rewritePublicSnapshots(identity, (snapshot) => withoutPublicRows(snapshot, removed));
 }
 
 export function writePublicSnapshot(

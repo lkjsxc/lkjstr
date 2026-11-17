@@ -20,12 +20,42 @@ function evidence(value: Counts): NonNullable<Counts['context']> | undefined {
   return next;
 }
 
+type Selection = NonNullable<NonNullable<Counts['context']>['selection']>;
+function selection(value: Counts): Selection | undefined {
+  const basis = value.context?.selection;
+  if (!basis || !/^[0-9a-f]{64}$/.test(basis.account) || !basis.token || basis.token.length > 128)
+    return;
+  if (basis.id === undefined) return basis.createdAt === undefined ? basis : undefined;
+  if (
+    !/^[0-9a-f]{64}$/.test(basis.id) ||
+    !/^(0|[1-9][0-9]{0,19})$/.test(basis.createdAt ?? '') ||
+    BigInt(basis.createdAt!) > 18446744073709551615n
+  )
+    return;
+  return basis;
+}
+/** Keep one coherent count model when its view policy is older or still uncommitted. */
+function selectionAllows(old: Counts, next: Counts): boolean {
+  if (!old.context?.selection && !next.context?.selection) return true;
+  const held = selection(old),
+    incoming = selection(next);
+  if (!held || !incoming?.committed || held.account !== incoming.account) return false;
+  if (held.id === incoming.id && held.createdAt === incoming.createdAt)
+    return held.token === incoming.token || old.context?.token !== next.context?.token;
+  if (!next.context?.current || !incoming.id) return false;
+  if (!held.id) return true;
+  const a = BigInt(held.createdAt!),
+    b = BigInt(incoming.createdAt!);
+  return b > a || (b === a && incoming.id < held.id);
+}
+
 export function mergePublicCounts(old: NoteRow, next: NoteRow): Held {
   const held = evidence(old.counts);
   const incoming = evidence(next.counts);
   if (
     !held ||
     (incoming?.restored &&
+      selectionAllows(old.counts, next.counts) &&
       incoming.lineage === held.lineage &&
       (BigInt(incoming.generation) > BigInt(held.generation) ||
         (incoming.generation === held.generation && incoming.token === held.token)))
@@ -47,7 +77,8 @@ export function rememberPublicCounts(rows: readonly Row[], values: DurableCounts
     const previous = held && evidence(held.counts);
     if (
       previous &&
-      (previous.lineage !== basis.lineage ||
+      (!selectionAllows(held!.counts, row.counts) ||
+        previous.lineage !== basis.lineage ||
         BigInt(basis.generation) < BigInt(previous.generation) ||
         (basis.generation === previous.generation && basis.token !== previous.token))
     )

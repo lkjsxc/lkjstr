@@ -68,3 +68,25 @@ Live verified updates may render before their contributor checkpoint commits;
 only the last current committed basis is copied to durable row snapshots.
 Unproved counts use the existing unknown/lower-bound presentation. The backend
 context draft and these frontend changes still await combined native/Worker verification.
+
+## Positive held-reference reconciliation
+
+A replay announces only bounded row keys, event IDs and metadata/quote IDs
+through cache.hold. They never become verified events or delivered-row authority.
+The engine first looks in its store and IndexedDB; residual exact IDs become
+ordinary core wants. Only an original author's verified signed deletion can
+produce cache.reconcile. Both saved windows, held rows and remembered faces are
+corrected; newer metadata with a different ID survives. A deleted anchor asks
+for the surviving held anchor. EOSE, missing bootstrap data and arbitrary cached
+authors cannot authorize a deletion.
+
+Counts also carry the committed account/public-mute selection identity. An
+older, unknown, cross-account or pending policy cannot replace the held coherent
+count model. A newer committed replaceable policy can lower replies without a
+contributor change; timestamp comparison is exact and equal-time lower IDs win.
+An unfiltered policy never proves removal of a previously known policy. Earlier
+unshipped snapshots lacking selection wait for explicit navigation if needed.
+
+The 34 focused snapshot/count/reconciliation/selection cases and full frontend
+gate pass after integration on 2026-11-17. Real IndexedDB corruption, old metadata
+migration and warm-browser timing proofs are still required.

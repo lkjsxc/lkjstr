@@ -217,6 +217,14 @@ export type Counts = {
     readonly restored: boolean;
     /** The displayed values exactly match this committed basis. */
     readonly current: boolean;
+    /** Committed public mute policy for the account; absence never clears a known policy. */
+    readonly selection?: {
+      readonly account: string;
+      readonly id?: string;
+      readonly createdAt?: string;
+      readonly token: string;
+      readonly committed: boolean;
+    };
   };
   readonly replies: number;
   readonly reposts: number;
@@ -758,7 +766,23 @@ export type SignerAuthorization = {
   readonly actionReq?: ReqId;
 };
 
+/** Held public rendering references; these never establish event or author authority. */
+export type PublicCacheHoldRow = {
+  readonly key: RowKey;
+  readonly id?: string;
+  readonly profiles?: readonly { readonly pubkey: Pubkey; readonly id: string }[];
+  readonly quotes?: readonly { readonly id: string }[];
+};
+export type PublicCacheReconcile = {
+  readonly t: 'cache.reconcile';
+  readonly sub: SubId;
+  readonly removedKeys: readonly RowKey[];
+  readonly invalidProfileIds: readonly string[];
+  readonly removedQuoteIds: readonly string[];
+};
+
 export type ToEngine =
+  | { readonly t: 'cache.hold'; readonly sub: SubId; readonly rows: readonly PublicCacheHoldRow[] }
   | { readonly t: 'storage.inspect'; readonly req: ReqId }
   | { readonly t: 'storage.close'; readonly req: ReqId }
   | { readonly t: 'signer.auth.cancel'; readonly id: string; readonly reason?: 'unsupported' }
@@ -925,6 +949,7 @@ export type Timeline = {
   readonly older: boolean;
 };
 export type FromEngine =
+  | PublicCacheReconcile
   | { readonly t: 'cache.policy'; readonly sub: SubId; readonly allow: boolean }
   | { readonly t: 'storage'; readonly req: ReqId; readonly report: StorageReport }
   | ({ readonly t: 'signer.auth' } & SignerAuthorization)

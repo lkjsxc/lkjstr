@@ -65,7 +65,16 @@ export function createMockEngine(post: (msg: FromEngine) => void, now = Date.now
       if (dm.handle(msg)) return;
       if (msg.t === 'upload.cancel') return act.cancelUpload(msg.req);
       if (msg.t === 'stats') post({ t: 'stats', req: msg.req, stats: mockStats(core) });
-      else if (msg.t === 'rowAtTime') {
+      else if (msg.t === 'cache.hold') {
+        if (subs.has(msg.sub))
+          post({
+            t: 'cache.reconcile',
+            sub: msg.sub,
+            removedKeys: [],
+            invalidProfileIds: [],
+            removedQuoteIds: [],
+          });
+      } else if (msg.t === 'rowAtTime') {
         const row = subs
           .get(msg.sub)
           ?.entries.map((e) => e.row())

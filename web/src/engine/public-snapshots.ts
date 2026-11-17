@@ -4,7 +4,13 @@ import type { Transport } from './client-transport.ts';
 import { applyOps } from './ops.ts';
 import type { Anchor, FromEngine, ToEngine } from './protocol.ts';
 import { rememberPublicCounts } from './public-snapshot-counts.ts';
-import { mergePublicRow } from './public-snapshot-model.ts';
+import {
+  heldPublicReferences,
+  invalidatePublicRow,
+  mergePublicRows,
+  publicPatchOps,
+  reconcilePublicView,
+} from './public-snapshot-reconcile.ts';
 import {
   forgetPublicSnapshot,
   type PublicSnapshot,
@@ -43,6 +49,8 @@ export function publicSnapshots(inner: Transport): Transport {
     rememberPublicMedia(snapshot.rows);
     view.held = snapshot;
     rememberPublicCounts(snapshot.rows, view.counts);
+    view.references = heldPublicReferences(snapshot.rows);
+    inner.post({ t: 'cache.hold', sub, rows: view.references });
     if (anchor === 'top') view.topAnchor = snapshot.anchor;
     queueMicrotask(() => {
       if (closed || views.get(sub) !== view || view.held !== snapshot) return;
@@ -68,6 +76,24 @@ export function publicSnapshots(inner: Transport): Transport {
   inner.listen((message) => {
     if (closed) return;
     const view = 'sub' in message ? views.get(message.sub) : undefined;
+    if (message.t === 'cache.reconcile') {
+      if (view?.allow === true) {
+        const oldAnchor = view.held?.anchor;
+        reconcilePublicView(view, message, receive);
+        if (view.held && oldAnchor && view.held.anchor !== oldAnchor) {
+          if (view.topAnchor === oldAnchor) view.topAnchor = view.held.anchor;
+          inner.post({
+            t: 'window',
+            sub: message.sub,
+            anchor: { key: view.held.anchor },
+            before: 0,
+            after: Math.max(60, view.held.rows.length),
+          });
+        }
+        dirty(view);
+      }
+      return;
+    }
     if (message.t === 'cache.policy') {
       if (!view) return;
       if (!message.allow) {
@@ -84,11 +110,7 @@ export function publicSnapshots(inner: Transport): Transport {
     if (message.t === 'rows' && view) {
       view.received = true;
       if (view.allow === true) {
-        const previous = new Map(view.rows.map((row) => [row.key, row]));
-        view.rows = message.rows.slice(0, 6400).map((row) => {
-          const old = previous.get(row.key);
-          return old ? mergePublicRow(old, row) : row;
-        });
+        view.rows = mergePublicRows(view, message.rows);
         if (view.intentTop)
           view.topAnchor ??= view.rows.find(
             (row) => row.kind === 'note' || row.kind === 'notification',
@@ -105,16 +127,14 @@ export function publicSnapshots(inner: Transport): Transport {
       // An older/denying engine remains authoritative; no new snapshot is retained.
       view.held = undefined;
     } else if (message.t === 'patch' && view && view.allow === true) {
-      const ops = message.ops.map((op) => {
-        if (op.op !== 'update') return op;
-        const old = view.rows.find((row) => row.key === op.row.key);
-        return old ? { ...op, row: mergePublicRow(old, op.row) } : op;
-      });
+      const ops = publicPatchOps(view, message.ops);
       for (const op of ops) {
         if (op.op === 'update') rememberPublicCounts([op.row], view.counts);
         else if (op.op === 'insert') rememberPublicCounts(op.rows, view.counts);
       }
-      view.rows = applyOps(view.rows, ops).slice(0, 6400);
+      view.rows = applyOps(view.rows, ops)
+        .slice(0, 6400)
+        .map((row) => invalidatePublicRow(row, view.invalidations));
       rememberPublicMedia(view.rows);
       const removals = ops.filter((op) => op.op === 'remove');
       const removed = new Set(removals.map((op) => op.key));

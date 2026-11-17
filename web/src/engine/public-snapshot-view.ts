@@ -1,12 +1,13 @@
 // Retained public row state and reconciliation; no account or private database access.
 import { applyOps } from './ops.ts';
-import type { FromEngine, Row } from './protocol.ts';
+import type { FromEngine, PublicCacheHoldRow, Row } from './protocol.ts';
 import {
   type DurableCounts,
   durablePublicRows,
   rememberPublicCounts,
 } from './public-snapshot-counts.ts';
 import { capturePublicWindow, mergePublicRow } from './public-snapshot-model.ts';
+import type { PublicInvalidations } from './public-snapshot-reconcile.ts';
 import {
   forgetPublicSnapshot,
   type PublicSnapshot,
@@ -30,6 +31,8 @@ export type PublicView = {
   dirty: boolean;
   suspended?: boolean;
   completed?: boolean;
+  invalidations?: PublicInvalidations;
+  references?: readonly PublicCacheHoldRow[];
 };
 export function flushPublicView(view: PublicView): void {
   if (!view.dirty || view.allow !== true || view.held || view.suspended) return;

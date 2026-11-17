@@ -21,6 +21,21 @@ export function learnPerson(author: Author): Author {
   for (const listener of listeners) listener(next);
   return next;
 }
+/** Only positive engine metadata-deletion evidence may clear a hydrated author. */
+export function invalidatePeople(profileIds: ReadonlySet<string>): void {
+  for (const [pubkey, value] of people) {
+    if (!value.profileId || !profileIds.has(value.profileId)) continue;
+    const fallback: Author = {
+      pubkey,
+      npub: value.npub,
+      name: '',
+      ...(value.muted ? { muted: true } : {}),
+    };
+    people.set(pubkey, fallback);
+    for (const listener of listeners) listener(fallback);
+  }
+}
+
 export function learnRows(rows: readonly Row[]): void {
   for (const row of rows) {
     if ('author' in row && row.author) learnPerson(row.author);

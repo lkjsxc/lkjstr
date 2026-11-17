@@ -145,7 +145,11 @@ Merged gate and exact production evidence are in [engine-device-verification.md]
 
 - `cache.policy {sub,allow}` authorizes only public projected rows for a bounded pre-Worker rendering cache.
 - Private-list-derived rows and all DM/key/action messages remain ineligible.
+- `cache.hold {sub,rows:[{key,id?,profiles?:[{pubkey,id}],quotes?:[{id}]}]}` announces at most 64 held rows and bounded verified-reference identities, never event bodies.
+- `cache.reconcile {sub,removedKeys,invalidProfileIds,removedQuoteIds}` invalidates only announced public references after verified author-owned deletion; mock emits empty arrays.
+- Holds are separate from engine-delivered rows and release on close or cache-policy revocation; absence, EOSE and arbitrary cache content confer no authority.
 - `Counts.context?` carries a contributor lineage, canonical decimal generation, opaque token, restored flag and current flag.
+- `Counts.context.selection?` binds account and committed public-mute ID/time to the contributor token; older/unknown/pending selection cannot replace held counts.
 - Only a restored same-lineage generation that is at least as new can replace a held count basis; equal generations require equal tokens.
 - Tokens establish equality only. Changed lineages require explicit navigation; only current committed count models are durably captured.
 
