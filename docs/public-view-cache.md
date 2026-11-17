@@ -15,6 +15,8 @@ account with retained decrypted list policy is conservatively denied.
 Messages, private drafts, actions, keys, signing replies and account snapshots
 are never captured by this path. A denied permission removes both stored
 windows for that query before any subsequent public capture can occur.
+Denied rows also stay out of the global author suggestions. Cached account faces
+retain public identity and signer kind, without private-list or unread evidence.
 
 Only permitted row snapshots are persisted, with their complete query and
 render configuration identity. An update preserves this independent
@@ -37,12 +39,17 @@ note is handed back as a reading anchor, so relay arrivals cannot prepend
 the reader's initial screen. Missing bootstrap rows do not briefly erase a
 confirmed cached screen. Positive updates replace held values quietly; explicit
 navigation still asks for the requested window. Render-setting changes suspend
-capture on existing subscriptions until they reopen, avoiding ambiguous old replies. Private policy revocation never
-turns old private row models into a public snapshot.
+capture on existing subscriptions until they reopen, avoiding ambiguous old
+replies. Private policy revocation never turns old private row models into a
+public snapshot. Relay EOSE alone never removes a held public event; an explicit
+engine removal still reaches the reader and invalidates an empty saved window.
 
 ## Verification
 
-On 2026-11-17, all 16 focused frontend cases and the full frontend check passed.
+On 2026-11-17, 16 initial focused frontend cases and the full frontend check passed.
+Two additional private-author/account-face cases passed at 01:02:44 UTC with
+all 18 focused cases. Follow-up reconciliation and real-browser probes await
+execution after the baseline opening race releases the single browser slot.
 Three native projection-permission/revocation cases passed at 00:29:49 UTC
 (load 2.44/3.99/6.65). Real Worker/browser and timing evidence remain pending.
 The opening race compares immutable production builds; a local mirror is

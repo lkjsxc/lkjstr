@@ -42,6 +42,14 @@ export function publicSnapshots(inner: Transport): Transport {
     if (anchor === 'top') view.topAnchor = snapshot.anchor;
     queueMicrotask(() => {
       if (closed || views.get(sub) !== view || view.held !== snapshot) return;
+      try {
+        performance.clearMarks('lkjstr.public-cache');
+        performance.mark('lkjstr.public-cache', {
+          detail: { sub, source: view.source, rows: snapshot.rows.length },
+        });
+      } catch {
+        /* Optional measurement never delays replay. */
+      }
       receive({ t: 'state', sub, state: { phase: 'cache', relaysAsked: 0, relaysAnswered: 0 } });
       receive({
         t: 'rows',
@@ -65,6 +73,7 @@ export function publicSnapshots(inner: Transport): Transport {
         view.dirty = false;
       } else if (view.allow !== true) view.rows = [];
       view.allow = message.allow;
+      receive(message);
       return;
     }
     if (message.t === 'rows' && view) {
@@ -102,6 +111,7 @@ export function publicSnapshots(inner: Transport): Transport {
         if (removals.length) {
           view.held = { ...view.held, rows: applyOps(view.held.rows, removals) };
           receive({ ...message, ops: removals });
+          if (!view.held.rows.length) view.held = undefined;
         }
         if (heldRows(message.sub, view, receive)) return;
         receive({
@@ -112,6 +122,8 @@ export function publicSnapshots(inner: Transport): Transport {
           atBottom: view.atBottom,
         });
       } else receive({ ...message, ops });
+      if (ops.some((op) => op.op === 'remove') && !view.rows.length && !view.held)
+        view.completed = true;
       dirty(view);
       return;
     } else if (
@@ -121,16 +133,8 @@ export function publicSnapshots(inner: Transport): Transport {
       message.state.relaysAnswered > 0
     ) {
       view.completed = true;
-      // A completed finite lookup may positively remove a formerly held result.
-      view.held = undefined;
-      receive({
-        t: 'rows',
-        sub: message.sub,
-        rows: view.rows,
-        atTop: view.atTop,
-        atBottom: view.atBottom,
-      });
-      dirty(view);
+      // EOSE says the relay is finished, not that a stored public event was deleted.
+      if (!view.held) dirty(view);
     }
     receive(message);
   });
@@ -157,6 +161,7 @@ export function publicSnapshots(inner: Transport): Transport {
         if (message.hint.pageHidden) flush();
       } else if (message.t === 'open' && (views.has(message.sub) || views.size < 128)) {
         const view: View = {
+          source: message.query.source,
           identity: snapshotIdentity(message.query, language, previews),
           rows: [],
           atTop: true,

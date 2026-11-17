@@ -143,7 +143,7 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
     const top = el.scrollTop;
     const room = el.scrollHeight - top - el.clientHeight;
     const { first, last, count } = feedWindow(kind, rows);
-    if (top < 8 && atTop && !keys.held()) {
+    if (top < 8 && (atTop || headHeld) && !keys.held()) {
       if (!live && !headHeld)
         (live = true), request('top', 0, Math.max(PAGE, Math.min(count, LIMIT)));
     } else if (live && first) (live = false), request({ key: first }, 0, Math.max(count, PAGE));
@@ -187,7 +187,7 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
           keeper.forget();
         title();
         const head = rows.find((row) => row.kind === 'note' || row.kind === 'notification');
-        if (live && atTop && head && kind !== 'thread') {
+        if (live && head && kind !== 'thread') {
           headHeld = true;
           live = false;
           request({ key: head.key }, 0, Math.max(PAGE, rows.length));

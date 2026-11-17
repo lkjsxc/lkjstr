@@ -181,7 +181,7 @@ it('never relabels old row models with a changed rendering configuration', async
   next.transport.close();
 });
 
-it('keeps an offline snapshot until there is positive finite completion evidence', async () => {
+it('keeps a stored public event through offline completion and relay EOSE until explicit removal', async () => {
   await savePublic();
   const next = harness();
   next.open();
@@ -199,6 +199,10 @@ it('keeps an offline snapshot until there is positive finite completion evidence
     sub: 'one',
     state: { phase: 'done', relaysAsked: 1, relaysAnswered: 1 },
   });
+  await vi.advanceTimersByTimeAsync(201);
+  expect(next.messages.filter((message) => message.t === 'rows')).toHaveLength(1);
+  expect(readPublicSnapshot(snapshotIdentity(query, 'en', true), 'top')?.rows).toEqual([note()]);
+  next.emit({ t: 'patch', sub: 'one', ops: [{ op: 'remove', key: note().key }] });
   await vi.advanceTimersByTimeAsync(201);
   expect(readPublicSnapshot(snapshotIdentity(query, 'en', true), 'top')).toBeUndefined();
   next.transport.close();

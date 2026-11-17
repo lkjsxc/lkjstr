@@ -42,8 +42,21 @@ export function rememberedFace(pubkey: string): Account[] {
   ];
 }
 
+/** No private-list completion, filtering, unread or transient signer state survives here. */
+function publicFace(value: Account): Account {
+  const { pubkey, npub, name, picture, emoji, profileId } = value.author;
+  return {
+    author: { pubkey, npub, name, picture, emoji, profileId },
+    signer: value.signer,
+    unread: 0,
+    ...(value.signer === 'local' && value.encrypted === true
+      ? { encrypted: true, locked: true }
+      : {}),
+  };
+}
+
 export function rememberAccounts(accounts: readonly Account[]): void {
-  kv.set('account:faces', accounts.slice(0, 32));
+  kv.set('account:faces', accounts.slice(0, 32).map(publicFace));
 }
 export function rememberedAccounts(pubkey: string): Account[] {
   const values = kv.get('account:faces');
@@ -59,7 +72,7 @@ export function rememberedAccounts(pubkey: string): Account[] {
         typeof a.author?.npub === 'string' &&
         ['local', 'extension', 'remote', 'none'].includes(a.signer),
     );
-  return result.some((a) => a.author.pubkey === pubkey)
-    ? result.map((a) => (a.signer === 'local' && a.encrypted ? { ...a, locked: true } : a))
-    : rememberedFace(pubkey);
+  const faces = result.map(publicFace);
+  if (JSON.stringify(values) !== JSON.stringify(faces)) kv.set('account:faces', faces);
+  return faces.some((a) => a.author.pubkey === pubkey) ? faces : rememberedFace(pubkey);
 }

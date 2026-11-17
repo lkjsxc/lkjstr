@@ -112,7 +112,8 @@ export function createMockEngine(post: (msg: FromEngine) => void, now = Date.now
           ops: [],
         };
         subs.set(s.id, s);
-        post({ t: 'cache.policy', sub: s.id, allow: false });
+        // Mock transport never passes through durable publicSnapshots; its fixtures may update UI names.
+        post({ t: 'cache.policy', sub: s.id, allow: true });
         core.timelines();
         const nobody =
           !core.me() && ['home', 'notifications', 'bookmarks'].includes(msg.query.source);

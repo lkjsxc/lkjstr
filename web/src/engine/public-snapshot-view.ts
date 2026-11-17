@@ -9,6 +9,7 @@ import {
 } from './public-snapshot-store.ts';
 
 export type PublicView = {
+  source: string;
   identity: string;
   rows: readonly Row[];
   allow?: boolean;
