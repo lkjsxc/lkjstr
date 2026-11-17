@@ -192,3 +192,57 @@ fn rejected_live_union_falls_back_to_independent_filters_without_false_completio
     assert!(reqs.iter().all(|r| r.as_array().expect("REQ").len() == 3));
     assert_eq!(n.request_progress("home"), (1, 0));
 }
+
+#[test]
+fn urgent_head_does_not_replay_an_unfinished_huge_follower_envelope() {
+    let person = event(6, 1, 1, vec![]).pubkey;
+    let follower = NostrFilter {
+        kinds: Some(vec![3]),
+        tags: [("p".to_owned(), vec![person.clone()])].into(),
+        limit: Some(200),
+        ..Default::default()
+    };
+    let follow_query = Query {
+        source: Source::Followers,
+        target: Some(person.clone()),
+        ..Default::default()
+    };
+    let visible = NostrFilter {
+        authors: Some(vec![person.clone()]),
+        kinds: Some(vec![0]),
+        limit: Some(1),
+        ..Default::default()
+    };
+    let profile_query = Query {
+        source: Source::Profile,
+        target: Some(person),
+        ..Default::default()
+    };
+    let store = Store::new(100);
+    let mut n = setup(1, 1);
+    n.focused_sub = Some("profile".into());
+    let one = ("followers".to_owned(), follower, follow_query);
+    let original = acquire(&mut n, vec![one.clone()], &store);
+    assert_eq!(original.len(), 1);
+    let two = ("profile".to_owned(), visible, profile_query);
+    n.plan(vec![one, two], &store, NOW + 1200);
+    n.tick(NOW + 1300);
+    assert!(
+        !frames(&mut n)
+            .iter()
+            .any(|f| f[0] == "CLOSE" || f[0] == "REQ"),
+        "early interruption would force another multi-megabyte follower page"
+    );
+    n.message(R, &json!(["EOSE", original[0][1]]).to_string(), NOW + 2100);
+    n.tick(NOW + 2200);
+    let later = frames(&mut n);
+    assert!(
+        later.iter().any(|f| f[0] == "REQ"),
+        "focus gets its slot after EOSE"
+    );
+    assert!(
+        !later
+            .iter()
+            .any(|f| f[0] == "REQ" && f[1] == original[0][1])
+    );
+}

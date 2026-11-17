@@ -20,6 +20,7 @@ import { feedTitle } from './feed-title.ts';
 import { feedWindow } from './feed-window.ts';
 import { onHeld } from './held.ts';
 import { pauseNoteAudio } from './note-audio.ts';
+import { onOwnPublished } from './own-published.ts';
 import { createPreviewWants } from './preview-wants.ts';
 import { mountProfileKinds } from './profile-kinds.ts';
 import type { ViewEnv } from './registry.ts';
@@ -177,8 +178,8 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
           keeper.forget();
         title();
         const head = rows.find((row) => row.kind === 'note' || row.kind === 'notification');
-        // Channel and Global keep live heads: a locally published note must appear immediately.
-        if (live && head && kind !== 'thread' && kind !== 'channel' && kind !== 'global') {
+        // Channel messages always flow live; other feeds retain a stable reading head.
+        if (live && head && kind !== 'thread' && kind !== 'channel') {
           headHeld = true;
           live = false;
           request({ key: head.key }, 0, Math.max(PAGE, rows.length));
@@ -273,11 +274,16 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
   });
   const offAccountState = env.engine.accountState?.subscribe(showState);
   const offHeld = onHeld(() => void (rows.length && sync()));
+  const offOwnPost = onOwnPublished((author) => {
+    // Preserve a scrolled position; at the top the author's own new note is the new head.
+    if (kind === 'global' && author === account && el.scrollTop < 8 && env.visible.get()) toTop();
+  });
   const offSettings = env.settings.subscribe(() => (drawn.clear(), sync()));
   return () => {
     cancelAnimationFrame(frame);
     offAccountState?.();
-    for (const off of [offVisible, offInfo, offAccounts, offSettings, offHeld, bar]) off();
+    for (const off of [offVisible, offInfo, offAccounts, offSettings, offHeld, offOwnPost, bar])
+      off();
     kinds?.dispose();
     scrub();
     previews.dispose(), drawn.dispose(), rail.dispose();

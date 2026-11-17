@@ -24,3 +24,22 @@ pub(super) fn loss(
     }
     (Reverse(priority), unfinished, live, bytes, weight)
 }
+
+// A multi-filter wire is indivisible. Replacing its cheap sibling would also
+// replay the large finite follower or exact-ID answer before its first EOSE.
+// Leave a nine-second escape hatch for a newly focused urgent read.
+pub(super) fn holds_expensive_page(
+    requests: &BTreeMap<String, Request>,
+    victim: &Request,
+    now: u64,
+) -> bool {
+    requests.values().any(|r| {
+        r.sent
+            && r.relay == victim.relay
+            && r.wire_id == victim.wire_id
+            && !r.page_eose
+            && now.saturating_sub(r.sent_at) < 9000
+            && (r.filter.ids.is_some()
+                || (r.filter.kinds.as_deref() == Some(&[3]) && r.filter.tags.contains_key("p")))
+    })
+}

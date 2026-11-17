@@ -146,6 +146,7 @@ impl Network {
                                     || !(q.filter.ids.is_some()
                                         || (q.filter.kinds.as_deref() == Some(&[3])
                                             && q.filter.tags.contains_key("p"))))
+                                && !eviction::holds_expensive_page(&self.requests, q, now)
                                 && (!visible_profile(q) || (focused_page && q.priority > 0))
                                 && (q.priority != 0 || q.eose)
                                 && ((focused_page && q.priority > 0)

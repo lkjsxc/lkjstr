@@ -5,6 +5,7 @@ import { t } from '../shared/i18n.ts';
 import { kv } from '../shared/storage.ts';
 import { loadViewState } from '../shared/view-state.ts';
 import { failureText } from './can.ts';
+import { ownPublished } from './own-published.ts';
 import type { ViewEnv } from './registry.ts';
 
 export type ChannelDraft = {
@@ -146,6 +147,8 @@ export function createChannelOutbox(
     );
     busy.delete(item);
     final = true;
+    if (!item.draft.channel && (r.ok || r.delivery?.some((route) => route.state === 'ok')))
+      ownPublished(item.as);
     if (r.ok) {
       show(r.delivery ?? [], true);
       remove(item);
