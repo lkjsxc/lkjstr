@@ -1,6 +1,11 @@
 // Retained public row state and reconciliation; no account or private database access.
 import { applyOps } from './ops.ts';
 import type { FromEngine, Row } from './protocol.ts';
+import {
+  type DurableCounts,
+  durablePublicRows,
+  rememberPublicCounts,
+} from './public-snapshot-counts.ts';
 import { capturePublicWindow, mergePublicRow } from './public-snapshot-model.ts';
 import {
   forgetPublicSnapshot,
@@ -10,6 +15,7 @@ import {
 
 export type PublicView = {
   source: string;
+  counts: DurableCounts;
   identity: string;
   rows: readonly Row[];
   allow?: boolean;
@@ -28,7 +34,12 @@ export type PublicView = {
 export function flushPublicView(view: PublicView): void {
   if (!view.dirty || view.allow !== true || view.held || view.suspended) return;
   view.dirty = false;
-  const snapshot = capturePublicWindow(view.rows, view.reading, view.atTop, view.atBottom);
+  rememberPublicCounts(view.rows, view.counts);
+  const capture = (reading?: string): PublicSnapshot | undefined => {
+    const window = capturePublicWindow(view.rows, reading, view.atTop, view.atBottom);
+    return window ? { ...window, rows: durablePublicRows(window.rows, view.counts) } : undefined;
+  };
+  const snapshot = capture(view.reading);
   if (!snapshot) {
     if (view.completed && !view.rows.length) forgetPublicSnapshot(view.identity);
     return;
@@ -40,7 +51,7 @@ export function flushPublicView(view: PublicView): void {
       view.rows.find((row) => row.kind === 'note' || row.kind === 'notification')?.key ===
         view.topAnchor)
   ) {
-    const top = capturePublicWindow(view.rows, undefined, view.atTop, view.atBottom);
+    const top = capture();
     if (top) writePublicSnapshot(view.identity, true, top);
   }
 }

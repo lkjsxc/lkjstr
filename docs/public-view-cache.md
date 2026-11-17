@@ -46,13 +46,21 @@ engine removal still reaches the reader and invalidates an empty saved window.
 
 ## Verification
 
-On 2026-11-17, 16 initial focused frontend cases and the full frontend check passed.
-Two additional private-author/account-face cases passed at 01:02:44 UTC with
-all 18 focused cases. Follow-up reconciliation and real-browser probes await
-execution after the baseline opening race releases the single browser slot.
+On 2026-11-17, all 27 focused frontend cases and the full frontend check passed.
+This includes private-author/account-face exclusion, EOSE retention, explicit
+removal, count lineage/generation/durability and complete model hydration.
+The 01:31 UTC check completed in 11.729 seconds; real-browser probes remain
+pending behind the initial account-safe shipment.
 Three native projection-permission/revocation cases passed at 00:29:49 UTC
 (load 2.44/3.99/6.65). Real Worker/browser and timing evidence remain pending.
 The opening race compares immutable production builds; a local mirror is
 reported as such. No performance target is claimed from this cache alone.
-Counts still follow the engine during hydration; durable verified contributor
-context is separate work, not inferred from the existing partial-count flag.
+The count reconciliation draft uses durable contributor lineage and generation,
+never the partial-count flag or an aggregate maximum. Restored newer bases may
+correct counts downwards. Equal generations require equal opaque tokens, without
+ordering the tokens. Different lineages stay held until explicit navigation.
+Each view keeps at most 128 committed count/reaction models for its two windows.
+Live verified updates may render before their contributor checkpoint commits;
+only the last current committed basis is copied to durable row snapshots.
+Unproved counts use the existing unknown/lower-bound presentation. The backend
+context draft and these frontend changes still await combined native/Worker verification.

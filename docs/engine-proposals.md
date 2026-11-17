@@ -141,4 +141,12 @@ Bounds, atomic removal, conflicts and the Worker-scoped unlock limit are in [dm-
 Inspection bounds and verification limits are in [storage-inspection.md](storage-inspection.md).
 Merged gate and exact production evidence are in [engine-device-verification.md](engine-device-verification.md).
 
-Protocol 13: `cache.policy {sub,allow}` authorizes only public projected rows for a bounded pre-Worker rendering cache; private-list-derived rows and all DM/key/action messages remain ineligible. See [public-view-cache.md](public-view-cache.md).
+## Protocol 13 public cache additions (2026-11-17, owner authorized)
+
+- `cache.policy {sub,allow}` authorizes only public projected rows for a bounded pre-Worker rendering cache.
+- Private-list-derived rows and all DM/key/action messages remain ineligible.
+- `Counts.context?` carries a contributor lineage, canonical decimal generation, opaque token, restored flag and current flag.
+- Only a restored same-lineage generation that is at least as new can replace a held count basis; equal generations require equal tokens.
+- Tokens establish equality only. Changed lineages require explicit navigation; only current committed count models are durably captured.
+
+See [public-view-cache.md](public-view-cache.md). These additions are unshipped and retain all prior protocol meanings.

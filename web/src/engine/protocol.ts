@@ -207,6 +207,17 @@ export type Reaction = {
 };
 
 export type Counts = {
+  /** Since version 13: persisted verified contributor context; hashes are never ordered. */
+  readonly context?: {
+    readonly lineage: string;
+    /** Canonical unsigned decimal; compare with BigInt, never Number. */
+    readonly generation: string;
+    readonly token: string;
+    /** The committed contributor/fence basis was applied to the Store. */
+    readonly restored: boolean;
+    /** The displayed values exactly match this committed basis. */
+    readonly current: boolean;
+  };
   readonly replies: number;
   readonly reposts: number;
   readonly reactions: number;

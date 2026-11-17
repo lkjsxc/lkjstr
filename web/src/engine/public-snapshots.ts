@@ -3,6 +3,7 @@ import { rememberPublicMedia } from '../shared/public-media.ts';
 import type { Transport } from './client-transport.ts';
 import { applyOps } from './ops.ts';
 import type { Anchor, FromEngine, ToEngine } from './protocol.ts';
+import { rememberPublicCounts } from './public-snapshot-counts.ts';
 import { mergePublicRow } from './public-snapshot-model.ts';
 import {
   forgetPublicSnapshot,
@@ -39,6 +40,7 @@ export function publicSnapshots(inner: Transport): Transport {
     if (!snapshot) return;
     rememberPublicMedia(snapshot.rows);
     view.held = snapshot;
+    rememberPublicCounts(snapshot.rows, view.counts);
     if (anchor === 'top') view.topAnchor = snapshot.anchor;
     queueMicrotask(() => {
       if (closed || views.get(sub) !== view || view.held !== snapshot) return;
@@ -69,6 +71,7 @@ export function publicSnapshots(inner: Transport): Transport {
       if (!message.allow) {
         forgetPublicSnapshot(view.identity);
         view.rows = [];
+        view.counts.clear();
         view.held = undefined;
         view.dirty = false;
       } else if (view.allow !== true) view.rows = [];
@@ -91,6 +94,7 @@ export function publicSnapshots(inner: Transport): Transport {
         view.atTop = message.atTop;
         view.atBottom = message.atBottom;
         rememberPublicMedia(view.rows);
+        rememberPublicCounts(view.rows, view.counts);
         if (heldRows(message.sub, view, receive)) return;
         dirty(view);
         receive({ ...message, rows: view.rows });
@@ -104,6 +108,10 @@ export function publicSnapshots(inner: Transport): Transport {
         const old = view.rows.find((row) => row.key === op.row.key);
         return old ? { ...op, row: mergePublicRow(old, op.row) } : op;
       });
+      for (const op of ops) {
+        if (op.op === 'update') rememberPublicCounts([op.row], view.counts);
+        else if (op.op === 'insert') rememberPublicCounts(op.rows, view.counts);
+      }
       view.rows = applyOps(view.rows, ops).slice(0, 6400);
       rememberPublicMedia(view.rows);
       if (view.held) {
@@ -162,6 +170,7 @@ export function publicSnapshots(inner: Transport): Transport {
       } else if (message.t === 'open' && (views.has(message.sub) || views.size < 128)) {
         const view: View = {
           source: message.query.source,
+          counts: new Map(),
           identity: snapshotIdentity(message.query, language, previews),
           rows: [],
           atTop: true,
@@ -209,7 +218,11 @@ export function publicSnapshots(inner: Transport): Transport {
             ('key' in anchor && !view.held?.rows.some((row) => row.key === anchor.key))
           ) {
             view.held = undefined;
-            if (message.anchor === 'top') view.topAnchor = undefined;
+            if (message.anchor === 'top') {
+              view.topAnchor = undefined;
+              view.rows = [];
+              view.counts.clear();
+            }
           }
         }
       } else if (message.t === 'reading') {

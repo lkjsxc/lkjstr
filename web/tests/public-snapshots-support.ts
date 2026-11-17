@@ -21,7 +21,20 @@ export function note(key = '1'.repeat(64), name = 'Known person'): NoteRow {
     media: [],
     quotes: [],
     reactions: [],
-    counts: { reactions: 7, replies: 2, reposts: 1, zaps: 5, partial: false },
+    counts: {
+      reactions: 7,
+      replies: 2,
+      reposts: 1,
+      zaps: 5,
+      partial: false,
+      context: {
+        lineage: 'fixture',
+        generation: '1',
+        token: 'fixture-basis',
+        restored: true,
+        current: true,
+      },
+    },
     mine: { own: false, reposted: false, bookmarked: false },
   };
 }
