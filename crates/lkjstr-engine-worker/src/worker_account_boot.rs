@@ -38,6 +38,11 @@ pub(super) fn load(host: &Rc<RefCell<Host>>) {
             db.close();
             return;
         }
+        let metadata = idb::metadata(&db).await;
+        if signal.aborted() {
+            db.close();
+            return;
+        }
         let cached = idb::newest_events(&db, 2000).await;
         if signal.aborted() {
             db.close();
@@ -83,6 +88,16 @@ pub(super) fn load(host: &Rc<RefCell<Host>>) {
         if let Some(quality) = quality {
             h.engine.network.restore_quality(&quality, now());
         }
+        // Resolve stored names/follows before any view can plan relay work.
+        let cache_failed = metadata.is_err() || cached.is_err();
+        match metadata {
+            Ok(rows) => h.engine.restore_cache(&rows),
+            Err(_) => h.engine.cached_history_complete = false,
+        }
+        match cached {
+            Ok(rows) => h.engine.restore_cache(&rows),
+            Err(_) => h.engine.cached_history_complete = false,
+        }
         h.loaded = true;
         for id in h.sessions.keys().copied().collect::<Vec<_>>() {
             let shared = matches!(h.scope, Sink::Shared { .. });
@@ -95,25 +110,14 @@ pub(super) fn load(host: &Rc<RefCell<Host>>) {
             h.receive(id, input);
         }
         h.storage.replaying_startup = false;
-        match cached {
-            Ok(rows) => {
-                let dropped = h.engine.dropped;
-                for raw in rows {
-                    if let Ok(e) = lkjstr_protocol::compact::decode(&raw) {
-                        h.engine.enqueue("cache".into(), e);
-                    } else {
-                        h.engine.cached_history_complete = false;
-                    }
-                }
-                h.engine.cached_history_complete &= h.engine.dropped == dropped;
-            }
-            Err(_) => post(
+        if cache_failed {
+            post(
                 &h,
                 &Output::Error {
                     req: None,
                     code: "cache-read-failed".into(),
                 },
-            ),
+            );
         }
     });
 }

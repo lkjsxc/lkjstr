@@ -8,8 +8,20 @@ pub(super) async fn commit(
     store: &str,
     write: impl FnOnce(&IdbTransaction) -> Result<(), JsValue>,
 ) -> Result<(), String> {
+    commit_stores(db, &[store], write).await
+}
+
+pub(super) async fn commit_stores(
+    db: &IdbDatabase,
+    stores: &[&str],
+    write: impl FnOnce(&IdbTransaction) -> Result<(), JsValue>,
+) -> Result<(), String> {
+    let names = js_sys::Array::new();
+    for store in stores {
+        names.push(&(*store).into());
+    }
     let tx = db
-        .transaction_with_str_and_mode(store, IdbTransactionMode::Readwrite)
+        .transaction_with_str_sequence_and_mode(&names, IdbTransactionMode::Readwrite)
         .map_err(|_| "Cannot start storage transaction")?;
     let mut handlers = Vec::new();
     let done = Promise::new(&mut |resolve, reject| {

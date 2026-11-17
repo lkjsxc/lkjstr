@@ -50,10 +50,14 @@ Bounds, scorecards and deferred work are in
 
 ## Bounds and storage
 
-The Worker database is lkjstr-wasm. Compact event tuples coexist with reads of
-older rows. Startup indexes the newest 2000 verified events, with physical
-pruning to 20000 after successful live writes. Memory retains at most 16000
-regular and 4000 replaceable events independently of physical disk retention.
+The schema-2 Worker database is lkjstr-wasm. Verified compact event bytes carry
+format-tagged receipts; older or mismatched rows still pass ordinary verification.
+Startup restores a bounded metadata/deletion checkpoint before the newest 2000
+event rows and before opening views. The checkpoint adds at most 4000 records
+and 4 MiB of encoded bytes, including duplicates of event-store bodies.
+Physical event pruning remains 20000 newest rows; memory still retains at most
+16000 regular and 4000 replaceable events with a 64 MiB payload bound. Details,
+verification boundaries and unfinished retention work: [cache-bootstrap.md](cache-bootstrap.md).
 
 There are at most 128 views and 32 attached clients. Each visible view hydrates
 up to 6000 authors; shared profile requests chunk at 120 authors per relay.

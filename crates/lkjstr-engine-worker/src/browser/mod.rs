@@ -6,6 +6,7 @@ pub mod idb;
 mod idb_account_value;
 pub mod idb_accounts;
 mod idb_commit;
+mod idb_events;
 pub mod idb_drafts;
 mod idb_open;
 mod idb_schema;

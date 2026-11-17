@@ -4,11 +4,13 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use js_sys::{Object, Promise, Reflect};
+use js_sys::{Promise, Reflect};
+use lkjstr_core::cache::Record;
 use wasm_bindgen::{JsCast, JsValue, closure::Closure};
 use web_sys::{IdbCursorDirection, IdbDatabase, IdbRequest};
 
 pub use super::idb_commit::kv_commit;
+pub use super::idb_events::{metadata, put as put_events};
 pub use super::idb_open::open;
 
 type Step = Closure<dyn FnMut(web_sys::Event)>;
@@ -60,24 +62,8 @@ pub async fn kv_put(db: &IdbDatabase, key: &str, value: &str) -> Result<(), Stri
     kv_commit(db, &[(key.to_owned(), Some(value.to_owned()))]).await
 }
 
-/// Writes events as `{id, created_at, raw}` rows in one committed transaction.
-pub async fn put_events(db: &IdbDatabase, rows: &[(String, u64, String)]) -> Result<(), String> {
-    super::idb_commit::commit(db, "events", |tx| {
-        let store = tx.object_store("events")?;
-        for (id, created_at, raw) in rows {
-            let row = Object::new();
-            Reflect::set(&row, &"id".into(), &id.into())?;
-            Reflect::set(&row, &"created_at".into(), &(*created_at as f64).into())?;
-            Reflect::set(&row, &"raw".into(), &raw.into())?;
-            store.put(&row)?;
-        }
-        Ok(())
-    })
-    .await
-}
-
-/// Raw JSON of the newest `limit` events, newest first.
-pub async fn newest_events(db: &IdbDatabase, limit: usize) -> Result<Vec<String>, String> {
+/// Bounded stored records, newest first; old rows carry no trusted receipt.
+pub async fn newest_events(db: &IdbDatabase, limit: usize) -> Result<Vec<Record>, String> {
     let tx = db.transaction_with_str("events").map_err(err)?;
     let index = tx
         .object_store("events")
@@ -101,13 +87,8 @@ pub async fn newest_events(db: &IdbDatabase, limit: usize) -> Result<Vec<String>
                 return;
             }
             let cursor: web_sys::IdbCursorWithValue = cursor.unchecked_into();
-            let raw = cursor
-                .value()
-                .ok()
-                .and_then(|row| Reflect::get(&row, &"raw".into()).ok())
-                .and_then(|raw| raw.as_string());
-            if let Some(raw) = raw {
-                rows.borrow_mut().push(raw);
+            if let Some(record) = cursor.value().ok().and_then(super::idb_events::read) {
+                rows.borrow_mut().push(record);
             }
             let _ = cursor.continue_();
         });

@@ -3,7 +3,8 @@
 ## Purpose
 
 Current behavior and limits: [parity.md](parity.md) audits source; [engine-performance.md](engine-performance.md) records network evidence.
-Claude owns the interface. Account persistence passes the required gates; [exact evidence](engine-account-verification.md) binds the production checks.
+Claude owns the interface. Account persistence passes required gates; [exact evidence](engine-account-verification.md) binds its production checks.
+[Cache bootstrap](cache-bootstrap.md) passes native proofs; the real Worker/browser proof and merged gates remain pending.
 
 ## Specified keys and messages (2026-11-16)
 

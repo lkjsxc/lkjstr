@@ -3,6 +3,7 @@ pub mod account_storage;
 pub mod accounts;
 pub mod bench;
 pub mod bunker;
+mod cache;
 mod channel_actions;
 mod channel_create;
 mod channel_pending;

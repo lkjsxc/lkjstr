@@ -20,11 +20,7 @@ pub(super) fn persist(host: &Rc<RefCell<Host>>) {
         let batch = h.engine.pending.batch();
         let rows = batch
             .iter()
-            .filter_map(|e| {
-                lkjstr_protocol::compact::encode(e)
-                    .ok()
-                    .map(|raw| (e.id.clone(), e.created_at, raw))
-            })
+            .filter_map(|e| lkjstr_core::cache::Record::verified(e).ok())
             .collect::<Vec<_>>();
         let routes = h.engine.network.publication_routes_json();
         let revision = h.engine.network.publication_revision;

@@ -33,6 +33,7 @@ Engine (`crates/`):
 - [cover.md](cover.md): hydration traffic, duplicate resumption, public medians and gaps.
 - [orchestration.md](orchestration.md): publication routing, freshness, weights and limits.
 - [architecture.md](architecture.md): crates, runtime, orchestration, storage.
+- [cache-bootstrap.md](cache-bootstrap.md): verified public restore, metadata checkpoints, bounds and proof.
 - [verification.md](verification.md): gates, browser checks and their results.
 - [engine-stream-verification.md](engine-stream-verification.md): first stream gate evidence and limits.
 - [engine-lifetime-verification.md](engine-lifetime-verification.md): ownership, queue and retained-history follow-up gates.
