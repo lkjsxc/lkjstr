@@ -10,7 +10,7 @@ type Scene = (
   act: (page: Page) => Promise<void>,
   mock?: string,
 ) => Promise<void>;
-const notes = '.view[data-kind="home"] > .list > .note, .view[data-kind="global"] > .list > .note';
+const notes = '.view[data-kind="home"] > .list > .note';
 const assert = (ok: boolean, why: string): void => {
   if (!ok) throw new Error(why);
 };
@@ -33,12 +33,8 @@ async function failAccounts(page: Page, text: string): Promise<void> {
     });
   });
   await page.waitForFunction((word) => {
-    const states = [
-      ...document.querySelectorAll(
-        '.view[data-kind="home"] > .fstate, .view[data-kind="global"] > .fstate',
-      ),
-    ];
-    return states.length === 2 && states.every((node) => node.textContent === word);
+    const state = document.querySelector('.view[data-kind="home"] > .fstate');
+    return state?.textContent === word;
   }, text);
 }
 async function showStatus(page: Page): Promise<void> {
@@ -74,9 +70,6 @@ export function createAccountFailureShots() {
       await scene('account-failure-populated', '/', async (page) => {
         await home(page);
         await page.locator('.view[data-kind="home"] > .list > .note').first().waitFor();
-        await page.keyboard.press('Alt+Shift+ArrowLeft');
-        await page.locator('.view[data-kind="global"]:visible > .list > .note').first().waitFor();
-        await home(page);
         const retained = await page.evaluateHandle(
           (selector) => [...document.querySelectorAll(selector)],
           notes,
@@ -109,17 +102,15 @@ export function createAccountFailureShots() {
             (await page.locator('.view[data-kind="home"] > .list > .note').count()) === 0,
             'guest Home starts empty',
           );
-          const retained = await page.evaluateHandle(
-            (selector) => [...document.querySelectorAll(selector)],
-            notes,
-          );
+          // Inactive tabs unmount their view; this empty Home owns only its status node.
+          const retained = await state.elementHandle();
+          if (!retained) throw new Error('guest Home status premise');
           try {
-            assert(await retained.evaluate((rows) => rows.length > 0), 'guest Global note premise');
             await failAccounts(page, words['error.internal']);
             assert((await state.locator('button').count()) === 0, 'failure precedes Home Sign in');
             assert(
-              await retained.evaluate((rows) => rows.every((row) => row.isConnected)),
-              'guest failure retains Global note nodes',
+              await retained.evaluate((node) => node.isConnected),
+              'guest failure retains its existing status node',
             );
             await showStatus(page);
             remember(tag, 'account-failure-guest');
