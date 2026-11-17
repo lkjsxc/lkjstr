@@ -106,7 +106,7 @@ fn reordered_exact_wants_share_one_wire_until_the_final_owner_leaves() {
 }
 
 #[test]
-fn exact_sharing_keeps_limits_bounds_search_and_empty_predicates_distinct() {
+fn exact_sharing_keeps_predicates_distinct_but_skips_empty_id_wants() {
     let mut network = Network::default();
     let store = Store::new(0);
     network.configure(vec![R.into()], 0);
@@ -147,7 +147,8 @@ fn exact_sharing_keeps_limits_bounds_search_and_empty_predicates_distinct() {
     );
     assert_eq!(
         network.request_stats().as_array().expect("requests").len(),
-        variants.len()
+        variants.len() - 1,
+        "explicitly empty ID wants are already exhausted by local gap planning"
     );
 }
 

@@ -14,7 +14,7 @@ pub async fn metadata(db: &IdbDatabase, signal: &AbortSignal) -> Result<Vec<Reco
     if cached.is_err() {
         after = None;
     }
-    let started = crate::measure::now();
+    let started = super::storage_inspection::now();
     // Ordinary storage is capped at 20,000 rows. Byte-heavy or slow legacy
     // stores resume at the committed cursor on the next boot; absence is never
     // inferred from a partial pass. Held screen references hydrate separately.
@@ -22,7 +22,11 @@ pub async fn metadata(db: &IdbDatabase, signal: &AbortSignal) -> Result<Vec<Reco
         if signal.aborted() {
             return Err("Cache migration stopped".into());
         }
-        if page > 0 && crate::measure::now() - started >= 3000.0 {
+        if page > 0
+            && started
+                .zip(super::storage_inspection::now())
+                .is_some_and(|(from, to)| to.saturating_sub(from) >= 3000)
+        {
             break;
         }
         let (rows, next) = idb_public_scan::page(db, after.as_deref()).await?;
