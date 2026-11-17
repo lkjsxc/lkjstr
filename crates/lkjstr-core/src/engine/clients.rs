@@ -16,6 +16,14 @@ pub struct Clients {
     next: u64,
 }
 impl Clients {
+    pub fn subscription(&self, client: u64, local: &str) -> Option<String> {
+        let sub = format!("{client}:{local}");
+        self.clients
+            .get(&client)?
+            .subs
+            .contains(&sub)
+            .then_some(sub)
+    }
     pub fn connect(&mut self, now: u64) -> Option<u64> {
         if self.clients.len() >= 32 {
             return None;
@@ -82,6 +90,7 @@ impl Clients {
                 Input::Close { sub }
             }
             Input::Reading { sub, id } => Input::Reading { sub: ns(sub), id },
+            Input::CacheRead { sub, ids } => Input::CacheRead { sub: ns(sub), ids },
             Input::Window {
                 sub,
                 anchor,

@@ -99,6 +99,16 @@ the result says that the baseline is incomplete. Inspect retained evidence
 before retrying. Do not activate the schema-1 predecessor for migrated users.
 Browser data is never deleted to make a rollback fit.
 
+## Observed account-safe activation (2026-11-17)
+
+At 02:07 UTC the prescribed 07e88178 release passed all seven gates and
+548 real interface checks, then deployed and verified two compatible schema-2
+releases. Archive SHA-256: eb633111cf2c00df656bf7bbbc396d695b00df51a61796d9a244214b91c311cb.
+Index SHA-256: fa3286676dd34d61f91a2e5d060123b7a0ec3fee18a1cdf5184f3e8c0ac16468.
+Current release d709e49012af410685572170253e927b; compatible rollback
+9528fe7103b7462387235d47ec579285. Exact gate/HTTPS receipts remain
+in tmp/ship-20261117T015825Z-386270/.
+
 ## Resource ownership
 
 Builds and native tests stay at four jobs/threads. Development/test debug

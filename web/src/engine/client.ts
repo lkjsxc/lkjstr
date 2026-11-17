@@ -35,6 +35,7 @@ export function createEngine(transport: Transport): Engine {
   storage.visible(document.visibilityState !== 'hidden');
   const lists = createPrivateListClient(dm.access, (message) => transport.post(message));
   const subs = new Map<string, SubHandlers>(); // bound: open subscriptions (one per mounted list)
+  const privateRows = new Set<string>(); // Bound by owned subscriptions; excludes private-derived author hints.
   const owners = new Map<string, HTMLElement>(); // bound: open subscriptions
   const visible = new Set<string>(); // bound: as `subs`
   const asked = new Map<string, (s: EngineStats | undefined) => void>(); // bound: `stats` requests in flight
@@ -113,12 +114,17 @@ export function createEngine(transport: Transport): Engine {
   });
   transport.listen((msg) => {
     if (storage.receive(msg) || signerAuth.receive(msg)) return;
-    if (msg.t === 'rows') {
-      learnRows(msg.rows);
+    if (msg.t === 'cache.policy') {
+      if (subs.has(msg.sub)) {
+        if (msg.allow) privateRows.delete(msg.sub);
+        else privateRows.add(msg.sub);
+      }
+    } else if (msg.t === 'rows') {
+      if (!privateRows.has(msg.sub)) learnRows(msg.rows);
       subs.get(msg.sub)?.rows(msg.rows, msg.atTop, msg.atBottom);
     } else if (msg.t === 'timeline') subs.get(msg.sub)?.timeline?.(msg.timeline);
     else if (msg.t === 'patch') {
-      for (const op of msg.ops) {
+      for (const op of privateRows.has(msg.sub) ? [] : msg.ops) {
         if (op.op === 'update') learnRows([op.row]);
         else if (op.op === 'insert') learnRows(op.rows);
       }
@@ -211,6 +217,7 @@ export function createEngine(transport: Transport): Engine {
         },
         close() {
           if (!subs.delete(id)) return;
+          privateRows.delete(id);
           lists.close(id);
           visible.delete(id);
           owners.delete(id);
@@ -255,6 +262,7 @@ export function createEngine(transport: Transport): Engine {
       window.removeEventListener('keydown', active, true);
       clearTimeout(idleTimer);
       offPeople();
+      privateRows.clear();
       storage.dispose();
       signerAuth.dispose();
       lists.dispose();

@@ -8,29 +8,40 @@ impl Network {
             && !first.members.contains("~account-discovery");
         let cap = self.relays[&relay].max_filters.clamp(1, 8);
         let mut ids = vec![id.to_owned()];
-        // Live streams are left independent: interrupting one must not replay
-        // another stream. Finite pages safely share a single EOSE boundary.
-        if !first.live {
-            ids.extend(
-                self.requests
-                    .iter()
-                    .filter(|(key, r)| {
-                        key.as_str() != id
-                            && r.relay == relay
-                            && !r.live
-                            && !r.sent
-                            && !(r.verification_retry && self.verifying)
-                            && !r.complete
-                            && !r.eose
-                            && now >= r.ready_at
-                            && r.priority == first.priority
+        // Each logical quota/cursor survives inside the envelope. Never enlarge a
+        // transmitted envelope; a later want uses a new gap request.
+        let mut candidates: Vec<_> = self
+            .requests
+            .iter()
+            .filter(|(key, r)| {
+                key.as_str() != id
+                    && r.relay == relay
+                    && r.live == first.live
+                    && !r.sent
+                    && !(r.verification_retry && self.verifying)
+                    && !r.complete
+                    && !r.eose
+                    && now >= r.ready_at
+                    && if first.live {
+                        first.union_safe
+                            && r.union_safe
+                            && first.priority <= 2
+                            && r.priority <= 2
+                            && union::overlaps(&first.filter, &r.filter)
+                    } else {
+                        r.priority == first.priority
                             && (r.filter.kinds.as_deref() == Some(&[0]))
                                 == (first.filter.kinds.as_deref() == Some(&[0]))
-                    })
-                    .take(cap - 1)
-                    .map(|(key, _)| key.clone()),
-            );
-        }
+                    }
+            })
+            .collect();
+        candidates.sort_by_key(|(key, r)| (r.priority, std::cmp::Reverse(r.weight), *key));
+        ids.extend(
+            candidates
+                .into_iter()
+                .take(cap - 1)
+                .map(|(key, _)| key.clone()),
+        );
         self.next = self.next.saturating_add(1);
         let wire = format!("w{}", self.next);
         let mut frame = vec![json!("REQ"), json!(wire)];

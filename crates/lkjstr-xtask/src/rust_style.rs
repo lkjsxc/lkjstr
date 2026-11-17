@@ -86,7 +86,9 @@ fn allows_global_mutable_state(_rel: &str) -> bool {
 }
 
 fn is_test_path(rel: &str) -> bool {
-    rel.contains("/tests/") || rel.ends_with("_test.rs")
+    rel.contains("/tests/")
+        || rel.ends_with("_test.rs")
+        || rel.starts_with("crates/lkjstr-core/examples/read-score/")
 }
 
 fn scrub_line(line: &str) -> String {

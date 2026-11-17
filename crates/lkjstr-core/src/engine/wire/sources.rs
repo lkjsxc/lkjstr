@@ -25,11 +25,12 @@ impl Session {
         let Some((Some(anchor), before, _)) = self.windows.get(sub) else {
             return 0;
         };
-        self.project_source(sub, e, false)
-            .iter()
+        let all = self.project_source(sub, e, false);
+        all.iter()
             .position(|r| r["key"].as_str() == Some(anchor))
             .unwrap_or(0)
             .saturating_sub(*before)
+            .saturating_sub(usize::from(pinned_header(&all)))
     }
     pub(super) fn source_edges(&self, sub: &str, e: &Engine) -> (bool, bool) {
         let all = self.project_source(sub, e, false);
@@ -45,7 +46,7 @@ impl Session {
             })
             .unwrap_or((0, 50));
         (
-            start == 0,
+            start <= usize::from(pinned_header(&all)),
             end >= all.len() && super::list_edges::settled(self.queries.get(sub), e),
         )
     }
@@ -104,7 +105,6 @@ impl Session {
                         if let Some((role, depth)) = position {
                             value["thread"] = json!({"role":role,"depth":depth});
                         }
-                        super::quote_state::settle(&mut value,e);
                         Some(value)
                     }).collect()
             }).unwrap_or_default(),
@@ -135,6 +135,7 @@ impl Session {
             out.sort_by(|a, b| b["at"].as_u64().cmp(&a["at"].as_u64()));
         }
         for row in &mut out {
+            super::quote_state::settle(row, e, q.account.as_deref());
             if row["id"]
                 .as_str()
                 .is_some_and(|id| e.network.pending_event(id))
@@ -164,6 +165,7 @@ impl Session {
         if !windowed {
             return out;
         }
+        let header = pinned_header(&out).then(|| out[0].clone());
         if let Some((anchor, before, after)) = self.windows.get(sub) {
             let at = anchor
                 .as_ref()
@@ -175,8 +177,17 @@ impl Session {
         } else {
             out.truncate(50);
         }
+        if let Some(header) = header
+            && out.first().is_none_or(|row| row["key"] != header["key"])
+        {
+            out.insert(0, header);
+        }
         out
     }
+}
+fn pinned_header(rows: &[Value]) -> bool {
+    rows.first()
+        .is_some_and(|row| matches!(row["kind"].as_str(), Some("profile" | "channel")))
 }
 pub(super) fn person(e: &Engine, p: &str, account: Option<&str>, weight: u64) -> Value {
     let store = &e.store;

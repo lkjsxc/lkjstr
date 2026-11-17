@@ -16,8 +16,14 @@
     "smoke:browser": "pnpm --dir web smoke:real",
     "engine:check": "sh scripts/engine-check.sh",
     "engine:package": "sh scripts/engine-package.sh",
-    "real:hour": "pnpm --dir web build:real && node scripts/real-hour.mjs",
+    "real:hour": "pnpm --dir web build:real && node scripts/real-hour-rotation.mjs",
     "accounts:check": "node scripts/engine-accounts-check.mjs",
+    "race:open": "node scripts/race-open.mjs",
+    "cache:repeat": "node scripts/cache-repeat.mjs",
+    "cache:private": "node scripts/cache-repeat-private.mjs",
+    "read:score": "node scripts/read-score-public.mjs",
+    "read:compare": "node scripts/read-score-compare.mjs",
+    "read:fixture": "node scripts/read-score-native.mjs",
     "acts:check": "node scripts/engine-acts-harness.mjs"
   },
   "devDependencies": {

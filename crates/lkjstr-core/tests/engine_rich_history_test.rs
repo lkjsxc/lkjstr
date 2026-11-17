@@ -50,7 +50,7 @@ fn mixed_history_pages_notifications_independently_of_an_exhausted_note_feed() {
     let mut bottom = false;
     for now in (100..=8000).step_by(100) {
         for f in frames(&mut e).into_iter().filter(|f| f[0] == "REQ") {
-            if f[2]["kinds"] == json!([1, 42, 6, 16, 7, 9735]) {
+            if f[2]["kinds"] == json!([1, 6, 7, 16, 42, 9735]) {
                 let until = f[2]["until"].as_u64().unwrap_or(100);
                 paged |= until < 100;
                 for notice in notices.iter().filter(|n| n.created_at <= until).take(3) {

@@ -16,6 +16,7 @@ Frontend (`web/`):
 - [integration-release.md](integration-release.md): real-engine release candidate and UI gaps.
 - [hosting-needs.md](hosting-needs.md): what the static host must serve.
 - [offline-shell.md](offline-shell.md): verified shell storage, update lifetimes and bounds.
+- [public-view-cache.md](public-view-cache.md): public rendering snapshots, privacy authorization and reconciliation.
 - [repost.md](repost.md): public-source repost comparison.
 
 Engine (`crates/`):
@@ -30,8 +31,20 @@ Engine (`crates/`):
 - [status.md](status.md): what works, what does not, next steps in order.
 - [outbox.md](outbox.md): read cursors, durable quality, focus, weights and purposes.
 - [cover.md](cover.md): hydration traffic, duplicate resumption, public medians and gaps.
+- [engine-q1-progress.md](engine-q1-progress.md): exact sharing, finite page correctness and read-plan evidence.
+- [engine-q1-localreads.md](engine-q1-localreads.md): bounded optional exact-ID reads before relay fallback.
+- [engine-q1-frontier.md](engine-q1-frontier.md): independent logical quotas in shared finite requests.
+- [engine-filter-identity.md](engine-filter-identity.md): canonical selector identity and preserved ownership.
+- [engine-read-scorecard.md](engine-read-scorecard.md): deterministic device-wide wants and protocol-cost measurements.
+- [read-score-baseline.md](read-score-baseline.md): unchanged-product scorecard baseline.
+- [read-score.md](read-score.md): read-plan scorecard method and results.
 - [orchestration.md](orchestration.md): publication routing, freshness, weights and limits.
 - [architecture.md](architecture.md): crates, runtime, orchestration, storage.
+- [cache-bootstrap.md](cache-bootstrap.md): verified public restore, metadata checkpoints, bounds and proof.
+- [cache-repeat.md](cache-repeat.md): repeated public cache reads and measurement.
+- [cache-repeat-private.md](cache-repeat-private.md): private cache authorization proof.
+- [race-open.md](race-open.md): browser first-screen race evidence.
+- [cache-context.md](cache-context.md): durable contributors, held-reference authority, selection policy and bounds.
 - [verification.md](verification.md): gates, browser checks and their results.
 - [engine-stream-verification.md](engine-stream-verification.md): first stream gate evidence and limits.
 - [engine-lifetime-verification.md](engine-lifetime-verification.md): ownership, queue and retained-history follow-up gates.
@@ -42,6 +55,8 @@ Engine (`crates/`):
 - [engine-startup.md](engine-startup.md): real-build WASM preload regression and scoped correction.
 - [engine-shipping.md](engine-shipping.md): exact-source shipping, host validation and schema-compatible rollback.
 - [engine-performance.md](engine-performance.md): measurements.
+- [engine-performance-open-baseline.md](engine-performance-open-baseline.md): desktop opening baseline.
+- [engine-performance-open.md](engine-performance-open.md): opening-race measurement.
 - [engine-performance-ninth.md](engine-performance-ninth.md): ninth hour, resources, faults and measurement limits.
 - [engine-performance-ninth-coverage.md](engine-performance-ninth-coverage.md): hidden quote rows, receipt budgets and repeated acquisition.
 - [engine-performance-zaps.md](engine-performance-zaps.md): bounded receipt projection and scheduling proofs.
@@ -103,3 +118,6 @@ Engine (`crates/`):
 - [engine-live-route.md](engine-live-route.md): productive live recovery, bounded slot ownership and verification evidence.
 
 - [Historical measurement witnesses](engine-performance-history.md): bounded selection; ninth public DOM positives and receipt limits are recorded separately.
+
+- [Exact relay filter identity](engine-filter-identity.md): canonical logical read identity.
+- [Logical page frontiers](engine-q1-frontier.md): independent quotas inside shared envelopes.

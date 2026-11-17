@@ -32,7 +32,7 @@
 /** 10: account-scoped private lists with owned signer cancellation. */
 /** 11: owner-bound ephemeral bunker authorization challenges. */
 /** 12: finite storage inspection; no storage mutation. */
-/** 13: account availability distinct from the capability handshake. */
+/** 13: engine-authorized public rendering snapshots, independent of the protected event store. */
 /** 14: bounded act chains, profile act context and unresolved notification states. */
 export const PROTOCOL_VERSION = 14;
 
@@ -208,6 +208,25 @@ export type Reaction = {
 };
 
 export type Counts = {
+  /** Since version 13: persisted verified contributor context; hashes are never ordered. */
+  readonly context?: {
+    readonly lineage: string;
+    /** Canonical unsigned decimal; compare with BigInt, never Number. */
+    readonly generation: string;
+    readonly token: string;
+    /** The committed contributor/fence basis was applied to the Store. */
+    readonly restored: boolean;
+    /** The displayed values exactly match this committed basis. */
+    readonly current: boolean;
+    /** Committed public mute policy for the account; absence never clears a known policy. */
+    readonly selection?: {
+      readonly account: string;
+      readonly id?: string;
+      readonly createdAt?: string;
+      readonly token: string;
+      readonly committed: boolean;
+    };
+  };
   readonly replies: number;
   readonly reposts: number;
   readonly reactions: number;
@@ -766,7 +785,23 @@ export type SignerAuthorization = {
   readonly actionReq?: ReqId;
 };
 
+/** Held public rendering references; these never establish event or author authority. */
+export type PublicCacheHoldRow = {
+  readonly key: RowKey;
+  readonly id?: string;
+  readonly profiles?: readonly { readonly pubkey: Pubkey; readonly id: string }[];
+  readonly quotes?: readonly { readonly id: string }[];
+};
+export type PublicCacheReconcile = {
+  readonly t: 'cache.reconcile';
+  readonly sub: SubId;
+  readonly removedKeys: readonly RowKey[];
+  readonly invalidProfileIds: readonly string[];
+  readonly removedQuoteIds: readonly string[];
+};
+
 export type ToEngine =
+  | { readonly t: 'cache.hold'; readonly sub: SubId; readonly rows: readonly PublicCacheHoldRow[] }
   | { readonly t: 'storage.inspect'; readonly req: ReqId }
   | { readonly t: 'storage.close'; readonly req: ReqId }
   | { readonly t: 'signer.auth.cancel'; readonly id: string; readonly reason?: 'unsupported' }
@@ -933,6 +968,8 @@ export type Timeline = {
   readonly older: boolean;
 };
 export type FromEngine =
+  | PublicCacheReconcile
+  | { readonly t: 'cache.policy'; readonly sub: SubId; readonly allow: boolean }
   | { readonly t: 'storage'; readonly req: ReqId; readonly report: StorageReport }
   | ({ readonly t: 'signer.auth' } & SignerAuthorization)
   | { readonly t: 'signer.auth.clear'; readonly id: string }

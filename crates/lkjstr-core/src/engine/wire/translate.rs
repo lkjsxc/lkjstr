@@ -8,10 +8,15 @@ impl Session {
         engine: &Engine,
     ) -> Result<Vec<p::Input>, (Option<String>, &'static str)> {
         Ok(match input {
-            Input::Reading { sub, key } => self.reading(sub, key),
-            Input::Preview { sub, ids } => {
-                self.preview_near(sub, ids);
+            Input::CacheHold { sub, rows } => {
+                self.cache_hold(sub, rows, engine);
                 vec![]
+            }
+            Input::Reading { sub, key } => self.reading(sub, key, engine),
+            Input::Preview { sub, ids } => {
+                let selected = self.cache_read_inputs(&sub, &ids, engine);
+                self.preview_near(sub, ids);
+                selected
             }
             Input::StorageInspect { .. }
             | Input::StorageClose { .. }
@@ -84,6 +89,7 @@ impl Session {
                 self.timelines.remove(&sub);
                 self.notification_states.remove(&sub);
                 self.private_states.remove(&sub);
+                self.cache_release(&sub);
                 self.searches.remove(&sub);
                 self.queries.insert(sub.clone(), *query);
                 vec![p::Input::OpenVisible {
@@ -96,6 +102,7 @@ impl Session {
                 self.notification_states.remove(&sub);
                 self.queries.remove(&sub);
                 self.private_states.remove(&sub);
+                self.cache_release(&sub);
                 self.searches.remove(&sub);
                 self.delivered.remove(&sub);
                 self.windows.remove(&sub);

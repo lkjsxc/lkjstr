@@ -94,7 +94,11 @@ fn mute_updates_remove_previously_delivered_rows_and_unmute_restores_them() {
         0,
     );
     let out = output(&mut s, &mut e);
-    assert_eq!(out[0]["rows"][0]["key"], note.id);
+    let rows = out
+        .iter()
+        .find(|message| message["t"] == "rows" && message["sub"] == "feed")
+        .expect("initial feed rows");
+    assert_eq!(rows["rows"][0]["key"], note.id);
     e.enqueue("cache".into(), mute.clone());
     e.tick(75);
     let out = output(&mut s, &mut e);

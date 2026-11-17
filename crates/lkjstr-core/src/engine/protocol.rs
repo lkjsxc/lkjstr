@@ -20,6 +20,10 @@ pub enum Input {
     Close {
         sub: String,
     },
+    CacheRead {
+        sub: String,
+        ids: Vec<String>,
+    },
     Reading {
         sub: String,
         id: Option<String>,

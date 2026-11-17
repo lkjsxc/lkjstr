@@ -6,14 +6,14 @@ use lkjstr_protocol::NostrEvent;
 use std::sync::Arc;
 
 /// Compact historical authorization; no provider description or callback is copied.
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, serde::Serialize, serde::Deserialize)]
 pub struct IdentityProof {
     pub recipient: String,
     pub provider: String,
     pub profile: String,
     pub endpoint: String,
 }
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct TrustedReceipt {
     pub id: String,
     pub sender: String,
@@ -25,6 +25,7 @@ pub struct TrustedReceipt {
     pub target: Target,
     pub amount_msat: u64,
     pub created_at: u64,
+    #[serde(with = "proof_serde")]
     pub proof: Arc<IdentityProof>,
     pub provider_observed_at: u64,
     pub verified_at: u64,
@@ -151,4 +152,21 @@ pub fn receipt(
         provider_observed_at: provider.observed_at,
         verified_at: now,
     })
+}
+
+mod proof_serde {
+    use super::IdentityProof;
+    use serde::{Deserialize, Deserializer, Serialize, Serializer};
+    use std::sync::Arc;
+    pub fn serialize<S: Serializer>(
+        proof: &Arc<IdentityProof>,
+        serializer: S,
+    ) -> Result<S::Ok, S::Error> {
+        proof.as_ref().serialize(serializer)
+    }
+    pub fn deserialize<'de, D: Deserializer<'de>>(
+        deserializer: D,
+    ) -> Result<Arc<IdentityProof>, D::Error> {
+        IdentityProof::deserialize(deserializer).map(Arc::new)
+    }
 }

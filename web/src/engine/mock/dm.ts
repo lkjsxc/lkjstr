@@ -169,7 +169,7 @@ export function createPrivateMock(core: Core) {
         });
         if (messages.length > 2000) {
           const removed = messages.shift();
-          for (const key of seen) if (key.endsWith(':' + removed?.id)) seen.delete(key);
+          for (const key of seen) if (key.endsWith(`:${removed?.id}`)) seen.delete(key);
           const retained = new Set(messages.map((m) => m.conversation));
           for (const [peers, key] of rooms) if (!retained.has(key)) rooms.delete(peers);
         }
@@ -189,7 +189,7 @@ export function createPrivateMock(core: Core) {
         }
         for (const m of messages)
           if (m.conversation === a.conversation && m.participants.includes(a.as))
-            seen.add(a.as + ':' + m.id);
+            seen.add(`${a.as}:${m.id}`);
         core.post({ t: 'result', req: msg.req, ok: true });
       } else {
         const valid = a.relays.length <= 8 && a.relays.every((url) => /^wss?:\/\/[^/]+/.test(url));

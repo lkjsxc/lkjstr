@@ -147,7 +147,7 @@ pub(super) fn profile(query: &super::Query, engine: &Engine) -> Vec<Value> {
             value["repostedBy"] = json!({"actors":[super::note::author(&rows::author(&engine.store,&event.pubkey))],
                 "others":0,"at":event.created_at.saturating_mul(1000)});
         }
-        super::quote_state::settle(&mut value,engine);
+        super::quote_state::settle(&mut value, engine, query.account.as_deref());
         Some(value)
     }).collect()
 }

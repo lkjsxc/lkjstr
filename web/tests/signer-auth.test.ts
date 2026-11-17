@@ -54,7 +54,7 @@ it('deduplicates challenges without extending the original deadline', async () =
   auth.receive(first);
   expect(changed).toHaveBeenCalledTimes(1);
   await vi.advanceTimersByTimeAsync(30_000);
-  auth.receive({ ...first, url: first.url + '&step=2', expiresAt: Date.now() + 60_000 });
+  auth.receive({ ...first, url: `${first.url}&step=2`, expiresAt: Date.now() + 60_000 });
   expect(auth.pending.get()[0]?.expiresAt).toBe(first.expiresAt);
   await vi.advanceTimersByTimeAsync(30_000);
   expect(auth.pending.get()).toEqual([]);
@@ -97,7 +97,7 @@ it('mock authorization is an explicit fixture and clears before the terminal cal
   expect(done).not.toHaveBeenCalled();
   mock.handle({ t: 'signer.auth.cancel', id, reason: 'unsupported' });
   expect(done).toHaveBeenCalledExactlyOnceWith('unsupported');
-  mock.authorization.challenge(id, input.url + '&late');
+  mock.authorization.challenge(id, `${input.url}&late`);
   expect(out.filter((m) => m.t === 'signer.auth')).toHaveLength(1);
   mock.dispose();
 });

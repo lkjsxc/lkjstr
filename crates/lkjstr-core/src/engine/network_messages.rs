@@ -34,13 +34,7 @@ impl Network {
                 }) {
                     accepted = true;
                     if !r.page_eose {
-                        r.oldest = Some(
-                            r.oldest
-                                .map_or(event.created_at, |at| at.min(event.created_at)),
-                        );
-                        if r.received.len() < r.page_limit {
-                            r.received.insert(event.id.clone());
-                        }
+                        r.oldest = r.received.record(&event.id, event.created_at, r.page_limit);
                     }
                 }
                 if accepted {

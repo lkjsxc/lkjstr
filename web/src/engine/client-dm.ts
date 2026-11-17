@@ -21,7 +21,7 @@ export function createDmClient(transport: Transport) {
       receive: (snapshot: DmSnapshot) => void,
       options: { readonly visible?: boolean } = {},
     ) {
-      const sub = 'dm' + String(++serial);
+      const sub = `dm${String(++serial)}`;
       if (listeners.size >= 32) {
         let closed = false;
         queueMicrotask(() => {

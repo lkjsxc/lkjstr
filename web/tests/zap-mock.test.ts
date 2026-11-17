@@ -22,7 +22,7 @@ function setup() {
   });
   let serial = 0;
   const act = (action: Action) => {
-    const req = 'zap-mock-' + ++serial;
+    const req = `zap-mock-${++serial}`;
     engine?.handle({ t: 'act', req, action });
     return req;
   };

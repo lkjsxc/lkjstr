@@ -2,8 +2,8 @@
 use super::*;
 use crate::engine::Engine;
 use serde_json::Value;
-pub(super) fn settle(row: &mut Value, e: &Engine) {
-    super::counts::settle(row, e);
+pub(super) fn settle(row: &mut Value, e: &Engine, account: Option<&str>) {
+    super::counts::settle(row, e, account);
     super::acts::settle(row, e);
     if row["kind"] == "profile"
         && let Some(p) = row["author"]["pubkey"].as_str().map(str::to_owned)
@@ -29,18 +29,19 @@ pub(super) fn settle(row: &mut Value, e: &Engine) {
         }
     }
     if let Some(note) = row.get_mut("note") {
-        settle(note, e);
+        settle(note, e, account);
     }
 }
 impl Session {
     pub(super) fn settled_quote_patch(&mut self, sub: &str, e: &Engine) -> Vec<Value> {
+        let account = self.queries.get(sub).and_then(|q| q.account.as_deref());
         let Some(rows) = self.delivered.get_mut(sub) else {
             return vec![];
         };
         let mut ops = Vec::new();
         for row in rows {
             let before = row.clone();
-            settle(row, e);
+            settle(row, e, account);
             if before != *row {
                 ops.push(serde_json::json!({"op":"update","row":row}));
             }

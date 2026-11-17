@@ -83,6 +83,7 @@ impl Engine {
                 self.network.cancel_publication(&id);
             }
         }
+        self.read_contexts.changed(&event);
         self.store.insert(event.clone(), None);
         self.pending.push(event.clone(), true);
         for v in self.views.values_mut() {

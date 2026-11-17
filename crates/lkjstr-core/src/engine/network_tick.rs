@@ -44,21 +44,30 @@ impl Network {
                 self.effects.push(Effect::Connect(url.clone()));
             }
         }
-        let stale: Vec<_> = self
+        let stale: BTreeSet<_> = self
             .requests
-            .iter()
-            .filter(|(_, r)| r.live && r.sent && now.saturating_sub(r.last_rx) > 120000)
-            .map(|(id, _)| id.clone())
+            .values()
+            .filter(|r| r.live && r.sent && now.saturating_sub(r.last_rx) > 120000)
+            .filter(|r| {
+                !self.requests.values().any(|q| {
+                    q.sent
+                        && q.relay == r.relay
+                        && q.wire_id == r.wire_id
+                        && now.saturating_sub(q.last_rx) <= 120000
+                })
+            })
+            .map(|r| (r.relay.clone(), r.wire_id.clone()))
             .collect();
-        for id in stale {
-            if let Some(r) = self.requests.get_mut(&id) {
-                r.sent = false;
+        for (relay, wire) in stale {
+            for r in self
+                .requests
+                .values_mut()
+                .filter(|r| r.relay == relay && r.wire_id == wire)
+            {
                 r.eose = false;
                 r.last_rx = now;
-                let relay = r.relay.clone();
-                let wire = r.wire_id.clone();
-                self.close_group(&relay, &wire);
             }
+            self.close_group(&relay, &wire);
         }
         let mut counts = self.delivery_check_counts();
         let mut wires = BTreeSet::new();
@@ -125,9 +134,12 @@ impl Network {
                     let victim = self
                         .requests
                         .iter()
-                        .find(|(_, q)| {
+                        .filter(|(_, q)| {
                             q.relay == r.relay
                                 && q.sent
+                                && !self.requests.values().any(|other| other.sent
+                                    && other.relay == q.relay && other.wire_id == q.wire_id
+                                    && other.priority == 0 && !other.eose)
                                 // Finite hydration must finish or time out. Replaying
                                 // a large follower/ID answer for every name is costly.
                                 && (q.live || q.eose || focused_page
@@ -159,12 +171,17 @@ impl Network {
                                                 && (!r.members.contains("~account-discovery")
                                                     || !r.page_eose)))))
                         })
+                        .min_by_key(|(_, q)| eviction::loss(&self.requests, q))
                         .map(|(id, _)| id.clone());
                     if let Some(victim) = victim {
                         let relay = r.relay.clone();
                         let rotate = slot_sharing(r) || r.live;
                         let wire = self.requests[&victim].wire_id.clone();
-                        if let Some(q) = self.requests.get_mut(&victim) {
+                        for q in self
+                            .requests
+                            .values_mut()
+                            .filter(|q| q.relay == relay && q.wire_id == wire)
+                        {
                             q.sent = false;
                             q.eose = false;
                             if rotate
@@ -216,7 +233,7 @@ fn counts_filter(f: &NostrFilter) -> bool {
     f.tags.contains_key("e")
         && matches!(
             f.kinds.as_deref(),
-            Some([1, 6, 7, 9735] | [42, 16, 7, 9735] | [1, 42, 6, 16, 7, 9735])
+            Some([1, 6, 7, 9735] | [7, 16, 42, 9735] | [1, 6, 7, 16, 42, 9735])
         )
 }
 

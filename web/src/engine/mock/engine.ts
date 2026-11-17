@@ -95,7 +95,16 @@ export function createMockEngine(
       if (dm.handle(msg)) return;
       if (msg.t === 'upload.cancel') return act.cancelUpload(msg.req);
       if (msg.t === 'stats') post({ t: 'stats', req: msg.req, stats: mockStats(core) });
-      else if (msg.t === 'rowAtTime') {
+      else if (msg.t === 'cache.hold') {
+        if (subs.has(msg.sub))
+          post({
+            t: 'cache.reconcile',
+            sub: msg.sub,
+            removedKeys: [],
+            invalidProfileIds: [],
+            removedQuoteIds: [],
+          });
+      } else if (msg.t === 'rowAtTime') {
         const row = subs
           .get(msg.sub)
           ?.entries.map((e) => e.row())
@@ -142,6 +151,8 @@ export function createMockEngine(
           ops: [],
         };
         subs.set(s.id, s);
+        // Mock transport never passes through durable publicSnapshots; its fixtures may update UI names.
+        post({ t: 'cache.policy', sub: s.id, allow: true });
         core.timelines();
         const nobody =
           !core.me() && ['home', 'notifications', 'bookmarks'].includes(msg.query.source);
@@ -206,11 +217,18 @@ export function createMockEngine(
         s.windowed = true;
         s.ops = [];
         if (s.live && s.fresh) (s.fresh = 0), post({ t: 'fresh', sub: s.id, count: 0 });
+        const window = s.entries.slice(s.start, s.end);
+        if (
+          (s.query.source === 'profile' || s.query.source === 'channel') &&
+          s.start > 0 &&
+          s.entries[0]
+        )
+          window.unshift(s.entries[0]);
         post({
           t: 'rows',
           sub: s.id,
-          rows: s.entries.slice(s.start, s.end).map((e) => e.row()),
-          atTop: s.start === 0,
+          rows: window.map((e) => e.row()),
+          atTop: s.start <= (s.query.source === 'profile' || s.query.source === 'channel' ? 1 : 0),
           atBottom: s.end === s.entries.length,
         });
         core.timelines();

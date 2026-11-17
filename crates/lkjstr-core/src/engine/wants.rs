@@ -4,6 +4,7 @@ use lkjstr_protocol::NostrFilter;
 impl Engine {
     pub(super) fn replan(&mut self, now: u64) {
         let mut wants = self.publication_wants(now);
+        wants.extend(self.cache_reference_wants());
         wants.extend(self.dm_wants.clone());
         wants.extend(self.zap_wants());
         wants.extend(self.profile_wants());
@@ -47,6 +48,7 @@ impl Engine {
                 wants.push((sub.clone(), f, q));
             }
         }
+        self.plan_local_reads(&mut wants, now);
         let mut urls = self.network.relay_order.clone();
         for (_, _, q) in &wants {
             urls.extend(q.filters.relay_hints.iter().cloned());
@@ -116,6 +118,7 @@ fn requests(
     }
     if q.source == Source::Thread
         && let Some(id) = &q.target
+        && store.get(id).is_none()
     {
         result.push(NostrFilter {
             ids: Some(vec![id.clone()]),

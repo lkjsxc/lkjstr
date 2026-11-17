@@ -2,6 +2,7 @@
 import { kv } from '../shared/storage.ts';
 import { workerTransport as mockTransport, type Transport } from './client.ts';
 import type { FromEngine, RelayEntry } from './protocol.ts';
+import { publicSnapshots } from './public-snapshots.ts';
 
 export type BootstrapRelay = RelayEntry & { readonly search: boolean };
 export const DEFAULT_RELAYS: readonly BootstrapRelay[] = [
@@ -57,7 +58,7 @@ export async function createTransport(url: string): Promise<Transport> {
   // Bound by the transport's 64 in-flight actions. Persist only confirmed relay edits.
   const saves = new Map<string, { as: string; relays: readonly RelayEntry[] }>();
   let heard: ((msg: FromEngine) => void) | undefined;
-  return {
+  return publicSnapshots({
     post(msg, transfer) {
       if (msg.t === 'act' && msg.action.a === 'relays.save') {
         const { req, action } = msg;
@@ -92,5 +93,5 @@ export async function createTransport(url: string): Promise<Transport> {
       saves.clear();
       transport.close();
     },
-  };
+  });
 }

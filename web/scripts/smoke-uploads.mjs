@@ -23,7 +23,7 @@ export async function uploadScenarios(options) {
           await page
             .locator(`${accounts} input`)
             .fill(
-              `bunker://${bunker.pubkey}?relay=${encodeURIComponent(options.relayUrl + '/bunker')}`,
+              `bunker://${bunker.pubkey}?relay=${encodeURIComponent(`${options.relayUrl}/bunker`)}`,
             );
           await page.locator(`${accounts} input`).press('Enter');
         }
@@ -64,7 +64,7 @@ export async function uploadScenarios(options) {
           // Settings saves this same list action. The transport is observed only in test setup.
           await page.evaluate(
             ({ origin, alternate }) => {
-              const req = 'media-list-' + Date.now();
+              const req = `media-list-${Date.now()}`;
               window.uploadListDone = false;
               window.uploadListResult = undefined;
               window.uploadListReq = req;

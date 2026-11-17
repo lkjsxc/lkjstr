@@ -17,6 +17,8 @@ impl Engine {
                 visible,
             } => self.open_view(sub, query, visible, now),
             Input::Close { sub } => {
+                self.release_cache_references(&sub);
+                self.release_local_read_owner(&sub, now);
                 self.views.remove(&sub);
                 self.replan(now);
             }
@@ -40,6 +42,7 @@ impl Engine {
                     self.render(&sub, true);
                 }
             }
+            Input::CacheRead { sub, ids } => self.cache_read(&sub, &ids, now),
             Input::Reading { sub, id } => {
                 let Some(view) = self.views.get(&sub) else {
                     return;

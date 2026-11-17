@@ -24,7 +24,7 @@ pub use provider::{Provider, provider};
 pub use quote::{InvoiceInput, Quote, QuoteRecipient, invoice_plan, quote};
 pub use read_state::{ReadSnapshot, ReadState};
 pub use receipt::{IdentityProof, TrustedReceipt, receipt};
-pub use receipt_cache::{Evidence, Receipts, Total};
+pub use receipt_cache::{Evidence, MAX_HISTORICAL_IDENTITIES, Receipts, Total};
 pub use receipt_list::{ReceiptCursor, ReceiptPage, ReceiptRow, Verification};
 pub use request::{IntentState, InvoiceIntent, PreparedRequest, SuccessAction, invoice, prepare};
 pub use sender::Sender;

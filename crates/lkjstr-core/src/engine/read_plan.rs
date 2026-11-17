@@ -136,12 +136,13 @@ impl super::Network {
         } else {
             2
         };
-        let current: BTreeMap<_, _> = self
-            .requests
-            .values()
-            .filter(|r| r.page_filter == *f)
-            .map(|r| (r.relay.as_str(), r))
-            .collect();
+        let current = self.count_routes(f, now).unwrap_or_else(|| {
+            self.requests
+                .values()
+                .filter(|r| super::want_key::same(&r.page_filter, f))
+                .map(|r| (r.relay.as_str(), r))
+                .collect()
+        });
         let unavailable: BTreeSet<_> = candidates
             .iter()
             .filter(|c| {
@@ -181,7 +182,9 @@ impl super::Network {
                 let stable = current_route.is_some_and(|r| {
                     // Hydration rewrites logical filter keys into immutable buckets.
                     // Preserve their existing routing independently of live-slot ownership.
-                    r.read_slot || super::profiles::family(f, &r.members).is_some()
+                    r.read_slot
+                        || super::profiles::family(f, &r.members).is_some()
+                        || (r.members.is_empty() && r.complete && r.page_eose)
                 });
                 // An actual inclusive continuation inherits a full predecessor's
                 // ordinary slot. Reranking must not discard its unqueried tail.

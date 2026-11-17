@@ -224,23 +224,21 @@ fn reading_wire_accepts_only_that_subscriptions_delivered_note_keys() {
     };
     let accepted = wire.input(input("first", note["key"].clone()), &e).unwrap();
     assert!(
-        matches!(&accepted[..], [Input::Reading { id: Some(id), .. }] if id == note["id"].as_str().unwrap())
+        matches!(accepted.first(), Some(Input::Reading { id: Some(id), .. }) if id == note["id"].as_str().unwrap())
     );
-    assert!(
-        wire.input(input("other", note["key"].clone()), &e)
-            .unwrap()
-            .is_empty()
-    );
-    assert!(
-        wire.input(input("first", json!(fixtures()[1602].id)), &e)
-            .unwrap()
-            .is_empty()
-    );
-    assert!(
-        wire.input(input("first", json!("x".repeat(257))), &e)
-            .unwrap()
-            .is_empty()
-    );
+    // A verified delivered note may also request its bounded public contributor context.
+    assert!(accepted.len() <= 2);
+    assert!(accepted.iter().skip(1).all(|input| {
+        matches!(input, Input::CacheRead { sub, ids }
+            if sub == "first" && ids.as_slice() == [note["id"].as_str().unwrap()])
+    }));
+    for (sub, key) in [
+        ("other", note["key"].clone()),
+        ("first", json!(fixtures()[1602].id)),
+        ("first", json!("x".repeat(257))),
+    ] {
+        assert!(wire.input(input(sub, key), &e).unwrap().is_empty());
+    }
     assert!(matches!(
         &wire
             .input(input("first", serde_json::Value::Null), &e)

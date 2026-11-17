@@ -44,7 +44,10 @@ export function createCore(post: (msg: FromEngine) => void, now: () => number) {
     s.ops.push(op);
     if (!flushing) (flushing = true), later(PATCH_MS, flush);
   };
-  const inWindow = (s: Sub, i: number): boolean => s.windowed && i >= s.start && i < s.end;
+  const inWindow = (s: Sub, i: number): boolean =>
+    s.windowed &&
+    ((i >= s.start && i < s.end) ||
+      (i === 0 && (s.query.source === 'profile' || s.query.source === 'channel')));
   const accounts = (): void => post(privateListAccountSnapshot(who, unread));
   return {
     world,
@@ -142,6 +145,12 @@ export function createCore(post: (msg: FromEngine) => void, now: () => number) {
         s.fresh = s.live ? 0 : s.start;
         post({ t: 'fresh', sub: s.id, count: s.fresh });
         if (!refresh) continue;
+        if (
+          (s.query.source === 'profile' || s.query.source === 'channel') &&
+          s.start > 0 &&
+          next[0]
+        )
+          push(s, { op: 'update', row: next[0].row() });
         for (const old of kept) {
           const e = next[index.get(old.key) ?? -1]; // the new entry: a finite list's rows are made afresh
           if (e) push(s, { op: 'update', row: e.row() });

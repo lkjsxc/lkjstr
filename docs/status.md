@@ -2,9 +2,9 @@
 
 ## Purpose
 
-Current behavior and limits: [parity.md](parity.md) audits source; [engine-performance.md](engine-performance.md) records network evidence.
-Claude owns the interface. A1/A2 are implemented as protocol 14 on the account-safe baseline; Q1-Q5 remain specified.
-Q1's integrated cache/read candidate is measured but not shipped: the cold and daily Q5 scorecard rejects it.
+Current limits: [parity.md](parity.md), [engine-performance.md](engine-performance.md).
+Claude owns the interface. Account-safe and A1/A2 (972ef776) are live;
+[Q1](engine-q1-progress.md) passes native scoring, not public/Worker gates; Q2-Q5 remain.
 
 ## Specified keys and messages (2026-11-16)
 
@@ -12,8 +12,7 @@ Protocol 8 implements Claude's K1-K4, M1-M6 and D1 specifications with the exist
 private messages, one-to-one/group text, inbox settings and encrypted draft/failed-send recovery are reachable. Private bodies never enter public row
 caches or ordinary layout storage. Lock coordinates registered editors across clients before revoking plaintext; an unresponsive or expired unresolved
 editor prevents lock. The durable archive, signer and editor bounds are documented in [dm-drafts.md](dm-drafts.md), [dm-signers.md](dm-signers.md) and
-[dm-editor-locks.md](dm-editor-locks.md). No group-subject/file/reaction/delete surface was added. Strict per-page unlocking remains a recorded K2
-difference.
+[dm-editor-locks.md](dm-editor-locks.md). No group-subject/file/reaction/delete surface was added. Strict per-page unlocking remains a recorded K2 difference.
 
 The 468 required width/theme/language captures were generated and reviewed. Fresh real-Worker UI checks passed 13 key and 16 message assertions,
 including stable inbox discovery across relay-slot rotation. All seven required gates passed; evidence and limits are in
@@ -183,9 +182,10 @@ of 2000 requested notes and seven unresolved Home coverage candidates. Productiv
 production Worker before/after proof and combined gates. Public availability is still unknown; see [engine-live-route.md](engine-live-route.md).
 The sixth prescribed ship stopped before deployment at 16:35:57 UTC: separate package validators still required a direct HTML WASM preload.
 The archive graph and numeric-token corrections pass 80 package cases and 19 xtask tests; all required combined gates and exact packaging passed.
-The seventh prescribed ship passed all 548 real interface checks and packaging, then failed at the host operation at 17:53:27 UTC.
-The 2026-11-17 02:07 shipment deployed `07e88178` with a compatible schema-2 rollback. Protocol13 is not shipped.
-[Receipts and package hashes](engine-shipping.md) distinguish that deployed Worker from this stream's tested availability marker.
+The seventh ship's stale host validator was corrected through GitOps.
+Account-safe 07e88178 shipped at 02:07 UTC with schema-2 rollback and HTTPS proof;
+A1/A2 shipped at 972ef776. [Receipts and hashes](engine-shipping.md).
+Q1 passes native scoring but awaits public evidence, gates and deployment.
 
 Protocol-11/12 gate records: [variants](engine-variants-verification.md), [device](engine-device-verification.md).
 The [ninth hour](engine-performance-ninth.md) and [coverage audit](engine-performance-ninth-coverage.md) record hidden quotes and evidence limits.

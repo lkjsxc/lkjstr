@@ -91,7 +91,7 @@ impl Session {
             .map(|r| {
                 let mut row =
                     super::note::note(r, &engine.store, q.and_then(|q| q.account.as_deref()));
-                super::quote_state::settle(&mut row, engine);
+                super::quote_state::settle(&mut row, engine, q.and_then(|q| q.account.as_deref()));
                 row
             })
             .collect()

@@ -1,23 +1,23 @@
 import type { Subscription } from '../engine/client.ts';
 import { applyOps } from '../engine/ops.ts';
-import type { Anchor, Query, Row, Source, SubState } from '../engine/protocol.ts';
+import type { Anchor, Query, Row, SubState } from '../engine/protocol.ts';
 import { fullTime } from '../shared/format.ts';
 import { h } from '../shared/h.ts';
 import { t } from '../shared/i18n.ts';
 import { loadViewState, saveViewState } from '../shared/view-state.ts';
-import { ability, rich } from './can.ts';
+import { ability } from './can.ts';
 import { mountChannelDesk } from './channel-desk.ts';
-import { type BarState, mountFeedBar, typesQuery } from './feed-bar.ts';
+import { type BarState, mountFeedBar } from './feed-bar.ts';
 import { createRowList } from './feed-draw.ts';
 import { createFresh } from './feed-fresh.ts';
 import { mountFeedKeys } from './feed-keys.ts';
 import { createKeeper, type Place } from './feed-place.ts';
+import { feedQuery } from './feed-query.ts';
 import { mountScrub } from './feed-scrub.ts';
-import { CHILD, DATED, FILTERED, hasDaySeparators, OWN } from './feed-sources.ts';
+import { CHILD, DATED, hasDaySeparators, OWN } from './feed-sources.ts';
 import { feedState } from './feed-state.ts';
 import { feedTitle } from './feed-title.ts';
 import { feedWindow } from './feed-window.ts';
-import { filterQuery } from './filter-bar.ts';
 import { onHeld } from './held.ts';
 import { pauseNoteAudio } from './note-audio.ts';
 import { createPreviewWants } from './preview-wants.ts';
@@ -60,6 +60,7 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
   let atTop = true;
   let atBottom = false;
   let live = true;
+  let headHeld = false;
   let waiting = false;
   let sstate: SubState | undefined;
   let account = env.engine.me();
@@ -74,24 +75,7 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
     anchors: (key) => !key.startsWith('day:'),
     save: (place) => ((state.pos = place), save()),
   });
-  const query = (): Query => ({
-    source: kind as Source,
-    account: account || undefined,
-    privateLists: !!account,
-    pubkey: state.pubkey,
-    id: state.id,
-    ref: state.ref,
-    tag: state.tag,
-    ...(kind === 'search' ? { text: '' } : {}),
-    ...(kind === 'notifications' ? { types: typesQuery(state.only) } : {}),
-    ...(FILTERED.has(kind)
-      ? filterQuery(
-          { ...state.filter, ...(kind === 'search' ? { text: state.text } : {}) },
-          rich(env.engine),
-        )
-      : {}),
-    ...kinds?.query(),
-  });
+  const query = (): Query => feedQuery(kind, account, state, env.engine, kinds?.query());
   const request = (anchor: Anchor, before: number, after: number): void => {
     const extra = Math.max(0, before + after - LIMIT);
     if (before > after) before -= extra;
@@ -149,8 +133,9 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
     const top = el.scrollTop;
     const room = el.scrollHeight - top - el.clientHeight;
     const { first, last, count } = feedWindow(kind, rows);
-    if (top < 8 && atTop && !keys.held()) {
-      if (!live) (live = true), request('top', 0, Math.max(PAGE, Math.min(count, LIMIT)));
+    if (top < 8 && (atTop || headHeld) && !keys.held()) {
+      if (!live && !headHeld)
+        (live = true), request('top', 0, Math.max(PAGE, Math.min(count, LIMIT)));
     } else if (live && first) (live = false), request({ key: first }, 0, Math.max(count, PAGE));
     else if (room < NEAR_PX && !atBottom && last)
       request({ key: last }, Math.min(count, LIMIT), PAGE);
@@ -176,7 +161,7 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
     const place = keep ? keeper.get() : undefined;
     if (!keep) keeper.forget(), keys.clear();
     atTop = live = !place;
-    atBottom = waiting = jump = false;
+    atBottom = waiting = jump = headHeld = false;
     sstate = undefined;
     pill.hidden = true;
     sub = env.engine.open(query(), {
@@ -191,6 +176,13 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
         if (keeper.get() && !keeper.put() && (kind !== 'notifications' || rows.length > 0))
           keeper.forget();
         title();
+        const head = rows.find((row) => row.kind === 'note' || row.kind === 'notification');
+        // Channel messages (including one's own sends) flow in while the channel is open.
+        if (live && head && kind !== 'thread' && kind !== 'channel') {
+          headHeld = true;
+          live = false;
+          request({ key: head.key }, 0, Math.max(PAGE, rows.length));
+        }
         follow();
       },
       patch(ops) {
@@ -216,7 +208,7 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
   const toTop = (): void => {
     keys.clear();
     fresh.show(0);
-    if (atTop) return (keeper.forget(), follow());
+    headHeld = false;
     jump = live = true;
     request('top', 0, PAGE);
   };

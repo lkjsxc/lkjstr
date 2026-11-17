@@ -201,7 +201,7 @@ fn pending_counts_can_interrupt_settled_channel_work_on_a_full_relay() {
     assert!(frames.iter().any(|f| f[0] == "CLOSE" && f[1] == request[1]));
     let count = frames
         .iter()
-        .find(|f| f[0] == "REQ" && f[2]["kinds"] == json!([42, 16, 7, 9735]))
+        .find(|f| f[0] == "REQ" && f[2]["kinds"] == json!([7, 16, 42, 9735]))
         .expect("counts request");
     n.message(RELAY, &json!(["EOSE", count[1]]).to_string(), 186);
     n.tick(187);

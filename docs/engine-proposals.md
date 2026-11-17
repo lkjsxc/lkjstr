@@ -151,6 +151,22 @@ Merged gate and exact production evidence are in [engine-device-verification.md]
 Existing feed status nodes reuse `error.internal`; automatic Accounts availability
 and recovery still need a specification in [interface-needs.md](interface-needs.md).
 
+## Protocol 13 public cache additions (2026-11-17, owner authorized)
+
+- `cache.policy {sub,allow}` authorizes only public projected rows for a bounded pre-Worker rendering cache.
+- Private-list-derived rows and all DM/key/action messages remain ineligible.
+- `cache.hold {sub,rows:[{key,id?,profiles?:[{pubkey,id}],quotes?:[{id}]}]}` announces at most 64 held rows and bounded
+  verified-reference identities, never event bodies.
+- `cache.reconcile {sub,removedKeys,invalidProfileIds,removedQuoteIds}` invalidates only announced public references after
+  verified author-owned deletion; mock emits empty arrays.
+- Holds are separate from engine-delivered rows and release on close or cache-policy revocation; absence, EOSE and arbitrary cache content confer no authority.
+- `Counts.context?` carries a contributor lineage, canonical decimal generation, opaque token, restored flag and current flag.
+- `Counts.context.selection?` binds account and committed public-mute ID/time to the contributor token;
+  older/unknown/pending selection cannot replace held counts.
+- Only a restored same-lineage generation that is at least as new can replace a held count basis; equal generations require equal tokens.
+- Tokens establish equality only. Changed lineages require explicit navigation; only current committed count models are durably captured.
+
+See [public-view-cache.md](public-view-cache.md). These cache additions remain unshipped and retain all prior protocol meanings.
 ## Protocol 14 act chains (2026-11-17, owner specified)
 
 - Add `ActRef {type:'reaction'|'repost',actor,emoji?}` for one verified act link, without its counts.

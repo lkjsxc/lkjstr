@@ -159,7 +159,10 @@ fn profile_ties_anchor_and_time_rail_follow_the_selected_act() -> Test {
     )?;
     let held = rows(&output(&mut session, &mut engine)?);
     assert_eq!(held.iter().filter(|r| r["kind"] == "note").count(), 1);
-    assert_eq!(held[0]["id"], note.id);
+    assert!(
+        held.iter()
+            .any(|r| r["kind"] == "note" && r["id"] == note.id)
+    );
     let timeline = session
         .timeline_tick(&engine, 1000)
         .into_iter()

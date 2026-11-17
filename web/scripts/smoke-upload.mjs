@@ -33,7 +33,7 @@ const fixture = JSON.parse((await lines.next()).value);
 let chain = Promise.resolve();
 const sign = (event) => {
   const work = chain.then(async () => {
-    signer.stdin.write(JSON.stringify(event) + '\n');
+    signer.stdin.write(`${JSON.stringify(event)}\n`);
     return JSON.parse((await lines.next()).value);
   });
   chain = work.then(() => {});

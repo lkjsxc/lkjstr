@@ -11,8 +11,17 @@ mod batch;
 mod cancellation;
 #[path = "network_config.rs"]
 mod configuration;
+#[path = "network_count_routes.rs"]
+mod count_routes;
+#[path = "network_coverage.rs"]
+mod coverage;
 #[path = "network_delivery.rs"]
 mod delivery;
+#[path = "network_eviction.rs"]
+mod eviction;
+#[path = "network_frontier.rs"]
+mod frontier;
+use frontier::PageFrontier;
 #[path = "network_delivery_checks.rs"]
 mod delivery_checks;
 #[path = "network_lifecycle.rs"]
@@ -41,8 +50,12 @@ mod quality;
 mod routing_observations;
 #[path = "network_tick.rs"]
 mod scheduler;
+#[path = "network_union.rs"]
+mod union;
 #[path = "network_verification.rs"]
 mod verification;
+#[path = "read_want_key.rs"]
+pub(crate) mod want_key;
 use scheduler::filter_live;
 #[path = "read_plan.rs"]
 pub mod read_plan;
@@ -103,11 +116,12 @@ pub(super) struct Request {
     pub last_rx: u64,
     pub complete: bool,
     pub live: bool,
+    pub union_safe: bool, // Only public, independently revocable view wants may share live envelopes.
     pub list_watch: bool, // Visible TheirHome watch, even when shared with account discovery.
     pub asked: bool,
     pub ready_at: u64,
     // At most the transmitted page limit (<= 200) distinct IDs.
-    pub received: BTreeSet<String>,
+    pub received: PageFrontier,
     pub page_limit: usize,
     pub oldest: Option<u64>,
     pub retry_delay: u64,

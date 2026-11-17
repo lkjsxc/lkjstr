@@ -111,6 +111,8 @@ Rules:
   closed tabs, the active account's pubkey and face (name, picture, kind of
   signer: public data, so a reload starts as the reader). Events, keys and
   relay state are the engine's; a typed or shown key is never stored.
+  The second owner note permits bounded public row replay and media dimensions;
+  engine permission fences it from private projections. See [public-view-cache.md](public-view-cache.md).
 - One deliberate piece of optimism lives in the interface: a like or repost
   is drawn at once and published only after its Undo lapses (or when the page
   is hidden or closed). Everything else is drawn from engine patches.

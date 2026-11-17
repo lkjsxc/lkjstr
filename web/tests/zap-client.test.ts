@@ -78,7 +78,7 @@ it('cancels invoice ownership before allowing any queued extension dialog', asyn
       { zapSignal: abort.signal },
     );
     const action = x.sent.find((m) => m.t === 'act');
-    if (!action || action.t !== 'act') throw new Error('missing invoice action');
+    if (action?.t !== 'act') throw new Error('missing invoice action');
     abort.abort();
     abort.abort();
     expect(x.sent.filter((m) => m.t === 'zap.close')).toEqual([

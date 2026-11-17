@@ -88,6 +88,7 @@ pub fn start_shared() -> Result<SharedWorkerHandle, JsValue> {
         dm: Default::default(),
         zaps: Default::default(),
         private_lists: Default::default(),
+        public_cache: Default::default(),
         storage: Default::default(),
         bunker: Default::default(),
         server_checks: vec![],

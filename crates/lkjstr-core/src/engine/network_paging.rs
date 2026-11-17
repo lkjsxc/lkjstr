@@ -3,10 +3,11 @@
 use super::*;
 impl Network {
     pub fn page_finished(&self, filter: &lkjstr_protocol::NostrFilter) -> bool {
+        let filter = crate::engine::filter_identity::canonical(filter.clone());
         let requests: Vec<_> = self
             .requests
             .values()
-            .filter(|r| r.page_filter == *filter)
+            .filter(|r| r.page_filter == filter)
             .collect();
         // An unfinished route remains unknown, but must not veto successful
         // history forever after a refusal or its original page deadline.
@@ -23,12 +24,12 @@ impl Network {
     }
 
     pub(super) fn preceding_page(&self, request: &Request, logical: &NostrFilter) -> bool {
-        if logical.until.is_none() || request.page_filter == *logical {
+        if logical.until.is_none() || want_key::same(&request.page_filter, logical) {
             return false;
         }
         let mut family = request.page_filter.clone();
         family.until = logical.until;
-        family == *logical && self.page_cursor(&request.page_filter) == logical.until
+        want_key::same(&family, logical) && self.page_cursor(&request.page_filter) == logical.until
     }
     pub(super) fn pending_page_routes(&self, sub: &str, logical: &NostrFilter) -> Vec<String> {
         self.requests

@@ -28,7 +28,7 @@ it('settles a lost upload reply and ignores late progress or success', async () 
     { progress },
   );
   const action = sent.find((m) => m.t === 'act');
-  if (!action || action.t !== 'act') throw new Error('no upload action');
+  if (action?.t !== 'act') throw new Error('no upload action');
   receive({
     t: 'progress',
     req: action.req,
@@ -89,7 +89,7 @@ it('acknowledges upload cancellation once and suppresses queued or late authoriz
       { uploadSignal: abort.signal, progress },
     );
     const action = sent.find((m) => m.t === 'act');
-    if (!action || action.t !== 'act') throw new Error('missing upload');
+    if (action?.t !== 'act') throw new Error('missing upload');
     abort.abort();
     abort.abort();
     expect(sent.filter((m) => m.t === 'upload.cancel')).toEqual([
@@ -167,7 +167,7 @@ it('drops an extension answer if its upload was cancelled during the open dialog
       { uploadSignal: abort.signal },
     );
     const action = sent.find((m) => m.t === 'act');
-    if (!action || action.t !== 'act') throw new Error('missing upload');
+    if (action?.t !== 'act') throw new Error('missing upload');
     receive({ t: 'sign', req: 'old-sign', actionReq: action.req, pubkey: 'account', event: '{}' });
     expect(signEvent).toHaveBeenCalledTimes(1);
     abort.abort();

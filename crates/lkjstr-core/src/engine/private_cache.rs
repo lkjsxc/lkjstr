@@ -43,6 +43,7 @@ impl Engine {
         if !authority_decreased && self.private_lists.len() == before {
             return None;
         }
+        self.revoke_local_reads(now);
         let revoked = self
             .views
             .iter()

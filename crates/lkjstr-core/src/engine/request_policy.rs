@@ -29,7 +29,7 @@ impl Network {
                 let primary = q.is_some_and(|q| {
                     let mut head = crate::engine::query::filter(store, q);
                     head.until = r.page_filter.until;
-                    head == r.page_filter
+                    crate::engine::filter_identity::canonical(head) == r.page_filter
                 });
                 let (priority, purpose) = if own {
                     (2, "own")
