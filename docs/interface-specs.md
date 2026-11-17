@@ -45,6 +45,8 @@ what the engine offers and no surface reaches yet.
 | Q3 | Weights made from the past | [read-plan.md](read-plan.md#q3-weights-made-from-the-past) | ready |
 | Q4 | Spend where it brings most | [read-plan.md](read-plan.md#q4-spend-where-it-brings-most) | ready |
 | Q5 | A scorecard that is climbed | [read-plan.md](read-plan.md#q5-a-scorecard-that-is-climbed) | ready |
+| Q6 | Lists are kept, not asked again at every start | [read-plan.md](read-plan.md#q6-lists-are-kept-not-asked-again-at-every-start) | ready |
+| Q7 | A wider set to start from | [read-plan.md](read-plan.md#q7-a-wider-set-to-start-from) | ready |
 
 Keys come first because a locked account changes what the Messages tab says. A1 and A2 are the owner's request of
 2026-11-17 and are the next interface work: build them before anything under "Not specified yet".
@@ -52,6 +54,9 @@ Q1 to Q5 are the owner's direction of 2026-11-17 and replace S1, which is withdr
 draws does not matter; what matters is that the engine plans every tab's wants together, from weights made of the
 past, and asks the relays as well as it possibly can. They are engine work without a surface. Q1 is taken first,
 with the cache and first-paint work; A1 and A2 are small and are not delayed by Q2 to Q5.
+Q6 and Q7 are the owner's words of 2026-11-17 02:42 UTC: relay lists and the other slow lists are kept on the
+device instead of being asked again at every start, and the default relays become three wider measured sets. Q6
+lands with Q1 or straight after it; Q7 ships with the next ship that has room.
 
 Built on 2026-11-16 with protocol 8 and all required gates passed. The review
 matrix covers 468 specified width/theme/language captures; real flows passed

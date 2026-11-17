@@ -96,8 +96,62 @@ seconds; a public sample draws no rate-limit notice.
 - Work in a loop: measure, change one thing, keep it only if the scorecard is better, write the line in cover.md.
   Stop when three changes in a row move no number by two percent, and report what limits it then.
 
+## Q6 Lists are kept, not asked again at every start
+
+The owner, 2026-11-17: the relay list seems to be fetched from the default relays every time a page opens; it
+should be cached on the device. That is so today (orchestration.md: every saved account requests kinds 0, 3,
+10000, 10002 and 10063 at startup independently of cached records). This item replaces that rule.
+
+- Slow lists are records in the store with the time they were last confirmed and where: for the device's accounts
+  kinds 0, 3, 10000, 10002, 10050 and 10063; for every wanted person their relay list and profile.
+- A start uses the stored lists at once. The first connections go to the relays of the stored list, not to the
+  default relays, and no list is requested before the visible tabs have their content.
+- The device's accounts: after the first content, one request for all accounts and kinds together, only for what
+  is newer than the stored records, on the accounts' own relays; then a live want for the same while a page is
+  open, so an edit made in another client arrives by itself. Never one request per kind and account per start.
+- Other people: a stored list is confirmed again only when it is old (start: followed people 24 hours, others 7
+  days, shorter for heavier people, the scorecard decides), when evidence says it is stale (a newer one seen in
+  passing, a hint naming a relay the list lacks, the person no longer found where the list says), or when the
+  reader asks in Settings or on the profile. Confirmations are batched by relay and ask only for newer.
+- The default relays and indexers are the last place a list is looked for: only when nothing is stored and no hint
+  answered. They are not a step every start passes through.
+- A stored list that fails verification or is older than a stored newer one is never used. An account's records
+  are cleared with the account's data.
+- The scorecard of Q5 gains two numbers: list requests per start, and starts that reached first content without
+  touching a default relay.
+
+Check: second start of a signed-in account with a filled store and every default relay unreachable: the feed
+appears from the account's own relays and the request log holds no list request before first content and at most
+one batched one after it. A relay list changed in another client is in use here within a minute while a page is
+open, and after the first content of the next start otherwise.
+
+## Q7 A wider set to start from
+
+The owner, same message: the default relays feel too few. Today there are three for reading and writing and two
+for search, one list for every purpose.
+
+- Three sets by purpose, each in one place in the source with the date it was last measured: general (reading and
+  writing for a reader with no list of their own, and the fallback of Q2), up to eight; indexers (asked only for
+  profiles and lists, written to only with list events), up to four; search, up to three. The wire limit of eight
+  rises to fit. A reader's own saved list keeps its present limit and always wins.
+- More defaults do not mean more connections: the plan of Q2 to Q4 picks among them inside the device limit, and
+  with Q6 a reader who has a list rarely touches them. A new account publishes to at most four general relays.
+- Candidates, to be measured, not trusted: general relay.damus.io, nos.lol, yabu.me, relay.primal.net,
+  relay.nostr.wirednet.jp, r.kojira.io, nrelay.c-stellar.net, nostr.mom, relay.snort.social, offchain.pub;
+  indexers purplepag.es, user.kindpag.es, indexer.coracle.social, directory.yabu.me; search search.nos.today,
+  relay.nostr.band, relay.noswhere.com. Add better ones you know of.
+- A relay enters a set only if, from a browser at the production origin, on three runs hours apart, it connects,
+  needs no payment or sign-in to read, answers a first filter of its purpose within three seconds, and its stated
+  limits fit. At least three general relays are ones where Japanese is written every hour. The same measurement
+  is a script run at each ship; a default that fails it twice running is named in the ship record and replaced.
+- No new surface or word. The sentence about reading from default relays stays as it is.
+
+Check: the measurement script passes for every default; a fresh profile with no account shows a feed with two of
+the general relays blocked; the scorecard does not fall against the three-relay set.
+
 ## Order
 
 Q1 first: it is the base of the others and of the cache and first-paint work in progress. Then Q2, Q3, Q4; Q5's
 scorecard is made with Q1 and used from then on. Each lands and ships alone. A1 and A2 are small and visible and
-are not delayed by this: take them between two of these items at the latest.
+are not delayed by this: take them between two of these items at the latest. Q6 is part of the cache work and
+lands with Q1 or straight after it; Q7 is small and ships with the next ship that has room.
