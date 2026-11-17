@@ -142,7 +142,7 @@ impl Engine {
                     .and_then(|id| {
                         events
                             .iter()
-                            .position(|e| super::rich::anchored(e, id, &v.query))
+                            .position(|e| super::rich::anchored(&self.store, e, id, &v.query))
                     })
                     .unwrap_or(0);
                 let needed = at.saturating_add(v.after).saturating_add(1).min(6000);

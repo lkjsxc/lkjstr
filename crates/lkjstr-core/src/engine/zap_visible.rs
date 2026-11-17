@@ -85,7 +85,7 @@ fn near(store: &Store, view: &View) -> Vec<Target> {
 pub(super) fn matches_anchor(store: &Store, row: &Row, id: &str, view: &View) -> bool {
     row.id == id
         || store.get(&row.id).is_some_and(|raw| {
-            super::rich::anchored(&raw, id, &view.query)
+            super::rich::anchored(store, &raw, id, &view.query)
                 || (matches!(raw.kind, 6 | 7 | 9735)
                     && receipt_target(&raw) == Some(Target::Event { id: id.into() }))
         })
@@ -111,6 +111,35 @@ fn visit(
         && seen.insert(target.clone())
     {
         out.push(target);
+    }
+    if let Some(raw) = store
+        .get(&row.id)
+        .filter(|event| super::acts::is_act(event.kind))
+    {
+        let chain = super::acts::resolve(store, &raw);
+        let mut targets: Vec<_> = chain
+            .links
+            .iter()
+            .filter(|event| event.kind == 9735)
+            .filter_map(|event| receipt_target(event))
+            .collect();
+        if let Some(note) = chain.note {
+            let target = Target::Event {
+                id: note.id.clone(),
+            };
+            if store
+                .referencing(&note.id)
+                .iter()
+                .any(|event| event.kind == 9735 && receipt_target(event) == Some(target.clone()))
+            {
+                targets.push(target);
+            }
+        }
+        for target in targets {
+            if out.len() < 128 && seen.insert(target.clone()) {
+                out.push(target);
+            }
+        }
     }
     if depth < 2 {
         for part in &row.content {

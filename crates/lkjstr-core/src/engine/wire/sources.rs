@@ -81,6 +81,7 @@ impl Session {
             "media-servers"=>q.account.as_deref().map(|a|e.upload_servers(a).into_iter().map(|url|e.server_row(&url)).collect()).unwrap_or_default(),
             "emoji"=>crate::engine::emoji::rows(store,q.account.as_deref()).into_iter().map(|e|json!({"kind":"emoji","key":format!("emoji:{}",e.code),"set":e.set,"code":e.code,"url":e.url})).collect(),
             "notifications"=>super::notifications::notifications(q,e),
+            "profile" if converted.as_ref().is_some_and(crate::engine::acts::activity) => super::acts::profile(q,e),
             "bookmarks"=>converted.as_ref().map(|q|crate::engine::list_events::events(store,q,&e.private_lists).iter().map(|event|super::note::note(&rows::row_with_lists(store,event,q.account.as_deref(),0,&e.private_lists),store,q.account.as_deref())).collect()).unwrap_or_default(),
             "list"=>{
                 q.convert().map(|converted|query::events(store,&converted).into_iter().next().map(|event|crate::engine::settings::list_tags_for(&event,&e.private_lists,q.account.as_deref()).iter().filter(|t|t.first().is_some_and(|k|k=="p")).filter_map(|t|t.get(1)).filter(|p|lkjstr_protocol::is_pubkey(p)).map(|p|person(e,p,q.account.as_deref(), weights.person(p))).collect()).unwrap_or_default()).unwrap_or_default()
@@ -94,7 +95,7 @@ impl Session {
                             None => None,
                         };
                         let wrapper = event.kind == 6 || (q.source == "profile" && matches!(q.show.as_deref(), Some("reposts" | "reactions")));
-                        let shown = if wrapper { lkjstr_protocol::tags::tag_values(&event, "e").last().and_then(|id| store.get(id))? } else { event.clone() };
+                        let shown = if wrapper { crate::engine::acts::target(&event).and_then(|id| store.get(&id))? } else { event.clone() };
                         let row = rows::row_with_lists(store, &shown, q.account.as_deref(), 0, &e.private_lists);
                         let mut value = super::note::note(&row, store, q.account.as_deref());
                         if wrapper && q.show.as_deref() == Some("reposts") {

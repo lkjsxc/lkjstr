@@ -150,3 +150,14 @@ Merged gate and exact production evidence are in [engine-device-verification.md]
 
 Existing feed status nodes reuse `error.internal`; automatic Accounts availability
 and recovery still need a specification in [interface-needs.md](interface-needs.md).
+
+## Protocol 14 act chains (2026-11-17, owner specified)
+
+- Add `ActRef {type:'reaction'|'repost',actor,emoji?}` for one verified act link, without its counts.
+- Add `NotificationRow.target.act?` for the reader's own targeted reaction/repost; existing target fields describe only the terminal note.
+- Add `NotificationRow.pendingAct? {act,state:'loading'|'missing'|'failed'}` while that note is unresolved; `target` remains absent.
+- Add `NoteRow.act?` for the selected profile person's own act; that event supplies the row time and chronological position.
+- Add `NoteRow.actOn?` for the immediately targeted act in profile Reactions/Reposts; terminal note counts and content stay unchanged.
+
+The bounded resolution and exact representative policy follow
+[interface-acts.md](interface-acts.md); source and proof limits are recorded with the implementation.

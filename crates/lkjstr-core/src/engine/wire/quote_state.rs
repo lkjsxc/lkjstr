@@ -4,6 +4,7 @@ use crate::engine::Engine;
 use serde_json::Value;
 pub(super) fn settle(row: &mut Value, e: &Engine) {
     super::counts::settle(row, e);
+    super::acts::settle(row, e);
     if row["kind"] == "profile"
         && let Some(p) = row["author"]["pubkey"].as_str().map(str::to_owned)
     {

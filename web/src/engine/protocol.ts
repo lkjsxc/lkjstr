@@ -32,7 +32,9 @@
 /** 10: account-scoped private lists with owned signer cancellation. */
 /** 11: owner-bound ephemeral bunker authorization challenges. */
 /** 12: finite storage inspection; no storage mutation. */
-export const PROTOCOL_VERSION = 13;
+/** 13: account availability distinct from the capability handshake. */
+/** 14: bounded act chains, profile act context and unresolved notification states. */
+export const PROTOCOL_VERSION = 14;
 
 /** Chosen by the interface, unique among its open subscriptions. */
 export type SubId = string;
@@ -231,7 +233,17 @@ export type LinkPreview = {
   readonly imageUrl?: string | null;
   readonly kind: 'loading' | 'link' | 'page' | 'post';
 };
+/** Since version 14. One verified reaction or repost link; its counts remain on that act. */
+export type ActRef = {
+  readonly type: 'reaction' | 'repost';
+  readonly actor: Author;
+  readonly emoji?: { readonly emoji: string; readonly url?: string };
+};
 export type NoteRow = {
+  /** Profile Reactions/Reposts only: the selected person's act, which also supplies this row's time. */
+  readonly act?: ActRef;
+  /** The immediately targeted act; only the terminal note is rendered as the row. */
+  readonly actOn?: ActRef;
   readonly previews?: readonly LinkPreview[];
   readonly kind: 'note';
   readonly key: RowKey;
@@ -334,7 +346,15 @@ export type NotificationRow = {
   readonly zapReceipt?: ZapReceipt;
   readonly comment?: string;
   /** The reader's note it is about (reaction, repost, zap): opened by a press on the excerpt. */
-  readonly target?: { readonly id: string; readonly excerpt: string; readonly media: number };
+  readonly target?: {
+    readonly id: string;
+    readonly excerpt: string;
+    readonly media: number;
+    /** The reader's own reaction or repost immediately targeted by the new act. */
+    readonly act?: ActRef;
+  };
+  /** Since version 14. The final note is unresolved; target stays absent and navigation uses an actor. */
+  readonly pendingAct?: { readonly act: ActRef; readonly state: 'loading' | 'missing' | 'failed' };
   /** `mention`, `reply`: the note that mentions or answers, drawn as a full note. */
   readonly note?: NoteRow;
   /** Arrived after the reader last looked at notifications. */

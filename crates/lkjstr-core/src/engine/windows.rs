@@ -39,7 +39,7 @@ impl Engine {
             &self.private_lists,
         );
         let (start, end) = (selected.raw.start, selected.raw.end);
-        let fresh = projection::count(&v.query, &events[..start]);
+        let fresh = projection::count(&self.store, &v.query, &events[..start]);
         let window = &events[start..end];
         let items: Vec<_> = window
             .iter()
@@ -127,26 +127,30 @@ impl Engine {
     }
 }
 
-fn plan(v: &super::View, events: &[crate::store::Event]) -> (usize, usize) {
+fn plan(
+    store: &crate::store::Store,
+    v: &super::View,
+    events: &[crate::store::Event],
+) -> (usize, usize) {
     let at = v
         .anchor
         .as_ref()
         .and_then(|id| {
             events
                 .iter()
-                .position(|e| super::rich::anchored(e, id, &v.query))
+                .position(|e| super::rich::anchored(store, e, id, &v.query))
         })
         .unwrap_or(0);
     let mut start = at;
     let mut above = 0;
     while start > 0 && above < v.before {
         start -= 1;
-        if !projection::unavailable(&v.query, &events[start]) {
+        if !projection::unavailable(store, &v.query, &events[start]) {
             above += 1;
         }
     }
     // Keep adjacent invisible targets owned when the first note is anchored.
-    while start > 0 && projection::unavailable(&v.query, &events[start - 1]) {
+    while start > 0 && projection::unavailable(store, &v.query, &events[start - 1]) {
         start -= 1;
     }
     (start, above.saturating_add(v.after).saturating_add(1))
@@ -162,13 +166,13 @@ pub(super) fn selection(
     events: &[crate::store::Event],
     private: &super::settings::PrivateLists,
 ) -> Selection {
-    let (start, quota) = plan(v, events);
+    let (start, quota) = plan(store, v, events);
     let held = if enabled && v.query.account.is_none() && v.query.source == Source::Global {
         super::global::classify_window(
             store,
             &events[start..],
             |p| network.profile_absent(p),
-            |e| projection::unavailable(&v.query, e),
+            |e| projection::unavailable(store, &v.query, e),
             quota,
         )
     } else {
@@ -180,11 +184,12 @@ pub(super) fn selection(
                     return None;
                 }
                 // Person membership is independent of contact-list payloads and note mutes.
-                let reason = if v.query.source != Source::Followers
-                    && query::hidden_with_lists(store, &v.query, event, private).is_some()
+                let reason = if !super::acts::notification_visible(store, &v.query, event)
+                    || (v.query.source != Source::Followers
+                        && query::hidden_with_lists(store, &v.query, event, private).is_some())
                 {
                     Some(super::global::Held::Filtered)
-                } else if projection::unavailable(&v.query, event) {
+                } else if projection::unavailable(store, &v.query, event) {
                     Some(super::global::Held::UnavailableRepost)
                 } else {
                     None

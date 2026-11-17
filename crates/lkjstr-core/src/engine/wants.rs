@@ -1,6 +1,6 @@
 //! Bound hydration to visible rows and share the resulting request filters.
 use super::{Engine, protocol::Source, query};
-use lkjstr_protocol::{NostrFilter, tags::tag_values};
+use lkjstr_protocol::NostrFilter;
 impl Engine {
     pub(super) fn replan(&mut self, now: u64) {
         let mut wants = self.publication_wants(now);
@@ -147,8 +147,18 @@ fn requests(
         .filter(|(_, reason)| reason.is_none())
         .map(|(event, _)| event.clone())
         .collect();
-    // Batch visible note counts; released with the view and bounded by its window.
-    for events in visible.chunks(120) {
+    let references = super::acts::reference_rows(store, &visible);
+    let counted = if super::acts::activity(q) {
+        references.clone()
+    } else {
+        visible
+            .iter()
+            .filter(|event| !super::acts::is_act(event.kind))
+            .cloned()
+            .collect()
+    };
+    // Only displayed notes need counts; an act's counts have no surface yet.
+    for events in counted.chunks(120) {
         let mut f = NostrFilter {
             kinds: Some(if events.iter().any(|e| e.kind == 42) {
                 if events.iter().any(|e| e.kind != 42) {
@@ -191,19 +201,15 @@ fn requests(
             });
         }
     }
-    let mut prefetch = crate::prefetch::collect_window(&visible, store);
-    for event in &visible {
-        if matches!(event.kind, 6 | 7 | 16) {
-            let ids = tag_values(event, "e")
-                .into_iter()
-                .filter(|id| store.get(id).is_none())
-                .collect::<Vec<_>>();
-            if !ids.is_empty() {
-                prefetch.notes.extend(ids);
-            }
-        }
-    }
+    let prefetch = crate::prefetch::collect_window(&references, store);
     let mut ids = prefetch.notes;
+    ids.extend(
+        visible
+            .iter()
+            .filter(|event| super::acts::is_act(event.kind))
+            .filter_map(|event| super::acts::resolve(store, event).missing)
+            .take(120),
+    );
     // A separate 120-target budget preserves visible reference capacity.
     ids.extend(super::windows::projection::targets(
         &events[selected.raw],

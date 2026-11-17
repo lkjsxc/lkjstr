@@ -101,7 +101,10 @@ pub(super) fn note(row: &Row, store: &Store, account: Option<&str>) -> Value {
         let at = store
             .referencing(&row.id)
             .iter()
-            .filter(|e| matches!(e.kind, 6 | 16))
+            .filter(|e| {
+                matches!(e.kind, 6 | 16)
+                    && crate::engine::acts::target(e).as_deref() == Some(&row.id)
+            })
             .map(|e| e.created_at)
             .max()
             .unwrap_or(row.created_at);

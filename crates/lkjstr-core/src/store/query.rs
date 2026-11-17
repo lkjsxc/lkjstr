@@ -71,9 +71,7 @@ impl Store {
     pub fn reactions(&self, id: &str) -> Vec<Event> {
         self.referencing(id)
             .into_iter()
-            .filter(|e| {
-                e.kind == 7 && lkjstr_protocol::reaction_target_event_id(e).as_deref() == Some(id)
-            })
+            .filter(|e| e.kind == 7 && is_action_target(e, id))
             .collect()
     }
 
@@ -202,7 +200,11 @@ fn is_reply_to(event: &lkjstr_protocol::NostrEvent, id: &str) -> bool {
 }
 
 fn is_action_target(event: &lkjstr_protocol::NostrEvent, id: &str) -> bool {
-    lkjstr_protocol::event_references(event)
+    event
+        .tags
         .iter()
-        .any(|reference| reference.id == id)
+        .rev()
+        .find(|tag| tag.first().is_some_and(|key| key == "e"))
+        .and_then(|tag| tag.get(1))
+        .is_some_and(|target| target == id)
 }

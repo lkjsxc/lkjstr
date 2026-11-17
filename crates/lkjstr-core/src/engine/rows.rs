@@ -66,12 +66,9 @@ pub fn row_with_lists(
     };
     super::row_media::attachments(event, &mut parts);
     if event.kind == 6
-        && let Some(id) = lkjstr_protocol::tags::tag_values(event, "e").last()
+        && let Some(id) = super::acts::target(event)
     {
-        parts.push(Part::Quote {
-            id: id.clone(),
-            relays: vec![],
-        });
+        parts.push(Part::Quote { id, relays: vec![] });
     }
     for id in lkjstr_protocol::tags::tag_values(event, "q") {
         if !parts
@@ -148,7 +145,9 @@ pub fn row_with_lists(
     let mut reposts = store
         .referencing(&event.id)
         .into_iter()
-        .filter(|e| matches!(e.kind, 6 | 16))
+        .filter(|e| {
+            matches!(e.kind, 6 | 16) && super::acts::target(e).as_deref() == Some(&event.id)
+        })
         .map(|e| author(store, &e.pubkey))
         .collect::<Vec<_>>();
     reposts.sort_by(|a, b| a.pubkey.cmp(&b.pubkey));

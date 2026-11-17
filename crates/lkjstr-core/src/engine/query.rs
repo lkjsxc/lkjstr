@@ -113,6 +113,10 @@ pub(super) fn signed_out(q: &Query) -> bool {
         )
 }
 pub fn events(store: &Store, q: &Query) -> Vec<Event> {
+    select(store, q, true)
+}
+/// The final activity projection validates receipt links before choosing its representative.
+pub(super) fn select(store: &Store, q: &Query, collapse_acts: bool) -> Vec<Event> {
     if signed_out(q) {
         return vec![];
     }
@@ -168,6 +172,9 @@ pub fn events(store: &Store, q: &Query) -> Vec<Event> {
         events.extend(self::events(store, &news));
         events.sort_by(|a, b| (b.created_at, &b.id).cmp(&(a.created_at, &a.id)));
     }
+    if collapse_acts && super::acts::activity(q) {
+        return super::acts::representatives(store, events);
+    }
     // Several repost wrappers become one stable target row.
     let mut seen = std::collections::HashSet::new();
     events
@@ -177,7 +184,7 @@ pub fn events(store: &Store, q: &Query) -> Vec<Event> {
                 && q.source != Source::Notifications
                 && q.filters.show.as_deref() != Some("reposts")
             {
-                let target = tag_values(&e, "e").last().and_then(|id| store.get(id));
+                let target = super::acts::target(&e).and_then(|id| store.get(&id));
                 if target.as_ref().is_some_and(|t| {
                     t.kind == 42
                         && matches!(
@@ -219,22 +226,11 @@ pub(super) fn accepts(
         && if q.source == Source::Profile
             && matches!(q.filters.show.as_deref(), Some("reposts" | "reactions"))
         {
-            tag_values(e, "e")
-                .last()
-                .and_then(|id| store.get(id))
-                .is_none_or(|target| {
-                    let mut shown = q.clone();
-                    shown.filters.authors = None;
-                    shown.filters.from = None;
-                    shown.filters.since = None;
-                    shown.filters.until = None;
-                    matches_extra(&target, &shown)
-                })
+            super::acts::matches_terminal(store, e, q)
         } else if e.kind == 6 && q.source != Source::Notifications {
             q.filters.reposts != Some(false)
-                && tag_values(e, "e")
-                    .last()
-                    .and_then(|id| store.get(id))
+                && super::acts::target(e)
+                    .and_then(|id| store.get(&id))
                     .is_none_or(|target| matches_note(store, q, &target))
         } else {
             matches_extra(e, q)

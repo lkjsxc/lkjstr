@@ -7,7 +7,10 @@ use crate::engine::{
 use crate::store::{Event, Store};
 use std::collections::BTreeSet;
 
-pub(in crate::engine) fn unavailable(query: &Query, event: &Event) -> bool {
+pub(in crate::engine) fn unavailable(store: &Store, query: &Query, event: &Event) -> bool {
+    if crate::engine::acts::activity(query) {
+        return crate::engine::acts::resolve(store, event).note.is_none();
+    }
     query.filters.notifications != Some(true)
         && matches!(
             query.source,
@@ -21,10 +24,10 @@ pub(in crate::engine) fn unavailable(query: &Query, event: &Event) -> bool {
         && matches!(event.kind, 6 | 16)
 }
 
-pub(in crate::engine) fn count(query: &Query, events: &[Event]) -> usize {
+pub(in crate::engine) fn count(store: &Store, query: &Query, events: &[Event]) -> usize {
     events
         .iter()
-        .filter(|event| !unavailable(query, event))
+        .filter(|event| !unavailable(store, query, event))
         .count()
 }
 
@@ -40,7 +43,7 @@ pub(in crate::engine) fn targets(
         .iter()
         .zip(held)
         .filter(|(_, reason)| **reason == Some(Held::UnavailableRepost))
-        .filter_map(|(event, _)| lkjstr_protocol::tags::tag_values(event, "e").pop())
+        .filter_map(|(event, _)| crate::engine::acts::resolve(store, event).missing)
         .filter(|id| lkjstr_protocol::is_event_id(id) && store.get(id).is_none())
         .filter(|id| seen.insert(id.clone()))
         .take(120)

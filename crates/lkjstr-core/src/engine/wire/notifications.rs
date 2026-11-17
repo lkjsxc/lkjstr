@@ -41,7 +41,7 @@ pub(super) fn notifications(q: &Query, e: &Engine) -> Vec<Value> {
         {
             continue;
         }
-        let target = p::tags::tag_values(&event, "e").last().cloned();
+        let target = crate::engine::acts::target(&event);
         let group = if matches!(kind, "reaction" | "repost") {
             format!(
                 "notification:{kind}:{}:{}",
@@ -113,10 +113,8 @@ pub(super) fn notifications(q: &Query, e: &Engine) -> Vec<Value> {
                 row["comment"] = json!(comment);
             }
         }
-        if let Some(id) = target
-            && let Some(target) = e.store.get(&id)
-        {
-            row["target"] = json!({"id":id,"excerpt":target.content.chars().take(160).collect::<String>(),"media":p::embedded_media_attachments(&target).len()});
+        if let Some(id) = target {
+            super::acts::target(&mut row, e, &id);
         }
         groups.push(row);
     }
@@ -143,7 +141,8 @@ pub fn notification_watermark(
         .iter()
         .map(|e| e.created_at.saturating_mul(1000))
         .max()
-        .unwrap_or(0);
+        .unwrap_or(0)
+        .max(engine.seen.get(account).copied().unwrap_or(0));
     (
         at,
         events

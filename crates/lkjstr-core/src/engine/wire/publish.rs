@@ -104,6 +104,7 @@ pub(super) fn publish(what: P, engine: &Engine, account: &str) -> Result<p::Acti
                     .into_iter()
                     .filter(|e| {
                         e.pubkey == account
+                            && crate::engine::acts::target(e).as_deref() == Some(id.as_str())
                             && e.kind
                                 == if of.as_deref() == Some("reaction") {
                                     7

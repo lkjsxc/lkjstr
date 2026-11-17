@@ -55,27 +55,24 @@ pub(super) fn has(e: &NostrEvent, kind: &str) -> bool {
         })
 }
 
-pub(super) fn anchored(e: &NostrEvent, key: &str, q: &Query) -> bool {
+pub(super) fn anchored(store: &Store, e: &NostrEvent, key: &str, q: &Query) -> bool {
     if e.id == key || (q.source == super::protocol::Source::Followers && e.pubkey == key) {
         return true;
     }
     if q.source == super::protocol::Source::Profile
         && matches!(q.filters.show.as_deref(), Some("reposts" | "reactions"))
     {
-        return lkjstr_protocol::tags::tag_values(e, "e")
-            .last()
-            .is_some_and(|id| id == key);
+        return super::acts::resolve(store, e)
+            .note
+            .is_some_and(|note| note.id == key);
     }
     if q.filters.notifications == Some(true) || q.source == super::protocol::Source::Notifications {
         let kind = match e.kind {
-            6 => "repost",
+            6 | 16 => "repost",
             7 => "reaction",
             _ => return false,
         };
-        let target = lkjstr_protocol::tags::tag_values(e, "e")
-            .last()
-            .cloned()
-            .unwrap_or_default();
+        let target = super::acts::target(e).unwrap_or_default();
         let content = if e.kind == 7 {
             crate::reactions::label(&e.content)
         } else {

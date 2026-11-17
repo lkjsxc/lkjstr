@@ -7,6 +7,15 @@ pub(super) fn subject(
     raw: &NostrEvent,
     account: &str,
 ) -> Option<NostrEvent> {
+    if crate::engine::acts::is_act(raw.kind)
+        && crate::engine::acts::target(raw)
+            .and_then(|id| engine.store.get(&id))
+            .is_some_and(|target| {
+                crate::engine::acts::is_act(target.kind) && target.pubkey != account
+            })
+    {
+        return None;
+    }
     let event = if raw.kind == 9735 {
         let trusted = engine.zaps.receipts.get(&engine.store, &raw.id)?;
         let description = lkjstr_nips::event::unique(&raw.tags, "description").ok()??;
