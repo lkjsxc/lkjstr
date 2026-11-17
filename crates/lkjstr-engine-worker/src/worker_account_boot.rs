@@ -38,7 +38,12 @@ pub(super) fn load(host: &Rc<RefCell<Host>>) {
             db.close();
             return;
         }
-        let metadata = idb::metadata(&db).await;
+        let metadata = crate::browser::idb_public::metadata(&db, &signal).await;
+        if signal.aborted() {
+            db.close();
+            return;
+        }
+        let contexts = idb::read_contexts(&db).await;
         if signal.aborted() {
             db.close();
             return;
@@ -89,10 +94,13 @@ pub(super) fn load(host: &Rc<RefCell<Host>>) {
             h.engine.network.restore_quality(&quality, now());
         }
         // Resolve stored names/follows before any view can plan relay work.
-        let cache_failed = metadata.is_err() || cached.is_err();
+        let mut cache_failed = metadata.is_err() || cached.is_err() || contexts.is_err();
         match metadata {
             Ok(rows) => h.engine.restore_cache(&rows),
             Err(_) => h.engine.cached_history_complete = false,
+        }
+        if let Ok(contexts) = contexts {
+            cache_failed |= h.engine.restore_contexts(contexts).is_err();
         }
         match cached {
             Ok(rows) => h.engine.restore_cache(&rows),

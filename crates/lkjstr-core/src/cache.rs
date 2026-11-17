@@ -5,8 +5,15 @@ use lkjstr_protocol::{NostrEvent, compact};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
+#[path = "cache_context.rs"]
+pub mod context;
 #[path = "cache_metadata.rs"]
 mod metadata;
+#[path = "cache_validate.rs"]
+mod validate;
+pub use validate::{validate_metadata, validate_public_reference};
+#[path = "cache_zaps.rs"]
+pub mod zaps;
 pub use metadata::{METADATA_BYTES, METADATA_EVENTS, METADATA_KEY, merge_metadata, metadata_rows};
 
 const RECEIPT: &str = "lkjstr-verified-1:";

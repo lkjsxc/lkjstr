@@ -3,7 +3,7 @@ use super::{Output, Session};
 use crate::engine::Engine;
 
 impl Session {
-    fn public_cache_allowed(&self, sub: &str, engine: &Engine) -> bool {
+    pub(super) fn public_cache_allowed(&self, sub: &str, engine: &Engine) -> bool {
         let Some(query) = self.queries.get(sub) else {
             return false;
         };
@@ -53,6 +53,9 @@ impl Session {
             return;
         }
         let allow = self.public_cache_allowed(sub, engine);
+        if !allow {
+            self.cache_held.remove(sub);
+        }
         if self.cache_policies.get(sub) == Some(&allow) {
             return;
         }

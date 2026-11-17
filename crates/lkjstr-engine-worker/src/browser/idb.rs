@@ -10,7 +10,8 @@ use wasm_bindgen::{JsCast, JsValue, closure::Closure};
 use web_sys::{IdbCursorDirection, IdbDatabase, IdbRequest};
 
 pub use super::idb_commit::kv_commit;
-pub use super::idb_events::{metadata, put as put_events};
+pub use super::idb_contexts::{put as put_read_contexts, read as read_contexts};
+pub use super::idb_events::metadata;
 pub use super::idb_open::open;
 
 type Step = Closure<dyn FnMut(web_sys::Event)>;
@@ -22,7 +23,7 @@ fn err(value: JsValue) -> String {
         .unwrap_or_else(|| "IndexedDB error".to_owned())
 }
 
-fn settle(request: &IdbRequest) -> Promise {
+pub(super) fn settle(request: &IdbRequest) -> Promise {
     let request = request.clone();
     Promise::new(&mut |resolve, reject| {
         let ok_request = request.clone();

@@ -4,6 +4,7 @@ use lkjstr_protocol::{NostrFilter, tags::tag_values};
 impl Engine {
     pub(super) fn replan(&mut self, now: u64) {
         let mut wants = self.publication_wants(now);
+        wants.extend(self.cache_reference_wants());
         wants.extend(self.dm_wants.clone());
         wants.extend(self.zap_wants());
         wants.extend(self.profile_wants());

@@ -5,6 +5,8 @@ use super::{
 use crate::store::Store;
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::{Arc, Weak};
+#[path = "receipt_checkpoint.rs"]
+mod checkpoint;
 #[path = "receipt_evidence.rs"]
 mod evidence;
 #[path = "receipt_cache_list.rs"]

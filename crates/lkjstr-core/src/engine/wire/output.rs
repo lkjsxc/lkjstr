@@ -22,8 +22,9 @@ impl Session {
                     (at_top, at_bottom)
                 };
                 let mut rows = self.rows(&sub, &items, engine);
+                let account = self.queries.get(&sub).and_then(|q| q.account.as_deref());
                 for row in &mut rows {
-                    super::quote_state::settle(row, engine);
+                    super::quote_state::settle(row, engine, account);
                 }
                 self.delivered.insert(sub.clone(), rows.clone());
                 let mut out = vec![Output::Rows {

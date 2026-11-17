@@ -6,6 +6,7 @@ impl Engine {
             self.error(Some(sub), "subscription-limit");
             return;
         }
+        self.release_cache_references(&sub);
         self.network.reset_observation(&sub);
         self.outgoing
             .retain(|out| !matches!(out, Output::Status { sub: old, .. } if old == &sub));

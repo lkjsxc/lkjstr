@@ -3,7 +3,7 @@ pub mod account_storage;
 pub mod accounts;
 pub mod bench;
 pub mod bunker;
-mod cache;
+pub mod cache;
 mod channel_actions;
 mod channel_create;
 mod channel_pending;
@@ -99,6 +99,7 @@ pub struct Engine {
     pub notification_zaps: BTreeMap<String, zaps::ReadState>,
     pub metrics: metrics::Metrics,
     pub store: Store,
+    pub read_contexts: cache::ReadContexts,
     /// False when persisted history extends beyond the hydrated store: no partial time rail.
     pub cached_history_complete: bool,
     pub signed_out_global_filter: bool,
@@ -142,6 +143,7 @@ impl Engine {
             notification_zaps: BTreeMap::new(),
             metrics: Default::default(),
             store: Store::with_caps(16000, 4000),
+            read_contexts: Default::default(),
             cached_history_complete: true,
             signed_out_global_filter: true,
             pending: Default::default(),
@@ -176,12 +178,12 @@ impl Engine {
                 self.verified += 1;
                 self.network.event(&relay, &e, now);
                 if let Some(nested) = lkjstr_protocol::verified_nested_repost(&e) {
-                    self.store.insert(nested, Some(&relay));
+                    self.insert_verified(nested, Some(&relay));
                 }
                 if relay != "cache" {
                     self.pending.push(e.clone(), true);
                 }
-                self.store.insert(e, Some(&relay));
+                self.insert_verified(e, Some(&relay));
                 for v in self.views.values_mut() {
                     v.dirty = true;
                 }

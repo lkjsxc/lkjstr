@@ -139,6 +139,16 @@ pub(in crate::worker) fn pump_accounts(host: &Rc<RefCell<Host>>) {
             match result {
                 Ok(exported) => {
                     let private_revoked = private_cache::decreased(&h.accounts, &next);
+                    let removed: Vec<_> = h
+                        .accounts
+                        .entries
+                        .iter()
+                        .filter(|account| !next.entries.iter().any(|a| a.pubkey == account.pubkey))
+                        .map(|account| account.pubkey.clone())
+                        .collect();
+                    for account in removed {
+                        h.engine.forget_public_policy(&account);
+                    }
                     h.accounts = next;
                     bunker::sync(&mut h);
                     zaps::committed(&mut h, zap_change);

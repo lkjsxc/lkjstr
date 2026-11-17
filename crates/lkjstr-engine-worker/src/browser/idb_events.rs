@@ -5,7 +5,7 @@ use lkjstr_core::cache::{self, Record};
 use wasm_bindgen::{JsCast, JsValue, closure::Closure};
 use web_sys::{IdbDatabase, IdbObjectStore};
 
-fn write(store: &IdbObjectStore, record: &Record) -> Result<(), JsValue> {
+pub(super) fn write(store: &IdbObjectStore, record: &Record) -> Result<(), JsValue> {
     let row = Object::new();
     Reflect::set(&row, &"id".into(), &record.id.as_str().into())?;
     Reflect::set(

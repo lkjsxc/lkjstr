@@ -7,6 +7,11 @@ use serde::Deserialize;
 #[derive(Deserialize)]
 #[serde(tag = "t", rename_all = "camelCase")]
 pub enum Input {
+    #[serde(rename = "cache.hold")]
+    CacheHold {
+        sub: String,
+        rows: Vec<super::cache_hold::HeldRow>,
+    },
     #[serde(rename = "storage.inspect")]
     StorageInspect {
         req: String,

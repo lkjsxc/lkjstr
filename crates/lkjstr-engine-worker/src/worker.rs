@@ -43,6 +43,8 @@ mod previews;
 mod private_cache;
 #[path = "worker_private_lists.rs"]
 mod private_lists;
+#[path = "worker_public_cache.rs"]
+mod public_cache;
 #[path = "worker_auth.rs"]
 mod relay_auth;
 #[path = "worker_relays.rs"]
@@ -69,6 +71,7 @@ struct Host {
     dm: direct_messages::State,
     zaps: zaps::State,
     private_lists: private_lists::Book,
+    public_cache: public_cache::State,
     storage: storage::State,
     bunker: bunker::State,
     server_checks: Vec<(u64, String, String, String, u64)>, // shared four-request bound
@@ -122,6 +125,7 @@ pub fn start() -> Result<WorkerHandle, JsValue> {
         dm: Default::default(),
         zaps: Default::default(),
         private_lists: Default::default(),
+        public_cache: Default::default(),
         storage: Default::default(),
         bunker: Default::default(),
         server_checks: vec![],

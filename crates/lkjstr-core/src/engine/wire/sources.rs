@@ -103,7 +103,6 @@ impl Session {
                         if let Some((role, depth)) = position {
                             value["thread"] = json!({"role":role,"depth":depth});
                         }
-                        super::quote_state::settle(&mut value,e);
                         Some(value)
                     }).collect()
             }).unwrap_or_default(),
@@ -134,6 +133,7 @@ impl Session {
             out.sort_by(|a, b| b["at"].as_u64().cmp(&a["at"].as_u64()));
         }
         for row in &mut out {
+            super::quote_state::settle(row, e, q.account.as_deref());
             if row["id"]
                 .as_str()
                 .is_some_and(|id| e.network.pending_event(id))

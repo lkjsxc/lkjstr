@@ -22,6 +22,7 @@ impl Session {
             self.private_output(out, engine);
         }
         self.cache_policy(sub.as_deref(), &mut output, engine);
+        output.extend(self.cache_refresh(engine));
         output
     }
 

@@ -4,6 +4,7 @@
 mod author_feed;
 mod bytes;
 pub use bytes::event_payload_bytes;
+mod context_pins;
 mod directory;
 mod identity;
 mod profile;
@@ -49,6 +50,9 @@ pub struct Store {
     // At most 512 query name bindings; HTTP evidence is checked before insertion.
     query_names: HashMap<String, String>,
     deleted: HashSet<(String, String)>,
+    context_pins: HashSet<String>,
+    context_deleted: HashSet<(String, String)>,
+    verified_deleted: HashMap<String, u64>,
     cap: usize,
     replaceable_cap: usize,
     revision: u64,
@@ -80,6 +84,9 @@ impl Store {
             verified_nip05: HashMap::new(),
             query_names: HashMap::new(),
             deleted: HashSet::new(),
+            context_pins: HashSet::new(),
+            context_deleted: HashSet::new(),
+            verified_deleted: HashMap::new(),
             cap,
             replaceable_cap,
             revision: 0,
@@ -89,11 +96,6 @@ impl Store {
             payload_bytes: 0,
             byte_cap: 64 * 1024 * 1024,
         }
-    }
-
-    /// Retention losses can leave additional persisted history outside this store.
-    pub fn evictions(&self) -> u64 {
-        self.evictions
     }
 
     pub fn len(&self) -> usize {
@@ -123,10 +125,8 @@ impl Store {
 
     /// Inserts a (verified) event seen on `relay`.
     pub fn insert(&mut self, event: NostrEvent, relay: Option<&str>) -> Inserted {
-        if self
-            .deleted
-            .contains(&(event.id.clone(), event.pubkey.clone()))
-        {
+        if self.was_deleted(&event.id, &event.pubkey) {
+            self.confirm_verified_deletion(&event.id);
             return Inserted::Deleted;
         }
         if self.events.contains_key(&event.id) {

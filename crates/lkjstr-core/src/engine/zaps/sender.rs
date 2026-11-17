@@ -1,9 +1,9 @@
 //! Public attribution follows the signed request; DIP-03 private data stays opaque.
 use super::{Failure, Result};
 use lkjstr_nips::event::Event;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "k", rename_all = "lowercase")]
 pub enum Sender {
     Public { pubkey: String },

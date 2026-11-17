@@ -4,6 +4,11 @@ use lkjstr_protocol::{NostrEvent, is_replaceable_kind, tags::tag_values};
 use super::{MAX_DELETED, Store};
 
 impl Store {
+    /// Retention losses can leave additional persisted history outside this store.
+    pub fn evictions(&self) -> u64 {
+        self.evictions
+    }
+
     pub(super) fn apply_deletion(&mut self, deletion: &NostrEvent) {
         for target in tag_values(deletion, "e") {
             if self
@@ -12,6 +17,9 @@ impl Store {
                 .is_some_and(|e| e.pubkey != deletion.pubkey)
             {
                 continue;
+            }
+            if self.events.contains_key(&target) {
+                self.confirm_verified_deletion(&target);
             }
             self.remove(&target);
             if self.deleted.len() < MAX_DELETED {
@@ -35,7 +43,8 @@ impl Store {
                 .iter()
                 .filter_map(|(_, id)| {
                     let e = self.events.get(id)?;
-                    (is_replaceable_kind(e.kind) == replaceable).then(|| id.clone())
+                    (is_replaceable_kind(e.kind) == replaceable && !self.context_pins.contains(id))
+                        .then(|| id.clone())
                 })
                 .take(count.saturating_sub(cap))
                 .collect();
@@ -45,7 +54,12 @@ impl Store {
             }
         }
         while self.payload_bytes > self.byte_cap {
-            let Some((_, id)) = self.by_time.first().cloned() else {
+            let Some((_, id)) = self
+                .by_time
+                .iter()
+                .find(|(_, id)| !self.context_pins.contains(id))
+                .cloned()
+            else {
                 break;
             };
             self.remove(&id);

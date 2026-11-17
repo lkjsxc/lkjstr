@@ -50,6 +50,8 @@ impl Engine {
             self.replan(now);
         }
         if self.zaps.projection_changed() {
+            self.read_contexts
+                .receipts_changed(self.zaps.receipts.revision());
             self.invalidate();
         }
     }

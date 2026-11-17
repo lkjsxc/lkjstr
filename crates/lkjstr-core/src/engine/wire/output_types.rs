@@ -2,6 +2,16 @@ use serde::Serialize;
 #[derive(Serialize)]
 #[serde(tag = "t", rename_all = "camelCase")]
 pub enum Output {
+    #[serde(rename = "cache.reconcile")]
+    CacheReconcile {
+        sub: String,
+        #[serde(rename = "removedKeys")]
+        removed_keys: Vec<String>,
+        #[serde(rename = "invalidProfileIds")]
+        invalid_profile_ids: Vec<String>,
+        #[serde(rename = "removedQuoteIds")]
+        removed_quote_ids: Vec<String>,
+    },
     #[serde(rename = "cache.policy")]
     CachePolicy {
         sub: String,

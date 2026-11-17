@@ -2,7 +2,12 @@
 use super::Session;
 use crate::engine::protocol::Input;
 impl Session {
-    pub(super) fn reading(&self, sub: String, key: Option<String>) -> Vec<Input> {
+    pub(super) fn reading(
+        &self,
+        sub: String,
+        key: Option<String>,
+        engine: &crate::engine::Engine,
+    ) -> Vec<Input> {
         if !self.queries.contains_key(&sub) {
             return vec![];
         }
@@ -13,7 +18,7 @@ impl Session {
                     return vec![];
                 }
                 if let Some(anchor) = self.search_header_anchor(&sub, &key) {
-                    return self.reading(sub, anchor);
+                    return self.reading(sub, anchor, engine);
                 }
                 let row = self
                     .delivered
@@ -35,6 +40,9 @@ impl Session {
                 Some(id.into())
             }
         };
-        vec![Input::Reading { sub, id }]
+        let mut selected =
+            self.cache_read_inputs(&sub, &id.iter().cloned().collect::<Vec<_>>(), engine);
+        selected.insert(0, Input::Reading { sub, id });
+        selected
     }
 }

@@ -1,6 +1,8 @@
 //! Mirrors the frontend-owned web/src/engine/protocol.ts.
 pub mod actions;
+pub mod cache_hold;
 mod cache_policy;
+mod cache_read;
 mod channels;
 mod counts;
 mod delivery;
@@ -41,6 +43,7 @@ pub const PROTOCOL_VERSION: u32 = 13;
 pub struct Session {
     // At most one permission per owned subscription, removed on close/reopen.
     cache_policies: std::collections::BTreeMap<String, bool>,
+    cache_held: std::collections::BTreeMap<String, cache_hold::Held>,
     pub preview_near: std::collections::BTreeMap<String, Vec<String>>,
     pub preview_visible: Vec<String>,
     pub preview_save_data: bool,

@@ -81,6 +81,7 @@ pub(super) fn pump(host: &Rc<RefCell<Host>>) {
         }
     }
     storage::pump(host);
+    public_cache::pump(host);
     persist(host);
     identity::identities(host);
     accounts::pump_accounts(host);
