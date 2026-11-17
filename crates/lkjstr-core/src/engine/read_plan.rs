@@ -136,12 +136,13 @@ impl super::Network {
         } else {
             2
         };
-        let current: BTreeMap<_, _> = self
-            .requests
-            .values()
-            .filter(|r| r.page_filter == *f)
-            .map(|r| (r.relay.as_str(), r))
-            .collect();
+        let current = self.count_routes(f, now).unwrap_or_else(|| {
+            self.requests
+                .values()
+                .filter(|r| super::want_key::same(&r.page_filter, f))
+                .map(|r| (r.relay.as_str(), r))
+                .collect()
+        });
         let unavailable: BTreeSet<_> = candidates
             .iter()
             .filter(|c| {

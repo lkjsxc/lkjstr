@@ -4,7 +4,7 @@
 
 Hydration coalescing, finite-envelope lifetime and verified-duplicate resumption
 reduce repeated REQs without changing views, strings, Stats columns or feed order.
-The product still sends complete feed filters to two selected configured relays.
+The product retains complete logical feed filters on two selected configured relays.
 Device-wide dynamic author two-cover and cross-relay negentropy are unfinished.
 
 ## Hydration
@@ -39,8 +39,8 @@ being interrupted by each arriving name; focused unfinished pages can preempt.
 State is bounded by existing wants: at most 128 visible views, 6000 authors per
 view and 120 keys per bucket. It releases with the last visible owner. A finite
 multi-filter envelope remains alive when one logical member disappears; removed
-members accept no events. The last member closes it. No abandoned live stream is
-retained. Existing deadlines still bound unanswered finite requests.
+members accept no events. The last member closes it. Existing deadlines still bound unanswered finite requests. Public live envelope
+retirement remains an explicit measured boundary below.
 
 ## Resumption and limits
 
@@ -55,8 +55,9 @@ NIP-01 permits two filters when no explicit max_filters is given. This is an
 inference from the advertised REQ contract, not conformance proof. Unknown relays
 stay at one. Non-rate-limit CLOSED on a multi-filter envelope retries its logical
 members with fresh single-filter envelopes and disables inference until transport
-removal. Rate-limit responses retain the existing cooldown instead. Live requests
-remain independent; each logical filter retains its own limit and completion.
+removal. Rate-limit responses retain the existing cooldown instead. Overlapping public live wants can share immutable envelopes; each logical filter
+retains its own limit, received frontier and completion. Internal, encrypted and
+privately selected wants remain independently releasable.
 
 ## Rejected duplicate strategies
 
@@ -104,3 +105,30 @@ Bytes out fall 34366 -> 15840. The request, first-screen, visible-note and notic
 targets pass; the 50% duplicate-reduction target does not. No public multi-filter
 envelope was observed; that gain is established
 only by the deterministic fixture (four REQs to two without an explicit cap).
+
+## Q1 candidate: canonical wants and shared public envelopes
+
+Canonical request identity treats IDs, authors, kinds and each tag's values as
+sets, while preserving time, search and limit. Ordinary exact-ID wants subtract
+retained verified bodies before routing. Explicit relay provenance and internal
+remote-proof work keep their independent evidence requirements.
+
+Logical count routes inherit the union of their immutable physical target
+buckets. Permutation and the 120-target split no longer rerank healthy readers.
+A failed required bucket still opens a recovery slot; new targets never borrow
+old watermarks. The recorded 121/240-target regressions changed from two reopened
+requests, two replayed events and 862 replayed bytes to zero for each case.
+
+Five overlapping Home/notification/profile wants use five, three or one initial
+envelopes for filter caps one, two or eight. The quota fixture retains all 207
+wanted events even when Home's newest 200 events belong to one busy person.
+Closing a member accepts no further events solely for it and never closes a
+surviving member's wire. Focus protection, one rotation cooldown per wire and
+single-filter fallback cover the entire shared envelope.
+
+A relay cannot delete one selector from an existing multi-filter REQ. Removed
+public selectors can therefore still produce discarded wire traffic while
+another selector remains live. This requires a bounded handover before Q1 is
+complete; no zero-waste or complete-Q1 claim is made by this candidate.
+Twenty focused native planner regressions pass in tmp/q1-planner-focused.log.
+Full combined gates and frozen public/native score comparisons remain required.

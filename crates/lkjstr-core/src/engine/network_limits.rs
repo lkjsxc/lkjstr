@@ -98,7 +98,7 @@ impl Network {
         let requests: Vec<_> = self
             .requests
             .values()
-            .filter(|r| r.page_filter == *filter)
+            .filter(|r| want_key::same(&r.page_filter, filter))
             .collect();
         !requests.is_empty()
             && requests
@@ -109,7 +109,11 @@ impl Network {
     pub fn page_cursor(&self, filter: &lkjstr_protocol::NostrFilter) -> Option<u64> {
         self.requests
             .values()
-            .filter(|r| r.page_filter == *filter && r.page_eose && r.received.len() >= r.page_limit)
+            .filter(|r| {
+                want_key::same(&r.page_filter, filter)
+                    && r.page_eose
+                    && r.received.len() >= r.page_limit
+            })
             .filter_map(|r| r.oldest)
             .max()
     }
@@ -238,5 +242,5 @@ fn count_filter_matches(
             requested.kinds = actual.kinds.clone();
         }
     }
-    *actual == requested
+    want_key::same(actual, &requested)
 }

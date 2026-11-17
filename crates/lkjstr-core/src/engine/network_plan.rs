@@ -16,6 +16,7 @@ impl Network {
         private: &crate::engine::settings::PrivateLists,
         now: u64,
     ) {
+        let wants = want_key::gaps(wants, store);
         self.reported
             .retain(|sub, _| wants.iter().any(|(id, _, _)| id == sub));
         if self.relays.is_empty() {
@@ -80,7 +81,7 @@ impl Network {
             routes.dedup();
             for r in routes {
                 let primary = selected.primary.contains(&r);
-                let key = (r, filter_to_value(f).to_string());
+                let key = (r, want_key::key(f));
                 if primary {
                     primary_reads.insert(key.clone());
                 }
@@ -94,13 +95,15 @@ impl Network {
             let read_slot = primary_reads.contains(&(relay.clone(), key));
             let list_watch = lists::watch(&filter, &members, &live_lists);
             let live = filter_live(&filter) || members.contains("~account-discovery") || list_watch;
+            let union_safe = union::allowed(&filter, &members, &queries, store, private);
             let existing = self
                 .requests
                 .iter_mut()
-                .find(|(_, r)| r.relay == relay && r.page_filter == filter);
+                .find(|(_, r)| r.relay == relay && want_key::same(&r.page_filter, &filter));
             if let Some((id, r)) = existing {
                 let close = r.watch_list(live, now);
                 r.list_watch = list_watch;
+                r.union_safe = union_safe;
                 let relay = r.relay.clone();
                 let wire = r.wire_id.clone();
                 r.refresh_profile(&members, &refresh_profiles, now);
@@ -117,7 +120,7 @@ impl Network {
                 if let Some(id) = pending.as_ref() {
                     let previous = &self.requests[id];
                     let still_wanted = wants.iter().any(|(sub, f, _)| {
-                        previous.members.contains(sub) && *f == previous.page_filter
+                        previous.members.contains(sub) && want_key::same(f, &previous.page_filter)
                     });
                     if !still_wanted && let Some(r) = self.requests.get_mut(id) {
                         r.page_filter = filter;
@@ -164,6 +167,7 @@ impl Network {
                         complete: exhausted
                             || previous.is_some_and(|r| r.complete && !r.retryable_page_timeout()),
                         live,
+                        union_safe,
                         list_watch,
                         asked: previous.is_some_and(|r| r.asked),
                         ready_at: previous.map_or(ready_at, |r| r.ready_at),
