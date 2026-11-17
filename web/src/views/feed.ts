@@ -60,6 +60,7 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
   let atTop = true;
   let atBottom = false;
   let live = true;
+  let headHeld = false;
   let waiting = false;
   let sstate: SubState | undefined;
   let account = env.engine.me();
@@ -143,7 +144,8 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
     const room = el.scrollHeight - top - el.clientHeight;
     const { first, last, count } = feedWindow(kind, rows);
     if (top < 8 && atTop && !keys.held()) {
-      if (!live) (live = true), request('top', 0, Math.max(PAGE, Math.min(count, LIMIT)));
+      if (!live && !headHeld)
+        (live = true), request('top', 0, Math.max(PAGE, Math.min(count, LIMIT)));
     } else if (live && first) (live = false), request({ key: first }, 0, Math.max(count, PAGE));
     else if (room < NEAR_PX && !atBottom && last)
       request({ key: last }, Math.min(count, LIMIT), PAGE);
@@ -169,7 +171,7 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
     const place = keep ? keeper.get() : undefined;
     if (!keep) keeper.forget(), keys.clear();
     atTop = live = !place;
-    atBottom = waiting = jump = false;
+    atBottom = waiting = jump = headHeld = false;
     sstate = undefined;
     pill.hidden = true;
     sub = env.engine.open(query(), {
@@ -184,6 +186,12 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
         if (keeper.get() && !keeper.put() && (kind !== 'notifications' || rows.length > 0))
           keeper.forget();
         title();
+        const head = rows.find((row) => row.kind === 'note' || row.kind === 'notification');
+        if (live && atTop && head && kind !== 'thread') {
+          headHeld = true;
+          live = false;
+          request({ key: head.key }, 0, Math.max(PAGE, rows.length));
+        }
         follow();
       },
       patch(ops) {
@@ -209,7 +217,7 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
   const toTop = (): void => {
     keys.clear();
     fresh.show(0);
-    if (atTop) return (keeper.forget(), follow());
+    headHeld = false;
     jump = live = true;
     request('top', 0, PAGE);
   };

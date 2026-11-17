@@ -112,6 +112,7 @@ export function createMockEngine(post: (msg: FromEngine) => void, now = Date.now
           ops: [],
         };
         subs.set(s.id, s);
+        post({ t: 'cache.policy', sub: s.id, allow: false });
         core.timelines();
         const nobody =
           !core.me() && ['home', 'notifications', 'bookmarks'].includes(msg.query.source);

@@ -140,3 +140,5 @@ Bounds, atomic removal, conflicts and the Worker-scoped unlock limit are in [dm-
 
 Inspection bounds and verification limits are in [storage-inspection.md](storage-inspection.md).
 Merged gate and exact production evidence are in [engine-device-verification.md](engine-device-verification.md).
+
+Protocol 13: `cache.policy {sub,allow}` authorizes only public projected rows for a bounded pre-Worker rendering cache; private-list-derived rows and all DM/key/action messages remain ineligible. See [public-view-cache.md](public-view-cache.md).

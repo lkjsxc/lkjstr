@@ -32,7 +32,8 @@
 /** 10: account-scoped private lists with owned signer cancellation. */
 /** 11: owner-bound ephemeral bunker authorization challenges. */
 /** 12: finite storage inspection; no storage mutation. */
-export const PROTOCOL_VERSION = 12;
+/** 13: engine-authorized public rendering snapshots, independent of the protected event store. */
+export const PROTOCOL_VERSION = 13;
 
 /** Chosen by the interface, unique among its open subscriptions. */
 export type SubId = string;
@@ -913,6 +914,7 @@ export type Timeline = {
   readonly older: boolean;
 };
 export type FromEngine =
+  | { readonly t: 'cache.policy'; readonly sub: SubId; readonly allow: boolean }
   | { readonly t: 'storage'; readonly req: ReqId; readonly report: StorageReport }
   | ({ readonly t: 'signer.auth' } & SignerAuthorization)
   | { readonly t: 'signer.auth.clear'; readonly id: string }

@@ -10,14 +10,16 @@ export function createFresh(scroller: HTMLElement, env: ViewEnv, kind: string, t
   let marking = false;
   let disposed = false;
   let latest: readonly Row[] = [];
+  let pending = 0;
   const show = (count: number): void => {
-    el.hidden = count === 0 || scroller.scrollTop < 8;
+    pending = count;
+    el.hidden = count === 0;
     el.replaceChildren(icon('up'), t('feed.fresh', { n: count }));
   };
   const read = (rows: readonly Row[]): void => {
     latest = rows;
     if (scroller.scrollTop >= 8 || !env.visible.get()) return;
-    el.hidden = true;
+    el.hidden = pending === 0;
     if (kind !== 'notifications' || !env.engine.me() || marking || disposed) return;
     const unread = rows.filter((r): r is NotificationRow => r.kind === 'notification' && r.unread);
     const signature = unread

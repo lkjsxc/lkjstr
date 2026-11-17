@@ -16,6 +16,7 @@ Frontend (`web/`):
 - [integration-release.md](integration-release.md): real-engine release candidate and UI gaps.
 - [hosting-needs.md](hosting-needs.md): what the static host must serve.
 - [offline-shell.md](offline-shell.md): verified shell storage, update lifetimes and bounds.
+- [public-view-cache.md](public-view-cache.md): public rendering snapshots, privacy authorization and reconciliation.
 - [repost.md](repost.md): public-source repost comparison.
 
 Engine (`crates/`):

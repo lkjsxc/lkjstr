@@ -1,5 +1,6 @@
 //! Mirrors the frontend-owned web/src/engine/protocol.ts.
 pub mod actions;
+mod cache_policy;
 mod channels;
 mod counts;
 mod delivery;
@@ -34,10 +35,12 @@ mod input_types;
 mod output_types;
 pub use input_types::Input;
 pub use output_types::{CryptContext, Failure, Output};
-pub const PROTOCOL_VERSION: u32 = 12;
+pub const PROTOCOL_VERSION: u32 = 13;
 /// Adapter state is per transport client; the engine remains independent of pixels.
 #[derive(Default)]
 pub struct Session {
+    // At most one permission per owned subscription, removed on close/reopen.
+    cache_policies: std::collections::BTreeMap<String, bool>,
     pub preview_near: std::collections::BTreeMap<String, Vec<String>>,
     pub preview_visible: Vec<String>,
     pub preview_save_data: bool,

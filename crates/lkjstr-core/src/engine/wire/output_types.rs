@@ -2,6 +2,11 @@ use serde::Serialize;
 #[derive(Serialize)]
 #[serde(tag = "t", rename_all = "camelCase")]
 pub enum Output {
+    #[serde(rename = "cache.policy")]
+    CachePolicy {
+        sub: String,
+        allow: bool,
+    },
     Storage {
         req: String,
         report: crate::engine::storage_inspection::Report,

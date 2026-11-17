@@ -1,0 +1,151 @@
+// Finished public view models only. Raw events, actions, keys and private bodies never enter this store.
+import type { Anchor, Query, Row } from './protocol.ts';
+
+const PREFIX = 'lkjstr:public-view:1:';
+const MAX_ENTRIES = 32;
+const MAX_BYTES = 2 * 1024 * 1024;
+const MAX_ENTRY_BYTES = 192 * 1024;
+export const SNAPSHOT_ROWS = 64;
+
+export type PublicSnapshot = {
+  readonly rows: readonly Row[];
+  readonly anchor: string;
+  readonly atTop: boolean;
+  readonly atBottom: boolean;
+};
+type Envelope = { version: 1; seen: number; body: string; check: number };
+const rowKinds = new Set(['note', 'notification', 'profile', 'person', 'channel', 'mute', 'emoji']);
+const fingerprint = (text: string): number => {
+  let value = 2166136261;
+  for (let i = 0; i < text.length; i++) value = Math.imul(value ^ text.charCodeAt(i), 16777619);
+  return value >>> 0;
+};
+const backend = (): Storage | undefined => {
+  try {
+    return globalThis.localStorage;
+  } catch {
+    return undefined;
+  }
+};
+const canonical = (query: Query): string =>
+  JSON.stringify(Object.fromEntries(Object.entries(query).sort(([a], [b]) => a.localeCompare(b))));
+export const snapshotIdentity = (query: Query, language: string, previews: boolean): string =>
+  JSON.stringify([language, previews, canonical(query)]);
+const keyFor = (identity: string, top: boolean): string =>
+  PREFIX + (top ? 'top:' : 'read:') + identity;
+
+function decode(raw: string | null): PublicSnapshot | undefined {
+  if (!raw || raw.length * 2 > MAX_ENTRY_BYTES) return;
+  try {
+    const value = JSON.parse(raw) as Envelope;
+    if (
+      value.version !== 1 ||
+      typeof value.body !== 'string' ||
+      value.check !== fingerprint(value.body)
+    )
+      return;
+    const body = JSON.parse(value.body) as PublicSnapshot;
+    if (
+      !Array.isArray(body.rows) ||
+      body.rows.length === 0 ||
+      body.rows.length > SNAPSHOT_ROWS ||
+      typeof body.anchor !== 'string' ||
+      typeof body.atTop !== 'boolean' ||
+      typeof body.atBottom !== 'boolean' ||
+      !body.rows.every(
+        (row) =>
+          row &&
+          typeof row.key === 'string' &&
+          row.key.length > 0 &&
+          row.key.length <= 512 &&
+          rowKinds.has(row.kind),
+      ) ||
+      !body.rows.some((row) => row.key === body.anchor)
+    )
+      return;
+    return body;
+  } catch {
+    return;
+  }
+}
+
+export function readPublicSnapshot(identity: string, anchor: Anchor): PublicSnapshot | undefined {
+  if (identity.length > 8192 || (typeof anchor === 'object' && 'month' in anchor)) return;
+  try {
+    const store = backend();
+    const top = anchor === 'top';
+    const key = keyFor(identity, top);
+    const raw = store?.getItem(key) ?? null;
+    const snapshot = decode(raw);
+    const requested = typeof anchor === 'object' && 'key' in anchor ? anchor.key : undefined;
+    if (!snapshot || (!top && !snapshot.rows.some((row) => row.key === requested))) return;
+    if (raw) {
+      const envelope = JSON.parse(raw) as Envelope;
+      try {
+        store?.setItem(key, JSON.stringify({ ...envelope, seen: Date.now() }));
+      } catch {
+        /* cache touch only */
+      }
+    }
+    return snapshot;
+  } catch {
+    return;
+  }
+}
+
+export function forgetPublicSnapshot(identity: string): void {
+  try {
+    const store = backend();
+    store?.removeItem(keyFor(identity, true));
+    store?.removeItem(keyFor(identity, false));
+  } catch {
+    // A denied cache never changes account or layout storage.
+  }
+}
+
+export function writePublicSnapshot(
+  identity: string,
+  top: boolean,
+  snapshot: PublicSnapshot,
+): void {
+  if (identity.length > 8192 || !snapshot.rows.length) return;
+  const rows = snapshot.rows.slice(0, SNAPSHOT_ROWS);
+  if (
+    !rows.every((row) => rowKinds.has(row.kind)) ||
+    !rows.some((row) => row.key === snapshot.anchor)
+  )
+    return;
+  const body = JSON.stringify({ ...snapshot, rows });
+  const record = JSON.stringify({ version: 1, seen: Date.now(), body, check: fingerprint(body) });
+  const key = keyFor(identity, top);
+  if ((record.length + key.length) * 2 > MAX_ENTRY_BYTES) return;
+  try {
+    const store = backend();
+    if (!store) return;
+    const entries: { key: string; bytes: number; seen: number }[] = [];
+    for (let i = 0; i < store.length; i++) {
+      const candidate = store.key(i);
+      if (!candidate?.startsWith(PREFIX) || candidate === key) continue;
+      const raw = store.getItem(candidate) ?? '';
+      let seen = 0;
+      try {
+        const value = Number((JSON.parse(raw) as Envelope).seen);
+        seen = Number.isFinite(value) ? value : 0;
+      } catch {
+        /* damaged cache first */
+      }
+      entries.push({ key: candidate, bytes: (candidate.length + raw.length) * 2, seen });
+    }
+    entries.sort((a, b) => a.seen - b.seen);
+    let bytes = entries.reduce((sum, item) => sum + item.bytes, (record.length + key.length) * 2);
+    while (entries.length >= MAX_ENTRIES || bytes > MAX_BYTES) {
+      const old = entries.shift();
+      if (!old) break;
+      store.removeItem(old.key);
+      bytes -= old.bytes;
+    }
+    store.setItem(key, record);
+  } catch {
+    // Quota or unavailable storage means the already-rendered session keeps working.
+  }
+}

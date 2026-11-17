@@ -84,6 +84,7 @@ impl Session {
                 self.timelines.remove(&sub);
                 self.notification_states.remove(&sub);
                 self.private_states.remove(&sub);
+                self.cache_policies.remove(&sub);
                 self.searches.remove(&sub);
                 self.queries.insert(sub.clone(), *query);
                 vec![p::Input::OpenVisible {
@@ -96,6 +97,7 @@ impl Session {
                 self.notification_states.remove(&sub);
                 self.queries.remove(&sub);
                 self.private_states.remove(&sub);
+                self.cache_policies.remove(&sub);
                 self.searches.remove(&sub);
                 self.delivered.remove(&sub);
                 self.windows.remove(&sub);
