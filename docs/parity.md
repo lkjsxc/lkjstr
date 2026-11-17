@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Source audit refreshed on 2026-11-17 for protocol 13 account availability; focused client/contract checks pass, combined native/browser gates are pending.
+Source audit refreshed on 2026-11-17 for protocol 13 account availability; completed gates and rebase boundaries are in engine-availability-verification.md.
 The K1-K4/M1-M6 base passed its gates and is built. Protocol-9 required gates, 451 main Worker checks and 40 finite zap checks passed; exact source boundaries
 and failures are recorded in [engine-zap-verification.md](engine-zap-verification.md).
 Protocol-10 required gates, 452 main Worker checks and 31 private-list checks passed; see [engine-private-verification.md](engine-private-verification.md).
@@ -30,11 +30,11 @@ Evidence prefixes: `E/` = `crates/lkjstr-core/src/engine/`,
 
 New written Claude specifications take priority when present.
 
-1. Finish account availability and shipping proof, then fix quote/noise hiding,
-   repeated count acquisition and concurrent pruning. Existing account proofs remain bound to `04c10b9b`.
-2. Repeat the public hour after landing twelve with independent historical receipt
-   budgets and observed execution suspension. Ninth network completeness and the
-   sixth hour's seven Home candidates remain unresolved.
+1. Q1 and its emitted-request scorecard come first; implement specified A1/A2
+   without waiting for Q2-Q5. Repeated count acquisition is one measured Q1 gap.
+2. Keep the public hour cadence of every third runtime landing, with independent
+   historical receipts and qualified execution observations. Quote/noise hiding,
+   concurrent pruning and ninth-hour network completeness remain unresolved.
 3. Add storage clearing and settings backup, then article documents, followed
    hashtags, reports and optional encrypted setup sync. Size estimates stay explicit.
 4. Authorization, actor details, missing-bookmark placeholders, pins and person
@@ -77,7 +77,7 @@ New written Claude specifications take priority when present.
 | Read-only npub account | done | Imported public account cannot sign; E/accounts.rs, V/account-add.ts. |
 | Multiple saved accounts and switch | done | Global active account, removal and per-account draft/outbox isolation; E/accounts.rs, V/compose-who.ts. |
 | Durable account writes across Worker graphs | done | Strict same-database schema fence and revision comparison reject stale snapshots, preserving added/protected keys and atomic removal. Conflicts require explicit reload; no automatic reconciliation. Native, production and release evidence: docs/account-persistence.md, docs/engine-account-verification.md. |
-| Account-load failure and retained state | partial | Protocol13 supplies fixed Ready.accountError and separate client loading/ready/failed state without clearing accounts. Existing feed status uses existing internal-error wording. Automatic Accounts/topbar availability and recovery await design; combined gates pending. docs/engine-availability-verification.md. |
+| Account-load failure and retained state | partial | Protocol13 supplies fixed Ready.accountError and separate client loading/ready/failed state without clearing accounts. Existing feed status uses existing internal-error wording. Automatic Accounts/topbar availability and recovery await design; native/production gates pass at the recorded checkpoint. docs/engine-availability-verification.md. |
 | Independent per-tile posting identity | missing | Composer identity changes the globally active account; V/compose-who.ts. |
 | Edit profile metadata | engine ready, no surface | `profile.save` carries name/about/picture/banner/NIP-05/website/lightning address; E/wire/actions.rs. No V/ control calls it. |
 | Upload profile picture/banner | partial | Upload action and profile.save exist independently; no profile editor joins them. |
@@ -184,7 +184,7 @@ stream supplied the offline service worker, and Claude's specs supplied the K/M
 surfaces; older no-surface/no-public-hour prose is no longer a current finding.
 
 The full 2026-11-16 screenshot matrix covered all 39 K/M states in 12 variants
-(468 required captures); review sheets are under tmp/screens-interface-20261116-matrix.
+(468 required captures); its former review directory is absent. The current spec requests a new persistent K1 sheet with A1/A2.
 Fresh loopback real UI runs passed K13 at 10:32:12 UTC (6.576 s, starting load
 7.92/7.87/6.35) and M16 at 10:57:49 UTC (11.561 s, load 6.33/3.44/3.65).
 Evidence: docs/keys.md, docs/frontend-dm.md and their raw report paths. Required

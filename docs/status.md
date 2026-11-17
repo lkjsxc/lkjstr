@@ -3,7 +3,7 @@
 ## Purpose
 
 Current behavior and limits: [parity.md](parity.md) audits source; [engine-performance.md](engine-performance.md) records network evidence.
-Claude owns the interface. Account checkpoint `04c10b9b` passed its gates; [exact evidence](engine-account-verification.md) binds those production checks.
+Claude owns the interface. A1/A2 and Q1-Q5 are specified; Q1 and its scorecard come first, with A1/A2 in parallel.
 
 ## Specified keys and messages (2026-11-16)
 
@@ -131,7 +131,7 @@ surfaces.
 ## Accounts, routing and publication
 
 Account writes compare durable revisions; strict boot and schema fencing preserve rows across Worker graphs. Protocol13 separately reports account-load
-failure, retains client accounts and uses existing feed error wording. [Current proof](engine-availability-verification.md) awaits full native/browser gates.
+failure, retains client accounts and uses existing feed error wording. [Completed production proof](engine-availability-verification.md).
 Read-only/external accounts cannot export local keys; Debug redacts secrets. Extension/bunker signing remains owner-bound and verified.
 
 Every saved account refreshes profile/follow/relay/mute/server records without an open account view. Verified NIP-65 usage wins, with retained
@@ -155,7 +155,6 @@ These are concrete runtime limits, not permission to fake a successful answer.
 - Private lists: supported local/extension/bunker reads cover NIP-44 and older
   NIP-04. Public edits preserve ciphertext; private editing, named-set navigation
   and list-specific Retry controls remain absent. Rows/hydration are owner-scoped.
-- Emoji: referenced sets pass 20 native and 11 Worker cases, strict Clippy and combined gates. See [emoji-sets.md](emoji-sets.md).
 - Search: retained people, language OR and unavailable repost quotas/Fresh pass
   native/Worker proof and combined gates. Remote people discovery remains absent.
   See [unavailable-reposts.md](unavailable-reposts.md).
@@ -184,7 +183,7 @@ production Worker before/after proof and combined gates. Public availability is 
 The sixth prescribed ship stopped before deployment at 16:35:57 UTC: separate package validators still required a direct HTML WASM preload.
 The archive graph and numeric-token corrections pass 80 package cases and 19 xtask tests; all required combined gates and exact packaging passed.
 The seventh prescribed ship passed all 548 real interface checks and packaging, then failed at the host operation at 17:53:27 UTC.
-No successful deployment receipt exists; the last confirmed ship remains 541e4a1e. Deployment safeguards and the schema-2 rollback boundary
+The 2026-11-17 00:43 attempt stopped before its push; no new successful receipt exists. Confirmed live remains 541e4a1e. Safeguards and rollback
 are recorded in [engine-shipping.md](engine-shipping.md). This stream uses the prescribed wrapper; live verification is still pending.
 
 Protocol-11/12 gate records: [variants](engine-variants-verification.md), [device](engine-device-verification.md).

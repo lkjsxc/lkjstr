@@ -65,17 +65,90 @@ source snapshot. The handoff manifest covers nineteen owned files:
 - `final/metadata.json`:
   `681ba03650a1e6b8d8e7045547374adacc498dfc409d111157a1833309aa699d`.
 
-## Combined proof still pending
+## Combined production proof (2026-11-17)
 
-Two native serialization cases cover both dedicated and shared handshakes.
-The real IndexedDB guard suite retains its original 105 assertions and adds
-twelve checks for the fixed failed marker or its omission on successful boot:
-117 authored checks in total. They have not run for this addition yet.
+Production checkpoint `c3e1baa8` kept all 1293 tracked source files unchanged
+through its gates. The first five rows below use `5960c02d`; the sole later
+change is one rustfmt line wrap in the failed-handshake call. Both native
+serialization cases ran in the workspace gate. Builds/tests used four
+jobs/threads and owned data; every stage left no owned process running.
 
-The required root/web gates, real Worker conformance, real interface smoke,
-focused failure-state screenshots, the maintained `pnpm accounts:check`
-command and production storage inspection remain pending. They must bind the
-new package; earlier WASM hashes are historical evidence for the earlier
-checkpoint. The shipping pipeline has separate [local proof](engine-shipping.md).
-No current public-network or successful live-deployment claim follows from
-the focused checks above.
+| Stage | UTC start-end | Seconds | Load before; after (1/5/15 min) |
+| --- | --- | ---: | --- |
+| Shipping fixtures (19) | 01:18:16-01:18:26 | 9.279 | 6.17/5.92/5.28; 7.01/6.10/5.35 |
+| check:repo | 01:18:26-01:18:27 | 1.215 | 7.01/6.10/5.35; 7.01/6.10/5.35 |
+| web check | 01:18:27-01:18:37 | 9.971 | 7.01/6.10/5.35; 7.78/6.30/5.42 |
+| web build | 01:18:37-01:18:38 | 0.564 | 7.78/6.30/5.42; 7.56/6.27/5.42 |
+| Failure-state shots | 01:18:38-01:19:08 | 29.792 | 7.56/6.27/5.42; 5.59/5.91/5.32 |
+| test:quiet | 01:22:07-01:24:00 | 112.928 | 4.86/5.45/5.25; 8.98/7.29/5.98 |
+| rust-wasm:quiet | 01:24:01-01:26:22 | 141.290 | 8.98/7.29/5.98; 5.94/7.33/6.23 |
+| verify:quiet | 01:26:22-01:28:58 | 156.258 | 5.94/7.33/6.23; 9.88/9.66/7.38 |
+| Worker conformance | 01:28:58-01:34:48 | 349.668 | 9.88/9.66/7.38; 7.65/9.50/8.15 |
+| web smoke | 01:34:48-01:41:42 | 413.963 | 7.65/9.50/8.15; 5.55/7.68/7.93 |
+| build:real | 01:41:42-01:42:11 | 28.175 | 5.55/7.68/7.93; 6.75/7.73/7.94 |
+| smoke:real | 01:42:11-01:51:06 | 535.090 | 6.75/7.73/7.94; 7.47/6.59/7.16 |
+| package | 01:56:41-01:56:42 | 0.766 | 2.14/4.25/6.01; 2.14/4.25/6.01 |
+| accounts:check | 01:56:42-01:57:19 | 36.639 | 2.14/4.25/6.01; 1.50/3.83/5.79 |
+| Production storage | 01:57:19-01:57:20 | 1.126 | 1.50/3.83/5.79; 1.50/3.83/5.79 |
+
+Main Worker conformance passed 459 checks, mock UI 418, uploads 131 and real
+UI 541, without reported page errors. The maintained account command
+audited current/older production exports, then passed twelve write-race checks
+and all 117 strict-load/ownership checks. The original 105 assertions remain;
+twelve additions verify failed markers or their omission on normal boot.
+Storage passed nineteen checks. Account fixtures report zero page errors,
+external requests or forbidden sockets, and every cleanup flag is true.
+
+The production source manifest has SHA-256
+`e8981632ba1a6a906176ab4a61cca2b8beed57a6c34b5d6671c59a8927347062`.
+Frozen package: `tmp/shipping-release-artifacts/691c46c7975b938adb95/`.
+
+- WASM: `2b7f0e4a9ab89a241b17cd39ddceb2e974eade593707f5494f82a3b66354f002`.
+- Loader: `d69b6219eb9201b6b84c6579ff07ff1dd8b0993b026470a92e8351522fc1f179`.
+- Archive: 1602120 bytes,
+  `e6d19d21484de79df8181d4820eaf7a1d9483e360500a09fe2aad879370e7071`.
+
+`tmp/shipping-release-final-c3e1baa8/evidence.json` binds each selected attempt,
+source/artifact map, report and cleanup result; its SHA-256 is
+`a9dd72254837a49137d36ee53a5193b1110777d160fa4c17226ad65e79478e38`.
+Race, guard and storage report hashes are respectively:
+`cf475d80b257be3491d01872947828c0f2a0fcde07a46bc7ce4d4fdf688f5afe`,
+`9d5b831ac4901b21a71af96d269fbed8fa790fcfb0fb47287318c1b5821fa9d7`,
+`585f39809ff7818cc2034e449fe10761a17a8a9a8e35b616ddef9ded83295f47`.
+
+## Captures and corrected attempts
+
+Twenty-four PNGs and twelve comparison sheets cover populated/guest Home at
+1440/1024/390, both themes and languages, under
+`tmp/screens-account-failure-20261117/`. Four sheets were visually reviewed:
+`account-failure-contact-sheet-1440-dark-ja.jpg`, `1024-light-en.jpg`,
+`390-dark-ja.jpg` and `390-light-en.jpg`, all with that same filename prefix.
+Existing failure words are visible and populated Home retains its notes.
+Deliberate capture scrolling does not prove reading-anchor preservation;
+inactive Global is unmounted and is not claimed as retained evidence.
+Capture manifest hash:
+`e562e2cbfe18171160a037b2c40135a067d39258d1d3986bf8e7bf555cce6535`.
+Visual review record `tmp/account-failure-review.json`:
+`7c95a1cae3be4cc7a83982b227d8b11e8b50404f2642775cb618108d1bb8fb9f`.
+
+The first fixture incorrectly required inactive tabs to stay mounted. Another
+geometry assertion measured fractional padding rather than visible words;
+the footer box exceeded the viewport by 0.28125 pixels. The final fixture
+checks mounted Home and its text range. The first native gate stopped at
+rustfmt before compilation; its formatting correction preceded the passed run.
+Packaging initially stopped before its script ran because borrowed dependency
+links shared pnpm workspace metadata. Private offline/frozen installs repaired
+this without changing package manifests or locks. The retained isolation
+report `tmp/dependency-isolation-20261117/report.json` has SHA-256
+`7ac417446793d745b4110f835c333ccd239bd14e3a47aaeedb605fabc46e1984`.
+
+## Rebase and remaining boundary
+
+Rebase onto `07e88178` preserves the Rust/Worker implementation and incorporates
+Claude's unused paired A1/A2 strings, new specifications and upstream shipping
+authentication. The reconciled 23-case local shipping proof is recorded in
+[engine-shipping.md](engine-shipping.md). Final web checking and a rebound
+real package remain pending for this merged source. The older `04c10b9b`
+production hashes remain historical evidence, not aliases for this package.
+These finite checks do not establish current public-network completeness or
+a successful live deployment.

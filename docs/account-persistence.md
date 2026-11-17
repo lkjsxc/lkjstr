@@ -102,9 +102,9 @@ Ten client/feed regressions ran before implementation: eight assertion failures
 and two unchanged controls. All ten passed after, with exact source/UTC/load in
 `tmp/account-availability-proof/{before1,after1}`. Fifteen focused TypeScript
 cases, five Node contract cases and static TypeScript checking then passed.
-The two native serialization cases and strengthened 117-assertion production
-guard suite await execution.
-Earlier production hashes and completed gates below do not verify this addition.
+Both native cases and all 117 production guards now pass, alongside the required
+gates, twelve write-race checks and nineteen storage checks. Exact new source,
+package and capture evidence: [availability proof](engine-availability-verification.md).
 
 ## Focused verification
 

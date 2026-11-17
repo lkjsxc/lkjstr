@@ -147,6 +147,12 @@ Its retained `cadence-handoff.json` hash is
 `cadence.json` is
 `1eb918e90bcf0c687253a92a08ef38e1b7d702c522322fac64f6ef06ebca745c`.
 
-Host graph/rollback/HTTPS tests and the final combined gates are separate.
-These local finite proofs do not certify a live deployment; retain its actual
-receipts and schema-compatible IDs after the prescribed command finishes.
+After rebase onto `07e88178`, all nineteen cases remain and four synthetic
+authentication cases cover default fallback, explicit GH configuration, selected
+XDG credentials and missing credentials before costly gates. All 23 pass at
+02:05:16-02:05:27 UTC in 11.091 seconds, load 4.32/5.23/5.79; owned processes
+and fixture directories are empty. Report: `tmp/ship-rebase-proof/tests.json`,
+SHA-256 `ecbe78e7409edae34437b06ba25bd9d59a0c81567aa5448fab5537c240876944`.
+The account runtime has separate completed [production proof](engine-availability-verification.md).
+Host graph/rollback/HTTPS tests remain separate; finite local proof does not
+certify live deployment. Retain actual receipts and compatible release IDs.
