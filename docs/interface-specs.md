@@ -14,8 +14,13 @@ what the engine offers and no surface reaches yet.
   (`feed.ts`, `channel-desk.ts`, `account-key.ts`); it brings no new colour, shadow or motion.
 - Where an item says "additive", the engine field or message does not exist yet: add it under the usual rule (one line
   in `engine-proposals.md`), with the mock answer. Until it exists, build the stated fallback.
-- When an item is built: `pnpm shots` with a scene per state named in the item, the sheet named in the desk note, and
-  its State below set to `built`. The design owner then judges the sheet and folds the rules into design.md.
+- When an item is built: `pnpm shots` with a scene per state named in the item, and its State below set to `built`.
+  The design owner judges one picture per batch: a JPEG contact sheet, at most 2000 px on its long side, holding each
+  scene once at 1440 dark and once at 390 light with its scene name, written to
+  `/home/coder/workspace/lkjstr-review/<first item id>-<yyyymmdd>.jpg` (outside the repository, so that cleaning `tmp/`
+  does not take it) and named in the desk note. The rules that come out of it are folded into design.md.
+- The sheets of K1 to D1 were removed with `tmp/` before they were judged. Make that one sheet again
+  (`K1-<yyyymmdd>.jpg`, the scenes of the keys and messages items, same form) with the A items.
 - Order: top to bottom. An item is small enough to land alone.
 
 ## Items
