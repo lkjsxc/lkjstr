@@ -10,7 +10,8 @@ pub(super) fn failed(h: &Host) -> bool {
 }
 pub(super) fn ready(h: &Host, id: u64, shared: bool) {
     // Drain the transport's pre-ready queue without claiming an empty account load.
-    h.scope.direct(id, &Session::ready_account_unavailable(shared));
+    h.scope
+        .direct(id, &Session::ready_account_unavailable(shared));
 }
 pub(super) fn fail(h: &mut Host) {
     if h.stopped {
