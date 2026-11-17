@@ -46,6 +46,10 @@ tmp/q1-public-candidate-queue32-20261117-0940/. The snapshot makes no claim
 about the entire public event universe, other days or WAN-first-paint parity.
 
 The complete core test gate, Rust/WASM release gate, repository check,
-frontend check and real build pass on the queue change. The final production
-Worker browser gate and prescribed deployment remain separate checks; this
-score alone is not a shipped release.
+frontend check and real build pass. The production Worker harness then passed
+543/543 ordinary real-browser checks and 549/549 screenshot-mode checks, with
+zero page errors. The two-tab assertion now forces an uncached want and checks
+actual concurrent sockets: an idle cache-complete pane is not a failure.
+The mock UI and note-layout checks, 131 upload cases, release build, and
+offline shell/update/rollback recovery checks all pass. The prescribed
+deployment is still separate: this score alone is not a shipped release.

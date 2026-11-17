@@ -49,12 +49,32 @@ for (const event of [fixture.note, ...fixture.events]) {
 let signing = Promise.resolve();
 const relay = createServer();
 const ws = new bundle.wsServer({ server: relay });
-const activePaths = new Map(); // bound by the engine's eight relay connections
+const activePaths = new Map(); // all isolated test contexts share the loopback server
+const mainSockets = new Set(); // tagged browser context that actually owns the two app tabs
+const mainPathsSeen = new Set();
+const socketProbe = { active: false, seen: new Set(), live: new Map(), peak: new Map() };
 ws.on('connection', (socket, req) => {
   if (req.url === '/bunker' || req.url === '/bunker-secret')
     return bunker.route(socket, req.url === '/bunker-secret');
   activePaths.set(socket, req.url);
-  socket.on('close', () => activePaths.delete(socket));
+  if (
+    req.headers.cookie?.split(';').some((value) => value.trim() === 'lkjstr_smoke_context=main')
+  ) {
+    mainSockets.add(socket);
+    mainPathsSeen.add(req.url);
+    if (socketProbe.active && req.url !== '/reader') {
+      socketProbe.seen.add(req.url);
+      const live = (socketProbe.live.get(req.url) ?? 0) + 1;
+      socketProbe.live.set(req.url, live);
+      socketProbe.peak.set(req.url, Math.max(live, socketProbe.peak.get(req.url) ?? 0));
+    }
+  }
+  socket.on('close', () => {
+    activePaths.delete(socket);
+    if (socketProbe.active && mainSockets.has(socket) && req.url !== '/reader')
+      socketProbe.live.set(req.url, Math.max(0, (socketProbe.live.get(req.url) ?? 0) - 1));
+    mainSockets.delete(socket);
+  });
   (req.url === '/reader' ? readerFake : fake).route({
     send: (text) => socket.send(text),
     onMessage: (fn) => socket.on('message', fn),
@@ -98,6 +118,7 @@ try {
     args: ['--no-sandbox', '--disable-background-networking', '--ignore-certificate-errors'],
   });
   const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, locale: 'en-US' });
+  await ctx.addCookies([{ name: 'lkjstr_smoke_context', value: 'main', url: base }]);
   await seedLayouts(ctx);
   await ctx.route('**/*', (route) =>
     route.request().url().startsWith(`${base}/`) ? route.continue() : route.abort(),
@@ -390,6 +411,9 @@ try {
     base,
     fake,
     activePaths,
+    mainSockets,
+    mainPathsSeen,
+    socketProbe,
     check,
     launch,
     shots,

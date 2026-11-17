@@ -52,6 +52,9 @@ export async function reviewSettings({
   base,
   fake,
   activePaths,
+  mainSockets,
+  mainPathsSeen,
+  socketProbe,
   check,
   launch,
   shots,
@@ -81,21 +84,47 @@ export async function reviewSettings({
   await page.reload();
   await page.waitForFunction(() => document.documentElement.dataset.theme === 'dark');
   check('settings persist after reload');
+  // A cold second tab may paint wholly from the local store and correctly
+  // close every idle socket. Start an active-probe and force a genuinely
+  // missing search, so socket sharing is checked while there is wire demand.
+  socketProbe.active = true;
+  for (const [socket, path] of activePaths) {
+    if (!mainSockets.has(socket) || path === '/reader') continue;
+    socketProbe.seen.add(path);
+    const live = (socketProbe.live.get(path) ?? 0) + 1;
+    socketProbe.live.set(path, live);
+    socketProbe.peak.set(path, live);
+  }
   const other = await ctx.newPage();
   await other.goto(base);
   await other.locator('.tab[data-view="global"]').click();
   await other.locator('.view[data-kind="global"] .note').first().waitFor();
   check('second app tab receives notes');
-  // The separate read-only /reader fixture may stay open in this browser
-  // context. Only the app's relay sockets belong to the shared-engine check.
-  const appPaths = () => [...activePaths.values()].filter((path) => path !== '/reader');
-  const sharedRoutes = () => fake.connections() === new Set(appPaths()).size;
-  for (let n = 0; n < 200 && !sharedRoutes(); n++) await page.waitForTimeout(25);
-  check('two app tabs share one socket per relay', sharedRoutes() && appPaths().length > 0);
-  const learnedRoutes = () =>
-    appPaths().includes('/owner') && appPaths().every((path) => path === '/owner' || path === '/');
-  for (let n = 0; n < 200 && !learnedRoutes(); n++) await page.waitForTimeout(25);
-  check('learned owner relays survive reload and another tab bootstrap', learnedRoutes());
+  await launch('Search', 'search');
+  const needle = `sharing-probe-${Date.now()}`;
+  await page.locator('.view[data-kind="search"] input').first().fill(needle);
+  await page.locator('.view[data-kind="search"] input').first().press('Enter');
+  for (let n = 0; n < 200 && !fake.searches.includes(needle); n++) await page.waitForTimeout(25);
+  check('a fresh want after two tabs reaches the relay', fake.searches.includes(needle));
+  const shared = [...socketProbe.peak.values()].every((peak) => peak === 1);
+  if (!shared || socketProbe.seen.size === 0 || !mainPathsSeen.has('/owner')) {
+    console.error(
+      'shared-socket-diagnostic',
+      JSON.stringify({
+        fakeSockets: fake.connections(),
+        active: [...activePaths.values()],
+        context: [...mainPathsSeen],
+        probe: [...socketProbe.seen],
+        peaks: [...socketProbe.peak],
+      }),
+    );
+  }
+  check('two app tabs share one socket per relay', shared && socketProbe.seen.size > 0);
+  check(
+    'learned owner relays survive reload and another tab bootstrap',
+    mainPathsSeen.has('/owner') &&
+      [...socketProbe.seen].every((path) => path === '/owner' || path === '/'),
+  );
   return other;
 }
 

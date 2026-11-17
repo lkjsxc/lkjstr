@@ -196,4 +196,4 @@ Cold requests 53 -> 40, duplicates 214 -> 159, bytes 515907 -> 347028;
 warm requests 145 -> 25, bytes 1116770 -> 339094; each of seven days
 moves 75 -> 30 requests and <=435149 -> 352129 bytes.
 Q5 native comparator: keep=true, problems=[]; three coverage tests pass.
-Matched public Q5 passes; see [public score](q1-public-score-20261117.md). Worker and ship gates remain pending.
+Matched Q5 public: [score](q1-public-score-20261117.md). Worker 543 regular/549 screenshots, mock/upload/offline pass; ship pending.
