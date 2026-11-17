@@ -17,10 +17,10 @@ for (const [, path, wasm, loader] of packages) {
   }
 }
 const cases = [
-  ['genuine-absence', 3], ['v1-undefined-account', 7], ['v1-undefined-revision', 7], ['v1-malformed-account', 7],
-  ['v2-undefined-account', 7], ['v2-undefined-revision', 7], ['v2-malformed-account', 7], ['v2-read-error', 8],
-  ['shared-failure', 10], ['blocked-timeout', 11], ['stopped-blocked', 7], ['stopped-success', 4],
-  ['timeout-success', 8], ['removal-conflict', 7], ['removal-abort', 5],
+  ['genuine-absence', 4], ['v1-undefined-account', 8], ['v1-undefined-revision', 8], ['v1-malformed-account', 8],
+  ['v2-undefined-account', 8], ['v2-undefined-revision', 8], ['v2-malformed-account', 8], ['v2-read-error', 9],
+  ['shared-failure', 12], ['blocked-timeout', 12], ['stopped-blocked', 7], ['stopped-success', 4],
+  ['timeout-success', 9], ['removal-conflict', 7], ['removal-abort', 5],
 ];
 const output = resolve(process.env.LKJSTR_ENGINE_REPORT ?? 'tmp/account-guards-proof');
 const temporary = resolve(process.env.LKJSTR_TEST_TMPDIR ?? join(resolve(process.env.CARGO_TARGET_DIR ?? 'target', '..'), 'tmp', 'ag'));
@@ -91,7 +91,7 @@ try {
   if (report.browser) report.cleanup.browserReaped = await processIdentity(report.browser.pid) !== report.browser.start;
   try { await rm(owned, { recursive: true }); report.cleanup.tempRemoved = true; } catch { report.cleanup.tempRemoved = false; }
   report.finishedAt = new Date().toISOString(); report.loadEnd = loadavg(); report.durationMs = Date.now() - Date.parse(report.startedAt);
-  report.ok = !report.failure && report.cases.length === cases.length && report.checks.length === 105 && report.checks.every(c => c.ok) &&
+  report.ok = !report.failure && report.cases.length === cases.length && report.checks.length === 117 && report.checks.every(c => c.ok) &&
     report.pageErrors === 0 && report.externalRequests === 0 && report.forbiddenSockets === 0 && Object.values(report.cleanup).every(Boolean);
   await writeFile(join(output, 'report.json'), JSON.stringify(report, null, 2) + '\n');
   console.log(JSON.stringify({ output, ok: report.ok, checks: report.checks.length, durationMs: report.durationMs }));

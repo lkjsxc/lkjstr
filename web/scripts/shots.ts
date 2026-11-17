@@ -5,6 +5,7 @@
 import { spawn } from 'node:child_process';
 import { mkdirSync } from 'node:fs';
 import { type Browser, chromium, type Page } from 'playwright-core';
+import { createAccountFailureShots } from './shots-account-failure.ts';
 import { dmShots } from './shots-dm.ts';
 import { keysShots } from './shots-keys.ts';
 import { looksShots } from './shots-looks.ts';
@@ -25,6 +26,7 @@ const scenes = process.argv
   ?.slice(9)
   .split(',');
 const failed: string[] = [];
+const accountFailureShots = createAccountFailureShots();
 const SIZES = [
   [1440, 900],
   [1024, 768],
@@ -126,6 +128,7 @@ try {
         await looksShots(scene, lang === 'ja' ? '統計' : 'Stats');
         await keysShots(scene, launch(lang === 'ja' ? 'アカウント' : 'Accounts', 'account'), lang);
         await dmShots(scene, launch(lang === 'ja' ? '設定' : 'Settings', 'settings'), lang);
+        await accountFailureShots.run(scene, lang, tag);
         for (const [name, url] of [
           ['news', 'https://news.example/picture'],
           ['plain', 'https://news.example/article'],
@@ -213,6 +216,7 @@ try {
           guest,
         );
       }
+  if (!failed.length) await accountFailureShots.sheet(browser, out);
 } finally {
   try {
     await ownedBrowser?.close();

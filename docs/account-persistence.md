@@ -3,9 +3,10 @@
 ## Purpose
 
 Protect the durable account record when independent Worker graphs share one
-IndexedDB database. This correction adds no account surface, words or protocol.
-Focused native, production-Worker and actual IndexedDB boundary checks passed.
-All required release gates, real smoke and packaging passed at `04c10b9b`.
+IndexedDB database. The schema/CAS correction adds no account surface or words.
+Its focused native, production-Worker and actual IndexedDB checks passed, as did
+all required release gates, real smoke and packaging at `04c10b9b`. The later
+protocol 13 availability addition is separately qualified below.
 
 ## Observed old behavior
 
@@ -46,8 +47,9 @@ is closed. Stop also revokes the opener. There is at most one pending opener
 per Host, although a blocked native request can outlive its caller until the
 old connection closes.
 
-Failed boot sends the existing capability handshake without an Accounts
-snapshot, then directly fails queued/future actions and view requests. This
+Failed boot sends the capability handshake with protocol 13's optional fixed
+`accountError:{code:"internal"}` and no Accounts snapshot, then directly fails
+queued/future actions and view requests. No raw storage errors are sent. This
 also releases the transport's pre-handshake action queue. It does not claim
 there are no accounts, start signer work, or retain queued secret inputs.
 Later shared clients receive the same failed-boot handshake and request rules.
@@ -86,6 +88,23 @@ Further durable account operations fail until explicit reload. This is a
 conservative durable no-key-loss boundary, not automatic reconciliation or
 immediate cross-Worker revocation. Lock remains Worker-scoped; a global lock
 would require a separate editor flush quorum before any durable revocation.
+
+## Account availability follow-up
+
+The client retains account rows during reconnect/failure and separately exposes
+loading, ready and failed account state. Only an actual Accounts message proves
+a completed load; another capability Ready does not clear an observed failure.
+Existing feed `.fstate` uses `error.internal` before Sign in/nonempty branches,
+without dropping rows. Automatic Accounts availability/recovery is still missing;
+see [interface-needs.md](interface-needs.md). No words, CSS or controls are added.
+
+Ten client/feed regressions ran before implementation: eight assertion failures
+and two unchanged controls. All ten passed after, with exact source/UTC/load in
+`tmp/account-availability-proof/{before1,after1}`. Fifteen focused TypeScript
+cases, five Node contract cases and static TypeScript checking then passed.
+The two native serialization cases and strengthened 117-assertion production
+guard suite await execution.
+Earlier production hashes and completed gates below do not verify this addition.
 
 ## Focused verification
 

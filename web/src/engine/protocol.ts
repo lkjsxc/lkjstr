@@ -32,7 +32,7 @@
 /** 10: account-scoped private lists with owned signer cancellation. */
 /** 11: owner-bound ephemeral bunker authorization challenges. */
 /** 12: finite storage inspection; no storage mutation. */
-export const PROTOCOL_VERSION = 12;
+export const PROTOCOL_VERSION = 13;
 
 /** Chosen by the interface, unique among its open subscriptions. */
 export type SubId = string;
@@ -964,6 +964,8 @@ export type FromEngine =
       readonly version: number;
       /** Which engine answers: shown in About. */
       readonly engine: string;
+      /** Capability handshake only; account loading failed without an Accounts snapshot. */
+      readonly accountError?: { readonly code: 'internal' };
     }
   /** The accounts on this device and the active one (absent: signed out). Sent after `ready` and on change. */
   | { readonly t: 'accounts'; readonly accounts: readonly Account[]; readonly active?: Pubkey }

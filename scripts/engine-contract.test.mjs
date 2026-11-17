@@ -22,3 +22,14 @@ test('optional dependency error remains optional',async()=>{
   assert.doesNotThrow(()=>validateReplies([{t:'state',sub:'ordinary',
     state:{phase:'done',relaysAsked:1,relaysAnswered:1}}]));
 });
+
+test('Ready preserves old fields and accepts the optional fixed account failure',async()=>{
+  const {validateReplies,protocolVersion}=await import('./engine-contract.mjs');
+  const ready={t:'ready',version:protocolVersion,engine:'fixture'};
+  assert.doesNotThrow(()=>validateReplies([ready,{...ready,accountError:{code:'internal'}}]));
+});
+test('Ready rejects non-contract account errors',async()=>{
+  const {validateReplies,protocolVersion}=await import('./engine-contract.mjs');
+  for(const accountError of [null,'internal',{}, {code:'offline'}, {code:12}])
+    assert.throws(()=>validateReplies([{t:'ready',version:protocolVersion,engine:'fixture',accountError}]),/protocol shape mismatch \(payload redacted\)/);
+});

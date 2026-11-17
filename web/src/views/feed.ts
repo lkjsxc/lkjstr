@@ -128,8 +128,15 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
     if (rows[0] !== focus) keeper.set({ key: focus.key, off: 0 });
   };
   const showState = (): void => {
-    const { empty, key } = feedState(rows, sstate, atBottom, kind === 'search' && !state.text);
-    if (empty && !account && OWN.has(kind)) status.replaceChildren(signIn);
+    const { empty, key } = feedState(
+      rows,
+      sstate,
+      atBottom,
+      kind === 'search' && !state.text,
+      env.engine.accountState?.get().phase === 'failed',
+    );
+    if (key !== 'error.internal' && empty && !account && OWN.has(kind))
+      status.replaceChildren(signIn);
     else status.textContent = key ? t(key) : '';
     status.title = sstate?.lastArrival
       ? t('feed.lastArrival', { time: fullTime(sstate.lastArrival) })
@@ -272,10 +279,12 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
       (account = a.active ?? ''), (can = now), drawn.clear(), open();
     else if (now !== can) (can = now), drawn.clear(), sync();
   });
+  const offAccountState = env.engine.accountState?.subscribe(showState);
   const offHeld = onHeld(() => void (rows.length && sync()));
   const offSettings = env.settings.subscribe(() => (drawn.clear(), sync()));
   return () => {
     cancelAnimationFrame(frame);
+    offAccountState?.();
     for (const off of [offVisible, offInfo, offAccounts, offSettings, offHeld, bar]) off();
     kinds?.dispose();
     scrub();

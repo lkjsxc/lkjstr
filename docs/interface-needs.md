@@ -99,3 +99,14 @@ account revision. Existing private editors/session keys are retained, and no
 key operation is automatically retried. The user needs safe recovery without
 losing unsaved editors; the current engine requires an explicit reload and
 has no cross-Worker editor quorum or automatic credential reconciliation.
+
+## Account loading availability
+
+Protocol 13 adds `Ready.accountError` and `Engine.accountState` without clearing
+retained accounts. Existing feeds show the existing `error.internal` line in
+`.fstate`, ahead of Sign in or nonempty/end branches, while keeping rendered rows.
+Automatic availability in Accounts/topbar and safe recovery from blocked or
+failed loading still have no specified surface. No automatic alert, toast,
+new control or popup is added; an attempted action keeps its existing failure.
+The user needs to distinguish unavailable account storage from a loaded empty
+account set and recover without discarding unsaved editors or retained keys.

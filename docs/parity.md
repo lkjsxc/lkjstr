@@ -2,11 +2,11 @@
 
 ## Purpose
 
-Source audit refreshed on 2026-11-16 against protocol 12 and account checkpoint `04c10b9b`; required integration gates passed.
+Source audit refreshed on 2026-11-17 for protocol 13 account availability; focused client/contract checks pass, combined native/browser gates are pending.
 The K1-K4/M1-M6 base passed its gates and is built. Protocol-9 required gates, 451 main Worker checks and 40 finite zap checks passed; exact source boundaries
 and failures are recorded in [engine-zap-verification.md](engine-zap-verification.md).
 Protocol-10 required gates, 452 main Worker checks and 31 private-list checks passed; see [engine-private-verification.md](engine-private-verification.md).
-Current account production gates passed; see [engine-account-verification.md](engine-account-verification.md).
+Account checkpoint `04c10b9b` passed production gates; see [engine-account-verification.md](engine-account-verification.md). New availability proof is separate.
 The last confirmed ship is 541e4a1e; the seventh ship failed at the host operation. Source status does not establish the deployed build.
 Unregistered staging under tmp/ is excluded. This replaces the 11-14 inventory.
 Rows describe lkjstr's real Worker and reachable interface, not mock capability.
@@ -30,8 +30,8 @@ Evidence prefixes: `E/` = `crates/lkjstr-core/src/engine/`,
 
 New written Claude specifications take priority when present.
 
-1. Fix confirmed quote/noise hiding, then repeated count acquisition and
-   concurrent pruning. Account persistence now has full production gate evidence.
+1. Finish account availability and shipping proof, then fix quote/noise hiding,
+   repeated count acquisition and concurrent pruning. Existing account proofs remain bound to `04c10b9b`.
 2. Repeat the public hour after landing twelve with independent historical receipt
    budgets and observed execution suspension. Ninth network completeness and the
    sixth hour's seven Home candidates remain unresolved.
@@ -77,6 +77,7 @@ New written Claude specifications take priority when present.
 | Read-only npub account | done | Imported public account cannot sign; E/accounts.rs, V/account-add.ts. |
 | Multiple saved accounts and switch | done | Global active account, removal and per-account draft/outbox isolation; E/accounts.rs, V/compose-who.ts. |
 | Durable account writes across Worker graphs | done | Strict same-database schema fence and revision comparison reject stale snapshots, preserving added/protected keys and atomic removal. Conflicts require explicit reload; no automatic reconciliation. Native, production and release evidence: docs/account-persistence.md, docs/engine-account-verification.md. |
+| Account-load failure and retained state | partial | Protocol13 supplies fixed Ready.accountError and separate client loading/ready/failed state without clearing accounts. Existing feed status uses existing internal-error wording. Automatic Accounts/topbar availability and recovery await design; combined gates pending. docs/engine-availability-verification.md. |
 | Independent per-tile posting identity | missing | Composer identity changes the globally active account; V/compose-who.ts. |
 | Edit profile metadata | engine ready, no surface | `profile.save` carries name/about/picture/banner/NIP-05/website/lightning address; E/wire/actions.rs. No V/ control calls it. |
 | Upload profile picture/banner | partial | Upload action and profile.save exist independently; no profile editor joins them. |

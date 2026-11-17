@@ -15,12 +15,16 @@ export async function accountsGuardsClient(context, origin) {
       if (message.fixture === 'started') entry.started = true;
       if (message.fixture === 'stopped') entry.stopped = true;
       if (message.fixture === 'audit') entry.audits.set(message.req, message.audit);
-      if (message.t === 'ready') entry.ready++;
+      if (message.t === 'ready') {
+        entry.ready++;
+        if (message.accountError === undefined) entry.accountReadyClean++;
+        else if (message.version >= 13 && message.accountError?.code === 'internal' && Object.keys(message.accountError).length === 1) entry.accountReadyFailed++;
+      }
       if (message.t === 'accounts') { entry.listed++; entry.accounts = message.accounts; entry.active = message.active; }
       if (message.t === 'result') { if (entry.results.size >= 32) entry.overflow = true; else entry.results.set(message.req, message); }
       if (message.t === 'state') { if (entry.states.size >= 16) entry.overflow = true; else entry.states.set(message.sub, message.state); }
     }
-    function entry() { return { ready: 0, listed: 0, accounts: [], active: null, results: new Map(), states: new Map(), audits: new Map(), errors: 0, overflow: false }; }
+    function entry() { return { ready: 0, accountReadyClean: 0, accountReadyFailed: 0, listed: 0, accounts: [], active: null, results: new Map(), states: new Map(), audits: new Map(), errors: 0, overflow: false }; }
     async function start(name, graph = 'current', fault = '', broker = false, prequeued = false) {
       const e = entry(); e.prequeued = prequeued; e.ports = []; e.worker = new Worker('/' + graph + '/guard-worker.js?fault=' + fault + (broker ? '&broker=1' : '') + (prequeued ? '&prequeue=1' : ''), { type: 'module' });
       hosts.set(name, e); e.worker.onerror = () => e.errors++;
@@ -92,6 +96,7 @@ export async function accountsGuardsClient(context, origin) {
       await until(() => e.ready, 'owned failed handshake deadline');
       const result = await queued; await until(() => e.states.get(first), 'owned queued view deadline');
       check('failed boot sends Ready without Accounts', e.ready > 0 && e.listed === 0);
+      check('every failed handshake carries only the fixed account error', e.accountReadyFailed === e.ready);
       if (e.prequeued) check('normal inputs were delivered before boot could finish', (await audit(e)).prebootInputs === 2);
       check('initial action fails explicitly', result.ok === false && result.error?.code === 'internal');
       check('initial subscription fails explicitly', e.states.get(first).phase === 'failed');
@@ -108,6 +113,7 @@ export async function accountsGuardsClient(context, origin) {
       if (kind === 'genuine-absence') {
         const e = await start('empty'); await until(() => e.ready && e.listed, 'owned empty boot deadline');
         check('confirmed absence is a loaded empty account set', e.accounts.length === 0);
+        check('successful handshake omits account error', e.accountReadyClean === e.ready);
         check('fresh account creation succeeds', (await action(e, { a: 'account.add', how: 'create' })).ok === true); await healthy(e, check);
       } else if (/^v[12]-/.test(kind) || kind === 'shared-failure') {
         const version = kind.startsWith('v1-') ? 1 : 2; await seed(version === 1 ? 'legacy' : 'current'); await close('seed');

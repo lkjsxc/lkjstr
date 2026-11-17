@@ -79,6 +79,7 @@ Engine (`crates/`):
 - [Encrypted local keys and session access](keys.md)
 - [Account snapshot persistence and schema fence](account-persistence.md)
 - [Account production verification](engine-account-verification.md): maintained command, source binding and fixture corrections.
+- [Account availability verification](engine-availability-verification.md): fixed boot failure, retained client state and current evidence.
 - [Engine capabilities awaiting interface specifications](interface-needs.md)
 - [interface-specs.md](interface-specs.md): surfaces to build, item by item, with their state.
 - [interface-keys.md](interface-keys.md): password-protected keys: sign-in, lock, backup, protection.

@@ -2,7 +2,7 @@
 import { learnPerson, learnRows, onPerson } from '../shared/people.ts';
 import { createSignal } from '../shared/signal.ts';
 import { createActionRequests } from './client-actions.ts';
-import type { Accounts, Engine, SubHandlers } from './client-api.ts';
+import type { AccountState, Accounts, Engine, SubHandlers } from './client-api.ts';
 import { answerPublicKey, answerSign } from './client-crypto.ts';
 import { createDeliveryWatches } from './client-delivery.ts';
 import { createDmClient } from './client-dm.ts';
@@ -14,6 +14,7 @@ import { createZapClient } from './client-zaps.ts';
 import type { EngineStats, Hint } from './protocol.ts';
 
 export type {
+  AccountState,
   Accounts,
   ActResult,
   ActWatch,
@@ -38,6 +39,7 @@ export function createEngine(transport: Transport): Engine {
   const visible = new Set<string>(); // bound: as `subs`
   const asked = new Map<string, (s: EngineStats | undefined) => void>(); // bound: `stats` requests in flight
   const accounts = createSignal<Accounts>({ accounts: [] });
+  const accountState = createSignal<AccountState>({ phase: 'loading' });
   const status = createSignal({ connected: 0, wanted: 0, offline: false });
   const info = createSignal<{ engine: string; version: number } | null>(null);
   let serial = 0;
@@ -134,12 +136,15 @@ export function createEngine(transport: Transport): Engine {
         accounts: msg.accounts.map((a) => ({ ...a, author: learnPerson(a.author) })),
         active: msg.active,
       });
+      accountState.set({ phase: 'ready' });
     } else if (msg.t === 'status')
       status.set({ connected: msg.connected, wanted: msg.wanted, offline: msg.offline });
     else if (msg.t === 'reconnect') {
+      accountState.set({ phase: 'loading' });
       dm.flushers.suspend();
       lists.hidden();
     } else if (msg.t === 'ready') {
+      if (msg.accountError) accountState.set({ phase: 'failed', error: { code: 'internal' } });
       dm.flushers.ready(msg.version);
       info.set({ engine: msg.engine, version: msg.version });
     } else if (msg.t === 'stats') asked.get(msg.req)?.(msg.stats);
@@ -159,6 +164,7 @@ export function createEngine(transport: Transport): Engine {
     storage,
     zaps,
     accounts,
+    accountState,
     status,
     info,
     me: () => accounts.get().active ?? '',

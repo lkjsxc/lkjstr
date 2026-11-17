@@ -4,6 +4,7 @@ import {
   PROTOCOL_VERSION,
   type ToEngine,
 } from '../protocol.ts';
+import { failedAccountInput } from './account-failure.ts';
 import { createActions } from './actions.ts';
 import { createCore } from './core.ts';
 import { createPrivateMock } from './dm.ts';
@@ -24,7 +25,11 @@ export type MockEngine = {
 };
 export type Core = ReturnType<typeof createCore>;
 
-export function createMockEngine(post: (msg: FromEngine) => void, now = Date.now): MockEngine {
+export function createMockEngine(
+  post: (msg: FromEngine) => void,
+  now = Date.now,
+  boot: { accountError?: 'internal' } = {},
+): MockEngine {
   let zapObserve: ((msg: FromEngine) => void) | undefined;
   let authObserve: ((msg: FromEngine) => void) | undefined;
   const core = createCore((msg) => {
@@ -43,6 +48,7 @@ export function createMockEngine(post: (msg: FromEngine) => void, now = Date.now
   let config: EngineConfig = { language: 'en', heuristics: true, prefetch: true };
   let liveTimer: ReturnType<typeof setInterval> | undefined;
   let started = false;
+  let stopped = false;
   const live = (): void => {
     clearInterval(liveTimer);
     if (config.mock?.live === false) return;
@@ -51,16 +57,40 @@ export function createMockEngine(post: (msg: FromEngine) => void, now = Date.now
   const start = (): void => {
     if (started) return;
     started = true;
-    post({ t: 'ready', version: PROTOCOL_VERSION, engine: 'mock' });
+    post({
+      t: 'ready',
+      version: PROTOCOL_VERSION,
+      engine: 'mock',
+      ...(boot.accountError ? { accountError: { code: boot.accountError } } : {}),
+    });
+    if (boot.accountError) return;
     core.accounts();
     core.status();
     live();
   };
   later(40, start);
+  const dispose = (): void => {
+    stopped = true;
+    storage.dispose();
+    authorization.dispose();
+    act.dispose();
+    dm.dispose();
+    zaps.dispose();
+    clearInterval(liveTimer);
+    core.dispose();
+  };
   return {
     authorization,
     handle(msg) {
-      if (storage.handle(msg) || authorization.handle(msg)) return;
+      if (stopped || storage.handle(msg)) return;
+      if (boot.accountError) {
+        if (msg.t === 'detach') return dispose();
+        start();
+        if (msg.t === 'stats') post({ t: 'stats', req: msg.req, stats: mockStats(core) });
+        else failedAccountInput(post, msg);
+        return;
+      }
+      if (authorization.handle(msg)) return;
       if (zaps.handle(msg)) return;
       if (dm.handle(msg)) return;
       if (msg.t === 'upload.cancel') return act.cancelUpload(msg.req);
@@ -186,14 +216,6 @@ export function createMockEngine(post: (msg: FromEngine) => void, now = Date.now
         core.timelines();
       } else if (msg.t === 'act') act.run(msg.req, msg.action);
     },
-    dispose() {
-      storage.dispose();
-      authorization.dispose();
-      act.dispose();
-      dm.dispose();
-      zaps.dispose();
-      clearInterval(liveTimer);
-      core.dispose();
-    },
+    dispose,
   };
 }

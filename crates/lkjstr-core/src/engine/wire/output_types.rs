@@ -90,6 +90,8 @@ pub enum Output {
     Ready {
         version: u32,
         engine: String,
+        #[serde(rename = "accountError", skip_serializing_if = "Option::is_none")]
+        account_error: Option<AccountError>,
     },
     Accounts {
         accounts: Vec<serde_json::Value>,
@@ -158,6 +160,12 @@ pub enum Output {
         wanted: usize,
         offline: bool,
     },
+}
+/// Fixed boot classification; storage error details never cross the wire.
+#[derive(Serialize)]
+#[serde(tag = "code", rename_all = "kebab-case")]
+pub enum AccountError {
+    Internal,
 }
 #[derive(Debug, Serialize)]
 pub struct Failure {

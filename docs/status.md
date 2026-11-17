@@ -3,7 +3,7 @@
 ## Purpose
 
 Current behavior and limits: [parity.md](parity.md) audits source; [engine-performance.md](engine-performance.md) records network evidence.
-Claude owns the interface. Account persistence passes the required gates; [exact evidence](engine-account-verification.md) binds the production checks.
+Claude owns the interface. Account checkpoint `04c10b9b` passed its gates; [exact evidence](engine-account-verification.md) binds those production checks.
 
 ## Specified keys and messages (2026-11-16)
 
@@ -40,7 +40,7 @@ passed required gates and 338 real Worker checks; [engine-lifetime-verification.
 
 ## Engine stream (2026-11-16)
 
-Protocol 6 introduced DM, encrypted-key and relay authentication operations. Protocols 7/8/9/10/11/12 are additive; exact shapes are in
+Protocol 6 introduced DM, encrypted-key and relay authentication operations. Protocols 7/8/9/10/11/12/13 are additive; exact shapes are in
 [engine-proposals.md](engine-proposals.md). Unreached operations remain in [interface-needs.md](interface-needs.md).
 
 - Core/Worker DM supports local, NIP-07 and NIP-46 signers. NIP-17 text/group
@@ -130,9 +130,9 @@ surfaces.
 
 ## Accounts, routing and publication
 
-Account writes compare durable revisions before acknowledgement; strict boot and the schema fence preserve account rows across Worker graphs.
-Read-only npub/external signers cannot export a local key; secret-bearing Debug is redacted. Extension signing validates the exact request.
-Preauthorized bunkers use NIP-44 RPC, verified public keys and bounded closed sockets.
+Account writes compare durable revisions; strict boot and schema fencing preserve rows across Worker graphs. Protocol13 separately reports account-load
+failure, retains client accounts and uses existing feed error wording. [Current proof](engine-availability-verification.md) awaits full native/browser gates.
+Read-only/external accounts cannot export local keys; Debug redacts secrets. Extension/bunker signing remains owner-bound and verified.
 
 Every saved account refreshes profile/follow/relay/mute/server records without an open account view. Verified NIP-65 usage wins, with retained
 indexer/hint lookups and kind-3 JSON fallback. Search-only relay routes remain independent. NIP-11 documents constrain filters, page limits and

@@ -44,12 +44,17 @@ export type ActWatch = {
   delivery?(relays: readonly Delivery[]): void;
 };
 export type Accounts = { readonly accounts: readonly Account[]; readonly active?: Pubkey };
+/** Account loading is separate from capability readiness and retained account rows. */
+export type AccountState =
+  | { readonly phase: 'loading' | 'ready' }
+  | { readonly phase: 'failed'; readonly error: { readonly code: 'internal' } };
 export type Engine = {
   readonly dm?: ReturnType<typeof createDmClient>;
   readonly zaps?: ReturnType<typeof createZapClient>;
   readonly signerAuth?: ReturnType<typeof createSignerAuthClient>;
   readonly storage?: ReturnType<typeof createStorageClient>;
   readonly accounts: Signal<Accounts>;
+  readonly accountState?: Signal<AccountState>;
   readonly status: Signal<{ connected: number; wanted: number; offline: boolean }>;
   /** Which engine answered (`null` until it is ready). */
   readonly info: Signal<{ engine: string; version: number } | null>;

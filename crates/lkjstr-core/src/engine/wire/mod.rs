@@ -33,8 +33,8 @@ use serde::Deserialize;
 mod input_types;
 mod output_types;
 pub use input_types::Input;
-pub use output_types::{CryptContext, Failure, Output};
-pub const PROTOCOL_VERSION: u32 = 12;
+pub use output_types::{AccountError, CryptContext, Failure, Output};
+pub const PROTOCOL_VERSION: u32 = 13;
 /// Adapter state is per transport client; the engine remains independent of pixels.
 #[derive(Default)]
 pub struct Session {
@@ -56,7 +56,14 @@ pub struct Session {
 }
 impl Session {
     pub fn ready(shared: bool) -> Output {
+        Self::ready_with_account_error(shared, None)
+    }
+    pub fn ready_account_unavailable(shared: bool) -> Output {
+        Self::ready_with_account_error(shared, Some(AccountError::Internal))
+    }
+    fn ready_with_account_error(shared: bool, account_error: Option<AccountError>) -> Output {
         Output::Ready {
+            account_error,
             version: PROTOCOL_VERSION,
             engine: if shared {
                 "rust-wasm-shared"

@@ -140,3 +140,13 @@ Bounds, atomic removal, conflicts and the Worker-scoped unlock limit are in [dm-
 
 Inspection bounds and verification limits are in [storage-inspection.md](storage-inspection.md).
 Merged gate and exact production evidence are in [engine-device-verification.md](engine-device-verification.md).
+
+## Protocol 13 account availability (2026-11-17, owner authorized)
+
+- `FromEngine.ready.accountError? {code:"internal"}` marks failed account loading without inventing an Accounts snapshot or exposing storage details.
+- `Engine.accountState?` separates account availability from the capability handshake and retains the last account collection.
+- `AccountState.phase` is loading on initial/reconnected clients, ready only after Accounts, or failed after the fixed Ready marker.
+- `AccountState.error` is the fixed internal code on failure; an ordinary Ready alone does not clear that failure.
+
+Existing feed status nodes reuse `error.internal`; automatic Accounts availability
+and recovery still need a specification in [interface-needs.md](interface-needs.md).
