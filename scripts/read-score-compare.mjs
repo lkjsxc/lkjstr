@@ -46,7 +46,15 @@ export function compareScore(before, after, changeId = null) {
   for (const key of ['workloadHash','witnessHash','initialStoreHash','mode']) {
     if (!before[key] || before[key] !== after[key]) problems.push('different-or-missing-' + key);
   }
-  if (String(before.mode).startsWith('public') && (!before.candidateScopeFrozen || !after.candidateScopeFrozen || !before.candidateScopeHash || before.candidateScopeHash !== after.candidateScopeHash)) problems.push('candidate-scope-unfrozen-or-different');
+  if (String(before.mode).startsWith('public')) {
+    if (!before.candidateScopeFrozen || !after.candidateScopeFrozen || !before.candidateScopeHash || before.candidateScopeHash !== after.candidateScopeHash) problems.push('candidate-scope-unfrozen-or-different');
+    // A fixed witness set does not freeze a live latest-N answer. Posts age out
+    // while the relays receive new ones, even when the exact filter is unchanged.
+    const b = Date.parse(before.started), a = Date.parse(after.started);
+    const duration = Math.max(600, (before.requestedSeconds ?? 300) + (after.requestedSeconds ?? 300)) * 1000;
+    if (!Number.isFinite(b) || !Number.isFinite(a)) problems.push('public-capture-time-unavailable');
+    else if (Math.abs(a - b) > duration) problems.push('public-capture-windows-too-far-apart');
+  }
   if (before.complete !== true || after.complete !== true) problems.push('incomplete-traffic');
   const br = before.recall?.ratio, ar = after.recall?.ratio;
   if (!Number.isFinite(br) || !Number.isFinite(ar)) problems.push('recall-unavailable');

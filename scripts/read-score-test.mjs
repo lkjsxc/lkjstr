@@ -56,6 +56,17 @@ test('three actual comparable attempts without two percent movement trigger stop
   assert.equal(stopRule([...attempts.slice(0,2),{...attempts[2],comparable:false}]).stop,false);
 });
 
+test('public comparisons reject stale latest-page witnesses even when identities match',()=>{
+  const before={...structuredClone(score),mode:'public-real-relays',candidateScopeFrozen:true,
+    candidateScopeHash:'same',started:'2026-11-17T02:29:43.611Z',requestedSeconds:300};
+  const after={...structuredClone(before),started:'2026-11-17T06:27:15.011Z'};
+  assert.equal(compareScore(before,after).comparable,false);
+  assert.ok(compareScore(before,after).problems.includes('public-capture-windows-too-far-apart'));
+  after.started='2026-11-17T02:35:43.611Z';
+  assert.equal(compareScore(before,after).comparable,true);
+  delete after.started;
+  assert.ok(compareScore(before,after).problems.includes('public-capture-time-unavailable'));
+});
 test('native replay is first-class, including zero-new warm absolute costs',()=>{
   const base=structuredClone({...score,mode:'native-actual-engine-effects',traceHash:'same-trace'});
   const day={recall:{ratio:1},firstScreenMs:100,visibleCompleteMs:120,

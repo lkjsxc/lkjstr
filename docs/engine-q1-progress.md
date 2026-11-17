@@ -167,3 +167,21 @@ Home head and new-post reveal, scrolled position, and immediate own-channel-mess
 Channel messages are exempt from the initial head hold, consistent with the channel desk's
 existing live-message behavior. These are mock results, not a production Worker/public-relay
 first-paint or Q1 scorecard result. The combined real-Worker proof and ship are pending.
+
+## Public relay observation (2026-11-17, not a keep decision)
+
+The integrated `8c144310` real Worker ran for 300 seconds with the frozen busy
+account and candidate relay allowlist. Signed witness recall was 72/95, against
+the frozen baseline's 94/95. Network requests were 674 against 756, but exact
+wire duplicates rose from 1561 to 2371 and total bytes from 31.7 MB to
+42.1 MB. First-screen readiness was 782 ms against 849 ms. All original and
+derived evidence is preserved under `lkjstr-review/q1-combine-20261117/`.
+
+The captures started at 02:29 and 06:27 UTC, almost four hours apart. Twenty-two
+missing witnesses match the latest-200 Home requests, which returned newer
+posts at the later sample; the audit cannot distinguish time displacement from
+relay completeness. An unchanged witness hash does not freeze live relay state.
+The comparator now refuses a public keep decision when start times differ by
+more than the combined sample lengths (minimum ten minutes). The regression is
+reported, never silently excluded; the deterministic native Q5 still rejects
+this Q1 candidate on cold and daily traffic costs. No deployment occurred.

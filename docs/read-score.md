@@ -85,6 +85,12 @@ Use --replay=PATH to reuse the baseline workload and exact witness denominator.
 This freezes comparison identities; it cannot freeze external relay availability
 or the continuing traffic of ordinary live queries. Dates and host load must be
 read with every public comparison. A 300-second sample is not an hour.
+A public comparison whose capture starts differ by more than the sum of their
+measurement durations (at least ten minutes) is explicitly incomparable, even
+when both recordings have the same witness hash: old witnesses can fall out of
+live relay top-200 pages. This is a conservative window guard, not proof that
+two closer runs share unchanged relay state. Native signed-data replay remains
+the causal before/after guard; long-separated public samples are diagnostic.
 
 The optional --host-route=archserver uses the existing owned, TLS-preserving
 origin route. Exact original URLs, certificates and bytes remain; the report
