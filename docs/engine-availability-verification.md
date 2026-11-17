@@ -144,11 +144,39 @@ report `tmp/dependency-isolation-20261117/report.json` has SHA-256
 
 ## Rebase and remaining boundary
 
-Rebase onto `07e88178` preserves the Rust/Worker implementation and incorporates
-Claude's unused paired A1/A2 strings, new specifications and upstream shipping
-authentication. The reconciled 23-case local shipping proof is recorded in
-[engine-shipping.md](engine-shipping.md). Final web checking and a rebound
-real package remain pending for this merged source. The older `04c10b9b`
-production hashes remain historical evidence, not aliases for this package.
-These finite checks do not establish current public-network completeness or
-a successful live deployment.
+Rebase onto `07e88178` preserves every Rust/Worker byte. The only runtime-source
+changes from `c3e1baa8` are Claude's two unused paired string tables and four
+shipping/authentication files. The reconciled 23-case local shipping proof is
+recorded in [engine-shipping.md](engine-shipping.md).
+
+Merged checkpoint `a838686c` passed these rebound stages on 2026-11-17:
+
+| Stage | UTC start-end | Seconds | Load before; after (1/5/15 min) |
+| --- | --- | ---: | --- |
+| check:repo | 02:25:22-02:25:23 | 1.127 | 3.20/4.12/4.73; unchanged |
+| web check | 02:25:23-02:25:32 | 9.213 | 3.20/4.12/4.73; 3.79/4.21/4.75 |
+| web build | 02:25:32-02:25:33 | 0.545 | 3.79/4.21/4.75; unchanged |
+| build:real | 02:25:33-02:25:58 | 25.196 | 3.79/4.21/4.75; 3.55/4.10/4.69 |
+| package | 02:25:58-02:25:59 | 0.818 | 3.55/4.10/4.69; unchanged |
+
+All 1295 source files remained unchanged during these stages. Source manifest:
+`1559ff104e4d3e97a19dc2d9d061c7a573b050d6008d836162de5d69cc8186cf`.
+Every owned process was reaped. The preceding repo attempt stopped on two
+status prose lines before any product build; the corrected attempt is above.
+The complete native/browser sequence remains bound to `c3e1baa8`; it was not
+repeated for unused strings and documentation. WASM and loader hashes remain
+identical to that tested package.
+
+Rebound package: `tmp/shipping-release-artifacts/10b294fd79e597d76672/`.
+Its 1602407-byte archive has SHA-256
+`f235a981b045d6502182972246c37926a3d6cb64c022807b4d038794ff41030c`.
+The frontend app hash is
+`1327e61d46989f8c36483c333ee13bb0a61d9119687df1331b4c09b73b9ff9b2`.
+The evidence file `tmp/account-rebound-a838686c/evidence.json` binds the five
+attempts, source maps, prior production proof, shipping proof and every
+rechecked package file; its SHA-256 is
+`0263340b678b97f3c4aa8606db7ad756d6630ff6344b51cc5ad18fe11bcc5af4`.
+
+The older `04c10b9b` production hashes remain historical evidence. These finite
+checks do not establish current public-network completeness or a successful
+live deployment. This final evidence update changes documentation only.
