@@ -7,7 +7,7 @@ The K1-K4/M1-M6 base passed its gates and is built. Protocol-9 required gates, 4
 and failures are recorded in [engine-zap-verification.md](engine-zap-verification.md).
 Protocol-10 required gates, 452 main Worker checks and 31 private-list checks passed; see [engine-private-verification.md](engine-private-verification.md).
 Account checkpoint `04c10b9b` passed production gates; see [engine-account-verification.md](engine-account-verification.md). New availability proof is separate.
-The last confirmed ship is 541e4a1e; the seventh ship failed at the host operation. Source status does not establish the deployed build.
+Latest observed ship: `07e88178`, 2026-11-17 02:07 UTC, with a schema-2 rollback pair; see engine-shipping.md. Protocol13 remains unshipped.
 Unregistered staging under tmp/ is excluded. This replaces the 11-14 inventory.
 Rows describe lkjstr's real Worker and reachable interface, not mock capability.
 `done` means implemented for the stated scope; it does not establish public-network

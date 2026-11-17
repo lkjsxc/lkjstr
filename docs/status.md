@@ -90,7 +90,7 @@ private completion reuses only its current observed relay state. Native before/a
 reproduced Retry/reopen hang; see [engine-private-verification.md](engine-private-verification.md).
 
 The protocol-9 candidate reproduced aborted WASM response bodies during parallel startup. Removing its document-level WASM preload preserves the
-Worker assets and verified offline shell; [engine-startup.md](engine-startup.md) records the controlled before/after proof. The shipped 541e4a1e
+Worker assets and verified offline shell; [engine-startup.md](engine-startup.md) records the controlled before/after proof. The earlier 541e4a1e
 comparison passed.
 
 ## Corrections to the handoff and older status
@@ -172,7 +172,7 @@ These are concrete runtime limits, not permission to fake a successful answer.
 
 Required gates are the root repo/native/WASM/verify commands and web check, build and smoke. Protocol conformance adds DM, vault and AUTH cases to the
 real Worker harness; native cases cover pure decisions and failure races. Public measurements retain UTC date, host load, selected relays and
-limitations. Shipped `541e4a1e` passed all required gates and 545 real interface checks. [interface-verification.md](interface-verification.md)
+limitations. Earlier `541e4a1e` passed all required gates and 545 real interface checks. [interface-verification.md](interface-verification.md)
 records dates, load, the 468-state matrix and K2 differences. The completed third public hour has a [scoped audit](engine-performance-third.md); the
 private-list scope follow-up has separate evidence. Protocol 9 and its startup/distribution corrections passed all required gates;
 [engine-zap-verification.md](engine-zap-verification.md) records the runtime and measurement evidence. Protocol-10 private-list and layout integration
@@ -183,8 +183,8 @@ production Worker before/after proof and combined gates. Public availability is 
 The sixth prescribed ship stopped before deployment at 16:35:57 UTC: separate package validators still required a direct HTML WASM preload.
 The archive graph and numeric-token corrections pass 80 package cases and 19 xtask tests; all required combined gates and exact packaging passed.
 The seventh prescribed ship passed all 548 real interface checks and packaging, then failed at the host operation at 17:53:27 UTC.
-The 2026-11-17 00:43 attempt stopped before its push; no new successful receipt exists. Confirmed live remains 541e4a1e. Safeguards and rollback
-are recorded in [engine-shipping.md](engine-shipping.md). This stream uses the prescribed wrapper; live verification is still pending.
+The 2026-11-17 02:07 shipment deployed `07e88178` with a compatible schema-2 rollback. Protocol13 is not shipped.
+[Receipts and package hashes](engine-shipping.md) distinguish that deployed Worker from this stream's tested availability marker.
 
 Protocol-11/12 gate records: [variants](engine-variants-verification.md), [device](engine-device-verification.md).
 The [ninth hour](engine-performance-ninth.md) and [coverage audit](engine-performance-ninth-coverage.md) record hidden quotes and evidence limits.

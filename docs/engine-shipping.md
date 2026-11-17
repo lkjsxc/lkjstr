@@ -156,3 +156,35 @@ SHA-256 `ecbe78e7409edae34437b06ba25bd9d59a0c81567aa5448fab5537c240876944`.
 The account runtime has separate completed [production proof](engine-availability-verification.md).
 Host graph/rollback/HTTPS tests remain separate; finite local proof does not
 certify live deployment. Retain actual receipts and compatible release IDs.
+
+
+## Observed compatible shipment (2026-11-17)
+
+Another prescribed-wrapper run shipped `07e88178` at 02:07:15 UTC. Its retained
+`tmp/ship-20261117T015825Z-386270/` summary and both deployment/verification
+receipts were read after the shared `ship.out` had been replaced by a queued
+attempt's interval refusal. That refusal does not undo the completed shipment.
+This stream did not initiate either attempt or run another host command.
+
+Both receipts match the retained 1602184-byte archive, SHA-256
+`eb633111cf2c00df656bf7bbbc396d695b00df51a61796d9a244214b91c311cb`,
+and its index hash
+`fa3286676dd34d61f91a2e5d060123b7a0ec3fee18a1cdf5184f3e8c0ac16468`.
+The retained real UI report has 548 successful checks and no reported errors.
+The local stamp names the same source revision and completion time.
+
+The first compatible release is `9528fe7103b7462387235d47ec579285`;
+the second receipt starts there and ends at the distinct current release
+`d709e49012af410685572170253e927b`. This establishes the schema-2 rollback
+pair. Future ordinary shipments do not need to repeat its baseline mode.
+The deployed WASM is
+`59e2121a2dfc9c5c2f1e10963edf65f0f18c4fed0d5f86e0f4f0a1869c727cc5`,
+not the newer protocol-13 availability marker tested by this stream.
+
+The observation record `tmp/account-release-observed-ship-07e88178.json` binds
+the exact local receipts, archive contents, smoke report and stamp. Its hash is
+`89a404997f21484938e99ab3d5c5910082988f63f9c8c9b015f595884ebf9763`.
+These checks did not independently query DNS/TLS or the current host release;
+the host receipts themselves report that external browser verification is false.
+The three-hour cadence remains in force; the latest observed attempt ended
+at 02:07:15 UTC, so this stream will not attempt another ship before 05:07:16.
