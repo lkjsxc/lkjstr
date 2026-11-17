@@ -1,79 +1,10 @@
 import assert from 'node:assert/strict';
-import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { spawn, spawnSync } from 'node:child_process';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { spawn } from 'node:child_process';
 import test from 'node:test';
-
-const source = dirname(fileURLToPath(import.meta.url));
-const temporary = join(source, '../tmp');
-mkdirSync(temporary, { recursive: true });
-const realGit = spawnSync('which', ['git'], { encoding: 'utf8' }).stdout.trim();
-const quote = value => `'${value.replaceAll("'", "'\\''")}'`;
-function fixture(t, options = {}) {
-  const base = mkdtempSync(join(temporary, 'ship-test-'));
-  t.after(() => rmSync(base, { recursive: true, force: true }));
-  const root = join(base, 'work');
-  const origin = join(base, 'remote.git');
-  const state = join(base, 'state');
-  for (const path of [root, join(root, 'scripts'), join(root, 'web'), join(root, 'tmp'), join(root, '.test-bin')]) {
-    mkdirSync(path, { recursive: true });
-  }
-  for (const name of ['ship.sh', 'ship-clean.mjs', 'ship-receipt.mjs', 'ship-fixture.mjs']) {
-    copyFileSync(join(source, name), join(root, 'scripts', name));
-  }
-  writeFileSync(join(root, '.gitignore'), '/tmp/\n/target/\n/.test-bin/\n');
-  writeFileSync(join(root, 'web/keep'), 'test build output is produced by the fixture');
-  writeFileSync(join(root, 'tracked.txt'), 'before');
-  const git = args => {
-    const result = spawnSync('git', args, { cwd: root, encoding: 'utf8' });
-    assert.equal(result.status, 0, result.stderr);
-    return result.stdout;
-  };
-  git(['init', '-q', '-b', 'main']);
-  git(['config', 'user.name', 'Shipping test']);
-  git(['config', 'user.email', 'shipping-test@example.invalid']);
-  git(['add', '.']);
-  git(['commit', '-qm', 'Initial fixture']);
-  git(['init', '--bare', '-q', origin]);
-  git(['remote', 'add', 'origin', origin]);
-  git(['push', '-qu', 'origin', 'main']);
-  const hook = `#!/bin/sh\ncat >/dev/null\nprintf '%s\\n' '{"command":"push"}' >> ${quote(join(root, 'tmp/actions.jsonl'))}\n` +
-    `test ! -f ${quote(join(origin, 'reject-push'))}\n`;
-  writeFileSync(join(origin, 'hooks/pre-receive'), hook, { mode: 0o755 });
-  writeFileSync(join(root, 'tracked.txt'), 'tested candidate');
-  git(['commit', '-qam', 'Candidate fixture']);
-  if (options.rejectPush) writeFileSync(join(origin, 'reject-push'), 'reject');
-  const authEnv = {};
-  const authDefault = join(base, 'login/.config/gh');
-  const authXdg = join(base, 'redirected/gh');
-  const authCustom = join(base, 'custom-gh');
-  if (options.auth) {
-    for (const directory of [authDefault, authXdg, authCustom]) mkdirSync(directory, { recursive: true });
-    const chosen = options.auth === 'explicit' ? authCustom : options.auth === 'xdg' ? authXdg : authDefault;
-    if (options.auth !== 'missing') writeFileSync(join(chosen, 'hosts.yml'), 'synthetic credential fixture');
-    Object.assign(authEnv, { HOME: join(base, 'login'), XDG_CONFIG_HOME: join(base, 'redirected'),
-      GH_CONFIG_DIR: options.auth === 'explicit' ? authCustom : '', LKJSTR_SHIP_TEST_REAL_GIT: realGit,
-      GIT_CONFIG_NOSYSTEM: '1', GIT_CONFIG_GLOBAL: '/dev/null' });
-  }
-  for (const name of ['pnpm', 'ssh', 'desk', 'cargo', 'sleep', ...(options.auth ? ['git', 'credential-fixture'] : [])]) {
-    writeFileSync(join(root, '.test-bin', name), `#!${process.execPath}\nimport ${JSON.stringify(join(root, 'scripts/ship-fixture.mjs'))};\n`, { mode: 0o755 });
-  }
-  const events = () => existsSync(join(root, 'tmp/actions.jsonl'))
-    ? readFileSync(join(root, 'tmp/actions.jsonl'), 'utf8').trim().split('\n').filter(Boolean).map(JSON.parse) : [];
-  const run = (mode = '', env = {}) => {
-    const result = spawnSync('bash', ['scripts/ship.sh', '保存した内容を安全に保ちます', ...(mode ? [mode] : [])], {
-      cwd: root, encoding: 'utf8', timeout: 30_000,
-      env: { ...process.env, PATH: `${join(root, '.test-bin')}:${process.env.PATH}`,
-        LKJSTR_SHIP_STATE_DIR: state, LKJSTR_SHIP_TEST_ROOT: root, ...authEnv, ...env },
-    });
-    return { ...result, summary: readFileSync(join(root, 'tmp/ship.out'), 'utf8'),
-      log: readFileSync(join(root, 'tmp/ship.log'), 'utf8') };
-  };
-  return { root, origin, state, git, events, run, authDefault, authXdg, authCustom };
-}
-const deploys = events => events.filter(row => row.command === 'ssh' && row.action.includes('ops/lkjstr.py deploy'));
-const notices = events => events.filter(row => row.command === 'desk');
+import './ship-safety-cases.mjs';
+import { fixture, deploys, notices } from './ship-test-support.mjs';
 
 test('a rejected real Git push touches no host and reports no shipment', t => {
   const f = fixture(t, { rejectPush: true });
@@ -85,7 +16,7 @@ test('a rejected real Git push touches no host and reports no shipment', t => {
   assert.equal(existsSync(join(f.state, 'lkjstr-last-ship')), false);
 });
 
-test('one ordinary ship binds package and HTTPS digest, then cleans and tells the owner once', t => {
+test('one ordinary ship binds package and HTTPS digest, defers cleanup and tells the owner once', t => {
   const f = fixture(t);
   const result = f.run();
   assert.equal(result.status, 0, result.log);
@@ -94,13 +25,14 @@ test('one ordinary ship binds package and HTTPS digest, then cleans and tells th
   assert.equal(deploys(events).length, 1);
   assert.equal(notices(events).length, 1);
   assert.ok(events.findIndex(row => row.command === 'push') < events.findIndex(row => row.command === 'ssh'));
-  assert.ok(events.findIndex(row => row.command === 'cargo') < events.findIndex(row => row.command === 'desk'));
-  assert.equal(existsSync(join(f.root, 'target/debug')), false);
+  assert.equal(events.some(row => row.command === 'cargo'), false);
+  assert.match(result.log, /debug cleanup deferred/);
+  assert.equal(existsSync(join(f.root, 'target/debug')), true);
   assert.equal(existsSync(join(f.state, 'lkjstr-last-ship')), true);
   const count = events.length;
   const again = f.run();
   assert.equal(again.status, 1);
-  assert.match(again.summary, /less than two hours/);
+  assert.match(again.summary, /less than three hours/);
   assert.equal(f.events().length, count);
 });
 
@@ -187,14 +119,14 @@ test('debug cleanup defers while an owned gate process remains active', async t 
   } finally { active.kill(); }
 });
 
-test('debug cleanup refuses a target outside the owned repository', t => {
+test('debug cleanup defers without touching a target outside the owned repository', t => {
   const f = fixture(t);
   const outside = join(f.origin, 'unrelated-target');
   mkdirSync(outside);
   writeFileSync(join(outside, 'preserve'), 'unrelated');
   const result = f.run('', { CARGO_TARGET_DIR: outside });
   assert.equal(result.status, 0, result.log);
-  assert.match(result.log, /unrelated target directory/);
+  assert.match(result.log, /debug cleanup deferred/);
   assert.equal(readFileSync(join(outside, 'preserve'), 'utf8'), 'unrelated');
   assert.equal(f.events().some(row => row.command === 'cargo'), false);
 });

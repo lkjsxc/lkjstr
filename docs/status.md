@@ -181,11 +181,11 @@ passed all required gates, 452 main Worker checks and 31 private-list checks; th
 [engine-private-verification.md](engine-private-verification.md). The [sixth public hour](engine-performance-sixth.md) and faults are complete: 1903
 of 2000 requested notes and seven unresolved Home coverage candidates. Productive-route recovery and verification-queue guards pass native and
 production Worker before/after proof and combined gates. Public availability is still unknown; see [engine-live-route.md](engine-live-route.md).
+The sixth prescribed ship stopped before deployment at 16:35:57 UTC: separate package validators still required a direct HTML WASM preload.
 The archive graph and numeric-token corrections pass 80 package cases and 19 xtask tests; all required combined gates and exact packaging passed.
 The seventh prescribed ship passed all 548 real interface checks and packaging, then failed at the host operation at 17:53:27 UTC.
-No successful deployment receipt or served-index verification exists; the last confirmed successful ship remains 541e4a1e.
-The second owner note authorizes lkjstr-only host diagnosis and repair. The stale host validator rejected the direct-Worker asset graph before activation;
-the corrected route, exact-source shipping and schema-2 rollback baseline are documented in [engine-shipping.md](engine-shipping.md). Live repair is pending.
+No successful deployment receipt exists; the last confirmed ship remains 541e4a1e. Deployment safeguards and the schema-2 rollback boundary
+are recorded in [engine-shipping.md](engine-shipping.md). This stream uses the prescribed wrapper; live verification is still pending.
 
 Protocol-11/12 gate records: [variants](engine-variants-verification.md), [device](engine-device-verification.md).
 The [ninth hour](engine-performance-ninth.md) and [coverage audit](engine-performance-ninth-coverage.md) record hidden quotes and evidence limits.

@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { appendFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { basename, join } from 'node:path';
 import { spawnSync } from 'node:child_process';
+import { afterHash, beforeCopy, onDeploy } from './ship-fixture-change.mjs';
 
 const root = process.env.LKJSTR_SHIP_TEST_ROOT;
 if (!root) throw new Error('test fixture root is required');
@@ -50,18 +51,22 @@ if (name === 'credential-fixture') {
   const action = args.at(-1);
   log({ command: name, action });
   if (action.includes('cat >')) {
-    process.stdout.write(`${digest(readFileSync(0))}  transferred.tar.gz\n`);
+    const bytes = readFileSync(0);
+    log({ command: 'transfer', digest: digest(bytes), bytes: bytes.length });
+    process.stdout.write(`${digest(bytes)}  transferred.tar.gz\n`);
   } else if (action.includes('ops/lkjstr.py deploy')) {
     const before = state();
     before.calls += 1;
     if (process.env.LKJSTR_SHIP_TEST_BUSY && before.calls === 1) { save(before); process.exit(75); }
     if (Number(process.env.LKJSTR_SHIP_TEST_FAIL_DEPLOY) === before.calls) { save(before); process.exit(1); }
-    const after = before.calls.toString(16).padStart(32, '0');
+    const noop = process.env.LKJSTR_SHIP_TEST_NOOP_BASELINE && before.calls === 2;
+    const after = noop ? before.current : before.calls.toString(16).padStart(32, '0');
     const health = { edge_https_content_headers_spa_compression: true,
       external_dns_tls_browser_verified: false, served_index_sha256: digest(index) };
     const receipt = { action: 'deploy', status: 'passed', before: before.current, after,
       archive_sha256: action.split(' ').at(-1), health };
-    save({ calls: before.calls, current: after, previous: before.current });
+    save({ calls: before.calls, current: after, previous: noop ? before.previous : before.current });
+    onDeploy(log);
     process.stdout.write(JSON.stringify(receipt));
   } else if (action.endsWith('ops/lkjstr.py verify')) {
     process.stdout.write(JSON.stringify({ edge_https_content_headers_spa_compression: true,
@@ -77,6 +82,29 @@ if (name === 'credential-fixture') {
   log({ command: name, args });
   if (args.join(' ').startsWith('clean --profile dev')) rmSync(join(root, 'target/debug'), { recursive: true, force: true });
   else throw new Error('unexpected simulated cargo command');
+} else if (name === 'date') {
+  const now = process.env.LKJSTR_SHIP_TEST_NOW;
+  if (args.length === 1 && args[0] === '+%s' && now) {
+    if (!/^[0-9]+$/.test(now)) throw new Error('invalid fixture clock');
+    process.stdout.write(now + '\n');
+  } else {
+    const result = spawnSync('/bin/date', args);
+    if (result.status !== 0) process.exit(result.status ?? 1);
+    process.stdout.write(result.stdout);
+  }
+} else if (name === 'cp') {
+  if (args.length !== 2 || args[0] !== join(root, 'tmp/lkjstr-dist.tar.gz') ||
+      !args[1].startsWith(join(root, 'tmp/ship-')) || !args[1].endsWith('/lkjstr-dist.tar.gz')) {
+    throw new Error('unexpected fixture copy outside its snapshot');
+  }
+  beforeCopy(log);
+  const result = spawnSync('/bin/cp', args);
+  process.exit(result.status ?? 1);
+} else if (name === 'sha256sum') {
+  const result = spawnSync('/usr/bin/sha256sum', args, { input: args.length ? undefined : readFileSync(0) });
+  if (result.status !== 0) process.exit(result.status ?? 1);
+  afterHash(args, log);
+  process.stdout.write(result.stdout);
 } else if (name === 'sleep') {
   log({ command: name, args });
 } else {

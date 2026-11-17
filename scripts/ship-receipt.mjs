@@ -11,7 +11,7 @@ try {
   if (kind === 'deploy') {
     if (value.action !== 'deploy' || value.status !== 'passed' || value.archive_sha256 !== archive ||
         !/^[a-f0-9]{32}$/.test(value.after ?? '') ||
-        (expectedBefore && value.before !== expectedBefore)) {
+        (expectedBefore && (value.before !== expectedBefore || value.after === expectedBefore))) {
       throw new Error('the deployment receipt does not identify the tested release');
     }
     process.stdout.write(`${value.after}\n`);
