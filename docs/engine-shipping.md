@@ -89,6 +89,27 @@ the result says that the baseline is incomplete. Inspect the host receipt and
 current release before retrying. Do not activate the schema-1 predecessor for
 users who have migrated. Browser data is never deleted to make a rollback fit.
 
+## Observed account-safe activation (2026-11-17)
+
+The prescribed baseline shipment completed at 02:07 UTC for
+`07e881784286c3e021db59f739c6ff438ea58fec`. All seven repository/frontend gates
+and 548 real interface checks passed. The tested predecessor `fb036849` was
+rebased only over Claude's documentation changes; check:repo passed again.
+That permitted rebase exception is recorded in the per-run gate-validation.json.
+
+The archived package SHA-256 is
+`eb633111cf2c00df656bf7bbbc396d695b00df51a61796d9a244214b91c311cb`;
+the verified index SHA-256 is
+`fa3286676dd34d61f91a2e5d060123b7a0ec3fee18a1cdf5184f3e8c0ac16468`.
+Current release `d709e49012af410685572170253e927b` and its compatible
+predecessor `9528fe7103b7462387235d47ec579285` both passed deploy and verify.
+An independent host status read matched both IDs and the archive.
+Receipts and observed-completion.json are in
+`tmp/ship-20261117T015825Z-386270/`. A queued later attempt overwrote the
+top-level ship.out with the two-hour refusal; it did not undo this activation.
+The evidence proves the edge's HTTPS bytes and headers, not an external browser
+path. The owner note was emitted only after both releases were verified.
+
 ## Resource ownership and verification
 
 Builds and tests stay at four jobs/threads. Development/test debug information

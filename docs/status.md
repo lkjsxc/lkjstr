@@ -182,10 +182,10 @@ passed all required gates, 452 main Worker checks and 31 private-list checks; th
 of 2000 requested notes and seven unresolved Home coverage candidates. Productive-route recovery and verification-queue guards pass native and
 production Worker before/after proof and combined gates. Public availability is still unknown; see [engine-live-route.md](engine-live-route.md).
 The archive graph and numeric-token corrections pass 80 package cases and 19 xtask tests; all required combined gates and exact packaging passed.
-The seventh prescribed ship passed all 548 real interface checks and packaging, then failed at the host operation at 17:53:27 UTC.
-No successful deployment receipt or served-index verification exists; the last confirmed successful ship remains 541e4a1e.
-The second owner note authorizes lkjstr-only host diagnosis and repair. The stale host validator rejected the direct-Worker asset graph before activation;
-the corrected route, exact-source shipping and schema-2 rollback baseline are documented in [engine-shipping.md](engine-shipping.md). Live repair is pending.
+The seventh prescribed ship failed at the host operation at 17:53:27 UTC after passing its gates; the stale host validator was corrected through GitOps.
+On 2026-11-17 at 02:07 UTC, account-safe revision 07e88178 completed the prescribed shipment after all gates and 548 real interface checks.
+Both schema-2 deployments and HTTPS served-index verification passed; the current release and its compatible predecessor contain the same tested archive.
+Exact hashes, source-rebase evidence, release IDs and the external-path limit are recorded in [engine-shipping.md](engine-shipping.md).
 
 Protocol-11/12 gate records: [variants](engine-variants-verification.md), [device](engine-device-verification.md).
 The [ninth hour](engine-performance-ninth.md) and [coverage audit](engine-performance-ninth-coverage.md) record hidden quotes and evidence limits.
