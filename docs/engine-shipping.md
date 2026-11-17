@@ -76,7 +76,7 @@ the exact same archive twice through the normal host CLI. The second receipt
 must name the first verified release as its predecessor. One owner note is
 sent. The ordinary rollback target then contains the verified schema-2 runtime
 before any subsequent performance shipment. Old release directories remain.
-This establishes a compatible baseline, not a distinct earlier feature version.
+This establishes a compatible baseline, not a distinct earlier feature set.
 
 If the second deployment fails, no completed-baseline note or success timestamp
 is written. The first safe release remains the expected recovery target and

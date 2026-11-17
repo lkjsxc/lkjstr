@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Gates for the sole TypeScript frontend and Rust/WASM Worker product.
+Gates for the sole TypeScript frontend and Rust/WASM Worker product. Resource bounds: [engine-shipping.md](engine-shipping.md).
 ## Quiet gates
 
 Each root gate prints one ok line on success and a bounded tail on failure.
@@ -15,7 +15,7 @@ Each root gate prints one ok line on success and a bounded tail on failure.
 | pnpm verify:quiet | repo checks plus the rust-wasm gate |
 | sh scripts/engine-check.sh | loopback Worker conformance and delayed profile probe |
 
-The virtual workspace builds crates/lkjstr-engine-worker. Use CARGO_BUILD_JOBS=4 and RUST_TEST_THREADS=4 on shared hosts. Dev/test artifacts omit debug information and incremental caches to keep target/ below 25 GiB. Run one browser harness at a time; retire debug output after shipping and merged integration trees after preserving their evidence. Put caches in ignored tmp/:
+The virtual workspace builds crates/lkjstr-engine-worker. Use CARGO_BUILD_JOBS=4 and RUST_TEST_THREADS=4 on shared hosts. Put caches in ignored tmp/:
 CARGO_HOME, XDG_CACHE_HOME, XDG_CONFIG_HOME, XDG_DATA_HOME and TMPDIR. Set LKJSTR_WASM_BINDGEN to the matching wasm-bindgen-cli if needed.
 
 ## Frontend and real browser gates
