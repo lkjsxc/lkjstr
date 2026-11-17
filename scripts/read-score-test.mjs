@@ -56,6 +56,23 @@ test('three actual comparable attempts without two percent movement trigger stop
   assert.equal(stopRule([...attempts.slice(0,2),{...attempts[2],comparable:false}]).stop,false);
 });
 
+test('native replay is first-class, including zero-new warm absolute costs',()=>{
+  const base=structuredClone({...score,mode:'native-actual-engine-effects',traceHash:'same-trace'});
+  const day={recall:{ratio:1},firstScreenMs:100,visibleCompleteMs:120,
+    metrics:{wantedNew:2,requests:2,connections:1,duplicateWireEvents:1,bytesIn:50,bytesOut:25}};
+  base.warmStoreReplay=structuredClone({...day,firstScreenMs:0,visibleCompleteMs:0,
+    metrics:{...day.metrics,wantedNew:0}});
+  base.weekReplay=Array.from({length:7},()=>structuredClone(day));
+  const better=structuredClone(base);better.warmStoreReplay.metrics.requests=1;
+  const accepted=compareScore(base,better);
+  assert.equal(accepted.keep,true);
+  assert.ok(accepted.movement.some(row=>row.key==='warm.requests'&&row.improves));
+  better.weekReplay[3].metrics.bytesOut=30;
+  assert.equal(compareScore(base,better).keep,false);
+  assert.ok(compareScore(base,better).problems.includes('cost-regression-day4.bytes'));
+  delete better.weekReplay;
+  assert.ok(compareScore(base,better).problems.includes('native-replay-incomplete'));
+});
 test('event identity ignores object key order and preserves changed native fields',()=>{
   const {s,frame}=fixture();
   frame(false,['EVENT','one',{id,kind:1,content:'one'}]);

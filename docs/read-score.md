@@ -131,6 +131,16 @@ Recall and first-screen time must not regress. Requests, connections, duplicates
 and bytes per wanted-new event must not regress, and at least one metric must
 improve. Missing comparable evidence never becomes a keep decision.
 
+Native comparisons also require the same recorded action trace and all eight replay
+results: one fully held warm restart and seven daily sessions. Each must retain
+recall, first-screen and all-visible completion while requests, connections,
+duplicate wire events and total bytes do not rise. Fixed-workload absolute
+counts apply to the warm restart because it has zero wanted-new events; its
+per-new-event ratios are correctly unavailable. A warm win cannot excuse a
+cold loss, nor a daily regression; this makes the persisted-history evidence
+part of the actual keep and stop decisions. The public comparison stays
+limited to its measured real-relay workload and explicit witness bounds.
+
 The three-attempt stop rule uses consecutive comparable candidate changes, even
 when a change was rejected. Stop only when none moves any scorecard number by
 at least two percent. Keep every attempted report and state the limiting factor;

@@ -92,6 +92,36 @@ This proves an exact-selector ownership correction, not an aggregate or public
 performance gain. Browser paint and recorded-week learning remain unmeasured;
 the broader native workload has no claimed reduction from this change.
 
+## Integrated five-view replay (2026-11-17, provisional)
+
+The combined `stream/q1-combine-20261117-0605` tree contains the primary live-request
+union and public cache plus the isolated selector, frontier, header and disabled
+exact-ID coordinator work. The existing Q5 native workload is identical to the
+unchanged account-release baseline: 32 relays, 300 authors, five panes, a warm
+restart and seven generated daily action traces. Both have 331/331 exact recall.
+The report was captured with a dirty test-fix worktree but hashes its product
+source and actual fixture binary. The unchanged raw candidate is archived at
+`/home/coder/workspace/lkjstr-review/q1-combine-20261117/native-initial-rejected.json`.
+
+| Native Q5 stage | Unchanged release | Combined candidate |
+| --- | ---: | ---: |
+| Cold requests | 53 | 55 |
+| Cold duplicate wire events | 214 | 226 |
+| Cold total protocol bytes | 515907 | 576352 |
+| Cold first 50 Home rows, simulated ms | 375 | 375 |
+| Warm restart requests | 145 | 28 |
+| Warm restart protocol bytes | 1116770 | 451128 |
+| First generated day requests | 75 | 41 |
+| First generated day protocol bytes | 435149 | 525527 |
+| First generated day all-five readiness, simulated ms | 525 | 375 |
+
+The first Q5 verdict is **reject**, not ship: cold requests and bytes regress,
+and all seven daily traces also spend more bytes despite fewer requests.
+The warm-store request reduction is real in this deterministic fixture, but it
+cannot excuse regressions elsewhere. The public read-only five-view run and
+real Worker first paint remain necessary. The cold-cost source is being
+isolated in a separate tuning worktree; no claim about production speed follows.
+
 ## Remaining Q1 work
 
 The render snapshot and retained count contributors are not relay/filter
@@ -100,9 +130,10 @@ profile's historical completeness. Durable suppression needs verified committed
 receipts, retained bodies, relay/filter scope, explicit unresolved boundaries
 and invalidation after lost evidence.
 
-Live selectors remain independently owned. A relay cannot remove only one
-filter from an immutable live envelope. Sharing such an envelope requires an
-explicit strategy for lifetime and handover costs; no zero-replay claim is made.
+Live selectors now share immutable envelopes where the public eligibility
+and overlap rules permit it. A relay still cannot remove one constituent from
+an in-flight envelope; lifetime and handover costs require wire-level proof.
+No zero-replay claim is made for partial or interrupted live streams.
 The native scorecard does not substitute for browser first paint, public-relay
 measurement or recorded-week learning.
 

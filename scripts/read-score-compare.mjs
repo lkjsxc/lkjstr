@@ -4,6 +4,43 @@ import { pathToFileURL } from 'node:url';
 import { hash } from './read-score-model.mjs';
 const lower = ['requestsPerWantedNew','connectionsPerWantedNew','duplicatesPerWantedNew','bytesPerWantedNew'];
 const artifact = score => score.productSourceHash ?? (Array.isArray(score.build)?hash(score.build):null);
+// The native fixture has a zero-denominator warm restart and seven real Engine-input days.
+// Compare their absolute costs; a faster warm cache cannot hide a cold or daily regression.
+function compareNativeReplay(before, after, problems, movement) {
+  if (before.mode !== 'native-actual-engine-effects') return;
+  if (!before.traceHash || before.traceHash !== after.traceHash) problems.push('different-or-missing-traceHash');
+  const bw = before.weekReplay, aw = after.weekReplay;
+  if (!before.warmStoreReplay || !after.warmStoreReplay || !Array.isArray(bw) || !Array.isArray(aw) || bw.length !== 7 || aw.length !== 7) {
+    problems.push('native-replay-incomplete'); return;
+  }
+  const samples = [['warm',before.warmStoreReplay,after.warmStoreReplay],
+    ...bw.map((sample,i)=>['day'+(i+1),sample,aw[i]])];
+  for (const [name,b,a] of samples) {
+    if (b?.metrics?.wantedNew !== a?.metrics?.wantedNew || !Number.isFinite(b?.metrics?.wantedNew)) problems.push(name+'-different-wanted-new');
+    const costs = ['requests','connections','duplicateWireEvents','bytes'];
+    for (const key of costs) {
+      const value = s => key === 'bytes'
+        ? (Number.isFinite(s?.metrics?.bytesIn) && Number.isFinite(s?.metrics?.bytesOut) ? s.metrics.bytesIn+s.metrics.bytesOut : null)
+        : s?.metrics?.[key];
+      const from=value(b),to=value(a),label=name+'.'+key;
+      if (!Number.isFinite(from) || !Number.isFinite(to)) { problems.push('metric-unavailable-'+label); continue; }
+      movement.push({key:label,before:from,after:to,relative:from===0?(to===0?0:1):(to-from)/from,improves:to<from});
+      if (to>from) problems.push('cost-regression-'+label);
+    }
+    for (const key of ['firstScreenMs','visibleCompleteMs']) {
+      const from=b?.[key],to=a?.[key],label=name+'.'+key;
+      if (!Number.isFinite(from) || !Number.isFinite(to)) { problems.push('metric-unavailable-'+label); continue; }
+      movement.push({key:label,before:from,after:to,relative:from===0?(to===0?0:1):(to-from)/from,improves:to<from});
+      if (to>from) problems.push('first-screen-regression-'+label);
+    }
+    const from=b?.recall?.ratio,to=a?.recall?.ratio,label=name+'.recall';
+    if (!Number.isFinite(from) || !Number.isFinite(to)) problems.push('recall-unavailable-'+name);
+    else {
+      movement.push({key:label,before:from,after:to,relative:from===0?(to===0?0:1):(to-from)/from,improves:to>from});
+      if (to<from) problems.push('recall-regression-'+name);
+    }
+  }
+}
 export function compareScore(before, after, changeId = null) {
   const problems = [];
   for (const key of ['workloadHash','witnessHash','initialStoreHash','mode']) {
@@ -29,6 +66,7 @@ export function compareScore(before, after, changeId = null) {
     key:'firstScreenMs',before:before.firstScreenMs,after:after.firstScreenMs,
     relative:before.firstScreenMs===0?(after.firstScreenMs===0?0:1):(after.firstScreenMs-before.firstScreenMs)/before.firstScreenMs,
     improves:after.firstScreenMs<before.firstScreenMs});
+  compareNativeReplay(before,after,problems,movement);
   const beforeProductHash=artifact(before),afterProductHash=artifact(after);
   return { changeId,beforeProductHash,afterProductHash,actualChange:!!beforeProductHash&&!!afterProductHash&&beforeProductHash!==afterProductHash, comparable:!problems.some(p=>!p.includes('regression')), keep:problems.length===0&&movement.some(m=>m.improves),
     problems,movement,movedTwoPercent:movement.some(m=>Math.abs(m.relative)>=0.02),
