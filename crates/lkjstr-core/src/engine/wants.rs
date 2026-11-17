@@ -48,6 +48,7 @@ impl Engine {
                 wants.push((sub.clone(), f, q));
             }
         }
+        self.plan_local_reads(&mut wants, now);
         let mut urls = self.network.relay_order.clone();
         for (_, _, q) in &wants {
             urls.extend(q.filters.relay_hints.iter().cloned());

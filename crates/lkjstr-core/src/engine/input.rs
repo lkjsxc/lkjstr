@@ -18,6 +18,7 @@ impl Engine {
             } => self.open_view(sub, query, visible, now),
             Input::Close { sub } => {
                 self.release_cache_references(&sub);
+                self.release_local_read_owner(&sub, now);
                 self.views.remove(&sub);
                 self.replan(now);
             }

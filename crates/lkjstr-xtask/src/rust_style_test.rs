@@ -10,6 +10,8 @@ fn assertion_helpers_are_allowed_in_test_files_and_shared_fixtures() {
         "crates/example/tests/actions.rs",
         "crates/example/tests/common/mod.rs",
         "crates/example/src/actions_test.rs",
+        "crates/lkjstr-core/examples/read-score/driver.rs",
+        "crates/lkjstr-core/examples/read-score/fixture.rs",
     ] {
         let mut problems = Vec::new();
         check_file(&mut problems, path, ASSERTION_HELPERS);
@@ -23,6 +25,7 @@ fn production_assertion_helpers_are_rejected_even_with_clippy_allowances() {
         "crates/example/src/actions.rs",
         "crates/example/src/tests_helpers.rs",
         "crates/example/src/actions_test.rs.backup.rs",
+        "crates/lkjstr-core/examples/read_score/fixture.rs",
     ] {
         let mut problems = Vec::new();
         let text = format!("#![allow(clippy::unwrap_used)]\n{ASSERTION_HELPERS}");

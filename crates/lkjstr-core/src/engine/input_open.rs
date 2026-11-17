@@ -7,6 +7,7 @@ impl Engine {
             return;
         }
         self.release_cache_references(&sub);
+        self.release_local_read_owner(&sub, now);
         self.network.reset_observation(&sub);
         self.outgoing
             .retain(|out| !matches!(out, Output::Status { sub: old, .. } if old == &sub));
