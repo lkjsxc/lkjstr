@@ -121,6 +121,7 @@ export const ja: Record<keyof typeof en, string> = {
   'act.on.reaction': '{name} のリアクションに',
   'act.on.repost': '{name} のリポストに',
   'act.note.pending': 'ノートを取得しています…',
+  'act.note.missing': 'このノートは見つかりませんでした。',
   'filter.title': '絞り込み',
   'filter.query': '言葉　from:名前　has:image',
   'filter.words': '言葉…',

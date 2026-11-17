@@ -119,6 +119,7 @@ export const en = {
   'act.on.reaction': "on {name}'s reaction",
   'act.on.repost': "on {name}'s repost",
   'act.note.pending': 'Fetching the note…',
+  'act.note.missing': 'This note was not found.',
   'filter.title': 'Filter',
   'filter.query': 'words  from:name  has:image',
   'filter.words': 'Words…',

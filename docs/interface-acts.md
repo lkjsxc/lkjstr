@@ -42,7 +42,8 @@ reactions to the note itself are two rows.
   never wraps away from the excerpt; the excerpt truncates.
 - The note is not on the device yet: the chip alone, followed by `act.note.pending` in `--muted`. A press then opens
   the first actor's profile, as a row without a target does today. When the note arrives the line is completed.
-- The note cannot be found after the request ended: the chip and `quote.missing`.
+- The note cannot be found after the request ended: the chip and `act.note.missing` (not `quote.missing`: nothing
+  here was quoted; judged on the A1 sheet of 2026-11-17, the rest of A1 stands as drawn).
 - Fallback until the field exists: draw as today, but never draw a reaction's raw content (`+`, `:name:`) as an
   excerpt; an excerpt that is only that is treated as absent.
 
