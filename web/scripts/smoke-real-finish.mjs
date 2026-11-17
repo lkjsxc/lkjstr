@@ -86,12 +86,15 @@ export async function reviewSettings({
   await other.locator('.tab[data-view="global"]').click();
   await other.locator('.view[data-kind="global"] .note').first().waitFor();
   check('second app tab receives notes');
-  const sharedRoutes = () => fake.connections() === new Set(activePaths.values()).size;
+  // The separate read-only /reader fixture may stay open in this browser
+  // context. Only the app's relay sockets belong to the shared-engine check.
+  const appPaths = () => [...activePaths.values()].filter((path) => path !== '/reader');
+  const sharedRoutes = () => fake.connections() === new Set(appPaths()).size;
   for (let n = 0; n < 200 && !sharedRoutes(); n++) await page.waitForTimeout(25);
-  check('two app tabs share one socket per relay', sharedRoutes() && activePaths.size > 0);
+  check('two app tabs share one socket per relay', sharedRoutes() && appPaths().length > 0);
   const learnedRoutes = () =>
-    [...activePaths.values()].includes('/owner') &&
-    [...activePaths.values()].every((path) => path === '/owner' || path === '/');
+    appPaths().includes('/owner') &&
+    appPaths().every((path) => path === '/owner' || path === '/');
   for (let n = 0; n < 200 && !learnedRoutes(); n++) await page.waitForTimeout(25);
   check('learned owner relays survive reload and another tab bootstrap', learnedRoutes());
   return other;
