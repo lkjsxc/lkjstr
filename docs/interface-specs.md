@@ -33,8 +33,11 @@ what the engine offers and no surface reaches yet.
 | M5 | Signers that ask | [interface-dm.md](interface-dm.md#m5-signers-that-ask) | built |
 | M6 | New-message mark on the account | [interface-dm.md](interface-dm.md#m6-new-message-mark) | built |
 | D1 | Docs pages for both | [interface-dm.md](interface-dm.md#d1-docs-pages) | built |
+| A1 | Notification about the reader's reaction or repost | [interface-acts.md](interface-acts.md#a1-notification-about-the-readers-reaction-or-repost) | ready |
+| A2 | A person's reaction or repost of an act, in their profile | [interface-acts.md](interface-acts.md#a2-a-persons-reaction-or-repost-of-an-act-in-their-profile) | ready |
 
-Keys come first because a locked account changes what the Messages tab says.
+Keys come first because a locked account changes what the Messages tab says. A1 and A2 are the owner's request of
+2026-11-17 and are the next interface work: build them before anything under "Not specified yet".
 
 Built on 2026-11-16 with protocol 8 and all required gates passed. The review
 matrix covers 468 specified width/theme/language captures; real flows passed

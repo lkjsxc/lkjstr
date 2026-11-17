@@ -83,6 +83,7 @@ Engine (`crates/`):
 - [interface-specs.md](interface-specs.md): surfaces to build, item by item, with their state.
 - [interface-keys.md](interface-keys.md): password-protected keys: sign-in, lock, backup, protection.
 - [interface-dm.md](interface-dm.md): private messages: list, conversation, writing, inbox relays.
+- [interface-acts.md](interface-acts.md): reactions and reposts of reactions and reposts.
 
 - [relay-auth.md](relay-auth.md): scoped relay authentication and async identity races.
 - [bunker-auth.md](bunker-auth.md): private signer authorization intents, ownership and original deadlines.
