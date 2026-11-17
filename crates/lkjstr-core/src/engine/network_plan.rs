@@ -188,7 +188,20 @@ impl Network {
             .cloned()
             .collect();
         for id in obsolete {
-            if self.keep_coverage(&id, now) {
+            // Rerouting a still-wanted follower page must not discard its
+            // unfinished physical answer. Wait for the relay's EOSE before
+            // changing routes; a tab truly closing can still cancel at once.
+            let expensive_inflight = self.requests.get(&id).is_some_and(|r| {
+                r.sent
+                    && !r.page_eose
+                    && now.saturating_sub(r.sent_at) < 9000
+                    && r.filter.kinds.as_deref() == Some(&[3])
+                    && r.filter.tags.contains_key("p")
+                    && wants.iter().any(|(sub, filter, _)| {
+                        r.members.contains(sub) && want_key::same(filter, &r.page_filter)
+                    })
+            });
+            if expensive_inflight || self.keep_coverage(&id, now) {
                 continue;
             }
             if let Some(r) = self.requests.remove(&id)

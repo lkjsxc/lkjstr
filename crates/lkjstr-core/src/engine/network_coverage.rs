@@ -1,11 +1,14 @@
-//! Brief, bounded proof that a finite public follower lookup already reached EOSE.
+//! Bounded per-relay proof that a finite follower page has already been delivered.
 use super::*;
 
 // Nostr has no generic "exclude these IDs" filter. Replaying a completed
 // #p/kind-3 lookup immediately downloads large replaceable follow lists again.
-// Reuse only complete, short pages on the exact same relay and filter; freshness
-// expires after fifteen seconds and other targets never borrow this evidence.
-const TTL_MS: u64 = 15_000;
+// A full page proves the first page was delivered, NOT that followers are
+// exhausted. Keep that page until the user can deliberately request a cursor;
+// this prevents downloading the same huge replaceable lists again on a replan.
+// A short page can prove absence briefly. Neither proof crosses relays/targets.
+const SHORT_TTL_MS: u64 = 15_000;
+const FULL_TTL_MS: u64 = 300_000;
 const MAX_CACHED: usize = 256;
 
 fn reusable(r: &Request, now: u64) -> bool {
@@ -15,8 +18,12 @@ fn reusable(r: &Request, now: u64) -> bool {
         && !r.live
         && !r.sent
         && !r.verification_retry
-        && r.received.len() < r.page_limit
-        && now.saturating_sub(r.last_rx) <= TTL_MS
+        && now.saturating_sub(r.last_rx)
+            <= if r.received.len() >= r.page_limit {
+                FULL_TTL_MS
+            } else {
+                SHORT_TTL_MS
+            }
         && r.page_filter.kinds.as_deref() == Some(&[3])
         && r.page_filter.tags.len() == 1
         && r.page_filter.tags.contains_key("p")
@@ -109,7 +116,7 @@ mod tests {
         assert!(!network.requests.contains_key("r1"));
     }
     #[test]
-    fn incomplete_private_and_full_pages_never_create_a_proof() {
+    fn incomplete_and_private_pages_never_create_a_proof_but_full_pages_keep_a_cursor() {
         let mut network = Network::default();
         let mut incomplete = completed("a", 1000);
         incomplete.page_eose = false;
@@ -120,10 +127,14 @@ mod tests {
         let mut full = completed("c", 1000);
         full.page_limit = 0;
         network.requests.insert("full".into(), full);
-        for id in ["unfinished", "private", "full"] {
+        for id in ["unfinished", "private"] {
             assert!(!network.keep_coverage(id, 1001));
             assert!(!network.requests[id].members.is_empty());
         }
+        assert!(network.keep_coverage("full", 1001));
+        assert!(!network.page_exhausted(&network.requests["full"].page_filter));
+        network.expire_coverage(301_001);
+        assert!(!network.requests.contains_key("full"));
     }
     #[test]
     fn old_coverage_is_evicted_under_a_fixed_memory_budget() {
