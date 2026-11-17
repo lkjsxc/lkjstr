@@ -177,8 +177,8 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
           keeper.forget();
         title();
         const head = rows.find((row) => row.kind === 'note' || row.kind === 'notification');
-        // Channel messages (including one's own sends) flow in while the channel is open.
-        if (live && head && kind !== 'thread' && kind !== 'channel') {
+        // Channel and Global keep live heads: a locally published note must appear immediately.
+        if (live && head && kind !== 'thread' && kind !== 'channel' && kind !== 'global') {
           headHeld = true;
           live = false;
           request({ key: head.key }, 0, Math.max(PAGE, rows.length));
