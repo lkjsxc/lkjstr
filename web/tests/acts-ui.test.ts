@@ -51,7 +51,7 @@ it('keeps the newest custom reaction mark and the reader act chip separate from 
 
 for (const [state, key] of [
   ['loading', 'act.note.pending'],
-  ['missing', 'quote.missing'],
+  ['missing', 'act.note.missing'],
   ['failed', 'quote.error'],
 ] as const)
   it(`keeps ${state} act chains honest and opens the first actor until the note exists`, () => {

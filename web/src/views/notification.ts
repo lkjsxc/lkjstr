@@ -41,7 +41,7 @@ function targetLine(row: NotificationRow, env: ViewEnv): HTMLElement | null {
       ? 'act.note.pending'
       : pending.state === 'failed'
         ? 'quote.error'
-        : 'quote.missing';
+        : 'act.note.missing';
   return h(
     'div',
     { class: 'excerpt muted act-target' },
