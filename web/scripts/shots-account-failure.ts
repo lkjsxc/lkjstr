@@ -50,9 +50,12 @@ async function showStatus(page: Page): Promise<void> {
     );
     if (
       await status.evaluate((node) => {
-        const r = node.getBoundingClientRect();
+        // The scroll extent is rounded; inspect the words, not fractional bottom padding.
+        const text = document.createRange();
+        text.selectNodeContents(node);
+        const r = text.getBoundingClientRect();
         const view = node.parentElement!.getBoundingClientRect();
-        return r.top >= view.top && r.bottom <= view.bottom;
+        return r.height > 0 && r.top >= view.top && r.bottom <= Math.min(view.bottom, innerHeight);
       })
     )
       return;
