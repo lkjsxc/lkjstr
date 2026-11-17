@@ -10,6 +10,11 @@ This replaces the withdrawn item S1 (one moment in every tab). Tabs drawing at d
 is not accepted is a tab asking for what another tab, the store or an earlier session already has, a relay asked
 that never held the answer, or a slot spent on something the reader will not look at.
 
+A minute later the owner added: all information should gather in the back end, and very advanced orchestration
+should happen there. So every signal lives in the engine and nowhere else: the wants and how they are seen, what the
+store holds, what each relay did, what the reader does, every limit. No decision about what to ask, where or when is
+made in a tab, a view or a helper beside the engine.
+
 It is engine work with no new surface or word. Index and rules: [interface-specs.md](interface-specs.md). What exists
 and what was left out: [outbox.md](outbox.md), [cover.md](cover.md), [orchestration.md](orchestration.md). The
 mechanics are the builder's; the statements below are what must be true and how it is measured. A rule in an older
