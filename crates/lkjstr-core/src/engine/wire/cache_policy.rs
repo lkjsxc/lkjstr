@@ -4,42 +4,12 @@ use crate::engine::Engine;
 
 impl Session {
     pub(super) fn public_cache_allowed(&self, sub: &str, engine: &Engine) -> bool {
-        let Some(query) = self.queries.get(sub) else {
-            return false;
-        };
-        if !matches!(
-            query.source.as_str(),
-            "home"
-                | "global"
-                | "their-home"
-                | "profile"
-                | "thread"
-                | "notifications"
-                | "search"
-                | "hashtag"
-                | "bookmarks"
-                | "list"
-                | "relay"
-                | "followers"
-                | "following"
-                | "mutes"
-                | "people"
-                | "channels"
-                | "channel"
-                | "emoji"
-        ) {
-            return false;
-        }
-        // A public note selected by private membership is still a private projection.
-        // Conservatively fence every account-scoped projection while such policy exists.
-        !query.account.as_ref().is_some_and(|account| {
-            engine.private_lists.keys().any(|id| {
-                engine
-                    .store
-                    .get(id)
-                    .is_some_and(|event| &event.pubkey == account)
+        self.queries
+            .get(sub)
+            .and_then(|query| query.convert())
+            .is_some_and(|query| {
+                crate::engine::public_reads::allowed(&engine.store, &engine.private_lists, &query)
             })
-        })
     }
 
     pub(super) fn cache_policy(

@@ -30,6 +30,7 @@ pub mod preview;
 mod private_cache;
 pub mod private_lists;
 pub mod protocol;
+pub mod public_reads;
 mod publication_discovery;
 pub mod publication_plan;
 mod publication_routes;

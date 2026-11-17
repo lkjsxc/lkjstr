@@ -8,24 +8,17 @@ impl Engine {
             .iter()
             .filter(|(_, view)| {
                 view.visible
-                    && !matches!(
-                        view.query.source,
-                        protocol::Source::Relays
-                            | protocol::Source::Diagnostics
-                            | protocol::Source::MediaServers
-                    )
                     && !super::query::signed_out(&view.query)
-                    && !view.query.account.as_ref().is_some_and(|account| {
-                        self.private_lists.keys().any(|id| {
-                            self.store
-                                .get(id)
-                                .is_some_and(|event| &event.pubkey == account)
-                        })
-                    })
+                    && crate::engine::public_reads::allowed(
+                        &self.store,
+                        &self.private_lists,
+                        &view.query,
+                    )
             })
             .map(|(sub, _)| sub.clone())
             .collect()
     }
+
     /// Replace the whole registry so dropped/denied holds release their owners.
     /// Transport may namespace IDs; it cannot select relays or construct filters.
     pub fn cache_references(&mut self, wants: Vec<(String, Vec<String>)>, now: u64) {
