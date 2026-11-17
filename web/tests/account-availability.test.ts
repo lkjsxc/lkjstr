@@ -40,7 +40,7 @@ function feed(kind: string, saved = false) {
     cleanup.push(mountFeed(fixture.el, { ...fixture.env, engine: c.engine }, kind));
   mount();
   const opened = c.sent.find((message) => message.t === 'open');
-  if (!opened || opened.t !== 'open') throw new Error('missing fixture subscription');
+  if (opened?.t !== 'open') throw new Error('missing fixture subscription');
   return { ...c, ...fixture, sub: opened.sub };
 }
 function row() {

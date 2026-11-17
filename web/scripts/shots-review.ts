@@ -131,7 +131,7 @@ try {
       writeFileSync(job.destination, bytes, { flag: 'wx' });
       writeFileSync(
         job.destination.replace(/\.jpg$/, '.json'),
-        JSON.stringify(
+        `${JSON.stringify(
           {
             batch: job.name,
             assembledAt: new Date().toISOString(),
@@ -146,7 +146,7 @@ try {
           },
           null,
           2,
-        ) + '\n',
+        )}\n`,
         { flag: 'wx' },
       );
       console.log(

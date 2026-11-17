@@ -93,8 +93,7 @@ export async function reviewSettings({
   for (let n = 0; n < 200 && !sharedRoutes(); n++) await page.waitForTimeout(25);
   check('two app tabs share one socket per relay', sharedRoutes() && appPaths().length > 0);
   const learnedRoutes = () =>
-    appPaths().includes('/owner') &&
-    appPaths().every((path) => path === '/owner' || path === '/');
+    appPaths().includes('/owner') && appPaths().every((path) => path === '/owner' || path === '/');
   for (let n = 0; n < 200 && !learnedRoutes(); n++) await page.waitForTimeout(25);
   check('learned owner relays survive reload and another tab bootstrap', learnedRoutes());
   return other;
