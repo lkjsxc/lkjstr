@@ -3,7 +3,8 @@
 ## Purpose
 
 Current limits: [parity.md](parity.md); network evidence: [engine-performance.md](engine-performance.md). Claude owns the interface.
-[Account proofs](engine-account-verification.md) pass gates. [Cache bootstrap](cache-bootstrap.md) passes native proofs; browser/merged gates are pending.
+[Account proofs](engine-account-verification.md) pass gates. Cache and read-plan work remains in progress;
+see [bootstrap](cache-bootstrap.md) and [Q1 evidence](engine-q1-progress.md).
 
 ## Specified keys and messages (2026-11-16)
 
@@ -11,8 +12,7 @@ Protocol 8 implements Claude's K1-K4, M1-M6 and D1 specifications with the exist
 private messages, one-to-one/group text, inbox settings and encrypted draft/failed-send recovery are reachable. Private bodies never enter public row
 caches or ordinary layout storage. Lock coordinates registered editors across clients before revoking plaintext; an unresponsive or expired unresolved
 editor prevents lock. The durable archive, signer and editor bounds are documented in [dm-drafts.md](dm-drafts.md), [dm-signers.md](dm-signers.md) and
-[dm-editor-locks.md](dm-editor-locks.md). No group-subject/file/reaction/delete surface was added. Strict per-page unlocking remains a recorded K2
-difference.
+[dm-editor-locks.md](dm-editor-locks.md). No group-subject/file/reaction/delete surface was added. Strict per-page unlocking remains a recorded K2 difference.
 
 The 468 required width/theme/language captures were generated and reviewed. Fresh real-Worker UI checks passed 13 key and 16 message assertions,
 including stable inbox discovery across relay-slot rotation. All seven required gates passed; evidence and limits are in

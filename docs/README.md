@@ -31,6 +31,10 @@ Engine (`crates/`):
 - [status.md](status.md): what works, what does not, next steps in order.
 - [outbox.md](outbox.md): read cursors, durable quality, focus, weights and purposes.
 - [cover.md](cover.md): hydration traffic, duplicate resumption, public medians and gaps.
+- [engine-q1-progress.md](engine-q1-progress.md): exact sharing, finite page correctness and read-plan evidence.
+- [engine-q1-frontier.md](engine-q1-frontier.md): independent logical quotas in shared finite requests.
+- [engine-filter-identity.md](engine-filter-identity.md): canonical selector identity and preserved ownership.
+- [engine-read-scorecard.md](engine-read-scorecard.md): deterministic device-wide wants and protocol-cost measurements.
 - [orchestration.md](orchestration.md): publication routing, freshness, weights and limits.
 - [architecture.md](architecture.md): crates, runtime, orchestration, storage.
 - [cache-bootstrap.md](cache-bootstrap.md): verified public restore, metadata checkpoints, bounds and proof.
