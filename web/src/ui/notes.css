@@ -113,3 +113,12 @@
 .lcdesc[hidden] { display: none; }
 .content.folded > .link-card { font-size: 13.5px; line-height: 1.4; display: none; }
 @container (max-width: 439px) { .lcpicture { flex-basis: 88px; width: 88px; } }
+
+/* A1/A2 display existing act chips without a count or action. */
+.act-chip { flex: none; white-space: nowrap; }
+.act-repost { display: inline-flex; align-items: center; color: var(--muted); }
+.act-repost > .i { width: 16px; height: 16px; }
+.ctx .act-repost > .i { width: 16px; height: 16px; }
+.act-context > .act-phrase { display: flex; flex: 0 1 auto; overflow: visible; }
+.act-phrase > span { flex: none; white-space: pre; }
+.act-context .name { display: block; flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

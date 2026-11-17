@@ -2,6 +2,7 @@
 import type { Query, Row } from '../protocol.ts';
 import { stranger } from './accounts.ts';
 import { channelHeader, channelList, channelOf } from './channels.ts';
+import { profileAct } from './fixtures-acts.ts';
 import { finite, notifications } from './lists.ts';
 import { byPubkey, byRef, FOLLOWERS, PEOPLE, type Person } from './people.ts';
 import { noteRow, pendingProfile, personRow, profileRow, type RowOpts } from './rows.ts';
@@ -29,7 +30,8 @@ const named = (p: Person, typed: string): boolean => {
 };
 /** A profile's list by kind. Who reacted to what is not part of the mock world: the reader's own reactions are
  * real, another person's are a fixed made-up slice. */
-function ofProfile(q: Query, n: MNote, who: string | undefined, me: string): boolean {
+function ofProfile(w: World, q: Query, n: MNote, who: string | undefined, me: string): boolean {
+  if (profileAct(w, q, n)) return true;
   const pk = n.by.author.pubkey;
   if (q.show === 'reposts') return n.reposts.some((r) => r.by.author.pubkey === who);
   if (q.show === 'reactions')
@@ -49,8 +51,9 @@ export function matches(w: World, q: Query, n: MNote, me: string): boolean {
   if (Boolean(n.channel) !== (q.source === 'channel') && q.source !== 'bookmarks') return false;
   if (w.isMuted(n) && q.source !== 'profile') return false;
   if (q.authors?.length && !q.authors.includes(pk)) return false;
-  if (q.since !== undefined && n.at < q.since) return false;
-  if (q.until !== undefined && n.at > q.until) return false;
+  const at = profileAct(w, q, n)?.at ?? n.at;
+  if (q.since !== undefined && at < q.since) return false;
+  if (q.until !== undefined && at > q.until) return false;
   if (q.media === 'only' && !n.media.length) return false;
   if (q.media === 'none' && n.media.length) return false;
   if (q.replies === false && n.re) return false;
@@ -90,7 +93,7 @@ export function matches(w: World, q: Query, n: MNote, me: string): boolean {
     case 'relay':
       return true;
     case 'profile':
-      return ofProfile(q, n, q.pubkey ?? byRef(q.ref ?? '')?.author.pubkey, me);
+      return ofProfile(w, q, n, q.pubkey ?? byRef(q.ref ?? '')?.author.pubkey, me);
     case 'hashtag':
       return n.segments.some(
         (s) => s.k === 'hashtag' && s.tag.toLowerCase() === q.tag?.toLowerCase(),
@@ -186,11 +189,12 @@ export function select(w: World, q: Query, me: string): Entry[] {
     return people.map((p) => ({ key: p.author.pubkey, row: () => personRow(w, p, me) }));
   }
   const opts: RowOpts = { me, reposts: q.reposts };
-  const time = (n: MNote): number => (q.reposts === false ? n.at : (n.reposts[0]?.at ?? n.at));
+  const time = (n: MNote): number =>
+    profileAct(w, q, n)?.at ?? (q.reposts === false ? n.at : (n.reposts[0]?.at ?? n.at));
   const kept = w.notes
     .filter((n) => matches(w, q, n, me))
     .sort((a, b) => time(b) - time(a) || b.id.localeCompare(a.id));
-  const notes = kept.map((n) => entry(w, n, opts));
+  const notes = kept.map((n) => entry(w, n, { ...opts, activity: profileAct(w, q, n) }));
   if (
     q.notifications &&
     me &&

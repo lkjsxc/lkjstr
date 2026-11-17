@@ -1,19 +1,16 @@
 // The rows that are not notes: a profile's header, a person in a list, a notification.
-import type { NotificationRow, PersonRow, ProfileRow } from '../engine/protocol.ts';
-import { countText, dayOf, fullTime, noteTime } from '../shared/format.ts';
+import type { PersonRow, ProfileRow } from '../engine/protocol.ts';
+import { countText, dayOf } from '../shared/format.ts';
 import { h } from '../shared/h.ts';
 import { getLang, type Key, t } from '../shared/i18n.ts';
 import { icon } from '../shared/icons.ts';
-import { reactionLabel } from '../shared/reactions.ts';
 import { openMenu } from '../wm/menus.ts';
 import { ability, abilityText } from './can.ts';
-import { renderNote } from './note.ts';
 import { act } from './note-actions.ts';
 import {
   avatar,
   copy,
   displayName,
-  emojiImg,
   faceButton,
   how,
   nameButton,
@@ -189,74 +186,4 @@ export function renderPerson(row: PersonRow, env: ViewEnv): HTMLElement {
   return el;
 }
 
-/** "A and B reacted to your note": each person opens their profile; a press anywhere else opens what the news
- * is about, as on a note. */
-export function renderNotification(row: NotificationRow, env: ViewEnv): HTMLElement {
-  if (row.note && (row.type === 'mention' || row.type === 'reply')) {
-    const el = renderNote(row.note, env);
-    if (row.unread) el.classList.add('unread');
-    return el;
-  }
-  const names = row.actors
-    .slice(0, 2)
-    .flatMap((a, i) => [i ? t('list.sep') : '', nameButton(a, env)]);
-  const rest = row.others + Math.max(0, row.actors.length - 2);
-  const mark =
-    row.type === 'reaction' && row.emoji
-      ? row.emoji.url && row.emoji.emoji.startsWith(':')
-        ? emojiImg(row.emoji.emoji, row.emoji.url)
-        : reactionLabel(row.emoji.emoji)
-      : icon(row.type === 'repost' ? 'repost' : row.type === 'zap' ? 'zap' : 'user');
-  const target = row.target;
-  const first = row.actors[0];
-  const go = (e: MouseEvent): void => {
-    if (String(getSelection())) return; // selecting text is not a press
-    if (target) env.open('thread', { id: target.id }, how(e));
-    else if (first) env.open('profile', { pubkey: first.pubkey, title: plainName(first) }, how(e));
-  };
-  const plain = (e: Event): boolean => !(e.target as Element).closest('button, a');
-  const el = h(
-    'div',
-    { class: row.unread ? 'notif unread' : 'notif' },
-    h('span', { class: `nmark k-${row.type}` }, mark),
-    h(
-      'div',
-      { class: 'nmain' },
-      h(
-        'div',
-        { class: 'nfaces' },
-        row.actors.slice(0, 6).map((a) => faceButton(a, env, 'av sm')),
-        h(
-          'time',
-          { title: fullTime(row.at) },
-          noteTime(row.at, Date.now(), {
-            relative: env.settings.get().relativeTime,
-            lang: getLang(),
-          }),
-        ),
-      ),
-      h(
-        'div',
-        null,
-        names,
-        rest ? t('ctx.others', { n: rest }) : '',
-        t(`notif.${row.type}` as Key, { sats: row.sats ?? 0 }),
-      ),
-      row.comment ? h('div', { class: 'text' }, row.comment) : null,
-      target
-        ? h(
-            'button',
-            {
-              class: 'excerpt muted clip',
-              onclick: (e) => env.open('thread', { id: target.id }, how(e as MouseEvent)),
-            },
-            target.excerpt,
-          )
-        : null,
-    ),
-  );
-  el.addEventListener('click', (e) => void (plain(e) && go(e)));
-  el.addEventListener('mousedown', (e) => void (e.button === 1 && plain(e) && e.preventDefault()));
-  el.addEventListener('auxclick', (e) => void (e.button === 1 && plain(e) && go(e)));
-  return el;
-}
+export { renderNotification } from './notification.ts';

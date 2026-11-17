@@ -3,6 +3,7 @@
 import { groupReactions } from '../../shared/reactions.ts';
 import type { Author, NoteRow, PersonRow, ProfileRow, Quote, Reaction } from '../protocol.ts';
 import { banner } from './art.ts';
+import type { ProfileAct } from './fixtures-acts.ts';
 import { previewFixtures } from './fixtures-previews.ts';
 import { EMOJI, FOLLOWERS, type Person, SELF } from './people.ts';
 import type { MNote, World } from './world.ts';
@@ -39,6 +40,7 @@ export type RowOpts = {
   /** The reader's account. */
   me: string;
   reposts?: boolean;
+  activity?: ProfileAct;
   /** In a thread the parent is in view: no reply context line. */
   thread?: NoteRow['thread'];
 };
@@ -53,7 +55,9 @@ export function noteRow(w: World, n: MNote, o: RowOpts): NoteRow {
     id: n.id,
     bech32: `note1${n.id.slice(0, 58)}`,
     author: n.by.author,
-    at: n.at,
+    at: o.activity?.at ?? n.at,
+    act: o.activity?.act,
+    actOn: o.activity?.actOn,
     segments: n.segments,
     media: n.media,
     quotes: n.quote ? [quoteOf(w, n.quote)] : [],
@@ -61,13 +65,16 @@ export function noteRow(w: World, n: MNote, o: RowOpts): NoteRow {
       parent && !o.thread
         ? { id: parent.id, author: parent.by.author, excerpt: firstLine(parent.text) }
         : undefined,
-    repostedBy: shown.length
-      ? {
-          actors: shown.slice(0, 2).map((r) => r.by.author),
-          others: Math.max(0, shown.length - 2),
-          at: shown[0]?.at ?? n.at,
-        }
-      : undefined,
+    repostedBy:
+      o.activity?.act?.type === 'repost'
+        ? { actors: [o.activity.act.actor], others: 0, at: o.activity.at }
+        : shown.length
+          ? {
+              actors: shown.slice(0, 2).map((r) => r.by.author),
+              others: Math.max(0, shown.length - 2),
+              at: shown[0]?.at ?? n.at,
+            }
+          : undefined,
     cw: n.cw,
     counts: {
       replies: w.repliesTo(n.id).length,

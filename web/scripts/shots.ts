@@ -6,6 +6,7 @@ import { spawn } from 'node:child_process';
 import { mkdirSync } from 'node:fs';
 import { type Browser, chromium, type Page } from 'playwright-core';
 import { createAccountFailureShots } from './shots-account-failure.ts';
+import { actsShots } from './shots-acts.ts';
 import { dmShots } from './shots-dm.ts';
 import { keysShots } from './shots-keys.ts';
 import { looksShots } from './shots-looks.ts';
@@ -107,6 +108,7 @@ try {
             if ((name === 'tabsearch' || name.startsWith('looks-')) && lang === 'en')
               await page.screenshot({ path: `${out}/${name}-${width}-${theme}.png` });
           } catch (e) {
+            if (process.env.LKJSTR_SHOTS_DEBUG) console.error(e);
             failed.push(`${name}-${tag}: ${String(e).split('\n')[0]}`);
           }
           await ctx.close();
@@ -117,7 +119,7 @@ try {
           await page.keyboard.type(word);
           // View choices precede Docs pages that can share their title (Relays).
           await page.locator('.ncard > b').getByText(word, { exact: true }).first().click();
-          await page.waitForSelector(`.view[data-kind="${kind}"] > *`);
+          await page.waitForSelector(`.view[data-kind="${kind}"]:visible > *:visible`);
         };
         if (theme === 'dark' && (width === 1440 || width === 390))
           for (const id of ['about', 'features', 'guide'])
@@ -129,6 +131,11 @@ try {
         await keysShots(scene, launch(lang === 'ja' ? 'アカウント' : 'Accounts', 'account'), lang);
         await dmShots(scene, launch(lang === 'ja' ? '設定' : 'Settings', 'settings'), lang);
         await accountFailureShots.run(scene, lang, tag);
+        await actsShots(
+          scene,
+          launch(lang === 'ja' ? '通知' : 'Notifications', 'notifications'),
+          lang,
+        );
         for (const [name, url] of [
           ['news', 'https://news.example/picture'],
           ['plain', 'https://news.example/article'],

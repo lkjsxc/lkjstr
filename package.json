@@ -17,7 +17,8 @@
     "engine:check": "sh scripts/engine-check.sh",
     "engine:package": "sh scripts/engine-package.sh",
     "real:hour": "pnpm --dir web build:real && node scripts/real-hour.mjs",
-    "accounts:check": "node scripts/engine-accounts-check.mjs"
+    "accounts:check": "node scripts/engine-accounts-check.mjs",
+    "acts:check": "node scripts/engine-acts-harness.mjs"
   },
   "devDependencies": {
     "playwright-core": "1.65.0",

@@ -85,6 +85,7 @@ Engine (`crates/`):
 - [interface-keys.md](interface-keys.md): password-protected keys: sign-in, lock, backup, protection.
 - [interface-dm.md](interface-dm.md): private messages: list, conversation, writing, inbox relays.
 - [interface-acts.md](interface-acts.md): reactions and reposts of reactions and reposts.
+- [engine-acts.md](engine-acts.md): bounded act chains, ownership, profile selection and verification.
 - [read-plan.md](read-plan.md): one plan for everything the tabs want, with weights made from the past.
 
 - [relay-auth.md](relay-auth.md): scoped relay authentication and async identity races.

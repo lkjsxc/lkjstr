@@ -6,6 +6,7 @@ import { type Child, h } from '../shared/h.ts';
 import { getLang, t } from '../shared/i18n.ts';
 import { icon } from '../shared/icons.ts';
 import { readNoteState, writeNoteState } from '../shared/note-state.ts';
+import { patchActContext } from './act-context.ts';
 import { linkCards } from './link-cards.ts';
 import { actionRow, reactionChips } from './note-actions.ts';
 import { stableNoteWidths } from './note-fit-geometry.ts';
@@ -109,7 +110,7 @@ export function renderNote(row: NoteRow, env: ViewEnv, dated = false): HTMLEleme
     env.open('thread', { id: row.id, title: plainName(row.author) }, how(e));
   };
   const context: Child[] = [];
-  if (row.repostedBy) {
+  if (row.repostedBy && !(row.act && row.actOn)) {
     const { actors, others } = row.repostedBy;
     const names = actors.flatMap((a, i) => [
       i ? t('list.sep') : '',
@@ -210,6 +211,7 @@ export function renderNote(row: NoteRow, env: ViewEnv, dated = false): HTMLEleme
       ),
     ),
   );
+  patchActContext(el, row, env);
   drawnBy.set(el, JSON.stringify(row.author));
   const plain = (e: Event): boolean =>
     !(e.target as Element).closest('button, a, input, textarea, video, audio, .quote');
@@ -223,12 +225,23 @@ export function renderNote(row: NoteRow, env: ViewEnv, dated = false): HTMLEleme
 /** The body of a note without what changes all the time (counts, reactions, the reader's own marks) and without
  * its author, whose name and picture arrive after the note does. */
 export const bodySig = (row: NoteRow): string =>
-  JSON.stringify({ ...row, author: 0, pending: 0, counts: 0, reactions: 0, mine: 0 });
+  JSON.stringify({
+    ...row,
+    author: 0,
+    pending: 0,
+    counts: 0,
+    reactions: 0,
+    mine: 0,
+    act: !!row.act,
+    actOn: !!row.actOn,
+    repostedBy: row.act && row.actOn ? 0 : row.repostedBy,
+  });
 /** Redraws only the author's line and face, the chips and the action row of a drawn note: the text stays as the
  * reader left it (unfolded, uncovered), pictures are not loaded again and nothing moves under the pointer. */
 export function patchNote(el: HTMLElement, row: NoteRow, env: ViewEnv, dated = false): void {
   const main = el.querySelector(':scope > .nrow > .nmain');
   if (!main) return;
+  patchActContext(el, row, env);
   el.classList.toggle('pending', row.pending === true);
   const was = main.querySelector<HTMLElement>(':scope > .nhead');
   const name = was?.querySelector('.name');

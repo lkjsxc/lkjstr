@@ -1,6 +1,7 @@
 // The finite lists of the mock world: notifications, relays, mutes, media servers, custom emoji, diagnostics.
 import type { NotificationRow, Query, Row } from '../protocol.ts';
 import { PROTOCOL_VERSION } from '../protocol.ts';
+import { actNotifications } from './fixtures-acts.ts';
 import { byHandle, byPubkey, EMOJI } from './people.ts';
 import { relays } from './relays.ts';
 import { ME, noteRow } from './rows.ts';
@@ -21,6 +22,7 @@ export function notifications(w: World, q: Query): NotificationRow[] {
   };
   const at = (min: number): number => w.base - min * MIN;
   const rows: Omit<NotificationRow, 'kind' | 'key'>[] = [
+    ...actNotifications(w, q.account ?? ME),
     {
       type: 'reaction',
       actors: [a('aoi'), a('kenji'), a('sakura')],
