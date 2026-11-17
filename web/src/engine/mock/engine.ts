@@ -187,11 +187,18 @@ export function createMockEngine(post: (msg: FromEngine) => void, now = Date.now
         s.windowed = true;
         s.ops = [];
         if (s.live && s.fresh) (s.fresh = 0), post({ t: 'fresh', sub: s.id, count: 0 });
+        const window = s.entries.slice(s.start, s.end);
+        if (
+          (s.query.source === 'profile' || s.query.source === 'channel') &&
+          s.start > 0 &&
+          s.entries[0]
+        )
+          window.unshift(s.entries[0]);
         post({
           t: 'rows',
           sub: s.id,
-          rows: s.entries.slice(s.start, s.end).map((e) => e.row()),
-          atTop: s.start === 0,
+          rows: window.map((e) => e.row()),
+          atTop: s.start <= (s.query.source === 'profile' || s.query.source === 'channel' ? 1 : 0),
           atBottom: s.end === s.entries.length,
         });
         core.timelines();

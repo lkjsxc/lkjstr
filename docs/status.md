@@ -3,8 +3,8 @@
 ## Purpose
 
 Current limits: [parity.md](parity.md); network evidence: [engine-performance.md](engine-performance.md). Claude owns the interface.
-[Account proofs](engine-account-verification.md) pass gates. Cache and read-plan work remains in progress;
-see [bootstrap](cache-bootstrap.md) and [Q1 evidence](engine-q1-progress.md).
+[Account proofs](engine-account-verification.md) pass gates; windowed profile/channel headers stay put while scrolling.
+Read plans, cache and real-Worker browser proof remain unfinished: see [bootstrap](cache-bootstrap.md) and [Q1 evidence](engine-q1-progress.md).
 
 ## Specified keys and messages (2026-11-16)
 

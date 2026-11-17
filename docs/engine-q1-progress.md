@@ -114,7 +114,25 @@ native/WASM Clippy and the complete workspace tests. Two older wire fixtures ass
 was a row; both fail unchanged on the baseline after cache-policy messages were added. They now select
 the actual `feed` row output and preserve every content assertion.
 
-The browser reservation guard found another acts proof running at 02:59 UTC, so the frontend smoke
-gate did not start. Its pending state is separate from the six passing gates. No public comparison,
-primary integration or ship is claimed by this foundation. Other roots' live-union and cache work
-was not part of this isolated build and still needs a combined proof.
+The browser reservation guard found another acts proof running at 02:59 UTC. A later single mock
+smoke attempt reached a profile, then failed because a second note-anchored window discarded the
+structural profile header. No public comparison, primary integration or ship is claimed. Other
+roots' live-union and cache work still needs a combined proof.
+
+## Windowed structural headers (2026-11-17)
+
+Native profile and channel projections now retain their structural header outside the currently
+selected note window. Neither a deep anchor nor a zero-note window removes the navigation row;
+the note range is unchanged. Top/fresh markers no longer count the pinned header as an unseen note.
+The mock mirrors pinned headers on windows and updates while scrolled. This is a correctness and
+first-paint smoke repair, not a Q1 scorecard or real-relay performance improvement.
+
+Two native and two mock structural-header regressions pass. The frontend suite passes 463/463
+across 86 files; check and build pass. Eighteen preexisting frontend lint findings across thirteen
+files required mechanical formatting/lint corrections, each reviewed for unchanged behavior.
+The full mock browser smoke passed 420/420 checks with zero failures under the shared harness lock.
+It includes profile/Their Home navigation and reload at desktop/phone widths, the held cached
+Home head and new-post reveal, scrolled position, and immediate own-channel-message display.
+Channel messages are exempt from the initial head hold, consistent with the channel desk's
+existing live-message behavior. These are mock results, not a production Worker/public-relay
+first-paint or Q1 scorecard result. The combined real-Worker proof and ship are pending.

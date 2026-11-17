@@ -356,12 +356,20 @@ async function run(browser: Browser): Promise<void> {
   );
   const view = ja.locator('.view[data-kind="home"]');
   const firstKey = await view.locator('.note').first().getAttribute('data-key');
+  // A cached first screen holds its head until the reader asks for new posts.
+  await ja.locator('.view[data-kind="home"] .fresh:visible').waitFor({ timeout: 20000 });
+  fact(
+    'at the top new notes leave the cached head in place',
+    (await view.locator('.note').first().getAttribute('data-key')) === firstKey &&
+      (await view.evaluate((e) => e.scrollTop)) === 0,
+  );
+  await ja.locator('.view[data-kind="home"] .fresh').click();
   await ja.waitForFunction(
     (k) => document.querySelector('.view[data-kind="home"] .note')?.getAttribute('data-key') !== k,
     firstKey,
     { timeout: 15000 },
   );
-  fact('at the top new notes flow in', (await view.evaluate((e) => e.scrollTop)) === 0);
+  fact('fresh control reveals the new head', (await view.evaluate((e) => e.scrollTop)) === 0);
   await view.hover();
   await ja.mouse.wheel(0, 900);
   await ja.waitForTimeout(300);
@@ -382,9 +390,10 @@ async function run(browser: Browser): Promise<void> {
     [held, after],
   );
   await ja.locator('.view[data-kind="home"] .fresh').click();
-  await ja.waitForFunction(() =>
-    document.querySelector('.view[data-kind="home"] .fresh')?.hasAttribute('hidden'),
-  );
+  await ja.waitForFunction(() => {
+    const el = document.querySelector<HTMLElement>('.view[data-kind="home"]');
+    return el?.scrollTop === 0 && el.querySelector('.fresh')?.hasAttribute('hidden');
+  });
   fact('the pill returns to the top', (await view.evaluate((e) => e.scrollTop)) === 0);
   await ja.context().close();
 

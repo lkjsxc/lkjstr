@@ -187,7 +187,8 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
           keeper.forget();
         title();
         const head = rows.find((row) => row.kind === 'note' || row.kind === 'notification');
-        if (live && head && kind !== 'thread') {
+        // Channel messages (including one's own sends) flow in while the channel is open.
+        if (live && head && kind !== 'thread' && kind !== 'channel') {
           headHeld = true;
           live = false;
           request({ key: head.key }, 0, Math.max(PAGE, rows.length));

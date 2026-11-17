@@ -5,6 +5,11 @@ export async function wishNotifications({ page, real, events, width, fact, engin
     .locator(`${view('notifications')} .list > *`)
     .first()
     .waitFor();
+  // The mock can fit all eight grouped rows on a tall desktop. This check
+  // exercises scroll retention, so make overflow an explicit test precondition.
+  await page.locator(view('notifications')).evaluate((el) => {
+    if (el.scrollHeight <= el.clientHeight + 40) el.style.maxBlockSize = '560px';
+  });
   await page.waitForFunction((selector) => {
     const el = document.querySelector(selector.replace(':visible', ''));
     return (
