@@ -38,8 +38,8 @@ what the engine offers and no surface reaches yet.
 | M5 | Signers that ask | [interface-dm.md](interface-dm.md#m5-signers-that-ask) | built |
 | M6 | New-message mark on the account | [interface-dm.md](interface-dm.md#m6-new-message-mark) | built |
 | D1 | Docs pages for both | [interface-dm.md](interface-dm.md#d1-docs-pages) | built |
-| A1 | Notification about the reader's reaction or repost | [interface-acts.md](interface-acts.md#a1-notification-about-the-readers-reaction-or-repost) | ready |
-| A2 | A person's reaction or repost of an act, in their profile | [interface-acts.md](interface-acts.md#a2-a-persons-reaction-or-repost-of-an-act-in-their-profile) | ready |
+| A1 | Notification about the reader's reaction or repost | [interface-acts.md](interface-acts.md#a1-notification-about-the-readers-reaction-or-repost) | built |
+| A2 | A person's reaction or repost of an act, in their profile | [interface-acts.md](interface-acts.md#a2-a-persons-reaction-or-repost-of-an-act-in-their-profile) | built |
 | Q1 | Tabs state wants; the engine makes one plan | [read-plan.md](read-plan.md#q1-tabs-state-wants-the-engine-makes-one-plan) | ready |
 | Q2 | Ask where the answer is | [read-plan.md](read-plan.md#q2-ask-where-the-answer-is) | ready |
 | Q3 | Weights made from the past | [read-plan.md](read-plan.md#q3-weights-made-from-the-past) | ready |

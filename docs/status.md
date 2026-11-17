@@ -3,7 +3,8 @@
 ## Purpose
 
 Current behavior and limits: [parity.md](parity.md) audits source; [engine-performance.md](engine-performance.md) records network evidence.
-Claude owns the interface. A1/A2 and Q1-Q5 are specified; Q1 and its scorecard come first, with A1/A2 in parallel.
+Claude owns the interface. A1/A2 are implemented as protocol 14 on the account-safe baseline; Q1-Q5 remain specified.
+Q1's integrated cache/read candidate is measured but not shipped: the cold and daily Q5 scorecard rejects it.
 
 ## Specified keys and messages (2026-11-16)
 

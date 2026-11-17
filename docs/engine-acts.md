@@ -21,7 +21,7 @@ receives finished additive display models.
   The ownership decision applies to rows, unread totals and read-watermark ties.
 - Reactions, reposts and trusted zap notifications retain their newest type and
   immediate-target grouping. The displayed excerpt and navigation use the final
-  note. Failed, missing and pending lookups reuse the existing quote states.
+  note. Pending, failed and missing lookups retain distinct terminal states; missing uses the reviewed `act.note.missing` word.
 - An act on an act contributes only to the immediate target's counters, reaction
   chips and own-action marks. Ancestor `e` tags are still reference indexes; they
   do not increase a terminal note's action counts or repost attribution. Undoing
@@ -56,7 +56,7 @@ by the retained source slice; visible hydration retains the existing window,
 120-id lookup and 6000-author limits. No long-lived act graph or timer is added.
 Only the next missing link of an admitted chain is requested.
 
-Protocol 13 adds `ActRef`, `NotificationRow.target.act`, `pendingAct`,
+Protocol 14 adds `ActRef`, `NotificationRow.target.act`, `pendingAct`,
 `NoteRow.act` and `actOn`; absent fields preserve older render behavior. The
 proposal is in [engine-proposals.md](engine-proposals.md). Exact-id absence is
 accepted only after every candidate request ended successfully and below its
@@ -95,3 +95,32 @@ visible child instead of its hidden time marker; notification scenes close the
 preset tab before installing a fresh filtered subscription. Existing external
 sheets from another draft were preserved. Current-main integration, full browser
 gates and final sheet assembly are recorded by the subsequent verification step.
+
+## Account-safe main integration (2026-11-17)
+
+The act-only release branch starts from account-safe origin/main `656c1c44`;
+it contains neither the unshipped Q1 cache/read experiment nor any new A1
+word. Its missing-note state now uses Claude's subsequent `act.note.missing`
+key. Protocol 14 is shared by Rust and TypeScript.
+
+All four quiet gates pass with four Cargo build jobs/test threads. Frontend
+check/build and all 462 unit tests pass. The stable mock browser ran 418
+checks, and the real production-Worker browser ran 548 checks with zero
+page errors. Dedicated fixture proof passed 14/14; the signed, local,
+read-only relay/Worker proof passed 32/32, with no signer/publication attempt
+or unexpected HTTP request. Its 8,336,018-byte WASM SHA-256 is
+`e573aeaeb9e1ee2a7cb570f4782065e55eadd534f059651485870cba1dec249a`.
+Reports are `tmp/smoke-mock-report.json`, `tmp/smoke-real/report.json`
+and `tmp/acts-worker-release-20261117/report.json`.
+
+Five specified A1/A2 scenes were recaptured in Japanese at 1440 dark and
+390 light. The current `/home/coder/workspace/lkjstr-review/A1-20261117.jpg`
+is 1996x1559, SHA-256
+`ea13e389d7dbd18efd866e346c7fabc7a61c6f1853cfbe3caa74876fcb5761eb`.
+The judged prior wording was retained as `A1-20261117-reviewed-before-word.jpg`;
+the required `K1-20261117.jpg` also remains. The 12-variant original matrix
+remains under the earlier ignored fixture path. A long mock smoke was rerun
+against an unchanged build after the first run overlapped a real-build
+replacement; the stable run passed. The first browser launch needed a short
+`TMPDIR=/tmp` to avoid Chromium's Unix-socket path limit. No public-relay
+benchmark or live deployment is claimed by these gates.

@@ -57,7 +57,7 @@ export async function actsShots(
             ? 'act.note.pending'
             : name === 'notif-act-failed'
               ? 'quote.error'
-              : 'quote.missing';
+              : 'act.note.missing';
         assert.ok(text.includes(words[key]));
       }
       await row.scrollIntoViewIfNeeded();
