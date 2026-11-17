@@ -232,7 +232,7 @@ fn counts_filter(f: &NostrFilter) -> bool {
     f.tags.contains_key("e")
         && matches!(
             f.kinds.as_deref(),
-            Some([1, 6, 7, 9735] | [42, 16, 7, 9735] | [1, 42, 6, 16, 7, 9735])
+            Some([1, 6, 7, 9735] | [7, 16, 42, 9735] | [1, 6, 7, 16, 42, 9735])
         )
 }
 

@@ -1,25 +1,14 @@
 //! Canonical logical identity and local immutable-ID gaps. No routing decisions in callers.
 use super::{NostrFilter, Query, Source};
 use crate::store::Store;
-fn set<T: Ord>(values: &mut Option<Vec<T>>) {
-    if let Some(values) = values {
-        values.sort();
-        values.dedup();
-    }
-}
-pub(in crate::engine) fn key(filter: &NostrFilter) -> String {
-    let mut canonical = filter.clone();
-    set(&mut canonical.ids);
-    set(&mut canonical.authors);
-    set(&mut canonical.kinds);
-    for values in canonical.tags.values_mut() {
-        values.sort();
-        values.dedup();
-    }
-    lkjstr_protocol::filter_to_value(&canonical).to_string()
+pub(crate) fn key(filter: &NostrFilter) -> String {
+    lkjstr_protocol::filter_to_value(&crate::engine::filter_identity::canonical(filter.clone()))
+        .to_string()
 }
 pub(in crate::engine) fn same(a: &NostrFilter, b: &NostrFilter) -> bool {
-    a == b || key(a) == key(b)
+    a == b
+        || crate::engine::filter_identity::canonical(a.clone())
+            == crate::engine::filter_identity::canonical(b.clone())
 }
 pub(super) fn gaps(
     wants: Vec<(String, NostrFilter, Query)>,
@@ -47,7 +36,11 @@ pub(super) fn gaps(
                     return None;
                 }
             }
-            Some((sub, filter, query))
+            Some((
+                sub,
+                crate::engine::filter_identity::canonical(filter),
+                query,
+            ))
         })
         .collect()
 }

@@ -32,11 +32,7 @@ pub(super) fn allowed(
                             | Source::Hashtag
                             | Source::Relay
                             | Source::Channel
-                    ) && !q.account.as_ref().is_some_and(|account| {
-                        private
-                            .keys()
-                            .any(|id| store.get(id).is_some_and(|event| &event.pubkey == account))
-                    })
+                    ) && crate::engine::public_reads::allowed(store, private, q)
                 })
         })
 }

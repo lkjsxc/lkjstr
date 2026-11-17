@@ -3,10 +3,11 @@
 use super::*;
 impl Network {
     pub fn page_finished(&self, filter: &lkjstr_protocol::NostrFilter) -> bool {
+        let filter = crate::engine::filter_identity::canonical(filter.clone());
         let requests: Vec<_> = self
             .requests
             .values()
-            .filter(|r| want_key::same(&r.page_filter, filter))
+            .filter(|r| r.page_filter == filter)
             .collect();
         // An unfinished route remains unknown, but must not veto successful
         // history forever after a refusal or its original page deadline.

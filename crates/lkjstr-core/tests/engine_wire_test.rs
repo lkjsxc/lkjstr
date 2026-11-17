@@ -48,7 +48,11 @@ fn frontend_contract_flat_filters_millis_anchor_and_finished_rows() {
         .into_iter()
         .flat_map(|o| s.output(o, &e))
         .collect::<Vec<_>>();
-    let value = serde_json::to_value(&output[0]).expect("output");
+    let rows = output
+        .iter()
+        .find(|output| matches!(output, Output::Rows { sub, .. } if sub == "feed"))
+        .expect("feed rows");
+    let value = serde_json::to_value(rows).expect("output");
     assert_eq!(value["t"], "rows");
     let row = &value["rows"][0];
     assert_eq!(row["kind"], "note");

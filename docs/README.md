@@ -104,3 +104,6 @@ Engine (`crates/`):
 - [engine-live-route.md](engine-live-route.md): productive live recovery, bounded slot ownership and verification evidence.
 
 - [Historical measurement witnesses](engine-performance-history.md): bounded selection; ninth public DOM positives and receipt limits are recorded separately.
+
+- [Exact relay filter identity](engine-filter-identity.md): canonical logical read identity.
+- [Logical page frontiers](engine-q1-frontier.md): independent quotas inside shared envelopes.

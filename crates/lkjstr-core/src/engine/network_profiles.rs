@@ -23,8 +23,8 @@ pub(super) fn family(f: &NostrFilter, members: &BTreeSet<String>) -> Option<u8> 
     if f.authors.is_none() && f.tags.len() == 1 && f.tags.contains_key("e") {
         return match f.kinds.as_deref() {
             Some([1, 6, 7, 9735]) => Some(2),
-            Some([42, 16, 7, 9735]) => Some(4),
-            Some([1, 42, 6, 16, 7, 9735]) => Some(5),
+            Some([7, 16, 42, 9735]) => Some(4),
+            Some([1, 6, 7, 16, 42, 9735]) => Some(5),
             _ => None,
         };
     }
@@ -143,8 +143,8 @@ impl Network {
                         filter.tags.insert("e".into(), values);
                         filter.kinds = Some(match kind {
                             2 => vec![1, 6, 7, 9735],
-                            4 => vec![42, 16, 7, 9735],
-                            _ => vec![1, 42, 6, 16, 7, 9735],
+                            4 => vec![7, 16, 42, 9735],
+                            _ => vec![1, 6, 7, 16, 42, 9735],
                         });
                     }
                 }

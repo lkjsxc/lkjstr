@@ -171,7 +171,8 @@ impl Network {
                         list_watch,
                         asked: previous.is_some_and(|r| r.asked),
                         ready_at: previous.map_or(ready_at, |r| r.ready_at),
-                        received: previous.map_or_else(BTreeSet::new, |r| r.received.clone()),
+                        received: previous
+                            .map_or_else(PageFrontier::default, |r| r.received.clone()),
                         page_limit: previous.map_or(200, |r| r.page_limit),
                         oldest: previous.and_then(|r| r.oldest),
                         retry_delay: previous.map_or(1000, |r| r.retry_delay),

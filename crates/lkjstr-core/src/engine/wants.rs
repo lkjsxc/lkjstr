@@ -117,6 +117,7 @@ fn requests(
     }
     if q.source == Source::Thread
         && let Some(id) = &q.target
+        && store.get(id).is_none()
     {
         result.push(NostrFilter {
             ids: Some(vec![id.clone()]),

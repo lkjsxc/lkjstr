@@ -15,6 +15,7 @@ pub mod dm;
 mod dm_network;
 mod emoji;
 pub mod feedback;
+mod filter_identity;
 pub mod global;
 mod history;
 mod hydration;

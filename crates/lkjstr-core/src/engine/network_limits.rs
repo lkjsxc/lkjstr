@@ -95,10 +95,11 @@ impl Network {
 
 impl Network {
     pub fn page_exhausted(&self, filter: &lkjstr_protocol::NostrFilter) -> bool {
+        let filter = crate::engine::filter_identity::canonical(filter.clone());
         let requests: Vec<_> = self
             .requests
             .values()
-            .filter(|r| want_key::same(&r.page_filter, filter))
+            .filter(|r| r.page_filter == filter)
             .collect();
         !requests.is_empty()
             && requests
@@ -107,13 +108,10 @@ impl Network {
     }
     /// The shallowest full relay page advances without skipping another relay's tail.
     pub fn page_cursor(&self, filter: &lkjstr_protocol::NostrFilter) -> Option<u64> {
+        let filter = crate::engine::filter_identity::canonical(filter.clone());
         self.requests
             .values()
-            .filter(|r| {
-                want_key::same(&r.page_filter, filter)
-                    && r.page_eose
-                    && r.received.len() >= r.page_limit
-            })
+            .filter(|r| r.page_filter == filter && r.page_eose && r.received.len() >= r.page_limit)
             .filter_map(|r| r.oldest)
             .max()
     }
@@ -225,10 +223,10 @@ fn count_filter_matches(
     filter: &lkjstr_protocol::NostrFilter,
     actual: &lkjstr_protocol::NostrFilter,
 ) -> bool {
-    let mut requested = filter.clone();
+    let mut requested = crate::engine::filter_identity::canonical(filter.clone());
     if matches!(
         requested.kinds.as_deref(),
-        Some([1, 6, 7, 9735] | [42, 16, 7, 9735])
+        Some([1, 6, 7, 9735] | [7, 16, 42, 9735])
     ) && let (Some(ids), Some(batch)) = (requested.tags.get("e"), actual.tags.get("e"))
         && ids.iter().all(|id| batch.contains(id))
     {
