@@ -87,6 +87,15 @@ sample recorded no page errors, HTTP requests outside the fixture, or
 browser publications. Its Home median first screen was 71.7 ms. The
 separate exploratory profile visit waited for the Worker in this run.
 
+The candidate's standard real smoke matched the earlier two-tab search
+failure after 501 checks with no page errors. The focused browser trace
+confirmed both documents were visible and the first had focus. At the failed
+assertion no Search input remained in that document. Bringing it to the front
+did not restore the input or send the exact search request to the relay.
+The wire assertion is retained. Shipment is held pending an explanation.
+See `tmp/evidence/candidate-real-failed.json` and
+`tmp/evidence/real-diagnose.log` in the shipping worktree.
+
 Earlier draft and sandbox observations:
 
 - The retained Chromium mock run passed 420 checks with zero failures;
