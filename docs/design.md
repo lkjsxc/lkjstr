@@ -126,7 +126,7 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
   left; unread is a vermilion bar at the left.
 ## Lists
 - At the top of a feed new notes flow in by themselves, after a reload too. Anywhere else the position holds and a pill
-  counts what is above: scrolling to the top or pressing it shows them. A row selected by the keyboard holds the list too.
+  counts what is above; scrolling to the top or pressing the pill shows them. A row selected by the keyboard holds the list too.
 - The reading position is an anchor note plus offset: it survives reload,
   another tile width, a moved or reopened tab, late media.
 - A thread opens on its focused note at the top of the tile. The notes it

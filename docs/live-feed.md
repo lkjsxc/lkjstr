@@ -70,6 +70,25 @@ window that does not reach the head.
 
 ## Verification (2026-11-18)
 
+In the shipping worktree, the independent warm-return reproduction failed on
+`1d83edbc` and passed with the retained fix `d1f7d918`. The full web check,
+22 focused tests, mock and real builds, and `pnpm verify:quiet` passed.
+The unmodified upstream baseline `b3de286e` passed all 550 real smoke checks
+with no page errors, including the earlier two-tab search assertion.
+
+The signed loopback run passed 42 checks over five warm launches with the
+production Worker. Home followed arrivals both before and after a page
+reload. While scrolled, two arrivals left the same row at the same offset
+with 0 px of movement. Scrolling to the top drew both once, in order, and
+cleared the pill. Pressing the pill and leaving and returning to the tab
+also passed. After a forced disconnect, the fixture delivered the previous
+head again on the new connection and its row still occurred once. The
+sample recorded no page errors, HTTP requests outside the fixture, or
+browser publications. Its Home median first screen was 71.7 ms. The
+separate exploratory profile visit waited for the Worker in this run.
+
+Earlier draft and sandbox observations:
+
 - The retained Chromium mock run passed 420 checks with zero failures;
   `tmp/smoke-mock-report.json` records the totals. Its progress showed the
   head changing automatically, the scrolled anchor holding, and scrolling
@@ -115,3 +134,5 @@ and inspect `FETCH_HEAD`.
 4. After activation, open the live site signed in and observe ordinary relay
    traffic. At the top of Home confirm a new note appears without a press;
    scroll down and confirm that the position holds and the pill counts.
+   Scroll back to the top and confirm the counted notes appear once, in order.
+   Leave the tab and return at the top to confirm it immediately follows again.

@@ -10,6 +10,7 @@ import { chromium } from 'playwright-core';
 import bundle from 'playwright-core/lib/utilsBundle';
 import { fakeRelay } from '../../scripts/browser-relay.mjs';
 import { publicCacheProbe } from './public-cache-probe.mjs';
+import { checkLiveHome } from './smoke-live-home.mjs';
 import { openKeyField } from './smoke-seed.mjs';
 import { bech32 } from './smoke-visitors.mjs';
 
@@ -55,13 +56,19 @@ try {
   const fake = fakeRelay();
   relay = createServer();
   socketServer = new bundle.wsServer({ server: relay });
-  socketServer.on('connection', (socket) =>
+  const delivered = new Map();
+  socketServer.on('connection', (socket) => {
+    const connection = fake.opened() + 1;
     fake.route({
-      send: (text) => socket.send(text),
+      send: (text) => {
+        const [type, , event] = JSON.parse(text);
+        if (type === 'EVENT' && event.kind === 1) delivered.set(event.id, connection);
+        socket.send(text);
+      },
       onMessage: (fn) => socket.on('message', fn),
       onClose: (fn) => socket.on('close', fn),
-    }),
-  );
+    });
+  });
   await new Promise((done) => relay.listen(0, '127.0.0.1', done));
   const relayUrl = `ws://127.0.0.1:${relay.address().port}`;
   server = spawn(
@@ -112,13 +119,21 @@ try {
           tabs: ['global'],
           active: 'global',
         });
-        put('lkjstr:layout:main', { type: 'pane', id: 'main', tabs: ['home'], active: 'home' });
+        put('lkjstr:layout:main', {
+          type: 'pane',
+          id: 'main',
+          tabs: ['settings', 'home'],
+          active: 'home',
+        });
         for (const who of ['', pubkey])
           put(`lkjstr:relays:${who}`, [{ url: relayUrl, read: true, write: false, search: true }]);
       },
       { base, relayUrl, pubkey: fixture.note.pubkey },
     );
     await context.addInitScript(publicCacheProbe, { delayMs });
+    await context.route('**/*', (route) =>
+      route.request().url().startsWith(`${base}/`) ? route.continue() : route.abort(),
+    );
     context.on('request', (request) => {
       if (!request.url().startsWith(base) && report.externalRequests.length < 20)
         report.externalRequests.push(request.url());
@@ -242,6 +257,20 @@ try {
       load: loadavg(),
       probe: await page.evaluate(() => globalThis.__publicCacheProbe),
     });
+    if (run === 4) {
+      stage = 'live Home after warm replay and reload';
+      report.liveHome = await checkLiveHome({
+        page,
+        fake,
+        check,
+        sign,
+        arrival,
+        delivered,
+        disconnect: () => {
+          for (const socket of socketServer.clients) socket.terminate();
+        },
+      });
+    }
     await close();
   }
   check(

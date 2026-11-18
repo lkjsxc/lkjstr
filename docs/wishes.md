@@ -49,6 +49,11 @@ It is offered only below the top: at the top rows arrive by themselves.
 Notification read marking updates unread classes without replacing the row.
 Account unread counts use the same projection.
 
+A busy feed can move a row just as the reader presses Like, Repost or Zap.
+A proposed rule is to hold the list while the pointer rests on a button or
+link within a row, counting arrivals in the pill as with keyboard selection.
+The list would resume following the head when the pointer leaves.
+
 Read marks record the newest known notification timestamp and all ids at that
 timestamp. This avoids losing arrivals within the same second or leaving future
 clock-skewed rows permanently unread. At most 6000 tied ids per device account
