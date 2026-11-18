@@ -169,3 +169,40 @@ it('waits for a hidden tab to come to the front before it follows the head', asy
   expect(f.last()?.anchor).toBe('top');
   expect(f.windows()).toHaveLength(2);
 });
+
+it('resumes automatic head after scrolling a warm snapshot during partial hydration', async () => {
+  const first = feed();
+  first.allow();
+  first.rows([row(2), row(1)]);
+  await vi.advanceTimersByTimeAsync(250);
+  close();
+
+  const f = feed();
+  await vi.advanceTimersByTimeAsync(20);
+  expect(f.drawn()).toEqual([key(2), key(1)]);
+  f.allow();
+  f.rows([row(2)], false);
+  await f.scroll(600);
+  expect(f.windows().map((w) => w.anchor)).toEqual([{ key: key(2) }, { key: key(2) }]);
+
+  // The partial response leaves the warm rows on screen while the reader is scrolled.
+  f.rows([row(2)], false);
+  f.count(2);
+  expect(f.drawn()).toEqual([key(2), key(1)]);
+  expect(f.el.scrollTop).toBe(600);
+  expect(f.pill()?.hidden).toBe(false);
+
+  await f.scroll(0);
+  expect(f.last()?.anchor).toBe('top');
+  expect(f.pill()?.hidden).toBe(true);
+  await f.scroll(0);
+  expect(f.windows()).toHaveLength(3);
+
+  f.rows([row(4), row(3), row(2), row(1)]);
+  f.count(0);
+  f.arrive(row(5), key(4));
+  expect(f.drawn()).toEqual([key(5), key(4), key(3), key(2), key(1)]);
+  expect(f.el.scrollTop).toBe(0);
+  expect(f.pill()?.hidden).toBe(true);
+  expect(f.windows()).toHaveLength(3);
+});

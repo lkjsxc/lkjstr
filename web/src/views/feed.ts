@@ -129,13 +129,13 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
   };
   const follow = (): void => {
     if (env.visible.get()) sub?.reading?.(keeper.get()?.key ?? rows[0]?.key ?? null);
-    if (waiting || rail.busy() || !sub || !env.visible.get()) return;
+    if (rail.busy() || !sub || !env.visible.get()) return;
     if (kind === 'bookmarks' && sstate?.privateLists?.phase === 'loading') return;
-    const top = el.scrollTop;
-    const room = el.scrollHeight - top - el.clientHeight;
-    const { first, last, count } = feedWindow(kind, rows);
     const head = atTop || mode === 'held-head' || (mode === 'top' && above > 0);
-    if (top < 8 && head && !keys.held()) {
+    const followHead = el.scrollTop < 8 && head && !keys.held();
+    if (waiting && !(followHead && mode === 'held-head')) return; // Warm replay can withhold rows.
+    const { first, last, count } = feedWindow(kind, rows);
+    if (followHead) {
       if (mode !== 'top' || above > 0) {
         mode = 'top';
         fresh.show(0);
@@ -143,9 +143,9 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
       }
     } else if (mode === 'top' && first) {
       (mode = 'held-head'), request({ key: first }, 0, Math.max(count, PAGE));
-    } else if (room < NEAR_PX && !atBottom && last) {
+    } else if (el.scrollHeight - el.scrollTop - el.clientHeight < NEAR_PX && !atBottom && last) {
       (mode = 'page'), request({ key: last }, Math.min(count, LIMIT), PAGE);
-    } else if (top < NEAR_PX && !atTop && mode === 'page' && first)
+    } else if (el.scrollTop < NEAR_PX && !atTop && mode === 'page' && first)
       request({ key: first }, PAGE, Math.min(count, LIMIT));
   };
   let frame = 0;

@@ -39,7 +39,9 @@ holds the list around a row and counts what is above it with `fresh`.
 - A replayed public screen is still pinned to its first note by
   `public-snapshots.ts`, so a partial bootstrap cannot interleave with it. The
   first nonzero `fresh` for a reader at the top is the cue to ask for `top`;
-  the replayed rows then follow the arrivals in order.
+  the replayed rows then follow the arrivals in order. If the reader scrolls
+  down and back to the head during partial hydration, the `top` request
+  supersedes the held-head request even while its response is withheld.
 - Notifications that flow in while the browser page is hidden are drawn but
   not marked read until the page is visible again.
 
