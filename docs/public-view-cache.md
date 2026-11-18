@@ -35,8 +35,11 @@ Event verification remains an engine responsibility. A separate 600-picture,
 private media dimensions remain in bounded session memory.
 
 A replay uses the existing cache state and existing rows. The first retained
-note is handed back as a reading anchor, so relay arrivals cannot prepend
-the reader's initial screen. Missing bootstrap rows do not briefly erase a
+note is handed back as a reading anchor, so partial bootstrap rows cannot
+interleave with the reader's initial screen. The engine counts rows above that
+anchor with the existing fresh message. A reader at the top then receives the
+head window without a press; a scrolled reader keeps the pinned window and the
+count. See [live-feed.md](live-feed.md). Missing bootstrap rows do not briefly erase a
 confirmed cached screen. Positive updates replace held values quietly; explicit
 navigation still asks for the requested window. Render-setting changes suspend
 capture on existing subscriptions until they reopen, avoiding ambiguous old

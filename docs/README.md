@@ -17,6 +17,7 @@ Frontend (`web/`):
 - [hosting-needs.md](hosting-needs.md): what the static host must serve.
 - [offline-shell.md](offline-shell.md): verified shell storage, update lifetimes and bounds.
 - [public-view-cache.md](public-view-cache.md): public rendering snapshots, privacy authorization and reconciliation.
+- [live-feed.md](live-feed.md): arrivals at the top without a press, held reading positions, evidence and release path.
 - [repost.md](repost.md): public-source repost comparison.
 
 Engine (`crates/`):

@@ -83,22 +83,16 @@ export async function wishNotifications({ page, real, events, width, fact, engin
     });
     await page.waitForTimeout(300);
     fact(
-      '6 scrolling to the top keeps arrivals behind the existing control',
+      '6 scrolling to the top shows arrivals and clears the count without a press',
       await page
         .locator(view('notifications'))
         .evaluate(
           (el, key) =>
             el.scrollTop < 8 &&
-            !el.querySelector('.fresh').hidden &&
-            el.querySelector('.list > [data-key]:not([data-key^="day:"])')?.dataset.key === key,
+            el.querySelector('.fresh').hidden &&
+            el.querySelector('.list > [data-key]:not([data-key^="day:"])')?.dataset.key !== key,
           head,
         ),
     );
-    await page.locator(`${view('notifications')} .fresh`).click();
-    await page.waitForFunction(() => {
-      const el = document.querySelector('.view[data-kind="notifications"]');
-      return el.scrollTop < 8 && el.querySelector('.fresh').hidden;
-    });
-    fact('6 only the explicit control clears held arrivals', true);
   }
 }

@@ -356,20 +356,17 @@ async function run(browser: Browser): Promise<void> {
   );
   const view = ja.locator('.view[data-kind="home"]');
   const firstKey = await view.locator('.note').first().getAttribute('data-key');
-  // A cached first screen holds its head until the reader asks for new posts.
-  await ja.locator('.view[data-kind="home"] .fresh:visible').waitFor({ timeout: 20000 });
-  fact(
-    'at the top new notes leave the cached head in place',
-    (await view.locator('.note').first().getAttribute('data-key')) === firstKey &&
-      (await view.evaluate((e) => e.scrollTop)) === 0,
-  );
-  await ja.locator('.view[data-kind="home"] .fresh').click();
+  // Nothing is pressed: the head changes by itself and the new-notes control is never offered at the top.
   await ja.waitForFunction(
     (k) => document.querySelector('.view[data-kind="home"] .note')?.getAttribute('data-key') !== k,
     firstKey,
-    { timeout: 15000 },
+    { timeout: 20000 },
   );
-  fact('fresh control reveals the new head', (await view.evaluate((e) => e.scrollTop)) === 0);
+  fact(
+    'at the top new notes flow in without a press',
+    (await view.evaluate((e) => e.scrollTop)) === 0 &&
+      (await view.locator('.fresh').evaluate((e) => e.hasAttribute('hidden'))),
+  );
   await view.hover();
   await ja.mouse.wheel(0, 900);
   await ja.waitForTimeout(300);
@@ -389,6 +386,24 @@ async function run(browser: Browser): Promise<void> {
     held[0] === after[0] && Math.abs(held[1] - after[1]) <= 1,
     [held, after],
   );
+  // Back at the top by scrolling alone: what was counted is shown and the count goes.
+  const heldHead = await view.locator('.note').first().getAttribute('data-key');
+  await view.evaluate((e) => e.scrollTo(0, 0));
+  await ja.waitForFunction((k) => {
+    const el = document.querySelector<HTMLElement>('.view[data-kind="home"]');
+    return (
+      el?.scrollTop === 0 &&
+      el.querySelector('.fresh')?.hasAttribute('hidden') &&
+      el.querySelector('.note')?.getAttribute('data-key') !== k
+    );
+  }, heldHead);
+  fact('scrolling back to the top shows what arrived', true);
+  const keysNow = await view
+    .locator('.list > .note')
+    .evaluateAll((nodes) => nodes.map((n) => (n as HTMLElement).dataset.key));
+  fact('arrivals are drawn once', new Set(keysNow).size === keysNow.length, keysNow.length);
+  await ja.mouse.wheel(0, 900);
+  await ja.locator('.view[data-kind="home"] .fresh:visible').waitFor({ timeout: 20000 });
   await ja.locator('.view[data-kind="home"] .fresh').click();
   await ja.waitForFunction(() => {
     const el = document.querySelector<HTMLElement>('.view[data-kind="home"]');

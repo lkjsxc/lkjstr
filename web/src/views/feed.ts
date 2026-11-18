@@ -60,8 +60,8 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
   const previews = createPreviewWants(el, () => sub);
   let atTop = true;
   let atBottom = false;
-  let live = true;
-  let headHeld = false;
+  let mode: 'top' | 'held-head' | 'page' = 'top';
+  let above = 0; // rows above the window, as the engine last counted them
   let waiting = false;
   let sstate: SubState | undefined;
   let account = env.engine.me();
@@ -134,13 +134,18 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
     const top = el.scrollTop;
     const room = el.scrollHeight - top - el.clientHeight;
     const { first, last, count } = feedWindow(kind, rows);
-    if (top < 8 && (atTop || headHeld) && !keys.held()) {
-      if (!live && !headHeld)
-        (live = true), request('top', 0, Math.max(PAGE, Math.min(count, LIMIT)));
-    } else if (live && first) (live = false), request({ key: first }, 0, Math.max(count, PAGE));
-    else if (room < NEAR_PX && !atBottom && last)
-      request({ key: last }, Math.min(count, LIMIT), PAGE);
-    else if (top < NEAR_PX && !atTop && first)
+    const head = atTop || mode === 'held-head' || (mode === 'top' && above > 0);
+    if (top < 8 && head && !keys.held()) {
+      if (mode !== 'top' || above > 0) {
+        mode = 'top';
+        fresh.show(0);
+        request('top', 0, Math.max(PAGE, Math.min(count, LIMIT)));
+      }
+    } else if (mode === 'top' && first) {
+      (mode = 'held-head'), request({ key: first }, 0, Math.max(count, PAGE));
+    } else if (room < NEAR_PX && !atBottom && last) {
+      (mode = 'page'), request({ key: last }, Math.min(count, LIMIT), PAGE);
+    } else if (top < NEAR_PX && !atTop && mode === 'page' && first)
       request({ key: first }, PAGE, Math.min(count, LIMIT));
   };
   let frame = 0;
@@ -161,14 +166,17 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
     rows = [];
     const place = keep ? keeper.get() : undefined;
     if (!keep) keeper.forget(), keys.clear();
-    atTop = live = !place;
-    atBottom = waiting = jump = headHeld = false;
+    atTop = !place;
+    mode = place ? 'page' : 'top';
+    atBottom = waiting = jump = false;
+    above = 0;
     sstate = undefined;
-    pill.hidden = true;
+    fresh.show(0);
     sub = env.engine.open(query(), {
       rows(next, top, bottom) {
         rows = [...next];
         atTop = top;
+        if (top) above = 0;
         atBottom = bottom;
         waiting = false;
         rail.window();
@@ -177,13 +185,6 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
         if (keeper.get() && !keeper.put() && (kind !== 'notifications' || rows.length > 0))
           keeper.forget();
         title();
-        const head = rows.find((row) => row.kind === 'note' || row.kind === 'notification');
-        // Channel messages always flow live; other feeds retain a stable reading head.
-        if (live && head && kind !== 'thread' && kind !== 'channel') {
-          headHeld = true;
-          live = false;
-          request({ key: head.key }, 0, Math.max(PAGE, rows.length));
-        }
         follow();
       },
       patch(ops) {
@@ -193,7 +194,10 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
       },
       timeline: (next) => rail.timeline(next),
       fresh(count) {
-        fresh.show(count);
+        // A replayed screen is pinned below `top`; its first count is the cue to follow the head again.
+        above = count;
+        if (count && el.scrollTop < 8 && (mode !== 'page' || atTop)) follow();
+        fresh.show(mode === 'top' ? 0 : count);
       },
       state(s) {
         sstate = s;
@@ -207,10 +211,9 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
     sync();
   };
   const toTop = (): void => {
-    keys.clear();
-    fresh.show(0);
-    headHeld = false;
-    jump = live = true;
+    keys.clear(), fresh.show(0);
+    jump = true;
+    mode = 'top';
     request('top', 0, PAGE);
   };
   const keys = mountFeedKeys({
@@ -237,7 +240,7 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
     active: () => env.visible.get() && Boolean(el.closest('.pane.cur')),
     seek: (anchor) => {
       keys.clear();
-      live = false;
+      mode = 'page';
       request(anchor, PAGE, PAGE);
     },
   });

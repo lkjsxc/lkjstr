@@ -180,11 +180,13 @@ try {
   await close();
   const arrival = await sign(
     1,
-    'Cache fixture new note waits behind the existing control',
+    'Cache fixture new note becomes the head without a press',
     [],
     now + 60,
   );
   fake.add(arrival);
+  // What the next launch must replay: the seeded screen, then the screen the arrival last headed.
+  let replayed = homeKeys.slice(0, 10);
   for (let run = 0; run < 5; run++) {
     stage = `warm launch ${run + 1}`;
     page = await launch(1800);
@@ -198,8 +200,8 @@ try {
       early.firstScreen < 1800 && early.created.length === 0 && early.requested > 0,
     );
     check(
-      `warm ${run + 1}: cached Home rows retain their original head`,
-      JSON.stringify(keys) === JSON.stringify(homeKeys.slice(0, 10)),
+      `warm ${run + 1}: the replayed Home screen is the one last read`,
+      JSON.stringify(keys) === JSON.stringify(replayed),
     );
     if (run === 0) {
       await page.screenshot({ path: join(output, 'home-before-worker.png') });
@@ -212,25 +214,28 @@ try {
       }
     }
     await page.waitForFunction(() => globalThis.__publicCacheProbe.ready !== null);
-    await page.locator(`${home} .fresh:not([hidden])`).waitFor();
+    // Nothing is pressed: the note the relay holds above the replayed screen becomes its head.
+    await page.waitForFunction(
+      (id) =>
+        document
+          .querySelector('.view[data-kind="home"] .list > .note')
+          ?.getAttribute('data-note') === id,
+      arrival.id,
+    );
     const after = await page
       .locator(`${home} .list > .note`)
       .evaluateAll((nodes) => nodes.slice(0, 10).map((node) => node.dataset.key));
     check(
-      `warm ${run + 1}: reconciliation and fresh arrivals never prepend`,
-      JSON.stringify(after) === JSON.stringify(homeKeys.slice(0, 10)),
+      `warm ${run + 1}: the arrival heads the replayed rows, each drawn once and in order`,
+      JSON.stringify(after.slice(1)) === JSON.stringify(homeKeys.slice(0, 9)) &&
+        new Set(after).size === after.length,
     );
-    if (run === 4) {
-      await page.locator(`${home} .fresh:not([hidden])`).click();
-      await page.waitForFunction(
-        (id) =>
-          document
-            .querySelector('.view[data-kind="home"] .list > .note')
-            ?.getAttribute('data-note') === id,
-        arrival.id,
-      );
-      check('the existing fresh control explicitly reveals the new head', true);
-    }
+    check(
+      `warm ${run + 1}: no new-notes control is offered at the top`,
+      await page.locator(`${home} .fresh`).evaluate((node) => node.hidden),
+    );
+    if (run === 0) await page.screenshot({ path: join(output, 'home-after-arrival.png') });
+    replayed = after;
     await pause(250);
     report.runs.push({
       run: run + 1,

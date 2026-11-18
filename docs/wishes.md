@@ -45,6 +45,7 @@ The heart action counts likes; other emoji keep their own chips.
 Notifications previously bypassed the grouped row projection for fresh counts.
 They now count the same filtered, grouped rows they display, excluding own acts.
 Every feed uses the same pill. Pressing it or scrolling to the top clears it.
+It is offered only below the top: at the top rows arrive by themselves.
 Notification read marking updates unread classes without replacing the row.
 Account unread counts use the same projection.
 
