@@ -90,35 +90,31 @@ export async function railSmoke(
       const narrow = mobile.locator(`${feed} .time-rail`);
       await narrow.waitFor({ state: 'visible' });
       await mobile.evaluate(() => (document.documentElement.dataset.theme = 'dark'));
-      const yearOpacity = (opacity: string) =>
-        mobile.waitForFunction(
-          ({ feed, opacity }) => {
-            const year = document.querySelector(`${feed} .time-rail .time-year`);
-            return year && getComputedStyle(year).opacity === opacity;
+      const yearOpacity = async (hovered: boolean): Promise<boolean> => {
+        const observed = await mobile.waitForFunction(
+          ({ feed, hovered }) => {
+            const rail = document.querySelector(`${feed} .time-rail`);
+            const year = rail?.querySelector('.time-year');
+            return Boolean(
+              year &&
+                rail?.matches(':hover') === hovered &&
+                getComputedStyle(year).opacity === (hovered ? '1' : '0'),
+            );
           },
-          { feed, opacity },
+          { feed, hovered },
         );
+        // The rail may replace year nodes on its next paint. Assert the sampled state.
+        const matches = await observed.jsonValue();
+        await observed.dispose();
+        return matches;
+      };
       await mobile.mouse.move(20, 20);
       check('narrow time rail is 16px', (await narrow.boundingBox())?.width === 16);
-      await yearOpacity('0');
-      check(
-        'narrow rail shows year numbers on hover',
-        (await narrow
-          .locator('.time-year')
-          .first()
-          .evaluate((e) => getComputedStyle(e).opacity)) === '0',
-      );
+      check('narrow rail shows year numbers on hover', await yearOpacity(false));
       await narrow.hover();
-      await yearOpacity('1');
-      check(
-        'hover reveals narrow year numbers',
-        (await narrow
-          .locator('.time-year')
-          .first()
-          .evaluate((e) => getComputedStyle(e).opacity)) === '1',
-      );
+      check('hover reveals narrow year numbers', await yearOpacity(true));
       await mobile.mouse.move(20, 20);
-      await yearOpacity('0');
+      await yearOpacity(false);
       await mobile.screenshot({ path: `${root}rail-390-dark.png` });
     } finally {
       await mobile.close();
