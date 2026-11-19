@@ -14,7 +14,8 @@ they arrive. The keeper restores the same note and offset after drawing.
 Returning to the top by scrolling shows the new rows and resumes the head.
 Pressing the pill requests the head and releases any selection or anchor.
 
-The pill counts projected rows above the viewport up to the last read head.
+The pill counts projected rows above the reading position or keyboard
+selection, up to the last read head.
 Headers, day separators and repeated delivery do not count. Grouped
 notification rows count once, using the same projection as the visible rows.
 A held head reserves room for new rows within an 800-row window. If there

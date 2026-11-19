@@ -96,7 +96,7 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
       if (atTop && !waiting && el.scrollTop < 8) state.head = feedWindow(kind, rows).first;
       fresh.show(0);
     } else if (live && state.head) {
-      const count = freshRows(rows, state.head, keeper.get()?.key);
+      const count = freshRows(rows, state.head, keys.held() ?? keeper.get()?.key);
       const more = above > (count === undefined ? (outsideBaseline ?? above) : 0);
       fresh.show(more ? (freshRows(rows, state.head, undefined) ?? 0) : (count ?? 0), more);
     } else fresh.show(above);

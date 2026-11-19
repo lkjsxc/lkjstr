@@ -136,6 +136,25 @@ it('discloses overflow until a press reloads the head', async () => {
   expect(f.pill()?.getAttribute('aria-label')).toBeNull();
 });
 
+it('counts an arrival that peeks into view above a keyboard-held row', async () => {
+  const f = feed();
+  const pane = document.createElement('div');
+  pane.className = 'pane cur';
+  document.body.append(pane);
+  pane.append(f.el);
+  f.rows([row(2), row(1)]);
+  window.dispatchEvent(new KeyboardEvent('keydown', { key: 'j', code: 'KeyJ' }));
+  expect(f.el.querySelector('.sel')?.getAttribute('data-key')).toBe(key(2));
+  f.rows([row(2), row(1)]);
+  f.arrive(row(3), key(2));
+  const notes = [...f.el.querySelectorAll('.list > .note')];
+  notes.forEach((note, i) => {
+    vi.spyOn(note, 'getBoundingClientRect').mockReturnValue(new DOMRect(0, -30 + 45 * i, 390, 45));
+  });
+  await f.scroll(100);
+  expect(f.pill()?.textContent).toBe('1 new');
+});
+
 it('pages up at the edge of an older window without jumping past intervening rows', async () => {
   const f = feed();
   Object.defineProperty(f.el, 'scrollHeight', { value: 5000 });
