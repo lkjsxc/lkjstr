@@ -120,9 +120,9 @@ replacing a snapshot. Muted windows refill themselves; only visible rows request
 from a completed absence. Named-list queries and profile hydration include cached private members only when the query names the signed list owner;
 other readers keep public tags. The reproduced isolation fix is documented in [private-list-scope.md](private-list-scope.md).
 
-Windows retain keys and reading anchors. Ordinary sides cap at 800 rows; retainAbove caps at 6000. Time rails and ordinal seeks describe retained
-cache membership, not the whole network. Generation snapshots reject changed queries. Signed-out Global optionally filters repeated authors, duplicate
-bursts and no-profile rows only after successful untruncated metadata lookups.
+Windows retain keys and reading anchors. Ordinary sides cap at 800 rows; retainAbove caps at 6000. Held feeds fill a bounded window above the
+anchor as notes arrive. See [live-feed.md](live-feed.md). Time rails and ordinal seeks describe retained cache membership. Generation snapshots reject
+changed queries. Signed-out Global can filter repeated authors, duplicate bursts and absent profiles after successful untruncated metadata lookups.
 
 Notes display client tags, custom reactions, mentions, content warnings and image/video/audio metadata. Kind-30023 publishing exists as
 Draft.longForm; there is no parsed article document/reader. Note deletion checks authorship. Per-note reaction/repost detail and profile editing await

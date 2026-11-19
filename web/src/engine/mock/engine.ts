@@ -8,6 +8,7 @@ import { failedAccountInput } from './account-failure.ts';
 import { createActions } from './actions.ts';
 import { createCore } from './core.ts';
 import { createPrivateMock } from './dm.ts';
+import { liveWindow } from './live-window.ts';
 import { privateListState } from './private-lists.ts';
 import { select } from './query.ts';
 import { searchWindow } from './search-window.ts';
@@ -216,6 +217,11 @@ export function createMockEngine(
         }
         s.windowed = true;
         s.ops = [];
+        s.liveRange =
+          msg.liveAbove && msg.anchor !== 'top' && s.query.source !== 'search'
+            ? { before: msg.before, after: msg.after }
+            : undefined;
+        if (s.liveRange) return (liveWindow(s, post), core.timelines());
         if (s.live && s.fresh) (s.fresh = 0), post({ t: 'fresh', sub: s.id, count: 0 });
         const window = s.entries.slice(s.start, s.end);
         if (

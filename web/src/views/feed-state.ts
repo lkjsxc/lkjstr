@@ -1,6 +1,24 @@
 // Reuse the existing feed status node for relay and private-list completion.
 import type { Row, SubState } from '../engine/protocol.ts';
-import type { Key } from '../shared/i18n.ts';
+import { fullTime } from '../shared/format.ts';
+import { type Key, t } from '../shared/i18n.ts';
+
+export function showFeedState(
+  status: HTMLElement,
+  signIn: HTMLElement | undefined,
+  rows: readonly Row[],
+  state: SubState | undefined,
+  atBottom: boolean,
+  searchHint: boolean,
+  accountsUnavailable: boolean,
+): void {
+  const { empty, key } = feedState(rows, state, atBottom, searchHint, accountsUnavailable);
+  if (key !== 'error.internal' && empty && signIn) status.replaceChildren(signIn);
+  else status.textContent = key ? t(key) : '';
+  status.title = state?.lastArrival
+    ? t('feed.lastArrival', { time: fullTime(state.lastArrival) })
+    : '';
+}
 export function feedState(
   rows: readonly Row[],
   state: SubState | undefined,

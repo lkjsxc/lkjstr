@@ -234,14 +234,15 @@ export function publicSnapshots(inner: Transport): Transport {
           const anchor = message.anchor;
           flushView(view);
           view.intentTop = message.anchor === 'top';
+          view.liveAbove = message.liveAbove;
           if (view.initial) {
             view.initial = false;
             const snapshot = view.received ? undefined : replay(message.sub, view, message.anchor);
             if (snapshot) {
               const pinned: WindowMessage = {
                 ...message,
-                anchor: { key: snapshot.anchor },
-                before: 0,
+                anchor: message.liveAbove ? anchor : { key: snapshot.anchor },
+                before: message.liveAbove ? message.before : 0,
                 after: Math.max(message.after, snapshot.rows.length),
               };
               inner.post(pinned, transfer);

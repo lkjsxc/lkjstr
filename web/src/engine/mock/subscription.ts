@@ -15,4 +15,5 @@ export type Sub = {
   anchor?: string;
   returnKey?: string;
   searchRange?: { before: number; after: number; retainAbove: boolean };
+  liveRange?: { before: number; after: number };
 };

@@ -125,8 +125,7 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
 - On is indigo. Keyboard selection is a wash with an indigo bar at the
   left; unread is a vermilion bar at the left.
 ## Lists
-- At the top of a feed new notes flow in by themselves, after a reload too. Anywhere else the position holds and a pill
-  counts what is above; scrolling to the top or pressing the pill shows them. A row selected by the keyboard holds the list too.
+- New notes are always loaded into the feed as they arrive, after a reload too. At the top they show at once and the list stays at the top. Anywhere else they are inserted above while the reading position holds (the anchor note keeps its place on screen); the pill counts the unread notes above, scrolling up reaches them with no click, and pressing the pill goes to the top. A row selected by the keyboard holds the list too. The feed keeps its bounded window: when more arrive above than the window holds, the pill says so, and pressing it reloads the head.
 - The reading position is an anchor note plus offset: it survives reload,
   another tile width, a moved or reopened tab, late media.
 - A thread opens on its focused note at the top of the tile. The notes it

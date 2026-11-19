@@ -379,6 +379,7 @@ async function run(browser: Browser): Promise<void> {
       return [n?.dataset.key ?? '', Math.round(n?.getBoundingClientRect().top ?? 0)];
     });
   const held = await probe();
+  const heldHead = await view.locator('.note').first().getAttribute('data-key');
   await ja.locator('.view[data-kind="home"] .fresh:visible').waitFor({ timeout: 20000 });
   const after = await probe();
   fact(
@@ -387,7 +388,6 @@ async function run(browser: Browser): Promise<void> {
     [held, after],
   );
   // Back at the top by scrolling alone: what was counted is shown and the count goes.
-  const heldHead = await view.locator('.note').first().getAttribute('data-key');
   await view.evaluate((e) => e.scrollTo(0, 0));
   await ja.waitForFunction((k) => {
     const el = document.querySelector<HTMLElement>('.view[data-kind="home"]');

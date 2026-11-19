@@ -35,8 +35,8 @@ const report = {
 const hash = (bytes) => createHash('sha256').update(bytes).digest('hex');
 report.indexSha256 = hash(await readFile('dist/index.html'));
 report.fixtureSha256 = hash(await readFile(fixturePath));
-const check = (name, ok) => {
-  report.checks.push({ name, ok: !!ok });
+const check = (name, ok, detail) => {
+  report.checks.push({ name, ok: !!ok, detail });
   if (!ok) throw Error(name);
 };
 const pause = (ms) => new Promise((done) => setTimeout(done, ms));
@@ -103,6 +103,7 @@ try {
         `${process.env.HOME}/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome`,
       args: ['--no-sandbox', '--disable-background-networking'],
       viewport: { width: 1440, height: 900 },
+      deviceScaleFactor: 1,
       locale: 'en-US',
     });
     await context.addInitScript(
@@ -202,6 +203,7 @@ try {
   fake.add(arrival);
   // What the next launch must replay: the seeded screen, then the screen the arrival last headed.
   let replayed = homeKeys.slice(0, 10);
+  report.liveHome = [];
   for (let run = 0; run < 5; run++) {
     stage = `warm launch ${run + 1}`;
     page = await launch(1800);
@@ -258,18 +260,32 @@ try {
       probe: await page.evaluate(() => globalThis.__publicCacheProbe),
     });
     if (run === 4) {
-      stage = 'live Home after warm replay and reload';
-      report.liveHome = await checkLiveHome({
-        page,
-        fake,
-        check,
-        sign,
-        arrival,
-        delivered,
-        disconnect: () => {
-          for (const socket of socketServer.clients) socket.terminate();
-        },
-      });
+      let latest = arrival;
+      for (const width of [1440, 390]) {
+        stage = `live Home at ${width}px after warm replay and reload`;
+        if (width === 390) {
+          await page.setViewportSize({ width, height: 844 });
+          await page.reload();
+          await page.waitForFunction(() => globalThis.__publicCacheProbe.ready !== null);
+          const id = await page.locator(`${home} .list > .note`).first().getAttribute('data-note');
+          latest = fake.stored.find((event) => event.id === id);
+          check('the phone starts from the current signed Home head', Boolean(latest));
+        }
+        const proof = await checkLiveHome({
+          page,
+          fake,
+          sign,
+          arrival: latest,
+          delivered,
+          overflow: width === 390,
+          check: (name, ok, detail) => check(`${width}px: ${name}`, ok, detail),
+          shot: (name) => page.screenshot({ path: join(output, `home-${width}-${name}.png`) }),
+          disconnect: () => {
+            for (const socket of socketServer.clients) socket.terminate();
+          },
+        });
+        report.liveHome.push({ width, deviceScaleFactor: 1, ...proof });
+      }
     }
     await close();
   }

@@ -117,6 +117,7 @@ impl Session {
                 before,
                 after,
                 retain_above,
+                live_above,
             } => {
                 if !self.queries.contains_key(&sub) {
                     return Err((None, "unknown-subscription"));
@@ -149,12 +150,11 @@ impl Session {
                     }
                 };
                 let anchor = anchor.filter(|key| engine.accepts_private_anchor(account, key));
+                let retain_above = retain_above && !live_above;
                 let mut before = if retain_above { 6000 } else { before.min(800) };
-                if self
-                    .queries
-                    .get(&sub)
-                    .is_some_and(|q| q.source == "notifications" || q.notifications == Some(true))
-                {
+                if self.queries.get(&sub).is_some_and(|q| {
+                    !live_above && (q.source == "notifications" || q.notifications == Some(true))
+                }) {
                     before = self.notification_before(&sub, engine, anchor.as_deref(), before);
                 }
                 self.windows

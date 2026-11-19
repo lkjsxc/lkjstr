@@ -1,6 +1,8 @@
 // Where the reader is in a list: the first row on screen and how far its top is from the top of the tile. Not a
 // scroll offset, which means nothing once rows above change, a tile gets another width or a picture arrives. The
 // place is read from the screen whenever the reader scrolls and put back whenever anything else moves the rows.
+import type { Row } from '../engine/protocol.ts';
+
 export type Place = { readonly key: string; readonly off: number };
 
 export type Keeper = {
@@ -13,7 +15,7 @@ export type Keeper = {
   /** Puts the saved place back on screen. False when its row is not drawn. */
   put(): boolean;
   /** Before rows are redrawn; the result is called after, and keeps whatever is on screen where it was. */
-  hold(): () => void;
+  hold(preferred?: string): () => void;
   /** Back to the very top. */
   forget(): void;
   dispose(): void;
@@ -26,6 +28,8 @@ export function createKeeper(o: {
   /** The scroller and, inside it, the element whose children are the rows (`data-key` on each). */
   readonly el: HTMLElement;
   readonly list: HTMLElement;
+  /** Space to hold a selected note when the list would otherwise be too short to scroll. */
+  readonly stretch?: HTMLElement;
   readonly saved: Place | undefined;
   /** On screen right now: a hidden tab has nothing to read and nothing to put. */
   readonly active: () => boolean;
@@ -38,6 +42,12 @@ export function createKeeper(o: {
   let place = o.saved;
   let timer: ReturnType<typeof setTimeout> | undefined;
   let dirty = false;
+  let fraction = 0;
+  const shiftList = (next: number): void => {
+    if (next === fraction) return;
+    fraction = next;
+    list.style.translate = next ? `0 ${next}px` : '';
+  };
   const flush = (): void => {
     clearTimeout(timer);
     timer = undefined;
@@ -76,21 +86,34 @@ export function createKeeper(o: {
   const read = (): void => {
     if (!o.active()) return;
     if (place && size !== sized() && put()) return;
+    if (el.scrollTop < TOP_PX) shiftList(0);
     const first = el.scrollTop < TOP_PX ? undefined : onScreen(1)[0];
-    set(first && { key: first.key, off: Math.round(first.top) });
+    set(first && { key: first.key, off: first.top });
     size = sized();
   };
-  const moveTo = (key: string, off: number): boolean => {
+  const moveTo = (key: string, off: number, selected = false): boolean => {
     const node = o.node(key);
     if (!node?.isConnected) return false;
-    const delta = node.getBoundingClientRect().top - el.getBoundingClientRect().top - off;
+    const delta =
+      node.getBoundingClientRect().top - el.getBoundingClientRect().top - off - fraction;
+    const tail = selected ? o.stretch : undefined;
+    if (tail && el.scrollTop + delta > el.scrollHeight - el.clientHeight) {
+      const bottom = tail.getBoundingClientRect().bottom - el.getBoundingClientRect().top;
+      const deficit = Math.ceil(el.clientHeight + delta - bottom);
+      tail.style.height = `${tail.offsetHeight + Math.max(0, deficit)}px`;
+    }
+    const before = el.scrollTop;
     if (Math.abs(delta) >= 0.5) el.scrollTop += delta;
+    // Scroll positions can round to a device pixel even when row heights are fractional.
+    const remainder = delta - (el.scrollTop - before);
+    if (Math.abs(remainder) < 1) shiftList(-remainder);
     size = sized();
     return true;
   };
   const put = (): boolean => {
     if (!o.active()) return true;
     if (place) return moveTo(place.key, place.off);
+    if (el.scrollTop < TOP_PX) shiftList(0);
     if (el.scrollTop < TOP_PX && el.scrollTop > 0) el.scrollTop = 0;
     return true;
   };
@@ -108,17 +131,26 @@ export function createKeeper(o: {
     set: (next) => (set(next), void put()),
     read,
     put,
-    hold() {
+    hold(preferred) {
       if (!o.active()) return () => undefined;
       // Several rows, because the first may be the one that goes away.
-      const held = place ? onScreen(6) : [];
+      const held = place || el.scrollTop >= TOP_PX ? onScreen(6) : [];
+      const node = preferred && o.node(preferred);
+      if (node) {
+        const row = node.getBoundingClientRect();
+        const view = el.getBoundingClientRect();
+        if (row.bottom > view.top && row.top < view.bottom)
+          held.unshift({ key: preferred, top: row.top - view.top });
+      }
       return () => {
-        if (held.some((r) => moveTo(r.key, r.top))) read();
+        if (held.some((r) => moveTo(r.key, r.top, r.key === preferred))) read();
         else put();
       };
     },
     forget() {
       set(undefined);
+      shiftList(0);
+      if (o.stretch) o.stretch.style.height = '';
       el.scrollTop = 0;
     },
     dispose() {
@@ -127,5 +159,25 @@ export function createKeeper(o: {
       window.removeEventListener('pagehide', flush);
       flush();
     },
+  };
+}
+
+/** Give the focused thread note enough space to sit at the top of its tile. */
+export function createThreadSeat(
+  el: HTMLElement,
+  tail: HTMLElement,
+  keeper: Keeper,
+  seated: boolean,
+  nodeFor: (key: string) => HTMLElement | undefined,
+) {
+  return (rows: readonly Row[]): void => {
+    const focus = rows.find((row) => row.kind === 'note' && row.thread?.role === 'focus');
+    const node = focus && nodeFor(focus.key);
+    if (!node) return;
+    const below = tail.getBoundingClientRect().top - node.getBoundingClientRect().top;
+    tail.style.height = `${Math.max(0, Math.ceil(el.clientHeight - below))}px`;
+    if (seated) return;
+    seated = true;
+    if (rows[0] !== focus) keeper.set({ key: focus.key, off: 0 });
   };
 }

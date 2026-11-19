@@ -24,6 +24,7 @@ export type PublicView = {
   atBottom: boolean;
   initial: boolean;
   intentTop: boolean;
+  liveAbove?: boolean;
   reading?: string;
   held?: PublicSnapshot;
   topAnchor?: string;
@@ -69,8 +70,16 @@ export function holdPublicRows(
   const byKey = new Map(view.rows.map((row) => [row.key, row]));
   const head =
     view.rows.find((row) => row.kind === 'note' || row.kind === 'notification') ?? view.rows[0];
-  if (head?.key === held.anchor && held.rows.every((row) => byKey.has(row.key))) {
+  if (
+    (view.liveAbove || head?.key === held.anchor) &&
+    held.rows.every((row) => byKey.has(row.key))
+  ) {
     view.held = undefined;
+    if (view.liveAbove) {
+      const painted = new Map(held.rows.map((row) => [row.key, row]));
+      view.rows = view.rows.map((row) => mergePublicRow(painted.get(row.key) ?? row, row));
+      return false;
+    }
     const last = Math.max(
       ...held.rows.map((row) => view.rows.findIndex((next) => next.key === row.key)),
     );

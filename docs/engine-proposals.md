@@ -177,3 +177,5 @@ See [public-view-cache.md](public-view-cache.md). These cache additions remain u
 
 The bounded resolution and exact representative policy follow
 [interface-acts.md](interface-acts.md); source and proof limits are recorded with the implementation.
+
+- Optional `window.liveAbove` lets newly projected rows fill the explicit before budget, including grouped notifications.

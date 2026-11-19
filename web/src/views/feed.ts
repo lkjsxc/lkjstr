@@ -1,7 +1,6 @@
 import type { Subscription } from '../engine/client.ts';
 import { applyOps } from '../engine/ops.ts';
 import type { Anchor, Query, Row, SubState } from '../engine/protocol.ts';
-import { fullTime } from '../shared/format.ts';
 import { h } from '../shared/h.ts';
 import { t } from '../shared/i18n.ts';
 import { loadViewState, saveViewState } from '../shared/view-state.ts';
@@ -11,13 +10,13 @@ import { type BarState, mountFeedBar } from './feed-bar.ts';
 import { createRowList } from './feed-draw.ts';
 import { createFresh } from './feed-fresh.ts';
 import { mountFeedKeys } from './feed-keys.ts';
-import { createKeeper, type Place } from './feed-place.ts';
+import { createKeeper, createThreadSeat, type Place } from './feed-place.ts';
 import { feedQuery } from './feed-query.ts';
 import { mountScrub } from './feed-scrub.ts';
 import { CHILD, DATED, hasDaySeparators, OWN } from './feed-sources.ts';
-import { feedState } from './feed-state.ts';
+import { showFeedState } from './feed-state.ts';
 import { feedTitle } from './feed-title.ts';
-import { feedWindow } from './feed-window.ts';
+import { feedWindow, freshRows } from './feed-window.ts';
 import { onHeld } from './held.ts';
 import { pauseNoteAudio } from './note-audio.ts';
 import { onOwnPublished } from './own-published.ts';
@@ -39,6 +38,7 @@ type State = BarState & {
   show?: string;
   pos?: Place;
   extent?: number;
+  head?: string;
 };
 export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => void {
   const state: State = loadViewState<State>(env.instance);
@@ -61,15 +61,18 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
   let atTop = true;
   let atBottom = false;
   let mode: 'top' | 'held-head' | 'page' = 'top';
-  let above = 0; // rows above the window, as the engine last counted them
+  let above = 0;
+  let outsideBaseline: number | undefined;
   let waiting = false;
   let sstate: SubState | undefined;
   let account = env.engine.me();
   let can = ability(env.engine);
   let jump = false;
+  const live = DATED.has(kind) || ['bookmarks', 'notifications', 'search'].includes(kind);
   const keeper = createKeeper({
     el,
     list,
+    stretch: kind === 'thread' ? undefined : tail,
     saved: state.pos,
     active: () => el.isConnected && env.visible.get(),
     node: (key) => drawn.node(key),
@@ -77,7 +80,7 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
     save: (place) => ((state.pos = place), save()),
   });
   const query = (): Query => feedQuery(kind, account, state, env.engine, kinds?.query());
-  const request = (anchor: Anchor, before: number, after: number): void => {
+  const request = (anchor: Anchor, before: number, after: number, liveAbove = false): void => {
     const extra = Math.max(0, before + after - LIMIT);
     if (before > after) before -= extra;
     else after -= extra;
@@ -85,55 +88,51 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
       (state.extent = Math.min(LIMIT, before + after)), save();
     }
     waiting = true;
-    sub?.window(anchor, before, after);
+    outsideBaseline = anchor === 'top' || mode === 'held-head' ? 0 : undefined;
+    sub?.window(anchor, before, after, liveAbove);
+  };
+  const paintFresh = (): void => {
+    if (mode === 'top') {
+      if (atTop && !waiting && el.scrollTop < 8) state.head = feedWindow(kind, rows).first;
+      fresh.show(0);
+    } else if (live && state.head) {
+      const count = freshRows(rows, state.head, keeper.get()?.key);
+      const more = above > (count === undefined ? (outsideBaseline ?? above) : 0);
+      fresh.show(more ? (freshRows(rows, state.head, undefined) ?? 0) : (count ?? 0), more);
+    } else fresh.show(above);
   };
   const sync = (): void => {
-    if (kind === 'notifications' && el.scrollTop >= 8) keeper.read();
-    const settle = keeper.hold();
+    const settle = keeper.hold(keys.held());
     drawn.draw(rows);
     kinds?.seat(rows[0] && drawn.node(rows[0].key), rows[0]);
     showState();
     seat();
     settle();
     fresh.read(rows);
+    paintFresh();
     keys.paint();
     previews.sync(), rail.sync();
-    if (env.visible.get()) sub?.reading?.(keeper.get()?.key ?? rows[0]?.key ?? null);
   };
-  let seated = kind !== 'thread' || Boolean(state.pos);
-  const seat = (): void => {
-    if (kind !== 'thread' || !env.visible.get()) return;
-    const focus = rows.find((r) => r.kind === 'note' && r.thread?.role === 'focus');
-    const node = focus && drawn.node(focus.key);
-    if (!node) return;
-    const below = tail.getBoundingClientRect().top - node.getBoundingClientRect().top;
-    tail.style.height = `${Math.max(0, Math.ceil(el.clientHeight - below))}px`;
-    if (seated) return;
-    seated = true;
-    if (rows[0] !== focus) keeper.set({ key: focus.key, off: 0 });
-  };
-  const showState = (): void => {
-    const { empty, key } = feedState(
+  const seatThread = createThreadSeat(el, tail, keeper, Boolean(state.pos), drawn.node);
+  const seat = (): void => void (kind === 'thread' && env.visible.get() && seatThread(rows));
+  const showState = (): void =>
+    showFeedState(
+      status,
+      !account && OWN.has(kind) ? signIn : undefined,
       rows,
       sstate,
       atBottom,
       kind === 'search' && !state.text,
       env.engine.accountState?.get().phase === 'failed',
     );
-    if (key !== 'error.internal' && empty && !account && OWN.has(kind))
-      status.replaceChildren(signIn);
-    else status.textContent = key ? t(key) : '';
-    status.title = sstate?.lastArrival
-      ? t('feed.lastArrival', { time: fullTime(sstate.lastArrival) })
-      : '';
-  };
   const follow = (): void => {
-    if (env.visible.get()) sub?.reading?.(keeper.get()?.key ?? rows[0]?.key ?? null);
     if (rail.busy() || !sub || !env.visible.get()) return;
+    sub.reading?.(keeper.get()?.key ?? rows[0]?.key ?? null);
     if (kind === 'bookmarks' && sstate?.privateLists?.phase === 'loading') return;
     const head = atTop || mode === 'held-head' || (mode === 'top' && above > 0);
-    const followHead = el.scrollTop < 8 && head && !keys.held();
-    if (waiting && !(followHead && mode === 'held-head')) return; // Warm replay can withhold rows.
+    const overflow = fresh.overflow() && !waiting;
+    const followHead = el.scrollTop < 8 && head && !keys.held() && !overflow;
+    if (waiting && !(followHead && mode === 'held-head')) return;
     const { first, last, count } = feedWindow(kind, rows);
     if (followHead) {
       if (mode !== 'top' || above > 0) {
@@ -142,15 +141,17 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
         request('top', 0, Math.max(PAGE, Math.min(count, LIMIT)));
       }
     } else if (mode === 'top' && first) {
-      (mode = 'held-head'), request({ key: first }, 0, Math.max(count, PAGE));
+      mode = 'held-head';
+      const after = Math.max(count, PAGE);
+      request({ key: first }, live ? LIMIT - after : 0, after, live);
     } else if (el.scrollHeight - el.scrollTop - el.clientHeight < NEAR_PX && !atBottom && last) {
       (mode = 'page'), request({ key: last }, Math.min(count, LIMIT), PAGE);
-    } else if (el.scrollTop < NEAR_PX && !atTop && mode === 'page' && first)
+    } else if (el.scrollTop < NEAR_PX && !atTop && mode === 'page' && first && !overflow)
       request({ key: first }, PAGE, Math.min(count, LIMIT));
   };
   let frame = 0;
   const onScroll = (): void => {
-    keeper.read(), fresh.read(rows);
+    keeper.read(), fresh.read(rows), paintFresh();
     if (!frame) frame = requestAnimationFrame(() => ((frame = 0), follow()));
   };
   el.addEventListener('scroll', onScroll, { passive: true });
@@ -165,18 +166,17 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
     rail.reset();
     rows = [];
     const place = keep ? keeper.get() : undefined;
-    if (!keep) keeper.forget(), keys.clear();
+    if (!keep) (state.head = undefined), keeper.forget(), keys.clear();
     atTop = !place;
     mode = place ? 'page' : 'top';
     atBottom = waiting = jump = false;
     above = 0;
     sstate = undefined;
-    fresh.show(0);
     sub = env.engine.open(query(), {
       rows(next, top, bottom) {
         rows = [...next];
         atTop = top;
-        if (top) above = 0;
+        if (top) (state.head ??= feedWindow(kind, rows).first), (above = 0);
         atBottom = bottom;
         waiting = false;
         rail.window();
@@ -190,14 +190,15 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
       patch(ops) {
         rows = applyOps(rows, ops);
         sync();
-        title(); // a name that arrives late renames the tab in place
+        title();
+        if (env.visible.get()) sub?.reading?.(keeper.get()?.key ?? rows[0]?.key ?? null);
       },
       timeline: (next) => rail.timeline(next),
       fresh(count) {
-        // A replayed screen is pinned below `top`; its first count is the cue to follow the head again.
         above = count;
+        outsideBaseline ??= count;
+        paintFresh();
         if (count && el.scrollTop < 8 && (mode !== 'page' || atTop)) follow();
-        fresh.show(mode === 'top' ? 0 : count);
       },
       state(s) {
         sstate = s;
@@ -206,7 +207,7 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
       },
     });
     sub.visible(env.visible.get());
-    if (place) request({ key: place.key }, PAGE, PAGE);
+    if (place) request({ key: place.key }, live ? LIMIT - PAGE : PAGE, PAGE, live);
     else request('top', 0, Math.max(PAGE, state.extent ?? PAGE));
     sync();
   };
@@ -278,8 +279,7 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
   const offAccountState = env.engine.accountState?.subscribe(showState);
   const offHeld = onHeld(() => void (rows.length && sync()));
   const offOwnPost = onOwnPublished((author) => {
-    // Preserve a scrolled position; at the top the author's own new note is the new head.
-    if (kind === 'global' && author === account && el.scrollTop < 8 && env.visible.get()) toTop();
+    if (kind === 'global' && author === account && mode === 'top' && env.visible.get()) toTop();
   });
   const offSettings = env.settings.subscribe(() => (drawn.clear(), sync()));
   return () => {

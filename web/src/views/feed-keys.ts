@@ -10,7 +10,7 @@ import type { ViewEnv } from './registry.ts';
 
 export type FeedKeys = {
   /** A row is selected and shown: the list must not move under it. */
-  held(): boolean;
+  held(): string | undefined;
   /** After rows were redrawn. */
   paint(): void;
   clear(): void;
@@ -141,7 +141,7 @@ export function mountFeedKeys(o: {
   window.addEventListener('keydown', key);
   list.addEventListener('pointerdown', press);
   return {
-    held: () => shown && Boolean(cursor),
+    held: () => (shown ? cursor : undefined),
     paint,
     clear() {
       shown = false;

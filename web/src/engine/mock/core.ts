@@ -1,6 +1,7 @@
 // Shared mock policy and bounded fixture subscriptions.
 import type { FromEngine, PatchOp, Query } from '../protocol.ts';
 import { createAccounts } from './accounts.ts';
+import { liveWindow } from './live-window.ts';
 import { privateListAccountSnapshot, privateListState } from './private-lists.ts';
 import { entry, matches, select } from './query.ts';
 import { relays } from './relays.ts';
@@ -96,6 +97,7 @@ export function createCore(post: (msg: FromEngine) => void, now: () => number) {
         queueTimeline();
         if (!s.windowed) continue;
         if (search) refreshSearch(s, post);
+        else if (s.liveRange) liveWindow(s, post);
         else if (s.live) s.end++, push(s, { op: 'insert', before: first, rows: [e.row()] });
         else s.start++, s.end++, post({ t: 'fresh', sub: s.id, count: ++s.fresh });
         post({
@@ -127,6 +129,10 @@ export function createCore(post: (msg: FromEngine) => void, now: () => number) {
         s.entries = next;
         queueTimeline();
         if (!s.windowed) continue;
+        if (s.liveRange) {
+          liveWindow(s, post);
+          continue;
+        }
         const index = new Map(next.map((e, i) => [e.key, i]));
         for (const e of shown) if (!index.has(e.key)) push(s, { op: 'remove', key: e.key });
         const kept = shown.filter((e) => index.has(e.key));

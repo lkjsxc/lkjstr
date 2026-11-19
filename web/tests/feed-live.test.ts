@@ -1,4 +1,4 @@
-// At the very top a feed follows its head by itself; anywhere else arrivals are only counted.
+// Arrivals render immediately while the head or the reader's anchor stays put.
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { createEngine } from '../src/engine/client.ts';
 import type { FromEngine, NoteRow, ToEngine } from '../src/engine/protocol.ts';
@@ -92,11 +92,15 @@ it('holds a scrolled reader, counts what arrives, and shows it on the way back t
   f.rows([row(2), row(1)]);
   await f.scroll(600);
   expect(f.last()?.anchor).toEqual({ key: key(2) });
-  f.rows([row(2), row(1)], false);
-  f.count(3);
+  expect(f.last()).toMatchObject({ before: 740, after: 60, liveAbove: true });
+  f.rows([row(2), row(1)]);
+  f.arrive(row(3), key(2));
+  f.arrive(row(4), key(3));
+  f.arrive(row(5), key(4));
+  f.count(0);
   await vi.advanceTimersByTimeAsync(20);
   expect(f.last()?.anchor).toEqual({ key: key(2) });
-  expect(f.drawn()).toEqual([key(2), key(1)]);
+  expect(f.drawn()).toEqual([key(5), key(4), key(3), key(2), key(1)]);
   expect(f.el.scrollTop).toBe(600);
   expect(f.pill()?.hidden).toBe(false);
   expect(f.pill()?.textContent).toBe('3 new');
@@ -112,6 +116,26 @@ it('holds a scrolled reader, counts what arrives, and shows it on the way back t
   expect(f.windows()).toHaveLength(asked);
 });
 
+it('discloses overflow until a press reloads the head', async () => {
+  const f = feed();
+  f.rows([row(2), row(1)]);
+  await f.scroll(600);
+  f.rows([row(5), row(4), row(3), row(2), row(1)], false);
+  f.count(1);
+  expect(f.pill()?.textContent).toBe('3+ new');
+  expect(f.pill()?.getAttribute('aria-label')).toBe(
+    'More new notes than this list holds. Press to go to the latest.',
+  );
+  await f.scroll(0);
+  expect(f.last()?.anchor).toEqual({ key: key(2) });
+  f.pill()?.click();
+  expect(f.last()?.anchor).toBe('top');
+  f.rows([row(6), row(5), row(4), row(3), row(2), row(1)]);
+  f.count(0);
+  expect(f.pill()?.hidden).toBe(true);
+  expect(f.pill()?.getAttribute('aria-label')).toBeNull();
+});
+
 it('pages up at the edge of an older window without jumping past intervening rows', async () => {
   const f = feed();
   Object.defineProperty(f.el, 'scrollHeight', { value: 5000 });
@@ -122,10 +146,10 @@ it('pages up at the edge of an older window without jumping past intervening row
   expect(f.last()?.anchor).toEqual({ key: key(11) });
   f.rows([row(9), row(8)], false);
   f.count(3);
+  expect(f.pill()?.hidden).toBe(true);
 
   await f.scroll(0);
   expect(f.last()).toMatchObject({ anchor: { key: key(9) }, before: 60 });
-  expect(f.pill()?.hidden).toBe(false);
 });
 
 it('leaves a replayed screen for the head as soon as the engine counts rows above it', async () => {

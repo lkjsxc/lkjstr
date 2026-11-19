@@ -873,6 +873,8 @@ export type ToEngine =
       /** Retain up to 6000 cached rows above the anchor while extending below. */
       readonly retainAbove?: boolean;
       // end engine-added
+      /** Let incoming rows fill the explicit before budget, including grouped rows. */
+      readonly liveAbove?: boolean;
     }
   | { readonly t: 'act'; readonly req: ReqId; readonly action: Action }
   /** Answer to `sign`: the signed event as JSON text, or why not. */

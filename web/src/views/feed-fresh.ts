@@ -12,16 +12,25 @@ export function createFresh(scroller: HTMLElement, env: ViewEnv, kind: string, t
   let disposed = false;
   let latest: readonly Row[] = [];
   let pending = 0;
-  const show = (count: number): void => {
-    if (count === pending) return;
+  let overflow = false;
+  const show = (count: number, more = false): void => {
+    if (count === pending && more === overflow) return;
     pending = count;
-    el.hidden = count === 0;
-    el.replaceChildren(icon('up'), t('feed.fresh', { n: count }));
+    overflow = more;
+    el.hidden = count === 0 && !more;
+    el.replaceChildren(icon('up'), t(more ? 'feed.freshOverflow' : 'feed.fresh', { n: count }));
+    if (more) {
+      el.title = t('feed.freshOverflowHint');
+      el.setAttribute('aria-label', el.title);
+    } else {
+      el.removeAttribute('title');
+      el.removeAttribute('aria-label');
+    }
   };
   const read = (rows: readonly Row[]): void => {
     latest = rows;
     if (scroller.scrollTop >= 8 || !env.visible.get()) return;
-    el.hidden = pending === 0;
+    el.hidden = pending === 0 && !overflow;
     // Rows that flowed in behind a hidden page were drawn, not read.
     if (document.visibilityState === 'hidden') return;
     if (kind !== 'notifications' || !env.engine.me() || marking || disposed) return;
@@ -47,6 +56,7 @@ export function createFresh(scroller: HTMLElement, env: ViewEnv, kind: string, t
   document.addEventListener('visibilitychange', reread);
   return {
     el,
+    overflow: () => overflow,
     show,
     read,
     dispose() {
