@@ -51,8 +51,7 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
   let atTop = true;
   let atBottom = false;
   let mode: 'top' | 'held-head' | 'page' = 'top';
-  let above = 0;
-  let newestOutsideOwn = false;
+  let outside = { count: 0, own: false };
   let outsideBaseline: number | undefined;
   let waiting = false;
   let sstate: SubState | undefined;
@@ -88,9 +87,9 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
       if (atTop && !waiting && el.scrollTop < 8) state.head = feedWindow(kind, rows).first;
       fresh.show(el.scrollTop < 8 ? 0 : staged, false, staged > 0);
     } else {
-      const own = staged > 0 || (above > 0 ? newestOutsideOwn : isOwnNote(rows[0]));
+      const own = staged > 0 || (outside.count > 0 ? outside.own : isOwnNote(rows[0]));
       const at = keys.held() ?? keeper.get()?.key;
-      const arrivals = heldFresh(rows, live ? state.head : undefined, at, above, outsideBaseline);
+      const arrivals = heldFresh(rows, live ? state.head : undefined, at, outside, outsideBaseline);
       fresh.show(arrivals.count + staged, arrivals.more, kind === 'home' && own);
     }
   };
@@ -117,18 +116,19 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
       atBottom,
       kind === 'search' && !state.text,
       env.engine.accountState?.get().phase === 'failed',
+      drafts?.visible() ?? false,
     );
   const follow = (): void => {
     if (rail.busy() || !sub || !env.visible.get()) return;
     sub.reading?.(keeper.get()?.key ?? rows[0]?.key ?? null);
     if (kind === 'bookmarks' && sstate?.privateLists?.phase === 'loading') return;
-    const head = atTop || mode === 'held-head' || (mode === 'top' && above > 0);
+    const head = atTop || mode === 'held-head' || (mode === 'top' && outside.count > 0);
     const overflow = fresh.overflow() && !waiting;
     const followHead = el.scrollTop < 8 && head && !keys.held() && !overflow;
     if (waiting && !(followHead && mode === 'held-head')) return;
     const { first, last, count } = feedWindow(kind, rows);
     if (followHead) {
-      if (mode !== 'top' || above > 0) {
+      if (mode !== 'top' || outside.count > 0) {
         mode = 'top';
         fresh.show(0);
         request('top', 0, Math.max(PAGE, Math.min(count, LIMIT)));
@@ -163,13 +163,14 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
     atTop = !place;
     mode = place ? 'page' : 'top';
     atBottom = waiting = jump = false;
-    above = 0;
+    outside = { count: 0, own: false };
     sstate = undefined;
     sub = env.engine.open(query(), {
       rows(next, top, bottom) {
         rows = [...next];
         atTop = top;
-        if (top) (state.head ??= feedWindow(kind, rows).first), (above = 0);
+        if (top)
+          (state.head ??= feedWindow(kind, rows).first), (outside = { count: 0, own: false });
         atBottom = bottom;
         waiting = false;
         rail.window();
@@ -188,8 +189,7 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
       },
       timeline: (next) => rail.timeline(next),
       fresh(count, ownHead) {
-        above = count;
-        newestOutsideOwn = ownHead;
+        outside = { count, own: ownHead };
         outsideBaseline ??= count;
         paintFresh();
         if (count && el.scrollTop < 8 && (mode !== 'page' || atTop)) follow();

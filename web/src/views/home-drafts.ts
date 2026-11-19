@@ -93,7 +93,9 @@ function renderDraft(entry: HomeDraft, env: ViewEnv): HTMLElement {
           ),
         ),
         h('div', { class: 'content' }, h('div', { class: 'text' }, draft.text), draftMedia(draft)),
-        failure ? h('div', { class: 'cresult error' }, failureText(failure)) : null,
+        failure
+          ? h('div', { class: 'cresult' }, h('span', { class: 'error' }, failureText(failure)))
+          : null,
         failure
           ? draftButtons(
               false,
@@ -114,6 +116,7 @@ export function mountHomeDrafts(env: ViewEnv) {
   let current: readonly HomeDraft[] = [];
   return {
     el,
+    visible: () => current.length > 0,
     count: () => current.filter((entry) => !entry.signed).length,
     draw(rows: readonly Row[]) {
       const account = env.engine.me();

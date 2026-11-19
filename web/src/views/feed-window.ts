@@ -25,9 +25,10 @@ export function heldFresh(
   rows: readonly Row[],
   boundary: string | undefined,
   reading: string | undefined,
-  above: number,
+  outside: { count: number },
   outsideBaseline: number | undefined,
 ) {
+  const above = outside.count;
   if (!boundary) return { count: above, more: false };
   const count = freshRows(rows, boundary, reading);
   const more = above > (count === undefined ? (outsideBaseline ?? above) : 0);

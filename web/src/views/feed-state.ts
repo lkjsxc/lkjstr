@@ -25,9 +25,11 @@ export function showFeedState(
   atBottom: boolean,
   searchHint: boolean,
   accountsUnavailable: boolean,
+  hasDraft: boolean,
 ): void {
   const { empty, key } = feedState(rows, state, atBottom, searchHint, accountsUnavailable);
   if (key !== 'error.internal' && empty && signIn) status.replaceChildren(signIn);
+  else if (key === 'feed.empty' && hasDraft) status.replaceChildren();
   else status.textContent = key ? t(key) : '';
   status.title = state?.lastArrival
     ? t('feed.lastArrival', { time: fullTime(state.lastArrival) })
