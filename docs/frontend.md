@@ -71,8 +71,8 @@ Seams worth knowing inside `src/views/`:
 - `open {sub, query}`, `window {sub, anchor, before, after}`, `close {sub}`
   from the interface; `rows`, batched `patch`, `fresh` and `state` back. A row
   is a finished view model; the interface virtualises and never reorders.
-- `act {req, action}` with a `result`, plus `progress` and per-relay
-  `delivery` for publishes and uploads. A publication result can settle before
+- `act {req, action}` with a `result`, `publish.signed` for the signed note id, and
+  `progress` or per-relay `delivery`. A publication result can settle before
   the remaining relay answers. The composer retains delivery callbacks while its
   result is displayed; unsettled sends can survive a remount. When the last send
   settles without a mounted composer, the current delivery watch is released.
@@ -113,9 +113,9 @@ Rules:
   relay state are the engine's; a typed or shown key is never stored.
   The second owner note permits bounded public row replay and media dimensions;
   engine permission fences it from private projections. See [public-view-cache.md](public-view-cache.md).
-- One deliberate piece of optimism lives in the interface: a like or repost
-  is drawn at once and published only after its Undo lapses (or when the page
-  is hidden or closed). Everything else is drawn from engine patches.
+- Home draws the composer's retained draft while the signature is pending.
+  The Worker supplies the signed row and its exact id for reconciliation.
+  Likes and reposts are drawn at once and publish when Undo lapses or the page closes or hides.
 
 ## Commands
 
