@@ -77,8 +77,11 @@ impl Network {
 }
 
 impl crate::engine::Engine {
-    pub fn publication_frame_sent(&mut self, relay: &str, frame: &str, sent: bool) {
-        if let Some(note) = self.network.publication_frame_sent(relay, frame, sent) {
+    pub fn publication_frame_sent(&mut self, relay: &str, frame: &str, sent: bool, now: u64) {
+        if let Some(note) = self
+            .network
+            .publication_frame_sent_at(relay, frame, sent, now)
+        {
             if self.tentative_notes.remove(&note.id) {
                 self.pending.push(note, true);
             }

@@ -73,9 +73,9 @@ pub(super) fn pump(host: &Rc<RefCell<Host>>) {
                     .sockets
                     .get(&url)
                     .is_some_and(|s| s.send(&text));
-                host.borrow_mut()
-                    .engine
-                    .publication_frame_sent(&url, &text, sent);
+                let mut h = host.borrow_mut();
+                let at = h.time();
+                h.engine.publication_frame_sent(&url, &text, sent, at);
             }
         }
     }

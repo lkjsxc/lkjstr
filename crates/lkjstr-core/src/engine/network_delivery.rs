@@ -39,21 +39,30 @@ impl Network {
         text: &str,
         sent: bool,
     ) -> Option<NostrEvent> {
-        let Ok(frame) = serde_json::from_str::<Value>(text) else {
-            return None;
-        };
+        self.publication_frame_sent_at(relay, text, sent, self.now)
+    }
+
+    pub(in crate::engine) fn publication_frame_sent_at(
+        &mut self,
+        relay: &str,
+        text: &str,
+        sent: bool,
+        now: u64,
+    ) -> Option<NostrEvent> {
+        let frame = serde_json::from_str::<Value>(text).ok()?;
         if frame[0] != "EVENT" {
             return None;
         }
-        let Some(p) = frame[1]["id"]
+        let p = frame[1]["id"]
             .as_str()
-            .and_then(|id| self.publications.get_mut(id))
-        else {
-            return None;
-        };
+            .and_then(|id| self.publications.get_mut(id))?;
         if sent {
             let first = p.transport_confirmed.is_empty();
-            p.transport_confirmed.insert(relay.into());
+            if p.transport_confirmed.insert(relay.into())
+                && let Some((_, ack)) = p.note_route_deadlines.get_mut(relay)
+            {
+                *ack = Some(now.saturating_add(NOTE_ACK_WAIT_MS));
+            }
             if !p.default_notice_sent && p.default_routes.iter().any(|url| url == relay) {
                 p.default_notice_sent = true;
                 self.output

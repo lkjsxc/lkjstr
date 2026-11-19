@@ -153,7 +153,6 @@ pub(super) fn refreshed_destinations(list: &WriteRelayList) -> Vec<Destination> 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::engine::network::Relay;
 
     fn route(url: &str, write: bool) -> RelayConfig {
         RelayConfig {
@@ -180,9 +179,7 @@ mod tests {
             None,
         );
         for url in ["wss://read.test/", "wss://unrelated.test/"] {
-            let mut socket = Relay::default();
-            socket.online = true;
-            engine.network.relays.insert(url.into(), socket);
+            engine.network.relays.entry(url.into()).or_default().online = true;
         }
         let mut input = PublicationInput::default();
         let (id, defaults) = engine.note_write_routes(&owner, &mut input);
