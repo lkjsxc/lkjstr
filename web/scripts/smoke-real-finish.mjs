@@ -105,13 +105,12 @@ export async function reviewSettings({
   await launcher(other).locator('.x').click();
   await launcher(page).waitFor({ state: 'detached' });
   check('browser tabs follow tab changes in the same workspace');
-  await other.locator('lkjstr-spaces button', { hasText: /^2$/ }).click();
+  await other.locator('.tab[data-view="global"]').click();
   const otherGlobal = other.locator('.view[data-kind="global"]:visible .note').first();
   await otherGlobal.waitFor();
-  await page.waitForFunction(
-    () => JSON.parse(localStorage.getItem('lkjstr:layout:main:spaces'))?.active === 2,
-  );
   check('second app tab receives notes');
+  await page.locator('lkjstr-spaces button', { hasText: /^2$/ }).click();
+  await page.locator('lkjstr-spaces button.on', { hasText: /^2$/ }).waitFor();
   await launch('Search', 'search');
   const needle = `sharing-probe-${Date.now()}`;
   await page.locator('.view[data-kind="search"] input').first().fill(needle);
@@ -119,9 +118,10 @@ export async function reviewSettings({
   for (let n = 0; n < 200 && !fake.searches.includes(needle); n++) await page.waitForTimeout(25);
   check('a fresh want after two tabs reaches the relay', fake.searches.includes(needle));
   check(
-    'Search and the second workspace Global are both visible during the wire probe',
+    'workspace 2 Search and workspace 1 Global are both visible during the wire probe',
     (await page.locator('.view[data-kind="search"]:visible input').first().isVisible()) &&
-      (await otherGlobal.isVisible()),
+      (await otherGlobal.isVisible()) &&
+      (await other.locator('lkjstr-spaces button.on', { hasText: /^1$/ }).isVisible()),
   );
   const shared = [...socketProbe.peak.values()].every((peak) => peak === 1);
   if (!shared || socketProbe.seen.size === 0 || !mainPathsSeen.has('/owner')) {
@@ -142,7 +142,7 @@ export async function reviewSettings({
     mainPathsSeen.has('/owner') &&
       [...socketProbe.seen].every((path) => path === '/owner' || path === '/'),
   );
-  await other.locator('lkjstr-spaces button', { hasText: /^1$/ }).click();
+  await page.locator('lkjstr-spaces button', { hasText: /^1$/ }).click();
   await page.waitForFunction(
     () => JSON.parse(localStorage.getItem('lkjstr:layout:main:spaces'))?.active === 1,
   );

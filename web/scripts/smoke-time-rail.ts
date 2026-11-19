@@ -86,11 +86,21 @@ export async function railSmoke(
         ),
       );
       await mobile.goto(page.url());
+      await mobile.bringToFront();
       const narrow = mobile.locator(`${feed} .time-rail`);
       await narrow.waitFor({ state: 'visible' });
       await mobile.evaluate(() => (document.documentElement.dataset.theme = 'dark'));
+      const yearOpacity = (opacity: string) =>
+        mobile.waitForFunction(
+          ({ feed, opacity }) => {
+            const year = document.querySelector(`${feed} .time-rail .time-year`);
+            return year && getComputedStyle(year).opacity === opacity;
+          },
+          { feed, opacity },
+        );
       await mobile.mouse.move(20, 20);
       check('narrow time rail is 16px', (await narrow.boundingBox())?.width === 16);
+      await yearOpacity('0');
       check(
         'narrow rail shows year numbers on hover',
         (await narrow
@@ -99,6 +109,7 @@ export async function railSmoke(
           .evaluate((e) => getComputedStyle(e).opacity)) === '0',
       );
       await narrow.hover();
+      await yearOpacity('1');
       check(
         'hover reveals narrow year numbers',
         (await narrow
@@ -107,6 +118,7 @@ export async function railSmoke(
           .evaluate((e) => getComputedStyle(e).opacity)) === '1',
       );
       await mobile.mouse.move(20, 20);
+      await yearOpacity('0');
       await mobile.screenshot({ path: `${root}rail-390-dark.png` });
     } finally {
       await mobile.close();

@@ -91,8 +91,8 @@ Global in the second document could write its layout after Search had been
 opened in the first, replacing Search and canceling its pending save. The
 window-manager regression drives that ordering deterministically. The real
 smoke checks same-workspace synchronization separately, then keeps the
-second reader in workspace 2 while the first makes the original exact
-Search request. Both documents must keep their views visible and still
+second reader on the original Global while the first makes the exact
+Search request from workspace 2. Both documents must keep their views visible and still
 share a single socket per relay.
 
 Run the frontend and root gates with worktree-local caches and the shared
