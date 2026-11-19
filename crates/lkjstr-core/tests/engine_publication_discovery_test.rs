@@ -129,7 +129,7 @@ fn missing_inbox_is_discovered_after_first_success_and_unanswered_delivery_stays
     assert!(e.network.drain_effects().iter().any(
         |f| matches!(f,Effect::Send(u,t) if u=="wss://inbox.test/" && t.starts_with("[\"EVENT\""))
     ));
-    e.tick(105005);
+    e.tick(105006);
     assert!(
         e.network.recent_publications()[0]["deliveries"]
             .as_array()
@@ -137,7 +137,7 @@ fn missing_inbox_is_discovered_after_first_success_and_unanswered_delivery_stays
             .iter()
             .any(|r| r["url"] == "wss://inbox.test/" && r["state"] == "pending")
     );
-    e.tick(105006);
+    e.tick(105007);
     assert!(
         e.network.recent_publications()[0]["deliveries"]
             .as_array()

@@ -226,6 +226,7 @@ export const bodySig = (row: NoteRow): string =>
     ...row,
     author: 0,
     pending: 0,
+    connecting: 0,
     counts: 0,
     reactions: 0,
     mine: 0,

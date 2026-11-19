@@ -93,10 +93,11 @@ Its complete asset manifest is SHA-256 checked before installation succeeds.
 Each new attempt has a separate cache and a build-bound completion marker.
 Failed installs preserve both active and waiting shells, including a rollback
 to the active build. Missing cached assets use the same integrity check online.
-Activation waits for every old controlled client; no open draft is taken over.
-Cleanup retains the active, waiting and current installer, at most three shell
-copies across repeated updates. An interrupted activation retries cleanup on the
-first controlled fetch; fetches never recreate retired caches. Short Web Locks
+Verified handoff permits the next reload to use the new shell. Open documents
+with drafts stay in place and their hashed startup assets remain readable from
+one predecessor cache. Cleanup also retains the active, waiting and current
+installer. An interrupted activation retries cleanup on the first controlled
+fetch; fetches never recreate retired caches. Short Web Locks
 serialize allocation, completion and cleanup; network downloads hold no lock.
 Root/note/profile navigation works from the cached shell. Only packaged static
 assets are cached: no events, keys, uploads or remote media. Serve sw.js with
