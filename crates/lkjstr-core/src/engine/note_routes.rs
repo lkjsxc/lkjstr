@@ -149,3 +149,58 @@ pub(super) fn refreshed_destinations(list: &WriteRelayList) -> Vec<Destination> 
         ..Default::default()
     })
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::engine::network::Relay;
+
+    fn route(url: &str, write: bool) -> RelayConfig {
+        RelayConfig {
+            url: url.into(),
+            read: true,
+            write,
+            search: false,
+        }
+    }
+
+    #[test]
+    fn a_cached_outbox_and_online_account_reader_are_used_without_a_lookup() {
+        let mut engine = Engine::new();
+        let owner = "aa".repeat(32);
+        let fixture = WriteRelayList {
+            id: "bb".repeat(32),
+            at: 5,
+            urls: vec!["wss://write.test/".into()],
+        };
+        engine.configure_note_routes(
+            Some(owner.clone()),
+            Some(vec![route("wss://read.test/", false)]),
+            Some(fixture.clone()),
+            None,
+        );
+        for url in ["wss://read.test/", "wss://unrelated.test/"] {
+            let mut socket = Relay::default();
+            socket.online = true;
+            engine.network.relays.insert(url.into(), socket);
+        }
+        let mut input = PublicationInput::default();
+        let (id, defaults) = engine.note_write_routes(&owner, &mut input);
+        assert_eq!(id.as_ref(), Some(&fixture.id));
+        assert_eq!(input.own, ["wss://write.test/", "wss://read.test/"]);
+        assert!(defaults.is_empty());
+    }
+
+    #[test]
+    fn default_write_routes_are_available_immediately_when_no_account_routes_are_known() {
+        let mut engine = Engine::new();
+        let owner = "aa".repeat(32);
+        let routes = vec!["wss://fallback.test/".to_string()];
+        engine.configure_note_routes(Some(owner.clone()), None, None, Some(routes.clone()));
+        let mut input = PublicationInput::default();
+        let (id, defaults) = engine.note_write_routes(&owner, &mut input);
+        assert!(id.is_none());
+        assert_eq!(input.own, routes);
+        assert_eq!(defaults, routes);
+    }
+}

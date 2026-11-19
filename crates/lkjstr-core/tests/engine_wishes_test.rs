@@ -1,7 +1,10 @@
 #![allow(clippy::expect_used, clippy::panic)]
 mod engine_review_support;
 use engine_review_support::*;
-use lkjstr_core::engine::{Engine, protocol, wire::Session};
+use lkjstr_core::engine::{
+    Engine, protocol,
+    wire::{Output, Session},
+};
 use serde_json::{Value, json};
 fn messages(s: &mut Session, e: &mut Engine, q: Value) -> Vec<Value> {
     accept(s, e, json!({"t":"open","sub":"wish","query":q}), 0);
@@ -215,12 +218,8 @@ fn notification_fresh_counts_visible_groups_and_omits_own_acts() {
         &e,
     );
     assert!(
-        serde_json::to_value(out)
-            .expect("json")
-            .as_array()
-            .expect("array")
-            .iter()
-            .any(|v| v["t"] == "fresh" && v["count"] == 0)
+        out.iter()
+            .any(|row| matches!(row, Output::Fresh { count: 0, .. }))
     );
     let mut arrival = event(
         9,
@@ -242,11 +241,7 @@ fn notification_fresh_counts_visible_groups_and_omits_own_acts() {
         &e,
     );
     assert!(
-        serde_json::to_value(out)
-            .expect("json")
-            .as_array()
-            .expect("array")
-            .iter()
-            .any(|v| v["t"] == "fresh" && v["count"] == 1)
+        out.iter()
+            .any(|row| matches!(row, Output::Fresh { count: 1, .. }))
     );
 }
