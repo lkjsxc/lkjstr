@@ -220,7 +220,7 @@ impl Session {
                 });
                 let mut out = vec![Output::State {
                     sub: sub.clone(),
-                    state: json!({"phase":match state.as_str(){"data"=>if self.queries.get(&sub).is_some_and(|q| q.source=="channels") || empty_profile {"done"} else {"live"},"not-found"=>if known_channel {"live"} else {"done"},_=>"failed"},"relaysAsked":asked_relays,"relaysAnswered":answered}),
+                    state: json!({"phase":match state.as_str(){"pending"=>"cache","data"=>if self.queries.get(&sub).is_some_and(|q| q.source=="channels") || empty_profile {"done"} else {"live"},"not-found"=>if known_channel {"live"} else {"done"},_=>"failed"},"relaysAsked":asked_relays,"relaysAnswered":answered}),
                 }];
                 if !ops.is_empty() {
                     out.push(Output::Patch { sub, ops });

@@ -31,6 +31,7 @@ impl Network {
                 [HEDGE_MS, SOFT_MS, HARD_MS].map(|delay| r.created_at.saturating_add(delay))
             })
             .filter(|at| *at > now)
+            .chain(self.read_startup_wakeup(now))
             .chain(self.metadata.next_expiry(now))
             .chain(
                 self.requests
@@ -137,11 +138,15 @@ impl Network {
                 self.close_group(&relay, &wire);
             }
         }
+        self.settle_read_startups(now);
     }
     fn unopened_expired(&self, r: &Request, now: u64) -> bool {
         !r.asked
             && now.saturating_sub(r.created_at) >= r.wait_bound()
-            && self.relays.get(&r.relay).is_none_or(|peer| !peer.online)
+            && self
+                .relays
+                .get(&r.relay)
+                .is_none_or(|peer| !peer.online && !peer.connecting)
     }
 }
 

@@ -178,33 +178,6 @@ fn a_useful_route_suppresses_the_speculative_third_route() {
 }
 
 #[test]
-fn never_opened_finite_requests_fail_at_five_seconds_without_claiming_empty() {
-    let mut network = Network::default();
-    network.configure(vec![A.into()], NOW);
-    let f = NostrFilter {
-        ids: Some(vec!["a".repeat(64)]),
-        ..Default::default()
-    };
-    network.plan(
-        vec![("feed".into(), f, Query::default())],
-        &Store::new(100),
-        NOW,
-    );
-    network.tick(NOW + 4_999);
-    assert!(states(&mut network).is_empty());
-    network.tick(NOW + 5_000);
-    assert_eq!(states(&mut network), ["error"]);
-    assert_eq!(network.relays[A].timeouts, 1);
-    network.tick(NOW + 5_001);
-    assert!(
-        network
-            .drain_effects()
-            .iter()
-            .any(|effect| matches!(effect, Effect::Disconnect(url) if url == A))
-    );
-}
-
-#[test]
 fn completed_one_shot_closes_once_and_late_cancelled_frames_do_not_route() {
     let event = note(190);
     let f = NostrFilter {

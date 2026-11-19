@@ -136,8 +136,8 @@ Read-only/external accounts cannot export local keys; Debug redacts secrets. Ext
 
 Every saved account refreshes profile/follow/relay/mute/server records without an open account view. Verified NIP-65 usage wins, with retained
 indexer/hint lookups and kind-3 JSON fallback. Search-only relay routes remain independent. NIP-11 documents constrain filters, page limits and
-subscription counts. SharedWorker and the Web Locks/BroadcastChannel fallback share visible wants; hidden/detached views release work. Cache/store
-queues have explicit bounds. [Relay orchestration](relay-orchestration-20261119.md) adds progressive reads, cached gap repair and NIP-65 routing.
+subscription counts. SharedWorker and Web Locks/BroadcastChannel share visible wants; hidden/detached views release bounded cache and relay work.
+[Relay orchestration](relay-orchestration-20261119.md) adds progressive reads, gap repair, NIP-65 routes and a ten-second startup soft bound.
 
 Publishing uses author outboxes and inbox/context routes, with first acceptance resolving a public action. Home shows its retained draft while signing.
 Signed text notes appear in Home, Profile and Thread before any relay reply. Cached write lists and connected write-enabled relays send while discovery runs.

@@ -21,7 +21,7 @@ absence and history.
 | No-data hedge | Third route at 400ms |
 | Soft first-event bound | 1.5s frees a primary slot; owed span remains |
 | Public request deadline | 5s per transmitted request |
-| Unopened public request | Failed at 5s without claiming empty |
+| Zero-connection startup | Neutral until all attempts fail, or a 10s soft error |
 | Private reads | Existing 15s bound |
 | Profile coalescing | 50ms, at most 120 authors per batch |
 | Physical subscriptions per relay | Existing NIP-11 cap, clamped to 1-8 |
@@ -29,7 +29,12 @@ absence and history.
 | Active transports | Existing shared 64-route budget |
 
 Timers wake the engine even when sockets are silent. Slot-queued work is not
-expired as though it had been transmitted. First-event latency uses verified
+expired as though it had been transmitted. Missing bootstrap configuration is
+not a failed connection. A still-connecting route survives the response bound;
+zero-connection startup reports a soft error at 10s without cancelling it.
+A later connection can restore the existing cache/loading phase. Private reads
+retain their 15s startup bound. Startup observations cap at 4096 and release
+with their owners. First-event latency uses verified
 events, including exact verified cache duplicates; the useful-event counter
 still credits first insertion only. EOSE is observed once per envelope.
 Connection failure, CLOSED, timeout and rate-limit evidence reduces quality;
@@ -98,8 +103,10 @@ These are additive engine fields and introduce no UI controls.
 ## Verification
 
 Native engine_relay_progressive_test cases cover the 300ms partial-data and
-one-page paths, silent-socket hedge, useful-data suppression, unopened failure,
-one-shot close/late cancellation and quality restart. Cache-gap tests cover
+one-page paths, silent-socket hedge, useful-data suppression, one-shot close,
+late cancellation and quality restart. Startup cases cover delayed bootstrap,
+a seven-second handshake, late recovery after the ten-second soft error,
+definitive failure, owner release and separate public/private deadlines. Cache-gap tests cover
 inclusive tied boundaries, independent older repair, future timestamps and
 failed restart fetches. Outbox cases cover roles, fallback, new-list discovery,
 newest replacement, invalid hints and explicit read-disable precedence.
@@ -108,7 +115,9 @@ The real Worker relay fixture withholds EOSE to exercise the 300ms data rule,
 400ms hedge, five-second timeout, partial success, finite CLOSE and cancellation.
 Signed author metadata keeps the normal Global policy in force. A fresh second
 context prevents cached rows from substituting for the timed network arrival.
-Reports bind both the loaded WASM and fixture script hashes.
+A third context opens before relay configuration to reject an initial failed
+phase and verify recovery on that same view. Reports bind both the loaded
+WASM and fixture script hashes.
 
 Metadata cases cover TTL, clock rollback, replacement identity, cache renewal,
 bounded retry, immediate cached-name display and already-open outbox reuse.

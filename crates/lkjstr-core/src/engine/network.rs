@@ -62,6 +62,8 @@ mod quality;
 mod routing_observations;
 #[path = "network_tick.rs"]
 mod scheduler;
+#[path = "network_startup.rs"]
+mod startup;
 #[path = "network_union.rs"]
 mod union;
 #[path = "network_verification.rs"]
@@ -207,4 +209,6 @@ pub struct Network {
     pub(super) profiles_changed: bool,
     pub verifying: bool,
     pub(super) reported: BTreeMap<String, String>,
+    // At most 4096 active foreground observations; pruned on plan and reset on Open.
+    read_starts: BTreeMap<String, startup::ReadStart>,
 }

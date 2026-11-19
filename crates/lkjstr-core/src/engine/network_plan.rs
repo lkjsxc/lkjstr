@@ -21,22 +21,7 @@ impl Network {
         self.admit_outboxes(&wants, store, now);
         self.reported
             .retain(|sub, _| wants.iter().any(|(id, _, _)| id == sub));
-        if self.relays.is_empty() {
-            for (sub, _, _) in wants
-                .iter()
-                .filter(|(sub, _, _)| !progress::background_member(sub))
-            {
-                if self.reported.get(sub).is_none_or(|s| s != "error") {
-                    self.output.push(Output::Status {
-                        sub: sub.clone(),
-                        state: "error".into(),
-                        asked_relays: 0,
-                        answered_relays: 0,
-                    });
-                    self.reported.insert(sub.clone(), "error".into());
-                }
-            }
-        }
+        self.observe_read_starts(&wants, now);
         let live_lists = lists::views(&wants);
         let refresh_profiles: BTreeSet<_> = wants
             .iter()

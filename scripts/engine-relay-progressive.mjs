@@ -101,7 +101,7 @@ try {
   let page = await context.newPage();
   page.on('pageerror', error => report.errors.push(String(error)));
   await page.goto(origin);
-  const startWorker = ({ origin, id }) => {
+  const startWorker = ({ origin, id, configurationDelay = 0 }) => {
     window.messages = []; window.rows = {}; window.first = {};
     window.worker = new Worker('/worker.js', { type: 'module' });
     window.worker.onerror = error => window.messages.push({ t: 'worker-error', message: error.message });
@@ -119,10 +119,17 @@ try {
       if (message.t === 'state' && sub === 'feed' && message.state.phase === 'live') window.first.ready ??= Date.now();
       if (message.t === 'ready') {
         window.worker.postMessage({ t: 'configure', config: { language: 'en', heuristics: false, prefetch: false } });
-        window.worker.postMessage({ t: 'relays', relays: ['a','b','c'].map(path => ({ url: origin.replace('http:', 'ws:') + '/' + path, read: true, write: false, search: false })) });
+        const configureRelays = () => {
+          window.beforeConfiguration = { rows: window.rows.feed?.length ?? 0,
+            messages: window.messages.filter(m => m.sub === 'feed').length };
+          window.first.configured = Date.now();
+          window.worker.postMessage({ t: 'relays', relays: ['a','b','c'].map(path => ({ url: origin.replace('http:', 'ws:') + '/' + path, read: true, write: false, search: false })) });
+        };
+        if (!configurationDelay) configureRelays();
         window.first.open = Date.now();
         window.worker.postMessage({ t: 'open', sub: 'feed', query: { source: 'global' } });
         window.worker.postMessage({ t: 'hint', hint: { visibleSubs: ['feed'], focusedSub: 'feed', pageHidden: false, idle: false, saveData: false } });
+        if (configurationDelay) setTimeout(configureRelays, configurationDelay);
       }
     };
   };
@@ -180,6 +187,31 @@ try {
   await page.evaluate(() => { window.worker.postMessage({ t: 'close', sub: 'feed' }); window.worker.postMessage({ t: 'detach' }); });
   await delay(100);
   await page.evaluate(() => window.worker.terminate());
+  await fresh.close();
+  const startup = await browser.newContext();
+  await startup.route('**/*', route => new URL(route.request().url()).origin === origin ? route.continue() : route.abort());
+  page = await startup.newPage();
+  page.on('pageerror', error => report.errors.push(String(error)));
+  await page.goto(origin);
+  await page.evaluate(startWorker, { origin, id: note.id, configurationDelay: 400 });
+  const startupReady = await wait(() => page.evaluate(() => !!window.first.ready), 5000);
+  report.startup = await page.evaluate(() => ({
+    timing: window.first,
+    beforeConfiguration: window.beforeConfiguration,
+    states: window.messages.filter(m => m.t === 'state' && m.sub === 'feed'),
+    initialRows: window.messages.find(m => m.t === 'rows' && m.sub === 'feed')?.rows.length,
+  }));
+  check('opening before asynchronous relay configuration never flashes failed',
+    report.startup.timing.configured - report.startup.timing.open >= 350 &&
+    report.startup.beforeConfiguration.rows === 0 && !report.startup.states.some(m => m.state.phase === 'failed'), report.startup);
+  check('the same pending view receives verified data after configuration arrives',
+    startupReady && report.startup.timing.note >= report.startup.timing.configured &&
+    report.startup.timing.ready - report.startup.timing.open < 1500 &&
+    await page.evaluate(id => window.rows.feed?.filter(row => row.id === id).length === 1, note.id), report.startup.timing);
+  report.workerErrors.push(...await page.evaluate(() => window.messages.filter(m => m.t === 'worker-error')));
+  await page.evaluate(() => { window.worker.postMessage({ t: 'close', sub: 'feed' }); window.worker.postMessage({ t: 'detach' }); });
+  await delay(100);
+  await page.evaluate(() => window.worker.terminate());
 } catch (error) { report.failure = String(error); console.error(report.failure); }
 finally {
   helper?.stdin.end();
@@ -189,7 +221,7 @@ finally {
   if (ws) { for (const socket of ws.clients) socket.terminate(); await new Promise(done => ws.close(done)); }
   if (server?.listening) { server.closeAllConnections(); await new Promise(done => server.close(done)); }
   report.finishedAt = new Date().toISOString();
-  report.ok = !report.failure && !report.errors.length && !report.workerErrors?.length && report.checks.length === 11 && report.checks.every(c => c.ok);
+  report.ok = !report.failure && !report.errors.length && !report.workerErrors?.length && report.checks.length === 13 && report.checks.every(c => c.ok);
   await writeFile(join(out, 'report.json'), JSON.stringify(report, null, 2) + '\n');
   console.log(JSON.stringify({ out, ok: report.ok, failure: report.failure, timing: report.timing }));
   if (!report.ok) process.exitCode = 1;

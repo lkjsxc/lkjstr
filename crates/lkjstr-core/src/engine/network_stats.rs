@@ -3,6 +3,7 @@ impl Network {
     /// A new logical Open observes the current requests afresh, without restarting them.
     pub(in crate::engine) fn reset_observation(&mut self, sub: &str) {
         self.reported.remove(sub);
+        self.read_starts.remove(sub);
         self.output
             .retain(|out| !matches!(out, Output::Status { sub: old, .. } if old == sub));
     }
