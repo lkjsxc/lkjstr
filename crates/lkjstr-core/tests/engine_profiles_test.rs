@@ -76,8 +76,11 @@ fn cached_name_is_inline_and_needs_no_duplicate_metadata_request() {
     };
     let note = sign(1, "hello");
     e.store.insert(note.clone(), Some("wss://c.test/"));
-    e.store
-        .insert(sign(0, r#"{"name":"known"}"#), Some("cache"));
+    let metadata = sign(0, r#"{"name":"known"}"#);
+    e.store.insert(metadata.clone(), Some("cache"));
+    // A recent verified refresh retains its TTL across cached rendering.
+    e.network
+        .observe_verified("wss://c.test/", &metadata, BASE_MS);
     open(&mut e, "visible");
     assert!(e.drain().iter().any(
         |o| matches!(o, Output::Rows {items,..} if items.iter().any(|r|r.author.name=="known"))

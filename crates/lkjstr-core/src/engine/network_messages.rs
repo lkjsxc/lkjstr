@@ -2,6 +2,7 @@ use super::*;
 impl Network {
     /// Frame parsing and signature verification remain in protocol/core.
     pub fn message(&mut self, relay: &str, text: &str, now: u64) -> Option<NostrEvent> {
+        self.now = now;
         if text.len() > 1024 * 1024 {
             return None;
         }
@@ -44,6 +45,7 @@ impl Network {
             lkjstr_protocol::RelayMessage::Eose(subscription_id) => {
                 self.close_delivery_check(relay, &subscription_id);
                 let mut close = false;
+                let mut first_latency = None;
                 for r in self
                     .requests
                     .values_mut()
@@ -54,19 +56,20 @@ impl Network {
                     r.eose = true;
                     r.page_eose = true;
                     r.last_rx = now;
-                    if let Some(relay) = self.relays.get_mut(relay) {
-                        let latency = now.saturating_sub(r.sent_at);
-                        relay.latency_ms = Some(
-                            relay
-                                .latency_ms
-                                .map_or(latency, |old| (old * 7 + latency) / 8),
-                        );
-                    }
+                    first_latency.get_or_insert(now.saturating_sub(r.sent_at));
                     if !r.live {
                         r.complete = true;
                         r.sent = false;
                         close = true;
                     }
+                }
+                if let Some(latency) = first_latency
+                    && let Some(peer) = self.relays.get_mut(relay)
+                {
+                    peer.latency_ms = Some(
+                        peer.latency_ms
+                            .map_or(latency, |old| (old * 7 + latency) / 8),
+                    );
                 }
                 if close {
                     self.send(relay, json!(["CLOSE", subscription_id]));
@@ -91,10 +94,19 @@ impl Network {
                     r.max_filters = 1;
                     r.single_filters = true;
                 }
+                if !quality::limited(&message)
+                    && self
+                        .requests
+                        .values()
+                        .any(|r| r.relay == relay && r.wire_id == subscription_id && r.sent)
+                    && let Some(peer) = self.relays.get_mut(relay)
+                {
+                    peer.failures = peer.failures.saturating_add(1).min(8);
+                }
                 for r in self
                     .requests
                     .values_mut()
-                    .filter(|r| r.wire_id == subscription_id && r.relay == relay)
+                    .filter(|r| r.wire_id == subscription_id && r.relay == relay && r.sent)
                 {
                     self.profiles_changed = true;
                     self.quality_revision = self.quality_revision.wrapping_add(1);

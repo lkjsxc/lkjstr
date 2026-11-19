@@ -41,9 +41,10 @@ the existing transport contract does not need to change with the crate name.
 publication_plan.rs makes explicit kind-aware delivery plans; publication_discovery
 fills missing inbox lists under the same deadline. Network owns retries and early
 success, plus bounded Stats receipts and a durable deletion-route ledger.
-read_plan.rs ranks configured routes by coverage and measured quality without
-changing chronological feeds. Route-local cursors separate logical pages from
-wire envelopes. Routing and scheduling share lazy account weights per plan;
+read_plan.rs ranks configured fallback and bounded verified NIP-65 routes by
+coverage and measured first-event/EOSE quality without changing chronological
+feeds. Progressive readiness does not wait for all EOSE. Route-local cursors
+and inclusive cache-gap repair separate logical pages from wire envelopes. Routing and scheduling share lazy account weights per plan;
 authorless routes skip graph construction. Device refresh uses per-kind requests.
 Bounds, scorecards and deferred work are in
 [orchestration.md](orchestration.md) and [outbox.md](outbox.md).

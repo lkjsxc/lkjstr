@@ -31,7 +31,18 @@ impl Network {
                     head.until = r.page_filter.until;
                     crate::engine::filter_identity::canonical(head) == r.page_filter
                 });
-                let (priority, purpose) = if own {
+                let background = (r.filter.kinds.as_deref() == Some(&[0])
+                    && r.filter
+                        .authors
+                        .as_ref()
+                        .is_some_and(|authors| authors.iter().all(|a| store.profile(a).is_some())))
+                    || (r.filter.tags.contains_key("e")
+                        && q.is_some_and(|q| q.source != Source::Thread));
+                let (priority, purpose) = if member.starts_with("~repair:")
+                    || member.starts_with("~prefetch:")
+                {
+                    (4, "prefetch")
+                } else if own {
                     (2, "own")
                 } else if member.starts_with("~dm:") || member.starts_with("~dm-legacy:") {
                     (
@@ -60,6 +71,8 @@ impl Network {
                         || (r.filter.kinds.as_deref() == Some(&[41]) && r.filter.tags.is_empty()))
                 {
                     (1, "visible")
+                } else if background {
+                    (4, "prefetch")
                 } else if r
                     .filter
                     .kinds

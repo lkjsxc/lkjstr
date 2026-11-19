@@ -1,4 +1,4 @@
-//! Pure request routing within the reader's configured transports.
+//! Pure request routing with bounded progressive fallback.
 //! Inputs are observations and verified outbox lists, never timeline order.
 use std::collections::{BTreeMap, BTreeSet};
 #[path = "read_recovery.rs"]
@@ -99,40 +99,11 @@ impl super::Network {
         now: u64,
     ) -> ReadRoutes {
         use crate::engine::protocol::Source;
-        let authors: BTreeMap<_, _> = f
-            .authors
-            .iter()
-            .flatten()
-            .filter_map(|author| store.relay_list(author).map(|list| (author, list)))
-            .collect();
-        let mut candidates: Vec<_> = self
-            .relay_order
-            .iter()
-            .filter_map(|url| {
-                let r = self.relays.get(url)?;
-                let usage = self.known.get(url)?;
-                if !(if q.source == Source::Search {
-                    usage.search
-                } else if q.source == Source::Channels {
-                    usage.read || usage.search
-                } else {
-                    usage.read
-                }) {
-                    return None;
-                }
-                Some(Candidate {
-                    url: url.clone(),
-                    weight: r.quality_weight(now),
-                    authors: authors
-                        .iter()
-                        .filter(|(_, list)| list.iter().any(|(u, _, write)| u == url && *write))
-                        .map(|(author, _)| (*author).clone())
-                        .collect(),
-                })
-            })
-            .collect();
+        let mut candidates = self.read_candidates(f, q, store, now);
         let limit = if matches!(q.source, Source::Channel | Source::Channels) {
             24
+        } else if self.hedge_due(f, now) {
+            3
         } else {
             2
         };
@@ -163,7 +134,10 @@ impl super::Network {
                 c.weight == 0
                     || (!relay.online && relay.failures > 0)
                     || (!request.page_eose
-                        && (request.complete || (request.asked && now >= request.initial_deadline)))
+                        && (request.complete
+                            || (request.first_event_at.is_none()
+                                && now.saturating_sub(request.created_at) >= 1_500)
+                            || (request.asked && now >= request.initial_deadline)))
             })
             .map(|c| c.url.clone())
             .collect();
@@ -199,9 +173,16 @@ impl super::Network {
                     });
                 (stable || continuing) && !unavailable.contains(&c.url)
             })
-            .take(limit)
             .map(|c| c.url.clone())
             .collect();
+        if routes.len() > limit {
+            routes.sort_by_key(|url| {
+                current
+                    .get(url.as_str())
+                    .is_none_or(|r| r.first_event_at.is_none() && r.last_event.is_none())
+            });
+            routes.truncate(limit);
+        }
         let selected = if candidates.iter().any(|c| !c.authors.is_empty()) {
             let policy = weights.get(q.account.as_deref());
             select_weighted(&candidates, limit, |p| policy.person(p))
@@ -213,7 +194,7 @@ impl super::Network {
                 routes.push(url);
             }
         }
-        if limit == 2 && f.until.is_none() && !self.verifying {
+        if limit <= 3 && f.until.is_none() && !self.verifying {
             recovery::promote(
                 &mut routes,
                 &candidates,
@@ -221,6 +202,23 @@ impl super::Network {
                 &unavailable,
                 &q.filters.relay_hints,
             );
+        }
+        // A newly discovered outbox may join an in-flight configured page without
+        // discarding either route's cursor or waiting for its EOSE.
+        if f.until.is_none()
+            && routes.len() < 3
+            && !routes.iter().any(|url| {
+                candidates
+                    .iter()
+                    .any(|c| &c.url == url && !c.authors.is_empty())
+            })
+            && let Some(outbox) = candidates
+                .iter()
+                .filter(|c| !c.authors.is_empty() && c.weight > 0)
+                .max_by_key(|c| c.weight)
+            && !routes.contains(&outbox.url)
+        {
+            routes.push(outbox.url.clone());
         }
         let primary = routes.iter().cloned().collect();
         // Keep failed-page uncertainty outside those slots. Historical evidence

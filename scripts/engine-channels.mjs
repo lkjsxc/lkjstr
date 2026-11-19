@@ -30,6 +30,11 @@ export async function channels({page,send,wait,check,note,signer,lines,fake,orig
     await wait(s=>window.channelRows[s]!==undefined,sub);
   };
   const c=[];for(let i=0;i<4;i++){const e=await sign(40,1700300000+i,JSON.stringify({name:`Room ${i}`,about:'channel garden',relays:[route]}));c.push(e);fake.add(e);}
+  // Seed history before joining starts live unread watches. Ready now permits partial data;
+  // injecting historical rows after joining would instead create real Fresh arrivals.
+  const history=[];
+  for(let i=0;i<230;i++)history.push(await sign(42,1700400000+Math.floor(i/3),`Channel history ${i}`,root(c[0].id)));
+  for(const e of history)fake.add(e);
   fake.add(await sign(10005,Math.floor(Date.now()/1000)+10,'',c.slice(0,3).map(e=>['e',e.id])));
   const earlyJoin=await act({a:'channel.join',as:note.pubkey,id:c[0].id,on:true},true);
   check('early channel join fetches its owner list without an open channel view',earlyJoin.ok&&fake.published.some(e=>e.kind===10005&&e.tags.filter(t=>t[0]==='e').map(t=>t[1]).join()===c.slice(0,3).map(e=>e.id).join()));
@@ -50,9 +55,6 @@ export async function channels({page,send,wait,check,note,signer,lines,fake,orig
   await wait(()=>window.channelRows['ch-not-channel']?.length===0);
   check('known nonchannel reference yields no channel row',true);
   for(const sub of ['ch-word','ch-ref','ch-not-channel'])await send({t:'close',sub});
-  const history=[];
-  for(let i=0;i<230;i++)history.push(await sign(42,1700400000+Math.floor(i/3),`Channel history ${i}`,root(c[0].id)));
-  for(const e of history)fake.add(e);
   await open('ch-room',{source:'channel',id:c[0].id,account:note.pubkey});
   await send({t:'hint',hint:{visibleSubs:['ch-list','ch-room'],pageHidden:false,idle:false,saveData:false}});
   await wait(()=>window.channelRows['ch-room']?.length>=50&&window.channelRows['ch-room'][0].kind==='channel');

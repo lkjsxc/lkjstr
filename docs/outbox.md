@@ -15,10 +15,12 @@ seeks do not inherit this optimization. Interrupted filters retain page evidence
 failed, truncated and nonadvancing timestamp-tie pages never prove exhaustion.
 The state is bounded by current wants and released with the last owning view.
 
-This is the cursor prerequisite, not author-sharded outbox reading. Ordinary reads
-still use two complete-filter configured routes. Dynamic author-list discovery,
-author-shard reassignment and the global 12/6-connection two-cover budget are not
-implemented. No new relay-selection setting is exposed.
+The November 19 extension adds bounded signed author-list discovery and NIP-65
+routes to configured fallback, with two initial complete-filter routes and a
+timed third-route hedge. Inclusive cache-gap repair preserves this cursor
+evidence. Author-shard reassignment and a global 12/6-connection two-cover
+budget remain unimplemented. No new relay-selection setting is exposed.
+See [relay-orchestration-20261119.md](relay-orchestration-20261119.md).
 
 ## Durable relay quality and throttling
 

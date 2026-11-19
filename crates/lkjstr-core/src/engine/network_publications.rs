@@ -157,68 +157,8 @@ impl Network {
         }
     }
     pub(super) fn settle(&mut self, now: u64) {
-        let subs: BTreeSet<_> = self
-            .requests
-            .values()
-            .flat_map(|r| r.members.iter().cloned())
-            .collect();
-        for sub in subs {
-            if self.verifying {
-                break;
-            }
-            let rs: Vec<_> = self
-                .requests
-                .values()
-                .filter(|r| r.members.contains(&sub))
-                .collect();
-            let done = rs
-                .iter()
-                .all(|r| r.page_eose || r.eose || r.complete || (r.sent && now >= r.deadline));
-            if done {
-                let state = if rs.iter().any(|r| r.last_event.is_some()) {
-                    "data"
-                } else if rs.iter().any(|r| !r.eose && !r.page_eose) {
-                    "error"
-                } else {
-                    "not-found"
-                };
-                if self.reported.get(&sub).is_none_or(|s| s != state) {
-                    self.output.push(Output::Status {
-                        sub: sub.clone(),
-                        state: state.into(),
-                        answered_relays: self.request_progress(&sub).1,
-                        asked_relays: rs
-                            .iter()
-                            .filter(|r| r.asked)
-                            .map(|r| &r.relay)
-                            .collect::<BTreeSet<_>>()
-                            .len(),
-                    });
-                    self.reported.insert(sub.clone(), state.into());
-                }
-            }
-        }
-        let timed_out: Vec<_> = self
-            .requests
-            .iter()
-            .filter(|(_, r)| !r.eose && !r.complete && r.sent && now >= r.deadline)
-            .map(|(id, _)| id.clone())
-            .collect();
-        for id in timed_out {
-            if let Some(r) = self.requests.get_mut(&id) {
-                self.profiles_changed = true;
-                r.complete = !r.live;
-                r.ready_at = now + r.retry_delay;
-                r.retry_delay = (r.retry_delay * 2).min(30000);
-                let was_sent = r.sent;
-                r.sent = false;
-                let relay = r.relay.clone();
-                if was_sent {
-                    let wire = r.wire_id.clone();
-                    self.close_group(&relay, &wire);
-                }
-            }
-        }
+        self.settle_reads(now);
+        self.metadata_finished();
         let ids: Vec<_> = self
             .publications
             .iter()
@@ -237,5 +177,35 @@ impl Network {
         }
         self.check_deliveries(now);
         self.release_publication_relays();
+    }
+}
+
+impl Network {
+    pub fn publish(
+        &mut self,
+        req: String,
+        event: NostrEvent,
+        routes: Vec<crate::engine::publication_plan::Destination>,
+        now: u64,
+    ) {
+        let account = if event.kind == 1059 {
+            String::new()
+        } else {
+            event.pubkey.clone()
+        };
+        self.publish_as(req, event, routes, now, account);
+    }
+
+    /// Gift wraps require their original sender; their event pubkey is ephemeral.
+    pub fn publish_as(
+        &mut self,
+        req: String,
+        event: NostrEvent,
+        routes: Vec<crate::engine::publication_plan::Destination>,
+        now: u64,
+        account: String,
+    ) {
+        self.stage_publication(req, event, routes, now, account);
+        self.tick(now);
     }
 }

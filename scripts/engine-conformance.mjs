@@ -46,6 +46,18 @@ export async function conformance({page,send,wait,check,note,signer,lines,origin
     await send({t:'close',sub});
   }
   check('all protocol sources return typed windows',true);
+  const held=await act({a:'publish',as:note.pubkey,what:{k:'note',draft:{text:'held public cache fixture'}}},true);
+  check('held cache fixture is a verified own note',held.ok&&typeof held.id==='string');
+  await send({t:'open',sub:'cache-held',query:{source:'thread',account:note.pubkey,id:held.id}});
+  await wait(id=>window.messages.some(m=>m.sub==='cache-held'&&(m.rows??m.ops?.flatMap(o=>o.row?[o.row]:o.rows??[])??[]).some(r=>r.id===id)),held.id);
+  await wait(()=>window.messages.some(m=>m.t==='cache.policy'&&m.sub==='cache-held'&&m.allow));
+  await send({t:'cache.hold',sub:'cache-held',rows:[{key:held.id,id:held.id}]});
+  check('held cache deletion is signed and accepted',(await act({a:'publish',as:note.pubkey,what:{k:'delete',id:held.id}},true)).ok);
+  await wait(id=>window.messages.some(m=>m.t==='cache.reconcile'&&m.sub==='cache-held'&&m.removedKeys.includes(id)),held.id);
+  const reconciled=(await messages()).find(m=>m.t==='cache.reconcile'&&m.sub==='cache-held');
+  check('verified deletion reconciles the exact held public reference',reconciled.removedKeys.join()===held.id&&!reconciled.invalidProfileIds.length&&!reconciled.removedQuoteIds.length);
+  await send({t:'cache.hold',sub:'cache-held',rows:[]});
+  await send({t:'close',sub:'cache-held'});
   check('bad relay save rejects the entire action',(await act({a:'relays.save',as:note.pubkey,relays:[{url:'https://bad.test',read:true,write:true}] })).error?.code==='rejected');
   check('invalid media retry is rejected',(await act({a:'servers.check',server:'http://bad.test'})).error?.code==='rejected');
   check('bad server save rejects the entire action',(await act({a:'servers.save',as:note.pubkey,servers:['http://bad.test']})).error?.code==='rejected');

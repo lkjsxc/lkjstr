@@ -48,6 +48,7 @@ impl Network {
         for key in ids {
             let r = &mut self.requests.get_mut(&key);
             let Some(r) = r else { continue };
+            let wait = r.wait_bound();
             let mut filter = r.filter.clone();
             if let Some(at) = r.last_event.filter(|_| r.live && r.page_eose) {
                 // Gift-wrap timestamps are randomized over the preceding two days.
@@ -74,12 +75,19 @@ impl Network {
             r.verification_retry = false;
             r.sent = true;
             if !r.asked {
-                r.initial_deadline = now + 15000;
+                r.initial_deadline = now.saturating_add(wait);
             }
             r.asked = true;
             r.sent_at = now;
+            r.first_event_at = None;
             r.last_rx = now;
-            r.deadline = now + 15000;
+            r.deadline = now.saturating_add(wait);
+            if !r.page_eose && now < r.initial_deadline {
+                r.deadline = r.deadline.min(r.initial_deadline);
+            }
+        }
+        if let Some(r) = self.relays.get_mut(&relay) {
+            r.request_uses = r.request_uses.saturating_add(1);
         }
         self.send(&relay, Value::Array(frame));
         if !profile && let Some(r) = self.relays.get_mut(&relay) {

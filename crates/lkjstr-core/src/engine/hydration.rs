@@ -102,7 +102,7 @@ pub(super) fn authors(
 }
 
 impl Engine {
-    pub(super) fn profile_wants(&self) -> Vec<(String, NostrFilter, Query)> {
+    pub(super) fn profile_wants(&self, now: u64) -> Vec<(String, NostrFilter, Query)> {
         // 128 visible views x 6000 authors; requests chunk at 120 per relay.
         let mut batches: BTreeMap<String, BTreeMap<String, BTreeSet<String>>> = BTreeMap::new();
         let reads: Vec<_> = self
@@ -138,12 +138,17 @@ impl Engine {
             });
             people.truncate(6000);
             for (author, seen) in people {
-                if self.store.profile(&author).is_some() {
+                if self.network.metadata_fresh(&self.store, &author, 0, now) {
                     continue;
                 }
                 let delivered: Vec<_> = seen
                     .into_iter()
-                    .filter(|u| reads.contains(u))
+                    .filter(|u| {
+                        reads.contains(u)
+                            || (self.network.read_outboxes.contains(u)
+                                && self.network.known.get(u).is_none_or(|r| r.read)
+                                && self.network.relays.get(u).is_some_and(|r| r.online))
+                    })
                     .take(1)
                     .collect();
                 let first = if delivered.is_empty() {
@@ -167,7 +172,11 @@ impl Engine {
                         .or_default()
                         .entry(author.clone())
                         .or_default()
-                        .insert(sub.clone());
+                        .insert(if self.store.profile(&author).is_some() {
+                            format!("~prefetch:{sub}")
+                        } else {
+                            sub.clone()
+                        });
                 }
             }
         }
@@ -199,5 +208,19 @@ impl Engine {
             }
         }
         wants
+    }
+}
+
+pub(super) fn people(store: &Store, query: &Query) -> Vec<NostrFilter> {
+    let authors = super::rich::authors(store, query).unwrap_or_default();
+    if authors.is_empty() {
+        vec![]
+    } else {
+        vec![NostrFilter {
+            kinds: Some(vec![0]),
+            authors: Some(authors.into_iter().take(32).collect()),
+            limit: Some(32),
+            ..Default::default()
+        }]
     }
 }

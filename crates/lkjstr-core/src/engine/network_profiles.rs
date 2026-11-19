@@ -1,9 +1,11 @@
-//! Coalesce hydration during a 75 ms window; keep transmitted buckets immutable.
+//! Coalesce hydration during a 50 ms window; keep transmitted buckets immutable.
 use super::*;
 
 // Exclude owner refreshes, cursored pages and follow watches.
 pub(super) fn family(f: &NostrFilter, members: &BTreeSet<String>) -> Option<u8> {
-    if members.iter().any(|m| m.starts_with('~'))
+    if members
+        .iter()
+        .any(|m| m.starts_with('~') && !m.starts_with("~prefetch:"))
         || f.since.is_some()
         || f.until.is_some()
         || f.search.is_some()
@@ -176,7 +178,7 @@ impl Network {
         now: u64,
     ) -> u64 {
         if family(filter, members).is_some() {
-            now + 75
+            now + 50
         } else {
             now
         }

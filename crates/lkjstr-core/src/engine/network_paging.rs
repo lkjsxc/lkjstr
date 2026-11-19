@@ -73,7 +73,8 @@ impl Network {
         let mut filter = logical.clone();
         // A recovered route can make the union cursor newer while it catches up.
         // Already successful routes keep their own tail; they never rewind.
-        let exhausted = previous.received.len() < previous.page_limit;
+        let exhausted =
+            previous.cached_until.is_none() && previous.received.len() < previous.page_limit;
         filter.until = previous.oldest.or(previous.filter.until).or(logical.until);
         (filter, exhausted, None)
     }

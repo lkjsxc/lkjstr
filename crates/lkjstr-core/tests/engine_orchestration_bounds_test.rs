@@ -143,15 +143,16 @@ fn inbox_lookup_waits_for_first_feed_page_then_rotates_single_slot() {
         .expect("lookup gets a turn");
     network.message(relay, &json!(["EOSE", lookup[1]]).to_string(), 301);
     network.plan(vec![feed], &store, 400);
-    assert!(
-        frames(&mut network)
-            .iter()
-            .any(|f| *f == json!(["CLOSE", lookup[1]]))
-    );
+    let mut resumed = frames(&mut network);
+    assert!(resumed.iter().any(|f| *f == json!(["CLOSE", lookup[1]])));
     network.tick(1300);
-    assert!(
-        frames(&mut network)
+    resumed.extend(frames(&mut network));
+    // A finite list lookup releases its slot immediately after EOSE.
+    assert_eq!(
+        resumed
             .iter()
-            .any(|f| f[0] == "REQ" && f[2]["kinds"] == json!([1, 6]))
+            .filter(|f| f[0] == "REQ" && f[2]["kinds"] == json!([1, 6]))
+            .count(),
+        1
     );
 }

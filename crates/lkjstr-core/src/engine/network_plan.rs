@@ -18,10 +18,14 @@ impl Network {
     ) {
         self.expire_coverage(now);
         let wants = want_key::gaps(wants, store);
+        self.admit_outboxes(&wants, store, now);
         self.reported
             .retain(|sub, _| wants.iter().any(|(id, _, _)| id == sub));
         if self.relays.is_empty() {
-            for (sub, _, _) in &wants {
+            for (sub, _, _) in wants
+                .iter()
+                .filter(|(sub, _, _)| !progress::background_member(sub))
+            {
                 if self.reported.get(sub).is_none_or(|s| s != "error") {
                     self.output.push(Output::Status {
                         sub: sub.clone(),
@@ -90,12 +94,15 @@ impl Network {
                 entry.1.insert(sub.clone());
             }
         }
+        self.add_cache_repairs(&mut desired, &queries, store, now);
         self.stabilize_profiles(&mut desired, &live_lists);
         let mut retained = BTreeSet::new();
         for ((relay, key), (filter, members)) in desired {
             let read_slot = primary_reads.contains(&(relay.clone(), key));
             let list_watch = lists::watch(&filter, &members, &live_lists);
-            let live = filter_live(&filter) || members.contains("~account-discovery") || list_watch;
+            let live = (filter_live(&filter) && filter.kinds.as_deref() != Some(&[10002]))
+                || members.contains("~account-discovery")
+                || list_watch;
             let union_safe = union::allowed(&filter, &members, &queries, store, private);
             let existing = self
                 .requests
@@ -107,6 +114,7 @@ impl Network {
                 r.union_safe = union_safe;
                 let relay = r.relay.clone();
                 let wire = r.wire_id.clone();
+                r.refresh_metadata(now);
                 r.refresh_profile(&members, &refresh_profiles, now);
                 r.live |= members.contains("~account-discovery");
                 r.members = members;
@@ -116,7 +124,7 @@ impl Network {
                     self.close_group(&relay, &wire);
                 }
             } else {
-                let (wire_filter, exhausted, pending) =
+                let (mut wire_filter, exhausted, pending) =
                     self.page_request(&relay, &filter, &members);
                 if let Some(id) = pending.as_ref() {
                     let previous = &self.requests[id];
@@ -144,6 +152,16 @@ impl Network {
                     self.hydration_ready(&filter, &members, now)
                 };
                 let previous = pending.as_ref().and_then(|id| self.requests.get(id));
+                let cached_until = previous.and_then(|r| r.cached_until).or_else(|| {
+                    self.cached_boundary(&relay, &filter, &members, &queries, store, now)
+                });
+                if let Some(boundary) = cached_until {
+                    wire_filter.since = Some(
+                        boundary
+                            .saturating_sub(2)
+                            .max(wire_filter.since.unwrap_or(0)),
+                    );
+                }
                 self.requests.insert(
                     id.clone(),
                     Request {
@@ -154,6 +172,7 @@ impl Network {
                         weight: 1,
                         filter: wire_filter,
                         page_filter: filter.clone(),
+                        cached_until,
                         members,
                         read_slot,
                         verification_retry: previous.is_some_and(|r| r.verification_retry),
@@ -164,6 +183,8 @@ impl Network {
                         initial_deadline: previous.map_or(u64::MAX, |r| r.initial_deadline),
                         last_event: None,
                         sent_at: 0,
+                        created_at: previous.map_or(now, |r| r.created_at),
+                        first_event_at: previous.and_then(|r| r.first_event_at),
                         last_rx: now,
                         complete: exhausted
                             || previous.is_some_and(|r| r.complete && !r.retryable_page_timeout()),
@@ -215,6 +236,7 @@ impl Network {
         }
         self.bound_coverage();
         self.request_policy(&queries, store, &mut weights);
+        self.read_wakeup(now);
         self.tick(now);
     }
     pub(super) fn send(&mut self, relay: &str, value: Value) {

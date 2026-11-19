@@ -104,15 +104,21 @@ impl Network {
         !requests.is_empty()
             && requests
                 .iter()
-                .all(|r| r.page_eose && r.received.len() < r.page_limit)
+                .all(|r| r.cached_until.is_none() && r.page_eose && r.received.len() < r.page_limit)
     }
     /// The shallowest full relay page advances without skipping another relay's tail.
     pub fn page_cursor(&self, filter: &lkjstr_protocol::NostrFilter) -> Option<u64> {
         let filter = crate::engine::filter_identity::canonical(filter.clone());
         self.requests
             .values()
-            .filter(|r| r.page_filter == filter && r.page_eose && r.received.len() >= r.page_limit)
-            .filter_map(|r| r.oldest)
+            .filter(|r| r.page_filter == filter && r.page_eose)
+            .filter_map(|r| {
+                if r.received.len() >= r.page_limit {
+                    r.oldest
+                } else {
+                    r.cached_until
+                }
+            })
             .max()
     }
 }

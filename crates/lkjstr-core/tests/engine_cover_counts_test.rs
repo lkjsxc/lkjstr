@@ -27,7 +27,7 @@ fn reqs(n: &mut Network) -> Vec<Value> {
 #[test]
 fn missing_feed_eose_releases_counts_at_deadline_in_backoff_and_during_retry() {
     for focused in [false, true] {
-        for arrival in [100, 15001, 16000] {
+        for arrival in [100, 5001, 6000] {
             let mut n = Network::default();
             let mut store = Store::new(100);
             let note = event(1, 1, "visible note", vec![]);
@@ -55,9 +55,9 @@ fn missing_feed_eose_releases_counts_at_deadline_in_backoff_and_during_retry() {
             if arrival == 100 {
                 n.plan(wants.clone(), &store, arrival);
             }
-            n.tick(14999);
+            n.tick(4999);
             assert!(reqs(&mut n).is_empty(), "wait for the initial page");
-            n.tick(15000);
+            n.tick(5000);
             let mut frames = reqs(&mut n);
             if arrival > 100 {
                 assert!(frames.is_empty());
@@ -70,7 +70,7 @@ fn missing_feed_eose_releases_counts_at_deadline_in_backoff_and_during_retry() {
                 .iter()
                 .find(|f| f[2]["#e"].is_array())
                 .expect("counts must run after the initial page deadline");
-            if arrival == 16000 {
+            if arrival == 6000 {
                 assert!(
                     frames
                         .iter()
@@ -81,7 +81,7 @@ fn missing_feed_eose_releases_counts_at_deadline_in_backoff_and_during_retry() {
             assert!(!n.page_exhausted(&feed_filter));
             assert!(!n.count_complete(&counts, &store));
             let reaction = event(2, 7, "+", vec![vec!["e".into(), note.id.clone()]]);
-            let now = arrival.max(15000) + 101;
+            let now = arrival.max(5000) + 101;
             let received = n
                 .message(
                     R,

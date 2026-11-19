@@ -41,5 +41,6 @@ node scripts/engine-harness.mjs > tmp/engine-harness.log 2>&1 || {
   tail -c 4000 tmp/engine-harness.log >&2 || true
   exit 1
 }
+LKJSTR_ENGINE_REPORT=tmp/relay-progressive-worker node scripts/engine-relay-progressive.mjs > tmp/relay-progressive-worker.log 2>&1 || { tail -20 tmp/relay-progressive-worker.log; exit 1; }
 node scripts/engine-profile-latency.mjs > tmp/engine-profile-latency.log 2>&1 || { tail -20 tmp/engine-profile-latency.log; exit 1; }
 echo 'ok engine-conformance'

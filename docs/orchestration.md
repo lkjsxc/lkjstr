@@ -75,25 +75,28 @@ publications. Transport resources are released after their remaining wants end.
 
 ## Reading and freshness
 
-The live selector ranks the existing configured routes using cached NIP-65
-outbox coverage, first-useful arrival share, EOSE latency, connection failures,
-rate-limit cooldown and authentication refusal. A neutral prior prevents small
-samples from dominating. A greedy marginal-coverage score values a first copy
-more than a second. Ordinary requests retain their two-route fanout and complete
-filters. Existing eligible routes stay fixed for an unchanged filter, including
-a completed page, so quality updates cannot discard coverage or cursors. New
-page filters rank afresh; changed read/search configuration still takes effect.
-Channel requests retain their existing larger route fanout. Publication-only
-transports never become generic read routes. Explicit view hints supplement
-ordinary routes without displacing their page evidence.
+The selector ranks configured fallback and query-scoped signed NIP-65 routes
+using verified first-event/EOSE timing, useful arrival share, connection errors,
+CLOSED responses and cooldown. Author notes use advertised write roles; mentions
+and replies use the reader's read roles. Explicit read disables remain binding.
+Initial ordinary fanout is two; a 400ms no-data hedge may add a third. The 1.5s
+soft bound frees a primary slot while retaining owed route-local history.
+Public read waits end at 5s. Private read lifetimes remain unchanged.
 
-Hydration now collects pending authors, event IDs, counts and finite kind-3
-lookups for 75 ms. Profiles already in the store are not fetched again by visible
-rows; owner discovery still refreshes independently. Missing profiles start on
-one delivering route and fall back after termination. Limits, exact-duplicate
-resume evidence, finite-envelope cancellation and measured results are in
-[cover.md](cover.md). Complete-filter feed fanout remains two; no dynamic author
-cover or cross-relay range exclusion is claimed.
+Verified rows render as they arrive. A delivered page or 300ms with verified
+data settles the usable state independently of slow EOSE. Empty/history evidence
+still requires successful answers and drained verification. Cache rows are
+immediate; fresh gaps use since with a two-second overlap plus an inclusive
+until repair. Neither failed reads nor cached membership prove exhaustion.
+
+Visible profile hydration batches for 50ms, starts on a delivering route and
+falls back after termination. Cached metadata has observation-based TTLs
+(15min profiles, 5min relay lists), background revalidation and bounded durable
+stamps. Background replies/counts, nearby older pages and cached-name refreshes
+use existing sockets and yield to explicit work. Finite envelopes, cursor and
+cancellation rules remain in [cover.md](cover.md). Current bounds and deterministic
+proofs are in [relay-orchestration-20261119.md](relay-orchestration-20261119.md).
+Complete filters remain intact; author-sharded global two-cover is not claimed.
 
 Every saved device account, up to 32, requests kinds 0, 3, 10000, 10002 and 10063
 at startup independently of cached records or open account views. Successful

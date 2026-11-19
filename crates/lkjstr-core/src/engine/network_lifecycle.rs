@@ -48,16 +48,36 @@ impl Network {
     /// but never earn first-arrival credit in Stats or quality ranking.
     pub fn observe_verified(&mut self, relay: &str, e: &NostrEvent, now: u64) {
         self.confirm_delivery(relay, &e.id, now);
+        if relay.starts_with("ws") && self.metadata.observed(e, now) {
+            self.quality_revision = self.quality_revision.wrapping_add(1);
+        }
+        let mut first = None;
         for r in self
             .requests
             .values_mut()
             .filter(|r| r.relay == relay && lkjstr_protocol::matches_filter(e, &r.filter))
         {
             r.last_rx = now;
+            if r.first_event_at.is_none()
+                && (r.sent || (r.asked && r.page_eose && r.received.contains(&e.id)))
+            {
+                r.first_event_at = Some(now);
+                first = Some(now.saturating_sub(r.sent_at));
+            }
             // A future-dated event must not move the replay watermark past valid traffic.
             if e.created_at <= now / 1000 {
                 r.last_event = Some(r.last_event.unwrap_or(0).max(e.created_at));
             }
+        }
+        if let Some(latency) = first
+            && let Some(r) = self.relays.get_mut(relay)
+        {
+            r.first_event_ms = Some(
+                r.first_event_ms
+                    .map_or(latency, |old| (old * 7 + latency) / 8),
+            );
+            r.timeouts = r.timeouts.saturating_sub(1);
+            self.quality_revision = self.quality_revision.wrapping_add(1);
         }
     }
 }

@@ -77,7 +77,10 @@ impl Network {
             None => "unused",
         };
         json!({"route":route,"readRule":rule,"followedCovered":covered,
-            "weight":self.relays.get(url).map(|r| r.quality_weight(self.now))})
+            "weight":self.relays.get(url).map(|r| r.quality_weight(self.now)),
+            "firstEventMs":self.relays.get(url).and_then(|r| r.first_event_ms),
+            "requestUses":self.relays.get(url).map(|r| r.request_uses),
+            "readTimeouts":self.relays.get(url).map(|r| r.timeouts)})
     }
     pub fn open_wires(&self) -> BTreeMap<&str, usize> {
         let mut out = BTreeMap::new();

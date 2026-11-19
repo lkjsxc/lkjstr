@@ -924,6 +924,10 @@ export type EngineStats = {
     readonly readRule?: 'reader' | 'search' | 'hint' | 'unused';
     readonly route?: 'reading' | 'writing' | 'both' | 'search' | 'own' | 'unused';
     readonly followedCovered?: number;
+    readonly firstEventMs?: number | null;
+    /** Null when an inactive route has no retained transport observation. */
+    readonly requestUses?: number | null;
+    readonly readTimeouts?: number | null;
     readonly weight?: number | null;
     readonly eventsReceived: number;
     readonly duplicatesDropped: number;

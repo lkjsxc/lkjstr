@@ -9,9 +9,15 @@ pub(super) struct Observation {
     useful: u64,
     received: u64,
     latency: Option<u64>,
+    #[serde(default)]
+    first_event: Option<u64>,
+    #[serde(default)]
+    timeouts: u32,
     failures: u32,
     retry: u64,
     cooldown: u64,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    metadata: Vec<metadata::Stamp>,
 }
 impl Relay {
     pub fn quality_weight(&self, now: u64) -> u64 {
@@ -19,8 +25,11 @@ impl Relay {
         read_plan::weight(
             self.useful.saturating_add(self.prior_useful >> age),
             self.received.saturating_add(self.prior_received >> age),
-            self.latency_ms,
-            self.failures,
+            match (self.first_event_ms, self.latency_ms) {
+                (Some(first), Some(eose)) => Some((first.saturating_mul(3) + eose) / 4),
+                (first, eose) => first.or(eose),
+            },
+            self.failures.saturating_add(self.timeouts),
             (!self.online && !self.connecting && now < self.retry_at) || now < self.cooldown_until,
             self.last_error
                 .as_deref()
@@ -50,6 +59,8 @@ impl Network {
                         .saturating_add(r.prior_received >> age)
                         .min(1_000_000),
                     latency: r.latency_ms.map(|v| v.min(120000)),
+                    first_event: r.first_event_ms.map(|v| v.min(120000)),
+                    timeouts: r.timeouts.min(8),
                     failures: r.failures.min(8),
                     retry: if r.online || r.connecting {
                         0
@@ -57,6 +68,7 @@ impl Network {
                         r.retry_at.saturating_sub(now).min(120000)
                     },
                     cooldown: r.cooldown_until.saturating_sub(now).min(120000),
+                    metadata: Vec::new(),
                 },
             );
         }
@@ -68,6 +80,12 @@ impl Network {
             if let Some(url) = oldest {
                 observations.remove(&url);
             }
+        }
+        for observation in observations.values_mut() {
+            observation.metadata.clear();
+        }
+        if let Some(first) = observations.values_mut().next() {
+            first.metadata = self.metadata.snapshot(now);
         }
         serde_json::to_string(&observations).unwrap_or_default()
     }
@@ -87,6 +105,10 @@ impl Network {
             })
             .take(64)
             .collect();
+        self.metadata.restore(
+            self.observations.values().flat_map(|o| o.metadata.iter()),
+            now,
+        );
         for url in self.relays.keys().cloned().collect::<Vec<_>>() {
             self.apply_quality(&url, now);
         }
@@ -104,6 +126,8 @@ impl Network {
         r.prior_received = o.received.min(1_000_000) >> age;
         r.quality_at = now;
         r.latency_ms = (age < 24).then_some(o.latency).flatten();
+        r.first_event_ms = (age < 24).then_some(o.first_event).flatten();
+        r.timeouts = o.timeouts.min(8) >> age.min(8);
         r.failures = o.failures.min(8) >> age.min(8);
         r.retry_at = now.saturating_add(o.retry.min(120000).saturating_sub(elapsed));
         r.cooldown_until = now.saturating_add(o.cooldown.min(120000).saturating_sub(elapsed));

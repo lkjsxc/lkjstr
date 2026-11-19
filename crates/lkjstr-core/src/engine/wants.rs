@@ -7,7 +7,9 @@ impl Engine {
         wants.extend(self.cache_reference_wants());
         wants.extend(self.dm_wants.clone());
         wants.extend(self.zap_wants());
-        wants.extend(self.profile_wants());
+        wants.extend(self.profile_wants(now));
+        wants.extend(self.outbox_wants(now));
+        wants.extend(self.nearby_wants());
         wants.extend(self.discovery_wants());
         wants.extend(self.channel_action_wants());
         for (sub, v) in self.views.iter().filter(|(_, v)| v.visible) {
@@ -45,7 +47,17 @@ impl Engine {
                     q.filters.relay_hints.dedup();
                     q.filters.relay_hints.truncate(8);
                 }
-                wants.push((sub.clone(), f, q));
+                let owner = if q.source != Source::Thread
+                    && f.tags.contains_key("e")
+                    && f.kinds
+                        .as_ref()
+                        .is_some_and(|ks| ks.contains(&7) && ks.contains(&9735))
+                {
+                    format!("~prefetch:{sub}")
+                } else {
+                    sub.clone()
+                };
+                wants.push((owner, f, q));
             }
         }
         self.plan_local_reads(&mut wants, now);
@@ -89,17 +101,7 @@ fn requests(
         return vec![];
     }
     if q.source == Source::People {
-        let authors = super::rich::authors(store, q).unwrap_or_default();
-        return if authors.is_empty() {
-            vec![]
-        } else {
-            vec![NostrFilter {
-                kinds: Some(vec![0]),
-                authors: Some(authors.into_iter().take(32).collect()),
-                limit: Some(32),
-                ..Default::default()
-            }]
-        };
+        return super::hydration::people(store, q);
     }
     let mut result = vec![query::filter(store, q)];
     if q.source == Source::TheirHome {

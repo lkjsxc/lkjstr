@@ -3,6 +3,7 @@ impl Network {
     pub fn tick(&mut self, now: u64) {
         self.now = now;
         self.expire_note_routes(now);
+        self.wake_reads(now);
         self.auth_tick(now);
         self.admit_configured(now);
         let relays: Vec<_> = self.relays.keys().cloned().collect();
@@ -11,7 +12,7 @@ impl Network {
             let wanted = self
                 .requests
                 .values()
-                .any(|r| r.relay == url && !r.complete)
+                .any(|q| q.relay == url && !q.complete && (!q.speculative() || r.online))
                 || (r.online && self.delivery_connection_wanted(&url, now))
                 || self.publications.values().any(|p| {
                     now < p.deadline && p.deliveries.get(&url).is_some_and(|s| s == "pending")
@@ -105,7 +106,7 @@ impl Network {
                         && !q.page_eose
                         && !q.complete
                         && now < q.initial_deadline
-                        && !q.members.is_disjoint(&r.members)
+                        && q.shares_view(r)
                 })
             {
                 continue;
@@ -211,11 +212,9 @@ impl Network {
 }
 
 fn visible_profile(r: &Request) -> bool {
-    profile(&r.filter) && !r.members.contains("~account-discovery")
-}
-
-fn profile(f: &NostrFilter) -> bool {
-    f.kinds.as_deref() == Some(&[0])
+    r.priority <= 3
+        && r.filter.kinds.as_deref() == Some(&[0])
+        && !r.members.contains("~account-discovery")
 }
 
 pub(super) fn filter_live(f: &NostrFilter) -> bool {
@@ -239,6 +238,7 @@ fn counts_filter(f: &NostrFilter) -> bool {
         )
 }
 // A bounded cooldown shares slots between channels, follow watches and live feeds.
+
 fn slot_sharing(r: &Request) -> bool {
     r.members.iter().any(|m| {
         m.starts_with("~dm:") || m.starts_with("~dm-legacy:") || m.starts_with("~dm-list:")

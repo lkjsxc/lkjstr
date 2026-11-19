@@ -24,6 +24,8 @@ mod eviction;
 #[path = "network_frontier.rs"]
 mod frontier;
 use frontier::PageFrontier;
+#[path = "network_cache_gaps.rs"]
+mod cache_gaps;
 #[path = "network_delivery_checks.rs"]
 mod delivery_checks;
 #[path = "network_lifecycle.rs"]
@@ -32,10 +34,14 @@ mod lifecycle;
 mod lists;
 #[path = "network_messages.rs"]
 mod messages;
+#[path = "network_metadata.rs"]
+mod metadata;
 #[path = "network_note_delivery.rs"]
 mod note_delivery;
 #[path = "network_stats.rs"]
 mod observations;
+#[path = "network_outbox.rs"]
+mod outbox;
 #[path = "network_paging.rs"]
 mod paging;
 #[path = "network_plan.rs"]
@@ -44,6 +50,8 @@ mod planning;
 mod policy;
 #[path = "network_profiles.rs"]
 mod profiles;
+#[path = "network_progress.rs"]
+mod progress;
 #[path = "network_publication_history.rs"]
 mod publication_history;
 #[path = "network_publications.rs"]
@@ -70,35 +78,6 @@ pub enum Effect {
     Connect(String),
     Disconnect(String),
     Send(String, String),
-}
-impl Network {
-    pub fn publish(
-        &mut self,
-        req: String,
-        event: NostrEvent,
-        routes: Vec<super::publication_plan::Destination>,
-        now: u64,
-    ) {
-        let account = if event.kind == 1059 {
-            String::new()
-        } else {
-            event.pubkey.clone()
-        };
-        self.publish_as(req, event, routes, now, account);
-    }
-
-    /// Gift wraps require their original sender; their event pubkey is ephemeral.
-    pub fn publish_as(
-        &mut self,
-        req: String,
-        event: NostrEvent,
-        routes: Vec<super::publication_plan::Destination>,
-        now: u64,
-        account: String,
-    ) {
-        self.stage_publication(req, event, routes, now, account);
-        self.tick(now);
-    }
 }
 #[derive(Default)]
 pub struct Relay {
@@ -127,6 +106,9 @@ pub struct Relay {
     pub nip11: bool,
     pub next_req_at: u64,
     pub latency_ms: Option<u64>,
+    pub first_event_ms: Option<u64>,
+    pub request_uses: u64,
+    pub timeouts: u32,
 }
 pub(super) struct Request {
     pub relay: String,
@@ -136,6 +118,7 @@ pub(super) struct Request {
     pub weight: u64,
     pub filter: NostrFilter,
     pub page_filter: NostrFilter, // Logical union, independent of the route cursor.
+    pub cached_until: Option<u64>, // Inclusive background repair boundary, never exhaustion proof.
     pub members: BTreeSet<String>,
     pub read_slot: bool, // Owns an ordinary reader slot; recovery routes remain separate.
     pub verification_retry: bool, // Local queue loss: replay this span after backlog drains.
@@ -146,6 +129,8 @@ pub(super) struct Request {
     pub initial_deadline: u64, // Count deferral ends even if the page keeps retrying.
     pub last_event: Option<u64>,
     pub sent_at: u64,
+    pub created_at: u64,
+    pub first_event_at: Option<u64>,
     pub last_rx: u64,
     pub complete: bool,
     pub live: bool,
@@ -193,8 +178,11 @@ pub struct Network {
     pub relays: BTreeMap<String, Relay>,
     observations: BTreeMap<String, quality::Observation>,
     pub quality_revision: u64,
+    metadata: metadata::Freshness,
+    pub(super) read_outboxes: BTreeSet<String>,
     pub focused_sub: Option<String>,
     pub now: u64,
+    pub(super) next_read_plan: Option<u64>,
     pub relay_order: Vec<String>,
     // At most 24 configured routes awaiting a free slot; retried each tick.
     pub deferred_relays: BTreeSet<String>,

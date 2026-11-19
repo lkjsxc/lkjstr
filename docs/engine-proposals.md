@@ -187,3 +187,6 @@ The bounded resolution and exact representative policy follow
 - `fresh.ownHead` is true when the newest countable row above the Home window is the reader's own note.
 - Optional `crypt.background` marks a passive inbox read.
 - `crypted.error: 'rate-limited'` defers a passive read while writing.
+
+Relay Stats add optional firstEventMs, requestUses and readTimeouts: verified first-event latency, session REQ envelopes and bounded read timeout score.
+Inactive routes without retained transport observations report null.

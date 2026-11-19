@@ -33,3 +33,22 @@ test('Ready rejects non-contract account errors',async()=>{
   for(const accountError of [null,'internal',{}, {code:'offline'}, {code:12}])
     assert.throws(()=>validateReplies([{t:'ready',version:protocolVersion,engine:'fixture',accountError}]),/protocol shape mismatch \(payload redacted\)/);
 });
+
+const relayStats=observed=>({t:'stats',req:'route-observation',stats:{
+  relays:[{url:'wss://fixture.invalid/',state:'idle',connectedSince:null,eventsReceived:0,
+    duplicatesDropped:0,openSubscriptions:0,bytesIn:0,bytesOut:0,lastError:null,latencyMs:null,...observed}],
+  totals:{eventsStored:0,cacheBytes:0,subscriptions:0,servedFromCache:0,servedFromNetwork:0},
+  orchestration:{relaysCoveringFollowSet:0,requestsCoalesced:0},
+}});
+test('relay observations distinguish absent, inactive and measured counters',async()=>{
+  const {validateReplies}=await import('./engine-contract.mjs');
+  for(const observed of [{},{firstEventMs:null,requestUses:null,readTimeouts:null},
+    {firstEventMs:44,requestUses:5,readTimeouts:1}])
+    assert.doesNotThrow(()=>validateReplies([relayStats(observed)]));
+});
+test('nullable relay observations still reject invalid counter types',async()=>{
+  const {validateReplies}=await import('./engine-contract.mjs');
+  for(const key of ['firstEventMs','requestUses','readTimeouts'])
+    for(const value of ['0',{},[],NaN,Infinity])
+      assert.throws(()=>validateReplies([relayStats({[key]:value})]),/protocol shape mismatch/);
+});
