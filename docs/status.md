@@ -139,10 +139,10 @@ indexer/hint lookups and kind-3 JSON fallback. Search-only relay routes remain i
 subscription counts. SharedWorker and the Web Locks/BroadcastChannel fallback share visible wants; hidden/detached views release work. Cache/store
 queues have explicit bounds.
 
-Publishing plans author outboxes plus inbox/context routes, resolves ordinary public actions on first acceptance and retains late per-relay
-confirmations. Unanswered delivery remains unknown; retries have an aggregate 30-second budget. Client tags default on and may be disabled. Persisted
-receipts help route later deletes. Lists refuse an edit until initial lookup completion, preserve unknown public tags and opaque private content, and
-reject unsupported private removals.
+Publishing plans author outboxes plus inbox/context routes and resolves ordinary public actions on first acceptance. Signed text notes appear in
+Home, Profile and Thread before any relay reply. Their destinations run in parallel with five seconds each and retain late confirmations.
+Unanswered delivery remains unknown. Discovery and other public actions retain the aggregate 30-second budget. Client tags default on.
+Persisted receipts help route deletes. Lists wait for initial lookup, retain opaque content and reject unsupported private removals.
 
 Blossom honors kind 10063; NIP-96 is the fallback. All signer kinds support upload authorization. Required-response evidence, explicit server
 selection, bounded processing and aggregate deadlines preserve truthful outcomes. Optional BUD-06 failure stays unknown. See

@@ -92,6 +92,9 @@ impl Session {
                 let mut row =
                     super::note::note(r, &engine.store, q.and_then(|q| q.account.as_deref()));
                 super::quote_state::settle(&mut row, engine, q.and_then(|q| q.account.as_deref()));
+                if let Some(q) = q.filter(|q| q.source == "home") {
+                    super::quote_state::home_delivery(&mut row, engine, q.account.as_deref());
+                }
                 row
             })
             .collect()

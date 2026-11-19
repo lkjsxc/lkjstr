@@ -83,6 +83,7 @@ fn missing_inbox_is_discovered_after_first_success_and_unanswered_delivery_stays
         100001,
     );
     e.network.connected(own, 100002);
+    e.tick(100002);
     let req = e
         .network
         .drain_effects()
@@ -128,7 +129,22 @@ fn missing_inbox_is_discovered_after_first_success_and_unanswered_delivery_stays
     assert!(e.network.drain_effects().iter().any(
         |f| matches!(f,Effect::Send(u,t) if u=="wss://inbox.test/" && t.starts_with("[\"EVENT\""))
     ));
-    e.tick(130002);
+    e.tick(105005);
+    assert!(
+        e.network.recent_publications()[0]["deliveries"]
+            .as_array()
+            .expect("delivery plan")
+            .iter()
+            .any(|r| r["url"] == "wss://inbox.test/" && r["state"] == "pending")
+    );
+    e.tick(105006);
+    assert!(
+        e.network.recent_publications()[0]["deliveries"]
+            .as_array()
+            .expect("delivery plan")
+            .iter()
+            .any(|r| r["url"] == "wss://inbox.test/" && r["state"] == "timeout")
+    );
     assert_eq!(
         e.network.publication_stats()["wss://inbox.test/"].publish_failed,
         0

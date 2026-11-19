@@ -2,6 +2,7 @@ use super::*;
 impl Network {
     pub fn tick(&mut self, now: u64) {
         self.now = now;
+        self.expire_note_routes(now);
         self.auth_tick(now);
         self.admit_configured(now);
         let relays: Vec<_> = self.relays.keys().cloned().collect();
@@ -237,7 +238,6 @@ fn counts_filter(f: &NostrFilter) -> bool {
             Some([1, 6, 7, 9735] | [7, 16, 42, 9735] | [1, 6, 7, 16, 42, 9735])
         )
 }
-
 // A bounded cooldown shares slots between channels, follow watches and live feeds.
 fn slot_sharing(r: &Request) -> bool {
     r.members.iter().any(|m| {

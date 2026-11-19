@@ -5,9 +5,10 @@ impl Network {
     // make an offline socket wanted, and release after the finite check/window.
     pub(super) fn delivery_connection_wanted(&self, url: &str, now: u64) -> bool {
         self.publications.values().any(|p| {
-            now >= p.deadline
-                && p.attempted.contains(url)
-                && p.deliveries.get(url).is_some_and(|s| s == "pending")
+            p.attempted.contains(url)
+                && p.deliveries
+                    .get(url)
+                    .is_some_and(|s| (s == "pending" && now >= p.deadline) || s == "timeout")
         }) || self.receipts.values().any(|r| {
             r.checks.contains_key(url)
                 || (now <= r.finished_at.saturating_add(10000)

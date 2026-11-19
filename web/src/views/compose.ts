@@ -231,6 +231,7 @@ export function mountCompose(el: HTMLElement, env: ViewEnv, channel?: string): (
     };
     const clear = (): void => {
       area.value = state.text = '';
+      area.focus({ preventScroll: true });
       state.mentions = [];
       mentions.reset();
       state.replyTo = state.replyOf = state.quote = state.quoteOf = state.emoji = undefined;
@@ -239,13 +240,11 @@ export function mountCompose(el: HTMLElement, env: ViewEnv, channel?: string): (
       drawHead();
     };
     result.replaceChildren();
-    if (!outbox.publish(draft)) {
+    if (!outbox.publish(draft, clear)) {
       result.textContent = t('compose.saveFailed');
       return;
     }
-    clear();
     ready();
-    area.focus({ preventScroll: true });
   }
 
   // Keep every typed word across a reload.

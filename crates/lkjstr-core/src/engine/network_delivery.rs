@@ -23,6 +23,41 @@ impl Publication {
     }
 }
 impl Network {
+    pub(super) fn expire_note_routes(&mut self, now: u64) {
+        let mut updates = Vec::new();
+        for (id, p) in &mut self.publications {
+            let mut expired = Vec::new();
+            for (relay, deadline) in &p.note_route_deadlines {
+                let Some(state) = p.deliveries.get_mut(relay) else {
+                    continue;
+                };
+                if now < *deadline || *state != "pending" {
+                    continue;
+                }
+                *state = if p.observed.contains(relay) {
+                    "accepted"
+                } else {
+                    "timeout"
+                }
+                .into();
+                expired.push(Delivery {
+                    relay: relay.clone(),
+                    state: state.clone(),
+                    message: None,
+                });
+            }
+            if !expired.is_empty()
+                && (p.discovery_pending || p.deliveries.values().any(|s| s == "pending"))
+            {
+                updates.push((id.clone(), p.req.clone(), expired, p.delivery()));
+            }
+        }
+        for (id, req, expired, deliveries) in updates {
+            self.update_publication(&id, &expired);
+            self.output.push(Output::Delivery { req, deliveries });
+        }
+    }
+
     /// The effect host reports an unsuccessful socket send; a failed retry cannot
     /// erase an earlier successful send. Native effect fixtures assume delivery.
     pub fn publication_frame_sent(&mut self, relay: &str, text: &str, sent: bool) {
@@ -73,7 +108,11 @@ impl Network {
         }
     }
     pub(super) fn finish_delivery(&mut self, id: String, mut p: Publication, now: u64) {
-        for (url, state) in p.deliveries.iter_mut().filter(|(_, s)| *s == "pending") {
+        for (url, state) in p
+            .deliveries
+            .iter_mut()
+            .filter(|(url, s)| *s == "pending" || (*s == "timeout" && p.observed.contains(*url)))
+        {
             *state = if p.observed.contains(url) {
                 "accepted"
             } else {
@@ -127,7 +166,10 @@ impl Network {
         let retry = !accepted && quality::limited(message);
         let update = if let Some(p) = self.publications.get_mut(id) {
             if !p.attempted.contains(relay)
-                || !p.deliveries.get(relay).is_some_and(|s| s == "pending")
+                || !p
+                    .deliveries
+                    .get(relay)
+                    .is_some_and(|s| s == "pending" || (!retry && s == "timeout"))
             {
                 return;
             }

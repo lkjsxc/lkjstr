@@ -1,7 +1,7 @@
 //! Missing inbox lists are read while own delivery proceeds; all work shares its deadline.
 use super::{
     Engine,
-    network::{Effect, Network, Relay},
+    network::{Effect, NOTE_ROUTE_WAIT_MS, Network, Relay},
     protocol::{Query, Source},
     publication_plan::Destination,
 };
@@ -130,6 +130,10 @@ impl Network {
             if let Some(p) = self.publications.get_mut(id) {
                 p.deliveries.insert(d.url.clone(), "pending".into());
                 p.inbox_routes.insert(d.url.clone());
+                if p.event.kind == 1 {
+                    p.note_route_deadlines
+                        .insert(d.url.clone(), now.saturating_add(NOTE_ROUTE_WAIT_MS));
+                }
             }
         }
         let added = routes.iter().any(|d| d.state == "pending");

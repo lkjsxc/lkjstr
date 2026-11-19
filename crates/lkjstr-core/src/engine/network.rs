@@ -3,6 +3,7 @@ use super::protocol::{Output, Query, Source};
 use lkjstr_protocol::{NostrEvent, NostrFilter, filter_to_value, normalize_relay_url};
 use serde_json::{Value, json};
 use std::collections::{BTreeMap, BTreeSet};
+pub(super) const NOTE_ROUTE_WAIT_MS: u64 = 5_000;
 #[path = "network_auth.rs"]
 pub mod auth;
 #[path = "network_batch.rs"]
@@ -66,6 +67,35 @@ pub enum Effect {
     Connect(String),
     Disconnect(String),
     Send(String, String),
+}
+impl Network {
+    pub fn publish(
+        &mut self,
+        req: String,
+        event: NostrEvent,
+        routes: Vec<super::publication_plan::Destination>,
+        now: u64,
+    ) {
+        let account = if event.kind == 1059 {
+            String::new()
+        } else {
+            event.pubkey.clone()
+        };
+        self.publish_as(req, event, routes, now, account);
+    }
+
+    /// Gift wraps require their original sender; their event pubkey is ephemeral.
+    pub fn publish_as(
+        &mut self,
+        req: String,
+        event: NostrEvent,
+        routes: Vec<super::publication_plan::Destination>,
+        now: u64,
+        account: String,
+    ) {
+        self.stage_publication(req, event, routes, now, account);
+        self.tick(now);
+    }
 }
 #[derive(Default)]
 pub struct Relay {
@@ -132,6 +162,8 @@ pub(super) struct Publication {
     pub auth_account: String, // Original sender; never infer a gift-wrap identity.
     pub deadline: u64,
     pub deliveries: BTreeMap<String, String>,
+    // Kind 1 only, one deadline per admitted destination (<= 20).
+    pub note_route_deadlines: BTreeMap<String, u64>,
     pub sent: BTreeMap<String, u64>,
     // Ever attempted, independent of reconnect/retry markers; <= 20 planned routes.
     pub attempted: BTreeSet<String>,

@@ -32,9 +32,24 @@ pub(super) fn settle(row: &mut Value, e: &Engine, account: Option<&str>) {
         settle(note, e, account);
     }
 }
+
+pub(super) fn home_delivery(row: &mut Value, e: &Engine, account: Option<&str>) {
+    if row["kind"] == "note" && row["author"]["pubkey"].as_str() == account {
+        if row["id"]
+            .as_str()
+            .is_some_and(|id| e.network.pending_event(id))
+        {
+            row["pending"] = Value::Bool(true);
+        } else if let Some(fields) = row.as_object_mut() {
+            fields.remove("pending");
+        }
+    }
+}
+
 impl Session {
     pub(super) fn settled_quote_patch(&mut self, sub: &str, e: &Engine) -> Vec<Value> {
-        let account = self.queries.get(sub).and_then(|q| q.account.as_deref());
+        let query = self.queries.get(sub);
+        let account = query.and_then(|q| q.account.as_deref());
         let Some(rows) = self.delivered.get_mut(sub) else {
             return vec![];
         };
@@ -42,6 +57,9 @@ impl Session {
         for row in rows {
             let before = row.clone();
             settle(row, e, account);
+            if query.is_some_and(|q| q.source == "home") {
+                home_delivery(row, e, account);
+            }
             if before != *row {
                 ops.push(serde_json::json!({"op":"update","row":row}));
             }

@@ -5,22 +5,7 @@ impl Network {
             .get(id)
             .is_some_and(|p| !p.reported_success)
     }
-    pub fn publish(
-        &mut self,
-        req: String,
-        event: NostrEvent,
-        routes: Vec<crate::engine::publication_plan::Destination>,
-        now: u64,
-    ) {
-        let account = if event.kind == 1059 {
-            String::new()
-        } else {
-            event.pubkey.clone()
-        };
-        self.publish_as(req, event, routes, now, account);
-    }
-    /// Gift wraps require their original sender; their event pubkey is ephemeral.
-    pub fn publish_as(
+    pub(in crate::engine) fn stage_publication(
         &mut self,
         req: String,
         event: NostrEvent,
@@ -70,6 +55,14 @@ impl Network {
         self.remember_publication(&event, routes, now);
         let recipients = crate::engine::publication_discovery::recipients(&event);
         let discovery_pending = !recipients.is_empty();
+        let note_route_deadlines = if event.kind == 1 {
+            deliveries
+                .keys()
+                .map(|url| (url.clone(), now.saturating_add(NOTE_ROUTE_WAIT_MS)))
+                .collect()
+        } else {
+            BTreeMap::new()
+        };
         self.publications.insert(
             event.id.clone(),
             Publication {
@@ -78,6 +71,7 @@ impl Network {
                 auth_account,
                 deadline: now.saturating_add(30000),
                 deliveries,
+                note_route_deadlines,
                 sent: BTreeMap::new(),
                 attempted: BTreeSet::new(),
                 messages: BTreeMap::new(),
@@ -89,7 +83,6 @@ impl Network {
                 discovery_pending,
             },
         );
-        self.tick(now);
     }
     pub(super) fn send_pending(&mut self, now: u64) {
         let mut frames = Vec::new();

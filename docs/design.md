@@ -169,6 +169,8 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
   Reopened tabs restore drafts; fresh tabs start empty. Hidden composers release mention lookups.
   Delivery counts follow late answers; unanswered rows are neutral and disappear on confirmation. Only final all-refused delivery is red.
 - Pressing Post empties the field and leaves the caret in it at once, whatever the signer; what is being sent is shown below, and a failure keeps its text.
+- A signed note appears locally in Home, the author's profile and its thread with the existing Sending mark. At the head it follows the live list.
+  While reading farther down, the new-notes pill counts arrivals above the held row. Confirmation updates the same row in place.
 - `@` and letters offer people under the caret: follows first; Enter takes one.
 - Every wrong click can be taken back. A like or a repost is drawn at once
   and sent only when its Undo toast (8 seconds) has gone, or when the page is

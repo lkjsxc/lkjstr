@@ -181,14 +181,14 @@ export function createChannelOutbox(
       notify();
       return true;
     },
-    publish(draft: Draft) {
+    publish(draft: Draft, saved?: () => void) {
       const item = { as: env.engine.me(), draft };
       drafts.push(item);
       if (!kv.persist(`view:${key}`, { id, drafts })) {
         drafts.pop();
         return false;
       }
-      notify(); // durable before the caller clears the field
+      saved?.(); // Free the field before starting the action or redrawing its outbox.
       void send(item);
       return true;
     },

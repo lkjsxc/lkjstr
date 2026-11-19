@@ -101,8 +101,18 @@ fn twelve_deliveries_connect_retry_and_finish_after_early_success() {
     );
     n.connected(&own[1], 2031);
     assert_eq!(sends(&mut n), 1);
-    n.tick(5010);
-    assert_eq!(sends(&mut n), 10);
+    n.tick(4999);
+    assert_eq!(sends(&mut n), 0);
+    assert_eq!(n.publication_stats()[own[2].as_str()].publish_failed, 0);
+    n.tick(5000);
+    assert_eq!(sends(&mut n), 0);
+    assert_eq!(n.publication_stats()[own[2].as_str()].publish_failed, 0);
+    assert_eq!(n.publication_stats()[own[2].as_str()].publish_pending, 1);
+    assert!(n.drain_output().iter().any(|o| matches!(
+        o,
+        Output::Delivery { deliveries, .. }
+            if deliveries.iter().filter(|d| d.state == "timeout").count() == 11
+    )));
     for url in own.iter().skip(1) {
         n.message(url, &json!(["OK", event.id, true, ""]).to_string(), 6000);
     }
@@ -144,7 +154,7 @@ fn expiry_never_sends_and_configuration_cannot_drop_pending_routes() {
     n.configure(vec!["wss://new.test/".into()], 1);
     assert!(n.relays.contains_key(&own[0]));
     n.drain_effects();
-    n.connected(&own[0], 30000);
+    n.connected(&own[0], 5000);
     assert_eq!(sends(&mut n), 0);
     assert!(n.drain_output().iter().any(|o|matches!(o,Output::Result{deliveries,..} if deliveries.iter().all(|d|d.state=="timeout"))));
     assert_eq!(n.publication_stats()[own[0].as_str()].publish_failed, 0);

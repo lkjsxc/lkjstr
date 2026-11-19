@@ -89,6 +89,35 @@ impl Engine {
         for v in self.views.values_mut() {
             v.dirty = true;
         }
+        if event.kind == 1 {
+            let author = event.pubkey.clone();
+            let id = event.id.clone();
+            let reply = lkjstr_protocol::reply_parent(&event).is_some()
+                || lkjstr_protocol::reply_root(&event).is_some();
+            self.network
+                .stage_publication(req, event, routes, now, author.clone());
+            let subs: Vec<_> = self
+                .views
+                .iter()
+                .filter(|(_, v)| {
+                    use crate::engine::protocol::Source;
+                    v.visible
+                        && match v.query.source {
+                            Source::Home => v.query.account.as_deref() == Some(&author),
+                            Source::Profile => v.query.target.as_deref() == Some(&author),
+                            Source::Thread => reply || v.query.target.as_deref() == Some(&id),
+                            _ => false,
+                        }
+                })
+                .map(|(sub, _)| sub.clone())
+                .collect();
+            for sub in subs {
+                self.render(&sub, false);
+            }
+            // Socket scheduling, discovery and subscription planning run on the next tick.
+            self.network.profiles_changed = true;
+            return;
+        }
         self.replan(now);
         if event.kind == 40 {
             self.start_channel_create(req, event, routes, now);
