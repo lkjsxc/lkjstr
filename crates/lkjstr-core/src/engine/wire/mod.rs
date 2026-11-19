@@ -95,6 +95,8 @@ pub struct WriteRelayList {
     pub id: String,
     pub at: u64,
     pub urls: Vec<String>,
+    #[serde(default, rename = "readOnly", skip_serializing_if = "Vec::is_empty")]
+    pub read_only: Vec<String>,
 }
 impl WriteRelayList {
     pub fn is_newer_than(&self, other: &Self) -> bool {

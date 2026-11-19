@@ -4,13 +4,23 @@ use super::{
     settings::strict_relay,
     wire::{RelayConfig, WriteRelayList},
 };
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 #[derive(Default)]
 pub(super) struct NoteRoutes {
     // One record per locally known owner, at most 32; each route list has at most 64 entries.
     accounts: BTreeMap<String, (Option<Vec<RelayConfig>>, Option<WriteRelayList>)>,
     defaults: Vec<String>,
+}
+
+pub(super) struct NoteRoutePolicy {
+    pub(super) list: Option<WriteRelayList>,
+    pub(super) blocked: BTreeSet<String>,
+}
+impl NoteRoutePolicy {
+    pub(super) fn allows(&self, url: &str) -> bool {
+        strict_relay(url).is_some_and(|url| !self.blocked.contains(&url))
+    }
 }
 
 impl Engine {
@@ -35,16 +45,25 @@ impl Engine {
         if accounts.len() < 32 || accounts.contains_key(&account) {
             let cached = cached.filter(|list| {
                 lkjstr_protocol::is_event_id(&list.id)
-                    && list.urls.len() <= 64
+                    && list.urls.len() + list.read_only.len() <= 64
                     && list
                         .urls
                         .iter()
+                        .chain(&list.read_only)
                         .all(|url| strict_relay(url).as_ref() == Some(url))
             });
             accounts.insert(
                 account,
                 (
-                    configured.map(|rs| rs.into_iter().take(64).collect()),
+                    configured.map(|rs| {
+                        rs.into_iter()
+                            .take(64)
+                            .filter_map(|mut r| {
+                                r.url = strict_relay(&r.url)?;
+                                Some(r)
+                            })
+                            .collect()
+                    }),
                     cached,
                 ),
             );
@@ -54,35 +73,62 @@ impl Engine {
     pub fn write_relay_list(&self, account: &str) -> Option<WriteRelayList> {
         let record = self.store.replaceable(account, 10002)?;
         let (_, entries) = self.account_relays(account)?;
+        let (writes, reads): (Vec<_>, Vec<_>) = entries.into_iter().partition(|r| r.write);
         Some(WriteRelayList {
             id: record.id.clone(),
             at: record.created_at,
-            urls: entries
-                .into_iter()
-                .filter(|relay| relay.write)
-                .map(|relay| relay.url)
-                .collect(),
+            urls: writes.into_iter().map(|relay| relay.url).collect(),
+            read_only: reads.into_iter().map(|relay| relay.url).collect(),
         })
+    }
+
+    pub(super) fn note_route_policy(&self, account: &str) -> NoteRoutePolicy {
+        let local = self.note_routes.accounts.get(account);
+        let resolved = self.write_relay_list(account);
+        let cached = local.and_then(|(_, cache)| cache.as_ref());
+        let list = match (resolved, cached) {
+            (Some(live), Some(cached)) if !cached.is_newer_than(&live) => Some(live),
+            (Some(live), None) => Some(live),
+            (_, cached) => cached.cloned(),
+        };
+        let configured = local
+            .and_then(|(entries, _)| entries.as_ref())
+            .into_iter()
+            .flatten();
+        let mut blocked: BTreeSet<_> = configured
+            .filter(|r| !r.write)
+            .map(|r| r.url.clone())
+            .collect();
+        if local.is_none() {
+            blocked.extend(
+                self.network
+                    .known
+                    .values()
+                    .filter(|r| !r.write && (r.read || r.search))
+                    .map(|r| r.url.clone()),
+            );
+        }
+        if let Some(list) = &list {
+            blocked.extend(list.read_only.iter().cloned());
+        } else if let Some((_, entries)) = self.account_relays(account) {
+            blocked.extend(entries.into_iter().filter(|r| !r.write).map(|r| r.url));
+        }
+        NoteRoutePolicy { list, blocked }
     }
 
     pub(super) fn note_write_routes(
         &self,
         account: &str,
         input: &mut PublicationInput,
-    ) -> (Option<String>, Vec<String>) {
+        policy: &NoteRoutePolicy,
+    ) -> Vec<String> {
         let local = self.note_routes.accounts.get(account);
-        let (configured, cached) = local
-            .map(|(entries, cached)| (entries.as_ref(), cached.as_ref()))
-            .unwrap_or_default();
-        let resolved = self.write_relay_list(account);
-        let list = match (&resolved, cached) {
-            (Some(live), Some(cached)) if cached.is_newer_than(live) => Some(cached),
-            (Some(live), _) => Some(live),
-            (_, cached) => cached,
-        };
-        if let Some(list) = list.filter(|list| !list.urls.is_empty()) {
+        let configured = local.and_then(|(entries, _)| entries.as_ref());
+        if let Some(list) = policy.list.as_ref().filter(|list| !list.urls.is_empty()) {
             input.own.clone_from(&list.urls);
-        } else if local.is_some() && (list.is_some() || self.account_relays(account).is_none()) {
+        } else if local.is_some()
+            && (policy.list.is_some() || self.account_relays(account).is_none())
+        {
             input.own = configured
                 .into_iter()
                 .flatten()
@@ -90,114 +136,62 @@ impl Engine {
                 .map(|r| r.url.clone())
                 .collect();
         }
-        let eligible = self
-            .account_relays(account)
-            .map(|(_, entries)| entries)
-            .or_else(|| configured.cloned());
-        if let Some(eligible) = eligible {
-            input.own.extend(
-                eligible
-                    .iter()
-                    .filter(|r| {
-                        (r.read || r.write)
-                            && self
+        input.own.retain(|url| policy.allows(url));
+        let needs_writers = input.own.is_empty();
+        input.own.extend(
+            configured
+                .into_iter()
+                .flatten()
+                .filter(|r| {
+                    r.write
+                        && policy.allows(&r.url)
+                        && (needs_writers
+                            || self
                                 .network
                                 .relays
                                 .get(&r.url)
-                                .is_some_and(|socket| socket.online)
-                    })
-                    .map(|r| r.url.clone()),
+                                .is_some_and(|relay| relay.online))
+                })
+                .map(|r| r.url.clone()),
+        );
+        if input.own.is_empty() {
+            input.own.extend(
+                self.note_routes
+                    .defaults
+                    .iter()
+                    .filter(|url| policy.allows(url))
+                    .cloned(),
             );
+            if policy.list.is_none() {
+                return input.own.clone();
+            }
         }
-        let defaults = if input.own.is_empty() {
-            input.own.clone_from(&self.note_routes.defaults);
-            self.note_routes.defaults.clone()
-        } else {
-            Vec::new()
-        };
-        if let Some(list) = list {
-            (Some(list.id.clone()), Vec::new())
-        } else {
-            (None, defaults)
-        }
-    }
-
-    pub(super) fn refreshed_note_routes(
-        &self,
-        account: &str,
-        previous: Option<&str>,
-    ) -> Option<WriteRelayList> {
-        let list = self.write_relay_list(account)?;
-        if Some(list.id.as_str()) == previous {
-            return None;
-        }
-        let cached = self
-            .note_routes
-            .accounts
-            .get(account)
-            .and_then(|(_, list)| list.as_ref());
-        if cached.is_some_and(|cached| cached.is_newer_than(&list)) {
-            return None;
-        }
-        Some(list)
+        input.own.sort_by_key(|url| {
+            !self
+                .network
+                .relays
+                .get(url)
+                .is_some_and(|relay| relay.online)
+        });
+        Vec::new()
     }
 }
 
-pub(super) fn refreshed_destinations(list: &WriteRelayList) -> Vec<Destination> {
+pub(super) fn refreshed_destinations(
+    list: &WriteRelayList,
+    policy: &NoteRoutePolicy,
+) -> Vec<Destination> {
     super::publication_plan::plan(PublicationInput {
-        own: list.urls.clone(),
+        own: list
+            .urls
+            .iter()
+            .filter(|url| policy.allows(url))
+            .cloned()
+            .collect(),
         ..Default::default()
     })
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn route(url: &str, write: bool) -> RelayConfig {
-        RelayConfig {
-            url: url.into(),
-            read: true,
-            write,
-            search: false,
-        }
-    }
-
-    #[test]
-    fn a_cached_outbox_and_online_account_reader_are_used_without_a_lookup() {
-        let mut engine = Engine::new();
-        let owner = "aa".repeat(32);
-        let fixture = WriteRelayList {
-            id: "bb".repeat(32),
-            at: 5,
-            urls: vec!["wss://write.test/".into()],
-        };
-        engine.configure_note_routes(
-            Some(owner.clone()),
-            Some(vec![route("wss://read.test/", false)]),
-            Some(fixture.clone()),
-            None,
-        );
-        for url in ["wss://read.test/", "wss://unrelated.test/"] {
-            engine.network.relays.entry(url.into()).or_default().online = true;
-        }
-        let mut input = PublicationInput::default();
-        let (id, defaults) = engine.note_write_routes(&owner, &mut input);
-        assert_eq!(id.as_ref(), Some(&fixture.id));
-        assert_eq!(input.own, ["wss://write.test/", "wss://read.test/"]);
-        assert!(defaults.is_empty());
-    }
-
-    #[test]
-    fn default_write_routes_are_available_immediately_when_no_account_routes_are_known() {
-        let mut engine = Engine::new();
-        let owner = "aa".repeat(32);
-        let routes = vec!["wss://fallback.test/".to_string()];
-        engine.configure_note_routes(Some(owner.clone()), None, None, Some(routes.clone()));
-        let mut input = PublicationInput::default();
-        let (id, defaults) = engine.note_write_routes(&owner, &mut input);
-        assert!(id.is_none());
-        assert_eq!(input.own, routes);
-        assert_eq!(defaults, routes);
-    }
-}
+#[path = "note_routes_test.rs"]
+mod tests;

@@ -23,7 +23,7 @@ impl Publication {
     }
 
     fn connection_error(&self) -> &'static str {
-        if self.event.kind == 1 && !self.deliveries.is_empty() {
+        if self.event.kind == 1 && self.deliveries.values().any(|state| state != "skipped") {
             "relay-unreachable"
         } else {
             "no-relays"

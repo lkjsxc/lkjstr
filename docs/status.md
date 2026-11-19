@@ -140,7 +140,7 @@ subscription counts. SharedWorker and the Web Locks/BroadcastChannel fallback sh
 queues have explicit bounds.
 
 Publishing uses author outboxes and inbox/context routes, with first acceptance resolving a public action. Home shows its retained draft while signing.
-Signed text notes appear in Home, Profile and Thread before any relay reply. Cached write lists and connected account relays send while discovery runs.
+Signed text notes appear in Home, Profile and Thread before any relay reply. Cached write lists and connected write-enabled relays send while discovery runs.
 Note destinations get ten seconds to connect and five seconds after the first frame; late confirmations remain available. Passive inbox checks yield to writing.
 Persisted receipts help route deletes. Lists wait for initial lookup, retain opaque content and reject unsupported private removals.
 

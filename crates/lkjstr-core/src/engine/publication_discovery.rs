@@ -28,19 +28,29 @@ impl Engine {
             .network
             .publications
             .iter()
-            .filter_map(|(id, p)| {
-                (p.event.kind == 1 && now < p.deadline)
-                    .then(|| self.refreshed_note_routes(&p.event.pubkey, p.author_list.as_deref()))
-                    .flatten()
-                    .map(|list| (id.clone(), list))
+            .filter(|(_, p)| p.event.kind == 1 && now < p.deadline)
+            .map(|(id, p)| {
+                (
+                    id.clone(),
+                    p.author_list.clone(),
+                    self.note_route_policy(&p.event.pubkey),
+                )
             })
             .collect();
-        for (id, list) in updates {
+        for (id, previous, policy) in updates {
+            self.network.apply_note_opt_out(&id, &policy.blocked);
+            let Some(list) = policy
+                .list
+                .as_ref()
+                .filter(|list| Some(&list.id) != previous.as_ref())
+            else {
+                continue;
+            };
             if let Some(p) = self.network.publications.get_mut(&id) {
                 p.author_list = Some(list.id.clone());
                 p.author_route_wait_until = 0;
             }
-            let routes = super::note_routes::refreshed_destinations(&list);
+            let routes = super::note_routes::refreshed_destinations(list, &policy);
             self.network.extend_publication(&id, routes, now, true);
         }
         let jobs: Vec<_> = self
@@ -124,7 +134,11 @@ impl Network {
         let Some(p) = self.publications.get(id) else {
             return;
         };
-        routes.retain(|d| !p.deliveries.contains_key(&d.url));
+        routes.retain(|d| {
+            p.deliveries
+                .get(&d.url)
+                .is_none_or(|state| state == "skipped")
+        });
         // Author refresh adds only new outboxes; recipient discovery adds only inbox/context.
         routes.retain(|d| (d.rule == "own") == author_update);
         let mut extra = p.inbox_routes.len();

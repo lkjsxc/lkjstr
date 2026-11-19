@@ -61,11 +61,6 @@ impl Engine {
             deletion: event.kind == 5,
             ..Default::default()
         };
-        let (author_list, default_routes) = if event.kind == 1 {
-            self.note_write_routes(&event.pubkey, &mut input)
-        } else {
-            (None, Vec::new())
-        };
         // People-list tags describe stored lists, not message recipients.
         for person in super::publication_discovery::recipients(event) {
             input.inboxes.push(
@@ -103,6 +98,17 @@ impl Engine {
             }
         }
         input.context.truncate(64);
+        let (author_list, default_routes) = if event.kind == 1 {
+            let policy = self.note_route_policy(&event.pubkey);
+            let defaults = self.note_write_routes(&event.pubkey, &mut input, &policy);
+            input.context.retain(|url| policy.allows(url));
+            for inbox in &mut input.inboxes {
+                inbox.retain(|url| policy.allows(url));
+            }
+            (policy.list.map(|list| list.id), defaults)
+        } else {
+            (None, Vec::new())
+        };
         (publication_plan::plan(input), author_list, default_routes)
     }
 }

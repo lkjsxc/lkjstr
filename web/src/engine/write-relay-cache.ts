@@ -24,7 +24,10 @@ export function writeRelayCache() {
           writeRelays &&
           (!old ||
             writeRelays.at > old.at ||
-            (writeRelays.at === old.at && writeRelays.id < old.id));
+            (writeRelays.at === old.at && writeRelays.id < old.id) ||
+            (writeRelays.id === old.id &&
+              old.readOnly === undefined &&
+              writeRelays.readOnly !== undefined));
         const current = newer ? writeRelays : old;
         if (current) next[account] = current;
         changed ||= Boolean(newer);

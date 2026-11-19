@@ -2,6 +2,41 @@ use super::*;
 use crate::engine::protocol::Delivery;
 
 impl Network {
+    pub(in crate::engine) fn apply_note_opt_out(&mut self, id: &str, blocked: &BTreeSet<String>) {
+        let Some(p) = self.publications.get_mut(id) else {
+            return;
+        };
+        let mut changed = Vec::new();
+        for url in blocked {
+            let Some(state) = p
+                .deliveries
+                .get_mut(url)
+                .filter(|state| *state == "pending")
+            else {
+                continue;
+            };
+            *state = if p.attempted.contains(url) {
+                "timeout"
+            } else {
+                "skipped"
+            }
+            .into();
+            p.note_route_deadlines.remove(url);
+            changed.push(Delivery {
+                relay: url.clone(),
+                state: state.clone(),
+                message: None,
+            });
+        }
+        if !changed.is_empty() {
+            self.output.push(Output::Delivery {
+                req: p.req.clone(),
+                deliveries: p.delivery(),
+            });
+            self.update_publication(id, &changed);
+        }
+    }
+
     pub(in crate::engine) fn can_stage_note(&self, id: &str) -> bool {
         self.publications.len() < 64 && !self.publications.contains_key(id)
     }

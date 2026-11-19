@@ -719,6 +719,7 @@ export type WriteRelayList = {
   readonly id: string;
   readonly at: number;
   readonly urls: readonly string[];
+  readonly readOnly?: readonly string[];
 };
 
 export type Account = {

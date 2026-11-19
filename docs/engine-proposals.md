@@ -182,7 +182,7 @@ The bounded resolution and exact representative policy follow
 - `publish.signed {req,id}` delivers a verified note id to the initiating client before its first signed row or a delivery result.
 - `publish.fallback {req}` reports the first actual frame sent to a default relay while the author's relay list is unknown.
 - `relays {account,cached,defaults,usesDefaults}` bootstraps the account's write routes independently of background discovery.
-- `accounts.accounts[].writeRelays {id,at,urls}` exposes the newest verified write list for device-local startup reuse.
+- `accounts.accounts[].writeRelays {id,at,urls,readOnly}` exposes verified write routes and opt-outs for device-local startup reuse.
 - `NoteRow.connecting` marks a signed, unconfirmed note still waiting for its first relay connection after three seconds.
 - `fresh.ownHead` is true when the newest countable row above the Home window is the reader's own note.
 - Optional `crypt.background` marks a passive inbox read.
