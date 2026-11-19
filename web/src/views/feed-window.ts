@@ -11,7 +11,7 @@ export function feedWindow(kind: string, rows: readonly Row[]) {
   };
 }
 
-export function freshRows(rows: readonly Row[], boundary: string, reading: string | undefined) {
+function freshRows(rows: readonly Row[], boundary: string, reading: string | undefined) {
   if (!rows.some((row) => row.key === boundary)) return;
   let count = 0;
   for (const row of rows) {
@@ -19,4 +19,21 @@ export function freshRows(rows: readonly Row[], boundary: string, reading: strin
     if (row.kind === 'note' || row.kind === 'notification') count++;
   }
   return count;
+}
+
+export function heldFresh(
+  rows: readonly Row[],
+  boundary: string | undefined,
+  reading: string | undefined,
+  above: number,
+  outsideBaseline: number | undefined,
+) {
+  if (!boundary) return { count: above, more: false };
+  const count = freshRows(rows, boundary, reading);
+  const more = above > (count === undefined ? (outsideBaseline ?? above) : 0);
+  return { count: (more ? freshRows(rows, boundary, undefined) : count) ?? 0, more };
+}
+
+export function isOwnNote(row: Row | undefined): boolean {
+  return row?.kind === 'note' && row.mine.own;
 }

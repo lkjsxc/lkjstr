@@ -130,6 +130,8 @@ pub enum Output {
     Fresh {
         sub: String,
         count: usize,
+        #[serde(rename = "ownHead", skip_serializing_if = "Option::is_none")]
+        own_head: Option<bool>,
     },
     State {
         sub: String,

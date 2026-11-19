@@ -160,6 +160,7 @@ export const ja: Record<keyof typeof en, string> = {
   'feed.searchHint': '探したい言葉を入力してください。',
   'feed.lastArrival': '最後に届いたのは {time}',
   'feed.fresh': '新着 {n}件',
+  'feed.freshOwn': 'あなたのノート ↑',
   'feed.freshOverflow': '新着 {n}件以上',
   'feed.freshOverflowHint': 'この一覧に入りきらない新着があります。押すと最新へ移動します。',
   'compose.hint': 'いまどうしてる？',

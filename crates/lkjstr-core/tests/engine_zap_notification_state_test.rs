@@ -52,6 +52,7 @@ fn fresh() -> p::Output {
     p::Output::Fresh {
         sub: "notices".into(),
         count: 0,
+        own_head: false,
     }
 }
 fn states(messages: &[Value]) -> Vec<&Value> {

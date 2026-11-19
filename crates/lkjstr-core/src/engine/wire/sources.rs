@@ -21,36 +21,7 @@ impl Session {
             .map(|at| before.min(at))
             .unwrap_or(0)
     }
-    pub(super) fn source_fresh(&self, sub: &str, e: &Engine) -> usize {
-        let Some((Some(anchor), before, _)) = self.windows.get(sub) else {
-            return 0;
-        };
-        let all = self.project_source(sub, e, false);
-        all.iter()
-            .position(|r| r["key"].as_str() == Some(anchor))
-            .unwrap_or(0)
-            .saturating_sub(*before)
-            .saturating_sub(usize::from(pinned_header(&all)))
-    }
-    pub(super) fn source_edges(&self, sub: &str, e: &Engine) -> (bool, bool) {
-        let all = self.project_source(sub, e, false);
-        let (start, end) = self
-            .windows
-            .get(sub)
-            .map(|(anchor, before, after)| {
-                let at = anchor
-                    .as_ref()
-                    .and_then(|key| all.iter().position(|r| r["key"].as_str() == Some(key)))
-                    .unwrap_or(0);
-                (at.saturating_sub(*before), at.saturating_add(*after))
-            })
-            .unwrap_or((0, 50));
-        (
-            start <= usize::from(pinned_header(&all)),
-            end >= all.len() && super::list_edges::settled(self.queries.get(sub), e),
-        )
-    }
-    fn project_source(&self, sub: &str, e: &Engine, windowed: bool) -> Vec<Value> {
+    pub(super) fn project_source(&self, sub: &str, e: &Engine, windowed: bool) -> Vec<Value> {
         let Some(q) = self.queries.get(sub) else {
             return vec![];
         };
@@ -191,7 +162,7 @@ impl Session {
         out
     }
 }
-fn pinned_header(rows: &[Value]) -> bool {
+pub(super) fn pinned_header(rows: &[Value]) -> bool {
     rows.first()
         .is_some_and(|row| matches!(row["kind"].as_str(), Some("profile" | "channel")))
 }

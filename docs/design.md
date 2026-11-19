@@ -172,7 +172,8 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
 - At Post, Home shows the retained draft with Signing in the time slot. A remote signer still waiting after ten seconds gets the existing remote
   waiting mark. Refused or failed signing keeps the draft with Retry, Edit and discard. The draft is replaced by the verified event by its exact id.
 - A signed note appears locally in Home, the author's profile and its thread with the existing Sending mark. At the head it follows the live list.
-  While reading farther down, the new-notes pill counts arrivals above the held row. Confirmation updates the same row in place.
+  While reading farther down, the new-notes pill counts arrivals above the held row and says "Your note" with an up arrow
+  when the newest above is the reader's own. Pressing the pill returns to the top. Confirmation updates the same row in place.
 - `@` and letters offer people under the caret: follows first; Enter takes one.
 - Every wrong click can be taken back. A like or a repost is drawn at once
   and sent only when its Undo toast (8 seconds) has gone, or when the page is

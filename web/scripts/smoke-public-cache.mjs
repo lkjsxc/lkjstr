@@ -47,10 +47,14 @@ try {
   signer.stderr.resume();
   const lines = createInterface({ input: signer.stdout })[Symbol.asyncIterator]();
   const fixture = JSON.parse((await lines.next()).value);
-  const sign = async (kind, content, tags = [], at = Math.floor(Date.now() / 1000)) => {
-    signer.stdin.write(
-      `${JSON.stringify({ pubkey: fixture.note.pubkey, kind, content, tags, created_at: at })}\n`,
-    );
+  const sign = async (
+    kind,
+    content,
+    tags = [],
+    at = Math.floor(Date.now() / 1000),
+    pubkey = fixture.note.pubkey,
+  ) => {
+    signer.stdin.write(`${JSON.stringify({ pubkey, kind, content, tags, created_at: at })}\n`);
     return JSON.parse((await lines.next()).value);
   };
   const fake = fakeRelay();
@@ -94,6 +98,20 @@ try {
   );
   fake.add(await sign(10002, '', [['r', relayUrl]]));
   const now = Math.floor(Date.now() / 1000);
+  signer.stdin.write('{"fixtureActor":true}\n');
+  const peer = JSON.parse((await lines.next()).value);
+  fake.add(peer);
+  fake.add(
+    await sign(
+      3,
+      '',
+      [
+        ['p', fixture.note.pubkey],
+        ['p', peer.pubkey],
+      ],
+      now,
+    ),
+  );
   for (let i = 0; i < 36; i++)
     fake.add(await sign(1, `Cache fixture public note ${i}`, [], now - i));
   const launch = async (delayMs) => {
@@ -238,6 +256,7 @@ try {
         fake,
         check,
         sign,
+        signPeer: (kind, content, tags, at) => sign(kind, content, tags, at, peer.pubkey),
         arrival,
         delivered,
         stage: (name) => {

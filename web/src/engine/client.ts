@@ -130,7 +130,7 @@ export function createEngine(transport: Transport): Engine {
         else if (op.op === 'insert') learnRows(op.rows);
       }
       subs.get(msg.sub)?.patch(msg.ops);
-    } else if (msg.t === 'fresh') subs.get(msg.sub)?.fresh?.(msg.count);
+    } else if (msg.t === 'fresh') subs.get(msg.sub)?.fresh?.(msg.count, msg.ownHead === true);
     else if (msg.t === 'state') subs.get(msg.sub)?.state?.(msg.state);
     else if (msg.t === 'progress') actions.progress(msg);
     else if (msg.t === 'publish.signed') actions.signed(msg);

@@ -22,7 +22,7 @@ import type {
 export type SubHandlers = {
   rows(rows: readonly Row[], atTop: boolean, atBottom: boolean): void;
   patch(ops: readonly PatchOp[]): void;
-  fresh?(count: number): void;
+  fresh?(count: number, ownHead: boolean): void;
   timeline?(timeline: Timeline): void;
   state?(state: SubState): void;
 };

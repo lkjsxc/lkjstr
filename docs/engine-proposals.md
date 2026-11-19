@@ -184,5 +184,6 @@ The bounded resolution and exact representative policy follow
 - `relays {account,cached,defaults,usesDefaults}` bootstraps the account's write routes independently of background discovery.
 - `accounts.accounts[].writeRelays {id,at,urls}` exposes the newest verified write list for device-local startup reuse.
 - `NoteRow.connecting` marks a signed, unconfirmed note still waiting for its first relay connection after three seconds.
+- `fresh.ownHead` is true when the newest countable row above the Home window is the reader's own note.
 - Optional `crypt.background` marks a passive inbox read.
 - `crypted.error: 'rate-limited'` defers a passive read while writing.

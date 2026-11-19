@@ -1,7 +1,7 @@
 // Shared mock policy and bounded fixture subscriptions.
 import type { FromEngine, PatchOp, Query } from '../protocol.ts';
 import { createAccounts } from './accounts.ts';
-import { liveWindow } from './live-window.ts';
+import { liveWindow, sendFresh } from './live-window.ts';
 import { privateListAccountSnapshot, privateListState } from './private-lists.ts';
 import { entry, matches, select } from './query.ts';
 import { relays } from './relays.ts';
@@ -99,7 +99,7 @@ export function createCore(post: (msg: FromEngine) => void, now: () => number) {
         if (search) refreshSearch(s, post);
         else if (s.liveRange) liveWindow(s, post);
         else if (s.live) s.end++, push(s, { op: 'insert', before: first, rows: [e.row()] });
-        else s.start++, s.end++, post({ t: 'fresh', sub: s.id, count: ++s.fresh });
+        else s.start++, s.end++, s.fresh++, sendFresh(s, post);
         post({
           t: 'state',
           sub: s.id,
@@ -149,7 +149,7 @@ export function createCore(post: (msg: FromEngine) => void, now: () => number) {
           push(s, { op: 'insert', before: after?.key ?? null, rows: [e.row()] });
         }
         s.fresh = s.live ? 0 : s.start;
-        post({ t: 'fresh', sub: s.id, count: s.fresh });
+        sendFresh(s, post);
         if (!refresh) continue;
         if (
           (s.query.source === 'profile' || s.query.source === 'channel') &&

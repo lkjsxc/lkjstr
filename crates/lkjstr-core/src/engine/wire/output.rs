@@ -123,19 +123,24 @@ impl Session {
                     vec![Output::Patch { sub, ops }]
                 }
             }
-            p::Output::Fresh { sub, count } => {
-                let count =
+            p::Output::Fresh {
+                sub,
+                count,
+                own_head,
+            } => {
+                let (count, own_head) =
                     if self.queries.get(&sub).is_some_and(|q| {
                         q.notifications == Some(true) || q.source == "notifications"
                     }) {
                         self.source_fresh(&sub, engine)
                     } else {
-                        count
+                        (count, own_head)
                     };
                 let ops = self.settled_quote_patch(&sub, engine);
                 let mut out = vec![Output::Fresh {
                     sub: sub.clone(),
                     count,
+                    own_head: own_head.then_some(true),
                 }];
                 if !ops.is_empty() {
                     out.push(Output::Patch { sub, ops });

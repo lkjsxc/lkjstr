@@ -13,13 +13,17 @@ export function createFresh(scroller: HTMLElement, env: ViewEnv, kind: string, t
   let latest: readonly Row[] = [];
   let pending = 0;
   let overflow = false;
-  const show = (count: number, more = false): void => {
-    if (count === pending && more === overflow) return;
+  let ownHead = false;
+  const show = (count: number, more = false, own = false): void => {
+    if (count === pending && more === overflow && own === ownHead) return;
     pending = count;
     overflow = more;
+    ownHead = own;
     el.hidden = count === 0 && !more;
-    el.replaceChildren(icon('up'), t(more ? 'feed.freshOverflow' : 'feed.fresh', { n: count }));
-    if (more) {
+    if (own) el.replaceChildren(t('feed.freshOwn'));
+    else
+      el.replaceChildren(icon('up'), t(more ? 'feed.freshOverflow' : 'feed.fresh', { n: count }));
+    if (more && !own) {
       el.title = t('feed.freshOverflowHint');
       el.setAttribute('aria-label', el.title);
     } else {

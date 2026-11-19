@@ -4,6 +4,7 @@ export async function checkLiveHome({
   fake,
   check,
   sign,
+  signPeer,
   arrival,
   delivered,
   disconnect,
@@ -13,6 +14,7 @@ export async function checkLiveHome({
   const home = '.view[data-kind="home"]';
   const view = page.locator(home);
   const pill = view.locator('.fresh');
+  const ownPill = view.getByRole('button', { name: 'Your note ↑', exact: true });
   const named = () =>
     view
       .locator('.list > .note .name', { hasText: /^Cache fixture$/ })
@@ -49,8 +51,8 @@ export async function checkLiveHome({
     );
   };
   let time = arrival.created_at;
-  const add = async (text) => {
-    const event = await sign(1, text, [], ++time);
+  const add = async (text, signer = signPeer) => {
+    const event = await signer(1, text, [], ++time);
     fake.add(event);
     return event;
   };
@@ -101,8 +103,8 @@ export async function checkLiveHome({
   await scroll(450);
   const before = await readingPlace();
   await shot('scrolled-before');
-  const older = await add('Home arrival while the reader is scrolled');
-  await view.getByRole('button', { name: '1 new', exact: true }).waitFor();
+  const older = await add('Own Home arrival while the reader is scrolled', sign);
+  await ownPill.waitFor();
   const newer = await add('Second Home arrival while the reader is scrolled');
   await view.getByRole('button', { name: '2 new', exact: true }).waitFor();
   await head(newer.id, older.id, afterReload.id);
@@ -148,8 +150,8 @@ export async function checkLiveHome({
   );
 
   await scroll(450);
-  const forPill = await add('Home arrival revealed by the pill');
-  await view.getByRole('button', { name: '1 new', exact: true }).click();
+  const forPill = await add('Own Home arrival revealed by the pill', sign);
+  await ownPill.click();
   await atHead(
     'pressing the pill returns to the top and reveals the arrival',
     forPill.id,
@@ -228,8 +230,9 @@ export async function checkLiveHome({
       'scrolling to the retained edge leaves the overflow disclosure',
       await overflowing.isVisible(),
     );
-    await overflowing.click();
-    await atHead('overflow pill reloads the real head', latest.id);
+    const ownOverflow = await add('Own Home head outside the held window', sign);
+    await ownPill.click();
+    await atHead('own overflow pill reloads the real head', ownOverflow.id, latest.id);
   }
   return { heldOffsetChangePx: shift, arrivalCount, previousConnection, connection };
 }
@@ -239,6 +242,7 @@ export async function checkLiveHomeWidths({
   fake,
   check,
   sign,
+  signPeer,
   arrival,
   delivered,
   stage,
@@ -263,6 +267,7 @@ export async function checkLiveHomeWidths({
       page,
       fake,
       sign,
+      signPeer,
       arrival,
       delivered,
       disconnect,

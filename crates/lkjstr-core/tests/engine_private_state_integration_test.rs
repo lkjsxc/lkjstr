@@ -90,6 +90,7 @@ fn fresh(session: &mut Session, engine: &Engine) -> Vec<Value> {
         p::Output::Fresh {
             sub: "notice".into(),
             count: 0,
+            own_head: false,
         },
         engine,
     ))

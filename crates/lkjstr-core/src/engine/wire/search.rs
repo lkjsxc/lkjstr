@@ -24,7 +24,7 @@ impl Session {
     pub(super) fn search_before(&mut self, output: &p::Output) -> Option<Context> {
         let (sub, top) = match output {
             p::Output::Rows { sub, at_top, .. } => (sub, Some(*at_top)),
-            p::Output::Fresh { sub, count } => (sub, Some(*count == 0)),
+            p::Output::Fresh { sub, count, .. } => (sub, Some(*count == 0)),
             p::Output::Patch { sub, .. } => (sub, None),
             _ => return None,
         };

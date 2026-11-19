@@ -1,6 +1,12 @@
 import type { FromEngine } from '../protocol.ts';
 import type { Sub } from './subscription.ts';
 
+export function sendFresh(s: Sub, post: (message: FromEngine) => void): void {
+  const first = s.fresh > 0 && s.query.source === 'home' ? s.entries[0]?.row() : undefined;
+  const ownHead = first?.kind === 'note' && first.mine.own;
+  post({ t: 'fresh', sub: s.id, count: s.fresh, ...(ownHead && { ownHead }) });
+}
+
 export function liveWindow(s: Sub, post: (message: FromEngine) => void): void {
   if (!s.liveRange || !s.windowed) return;
   const at = Math.max(
@@ -22,5 +28,5 @@ export function liveWindow(s: Sub, post: (message: FromEngine) => void): void {
     atBottom: s.end === s.entries.length,
   });
   s.fresh = count;
-  post({ t: 'fresh', sub: s.id, count });
+  sendFresh(s, post);
 }

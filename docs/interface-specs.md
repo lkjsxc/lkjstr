@@ -65,6 +65,12 @@ matrix covers 468 specified width/theme/language captures; real flows passed
 Worker-scoped unlock and coordinated-lock differences; design judgement remains
 with the design owner.
 
+## Home new-notes pill
+
+In Home, the existing new-notes pill uses `feed.freshOwn` when the newest row
+above the reading place is the reader's note. It keeps the same count, colour,
+and press-to-top behavior. Other arrivals keep the usual count label.
+
 ## Not specified yet
 
 Do not build these; they are the next batches, in this order: actor lists for reactions, reposts and zap receipts; a

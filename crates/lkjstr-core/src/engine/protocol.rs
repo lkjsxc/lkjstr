@@ -192,6 +192,8 @@ pub enum Output {
     Fresh {
         sub: String,
         count: usize,
+        #[serde(default, rename = "ownHead")]
+        own_head: bool,
     },
     Sign {
         req: String,

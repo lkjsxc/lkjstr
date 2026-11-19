@@ -158,6 +158,7 @@ export const en = {
   'feed.searchHint': 'Type what to look for.',
   'feed.lastArrival': 'Last arrival {time}',
   'feed.fresh': '{n} new',
+  'feed.freshOwn': 'Your note ↑',
   'feed.freshOverflow': '{n}+ new',
   'feed.freshOverflowHint': 'More new notes than this list holds. Press to go to the latest.',
   'compose.hint': 'What is on your mind?',

@@ -115,11 +115,10 @@ fn signed_reply_renders_before_any_relay_answer_and_confirms_in_place() {
     for sub in ["home", "profile", "thread"] {
         assert_eq!(row(&signed, sub, &note.id)["pending"], true, "{sub}");
     }
-    assert!(
-        signed
-            .iter()
-            .any(|m| m["t"] == "fresh" && m["sub"] == "held" && m["count"] == 1)
-    );
+    assert!(signed.iter().any(|m| m["t"] == "fresh"
+        && m["sub"] == "held"
+        && m["count"] == 1
+        && m["ownHead"] == true));
     assert!(
         signed
             .iter()

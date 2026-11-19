@@ -210,6 +210,7 @@ fn notification_fresh_counts_visible_groups_and_omits_own_acts() {
         protocol::Output::Fresh {
             sub: "wish".into(),
             count: 99,
+            own_head: false,
         },
         &e,
     );
@@ -236,6 +237,7 @@ fn notification_fresh_counts_visible_groups_and_omits_own_acts() {
         protocol::Output::Fresh {
             sub: "wish".into(),
             count: 100,
+            own_head: false,
         },
         &e,
     );

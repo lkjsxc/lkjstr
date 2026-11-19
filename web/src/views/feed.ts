@@ -16,7 +16,7 @@ import { mountScrub } from './feed-scrub.ts';
 import { CHILD, DATED, hasDaySeparators, OWN } from './feed-sources.ts';
 import { type FeedState, showFeedState } from './feed-state.ts';
 import { feedTitle } from './feed-title.ts';
-import { feedWindow, freshRows } from './feed-window.ts';
+import { feedWindow, heldFresh, isOwnNote } from './feed-window.ts';
 import { onHeld } from './held.ts';
 import { mountHomeDrafts } from './home-drafts.ts';
 import { pauseNoteAudio } from './note-audio.ts';
@@ -52,6 +52,7 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
   let atBottom = false;
   let mode: 'top' | 'held-head' | 'page' = 'top';
   let above = 0;
+  let newestOutsideOwn = false;
   let outsideBaseline: number | undefined;
   let waiting = false;
   let sstate: SubState | undefined;
@@ -85,15 +86,13 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
     const staged = drafts?.count() ?? 0;
     if (mode === 'top') {
       if (atTop && !waiting && el.scrollTop < 8) state.head = feedWindow(kind, rows).first;
-      fresh.show(el.scrollTop < 8 ? 0 : staged);
-    } else if (live && state.head) {
-      const count = freshRows(rows, state.head, keys.held() ?? keeper.get()?.key);
-      const more = above > (count === undefined ? (outsideBaseline ?? above) : 0);
-      fresh.show(
-        staged + (more ? (freshRows(rows, state.head, undefined) ?? 0) : (count ?? 0)),
-        more,
-      );
-    } else fresh.show(above + staged);
+      fresh.show(el.scrollTop < 8 ? 0 : staged, false, staged > 0);
+    } else {
+      const own = staged > 0 || (above > 0 ? newestOutsideOwn : isOwnNote(rows[0]));
+      const at = keys.held() ?? keeper.get()?.key;
+      const arrivals = heldFresh(rows, live ? state.head : undefined, at, above, outsideBaseline);
+      fresh.show(arrivals.count + staged, arrivals.more, kind === 'home' && own);
+    }
   };
   const sync = (): void => {
     const settle = keeper.hold(keys.held());
@@ -188,8 +187,9 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
         if (env.visible.get()) sub?.reading?.(keeper.get()?.key ?? rows[0]?.key ?? null);
       },
       timeline: (next) => rail.timeline(next),
-      fresh(count) {
+      fresh(count, ownHead) {
         above = count;
+        newestOutsideOwn = ownHead;
         outsideBaseline ??= count;
         paintFresh();
         if (count && el.scrollTop < 8 && (mode !== 'page' || atTop)) follow();

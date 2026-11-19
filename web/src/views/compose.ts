@@ -243,7 +243,6 @@ export function mountCompose(el: HTMLElement, env: ViewEnv, channel?: string): (
     if (!outbox.publish(draft, clear)) result.textContent = t('compose.saveFailed');
     ready();
   }
-  // Keep every typed word across a reload.
   area.addEventListener('input', () => (ready(), (state.text = area.value), save()));
   area.addEventListener('keydown', (e) => {
     if (pressed(e, 'send')) e.preventDefault(), void send();

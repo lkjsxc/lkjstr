@@ -24,11 +24,17 @@ pub(in crate::engine) fn unavailable(store: &Store, query: &Query, event: &Event
         && matches!(event.kind, 6 | 16)
 }
 
-pub(in crate::engine) fn count(store: &Store, query: &Query, events: &[Event]) -> usize {
-    events
+pub(in crate::engine) fn fresh(store: &Store, query: &Query, events: &[Event]) -> (usize, bool) {
+    let mut rows = events
         .iter()
-        .filter(|event| !unavailable(store, query, event))
-        .count()
+        .filter(|event| !unavailable(store, query, event));
+    let Some(first) = rows.next() else {
+        return (0, false);
+    };
+    let own = query.source == Source::Home
+        && first.kind == 1
+        && query.account.as_deref() == Some(first.pubkey.as_str());
+    (1 + rows.count(), own)
 }
 
 /// At most 120 distinct missing final targets per raw window, independent of

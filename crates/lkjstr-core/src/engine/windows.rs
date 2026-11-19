@@ -39,7 +39,7 @@ impl Engine {
             &self.private_lists,
         );
         let (start, end) = (selected.raw.start, selected.raw.end);
-        let fresh = projection::count(&self.store, &v.query, &events[..start]);
+        let (fresh, own_head) = projection::fresh(&self.store, &v.query, &events[..start]);
         let window = &events[start..end];
         let items: Vec<_> = window
             .iter()
@@ -113,6 +113,7 @@ impl Engine {
         self.outgoing.push(Output::Fresh {
             sub: sub.into(),
             count: fresh,
+            own_head,
         });
         v.at_bottom = at_bottom;
         v.rows = items;

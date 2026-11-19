@@ -1055,7 +1055,7 @@ export type FromEngine =
   /** Changes to the current window, batched (at most one message per 50–100 ms per subscription). */
   | { readonly t: 'patch'; readonly sub: SubId; readonly ops: readonly PatchOp[] }
   /** Rows exist above the window that it does not show (the window is anchored to a key). 0 clears it. */
-  | { readonly t: 'fresh'; readonly sub: SubId; readonly count: number }
+  | { readonly t: 'fresh'; readonly sub: SubId; readonly count: number; readonly ownHead?: boolean }
   | { readonly t: 'state'; readonly sub: SubId; readonly state: SubState }
   /** Upload progress. */
   | {
