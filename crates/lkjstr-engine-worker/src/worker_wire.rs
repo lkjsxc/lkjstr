@@ -131,7 +131,16 @@ impl Host {
                 self.scope.direct(id, &result);
                 return;
             }
-            W::Relays { relays } => {
+            W::Relays {
+                relays,
+                account,
+                cached,
+                defaults,
+                uses_defaults,
+            } => {
+                let local = (!uses_defaults).then(|| relays.clone());
+                self.engine
+                    .configure_note_routes(account, local, cached, defaults);
                 self.bootstrap(relays);
                 return;
             }

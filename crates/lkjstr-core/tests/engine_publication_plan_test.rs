@@ -104,7 +104,7 @@ fn twelve_deliveries_connect_retry_and_finish_after_early_success() {
     n.tick(4999);
     assert_eq!(sends(&mut n), 0);
     assert_eq!(n.publication_stats()[own[2].as_str()].publish_failed, 0);
-    n.tick(5000);
+    n.tick(5010);
     assert_eq!(sends(&mut n), 0);
     assert_eq!(n.publication_stats()[own[2].as_str()].publish_failed, 0);
     assert_eq!(n.publication_stats()[own[2].as_str()].publish_pending, 1);
@@ -154,11 +154,55 @@ fn expiry_never_sends_and_configuration_cannot_drop_pending_routes() {
     n.configure(vec!["wss://new.test/".into()], 1);
     assert!(n.relays.contains_key(&own[0]));
     n.drain_effects();
-    n.connected(&own[0], 5000);
+    n.connected(&own[0], 10000);
     assert_eq!(sends(&mut n), 0);
-    assert!(n.drain_output().iter().any(|o|matches!(o,Output::Result{deliveries,..} if deliveries.iter().all(|d|d.state=="timeout"))));
+    assert!(n.drain_output().iter().any(
+        |o| matches!(o,Output::Result{deliveries, error: Some(error),..}
+        if deliveries.is_empty() && error == "relay-unreachable")
+    ));
     assert_eq!(n.publication_stats()[own[0].as_str()].publish_failed, 0);
     assert_eq!(n.publication_stats()[own[0].as_str()].publish_pending, 1);
+}
+#[test]
+fn slow_connection_gets_its_own_ack_window_after_the_first_frame() {
+    let mut n = Network::default();
+    let event = note();
+    let own = urls("own", 2);
+    n.publish(
+        "post".into(),
+        event.clone(),
+        plan(PublicationInput {
+            own: own.clone(),
+            ..Default::default()
+        }),
+        1,
+    );
+    n.connected(&own[0], 2);
+    assert_eq!(sends(&mut n), 1);
+    n.message(&own[0], &json!(["OK", event.id, true, ""]).to_string(), 3);
+    assert!(
+        n.drain_output()
+            .iter()
+            .any(|o| matches!(o, Output::Result { error: None, .. }))
+    );
+    n.tick(5010);
+    assert_eq!(sends(&mut n), 0);
+    n.connected(&own[1], 7000);
+    assert_eq!(sends(&mut n), 1);
+    n.tick(11999);
+    assert!(
+        n.drain_output()
+            .iter()
+            .any(|o| matches!(o, Output::Delivery { deliveries, .. }
+        if deliveries.iter().any(|d| d.relay == own[1] && d.state == "pending")))
+    );
+    n.tick(12000);
+    assert!(
+        n.drain_output()
+            .iter()
+            .any(|o| matches!(o, Output::Delivery { deliveries, .. }
+        if deliveries.iter().any(|d| d.relay == own[1] && d.state == "timeout")))
+    );
 }
 #[test]
 fn no_destinations_is_honest_and_unsolicited_ack_cannot_succeed() {

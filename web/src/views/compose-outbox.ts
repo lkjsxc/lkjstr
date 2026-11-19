@@ -8,6 +8,7 @@ import { failureText } from './can.ts';
 import { draftButtons, draftMedia } from './draft-row.ts';
 import { type HomeDraft, hasHomeDraft, removeHomeDraft, showHomeDraft } from './home-drafts.ts';
 import { ownPublished } from './own-published.ts';
+import { toast } from './parts.ts';
 import type { ViewEnv } from './registry.ts';
 
 export type ChannelDraft = {
@@ -31,6 +32,19 @@ type Box = {
 };
 // One entry per mounted composer or unsettled send; released when both are gone.
 const boxes = new Map<string, Box>();
+let defaultNoticeShown = false;
+function announceDefaults(env: ViewEnv): void {
+  if (defaultNoticeShown) return;
+  defaultNoticeShown = true;
+  try {
+    const key = 'lkjstr:default-relays-notice';
+    if (sessionStorage.getItem(key)) return;
+    sessionStorage.setItem(key, '1');
+  } catch {
+    // Keep the notice once per document when storage is denied.
+  }
+  toast(env.layer, t('compose.defaultRelays'));
+}
 export function createChannelOutbox(
   env: ViewEnv,
   legacy: ChannelDraft[],
@@ -96,7 +110,7 @@ export function createChannelOutbox(
                     ? failureText(item.error)
                     : t('compose.retained'),
               ),
-          item.delivery
+          item.delivery?.length
             ? h(
                 'div',
                 null,
@@ -158,6 +172,9 @@ export function createChannelOutbox(
           clearTimeout(remote);
           if (entry) showHomeDraft((entry = { ...entry, signed: id }));
         },
+        fallback() {
+          announceDefaults(env);
+        },
         deliverySignal: watch.signal,
         delivery: (relays) => {
           if (watch.signal.aborted) return;
@@ -170,7 +187,13 @@ export function createChannelOutbox(
     );
     clearTimeout(remote);
     busy.delete(item);
-    if (entry && !entry.signed && !r.id && r.error) {
+    if (
+      entry &&
+      r.error &&
+      ((!entry.signed && !r.id) ||
+        r.error.code === 'relay-unreachable' ||
+        r.error.code === 'no-relays')
+    ) {
       showHomeDraft({ ...entry, failure: r.error });
     } else removeHomeDraft(item.homeKey);
     final = true;

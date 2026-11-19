@@ -180,5 +180,9 @@ The bounded resolution and exact representative policy follow
 
 - Optional `window.liveAbove` lets newly projected rows fill the explicit before budget, including grouped notifications.
 - `publish.signed {req,id}` delivers a verified note id to the initiating client before its first signed row or a delivery result.
+- `publish.fallback {req}` reports the first actual frame sent to a default relay while the author's relay list is unknown.
+- `relays {account,cached,defaults,usesDefaults}` bootstraps the account's write routes independently of background discovery.
+- `accounts.accounts[].writeRelays {id,at,urls}` exposes the newest verified write list for device-local startup reuse.
+- `NoteRow.connecting` marks a signed, unconfirmed note still waiting for its first relay connection after three seconds.
 - Optional `crypt.background` marks a passive inbox read.
 - `crypted.error: 'rate-limited'` defers a passive read while writing.

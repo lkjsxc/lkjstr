@@ -58,7 +58,12 @@ impl Network {
         let note_route_deadlines = if event.kind == 1 {
             deliveries
                 .keys()
-                .map(|url| (url.clone(), now.saturating_add(NOTE_ROUTE_WAIT_MS)))
+                .map(|url| {
+                    (
+                        url.clone(),
+                        (now.saturating_add(NOTE_CONNECT_WAIT_MS), None),
+                    )
+                })
                 .collect()
         } else {
             BTreeMap::new()
@@ -81,6 +86,11 @@ impl Network {
                 recipients,
                 inbox_routes,
                 discovery_pending,
+                author_list: None,
+                author_route_wait_until: 0,
+                default_routes: Vec::new(),
+                default_notice_sent: false,
+                connect_late: false,
             },
         );
     }
@@ -99,7 +109,11 @@ impl Network {
                     })
                 {
                     p.sent.insert(relay.clone(), now);
-                    p.attempted.insert(relay.clone());
+                    if p.attempted.insert(relay.clone())
+                        && let Some((_, ack)) = p.note_route_deadlines.get_mut(relay)
+                    {
+                        *ack = Some(now.saturating_add(NOTE_ACK_WAIT_MS));
+                    }
                     frames.push((relay.clone(), p.event.clone()));
                 }
             }
@@ -210,7 +224,9 @@ impl Network {
             .iter()
             .filter(|(_, p)| {
                 now >= p.deadline
-                    || (!p.discovery_pending && p.deliveries.values().all(|s| s != "pending"))
+                    || (!p.discovery_pending
+                        && (p.reported_success || now >= p.author_route_wait_until)
+                        && p.deliveries.values().all(|s| s != "pending"))
             })
             .map(|(id, _)| id.clone())
             .collect();

@@ -196,6 +196,7 @@ impl Clients {
             | Output::Diagnostics { sub, .. } => Some(sub.as_str()),
             Output::Sign { req, .. }
             | Output::PublishSigned { req, .. }
+            | Output::PublishFallback { req }
             | Output::Delivery { req, .. }
             | Output::Result { req, .. } => Some(req.as_str()),
             Output::Error { req, .. } => req.as_deref(),
@@ -220,6 +221,7 @@ impl Clients {
                 | Output::Diagnostics { sub, .. } => *sub = local,
                 Output::Sign { req, .. }
                 | Output::PublishSigned { req, .. }
+                | Output::PublishFallback { req }
                 | Output::Delivery { req, .. }
                 | Output::Result { req, .. } => *req = local,
                 Output::Error { req, .. } => *req = Some(local),

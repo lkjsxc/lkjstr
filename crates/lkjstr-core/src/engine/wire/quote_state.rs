@@ -40,8 +40,17 @@ pub(super) fn home_delivery(row: &mut Value, e: &Engine, account: Option<&str>) 
             .is_some_and(|id| e.network.pending_event(id))
         {
             row["pending"] = Value::Bool(true);
+            if row["id"]
+                .as_str()
+                .is_some_and(|id| e.network.connecting_event(id))
+            {
+                row["connecting"] = Value::Bool(true);
+            } else if let Some(fields) = row.as_object_mut() {
+                fields.remove("connecting");
+            }
         } else if let Some(fields) = row.as_object_mut() {
             fields.remove("pending");
+            fields.remove("connecting");
         }
     }
 }

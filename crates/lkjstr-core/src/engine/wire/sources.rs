@@ -141,6 +141,12 @@ impl Session {
                 .is_some_and(|id| e.network.pending_event(id))
             {
                 row["pending"] = json!(true);
+                if row["id"]
+                    .as_str()
+                    .is_some_and(|id| e.network.connecting_event(id))
+                {
+                    row["connecting"] = json!(true);
+                }
             }
         }
         let mut keys = std::collections::HashSet::new();

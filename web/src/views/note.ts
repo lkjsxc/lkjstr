@@ -16,6 +16,7 @@ import { displayName, faceButton, how, nameButton, plainName, segments } from '.
 import type { ViewEnv } from './registry.ts';
 
 const timeOf = (row: NoteRow, env: ViewEnv, dated: boolean): string => {
+  if (row.pending) return t(row.connecting ? 'note.connecting' : 'note.sending');
   const relative = env.settings.get().relativeTime;
   // Absolute dates compare with the divider's local day; relative ages use the current time.
   const now = dated && !relative ? (row.repostedBy?.at ?? row.at) : Date.now();
@@ -58,11 +59,7 @@ function head(row: NoteRow, env: ViewEnv, dated: boolean): HTMLElement {
         )
       : null,
     a.bot ? h('span', { class: 'badge' }, t('note.bot')) : null,
-    h(
-      'time',
-      { title: fullTime(row.at) },
-      row.pending ? t('note.sending') : timeOf(row, env, dated),
-    ),
+    h('time', { title: fullTime(row.at) }, timeOf(row, env, dated)),
     // Where the tile is too narrow for a bookmark button, a set bookmark is this mark instead.
     h(
       'span',

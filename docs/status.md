@@ -71,9 +71,9 @@ Protocol 6 introduced DM, encrypted-key and relay authentication operations. Pro
   completion or the original deadline, advances successful pages and preserves
   failed-route cursors. Failure never establishes empty history.
 - Real builds install a complete hash-verified offline shell with CacheStorage
-  and Web Locks. Failed updates/rollback preserve usable shells; activation waits
-  for old clients to close. At most three shell caches remain, and interrupted
-  cleanup recovers on fetch. Events, keys and remote media are excluded.
+  and Web Locks. A verified update can take over the next reload while an
+  open draft gets a notice. The previous hashed assets remain during handoff,
+  and interrupted cleanup recovers on fetch. Events, keys and media are excluded.
   Loopback cases cover corruption, rollback, offline links and two-tab races;
   see [offline-shell.md](offline-shell.md).
 
@@ -140,8 +140,8 @@ subscription counts. SharedWorker and the Web Locks/BroadcastChannel fallback sh
 queues have explicit bounds.
 
 Publishing uses author outboxes and inbox/context routes, with first acceptance resolving a public action. Home shows its retained draft while signing.
-Signed text notes appear in Home, Profile and Thread before any relay reply. Destinations get five seconds each in parallel and retain late confirmations.
-Unanswered delivery remains unknown. Discovery and other public actions retain the aggregate 30-second budget. Passive inbox checks yield to writing.
+Signed text notes appear in Home, Profile and Thread before any relay reply. Cached write lists and connected account relays send while discovery runs.
+Note destinations get ten seconds to connect and five seconds after the first frame; late confirmations remain available. Passive inbox checks yield to writing.
 Persisted receipts help route deletes. Lists wait for initial lookup, retain opaque content and reject unsupported private removals.
 
 Blossom honors kind 10063; NIP-96 is the fallback. All signer kinds support upload authorization. Required-response evidence, explicit server

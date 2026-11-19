@@ -195,6 +195,7 @@ export function mountCompose(el: HTMLElement, env: ViewEnv, channel?: string): (
   const media = createComposeMedia(thumbs, env, state, save, ready);
   function showDelivery(relays: readonly Delivery[], final: boolean, error?: Failure): void {
     if (error) return replaceChildren(result, h('div', { class: 'error' }, failureText(error)));
+    if (!relays.length) return replaceChildren(result);
     const ok = relays.filter((r) => r.state === 'ok').length;
     const failed = relays.filter((r) => r.state === 'failed');
     const unanswered = relays.filter((r) => r.state === 'pending' || r.state === 'timeout');
@@ -202,7 +203,7 @@ export function mountCompose(el: HTMLElement, env: ViewEnv, channel?: string): (
       result,
       h(
         'div',
-        { class: final && relays.length > 0 && failed.length === relays.length ? 'error' : '' },
+        { class: final && failed.length === relays.length ? 'error' : '' },
         t(final ? 'compose.delivered' : 'compose.sending', { ok, all: relays.length }),
       ),
       [...failed, ...unanswered].map((r) =>

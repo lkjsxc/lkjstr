@@ -29,6 +29,7 @@ pub mod local_reads;
 pub mod metrics;
 pub mod network;
 mod network_limits;
+mod note_routes;
 pub mod preview;
 mod private_cache;
 pub mod private_lists;
@@ -89,6 +90,9 @@ pub struct Engine {
     pub zaps: zaps::State,
     zap_demand: zap_visible::Demand,
     pending_publications: usize,
+    note_routes: note_routes::NoteRoutes,
+    // Signed local notes before their first frame, at most the 64 publication jobs.
+    tentative_notes: std::collections::BTreeSet<String>,
     // At most 64 creates (both outcomes) and 64 pending owner-list lookups (20s).
     channel_creates: BTreeMap<String, channel_create::Creation>,
     channel_pending: BTreeMap<String, channel_pending::Pending>,
@@ -135,6 +139,8 @@ impl Engine {
             zap_demand: Default::default(),
             dm_wants: vec![],
             pending_publications: 0,
+            note_routes: note_routes::NoteRoutes::default(),
+            tentative_notes: std::collections::BTreeSet::new(),
             channel_creates: BTreeMap::new(),
             channel_pending: BTreeMap::new(),
             client_tag: true,
@@ -169,6 +175,24 @@ impl Engine {
     pub fn drain(&mut self) -> Vec<Output> {
         let mut result = std::mem::take(&mut self.outgoing);
         result.extend(self.network.drain_output());
+        let mut removed = false;
+        for output in &result {
+            if let Output::Result {
+                id: Some(id),
+                error,
+                ..
+            } = output
+                && self.tentative_notes.remove(id)
+                && error
+                    .as_deref()
+                    .is_some_and(|code| matches!(code, "no-relays" | "relay-unreachable"))
+            {
+                removed |= self.store.discard_unseen_note(id);
+            }
+        }
+        if removed {
+            self.invalidate();
+        }
         self.channel_outputs(result)
     }
 }

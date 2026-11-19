@@ -93,6 +93,14 @@ pub enum Input {
     },
     Relays {
         relays: Vec<RelayConfig>,
+        #[serde(default)]
+        account: Option<String>,
+        #[serde(default)]
+        cached: Option<super::WriteRelayList>,
+        #[serde(default)]
+        defaults: Option<Vec<String>>,
+        #[serde(default, rename = "usesDefaults")]
+        uses_defaults: bool,
     },
     Heartbeat,
     Detach,

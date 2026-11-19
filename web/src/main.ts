@@ -7,7 +7,7 @@ import { createEngine } from './engine/client.ts';
 import { createTransport } from './engine/startup.ts';
 import { createIdleLock } from './shared/account-idle.ts';
 import { rememberAccounts, rememberedAccounts, rememberFace } from './shared/face.ts';
-import { resolveLang, setLang } from './shared/i18n.ts';
+import { resolveLang, setLang, t } from './shared/i18n.ts';
 import { pressedAt, watchPairs } from './shared/keys.ts';
 import { spacesKey } from './shared/layout-store.ts';
 import { migrateStorage } from './shared/migrate.ts';
@@ -16,6 +16,7 @@ import { createSettings } from './shared/settings.ts';
 import { kv } from './shared/storage.ts';
 import { createTopBar } from './ui/topbar.ts';
 import { backupPending } from './views/account-key.ts';
+import { toast } from './views/parts.ts';
 import { setServed } from './views/registry.ts';
 import { createWmController, type Wm } from './wm/controller.ts';
 import { createHost } from './wm/host.ts';
@@ -159,4 +160,13 @@ if (link) (incoming = () => ctl?.open(link[1] === 'p' ? 'profile' : 'thread', { 
 if (location.pathname !== '/' || location.search || location.hash)
   history.replaceState(null, '', '/');
 
-if (__REAL_ENGINE__) installShell();
+if (__REAL_ENGINE__)
+  installShell(
+    () =>
+      engine.posting?.get() ||
+      Array.from(document.querySelectorAll<HTMLTextAreaElement>('textarea.ctext')).some(
+        (field) => field.value.length > 0,
+      ) ||
+      document.querySelector('.compose .thumb, .compose .cctx') !== null,
+    () => toast(host.layer, t('shell.updateReady')),
+  );

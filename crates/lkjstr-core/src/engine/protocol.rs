@@ -201,6 +201,9 @@ pub enum Output {
         req: String,
         id: String,
     },
+    PublishFallback {
+        req: String,
+    },
     Delivery {
         req: String,
         deliveries: Vec<Delivery>,

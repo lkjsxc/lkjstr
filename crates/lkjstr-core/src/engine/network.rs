@@ -3,7 +3,8 @@ use super::protocol::{Output, Query, Source};
 use lkjstr_protocol::{NostrEvent, NostrFilter, filter_to_value, normalize_relay_url};
 use serde_json::{Value, json};
 use std::collections::{BTreeMap, BTreeSet};
-pub(super) const NOTE_ROUTE_WAIT_MS: u64 = 5_000;
+pub(super) const NOTE_CONNECT_WAIT_MS: u64 = 10_000;
+pub(super) const NOTE_ACK_WAIT_MS: u64 = 5_000;
 #[path = "network_auth.rs"]
 pub mod auth;
 #[path = "network_batch.rs"]
@@ -31,6 +32,8 @@ mod lifecycle;
 mod lists;
 #[path = "network_messages.rs"]
 mod messages;
+#[path = "network_note_delivery.rs"]
+mod note_delivery;
 #[path = "network_stats.rs"]
 mod observations;
 #[path = "network_paging.rs"]
@@ -162,8 +165,8 @@ pub(super) struct Publication {
     pub auth_account: String, // Original sender; never infer a gift-wrap identity.
     pub deadline: u64,
     pub deliveries: BTreeMap<String, String>,
-    // Kind 1 only, one deadline per admitted destination (<= 20).
-    pub note_route_deadlines: BTreeMap<String, u64>,
+    // Kind 1 only, connection deadline and optional first-frame ACK deadline (<= 20).
+    pub note_route_deadlines: BTreeMap<String, (u64, Option<u64>)>,
     pub sent: BTreeMap<String, u64>,
     // Ever attempted, independent of reconnect/retry markers; <= 20 planned routes.
     pub attempted: BTreeSet<String>,
@@ -174,6 +177,11 @@ pub(super) struct Publication {
     pub recipients: Vec<String>,
     pub inbox_routes: BTreeSet<String>,
     pub discovery_pending: bool,
+    pub author_list: Option<String>,
+    pub author_route_wait_until: u64,
+    pub default_routes: Vec<String>,
+    pub default_notice_sent: bool,
+    pub connect_late: bool,
 }
 #[derive(Default)]
 pub struct Network {

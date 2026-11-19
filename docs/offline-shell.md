@@ -12,8 +12,12 @@ Installation requires a secure context, Service Worker, CacheStorage, SHA-256
 and Web Locks. Unsupported or denied capabilities leave the online app usable.
 Web Locks coordinates same-origin workers across generations; the lock name
 is stable across builds. The app has one root-scope registration per origin.
-The worker never uses skipWaiting or clients.claim. A new shell waits for every
-old controlled client, including Worker clients, before normal activation.
+The generated app offers a verified waiting shell a handoff. Handoff activates
+with skipWaiting and claims clients without navigating them. On an ordinary
+reload already in progress, the app can reload once into the new graph. If a
+draft or post is active, it shows a reload notice and leaves the document open.
+An older app without the handoff protocol can discover the verified replacement
+on its first reload and use it on the next request after activation.
 
 ## Immutable installation
 
@@ -45,9 +49,11 @@ its own identity directly during activation.
 
 Cleanup retains one complete cache for each live build plus the actual current
 installer's incomplete stage. Old incomplete stages and superseded waiting
-builds are removed. Stable repeated updates retain at most three shell copies:
-active, previous waiting, and the current installer/new waiting build.
-Activation normally reduces this to the current live builds.
+builds are removed. Ordinary waiting updates retain active, previous waiting,
+and current installer. A handoff can retain one additional complete predecessor.
+The worker verifies predecessor app and engine assets against the hashes in
+their content-addressed filenames, then serves them to the existing clients.
+Navigation uses the active worker's complete index graph.
 
 A browser may discard or terminate activation work while still advancing the
 worker to activated. Cleanup therefore also runs on the first controlled fetch
@@ -73,6 +79,8 @@ finally. No owner account, public relay or publication is involved.
   C finishes honestly, and C does not take over an open B tab.
 - If activation cleanup is interrupted, a fresh controlled request removes
   retired caches before the fixture claims recovery.
+- One ordinary reload activates and adopts an update in a warm browser with two
+  tabs. A draft keeps its old document and receives the reload notice.
 
 Both original regressions failed against the saved original generator:
 rollback deleted A's cached index, and the fourth waiting build left four

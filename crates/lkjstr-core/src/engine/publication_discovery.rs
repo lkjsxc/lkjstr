@@ -1,7 +1,7 @@
 //! Missing inbox lists are read while own delivery proceeds; all work shares its deadline.
 use super::{
     Engine,
-    network::{Effect, NOTE_ROUTE_WAIT_MS, Network, Relay},
+    network::{Effect, NOTE_CONNECT_WAIT_MS, Network, Relay},
     protocol::{Query, Source},
     publication_plan::Destination,
 };
@@ -24,6 +24,25 @@ pub(super) fn recipients(event: &NostrEvent) -> Vec<String> {
 }
 impl Engine {
     pub(super) fn publication_wants(&mut self, now: u64) -> Vec<(String, NostrFilter, Query)> {
+        let updates: Vec<_> = self
+            .network
+            .publications
+            .iter()
+            .filter_map(|(id, p)| {
+                (p.event.kind == 1 && now < p.deadline)
+                    .then(|| self.refreshed_note_routes(&p.event.pubkey, p.author_list.as_deref()))
+                    .flatten()
+                    .map(|list| (id.clone(), list))
+            })
+            .collect();
+        for (id, list) in updates {
+            if let Some(p) = self.network.publications.get_mut(&id) {
+                p.author_list = Some(list.id.clone());
+                p.author_route_wait_until = 0;
+            }
+            let routes = super::note_routes::refreshed_destinations(&list);
+            self.network.extend_publication(&id, routes, now, true);
+        }
         let jobs: Vec<_> = self
             .network
             .publications
@@ -42,7 +61,7 @@ impl Engine {
                 .collect();
             self.network.set_unresolved_recipients(&id, missing.len());
             let routes = self.publication_routes(&event);
-            self.network.extend_publication(&id, routes, now);
+            self.network.extend_publication(&id, routes, now, false);
             if let Some(p) = self.network.publications.get_mut(&id) {
                 p.discovery_pending = !missing.is_empty();
                 p.recipients = missing.clone();
@@ -95,18 +114,32 @@ impl Engine {
     }
 }
 impl Network {
-    fn extend_publication(&mut self, id: &str, mut routes: Vec<Destination>, now: u64) {
+    fn extend_publication(
+        &mut self,
+        id: &str,
+        mut routes: Vec<Destination>,
+        now: u64,
+        author_update: bool,
+    ) {
         let Some(p) = self.publications.get(id) else {
             return;
         };
         routes.retain(|d| !p.deliveries.contains_key(&d.url));
-        // Freeze already planned own destinations. Discovery can add only inbox/context.
-        routes.retain(|d| d.rule != "own");
+        // Author refresh adds only new outboxes; recipient discovery adds only inbox/context.
+        routes.retain(|d| (d.rule == "own") == author_update);
         let mut extra = p.inbox_routes.len();
+        let mut admitted = p.deliveries.len();
         for d in routes.iter_mut().filter(|d| d.state == "pending") {
-            if extra >= 8 {
+            if admitted >= 20 || (!author_update && extra >= 8) {
                 d.state = "skipped".into();
-                d.reason = Some("inbox-cap".into());
+                d.reason = Some(
+                    if admitted >= 20 {
+                        "capacity"
+                    } else {
+                        "inbox-cap"
+                    }
+                    .into(),
+                );
                 continue;
             }
             extra += 1;
@@ -128,11 +161,16 @@ impl Network {
                 );
             }
             if let Some(p) = self.publications.get_mut(id) {
+                admitted += 1;
                 p.deliveries.insert(d.url.clone(), "pending".into());
-                p.inbox_routes.insert(d.url.clone());
+                if !author_update {
+                    p.inbox_routes.insert(d.url.clone());
+                }
                 if p.event.kind == 1 {
-                    p.note_route_deadlines
-                        .insert(d.url.clone(), now.saturating_add(NOTE_ROUTE_WAIT_MS));
+                    p.note_route_deadlines.insert(
+                        d.url.clone(),
+                        (now.saturating_add(NOTE_CONNECT_WAIT_MS), None),
+                    );
                 }
             }
         }

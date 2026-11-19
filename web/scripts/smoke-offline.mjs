@@ -7,6 +7,7 @@ import { extname, join, resolve } from 'node:path';
 import { shellBrowser } from './offline-browser.mjs';
 import { waitFor } from './offline-fixture.mjs';
 import { shellWorker } from './shell-cache.ts';
+import { shellHandoff } from './smoke-offline-handoff.mjs';
 import { shellRaces } from './smoke-offline-races.mjs';
 import { shellUpdates } from './smoke-offline-updates.mjs';
 
@@ -200,3 +201,4 @@ try {
 
 await shellUpdates();
 await shellRaces();
+await shellHandoff();

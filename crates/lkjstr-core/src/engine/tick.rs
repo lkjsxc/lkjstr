@@ -40,7 +40,9 @@ impl Engine {
         }
         self.network.tick(now);
         self.resume_channel_actions(now);
-        if self.network.publications.len() != self.pending_publications {
+        if self.network.update_note_connection_phases(now)
+            || self.network.publications.len() != self.pending_publications
+        {
             self.pending_publications = self.network.publications.len();
             self.replan(now);
             for v in self.views.values_mut() {

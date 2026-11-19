@@ -41,6 +41,9 @@ export function createActionRequests(
     signed(msg: Extract<FromEngine, { t: 'publish.signed' }>): void {
       pending.get(msg.req)?.watch?.signed?.(msg.id);
     },
+    fallback(req: string): void {
+      pending.get(req)?.watch?.fallback?.();
+    },
     result: finish,
     act(action: Action, watch?: ActWatch): Promise<ActResult> {
       const req = next();

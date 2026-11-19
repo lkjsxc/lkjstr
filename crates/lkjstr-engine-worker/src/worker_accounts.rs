@@ -72,6 +72,9 @@ fn send_accounts(h: &Host, id: u64) {
         let author=lkjstr_core::engine::rows::author(&h.engine.store,&a.pubkey);
         let mut value = serde_json::json!({"author":lkjstr_core::engine::wire::note::author(&author),"signer":a.signer,"encrypted":a.encrypted(),"locked":a.locked(),"unread":lkjstr_core::engine::wire::unread_count(&h.engine,&a.pubkey),"unreadZap":lkjstr_core::engine::wire::unread_zap_evidence(&h.engine,&a.pubkey)});
         value["privateLists"]=serde_json::json!(h.engine.private_reads.policy_status(&h.engine.store,&a.pubkey));
+        if let Some(list) = h.engine.write_relay_list(&a.pubkey) {
+            value["writeRelays"] = serde_json::json!(list);
+        }
         if h.engine.store.replaceable(&a.pubkey, 10050).is_some() {
             value["inbox"] = serde_json::json!(lkjstr_core::engine::dm::routing::inboxes(&h.engine.store, &a.pubkey).unwrap_or_default());
         }

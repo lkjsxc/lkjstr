@@ -134,6 +134,7 @@ export function createEngine(transport: Transport): Engine {
     else if (msg.t === 'state') subs.get(msg.sub)?.state?.(msg.state);
     else if (msg.t === 'progress') actions.progress(msg);
     else if (msg.t === 'publish.signed') actions.signed(msg);
+    else if (msg.t === 'publish.fallback') actions.fallback(msg.req);
     else if (msg.t === 'delivery') deliveries.receive(msg);
     else if (msg.t === 'result') {
       actions.result(msg);

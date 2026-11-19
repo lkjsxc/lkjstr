@@ -5,7 +5,7 @@ export function workerTransport(options = {}) {
   const namespace = `lkjstr-engine-v1:${import.meta.url}`;
   let receive = () => {}, closed = false, port, worker, release, epoch;
   let connection = 0, join;
-  let config, relays = options.relays ? { t: 'relays', relays: options.relays } : undefined, hint;
+  let config, relays = options.relayBootstrap ?? (options.relays ? { t: 'relays', relays: options.relays } : undefined), hint;
   const privateSubs = new Map(); // at most 32 private subscriptions
   const subs = new Map(); // bounded by engine's 128-subscription limit
   let started=false, readsReady=false;

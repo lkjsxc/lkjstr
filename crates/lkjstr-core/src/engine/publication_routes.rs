@@ -9,6 +9,17 @@ impl Engine {
         &self,
         event: &NostrEvent,
     ) -> Vec<publication_plan::Destination> {
+        self.plan_publication(event).0
+    }
+
+    pub(super) fn plan_publication(
+        &self,
+        event: &NostrEvent,
+    ) -> (
+        Vec<publication_plan::Destination>,
+        Option<String>,
+        Vec<String>,
+    ) {
         let mut own: Vec<String> = self
             .account_relays(&event.pubkey)
             .map(|(_, rs)| {
@@ -50,6 +61,11 @@ impl Engine {
             deletion: event.kind == 5,
             ..Default::default()
         };
+        let (author_list, default_routes) = if event.kind == 1 {
+            self.note_write_routes(&event.pubkey, &mut input)
+        } else {
+            (None, Vec::new())
+        };
         // People-list tags describe stored lists, not message recipients.
         for person in super::publication_discovery::recipients(event) {
             input.inboxes.push(
@@ -87,6 +103,6 @@ impl Engine {
             }
         }
         input.context.truncate(64);
-        publication_plan::plan(input)
+        (publication_plan::plan(input), author_list, default_routes)
     }
 }

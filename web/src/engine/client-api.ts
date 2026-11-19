@@ -43,6 +43,7 @@ export type ActWatch = {
   progress?(sent: number, total: number, detail?: Extract<FromEngine, { t: 'progress' }>): void;
   delivery?(relays: readonly Delivery[]): void;
   signed?(id: string): void;
+  fallback?(): void;
 };
 export type Accounts = { readonly accounts: readonly Account[]; readonly active?: Pubkey };
 /** Account loading is separate from capability readiness and retained account rows. */

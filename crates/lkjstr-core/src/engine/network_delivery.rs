@@ -21,69 +21,61 @@ impl Publication {
             })
             .collect()
     }
-}
-impl Network {
-    pub(super) fn expire_note_routes(&mut self, now: u64) {
-        let mut updates = Vec::new();
-        for (id, p) in &mut self.publications {
-            let mut expired = Vec::new();
-            for (relay, deadline) in &p.note_route_deadlines {
-                let Some(state) = p.deliveries.get_mut(relay) else {
-                    continue;
-                };
-                if now < *deadline || *state != "pending" {
-                    continue;
-                }
-                *state = if p.observed.contains(relay) {
-                    "accepted"
-                } else {
-                    "timeout"
-                }
-                .into();
-                expired.push(Delivery {
-                    relay: relay.clone(),
-                    state: state.clone(),
-                    message: None,
-                });
-            }
-            if !expired.is_empty()
-                && (p.discovery_pending || p.deliveries.values().any(|s| s == "pending"))
-            {
-                updates.push((id.clone(), p.req.clone(), expired, p.delivery()));
-            }
-        }
-        for (id, req, expired, deliveries) in updates {
-            self.update_publication(&id, &expired);
-            self.output.push(Output::Delivery { req, deliveries });
+
+    fn connection_error(&self) -> &'static str {
+        if self.event.kind == 1 && !self.deliveries.is_empty() {
+            "relay-unreachable"
+        } else {
+            "no-relays"
         }
     }
-
+}
+impl Network {
     /// The effect host reports an unsuccessful socket send; a failed retry cannot
     /// erase an earlier successful send. Native effect fixtures assume delivery.
-    pub fn publication_frame_sent(&mut self, relay: &str, text: &str, sent: bool) {
+    pub fn publication_frame_sent(
+        &mut self,
+        relay: &str,
+        text: &str,
+        sent: bool,
+    ) -> Option<NostrEvent> {
         let Ok(frame) = serde_json::from_str::<Value>(text) else {
-            return;
+            return None;
         };
         if frame[0] != "EVENT" {
-            return;
+            return None;
         }
         let Some(p) = frame[1]["id"]
             .as_str()
             .and_then(|id| self.publications.get_mut(id))
         else {
-            return;
+            return None;
         };
         if sent {
+            let first = p.transport_confirmed.is_empty();
             p.transport_confirmed.insert(relay.into());
+            if !p.default_notice_sent && p.default_routes.iter().any(|url| url == relay) {
+                p.default_notice_sent = true;
+                self.output
+                    .push(Output::PublishFallback { req: p.req.clone() });
+            }
+            if first && p.event.kind == 1 {
+                self.profiles_changed = true;
+                return Some(p.event.clone());
+            }
         } else {
             if !p.transport_confirmed.contains(relay) && p.attempted.remove(relay) {
                 p.observed.remove(relay);
+                if let Some((_, ack)) = p.note_route_deadlines.get_mut(relay) {
+                    *ack = None;
+                }
                 self.output.push(Output::Delivery {
                     req: p.req.clone(),
                     deliveries: p.delivery(),
                 });
             }
         }
+        None
     }
 
     pub fn watch_deliveries(&mut self, reqs: Vec<String>) {
@@ -139,7 +131,7 @@ impl Network {
             self.output.push(Output::Result {
                 req: p.req.clone(),
                 id: Some(id.clone()),
-                error: deliveries.is_empty().then(|| "no-relays".into()),
+                error: deliveries.is_empty().then(|| p.connection_error().into()),
                 deliveries: deliveries.clone(),
             });
         }

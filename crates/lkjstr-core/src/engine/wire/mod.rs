@@ -33,7 +33,7 @@ use super::thread;
 mod timeline;
 mod translate;
 use queries::{Anchor, Config, Query};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 mod input_types;
 mod output_types;
 pub use input_types::Input;
@@ -88,6 +88,18 @@ pub struct RelayConfig {
     pub read: bool,
     pub write: bool,
     pub search: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct WriteRelayList {
+    pub id: String,
+    pub at: u64,
+    pub urls: Vec<String>,
+}
+impl WriteRelayList {
+    pub fn is_newer_than(&self, other: &Self) -> bool {
+        self.at > other.at || (self.at == other.at && self.id < other.id)
+    }
 }
 
 /// Account badges use the same visible, grouped rows as the notifications feed.

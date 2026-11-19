@@ -75,7 +75,6 @@ pub(super) fn pump(host: &Rc<RefCell<Host>>) {
                     .is_some_and(|s| s.send(&text));
                 host.borrow_mut()
                     .engine
-                    .network
                     .publication_frame_sent(&url, &text, sent);
             }
         }

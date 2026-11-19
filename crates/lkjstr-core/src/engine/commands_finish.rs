@@ -61,7 +61,11 @@ impl Engine {
             self.error(Some(req), "signer-timeout");
             return;
         }
-        let routes = self.publication_routes(&event);
+        let (routes, author_list, default_routes) = self.plan_publication(&event);
+        if event.kind == 1 && !self.network.can_stage_note(&event.id) {
+            self.error(Some(req), "publication-limit");
+            return;
+        }
         if event.kind == 10002 {
             let entries = event
                 .tags
@@ -84,8 +88,13 @@ impl Engine {
             }
         }
         self.read_contexts.changed(&event);
+        if event.kind == 1 && self.store.get(&event.id).is_none() {
+            self.tentative_notes.insert(event.id.clone());
+        }
         self.store.insert(event.clone(), None);
-        self.pending.push(event.clone(), true);
+        if event.kind != 1 {
+            self.pending.push(event.clone(), true);
+        }
         for v in self.views.values_mut() {
             v.dirty = true;
         }
@@ -100,6 +109,13 @@ impl Engine {
             });
             self.network
                 .stage_publication(req, event, routes, now, author.clone());
+            self.network.track_note_routes(
+                &id,
+                author_list,
+                default_routes,
+                now,
+                self.discovery_accounts.contains(&author),
+            );
             let subs: Vec<_> = self
                 .views
                 .iter()

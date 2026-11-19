@@ -306,6 +306,7 @@ export type NoteRow = {
   readonly channel?: { readonly id: string; readonly name: string };
   /** Not confirmed by any relay yet (the reader's own note, just sent). */
   readonly pending?: boolean;
+  readonly connecting?: boolean;
 };
 
 export type ProfileRow = {
@@ -699,6 +700,7 @@ export type Failure = {
     | 'signer-timeout'
     | 'signer-missing'
     | 'no-relays'
+    | 'relay-unreachable'
     | 'rejected'
     | 'too-large'
     | 'unsupported'
@@ -713,6 +715,12 @@ export type Failure = {
   readonly message?: string;
 };
 
+export type WriteRelayList = {
+  readonly id: string;
+  readonly at: number;
+  readonly urls: readonly string[];
+};
+
 export type Account = {
   /** Evidence for observed encrypted mutes used by the compatible unread count. Unknown does not prompt. */
   readonly privateLists?: {
@@ -723,6 +731,7 @@ export type Account = {
   };
   /** Observed, signature-verified kind-10050 inbox relays; absent while unknown. */
   readonly inbox?: readonly string[];
+  readonly writeRelays?: WriteRelayList;
   readonly locked?: boolean;
   readonly encrypted?: boolean;
   readonly author: Author;
@@ -848,6 +857,10 @@ export type ToEngine =
   | {
       readonly t: 'relays';
       readonly relays: readonly (RelayEntry & { readonly search: boolean })[];
+      readonly account?: Pubkey;
+      readonly cached?: WriteRelayList;
+      readonly defaults?: readonly string[];
+      readonly usesDefaults?: boolean;
     }
   /** Send every 20s; after 180s without contact the engine releases this client. */
   | { readonly t: 'heartbeat' }
@@ -1056,6 +1069,7 @@ export type FromEngine =
   /** Per-relay delivery of a publish, sent as answers come in (the whole list each time). */
   | { readonly t: 'delivery'; readonly req: ReqId; readonly relays: readonly Delivery[] }
   | { readonly t: 'publish.signed'; readonly req: ReqId; readonly id: string }
+  | { readonly t: 'publish.fallback'; readonly req: ReqId }
   /** The end of an action. `delivery`: the final per-relay list of a publish. `uploaded`: of an upload.
    * `id`: of a published note, or of a channel created by `channel.save`. `key`: of `account.key`. */
   | {

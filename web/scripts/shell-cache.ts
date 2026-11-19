@@ -10,6 +10,7 @@ const build = __BUILD__;
 const prefix = 'lkjstr-shell-';
 const ownPrefix = prefix + build + '-';
 const marker = '/.lkjstr-shell-complete';
+const previousMarker = '/.lkjstr-shell-previous';
 const hashes = new Map(assets);
 let stage = null;
 
@@ -22,7 +23,9 @@ function slots() {
 }
 self.addEventListener('message', (event) => {
   if (event.data?.k === 'lkjstr-shell-identity')
-    event.ports[0]?.postMessage({ build, stage });
+    event.ports[0]?.postMessage({ build, stage, handoff: true });
+  if (event.data?.k === 'lkjstr-shell-takeover' && event.source?.type === 'window')
+    event.waitUntil(takeover());
 });
 function identity(worker) {
   return new Promise((resolve, reject) => {
@@ -48,6 +51,34 @@ async function complete(name) {
   const response = await caches.match(marker, { cacheName: name });
   return response ? response.text() : null;
 }
+async function previous(name) {
+  const value = await caches.match(previousMarker, { cacheName: name });
+  return value ? value.text() : null;
+}
+async function ownComplete(names = null) {
+  for (const name of names || await caches.keys()) {
+    if (name.startsWith(ownPrefix) && await complete(name) === build) return name;
+  }
+}
+async function takeover(base) {
+  const active = self.registration.active;
+  if (!active || active === self.registration.waiting) return;
+  base ??= await identity(active);
+  if (base.build === build) return;
+  await locked(async () => {
+    const name = await ownComplete();
+    if (!name || self.registration.active !== active)
+      throw new Error('shell handoff unavailable');
+    await (await caches.open(name)).put(previousMarker, new Response(base.build));
+  });
+  await self.skipWaiting();
+}
+async function takeOverLegacy() {
+  const active = self.registration.active;
+  if (!active) return;
+  const base = await identity(active).catch(() => null);
+  if (base && !base.handoff) await takeover(base).catch(() => null);
+}
 async function prune(ignore, local) {
   // New names are allocated only under this lock. Capture candidates before querying live workers.
   const names = (await caches.keys()).filter((name) => name.startsWith(prefix));
@@ -67,6 +98,15 @@ async function prune(ignore, local) {
   }
   // An incomplete stage is retained only while its actual installer is alive.
   if (live[2]?.stage) keep.add(live[2].stage);
+  const current = completed.get(live[0]?.build);
+  if (current) {
+    const prior = await previous(current);
+    for (const name of names) {
+      if (!name.startsWith(prefix + prior + '-') || await complete(name) !== prior) continue;
+      keep.add(name);
+      break;
+    }
+  }
   if (slots().some((worker, i) => worker !== before[i])) throw new Error('shell lifecycle changed');
   await Promise.all(names.filter((name) => !keep.has(name)).map((name) => caches.delete(name)));
   return completed;
@@ -95,7 +135,7 @@ self.addEventListener('install', (event) => {
       stage = ownPrefix + crypto.randomUUID();
       return { name: stage, cache: await caches.open(stage) };
     });
-    if (reserved.reused) return;
+    if (reserved.reused) return takeOverLegacy();
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 60000);
     try {
@@ -119,6 +159,7 @@ self.addEventListener('install', (event) => {
       clearTimeout(timer);
       controller.abort();
     }
+    await takeOverLegacy();
   })());
 });
 let maintenance = null;
@@ -133,8 +174,11 @@ function maintain(owner) {
   return maintenance;
 }
 self.addEventListener('activate', (event) => {
-  // Default lifecycle waits for all old controlled clients; never skipWaiting or claim a draft.
   event.waitUntil(maintain(self.registration.active));
+  event.waitUntil((async () => {
+    const name = await locked(() => ownComplete(), 'shared');
+    if (name && await previous(name)) await self.clients.claim();
+  })());
 });
 async function cached(path) {
   return locked(async () => {
@@ -146,6 +190,22 @@ async function cached(path) {
     return null;
   }, 'shared');
 }
+async function previousAsset(path, digestPrefix) {
+  return locked(async () => {
+    const names = await caches.keys();
+    const current = await ownComplete(names);
+    const prior = current && await previous(current);
+    if (!prior) return;
+    for (const name of names) {
+      if (!name.startsWith(prefix + prior + '-') || await complete(name) !== prior) continue;
+      const response = await caches.match(path, { cacheName: name });
+      if (!response) return;
+      const digest = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',
+        await response.clone().arrayBuffer())), (v) => v.toString(16).padStart(2, '0')).join('');
+      if (digest.startsWith(digestPrefix)) return response;
+    }
+  }, 'shared');
+}
 self.addEventListener('fetch', (event) => {
   const request = event.request;
   const url = new URL(request.url);
@@ -155,7 +215,12 @@ self.addEventListener('fetch', (event) => {
   const navigation = request.mode === 'navigate'
     && (url.pathname === '/' || new RegExp('^/(?:n|p)/[a-z0-9]+/?$').test(url.pathname));
   const path = navigation ? '/index.html' : url.pathname;
-  if (!hashes.has(path)) return;
+  if (!hashes.has(path)) {
+    const oldAsset = new RegExp('^/(?:app|boot|engine)(?:-[a-z]+)*-([a-f0-9]{16})[.](?:js|css|wasm)$').exec(path);
+    if (oldAsset) event.respondWith(previousAsset(path, oldAsset[1]).catch(() => null)
+      .then((response) => response || fetch(request)));
+    return;
+  }
   event.respondWith((async () => {
     let response;
     try { response = await cached(path); } catch { /* online verification still works */ }

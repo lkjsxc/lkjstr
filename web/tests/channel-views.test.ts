@@ -214,7 +214,12 @@ it('settles a publication across remount without overwriting the next ordinary d
   next.value = 'next draft';
   next.dispatchEvent(new Event('input'));
   expect(x.el.querySelector('.cdraft')?.textContent).toContain('Sending');
-  finish({ t: 'result', req: 'done', ok: true });
+  finish({
+    t: 'result',
+    req: 'done',
+    ok: true,
+    delivery: [{ url: 'wss://test.example/', state: 'ok' }],
+  });
   await vi.waitFor(() => expect(x.el.querySelector('.cdraft')).toBeNull());
   expect(loadViewState<{ text: string }>(x.env.instance).text).toBe('next draft');
   expect(next.value).toBe('next draft');

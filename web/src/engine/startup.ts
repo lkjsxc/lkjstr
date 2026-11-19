@@ -1,8 +1,9 @@
 // Only engine plumbing changes between mock and release builds.
 import { kv } from '../shared/storage.ts';
 import { workerTransport as mockTransport, type Transport } from './client.ts';
-import type { FromEngine, RelayEntry } from './protocol.ts';
+import type { FromEngine, RelayEntry, ToEngine } from './protocol.ts';
 import { publicSnapshots } from './public-snapshots.ts';
+import { writeRelayCache } from './write-relay-cache.ts';
 
 export type BootstrapRelay = RelayEntry & { readonly search: boolean };
 export const DEFAULT_RELAYS: readonly BootstrapRelay[] = [
@@ -14,6 +15,10 @@ export const DEFAULT_RELAYS: readonly BootstrapRelay[] = [
 ];
 
 export function bootstrapRelays(account = kv.get('account') ?? ''): readonly BootstrapRelay[] {
+  return configuredRelays(account) ?? DEFAULT_RELAYS;
+}
+
+function configuredRelays(account: unknown): readonly BootstrapRelay[] | undefined {
   const saved = kv.get(`relays:${account}`);
   if (
     !Array.isArray(saved) ||
@@ -28,7 +33,7 @@ export function bootstrapRelays(account = kv.get('account') ?? ''): readonly Boo
         typeof r.search === 'boolean',
     )
   )
-    return DEFAULT_RELAYS;
+    return undefined;
   return saved;
 }
 
@@ -51,10 +56,24 @@ export function savedRelays(
 
 export async function createTransport(url: string): Promise<Transport> {
   if (!__REAL_ENGINE__) return mockTransport(url);
-  const module: { workerTransport(options: { relays: readonly BootstrapRelay[] }): Transport } =
+  type RelayBootstrap = Extract<ToEngine, { t: 'relays' }>;
+  const module: { workerTransport(options: { relayBootstrap: RelayBootstrap }): Transport } =
     await import(new URL(url, location.href).href);
-  const transport = module.workerTransport({ relays: bootstrapRelays() });
-  let account = kv.get('account') ?? '';
+  const observedAccount = kv.get('account');
+  let account = typeof observedAccount === 'string' ? observedAccount : '';
+  const cached = writeRelayCache();
+  const bootstrap = (owner: string): RelayBootstrap => {
+    const configured = configuredRelays(owner);
+    return {
+      t: 'relays',
+      account: owner || undefined,
+      relays: configured ?? DEFAULT_RELAYS,
+      usesDefaults: !configured,
+      cached: cached.get(owner),
+      defaults: DEFAULT_RELAYS.filter((relay) => relay.write).map((relay) => relay.url),
+    };
+  };
+  const transport = module.workerTransport({ relayBootstrap: bootstrap(account) });
   // Bound by the transport's 64 in-flight actions. Persist only confirmed relay edits.
   const saves = new Map<string, { as: string; relays: readonly RelayEntry[] }>();
   let heard: ((msg: FromEngine) => void) | undefined;
@@ -66,7 +85,7 @@ export async function createTransport(url: string): Promise<Transport> {
           // A visitor's list belongs to this device alone: nothing is signed or published. It is kept here and
           // handed to the engine as the relays to read from.
           kv.set('relays:', savedRelays('', action.relays));
-          transport.post({ t: 'relays', relays: bootstrapRelays('') });
+          transport.post(bootstrap(''));
           queueMicrotask(() => heard?.({ t: 'result', req, ok: true }));
           return;
         }
@@ -82,9 +101,12 @@ export async function createTransport(url: string): Promise<Transport> {
           saves.delete(msg.req);
           if (save && msg.ok) kv.set(`relays:${save.as}`, savedRelays(save.as, save.relays));
         }
-        if (msg.t === 'accounts' && account !== (msg.active ?? '')) {
-          account = msg.active ?? '';
-          transport.post({ t: 'relays', relays: bootstrapRelays(account) });
+        if (msg.t === 'accounts') {
+          cached.update(msg.accounts);
+          if (account !== (msg.active ?? '')) {
+            account = msg.active ?? '';
+            transport.post(bootstrap(account));
+          }
         }
         fn(msg);
       });

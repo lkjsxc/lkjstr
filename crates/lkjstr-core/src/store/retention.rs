@@ -4,6 +4,15 @@ use lkjstr_protocol::{NostrEvent, is_replaceable_kind, tags::tag_values};
 use super::{MAX_DELETED, Store};
 
 impl Store {
+    pub(crate) fn discard_unseen_note(&mut self, id: &str) -> bool {
+        if self.seen_on(id).is_empty() && self.events.get(id).is_some_and(|event| event.kind == 1) {
+            self.revision += 1;
+            self.remove(id);
+            return true;
+        }
+        false
+    }
+
     /// Retention losses can leave additional persisted history outside this store.
     pub fn evictions(&self) -> u64 {
         self.evictions

@@ -147,6 +147,10 @@ pub enum Output {
         req: String,
         id: String,
     },
+    #[serde(rename = "publish.fallback")]
+    PublishFallback {
+        req: String,
+    },
     Delivery {
         req: String,
         relays: Vec<serde_json::Value>,
