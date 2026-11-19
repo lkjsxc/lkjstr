@@ -1,7 +1,10 @@
 // M6 uses only the protocol-8 count projection; older engines never receive a frame inbox query.
 import type { SettingsStore } from '../shared/settings.ts';
-import { createSignal } from '../shared/signal.ts';
+import { createSignal, type Signal } from '../shared/signal.ts';
 import type { Engine } from './client.ts';
+export function writingHasPriority(posting?: Pick<Signal<boolean>, 'get'>): boolean {
+  return posting?.get() === true || document.activeElement?.closest('.view.compose') != null;
+}
 export function createDmWatch(engine: Engine, settings: SettingsStore) {
   const unread = createSignal(0);
   let sub: ReturnType<NonNullable<Engine['dm']>['open']> | undefined,
@@ -13,7 +16,7 @@ export function createDmWatch(engine: Engine, settings: SettingsStore) {
     const account = engine.accounts.get().accounts.find((a) => a.author.pubkey === engine.me());
     const pubkey = account?.author.pubkey ?? '';
     if (owner !== pubkey) (owner = pubkey), unread.set(0);
-    const writing = engine.posting?.get() || document.activeElement?.closest('.view.compose');
+    const writing = writingHasPriority(engine.posting);
     const ready =
       (engine.info.get()?.version ?? 0) >= 8 &&
       settings.get().dmWatch &&

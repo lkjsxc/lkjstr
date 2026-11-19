@@ -11,6 +11,7 @@ import { createSignerAuthClient } from './client-signer-auth.ts';
 import { createStorageClient } from './client-storage.ts';
 import type { Transport } from './client-transport.ts';
 import { createZapClient } from './client-zaps.ts';
+import { writingHasPriority } from './dm-watch.ts';
 import type { EngineStats, Hint } from './protocol.ts';
 
 export type {
@@ -161,7 +162,7 @@ export function createEngine(transport: Transport): Engine {
     else if (msg.t === 'crypt.cancel') lists.cancel(msg.req);
     else if (msg.t === 'crypt') {
       if (msg.context) void lists.crypt(msg);
-      else void dm.access.crypt(msg);
+      else void dm.access.crypt(msg, () => writingHasPriority(actions.posting));
     } else if (msg.t === 'sign') void answerSign(msg, (m) => transport.post(m), actions.wantsSign);
     else if (msg.t === 'getPublicKey') void answerPublicKey(msg.req, (m) => transport.post(m));
   });

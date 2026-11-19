@@ -94,3 +94,29 @@ it('bounds an unanswered signer call, then Retry starts without waiting for its 
   expect(out.filter((m) => m.t === 'crypted' && m.req === 'deadline')).toHaveLength(1);
   access.dispose();
 });
+
+it('defers a passive decrypt if Post takes priority during its public key lookup', async () => {
+  const out: ToEngine[] = [];
+  const access = createDmAccess((message) => out.push(message));
+  const who = account({ signer: 'extension' });
+  access.accounts([who]);
+  access.allow(PUBKEY);
+  const lookup = deferred<string>();
+  const getPublicKey = vi.fn(() => lookup.promise);
+  const decrypt = vi.fn(async () => 'fixture reply');
+  (window as { nostr?: unknown }).nostr = { getPublicKey, nip44: { decrypt } };
+  let writing = false;
+  const priority = () => writing;
+  const passive = access.crypt({ ...crypt('passive'), background: true }, priority);
+  await tick();
+  expect(getPublicKey).toHaveBeenCalledTimes(1);
+  writing = true;
+  lookup.resolve(PUBKEY);
+  await passive;
+  expect(decrypt).not.toHaveBeenCalled();
+  expect(out).toEqual([{ t: 'crypted', req: 'passive', error: 'rate-limited' }]);
+  expect(access.status(who)).toBe('ready');
+  await access.crypt(crypt('explicit-inbox'), priority);
+  expect(out).toContainEqual({ t: 'crypted', req: 'explicit-inbox', value: 'fixture reply' });
+  access.dispose();
+});

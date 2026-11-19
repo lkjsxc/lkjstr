@@ -51,22 +51,17 @@ pub(super) fn pump(host: &Rc<RefCell<Host>>) {
             };
         }
         let now = h.time();
-        let background_extension = |h: &Host, account: &str| {
-            h.accounts
-                .entries
-                .iter()
-                .any(|a| a.pubkey == account && a.signer == "extension")
-                && !h.dm.views.iter().any(|((client, _), view)| {
-                    view.visible
-                        && !h.dm.hidden.contains(client)
-                        && view.query.account == account
-                        && !view.query.unread_only
-                })
-        };
+        let background_extension: BTreeSet<_> = h
+            .accounts
+            .entries
+            .iter()
+            .filter(|a| a.signer == "extension" && h.dm.passive_read(&a.pubkey))
+            .map(|a| a.pubkey.clone())
+            .collect();
         while h.dm.signers.gate.reads().len() < 2 {
             let Some(index) = h.dm.queue.iter().position(|(a, _)| {
                 !h.dm.signers.gate.reading(a)
-                    && (!background_extension(&h, a)
+                    && (!background_extension.contains(a)
                         || h.dm.background_read_at.get(a).is_none_or(|at| now >= *at))
             }) else {
                 break;
@@ -93,7 +88,7 @@ pub(super) fn pump(host: &Rc<RefCell<Host>>) {
                 h.dm.last_scan = u64::MAX;
                 continue;
             };
-            if background_extension(&h, &account) {
+            if background_extension.contains(&account) {
                 h.dm.background_read_at
                     .insert(account, now.saturating_add(1000));
             }

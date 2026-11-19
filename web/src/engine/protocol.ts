@@ -825,6 +825,7 @@ export type ToEngine =
       readonly req: ReqId;
       readonly value?: string;
       readonly error?:
+        | 'rate-limited'
         | 'signer-missing'
         | 'signer-refused'
         | 'signer-timeout'
@@ -993,6 +994,7 @@ export type FromEngine =
       readonly peer: Pubkey;
       readonly operation: 'nip44.encrypt' | 'nip44.decrypt' | 'nip04.decrypt';
       readonly data: string;
+      readonly background?: boolean;
       readonly context?: {
         readonly kind: 'private-list';
         readonly sub: SubId;

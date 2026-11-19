@@ -98,7 +98,7 @@ export function createDmAccess(post: (message: ToEngine) => void) {
         }
     },
     cancel: cancelRequest,
-    async crypt(message: Crypt): Promise<void> {
+    async crypt(message: Crypt, writing = () => false): Promise<void> {
       if (stopped || requests.has(message.req)) return;
       const list = message.context?.kind === 'private-list';
       const currentEpoch = (): number =>
@@ -107,6 +107,8 @@ export function createDmAccess(post: (message: ToEngine) => void) {
       const failure = (error: CryptError): void => {
         if (!stopped && !control.cancelled) post({ t: 'crypted', req: message.req, error });
       };
+      const defer = (): boolean => message.background === true && writing();
+      if (defer()) return failure('rate-limited');
       if (pending >= 16 || bytes + message.data.length > 2_800_000) return failure('too-large');
       const lease = currentEpoch();
       requests.set(message.req, control);
@@ -117,6 +119,7 @@ export function createDmAccess(post: (message: ToEngine) => void) {
       bytes += message.data.length;
       const run = chain.tail.then(async () => {
         if (stopped || control.cancelled) return;
+        if (defer()) return failure('rate-limited');
         if (currentEpoch() !== lease) return failure('signer-refused');
         const denied = list ? undefined : failures.get(message.pubkey);
         if (denied)
@@ -159,6 +162,10 @@ export function createDmAccess(post: (message: ToEngine) => void) {
           waits.add(cancel);
           const current = (): boolean => {
             if (!accepting || stopped || control.cancelled) return false;
+            if (defer()) {
+              finish({ t: 'crypted', req: message.req, error: 'rate-limited' }, false);
+              return false;
+            }
             if (currentEpoch() === lease) return true;
             finish({ t: 'crypted', req: message.req, error: 'signer-refused' }, false);
             return false;

@@ -68,6 +68,8 @@ pub enum Output {
         peer: String,
         operation: String,
         data: String,
+        #[serde(skip_serializing_if = "std::ops::Not::not")]
+        background: bool,
         #[serde(skip_serializing_if = "Option::is_none")]
         context: Option<CryptContext>,
     },

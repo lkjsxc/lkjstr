@@ -27,6 +27,7 @@ pub(super) fn begin(
                 peer: call.peer.into(),
                 operation: call.operation.into(),
                 data: data.into(),
+                background: call.read.is_some() && h.dm.passive_read(call.account),
                 context: call.list.map(|job| {
                     lkjstr_core::engine::wire::CryptContext::PrivateList {
                         sub: job.sub.clone(),
@@ -72,6 +73,7 @@ pub(super) async fn finish(
             "unsupported" => "unsupported",
             "signer-missing" => "signer-missing",
             "signer-timeout" => "signer-timeout",
+            "rate-limited" => "rate-limited",
             "offline" => "offline",
             _ => "signer-refused",
         });

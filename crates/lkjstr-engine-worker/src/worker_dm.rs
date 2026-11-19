@@ -128,6 +128,14 @@ impl State {
             })
             .map(|((id, _), _)| *id)
     }
+    fn passive_read(&self, account: &str) -> bool {
+        !self.views.iter().any(|((client, _), view)| {
+            view.visible
+                && !self.hidden.contains(client)
+                && view.query.account == account
+                && !view.query.unread_only
+        })
+    }
 }
 pub(super) fn pump(host: &Rc<RefCell<Host>>) {
     if !host.borrow().loaded || host.borrow().stopped {

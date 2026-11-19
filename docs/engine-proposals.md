@@ -180,3 +180,5 @@ The bounded resolution and exact representative policy follow
 
 - Optional `window.liveAbove` lets newly projected rows fill the explicit before budget, including grouped notifications.
 - `publish.signed {req,id}` delivers a verified note id to the initiating client before its first signed row or a delivery result.
+- Optional `crypt.background` marks a passive inbox read.
+- `crypted.error: 'rate-limited'` defers a passive read while writing.
