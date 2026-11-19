@@ -50,12 +50,25 @@ pub(super) fn pump(host: &Rc<RefCell<Host>>) {
                 revision
             };
         }
+        let now = h.time();
+        let background_extension = |h: &Host, account: &str| {
+            h.accounts
+                .entries
+                .iter()
+                .any(|a| a.pubkey == account && a.signer == "extension")
+                && !h.dm.views.iter().any(|((client, _), view)| {
+                    view.visible
+                        && !h.dm.hidden.contains(client)
+                        && view.query.account == account
+                        && !view.query.unread_only
+                })
+        };
         while h.dm.signers.gate.reads().len() < 2 {
-            let Some(index) =
-                h.dm.queue
-                    .iter()
-                    .position(|(a, _)| !h.dm.signers.gate.reading(a))
-            else {
+            let Some(index) = h.dm.queue.iter().position(|(a, _)| {
+                !h.dm.signers.gate.reading(a)
+                    && (!background_extension(&h, a)
+                        || h.dm.background_read_at.get(a).is_none_or(|at| now >= *at))
+            }) else {
                 break;
             };
             let Some((account, event)) = h.dm.queue.remove(index) else {
@@ -80,6 +93,10 @@ pub(super) fn pump(host: &Rc<RefCell<Host>>) {
                 h.dm.last_scan = u64::MAX;
                 continue;
             };
+            if background_extension(&h, &account) {
+                h.dm.background_read_at
+                    .insert(account, now.saturating_add(1000));
+            }
             jobs.push((read, event));
         }
     }

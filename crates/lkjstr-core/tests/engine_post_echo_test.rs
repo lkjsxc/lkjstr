@@ -108,6 +108,10 @@ fn signed_reply_renders_before_any_relay_answer_and_confirms_in_place() {
     );
     // No tick, ready socket, subscription response, EVENT echo or OK.
     let signed = output(&mut session, &mut engine);
+    assert_eq!(
+        signed[0],
+        json!({"t":"publish.signed","req":"post","id":note.id})
+    );
     for sub in ["home", "profile", "thread"] {
         assert_eq!(row(&signed, sub, &note.id)["pending"], true, "{sub}");
     }

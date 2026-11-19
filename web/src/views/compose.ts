@@ -13,12 +13,14 @@ import { createMentions } from './compose-mentions.ts';
 import { type ChannelDraft, createChannelOutbox } from './compose-outbox.ts';
 import { createWho } from './compose-who.ts';
 import { openEmojiPicker } from './emoji-picker.ts';
+import { homeDraftForEdit } from './home-drafts.ts';
 import type { ViewEnv } from './registry.ts';
 
 type Ref = { name: string; text: string };
 type State = {
   text?: string;
   outbox?: ChannelDraft[];
+  fromHomeDraft?: string;
   replyTo?: string;
   replyOf?: Ref;
   quote?: string;
@@ -121,7 +123,6 @@ export function mountCompose(el: HTMLElement, env: ViewEnv, channel?: string): (
         () => ((state.quote = state.quoteOf = undefined), save(), drawHead()),
       ),
     );
-
   const ready = (): void => {
     const can = ability(env.engine);
     const busy = media.busy();
@@ -134,7 +135,6 @@ export function mountCompose(el: HTMLElement, env: ViewEnv, channel?: string): (
       can !== 'ok' ||
       (!area.value.trim() && !media.count() && !state.quote);
   };
-
   const restore = (draft: Draft): boolean => {
     if (media.busy()) {
       result.textContent = t('compose.uploadWait');
@@ -193,7 +193,6 @@ export function mountCompose(el: HTMLElement, env: ViewEnv, channel?: string): (
   const outbox = createChannelOutbox(env, state.outbox ?? [], ready, showDelivery, restore);
   state.outbox = undefined;
   const media = createComposeMedia(thumbs, env, state, save, ready);
-
   function showDelivery(relays: readonly Delivery[], final: boolean, error?: Failure): void {
     if (error) return replaceChildren(result, h('div', { class: 'error' }, failureText(error)));
     const ok = relays.filter((r) => r.state === 'ok').length;
@@ -215,7 +214,7 @@ export function mountCompose(el: HTMLElement, env: ViewEnv, channel?: string): (
       ),
     );
   }
-  async function send(): Promise<void> {
+  function send(): void {
     ready();
     if (ability(env.engine) === 'locked') return denied(env, 'locked');
     if (post.disabled) return;
@@ -240,13 +239,9 @@ export function mountCompose(el: HTMLElement, env: ViewEnv, channel?: string): (
       drawHead();
     };
     result.replaceChildren();
-    if (!outbox.publish(draft, clear)) {
-      result.textContent = t('compose.saveFailed');
-      return;
-    }
+    if (!outbox.publish(draft, clear)) result.textContent = t('compose.saveFailed');
     ready();
   }
-
   // Keep every typed word across a reload.
   area.addEventListener('input', () => (ready(), (state.text = area.value), save()));
   area.addEventListener('keydown', (e) => {
@@ -286,6 +281,12 @@ export function mountCompose(el: HTMLElement, env: ViewEnv, channel?: string): (
   );
   drawHead();
   outbox.draw();
+  const fromHome = homeDraftForEdit(state.fromHomeDraft, env.engine.me());
+  if (fromHome && restore(fromHome.draft)) {
+    state.fromHomeDraft = undefined;
+    save();
+    fromHome.discard();
+  }
   if (state.replyTo || state.quote) requestAnimationFrame(() => area.focus());
   return () => {
     state.text = area.value;

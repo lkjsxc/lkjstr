@@ -148,6 +148,7 @@ impl Session {
                 pubkey: event.pubkey.clone(),
                 event: serde_json::to_string(&event).unwrap_or_default(),
             }],
+            p::Output::PublishSigned { req, id } => vec![Output::PublishSigned { req, id }],
             p::Output::Delivery { req, deliveries } => vec![Output::Delivery {
                 req,
                 relays: deliveries.into_iter().map(super::delivery::value).collect(),

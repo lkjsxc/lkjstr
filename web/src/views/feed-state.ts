@@ -2,6 +2,20 @@
 import type { Row, SubState } from '../engine/protocol.ts';
 import { fullTime } from '../shared/format.ts';
 import { type Key, t } from '../shared/i18n.ts';
+import type { BarState } from './feed-bar.ts';
+import type { Place } from './feed-place.ts';
+
+export type FeedState = BarState & {
+  title?: string;
+  pubkey?: string;
+  id?: string;
+  ref?: string;
+  tag?: string;
+  show?: string;
+  pos?: Place;
+  extent?: number;
+  head?: string;
+};
 
 export function showFeedState(
   status: HTMLElement,

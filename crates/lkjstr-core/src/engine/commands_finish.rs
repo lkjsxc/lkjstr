@@ -94,6 +94,10 @@ impl Engine {
             let id = event.id.clone();
             let reply = lkjstr_protocol::reply_parent(&event).is_some()
                 || lkjstr_protocol::reply_root(&event).is_some();
+            self.outgoing.push(Output::PublishSigned {
+                req: req.clone(),
+                id: id.clone(),
+            });
             self.network
                 .stage_publication(req, event, routes, now, author.clone());
             let subs: Vec<_> = self

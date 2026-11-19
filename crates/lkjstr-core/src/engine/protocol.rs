@@ -197,6 +197,10 @@ pub enum Output {
         req: String,
         event: UnsignedNostrEvent,
     },
+    PublishSigned {
+        req: String,
+        id: String,
+    },
     Delivery {
         req: String,
         deliveries: Vec<Delivery>,

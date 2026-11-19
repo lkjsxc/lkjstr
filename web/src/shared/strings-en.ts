@@ -61,6 +61,8 @@ export const en = {
   'note.show': 'Show',
   'note.more': 'Show more',
   'note.bot': 'bot',
+  'note.signing': 'signing…',
+  'note.signingLabel': 'Your note, waiting for signature',
   'note.sending': 'sending…',
   'nip05.ok': 'This name was checked and belongs to this key',
   'nip05.unchecked': 'This name has not been confirmed',

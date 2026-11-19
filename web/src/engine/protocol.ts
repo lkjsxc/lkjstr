@@ -1053,6 +1053,7 @@ export type FromEngine =
     }
   /** Per-relay delivery of a publish, sent as answers come in (the whole list each time). */
   | { readonly t: 'delivery'; readonly req: ReqId; readonly relays: readonly Delivery[] }
+  | { readonly t: 'publish.signed'; readonly req: ReqId; readonly id: string }
   /** The end of an action. `delivery`: the final per-relay list of a publish. `uploaded`: of an upload.
    * `id`: of a published note, or of a channel created by `channel.save`. `key`: of `account.key`. */
   | {

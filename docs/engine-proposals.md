@@ -179,3 +179,4 @@ The bounded resolution and exact representative policy follow
 [interface-acts.md](interface-acts.md); source and proof limits are recorded with the implementation.
 
 - Optional `window.liveAbove` lets newly projected rows fill the explicit before budget, including grouped notifications.
+- `publish.signed {req,id}` delivers a verified note id to the initiating client before its first signed row or a delivery result.

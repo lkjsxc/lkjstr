@@ -1,4 +1,6 @@
 // A cancelled result confirms removal by the owning queue or Worker.
+
+import { createSignal } from '../shared/signal.ts';
 import type { ActResult, ActWatch, Transport } from './client.ts';
 import type { Action, FromEngine } from './protocol.ts';
 
@@ -8,6 +10,7 @@ type Pending = {
   upload: boolean;
   zap: boolean;
   cancelled: boolean;
+  note: boolean;
 };
 export function createActionRequests(
   transport: Transport,
@@ -15,13 +18,16 @@ export function createActionRequests(
   addDelivery: (req: string, watch?: ActWatch) => void,
 ) {
   const pending = new Map<string, Pending>(); // <=64 requests allowed by transport
+  const posting = createSignal(false);
   const finish = (result: ActResult): void => {
     const entry = pending.get(result.req);
     if (!entry) return;
     pending.delete(result.req);
+    if (entry.note) posting.set([...pending.values()].some((action) => action.note));
     entry.done(result);
   };
   return {
+    posting,
     wantsSign(actionReq?: string): boolean {
       return (
         actionReq === undefined ||
@@ -32,11 +38,15 @@ export function createActionRequests(
       const entry = pending.get(msg.req);
       if (entry && !entry.cancelled) entry.watch?.progress?.(msg.sent, msg.total, msg);
     },
+    signed(msg: Extract<FromEngine, { t: 'publish.signed' }>): void {
+      pending.get(msg.req)?.watch?.signed?.(msg.id);
+    },
     result: finish,
     act(action: Action, watch?: ActWatch): Promise<ActResult> {
       const req = next();
       const upload = action.a === 'upload';
       const zap = action.a === 'zap.invoice';
+      const note = action.a === 'publish' && action.what.k === 'note';
       const signal = upload ? watch?.uploadSignal : zap ? watch?.zapSignal : undefined;
       if (signal?.aborted) return Promise.resolve({ t: 'result', req, ok: false, cancelled: true });
       if (pending.size >= 64)
@@ -79,6 +89,7 @@ export function createActionRequests(
         pending.set(req, {
           upload,
           zap,
+          note,
           watch,
           cancelled: false,
           done(result) {
@@ -87,6 +98,7 @@ export function createActionRequests(
             done(result);
           },
         });
+        if (note) posting.set(true);
         signal?.addEventListener('abort', cancel, { once: true });
         transport.post(
           { t: 'act', req, action },

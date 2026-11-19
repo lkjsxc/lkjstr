@@ -82,6 +82,7 @@ export function createActions(core: Core) {
               alt: m.alt,
             })),
           });
+          if (!n.channel) post({ t: 'publish.signed', req, id: n.id });
           core.arrived(n);
           if (n.re) core.changed(n.re);
           if (n.channel) channelTouched(core, n.channel);

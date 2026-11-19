@@ -5,6 +5,8 @@ import { t } from '../shared/i18n.ts';
 import { kv } from '../shared/storage.ts';
 import { loadViewState } from '../shared/view-state.ts';
 import { failureText } from './can.ts';
+import { draftButtons, draftMedia } from './draft-row.ts';
+import { type HomeDraft, hasHomeDraft, removeHomeDraft, showHomeDraft } from './home-drafts.ts';
 import { ownPublished } from './own-published.ts';
 import type { ViewEnv } from './registry.ts';
 
@@ -13,6 +15,8 @@ export type ChannelDraft = {
   draft: Draft;
   error?: Failure;
   delivery?: readonly Delivery[];
+  homeKey?: string;
+  homeAt?: number;
 };
 type Watch = {
   draw(): void;
@@ -50,7 +54,7 @@ export function createChannelOutbox(
   const currentBox = box;
   const { id, drafts, busy, listeners } = currentBox;
   const release = (): void => {
-    if (busy.size || listeners.size) return;
+    if (busy.size || listeners.size || drafts.some((item) => hasHomeDraft(item.homeKey))) return;
     currentBox.deliveryWatch?.abort();
     if (boxes.get(key) === box) boxes.delete(key);
   };
@@ -67,6 +71,7 @@ export function createChannelOutbox(
   const remove = (item: ChannelDraft): void => {
     const index = drafts.indexOf(item);
     if (index >= 0) drafts.splice(index, 1);
+    removeHomeDraft(item.homeKey);
     notify();
   };
   const draw = (): void => {
@@ -75,17 +80,11 @@ export function createChannelOutbox(
         const pending = busy.has(item);
         const unknown =
           !pending && item.delivery?.some((r) => r.state === 'timeout' || r.state === 'pending');
-        const action = (
-          label: 'compose.retry' | 'compose.edit' | 'compose.drop',
-          run: () => void,
-        ) => h('button', { class: 'btn', disabled: pending, onclick: run }, t(label));
         return h(
           'div',
           { class: 'cresult cdraft' },
           h('div', { class: 'text' }, item.draft.text),
-          ...(item.draft.media ?? []).map((m) =>
-            h('a', { href: m.url, target: '_blank', rel: 'noreferrer' }, m.url),
-          ),
+          ...draftMedia(item.draft),
           unknown
             ? null
             : h(
@@ -107,25 +106,45 @@ export function createChannelOutbox(
                 }),
               )
             : null,
-          h(
-            'div',
-            { class: 'actions' },
-            action('compose.retry', () => void send(item)),
-            action('compose.edit', () => {
+          draftButtons(
+            pending,
+            () => void send(item),
+            () => {
               if (edit(item.draft)) remove(item);
-            }),
-            action('compose.drop', () => remove(item)),
+            },
+            () => remove(item),
           ),
         );
       }),
     );
     changed();
   };
+  const homeEntry = (item: ChannelDraft): HomeDraft | undefined => {
+    const account = env.engine.accounts.get().accounts.find((a) => a.author.pubkey === item.as);
+    if (item.draft.channel || !account) return;
+    return {
+      key: (item.homeKey ??= crypto.randomUUID()),
+      at: (item.homeAt ??= Date.now()),
+      draft: item.draft,
+      author: account.author,
+      remote: account.signer === 'remote',
+      retry: () => void send(item),
+      discard: () => remove(item),
+      release,
+    };
+  };
   async function send(item: ChannelDraft): Promise<void> {
     if (busy.has(item)) return;
     busy.add(item);
     currentBox.deliveryWatch?.abort();
     const watch = (currentBox.deliveryWatch = new AbortController());
+    let entry = homeEntry(item);
+    if (entry) showHomeDraft(entry);
+    const remote = entry?.remote
+      ? setTimeout(() => {
+          if (entry && !entry.signed) showHomeDraft((entry = { ...entry, waiting: true }));
+        }, 10000)
+      : undefined;
     let final = false;
     const show: Watch['delivery'] = (...args) => {
       if (currentBox.deliveryWatch === watch) delivered(...args);
@@ -135,6 +154,10 @@ export function createChannelOutbox(
     const r = await env.engine.act(
       { a: 'publish', as: item.as, what: { k: 'note', draft: item.draft } },
       {
+        signed(id) {
+          clearTimeout(remote);
+          if (entry) showHomeDraft((entry = { ...entry, signed: id }));
+        },
         deliverySignal: watch.signal,
         delivery: (relays) => {
           if (watch.signal.aborted) return;
@@ -145,7 +168,11 @@ export function createChannelOutbox(
         },
       },
     );
+    clearTimeout(remote);
     busy.delete(item);
+    if (entry && !entry.signed && !r.id && r.error) {
+      showHomeDraft({ ...entry, failure: r.error });
+    } else removeHomeDraft(item.homeKey);
     final = true;
     if (!item.draft.channel && (r.ok || r.delivery?.some((route) => route.state === 'ok')))
       ownPublished(item.as);
@@ -162,6 +189,11 @@ export function createChannelOutbox(
   }
   const watch = { draw, delivery };
   listeners.add(watch);
+  for (const item of drafts) {
+    if (busy.has(item) || !item.homeKey || !item.error || item.delivery?.length) continue;
+    const entry = homeEntry(item);
+    if (entry) showHomeDraft({ ...entry, failure: item.error });
+  }
   // First draw is deferred until the composer has its outbox handle.
   queueMicrotask(draw);
   return {

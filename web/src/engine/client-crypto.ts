@@ -63,8 +63,11 @@ export async function answerSign(
     return;
   }
   const ext = (window as { nostr?: Nip07 }).nostr;
+  if (typeof ext?.signEvent !== 'function') {
+    post({ t: 'signed', req: msg.req, error: 'signer-missing' });
+    return;
+  }
   try {
-    if (!ext) throw new Error('no signer extension');
     const event = JSON.stringify(await ext.signEvent(JSON.parse(msg.event)));
     if (!wantsSign(msg.actionReq)) return;
     post({ t: 'signed', req: msg.req, event });

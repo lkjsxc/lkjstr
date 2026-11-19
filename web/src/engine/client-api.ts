@@ -42,6 +42,7 @@ export type ActWatch = {
   deliverySignal?: AbortSignal;
   progress?(sent: number, total: number, detail?: Extract<FromEngine, { t: 'progress' }>): void;
   delivery?(relays: readonly Delivery[]): void;
+  signed?(id: string): void;
 };
 export type Accounts = { readonly accounts: readonly Account[]; readonly active?: Pubkey };
 /** Account loading is separate from capability readiness and retained account rows. */
@@ -49,6 +50,7 @@ export type AccountState =
   | { readonly phase: 'loading' | 'ready' }
   | { readonly phase: 'failed'; readonly error: { readonly code: 'internal' } };
 export type Engine = {
+  readonly posting?: Pick<Signal<boolean>, 'get' | 'subscribe'>;
   readonly dm?: ReturnType<typeof createDmClient>;
   readonly zaps?: ReturnType<typeof createZapClient>;
   readonly signerAuth?: ReturnType<typeof createSignerAuthClient>;

@@ -1,0 +1,136 @@
+// Page-local presentation of the composer's durable outbox. Staged drafts never
+// enter the verified event store, row cache, or subscription/reading anchors.
+import type { Author, Draft, Failure, Row } from '../engine/protocol.ts';
+import { fullTime } from '../shared/format.ts';
+import { h } from '../shared/h.ts';
+import { t } from '../shared/i18n.ts';
+import { ability, failureText } from './can.ts';
+import { draftButtons, draftMedia } from './draft-row.ts';
+import { faceButton, nameButton } from './parts.ts';
+import type { ViewEnv } from './registry.ts';
+
+export type HomeDraft = {
+  readonly key: string;
+  readonly draft: Draft;
+  readonly author: Author;
+  readonly at: number;
+  readonly remote: boolean;
+  retry(): void;
+  discard(): void;
+  release(): void;
+  signed?: string;
+  failure?: Failure;
+  waiting?: boolean;
+};
+
+// At most 64 draft presentations per page. Eviction only affects the Home
+// presentation. The composer still owns the persisted draft and its recovery.
+const entries = new Map<string, HomeDraft>();
+const watches = new Set<() => void>(); // one per mounted Home
+const notify = (): void => {
+  for (const watch of watches) watch();
+};
+
+export function showHomeDraft(candidate: HomeDraft): void {
+  if (!entries.has(candidate.key) && entries.size >= 64) {
+    const failed = [...entries.values()].find((entry) => entry.failure);
+    if (!failed) return;
+    entries.delete(failed.key);
+    failed.release();
+  }
+  entries.set(candidate.key, candidate);
+  notify();
+}
+export function hasHomeDraft(key: string | undefined): boolean {
+  return key !== undefined && entries.has(key);
+}
+export function removeHomeDraft(key: string | undefined): void {
+  const entry = key ? entries.get(key) : undefined;
+  if (entry && entries.delete(entry.key)) {
+    entry.release();
+    notify();
+  }
+}
+export function homeDraftForEdit(key: string | undefined, account: string): HomeDraft | undefined {
+  const draft = key ? entries.get(key) : undefined;
+  return draft?.author.pubkey === account && draft.failure ? draft : undefined;
+}
+
+function renderDraft(entry: HomeDraft, env: ViewEnv): HTMLElement {
+  const { author, draft, failure, remote, signed, waiting } = entry;
+  const phase = failure ? 'failed' : signed ? 'sending' : 'signing';
+  return h(
+    'article',
+    {
+      class: `note home-draft ${failure ? 'cdraft' : 'pending'}`,
+      'data-draft': entry.key,
+      'data-phase': phase,
+      'aria-label': phase === 'signing' ? t('note.signingLabel') : null,
+    },
+    h(
+      'div',
+      { class: 'nrow' },
+      faceButton(author, env),
+      h(
+        'div',
+        { class: 'nmain' },
+        h(
+          'div',
+          { class: 'nhead' },
+          nameButton(author, env),
+          h(
+            'time',
+            { title: fullTime(entry.at) },
+            failure
+              ? ''
+              : t(
+                  signed
+                    ? 'note.sending'
+                    : remote && waiting
+                      ? 'account.busy.remote'
+                      : 'note.signing',
+                ),
+          ),
+        ),
+        h('div', { class: 'content' }, h('div', { class: 'text' }, draft.text), draftMedia(draft)),
+        failure ? h('div', { class: 'cresult error' }, failureText(failure)) : null,
+        failure
+          ? draftButtons(
+              false,
+              () => {
+                if (ability(env.engine) === 'ok') entry.retry();
+              },
+              () => env.open('compose', { fromHomeDraft: entry.key }),
+              entry.discard,
+            )
+          : null,
+      ),
+    ),
+  );
+}
+
+export function mountHomeDrafts(env: ViewEnv) {
+  const el = h('div');
+  let current: readonly HomeDraft[] = [];
+  return {
+    el,
+    count: () => current.filter((entry) => !entry.signed).length,
+    draw(rows: readonly Row[]) {
+      const account = env.engine.me();
+      const next = [...entries.values()]
+        .reverse()
+        .filter(
+          (entry) =>
+            entry.author.pubkey === account &&
+            !(entry.signed && rows.some((row) => row.key === entry.signed)),
+        );
+      if (next.length === current.length && next.every((entry, i) => entry === current[i])) return;
+      current = next;
+      el.replaceChildren(...next.map((entry) => renderDraft(entry, env)));
+    },
+    watch(watch: () => void) {
+      watches.add(watch);
+      return () => void watches.delete(watch);
+    },
+  };
+}

@@ -6,18 +6,19 @@ import { t } from '../shared/i18n.ts';
 import { loadViewState, saveViewState } from '../shared/view-state.ts';
 import { ability } from './can.ts';
 import { mountChannelDesk } from './channel-desk.ts';
-import { type BarState, mountFeedBar } from './feed-bar.ts';
+import { mountFeedBar } from './feed-bar.ts';
 import { createRowList } from './feed-draw.ts';
 import { createFresh } from './feed-fresh.ts';
 import { mountFeedKeys } from './feed-keys.ts';
-import { createKeeper, createThreadSeat, type Place } from './feed-place.ts';
+import { createKeeper, createThreadSeat } from './feed-place.ts';
 import { feedQuery } from './feed-query.ts';
 import { mountScrub } from './feed-scrub.ts';
 import { CHILD, DATED, hasDaySeparators, OWN } from './feed-sources.ts';
-import { showFeedState } from './feed-state.ts';
+import { type FeedState, showFeedState } from './feed-state.ts';
 import { feedTitle } from './feed-title.ts';
 import { feedWindow, freshRows } from './feed-window.ts';
 import { onHeld } from './held.ts';
+import { mountHomeDrafts } from './home-drafts.ts';
 import { pauseNoteAudio } from './note-audio.ts';
 import { onOwnPublished } from './own-published.ts';
 import { createPreviewWants } from './preview-wants.ts';
@@ -29,21 +30,11 @@ import { mountTimeRail } from './time-rail.ts';
 const PAGE = 60;
 const LIMIT = 800;
 const NEAR_PX = 1400;
-type State = BarState & {
-  title?: string;
-  pubkey?: string;
-  id?: string;
-  ref?: string;
-  tag?: string;
-  show?: string;
-  pos?: Place;
-  extent?: number;
-  head?: string;
-};
 export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => void {
-  const state: State = loadViewState<State>(env.instance);
+  const state: FeedState = loadViewState<FeedState>(env.instance);
   const save = (): void => saveViewState(env.instance, state);
   const list = h('div', { class: 'list' });
+  const drafts = kind === 'home' ? mountHomeDrafts(env) : undefined;
   const status = h('div', { class: 'fstate muted' });
   const signIn = h(
     'button',
@@ -51,7 +42,6 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
     t('bar.signedOut'),
   );
   const fresh = createFresh(el, env, kind, () => toTop());
-  const pill = fresh.el;
   const barSlot = h('div', { class: 'fslot' });
   const tail = h('div', { class: 'ftail' });
   const drawn = createRowList(list, env, () => hasDaySeparators(kind, state.show));
@@ -92,17 +82,22 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
     sub?.window(anchor, before, after, liveAbove);
   };
   const paintFresh = (): void => {
+    const staged = drafts?.count() ?? 0;
     if (mode === 'top') {
       if (atTop && !waiting && el.scrollTop < 8) state.head = feedWindow(kind, rows).first;
-      fresh.show(0);
+      fresh.show(el.scrollTop < 8 ? 0 : staged);
     } else if (live && state.head) {
       const count = freshRows(rows, state.head, keys.held() ?? keeper.get()?.key);
       const more = above > (count === undefined ? (outsideBaseline ?? above) : 0);
-      fresh.show(more ? (freshRows(rows, state.head, undefined) ?? 0) : (count ?? 0), more);
-    } else fresh.show(above);
+      fresh.show(
+        staged + (more ? (freshRows(rows, state.head, undefined) ?? 0) : (count ?? 0)),
+        more,
+      );
+    } else fresh.show(above + staged);
   };
   const sync = (): void => {
     const settle = keeper.hold(keys.held());
+    drafts?.draw(rows);
     drawn.draw(rows);
     kinds?.seat(rows[0] && drawn.node(rows[0].key), rows[0]);
     showState();
@@ -110,8 +105,7 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
     settle();
     fresh.read(rows);
     paintFresh();
-    keys.paint();
-    previews.sync(), rail.sync();
+    keys.paint(), previews.sync(), rail.sync();
   };
   const seatThread = createThreadSeat(el, tail, keeper, Boolean(state.pos), drawn.node);
   const seat = (): void => void (kind === 'thread' && env.visible.get() && seatThread(rows));
@@ -228,8 +222,8 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
     top: toTop,
   });
   el.classList.add('feed');
-  const pin = h('div', { class: 'fpin' }, pill);
-  el.replaceChildren(barSlot, pin, list, status, tail);
+  const pin = h('div', { class: 'fpin' }, fresh.el);
+  el.replaceChildren(barSlot, pin, ...(drafts ? [drafts.el] : []), list, status, tail);
   const rail = mountTimeRail({
     candidate: DATED.has(kind) && kind !== 'bookmarks',
     version: () => env.engine.info.get()?.version ?? 5,
@@ -278,12 +272,18 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
   });
   const offAccountState = env.engine.accountState?.subscribe(showState);
   const offHeld = onHeld(() => void (rows.length && sync()));
+  const offDrafts = drafts?.watch(() => {
+    const settle = keeper.hold(keys.held());
+    drafts.draw(rows);
+    settle(), paintFresh();
+  });
   const offOwnPost = onOwnPublished((author) => {
     if (kind === 'global' && author === account && mode === 'top' && env.visible.get()) toTop();
   });
   const offSettings = env.settings.subscribe(() => (drawn.clear(), sync()));
   return () => {
     cancelAnimationFrame(frame);
+    offDrafts?.();
     offAccountState?.();
     for (const off of [offVisible, offInfo, offAccounts, offSettings, offHeld, offOwnPost, bar])
       off();

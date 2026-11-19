@@ -140,6 +140,11 @@ pub enum Output {
         #[serde(rename = "actionReq", skip_serializing_if = "Option::is_none")]
         action_req: Option<String>,
     },
+    #[serde(rename = "publish.signed")]
+    PublishSigned {
+        req: String,
+        id: String,
+    },
     Delivery {
         req: String,
         relays: Vec<serde_json::Value>,

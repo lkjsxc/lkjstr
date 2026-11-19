@@ -101,6 +101,7 @@ pub(super) struct State {
     serial: u64,
     last_scan: u64,
     next_emit: u64,
+    background_read_at: BTreeMap<String, u64>, // <=32 device accounts
     marks_error: Option<&'static str>,
     marks_started: bool,
     marks_ready: bool,
@@ -159,6 +160,7 @@ pub(super) fn pump(host: &Rc<RefCell<Host>>) {
         h.dm.cursors.retain(|(a, _), _| active.contains(a));
         h.dm.errors.retain(|a, _| saved.contains(a));
         h.dm.failures.retain(|a, _| saved.contains(a));
+        h.dm.background_read_at.retain(|a, _| saved.contains(a));
         let mut pending: BTreeSet<_> = h.dm.pending.values().flatten().cloned().collect();
         let visible: Vec<_> =
             h.dm.views
