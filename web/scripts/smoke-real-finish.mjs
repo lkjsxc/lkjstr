@@ -97,8 +97,20 @@ export async function reviewSettings({
   }
   const other = await ctx.newPage();
   await other.goto(base);
-  await other.locator('.tab[data-view="global"]').click();
-  await other.locator('.view[data-kind="global"] .note').first().waitFor();
+  // Same-workspace edits deliberately synchronize. Wait for that round trip
+  // before opening a second, independent demand in another workspace.
+  await other.locator('.pane.cur .strip').getByTitle('New tab', { exact: true }).click();
+  const launcher = (tab) => tab.locator('.tab.active[data-view^="new"]').first();
+  await launcher(page).waitFor();
+  await launcher(other).locator('.x').click();
+  await launcher(page).waitFor({ state: 'detached' });
+  check('browser tabs follow tab changes in the same workspace');
+  await other.locator('lkjstr-spaces button', { hasText: /^2$/ }).click();
+  const otherGlobal = other.locator('.view[data-kind="global"]:visible .note').first();
+  await otherGlobal.waitFor();
+  await page.waitForFunction(
+    () => JSON.parse(localStorage.getItem('lkjstr:layout:main:spaces'))?.active === 2,
+  );
   check('second app tab receives notes');
   await launch('Search', 'search');
   const needle = `sharing-probe-${Date.now()}`;
@@ -106,6 +118,11 @@ export async function reviewSettings({
   await page.locator('.view[data-kind="search"] input').first().press('Enter');
   for (let n = 0; n < 200 && !fake.searches.includes(needle); n++) await page.waitForTimeout(25);
   check('a fresh want after two tabs reaches the relay', fake.searches.includes(needle));
+  check(
+    'Search and the second workspace Global are both visible during the wire probe',
+    (await page.locator('.view[data-kind="search"]:visible input').first().isVisible()) &&
+      (await otherGlobal.isVisible()),
+  );
   const shared = [...socketProbe.peak.values()].every((peak) => peak === 1);
   if (!shared || socketProbe.seen.size === 0 || !mainPathsSeen.has('/owner')) {
     console.error(
@@ -124,6 +141,10 @@ export async function reviewSettings({
     'learned owner relays survive reload and another tab bootstrap',
     mainPathsSeen.has('/owner') &&
       [...socketProbe.seen].every((path) => path === '/owner' || path === '/'),
+  );
+  await other.locator('lkjstr-spaces button', { hasText: /^1$/ }).click();
+  await page.waitForFunction(
+    () => JSON.parse(localStorage.getItem('lkjstr:layout:main:spaces'))?.active === 1,
   );
   return other;
 }
