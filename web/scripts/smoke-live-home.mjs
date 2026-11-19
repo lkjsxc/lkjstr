@@ -13,6 +13,11 @@ export async function checkLiveHome({
   const home = '.view[data-kind="home"]';
   const view = page.locator(home);
   const pill = view.locator('.fresh');
+  const named = () =>
+    view
+      .locator('.list > .note .name', { hasText: /^Cache fixture$/ })
+      .first()
+      .waitFor();
   const head = async (...ids) => {
     await page.waitForFunction(
       ({ home, ids }) => {
@@ -51,6 +56,10 @@ export async function checkLiveHome({
   };
   const atHead = async (label, ...ids) => {
     await head(...ids);
+    await page.waitForFunction((selector) => {
+      const node = document.querySelector(selector);
+      return node?.scrollTop === 0 && node.querySelector('.fresh')?.hidden;
+    }, home);
     check(
       label,
       (await view.evaluate((node) => node.scrollTop)) === 0 &&
@@ -59,6 +68,7 @@ export async function checkLiveHome({
     );
   };
 
+  await named();
   await shot('top-before');
   const whileOpen = await add('Home arrival while the warm page is already open');
   await atHead(
@@ -87,6 +97,7 @@ export async function checkLiveHome({
   const afterReload = await add('Home arrival after reloading at the top');
   await atHead('arrival after reload appears automatically', afterReload.id, whileOpen.id);
 
+  await named();
   await scroll(450);
   const before = await readingPlace();
   await shot('scrolled-before');
@@ -221,4 +232,45 @@ export async function checkLiveHome({
     await atHead('overflow pill reloads the real head', latest.id);
   }
   return { heldOffsetChangePx: shift, arrivalCount, previousConnection, connection };
+}
+
+export async function checkLiveHomeWidths({
+  page,
+  fake,
+  check,
+  sign,
+  arrival,
+  delivered,
+  stage,
+  shot,
+  disconnect,
+}) {
+  const results = [];
+  for (const width of [1440, 390]) {
+    stage(`live Home at ${width}px after warm replay and reload`);
+    if (width === 390) {
+      await page.setViewportSize({ width, height: 844 });
+      await page.reload();
+      await page.waitForFunction(() => globalThis.__publicCacheProbe.ready !== null);
+      const id = await page
+        .locator('.view[data-kind="home"]:visible .list > .note')
+        .first()
+        .getAttribute('data-note');
+      arrival = fake.stored.find((event) => event.id === id);
+      check('the phone starts from the current signed Home head', Boolean(arrival));
+    }
+    const proof = await checkLiveHome({
+      page,
+      fake,
+      sign,
+      arrival,
+      delivered,
+      disconnect,
+      overflow: width === 390,
+      check: (name, ok, detail) => check(`${width}px: ${name}`, ok, detail),
+      shot: (name) => shot(width, name),
+    });
+    results.push({ width, deviceScaleFactor: 1, ...proof });
+  }
+  return results;
 }

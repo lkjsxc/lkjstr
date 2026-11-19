@@ -9,8 +9,8 @@ import { createInterface } from 'node:readline';
 import { chromium } from 'playwright-core';
 import bundle from 'playwright-core/lib/utilsBundle';
 import { fakeRelay } from '../../scripts/browser-relay.mjs';
-import { publicCacheProbe } from './public-cache-probe.mjs';
-import { checkLiveHome } from './smoke-live-home.mjs';
+import { publicCacheProbe, seedCacheLayout } from './public-cache-probe.mjs';
+import { checkLiveHomeWidths } from './smoke-live-home.mjs';
 import { openKeyField } from './smoke-seed.mjs';
 import { bech32 } from './smoke-visitors.mjs';
 
@@ -106,31 +106,7 @@ try {
       deviceScaleFactor: 1,
       locale: 'en-US',
     });
-    await context.addInitScript(
-      ({ base, relayUrl, pubkey }) => {
-        if (location.origin !== base) return;
-        const put = (key, value) => {
-          if (!localStorage.getItem(key)) localStorage.setItem(key, JSON.stringify(value));
-        };
-        put('lkjstr:migration', 'owner-audit-1');
-        put('lkjstr:settings', { language: 'en', linkPreviews: false });
-        put('lkjstr:layout:guest', {
-          type: 'pane',
-          id: 'guest',
-          tabs: ['global'],
-          active: 'global',
-        });
-        put('lkjstr:layout:main', {
-          type: 'pane',
-          id: 'main',
-          tabs: ['settings', 'home'],
-          active: 'home',
-        });
-        for (const who of ['', pubkey])
-          put(`lkjstr:relays:${who}`, [{ url: relayUrl, read: true, write: false, search: true }]);
-      },
-      { base, relayUrl, pubkey: fixture.note.pubkey },
-    );
+    await context.addInitScript(seedCacheLayout, { base, relayUrl, pubkey: fixture.note.pubkey });
     await context.addInitScript(publicCacheProbe, { delayMs });
     await context.route('**/*', (route) =>
       route.request().url().startsWith(`${base}/`) ? route.continue() : route.abort(),
@@ -201,9 +177,7 @@ try {
     now + 60,
   );
   fake.add(arrival);
-  // What the next launch must replay: the seeded screen, then the screen the arrival last headed.
   let replayed = homeKeys.slice(0, 10);
-  report.liveHome = [];
   for (let run = 0; run < 5; run++) {
     stage = `warm launch ${run + 1}`;
     page = await launch(1800);
@@ -231,7 +205,6 @@ try {
       }
     }
     await page.waitForFunction(() => globalThis.__publicCacheProbe.ready !== null);
-    // Nothing is pressed: the note the relay holds above the replayed screen becomes its head.
     await page.waitForFunction(
       (id) =>
         document
@@ -259,34 +232,22 @@ try {
       load: loadavg(),
       probe: await page.evaluate(() => globalThis.__publicCacheProbe),
     });
-    if (run === 4) {
-      let latest = arrival;
-      for (const width of [1440, 390]) {
-        stage = `live Home at ${width}px after warm replay and reload`;
-        if (width === 390) {
-          await page.setViewportSize({ width, height: 844 });
-          await page.reload();
-          await page.waitForFunction(() => globalThis.__publicCacheProbe.ready !== null);
-          const id = await page.locator(`${home} .list > .note`).first().getAttribute('data-note');
-          latest = fake.stored.find((event) => event.id === id);
-          check('the phone starts from the current signed Home head', Boolean(latest));
-        }
-        const proof = await checkLiveHome({
-          page,
-          fake,
-          sign,
-          arrival: latest,
-          delivered,
-          overflow: width === 390,
-          check: (name, ok, detail) => check(`${width}px: ${name}`, ok, detail),
-          shot: (name) => page.screenshot({ path: join(output, `home-${width}-${name}.png`) }),
-          disconnect: () => {
-            for (const socket of socketServer.clients) socket.terminate();
-          },
-        });
-        report.liveHome.push({ width, deviceScaleFactor: 1, ...proof });
-      }
-    }
+    if (run === 4)
+      report.liveHome = await checkLiveHomeWidths({
+        page,
+        fake,
+        check,
+        sign,
+        arrival,
+        delivered,
+        stage: (name) => {
+          stage = name;
+        },
+        shot: (width, name) => page.screenshot({ path: join(output, `home-${width}-${name}.png`) }),
+        disconnect: () => {
+          for (const socket of socketServer.clients) socket.terminate();
+        },
+      });
     await close();
   }
   check(

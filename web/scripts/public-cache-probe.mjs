@@ -97,3 +97,26 @@ export function publicCacheProbe({ delayMs = 0 } = {}) {
   };
   requestAnimationFrame(frame);
 }
+
+export function seedCacheLayout({ base, relayUrl, pubkey }) {
+  if (location.origin !== base) return;
+  const put = (key, value) => {
+    if (!localStorage.getItem(key)) localStorage.setItem(key, JSON.stringify(value));
+  };
+  put('lkjstr:migration', 'owner-audit-1');
+  put('lkjstr:settings', { language: 'en', linkPreviews: false });
+  put('lkjstr:layout:guest', {
+    type: 'pane',
+    id: 'guest',
+    tabs: ['global'],
+    active: 'global',
+  });
+  put('lkjstr:layout:main', {
+    type: 'pane',
+    id: 'main',
+    tabs: ['settings', 'home'],
+    active: 'home',
+  });
+  for (const who of ['', pubkey])
+    put(`lkjstr:relays:${who}`, [{ url: relayUrl, read: true, write: false, search: true }]);
+}
