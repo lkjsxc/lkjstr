@@ -67,8 +67,9 @@
 .alist { margin-bottom: 16px; border-top: 1px solid var(--line); }
 .alist[hidden] { display: none; }
 .arow { padding: 5px 0; border-bottom: 1px solid var(--line); }
-.ahead { display: flex; align-items: center; gap: 8px; min-width: 0; }
-.aidentity { display: flex; flex: 1; align-items: center; gap: 6px; min-width: 0; }
+.ahead { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; min-width: 0; }
+/* The name keeps about 200px; buttons that would take it go to a line of their own, at the right. */
+.aidentity { display: flex; flex: 1 1 200px; align-items: center; gap: 6px; min-width: 0; }
 .aidentity > .avb { align-self: center; }
 .amain { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; padding: 4px 8px 4px 4px; border-radius: 6px; text-align: left; }
 .amain:hover { background: var(--hover); }
@@ -79,6 +80,7 @@
 .awho > .muted { font-size: 12.5px; }
 .awho .badge { margin-left: 0; }
 .abtns { display: flex; flex: none; gap: 6px; }
+.ahead > .abtns { margin-left: auto; justify-content: flex-end; }
 .aask { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; padding: 6px 4px 4px; color: var(--danger); font-size: 12.5px; }
 .btn.danger { border-color: var(--danger); color: var(--danger); }
 .btn.off { opacity: 0.5; }
@@ -104,7 +106,7 @@
 @container (max-width: 400px) {
   .ahead { flex-wrap: wrap; }
   .ahead > .aidentity { flex-basis: 100%; }
-  .ahead > .abtns { margin-left: calc(var(--avatar, 36px) + 14px); }
+  .ahead > .abtns { margin-left: calc(var(--avatar, 36px) + 14px); justify-content: flex-start; }
 }
 @media (pointer: coarse) {
   .aadd .addrow input, .aadd .btn, .abtns .btn, .krow .btn, .kfield { height: 40px; }
