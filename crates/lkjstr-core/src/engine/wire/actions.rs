@@ -154,14 +154,13 @@ pub enum Action {
     AccountUse { pubkey: String },
     #[serde(rename = "account.remove")]
     AccountRemove { pubkey: String },
-    // ArrayBuffer bytes are intentionally not deserialized into JSON or logged.
     Upload {
         server: Option<String>,
         #[serde(rename = "as")]
         account: String,
         name: String,
         mime: String,
-        #[serde(skip)]
+        #[serde(skip)] // ArrayBuffer bytes stay outside JSON and logs.
         bytes: Vec<u8>,
     },
 }
@@ -184,6 +183,7 @@ pub enum Publish {
         id: String,
         of: Option<String>,
         emoji: Option<String>,
+        url: Option<String>,
     },
 }
 #[derive(Debug, Deserialize)]

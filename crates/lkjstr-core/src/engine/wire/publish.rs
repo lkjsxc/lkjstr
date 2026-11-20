@@ -103,8 +103,15 @@ pub(super) fn publish(what: P, engine: &Engine, account: &str) -> Result<p::Acti
                 .unwrap_or_default();
             ("reaction", emoji, Some(id), tags)
         }
-        P::Delete { id, of, emoji } => {
+        P::Delete { id, of, emoji, url } => {
             let mut ids = if matches!(of.as_deref(), Some("reaction" | "repost")) {
+                let kind = if of.as_deref() == Some("reaction") {
+                    7
+                } else if engine.store.get(&id).is_some_and(|e| e.kind == 42) {
+                    16
+                } else {
+                    6
+                };
                 engine
                     .store
                     .referencing(&id)
@@ -112,17 +119,14 @@ pub(super) fn publish(what: P, engine: &Engine, account: &str) -> Result<p::Acti
                     .filter(|e| {
                         e.pubkey == account
                             && crate::engine::acts::target(e).as_deref() == Some(id.as_str())
-                            && e.kind
-                                == if of.as_deref() == Some("reaction") {
-                                    7
-                                } else if engine.store.get(&id).is_some_and(|e| e.kind == 42) {
-                                    16
-                                } else {
-                                    6
-                                }
+                            && e.kind == kind
                             && emoji.as_ref().is_none_or(|v| {
                                 crate::reactions::label(v) == crate::reactions::label(&e.content)
                             })
+                            && (kind != 7
+                                || url.as_deref().is_none_or(|url| {
+                                    crate::reactions::image_url(e).as_deref().unwrap_or("") == url
+                                }))
                     })
                     .map(|e| e.id.clone())
                     .collect::<Vec<_>>()

@@ -125,10 +125,7 @@ pub fn row_with_lists(
         .count();
     let mut reactions: BTreeMap<(String, Option<String>), Reaction> = BTreeMap::new();
     for e in store.reactions(&event.id) {
-        let url = custom_emojis(&e)
-            .into_iter()
-            .find(|v| e.content == format!(":{}:", v.shortcode))
-            .map(|v| v.url);
+        let url = crate::reactions::image_url(&e);
         let content = crate::reactions::label(&e.content).to_owned();
         let r = reactions
             .entry((content.clone(), url.clone()))

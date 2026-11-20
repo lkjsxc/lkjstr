@@ -2,8 +2,7 @@
 
 ## Purpose
 
-Additive protocol ledger. The 2026-11-16 owner delegation permits additive fields/messages with a line here; existing contracts stay intact. Earlier
-sections retain their original context. Current behavior and limits are in status.md and parity.md.
+Additive protocol ledger under the 2026-11-16 owner delegation. See status.md and parity.md for current behavior and limits.
 
 Earlier context through protocol 5 is preserved in [engine-proposals-history.md](engine-proposals-history.md).
 
@@ -188,6 +187,7 @@ The bounded resolution and representative policy follow [interface-acts.md](inte
 - `EmojiRow.address?` identifies the selected kind-30030 set or a direct entry's declared set.
 - `Draft.emoji[].address?` carries the optional NIP-30 set coordinate into a public note tag.
 - `Publish` reactions accept optional `address` as the fourth element of their custom emoji tag.
+- `Publish` reaction deletes accept optional `url` to select an exact image. An empty string selects a reaction rendered as text.
 
 Relay Stats add optional firstEventMs, requestUses and readTimeouts: verified first-event latency, session REQ envelopes and bounded read timeout score.
 Inactive routes without retained transport observations report null.

@@ -1,6 +1,8 @@
 //! Reaction display groups, bounded by the store's retained event collection.
 use crate::store::Event;
-use lkjstr_protocol::{ReactionKind, parse_reaction};
+use lkjstr_protocol::{
+    NostrEvent, ReactionKind, custom_emoji_reaction_shortcode, custom_emoji_tag, parse_reaction,
+};
 use std::collections::BTreeMap;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -18,6 +20,16 @@ pub fn label(content: &str) -> &str {
         "-" => "👎",
         other => other,
     }
+}
+
+pub(crate) fn image_url(event: &NostrEvent) -> Option<String> {
+    let code = custom_emoji_reaction_shortcode(&event.content)?;
+    event
+        .tags
+        .iter()
+        .rev()
+        .filter(|tag| tag.get(1) == Some(&code))
+        .find_map(|tag| custom_emoji_tag(tag).map(|emoji| emoji.url))
 }
 
 pub fn chips(events: &[Event], me: Option<&str>) -> Vec<Chip> {

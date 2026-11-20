@@ -89,11 +89,8 @@ pub(super) fn notifications(q: &Query, e: &Engine) -> Vec<Value> {
         }
         if event.kind == 7 {
             let mut emoji = json!({"emoji":crate::reactions::label(&event.content)});
-            if let Some(custom) = p::custom_emojis(&event)
-                .into_iter()
-                .find(|emoji| event.content == format!(":{}:", emoji.shortcode))
-            {
-                emoji["url"] = json!(custom.url);
+            if let Some(url) = crate::reactions::image_url(&event) {
+                emoji["url"] = json!(url);
             }
             row["emoji"] = emoji;
         }

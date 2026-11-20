@@ -4,6 +4,62 @@ use lkjstr_core::engine::{Engine, protocol::Input, wire::Session};
 use serde_json::json;
 
 #[test]
+fn deleting_a_reaction_can_select_its_image_with_a_shared_shortcode() -> Test {
+    let note = event(1, 10, 1, "target", vec![])?;
+    let reaction = |key, at, url: Option<&str>| {
+        let mut tags = vec![vec!["e".into(), note.id.clone()]];
+        if let Some(url) = url {
+            tags.push(vec!["emoji".into(), "cat".into(), url.into()]);
+        }
+        event(key, at, 7, ":cat:", tags)
+    };
+    let green_url = "https://images.test/green.png";
+    let green = reaction(2, 20, Some(green_url))?;
+    let blue = reaction(2, 21, Some("https://images.test/blue.png"))?;
+    let text = reaction(2, 22, None)?;
+    let foreign = reaction(3, 23, Some(green_url))?;
+    let mut engine = Engine::new();
+    put(&mut engine, &[&note, &green, &blue, &text, &foreign]);
+    let mut session = Session::default();
+    for (req, url, expected) in [
+        ("green", Some(green_url), vec![&green.id]),
+        ("text", Some(""), vec![&text.id]),
+        ("legacy", None, vec![&green.id, &blue.id, &text.id]),
+    ] {
+        let mut what = json!({"k":"delete","id":note.id,"of":"reaction","emoji":":cat:"});
+        if let Some(url) = url {
+            what["url"] = json!(url);
+        }
+        input(
+            &mut session,
+            &mut engine,
+            json!({"t":"act","req":req,"action":{
+            "a":"publish","as":green.pubkey,"what":what}}),
+            10_000,
+        )?;
+        let signed = output(&mut session, &mut engine)?
+            .into_iter()
+            .find(|message| message["t"] == "sign")
+            .ok_or("unsigned deletion")?;
+        let deletion: serde_json::Value =
+            serde_json::from_str(signed["event"].as_str().ok_or("deletion JSON")?)?;
+        let targets: std::collections::BTreeSet<_> = deletion["tags"]
+            .as_array()
+            .ok_or("deletion tags")?
+            .iter()
+            .filter(|tag| tag[0] == "e")
+            .filter_map(|tag| tag[1].as_str())
+            .collect();
+        assert_eq!(
+            targets,
+            expected.into_iter().map(String::as_str).collect(),
+            "{req}"
+        );
+    }
+    Ok(())
+}
+
+#[test]
 fn profile_of_another_person_filters_terminal_text_but_uses_their_act_time() -> Test {
     let note = event(1, 10, 1, "the selected terminal text", vec![])?;
     let inner = act(2, 20, 7, "⭐", &note)?;

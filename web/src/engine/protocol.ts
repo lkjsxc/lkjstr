@@ -580,6 +580,8 @@ export type Publish =
       readonly id: string;
       readonly of?: 'note' | 'repost' | 'reaction';
       readonly emoji?: string;
+      /** Reaction image URL, or '' for a reaction rendered as text. */
+      readonly url?: string;
     };
 
 export type ProfileEdit = {

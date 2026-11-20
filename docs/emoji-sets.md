@@ -65,9 +65,10 @@ failure/retry surface.
 Public drafts emit one tag per used, validated shortcode. Custom reactions emit
 one tag for their exact `:shortcode:`. Both include the optional set address when
 supplied. Profile names and bios read tags from their signed kind-0 metadata.
-Notes and reactions use their own signed tags. Encrypted list/set tags, set
-browsing/editing and recursive references remain outside this flow. DMs send the
-selected code and URL in their encrypted rumor.
+Notes and reactions use their own signed tags. Reaction removal can match the
+displayed image so two reactions using the same shortcode can be removed separately.
+Encrypted list/set tags, set browsing/editing and recursive references remain
+outside this flow. DMs send the selected code and URL in their encrypted rumor.
 
 ## Verification
 
