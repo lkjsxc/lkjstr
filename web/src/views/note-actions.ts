@@ -125,7 +125,7 @@ export function actionRow(row: NoteRow, env: ViewEnv): HTMLElement {
   // A narrow tile folds the bookmark (unless it is set) and then the zap into the "…" menu: the row hides them by
   // the tile's width, and the menu offers whatever the row is not showing.
   const folded = (el: HTMLElement): boolean => getComputedStyle(el).display === 'none';
-  const zapRun = (): void => toast(env.layer, t('act.zapSoon'));
+  const zapRun = (): void => void toast(env.layer, t('act.zapSoon'));
   const markLabel: Key = row.mine.bookmarked ? 'act.unbookmark' : 'act.bookmark';
   const marked = (on: boolean): Promise<boolean> =>
     act(env, (as) => ({ a: 'bookmark', as, id: row.id, on }));

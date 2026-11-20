@@ -34,6 +34,8 @@ export type OwnViews = {
   revive(tab: string, state?: object): void;
   /** Unmounts a tab that is being closed and returns the state it leaves, so it can be opened again as it was. */
   retire(tab: string): object;
+  /** What a tab holds in storage now, its input and outboxes included (it stays open). */
+  held(tab: string): object;
   /** Before a render: remembers where every mounted view is scrolled. */
   stash(): void;
   /** After a render: unmounts closed tabs, restores scroll positions, tells views whether they are in front. */
@@ -182,6 +184,7 @@ export function createOwnViews(
       dropViewState(instance(tab));
       return state;
     },
+    held: (tab) => snapshotViewState(instance(tab)),
     stash() {
       for (const m of mounts.values()) if (m.el.isConnected) m.top = m.el.scrollTop;
     },

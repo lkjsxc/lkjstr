@@ -9,6 +9,7 @@ import { PROTOCOL_VERSION } from '../src/engine/protocol.ts';
 import { dayOf } from '../src/shared/format.ts';
 import { KEYS } from '../src/shared/keys.ts';
 import { notesChecks } from './smoke-notes.ts';
+import { resetChecks } from './smoke-reset.ts';
 import { railSmoke } from './smoke-time-rail.ts';
 import { wishes } from './smoke-wishes.mjs';
 
@@ -450,6 +451,7 @@ async function run(browser: Browser): Promise<void> {
   await place(browser, still);
   await keyboard(browser, still);
   await defaults(browser, still);
+  await resetChecks((given) => open(browser, '/', { ...still, ...given }), fact);
   await scrolling(still);
   await filtering(browser, still);
   await rooms(browser, still);

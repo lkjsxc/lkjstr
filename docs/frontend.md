@@ -62,10 +62,12 @@ Seams worth knowing inside `src/views/`:
 - `wm/presets.ts` has two layout families: `main` for an account and `guest`
   for a visitor; `main.ts` shows the one that fits who is signed in.
 - `wm/controller.ts` owns one workspace; `wm/closed.ts` is its stored list of
-  closed tabs, `wm/choices.ts` what the New tab page offers (Documentation
-  once; its pages by typed name), `wm/reset.ts` the undoable reset that sends
-  the tabs a default lacks to the closed tabs. `shared/migrate.ts` moves an
-  untouched old default to the current one once, and nothing else.
+  closed tabs (read before every change, so browser tabs share it; entries
+  have ids), `wm/choices.ts` what the New tab page offers (Documentation
+  once; its pages by typed name), `wm/reset.ts` the reset that sends the tabs
+  a default lacks to the closed tabs, and whose Undo lapses once it could lose
+  a tab's state. `wm/store.ts` never writes back a layout it already holds.
+  `shared/migrate.ts` moves an untouched old default to the current one once.
 
 ## The engine boundary
 

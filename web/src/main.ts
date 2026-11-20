@@ -9,7 +9,7 @@ import { createIdleLock } from './shared/account-idle.ts';
 import { rememberAccounts, rememberedAccounts, rememberFace } from './shared/face.ts';
 import { resolveLang, setLang, t } from './shared/i18n.ts';
 import { pressedAt, watchPairs } from './shared/keys.ts';
-import { spacesKey } from './shared/layout-store.ts';
+import { layoutKey, spacesKey } from './shared/layout-store.ts';
 import { migrateStorage } from './shared/migrate.ts';
 import { learnPerson } from './shared/people.ts';
 import { createSettings } from './shared/settings.ts';
@@ -21,8 +21,9 @@ import { setServed } from './views/registry.ts';
 import { createWmController, type Wm } from './wm/controller.ts';
 import { createHost } from './wm/host.ts';
 import { otherTabs } from './wm/other-tabs.ts';
-import { FAMILY, familyOf } from './wm/presets.ts';
-import { parseActive } from './wm/spaces.ts';
+import { FAMILY, familyOf, GUEST } from './wm/presets.ts';
+import { retireSaved } from './wm/reset.ts';
+import { parseActive, SPACES } from './wm/spaces.ts';
 import { createSpacesBar } from './wm/spaces-bar.ts';
 import { createWmStore } from './wm/store.ts';
 
@@ -74,11 +75,15 @@ let picked: number | undefined; // this browser tab's workspace, once it chose o
 let incoming: (() => void) | undefined; // opens the tab of an incoming link (until the engine has spoken)
 let family = ''; // the layout family `ctl` shows: the reader's own, or the visitor's while signed out
 const active = (): number => picked ?? parseActive(store.get(spacesKey(FAMILY)));
-// This workspace goes back with Undo. Every layout: this one first (its closed tabs keep what they held), then the rest
-// are forgotten.
+// This workspace goes back with Undo. Every layout: each workspace of both families first sends the tabs its default
+// lacks to its own closed tabs, with what they held (this one through its controller); then the layouts are forgotten.
 const resetLayouts = (every: boolean): void => {
   ctl?.reset(!every);
-  if (every) store.reset();
+  if (!every) return;
+  for (const f of [FAMILY, GUEST])
+    for (let n = 1; n <= SPACES; n++)
+      if (f !== family || n !== shown) retireSaved(store.get(layoutKey(f, n)), f, n);
+  store.reset();
 };
 const env = { engine, settings, layer: host.layer, resetLayouts };
 
