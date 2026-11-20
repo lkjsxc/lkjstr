@@ -20,6 +20,14 @@ impl Engine {
             ) {
                 continue;
             }
+            let head = super::query::filter(&self.store, &view.query);
+            let active = view.history.as_ref().unwrap_or(&head);
+            if !self.network.page_finished(active) || self.network.page_exhausted(active) {
+                continue;
+            }
+            let Some(until) = self.network.page_cursor(active) else {
+                continue;
+            };
             let events = super::list_events::events(&self.store, &view.query, &self.private_lists);
             let selected = super::windows::selection(
                 &self.store,
@@ -32,14 +40,6 @@ impl Engine {
             if events.is_empty() || selected.raw.end.saturating_add(40) < events.len() {
                 continue;
             }
-            let head = super::query::filter(&self.store, &view.query);
-            let active = view.history.as_ref().unwrap_or(&head);
-            if !self.network.page_finished(active) || self.network.page_exhausted(active) {
-                continue;
-            }
-            let Some(until) = self.network.page_cursor(active) else {
-                continue;
-            };
             let mut older = head.clone();
             older.until = Some(until);
             if &older != active {

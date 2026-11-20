@@ -73,11 +73,11 @@ impl Engine {
             return;
         }
         verified();
-        let (routes, author_list, default_routes) = self.plan_publication(&event);
-        if event.kind == 1 && !self.network.can_stage_note(&event.id) {
+        if matches!(event.kind, 1 | 7) && !self.network.can_stage_publication(&event.id) {
             self.error(Some(req), "publication-limit");
             return;
         }
+        let (routes, author_list, default_routes) = self.plan_publication(&event);
         if event.kind == 10002 {
             let entries = event
                 .tags
@@ -147,6 +147,14 @@ impl Engine {
                 self.render(&sub, false);
             }
             // Socket scheduling, discovery and subscription planning run on the next tick.
+            self.network.profiles_changed = true;
+            return;
+        }
+        if event.kind == 7 {
+            // A burst of reactions can share the next planning pass, like signed notes.
+            let author = event.pubkey.clone();
+            self.network
+                .stage_publication(req, event, routes, now, author);
             self.network.profiles_changed = true;
             return;
         }

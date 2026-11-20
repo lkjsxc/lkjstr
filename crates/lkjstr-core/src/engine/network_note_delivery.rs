@@ -37,9 +37,6 @@ impl Network {
         }
     }
 
-    pub(in crate::engine) fn can_stage_note(&self, id: &str) -> bool {
-        self.publications.len() < 64 && !self.publications.contains_key(id)
-    }
     pub(in crate::engine) fn track_note_routes(
         &mut self,
         id: &str,

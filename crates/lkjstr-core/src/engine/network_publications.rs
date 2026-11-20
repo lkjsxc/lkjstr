@@ -5,6 +5,9 @@ impl Network {
             .get(id)
             .is_some_and(|p| !p.reported_success)
     }
+    pub(in crate::engine) fn can_stage_publication(&self, id: &str) -> bool {
+        self.publications.len() < 64 && !self.publications.contains_key(id)
+    }
     pub(in crate::engine) fn stage_publication(
         &mut self,
         req: String,
@@ -13,7 +16,7 @@ impl Network {
         now: u64,
         auth_account: String,
     ) {
-        if self.publications.len() >= 64 || self.publications.contains_key(&event.id) {
+        if !self.can_stage_publication(&event.id) {
             self.output.push(Output::Error {
                 req: Some(req),
                 code: "publication-limit".into(),
