@@ -24,6 +24,7 @@ export const ja: Record<keyof typeof en, string> = {
   'pane.close': 'タイルを閉じる',
   'pane.reset': '配置を初期状態に戻す',
   'pane.wasReset': '配置を初期状態に戻しました',
+  'pane.resetFailed': '配置は変えていません。閉じたタブを保存する空き容量がこの端末にありません。',
   'space.title': 'ワークスペース {n}',
   'launcher.placeholder': '入力して絞り込み・検索。Enter で先頭を開きます',
   'launcher.none': '当てはまるものがありません。',
@@ -234,6 +235,8 @@ export const ja: Record<keyof typeof en, string> = {
     'このワークスペースを最初の配置に戻します。閉じたタブは開き直せて、「元に戻す」で元の配置に戻せます。',
   'set.resetLayouts': 'レイアウト: すべての配置を初期状態に戻す',
   'set.resetLayouts.d': '9つのワークスペースを最初の状態に戻します。',
+  'set.resetLayoutsPartial':
+    '一部のワークスペースは配置を変えていません。閉じたタブを保存する空き容量がこの端末にありません。',
   'opt.auto': 'ブラウザに合わせる',
   'opt.ja': '日本語',
   'opt.en': 'English',

@@ -75,7 +75,8 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
   Reset closes the tabs the default lacks the ordinary way, so what they held
   waits in the closed tabs (as one batch, which later closes do not push out),
   and offers Undo until a tab is opened or closed. Reset every layout does the
-  same in every workspace. It touches layout only.
+  same in every workspace. A device with no room to keep those tabs keeps the
+  layout and says so. It touches layout only.
 - A list fills its tile. Only media, single form controls and prose pages keep a measure of their own.
 
 ## Signed out, and accounts

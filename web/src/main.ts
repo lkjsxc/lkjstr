@@ -76,14 +76,18 @@ let incoming: (() => void) | undefined; // opens the tab of an incoming link (un
 let family = ''; // the layout family `ctl` shows: the reader's own, or the visitor's while signed out
 const active = (): number => picked ?? parseActive(store.get(spacesKey(FAMILY)));
 // This workspace goes back with Undo. Every layout: each workspace of both families first sends the tabs its default
-// lacks to its own closed tabs, with what they held (this one through its controller); then the layouts are forgotten.
+// lacks to its own closed tabs, with what they held (this one through its controller); then the layouts are forgotten,
+// but for any workspace whose closed tabs the device had no room to keep.
 const resetLayouts = (every: boolean): void => {
-  ctl?.reset(!every);
+  const here = ctl?.reset(!every) ?? true;
   if (!every) return;
+  const kept = new Set(here ? [] : [layoutKey(family, shown)]);
   for (const f of [FAMILY, GUEST])
     for (let n = 1; n <= SPACES; n++)
-      if (f !== family || n !== shown) retireSaved(store.get(layoutKey(f, n)), f, n);
-  store.reset();
+      if ((f !== family || n !== shown) && !retireSaved(store.get(layoutKey(f, n)), f, n))
+        kept.add(layoutKey(f, n));
+  store.reset(kept);
+  if (kept.size) toast(host.layer, t('set.resetLayoutsPartial'));
 };
 const env = { engine, settings, layer: host.layer, resetLayouts };
 

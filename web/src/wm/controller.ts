@@ -24,8 +24,8 @@ export type Wm = {
   go(kind: string): void;
   compose(): void;
   drop(kind: string): void;
-  /** Back to the default arrangement (`undoable`: with an Undo toast); see `reset.ts`. */
-  reset(undoable: boolean): void;
+  /** Back to the default arrangement (`undoable`: with Undo); false: no room to keep its tabs, nothing changed. */
+  reset(undoable: boolean): boolean;
   search(): void;
   show(tab: string): void;
   dispose(): void;
@@ -51,12 +51,12 @@ export function createWmController(
   const back = new Map<string, { view: string; el?: HTMLElement }>(); // bound: one per such open tab
 
   const closed = createClosed(`${family}${at.index}`);
-  const retire = (view: string, batch?: string): ClosedTab | undefined => {
+  const retire = (view: string): ClosedTab | undefined => {
     const p = L.paneOfView(root, view);
     const state = own.retire(view);
     if (kindOf(view) === NEW_TAB) return;
     const c = { kind: kindOf(view), state, pane: p?.id ?? '', index: p?.tabs.indexOf(view) ?? 0 };
-    return closed.push(c, batch);
+    return closed.push(c);
   };
   const reopen = (): void => {
     const c = closed.pop();
@@ -136,7 +136,7 @@ export function createWmController(
   );
 
   const resets = createResets(
-    { root: () => root, set, retire, own, closed, live: () => !disposed },
+    { root: () => root, set, own, closed, live: () => !disposed },
     host.layer,
   );
   const ctx = {
@@ -165,7 +165,7 @@ export function createWmController(
         },
         {
           label: t('pane.close'),
-          run: () => (p.tabs.forEach((v) => retire(v)), set(L.closePane(root, p.id))),
+          run: () => (p.tabs.forEach(retire), set(L.closePane(root, p.id))),
         },
         { label: t('pane.reset'), run: () => resets.reset(preset(), true) },
       ]);

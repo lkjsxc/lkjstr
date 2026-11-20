@@ -11,8 +11,8 @@ export type WmStore = {
   /** Kept at once, written a moment later. */
   save(key: string, value: unknown): void;
   space(family: string, index: number): Space;
-  /** Forgets every saved layout, here and in the other browser tabs. */
-  reset(): void;
+  /** Forgets every saved layout but those in `keep`, here and in the other browser tabs. */
+  reset(keep?: ReadonlySet<string>): void;
   dispose(): void;
 };
 
@@ -78,8 +78,9 @@ export function createWmStore(): WmStore {
         },
       };
     },
-    reset() {
-      for (const key of [...values.keys()]) kv.remove(key), changed(key, undefined);
+    reset(keep) {
+      for (const key of [...values.keys()])
+        if (!keep?.has(key)) kv.remove(key), changed(key, undefined);
     },
     dispose() {
       flush();

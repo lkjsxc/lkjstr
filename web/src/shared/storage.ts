@@ -49,6 +49,13 @@ export const kv = {
       memory.set(key, raw); // quota: this session only
     }
   },
+  /** Writes so that it survives a reload, as far as this browser keeps anything (refused storage: this session, as
+   * every key); false when the device has no room, and then nothing changes. */
+  durably(key: string, value: unknown): boolean {
+    if (backend()) return kv.persist(key, value);
+    kv.set(key, value);
+    return true;
+  },
   persist(key: string, value: unknown): boolean {
     try {
       const s = backend();

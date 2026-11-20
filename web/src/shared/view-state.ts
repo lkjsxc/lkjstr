@@ -8,7 +8,7 @@ export function loadViewState<T extends object>(instance: string): Partial<T> {
   return typeof value === 'object' && value !== null ? (value as Partial<T>) : {};
 }
 
-export const saveViewState = (instance: string, state: object): void => {
+const merged = (instance: string, state: object): object => {
   const saved = loadViewState<{
     reader: unknown;
     scroll: unknown;
@@ -16,14 +16,16 @@ export const saveViewState = (instance: string, state: object): void => {
     channelEdit: unknown;
   }>(instance);
   // These independently owned slices cannot be overwritten by a view's older snapshot.
-  kv.set(key(instance), {
+  return {
     ...state,
     ...(saved.reader ? { reader: saved.reader } : {}),
     ...(saved.scroll ? { scroll: saved.scroll } : {}),
     ...(saved.drafts ? { drafts: saved.drafts } : {}),
     ...(saved.channelEdit ? { channelEdit: saved.channelEdit } : {}),
-  });
+  };
 };
+export const saveViewState = (instance: string, state: object): void =>
+  kv.set(key(instance), merged(instance, state));
 
 export const saveViewSlice = (
   instance: string,
@@ -45,14 +47,16 @@ export function snapshotViewState(instance: string): object {
   return { ...loadViewState(instance), tabCompanions };
 }
 
-export function restoreViewState(instance: string, snapshot: object): void {
+/** False when the device had no room for all of it (what was written then stays, harmlessly, under a closed id). */
+export function restoreViewState(instance: string, snapshot: object): boolean {
   const { tabCompanions, __say, ...state } = snapshot as Snapshot & { __say?: object };
-  saveViewState(instance, state);
-  if (__say && typeof __say === 'object') saveViewState(`${instance}:say`, __say);
+  const writes: [string, object][] = [[instance, state]];
+  if (__say && typeof __say === 'object') writes.push([`${instance}:say`, __say]);
   for (const suffix of companions) {
     const value = tabCompanions?.[suffix];
-    if (value) saveViewState(instance + suffix, value);
+    if (value) writes.push([instance + suffix, value]);
   }
+  return writes.every(([at, value]) => kv.durably(key(at), merged(at, value)));
 }
 
 /** A fresh tab releases every input and outbox key owned by its previous occupant. */

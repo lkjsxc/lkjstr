@@ -22,6 +22,7 @@ export const en = {
   'pane.close': 'Close tile',
   'pane.reset': 'Reset layout',
   'pane.wasReset': 'Layout reset',
+  'pane.resetFailed': 'Layout not changed: this device has no room left to keep the closed tabs.',
   'space.title': 'Workspace {n}',
   'launcher.placeholder': 'Type to filter or search; Enter opens the first',
   'launcher.none': 'Nothing matches.',
@@ -232,6 +233,8 @@ export const en = {
     'Put this workspace back to how it started. Tabs it closes can be reopened, and Undo puts it back as it was.',
   'set.resetLayouts': 'Layout: Reset every layout',
   'set.resetLayouts.d': 'Put all nine workspaces back to how they started.',
+  'set.resetLayoutsPartial':
+    'Some workspaces kept their layout: this device has no room left to keep their closed tabs.',
   'opt.auto': 'Same as the browser',
   'opt.ja': '日本語',
   'opt.en': 'English',

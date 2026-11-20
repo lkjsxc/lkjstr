@@ -16,7 +16,10 @@ export type ClosedTab = {
 };
 export type Closing = Omit<ClosedTab, 'id' | 'batch'>;
 export type Closed = {
-  push(tab: Closing, batch?: string): ClosedTab;
+  push(tab: Closing): ClosedTab;
+  /** Puts away a reset's tabs in one write that survives a reload; undefined, changing nothing, when the device has
+   * no room. Only then may the tabs' own state go. */
+  pushBatch(tabs: readonly Closing[], batch: string): ClosedTab[] | undefined;
   pop(): ClosedTab | undefined;
   /** Whether this entry still waits (not reopened, here or in another browser tab). */
   has(id: string): boolean;
@@ -26,7 +29,17 @@ export type Closed = {
 };
 
 const CLOSED_MAX = 20; // tabs closed one by one
-const BATCH_MAX = 100; // tabs put away by resets, oldest first; the latest reset keeps all of its own
+// Tabs put away by resets that hold nothing typed, oldest first; the latest reset keeps all of its own. One that holds
+// something typed is never pushed out: it is what was stored as that tab before the reset, moved, not added.
+const BATCH_MAX = 100;
+const TYPED = new Set(['text', 'drafts', 'media']);
+/** Whether a tab's state holds something typed: a text, a half-typed field, an attachment, an unsent post. */
+export function holdsTyped(value: unknown, typed = false): boolean {
+  if (typeof value === 'string') return typed && value.trim() !== '';
+  if (Array.isArray(value)) return typed ? value.length > 0 : value.some((x) => holdsTyped(x));
+  if (typeof value !== 'object' || value === null) return false;
+  return Object.entries(value).some(([k, x]) => holdsTyped(x, typed || TYPED.has(k)));
+}
 export const closedKey = (space: string): string => `closed:${space}`;
 
 let made = 0;
@@ -34,14 +47,15 @@ let made = 0;
 export const closedId = (): string =>
   `${Date.now().toString(36)}.${(made++).toString(36)}.${Math.random().toString(36).slice(2, 8)}`;
 
-/** Keeps the latest CLOSED_MAX single closes and BATCH_MAX tabs of resets (all of the latest reset's). */
+/** Keeps the latest CLOSED_MAX single closes and BATCH_MAX tabs of resets with nothing typed (see above). */
 function bound(list: readonly ClosedTab[]): ClosedTab[] {
   const latest = list.findLast((c) => c.batch)?.batch;
+  const spare = (c: ClosedTab): boolean => Boolean(c.batch) && !holdsTyped(c.state);
   let singles = list.filter((c) => !c.batch).length - CLOSED_MAX;
-  let grouped = list.filter((c) => c.batch).length - BATCH_MAX;
+  let grouped = list.filter(spare).length - BATCH_MAX;
   return list.filter((c) => {
     if (!c.batch) return singles-- <= 0;
-    if (c.batch === latest || grouped <= 0) return true;
+    if (c.batch === latest || !spare(c) || grouped <= 0) return true;
     grouped--;
     return false;
   });
@@ -82,10 +96,14 @@ export function createClosed(space: string): Closed {
   const write = (list: readonly ClosedTab[]): void =>
     list.length ? kv.set(key, list) : kv.remove(key);
   return {
-    push(tab, batch) {
-      const c: ClosedTab = { ...tab, id: closedId(), ...(batch ? { batch } : {}) };
+    push(tab) {
+      const c: ClosedTab = { ...tab, id: closedId() };
       write(bound([...read(), c]));
       return c;
+    },
+    pushBatch(tabs, batch) {
+      const put = tabs.map((tab): ClosedTab => ({ ...tab, id: closedId(), batch }));
+      return !put.length || kv.durably(key, bound([...read(), ...put])) ? put : undefined;
     },
     pop() {
       const list = read();
