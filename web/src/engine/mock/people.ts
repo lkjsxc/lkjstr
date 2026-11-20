@@ -78,7 +78,7 @@ const SPECS: Spec[] = [
   ['mio', 'みお', '絵を描きます。お仕事の依頼は DM まで。', 320, undefined],
   [
     'taro',
-    '山田太郎',
+    '山田太郎 🦀',
     'エンジニア。Rust と自宅サーバー。発言は個人の見解です。',
     250,
     'taro@example.jp',

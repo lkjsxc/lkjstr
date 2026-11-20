@@ -7,7 +7,7 @@ import { icon } from '../shared/icons.ts';
 import { reactionLabel } from '../shared/reactions.ts';
 import { actChip } from './act-context.ts';
 import { renderNote } from './note.ts';
-import { emojiImg, faceButton, how, nameButton, plainName } from './parts.ts';
+import { emojiImg, faceButton, how, nameButton, plainName, unicodeEmoji } from './parts.ts';
 import type { ViewEnv } from './registry.ts';
 
 const aboutAct = (row: NotificationRow) => row.target?.act ?? row.pendingAct?.act;
@@ -45,7 +45,7 @@ function targetLine(row: NotificationRow, env: ViewEnv): HTMLElement | null {
   return h(
     'div',
     { class: 'excerpt muted act-target' },
-    actChip(pending.act),
+    actChip(pending.act, true),
     h('span', { class: 'clip' }, t(key)),
   );
 }
@@ -66,7 +66,7 @@ export function renderNotification(row: NotificationRow, env: ViewEnv): HTMLElem
     row.type === 'reaction' && row.emoji
       ? row.emoji.url && row.emoji.emoji.startsWith(':')
         ? emojiImg(row.emoji.emoji, row.emoji.url, true)
-        : reactionLabel(row.emoji.emoji)
+        : unicodeEmoji(reactionLabel(row.emoji.emoji), true)
       : icon(row.type === 'repost' ? 'repost' : row.type === 'zap' ? 'zap' : 'user');
   const target = row.target;
   const first = row.actors[0];

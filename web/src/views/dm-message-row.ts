@@ -6,7 +6,7 @@ import { getLang, t } from '../shared/i18n.ts';
 import { icon } from '../shared/icons.ts';
 import { openMenu } from '../wm/menus.ts';
 import { dmAuthor } from './dm-parts.ts';
-import { copy, faceButton, nameButton, plainName, segments } from './parts.ts';
+import { copy, faceButton, nameButton, plainName, segments, unicodeEmoji } from './parts.ts';
 import type { ViewEnv } from './registry.ts';
 
 export function renderDmMessage(o: {
@@ -62,7 +62,7 @@ export function renderDmMessage(o: {
   const text = h(
     'div',
     { class: o.folded.has(m.id) ? 'text open' : 'text' },
-    m.segments ? segments(m.segments, env) : m.text,
+    m.segments ? segments(m.segments, env) : unicodeEmoji(m.text, true),
   );
   const content = h('div', { class: 'content' }, text);
   const main = h('div', { class: 'nmain' });

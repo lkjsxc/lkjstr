@@ -2,6 +2,7 @@
 // under it the reaction chips, so the row never moves when the first reaction arrives. Every action shows at once (the engine patches the row) and reports a failure in words.
 import type { ActResult } from '../engine/client.ts';
 import type { Action, NoteRow } from '../engine/protocol.ts';
+import { isEmojiGrapheme } from '../shared/emoji-text.ts';
 import { countText } from '../shared/format.ts';
 import { h } from '../shared/h.ts';
 import { getLang, type Key, t } from '../shared/i18n.ts';
@@ -11,7 +12,7 @@ import { type MenuItem, openMenu } from '../wm/menus.ts';
 import { ability, abilityText, able } from './can.ts';
 import { openEmojiPicker } from './emoji-picker.ts';
 import { type HeldWhat, hold, unhold } from './held.ts';
-import { copy, emojiImg, nameText, plainName, toast } from './parts.ts';
+import { copy, emojiImg, nameText, plainName, toast, unicodeEmoji } from './parts.ts';
 import type { ViewEnv } from './registry.ts';
 
 const DEFAULT_REACTION = '❤️';
@@ -77,12 +78,13 @@ export function reactionChips(row: NoteRow, env: ViewEnv): HTMLElement | null {
         'button',
         {
           class: r.mine ? 'rchip on' : 'rchip',
-          title: r.url ? null : r.emoji,
+          // An emoji says what it is in its popover; a reaction written as words keeps them in a tooltip.
+          title: r.url || isEmojiGrapheme(r.emoji) ? null : r.emoji,
           'data-emoji': r.emoji,
           'aria-pressed': r.mine,
           onclick: (e) => (e.stopPropagation(), react(env, row, r.emoji, r.url, !r.mine)),
         },
-        r.url ? emojiImg(r.emoji, r.url) : r.emoji,
+        r.url ? emojiImg(r.emoji, r.url) : unicodeEmoji(r.emoji),
         h('span', null, countText(r.count, row.counts.partial, getLang())),
       ),
     ),

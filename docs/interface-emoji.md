@@ -3,9 +3,9 @@
 ## Purpose
 
 One emoji picker for the composer, reactions and private messages, a preview of what is under the pointer, the
-keyboard or a resting finger, and the same information over a custom emoji wherever one is drawn. Index and rules:
+keyboard or a resting finger, and the same information over any emoji wherever one is drawn. Index and rules:
 [interface-specs.md](interface-specs.md). The owner asked for the picker on 2026-11-20 (mail 1699) and for the
-preview and the popover the same day (mail 1704). Engine side: [emoji-sets.md](emoji-sets.md).
+preview and the popover the same day (mail 1704), for every emoji (mail 1922). Engine side: [emoji-sets.md](emoji-sets.md).
 
 ## Shared rules
 
@@ -51,7 +51,7 @@ Pointer and touch: a press picks. A finger resting on a cell shows it in the str
 
 Data: the Unicode table (Emoji 16.0 and earlier, names in both languages, shortcodes, five tones) is built from the
 pinned emojibase-data package into one hashed JSON file, fetched when the picker first opens (the offline shell
-keeps it) and kept for the page's life; nothing is fetched for a reader who never opens the picker. Until it
+keeps it) and kept for the page's life; nothing is fetched for a reader who never opens the picker nor comes to an emoji in text. Until it
 arrives, or if it cannot be had, the common reactions of `shared/emoji-data.ts` are offered. The reader's custom
 emoji come from the engine's `emoji` source, which the open picker keeps visible; the last ones seen are drawn at
 once on the next opening. Pictures load lazily, keep their cell, and a picture that fails shows its code in small type.
@@ -69,23 +69,37 @@ Japanese name in Japanese, the English one otherwise) and its shortcode in faint
 holds, the cell with the keyboard, and while a search is typed, the first match. Otherwise it is empty and keeps its
 height.
 
-## E3 The custom emoji popover
+## E3 The emoji popover
 
-Over a custom emoji in note text, a name, a profile or a reaction chip: the same picture at 72 px with its `:code:`
-beside it, in a small floating box above it (below it when there is no room). It appears after a moment under the pointer,
-under a resting finger (whose press then neither opens the note nor reacts), and at once while the keyboard is on
-it. A custom emoji standing alone (note text, a message, a bio, an act, a notification's mark) is one tab stop; one
-inside a name, a quoted note or a reaction button takes none of its own, and a reaction button with the keyboard
-shows its emoji's popover. The popover takes no pointer events and closes on the next press, key, scroll or blur.
-The pictures it describes have no tooltip of their own. In text they load ahead of the reader: a picture is asked
-for when its row comes within one and a half tile heights of what the tile shows (a browser's own lazy loading waits
-inside a scrolling tile until it is in view), so its width, or the code that replaces a failed one, settles out of
-sight; above the reading place the anchor absorbs it. Until then it is a quiet box of the line's height.
+Over an emoji in note text, a name, a profile or a reaction chip, custom or Unicode: the emoji at 72 px in a small
+floating box above it (below it when there is no room). Beside a custom emoji, its `:code:`; beside a Unicode one,
+its name in the interface language (the Japanese name when the table has one, the English one otherwise) and its
+`:shortcode:` in faint type, as in the strip (E2). The owner asked for Unicode parity on 2026-11-20 (mail 1922).
+It appears after a moment under the pointer, under a resting finger (whose press then neither opens the note nor
+reacts), and at once while the keyboard is on it. An emoji standing alone (note text, a message, a bio, an act, a
+notification's mark) is one tab stop; one inside a name, a quoted note or a button (a reaction, a mention, a
+notification's excerpt) takes none of its own, and a reaction button with the keyboard shows its emoji's popover.
+The popover takes no pointer events and closes on the next press, key, scroll or blur.
+The emoji it describes have no tooltip of their own.
+
+Unicode emoji are found in text one grapheme at a time, so a flag, a keycap, a toned emoji or a joined (ZWJ)
+sequence is one emoji. Symbols that are text unless asked otherwise (copyright, arrows, the play sign) stay text
+unless written with the emoji selector. Each emoji is an inline mark around its characters: text order, wrapping,
+selection and copying are those of the text, and a press on one still opens its note. Names come from the same
+Unicode table as the picker's, asked for when the pointer, a finger or the keyboard first comes to a Unicode emoji
+(nothing is fetched before). Until it arrives, or when it cannot be had, the popover shows the emoji alone at once;
+a name that arrives later is drawn only if the popover still shows that emoji.
+
+Custom emoji pictures in text load ahead of the reader: a picture is asked for when its row comes within one and a
+half tile heights of what the tile shows (a browser's own lazy loading waits inside a scrolling tile until it is in
+view), so its width, or the code that replaces a failed one, settles out of sight; above the reading place the
+anchor absorbs it. Until then it is a quiet box of the line's height.
 
 ## Scenes
 
-`pnpm shots -- --scenes=emoji-preview,emoji-search,emoji-tones,emoji-peek,emoji-peek-keys,emoji-reaction` (in
-`web/`). Desktop points with a mouse, and `emoji-peek-keys` uses Tab; at 390 the scenes use touch and a long press.
+`pnpm shots -- --scenes=emoji-preview,emoji-search,emoji-tones,emoji-peek,emoji-peek-keys,emoji-reaction` and the
+Unicode `emoji-peek-unicode`, `-unicode-name`, `-unicode-keys` and `-unicode-reaction` (in `web/`). Desktop points
+with a mouse, and the `-keys` scenes use Tab; at 390 the scenes use touch and a long press.
 Each scene checks what it shows: the grid does not move while the preview changes, the strip and the popover take no
 press, and a long press neither picks, opens nor reacts. `pnpm smoke` adds the keyboard path through the picker and
-to a note's custom emoji, and that a press on one still opens its note.
+to a note's custom and Unicode emoji, and that a press on either still opens its note.

@@ -80,21 +80,27 @@ export const NOTES: readonly NoteSpec[] = [
   {
     by: 'kenji',
     ago: 9,
-    text: 'リレーの再起動が終わりました。5分ほど繋がりにくかったと思います、すみません :otsu:',
+    text: 'リレーの再起動が終わりました。5分ほど繋がりにくかったと思います、すみません🙇‍♂️ :otsu:',
     tag: 'restart',
     reactions: [
       [':otsu:', 12],
       ['🙏', 4],
     ],
   },
-  { by: 'taro', ago: 11, re: 'restart', text: '@kenji おつかれさまです。再接続も問題なしでした。' },
+  {
+    by: 'taro',
+    ago: 11,
+    re: 'restart',
+    text: '@kenji おつかれさまです👍🏽 再接続も問題なしでした。',
+  },
   {
     by: 'lena',
     ago: 15,
-    text: 'Kerning the word "Tokyo" for an hour. The y and the o will never be friends.',
+    text: 'Kerning the word "Tokyo" 🇯🇵 for an hour. The y and the o will never be friends 😅',
     reactions: [
       ['😂', 8],
       ['❤️', 5],
+      ['❤️‍🔥', 2],
     ],
   },
   {

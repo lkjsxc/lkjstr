@@ -1274,26 +1274,58 @@ async function reading(browser: Browser, still: Record<string, unknown>): Promis
       )),
   );
   await page.mouse.move(2, 2);
-  // The keyboard reaches a custom emoji in note text with Tab, and its popover follows; a press on it is still a
-  // press on the note.
+  // A Unicode emoji says what it is in the same popover: its name, from the table asked for only now, and its
+  // shortcode.
+  const unicode = page.locator(`${feed} .note .text .uemo`).first();
+  await unicode.scrollIntoViewIfNeeded();
+  await unicode.hover();
+  await page.locator('.epeek .ename:not(:empty)').waitFor();
+  fact(
+    'a Unicode emoji shows its name and shortcode in the same popover',
+    (await page.locator('.epeek .ebig').innerText()).length > 0 &&
+      /^:[a-z0-9_+-]+:$/.test(await page.locator('.epeek .ecode').innerText()),
+  );
+  await page.mouse.move(2, 2);
+  // The keyboard reaches a Unicode and a custom emoji in note text with Tab, and the popover follows each; a press on
+  // either is still a press on the note.
   const owner = page
     .locator(`${feed} .note`)
     .filter({ has: page.locator('.text img.emo') })
+    .filter({ has: page.locator('.text .uemo') })
     .first();
+  await owner.scrollIntoViewIfNeeded();
   await owner.locator('.name').first().focus();
-  for (let n = 0; n < 12; n++) {
-    if (await page.evaluate(() => document.activeElement?.matches('img.emo') === true)) break;
+  const on = (q: string) => page.evaluate((s) => document.activeElement?.matches(s) === true, q);
+  for (let n = 0; n < 12 && !(await on('.text .uemo, .text img.emo')); n++)
     await page.keyboard.press('Tab');
-  }
-  await page.locator('.epeek').waitFor();
+  await page.locator('.epeek .ename:not(:empty)').waitFor();
+  const glyph = await page.evaluate(() => document.activeElement?.textContent ?? '');
+  fact(
+    'Tab reaches a Unicode emoji in a note and names it in its popover',
+    (await on('.note .text .uemo')) && (await page.locator('.epeek .ebig').innerText()) === glyph,
+  );
+  await page.keyboard.press('Tab');
+  await page.locator('.epeek img').waitFor();
   fact(
     'Tab reaches a custom emoji in a note and shows its popover',
-    (await page.evaluate(() => document.activeElement?.matches('.note .text img.emo') === true)) &&
+    (await on('.note .text img.emo')) &&
       (await page.locator('.epeek .ename').innerText()) ===
         (await page.evaluate(() => document.activeElement?.getAttribute('alt'))),
   );
   await page.keyboard.press('Shift+Tab');
+  await page.locator('.epeek .ebig:not(img)').waitFor();
+  fact(
+    'back with the keyboard, the popover is the Unicode emoji again',
+    (await on('.note .text .uemo')) && (await page.locator('.epeek .ebig').innerText()) === glyph,
+  );
+  await page.keyboard.press('Shift+Tab');
   fact('leaving it with the keyboard closes the popover', (await count(page, '.epeek')) === 0);
+  await owner.locator('.text .uemo').first().click();
+  await page.locator('.th-focus').waitFor();
+  fact('a press on a Unicode emoji opens its note', (await count(page, '.epeek')) === 0);
+  await page.locator('.tab[data-view^="thread"]').click({ button: 'middle' });
+  await page.locator(`${feed} .note`).first().waitFor();
+  await inline.scrollIntoViewIfNeeded();
   await inline.click();
   await page.locator('.th-focus').waitFor();
   fact('a press on a custom emoji opens its note', (await count(page, '.epeek')) === 0);

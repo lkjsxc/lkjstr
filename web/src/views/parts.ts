@@ -1,5 +1,6 @@
 // Small pieces every view draws people and text with.
 import type { Author, Emoji, Segment } from '../engine/protocol.ts';
+import { emojiRuns } from '../shared/emoji-text.ts';
 import { type Child, h } from '../shared/h.ts';
 import { t } from '../shared/i18n.ts';
 import { icon } from '../shared/icons.ts';
@@ -60,13 +61,23 @@ export function avatar(a: Author, cls = 'av'): HTMLElement {
   return el;
 }
 
-/** Text with `:code:` replaced by the custom emoji it names. */
+/** Unicode emoji in text, each one grapheme in an inline mark that wraps, selects and copies as the characters it
+ * holds; its popover (emoji-peek.ts) says what it is. `focusable`: it stands alone (not inside a button or link), so
+ * the keyboard can reach it and its popover, as a custom emoji's. */
+export const unicodeEmoji = (text: string, focusable = false): Child[] =>
+  emojiRuns(text).map((run) =>
+    typeof run === 'string'
+      ? run
+      : h('span', { class: 'uemo', tabindex: focusable ? 0 : null }, run.emoji),
+  );
+
+/** Text with `:code:` replaced by the custom emoji it names, and its Unicode emoji marked. */
 export function withEmoji(text: string, emoji: readonly Emoji[] = []): Child[] {
-  if (!emoji.length) return [text];
+  if (!emoji.length) return unicodeEmoji(text);
   const by = new Map(emoji.map((e) => [e.code, e.url]));
-  return text.split(/(:[A-Za-z0-9_-]+:)/g).map((part) => {
+  return text.split(/(:[A-Za-z0-9_-]+:)/g).flatMap((part) => {
     const url = part.startsWith(':') ? by.get(part.slice(1, -1)) : undefined;
-    return url ? emojiImg(part, url) : part;
+    return url ? [emojiImg(part, url)] : unicodeEmoji(part);
   });
 }
 /** A custom emoji in text (emoji-load.ts): a box of the line's height that does not change while in view, a picture
@@ -112,7 +123,7 @@ export function faceButton(a: Author, env: ViewEnv, cls = 'av'): HTMLElement {
  * quoted note), so its custom emoji take no tab stop of their own. */
 export function segments(list: readonly Segment[], env: ViewEnv, inside = false): Child[] {
   return list.map((s) => {
-    if (s.k === 'text') return s.text;
+    if (s.k === 'text') return unicodeEmoji(s.text, !inside);
     if (s.k === 'emoji') return emojiImg(`:${s.code}:`, s.url, !inside);
     if (s.k === 'link')
       return h(
@@ -134,7 +145,7 @@ export function segments(list: readonly Segment[], env: ViewEnv, inside = false)
       return h(
         'button',
         { class: 'lnk', onclick: open('profile', { pubkey: s.pubkey, title: nameText(s.name) }) },
-        `@${nameText(s.name).replace(/\s*:[a-z0-9_]+:/g, '')}`,
+        unicodeEmoji(`@${nameText(s.name).replace(/\s*:[a-z0-9_]+:/g, '')}`),
       );
     if (s.k === 'hashtag')
       return h('button', { class: 'lnk', onclick: open('hashtag', { tag: s.tag }) }, `#${s.tag}`);

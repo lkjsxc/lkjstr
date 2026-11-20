@@ -1,12 +1,15 @@
-// A custom emoji in a note, a name or a reaction says what it is: under the pointer after a moment, while it or
-// its reaction button has the keyboard, or under a resting finger, a small popover shows the picture large with its
-// `:code:`. It takes no pointer events and closes on any press, scroll or key, so it never stands between the reader
-// and a click.
+// An emoji in a note, a name or a reaction says what it is: under the pointer after a moment, while it or its
+// reaction button has the keyboard, or under a resting finger, a small popover shows it large. A custom emoji shows
+// its picture and `:code:`; a Unicode one its name in the reader's language and its shortcode, from the Unicode
+// table, which is asked for when the first emoji is approached. Until the table is here (or when it cannot be had)
+// the popover shows the emoji alone, and takes the name when it comes only if it still shows that emoji. It takes
+// no pointer events and closes on any press, scroll or key, so it never stands between the reader and a click.
+import { emojiTable, emojiTableNow, glyphFor } from '../shared/emoji-table.ts';
 import { h, replaceChildren } from '../shared/h.ts';
 import { pictureOf } from './emoji-load.ts';
 import { describe, onLongPress } from './emoji-preview.ts';
 
-const EMOJI = 'img.emo';
+const EMOJI = 'img.emo, .uemo';
 const CHIP = '.rchip, .act-chip';
 const DELAY = 300;
 
@@ -17,7 +20,7 @@ export function installEmojiPeek(layer: HTMLElement): void {
   let over: Element | undefined;
   /** What showed it: only the keyboard's popover follows the focus. */
   let by: 'pointer' | 'finger' | 'key' = 'pointer';
-  let shown: HTMLImageElement | undefined;
+  let shown: HTMLElement | undefined;
 
   const hide = (): void => {
     clearTimeout(timer);
@@ -25,7 +28,7 @@ export function installEmojiPeek(layer: HTMLElement): void {
     over = shown = undefined;
     el.remove();
   };
-  const place = (img: HTMLImageElement): void => {
+  const place = (img: HTMLElement): void => {
     const origin = layer.getBoundingClientRect();
     const zoom = Number(getComputedStyle(el).zoom) || 1;
     const a = img.getBoundingClientRect();
@@ -39,30 +42,46 @@ export function installEmojiPeek(layer: HTMLElement): void {
     el.style.left = `${(left - origin.left) / zoom}px`;
     el.style.top = `${(top - origin.top) / zoom}px`;
   };
-  const show = (img: HTMLImageElement, how: typeof by): void => {
+  const draw = (img: HTMLElement): void => {
+    if (img instanceof HTMLImageElement)
+      return replaceChildren(el, describe({ picked: { emoji: img.alt, url: pictureOf(img) } }, 0));
+    const emoji = img.textContent ?? '';
+    const known = glyphFor(emoji);
+    replaceChildren(el, describe({ picked: { emoji }, glyph: known?.glyph }, known?.tone ?? 0));
+  };
+  const show = (img: HTMLElement, how: typeof by): void => {
     clearTimeout(timer);
     by = how;
     if (!img.isConnected) return;
-    replaceChildren(el, describe({ picked: { emoji: img.alt, url: pictureOf(img) } }, 0));
+    draw(img);
     layer.append(el);
     shown = img;
     place(img);
+    if (img instanceof HTMLImageElement || emojiTableNow()) return;
+    // The name comes with the table: drawn only over the emoji that asked for it, never over a later one.
+    void emojiTable().then(() => {
+      if (shown !== img || !el.isConnected || !img.isConnected || !glyphFor(img.textContent ?? ''))
+        return;
+      draw(img);
+      place(img);
+    });
   };
-  const emojiIn = (node: EventTarget | null): HTMLImageElement | null => {
+  const emojiIn = (node: EventTarget | null): HTMLElement | null => {
     const e = node as Element | null;
     return (
-      e?.closest?.<HTMLImageElement>(EMOJI) ??
-      e?.closest?.(CHIP)?.querySelector<HTMLImageElement>(EMOJI) ??
+      e?.closest?.<HTMLElement>(EMOJI) ??
+      e?.closest?.(CHIP)?.querySelector<HTMLElement>(EMOJI) ??
       null
     );
   };
 
   document.addEventListener('pointerover', (e) => {
     if (e.pointerType === 'touch') return;
-    const img = (e.target as Element).closest?.<HTMLImageElement>(EMOJI);
+    const img = (e.target as Element).closest?.<HTMLElement>(EMOJI);
     if (!img || img === over) return;
     hide();
     over = img;
+    if (!(img instanceof HTMLImageElement)) emojiTableNow(); // its name is on the way while the pointer rests
     timer = setTimeout(() => show(img, 'pointer'), DELAY);
   });
   document.addEventListener('pointerout', (e) => {

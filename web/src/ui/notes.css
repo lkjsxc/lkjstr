@@ -68,7 +68,9 @@
 .rchip:hover { border-color: var(--sep); color: var(--fg); }
 .rchip.on { border-color: var(--accent); background: var(--wash); color: var(--fg); }
 .rchip .emo { height: 16px; vertical-align: 0; }
-img.emo:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; border-radius: 3px; }
+img.emo:focus-visible, .uemo:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; border-radius: 3px; }
+/* A Unicode emoji is a mark around its characters: it wraps, selects and copies as text; a long press shows its popover. */
+.uemo { -webkit-touch-callout: none; }
 /* The action row: reply, repost, reaction, then the rest. The four that carry a count share the width equally,
    so every count starts at the same distance from its icon and never moves its neighbours; the three without
    one grow on the same rhythm, up to 56px. */

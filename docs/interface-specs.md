@@ -42,7 +42,7 @@ what the engine offers and no surface reaches yet.
 | A2 | A person's reaction or repost of an act, in their profile | [interface-acts.md](interface-acts.md#a2-a-persons-reaction-or-repost-of-an-act-in-their-profile) | built |
 | E1 | One emoji picker: frequent, sets, categories, tones, search | [interface-emoji.md](interface-emoji.md#e1-the-picker) | built |
 | E2 | The picker's fixed preview strip | [interface-emoji.md](interface-emoji.md#e2-the-preview-strip) | built |
-| E3 | The custom emoji popover in notes, names and reactions | [interface-emoji.md](interface-emoji.md#e3-the-custom-emoji-popover) | built |
+| E3 | The emoji popover (custom and Unicode) in notes, names and reactions | [interface-emoji.md](interface-emoji.md#e3-the-emoji-popover) | built |
 | Q1 | Tabs state wants; the engine makes one plan | [read-plan.md](read-plan.md#q1-tabs-state-wants-the-engine-makes-one-plan) | ready |
 | Q2 | Ask where the answer is | [read-plan.md](read-plan.md#q2-ask-where-the-answer-is) | ready |
 | Q3 | Weights made from the past | [read-plan.md](read-plan.md#q3-weights-made-from-the-past) | ready |
