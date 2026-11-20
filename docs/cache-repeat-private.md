@@ -9,8 +9,8 @@ replay is withheld. This is separate from the public read-only account and
 the two public usage hours. It does not replace either measurement.
 
 ~~~sh
-pnpm cache:repeat:private --build=/absolute/path/to/frozen/dist
-node --test scripts/cache-repeat-private-test.mjs
+pnpm cache:private --build=/absolute/path/to/frozen/dist
+pnpm test:harnesses
 ~~~
 
 The command requires an already built real package and never invokes Cargo.

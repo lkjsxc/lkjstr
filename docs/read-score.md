@@ -13,11 +13,12 @@ Build the native fixture with four jobs in the shared build reservation, then:
 ~~~sh
 cargo build -p lkjstr-core --example engine-read-score
 node scripts/read-score-native.mjs --output=tmp/native-score.json
-pnpm read:score --build=dist --verify-helper=PATH --seconds=300
+pnpm read:score --build=dist --verify-helper=PATH --seconds=300 --output=tmp/public-baseline
+pnpm read:scope tmp/public-baseline PATH tmp/candidate-allowlist.json
 node scripts/read-score-assess.mjs tmp/public-baseline
 pnpm read:compare before/scorecard.json after/scorecard.json --change=COMMIT
 pnpm read:compare --attempts=tmp/attempts.json
-node --test scripts/read-score-test.mjs
+pnpm test:harnesses
 ~~~
 
 All browser commands are opt-in and sequential. The public command never builds

@@ -113,9 +113,13 @@ The transport's six stale-callback regressions fail against its exact prior
 source; all eleven current tests pass. Logs:
 `tmp/transport-races-before.log`, `tmp/transport-races-after.log`.
 
-Run the isolated check with `node scripts/engine-editors-harness.mjs`.
-Select a frozen package with `LKJSTR_ENGINE_PKG`; `--before` preserves the
-older-contract reproduction. The normal Worker conformance suite includes the
-current check. The 16-check real message flow also passed cross-page Lock and
+The Worker conformance suite includes the current check. The isolated
+runner accepted `LKJSTR_ENGINE_PKG` and `--before` for the older package.
+
+```sh
+git show 8e8733596086e5dbdd75e8cb3be5b1af27113134:scripts/engine-editors-harness.mjs
+```
+
+The 16-check real message flow also passed cross-page Lock and
 exact-tail restoration; its dated evidence and the final integration gates are
 recorded in [interface-verification.md](interface-verification.md).

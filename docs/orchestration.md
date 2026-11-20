@@ -135,8 +135,11 @@ send failures. Accepted destinations rise from 2 to 20; first success stays
 100 ms. Connection attempts rise 4 to 22, EVENT frames 3 to 21, and payload bytes
 1137 to 7959. Broader required delivery necessarily sends more data; this is an
 explicit cost, not a Pareto improvement across all read and write metrics.
-The manual real-WASM public probe is scripts/engine-orchestration-sample.mjs;
-it permits REQ/CLOSE only and is excluded from automated gates.
+The historical real-WASM public probe permitted REQ/CLOSE only.
+
+```sh
+git show 8e8733596086e5dbdd75e8cb3be5b1af27113134:scripts/engine-orchestration-sample.mjs
+```
 
 The read follow-up now ships route-local cursors, durable cooldown/quality,
 finite multi-filter envelopes, focused work, account-scoped weights, request

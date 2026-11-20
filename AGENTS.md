@@ -72,6 +72,8 @@ Engine work:
 
 ## Verification
 
+- Keep one-off probe scripts and receipts out of the repository.
+
 Frontend: in `web/`, `pnpm check`, `pnpm build`, `pnpm smoke`.
 
 Engine, from the repository root, quiet gates print one `ok ...` line: `pnpm check:repo`, `pnpm test:quiet`,

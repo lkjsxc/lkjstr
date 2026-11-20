@@ -16,8 +16,13 @@ artifacts are preserved outside the disposable worktrees at:
 /home/coder/workspace/lkjstr-review/read-score-20261117-baseline
 ```
 
-[read-score-baseline-data.json](read-score-baseline-data.json) records every
-archived file's bytes and SHA-256, plus product source hashes and compact metrics.
+The original manifest records every archived file's bytes and SHA-256, plus
+product source hashes and compact metrics.
+
+```sh
+git show 8e8733596086e5dbdd75e8cb3be5b1af27113134:docs/read-score-baseline-data.json
+```
+
 Reports and raw body sets remain unchanged. Derived scorecards and audits are
 separate files. The native fixture's generated data contain no owner account.
 The public account is read-only and distinct from the owner's data.

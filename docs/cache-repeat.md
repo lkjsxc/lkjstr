@@ -13,7 +13,7 @@ Use a previously built real package. This command does not start Cargo.
 ~~~sh
 pnpm cache:repeat --build=/absolute/path/to/frozen/dist --seconds=3600
 pnpm cache:repeat --build=/absolute/path/to/frozen/dist --seconds=3600 --network-route=host
-node --test scripts/cache-repeat-test.mjs
+pnpm test:harnesses
 ~~~
 
 The default is 3600 seconds per phase and 30 seconds per visit, plus bounded

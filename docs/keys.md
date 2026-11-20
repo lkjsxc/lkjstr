@@ -97,11 +97,9 @@ action, and restores the preceding fixture account. No public relay receives
 test traffic. Mock fixtures use a visibly non-NIP-49 marker so they cannot be
 mistaken for real backups. `web/tests/vault.test.ts` checks their contract.
 
-After a real UI build, `node web/scripts/smoke-vault-only.mjs` checks the
-specified controls with a fresh Worker-generated account and an empty loopback
-relay, including downloading and re-importing the protected copy. It needs no
-native fixture build and writes tmp/vault-ui-report.json. The same helper is
-also included in smoke:real.
+`pnpm --dir web smoke:real` checks the specified controls with a fresh
+Worker-generated account and a loopback relay, including downloading and
+re-importing the protected copy.
 
 Run status belongs in docs/status.md and the landing's gate record. Native
 test code and this specification do not by themselves claim a browser run.

@@ -96,10 +96,14 @@ One extra kind-41 stream per selected route is the explicit discovery cost.
 
 The original 32-relay/300-author read and publication scorecards remain regression
 gates. These fixtures do not establish global two-cover or public network recall.
-The manual public comparison is scripts/engine-outbox-sample.mjs: fresh contexts,
-REQ/CLOSE-only guards, three allowlisted relays and no account/signer. Public
+The historical public comparison used fresh contexts, REQ/CLOSE-only guards,
+three allowlisted relays and no account/signer. Public
 samples are sequential, not a controlled speed benchmark. Results and the final
 gate record live in ignored tmp/outbox-report.md and tmp/outbox-public.json.
+
+```sh
+git show 8e8733596086e5dbdd75e8cb3be5b1af27113134:scripts/engine-outbox-sample.mjs
+```
 
 The one public comparison returned 121 -> 127 verified channels and no rate-limit
 notice. In the 30-second profile phase REQs increased 31 -> 39 and duplicate wire

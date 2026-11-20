@@ -119,11 +119,11 @@ Use a fresh worktree-local report directory and the real package.
 
 ```sh
 pnpm --dir web build:real
-node scripts/signing-latency-probe.mjs dist heavy-post
-FEED_VIEWS=0 node scripts/signing-latency-probe.mjs dist warm-post
-SIGN_MODE=reaction node scripts/signing-latency-probe.mjs dist paced-reaction
+pnpm bench:signing dist heavy-post
+FEED_VIEWS=0 pnpm bench:signing dist warm-post
+SIGN_MODE=reaction pnpm bench:signing dist paced-reaction
 SIGN_MODE=reaction SAMPLE_INTERVAL=145 FEED_BURST=34 ACCEPT_DELIVERY_FAILURES=1 \
-  node scripts/signing-latency-probe.mjs dist heavy-reaction
+  pnpm bench:signing dist heavy-reaction
 ```
 
 Set `SIGNER=protected`, `SIGNER=extension` or `SIGNER=remote` to select

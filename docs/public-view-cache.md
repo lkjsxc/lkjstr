@@ -51,6 +51,15 @@ to the next retained row without changing the surviving rows' order.
 
 ## Verification
 
+Run the loopback browser regression against a real build with a prebuilt
+fixture signer. It checks verified row replay while Worker startup is delayed.
+
+```sh
+pnpm --dir web build:real
+cargo build -p lkjstr-core --example engine-fixtures
+LKJSTR_FIXTURE_HELPER="$PWD/target/debug/examples/engine-fixtures" pnpm --dir web smoke:public-cache
+```
+
 On 2026-11-17, all 27 focused frontend cases and the full frontend check passed.
 This includes private-author/account-face exclusion, EOSE retention, explicit
 removal, count lineage/generation/durability and complete model hydration.

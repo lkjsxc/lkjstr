@@ -174,7 +174,7 @@ table and writes the required Japanese line after reviewing the limits.
 
 ## Harness checks
 
-node scripts/race-test.mjs checks public-identity decoding, fail-closed outbound
+`pnpm test:harnesses` checks public-identity decoding, fail-closed outbound
 guards, missing-run median behavior, the local production response policy,
 scoped non-multiplexed route arguments and refusal of failed TLS/HTTP probes.
 Phone checks reject missing rule witnesses, preserve dedicated-worker shaping

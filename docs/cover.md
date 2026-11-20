@@ -82,8 +82,8 @@ scorecards distinguish actual scheduler frames from rejected strategy simulation
 The original implementation is also run against the same coalescing and duplicate
 fixtures when recording the before scorecard; normal gates assert current behavior.
 
-scripts/engine-cover-sample.mjs is manual and excluded from automated gates. It
-uses the same public profile, fresh Worker/IndexedDB and three preconnected guarded
+The historical cover comparison uses the same public profile, fresh
+Worker/IndexedDB and three preconnected guarded
 transports for each 30-second run. The engine selects its own requests; idle warmed
 transports may remain unused. All sockets permit REQ/CLOSE only. Only allowlisted
 NIP-11 HTTP is permitted. The profile timer excludes transport warmup in both arms.
@@ -91,6 +91,10 @@ The relay set is yabu.me, nos.lol and relay.primal.net; damus failed warmup twic
 Results include visible note IDs, historical unique IDs, wire-kind attribution,
 rate-limit notices and simultaneous socket counts. Sequential public samples have
 unknown ground truth and are not a controlled latency benchmark.
+
+```sh
+git show 8e8733596086e5dbdd75e8cb3be5b1af27113134:scripts/engine-cover-sample.mjs
+```
 
 Raw runs, medians, targets, rejected experiments and gate results are retained in
 ignored tmp/cover-public.json and tmp/cover-report.md. tmp/cover-note.txt contains
