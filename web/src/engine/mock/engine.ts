@@ -136,6 +136,7 @@ export function createMockEngine(
         config = msg.config;
         world.linkPreviews = config.linkPreviews !== false;
         core.clientTag = config.clientTag !== false;
+        core.slow = config.mock?.slow;
         if (!started && config.mock?.accounts === 'none') core.who.clear();
         if (started) live();
         else start();

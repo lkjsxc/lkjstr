@@ -1,5 +1,5 @@
 // Shared mock policy and bounded fixture subscriptions.
-import type { FromEngine, PatchOp, Query } from '../protocol.ts';
+import type { EngineConfig, FromEngine, PatchOp, Query } from '../protocol.ts';
 import { createAccounts } from './accounts.ts';
 import { liveWindow, sendFresh } from './live-window.ts';
 import { privateListAccountSnapshot, privateListState } from './private-lists.ts';
@@ -54,6 +54,7 @@ export function createCore(post: (msg: FromEngine) => void, now: () => number) {
     world,
     timelines,
     clientTag: true,
+    slow: undefined as NonNullable<EngineConfig['mock']>['slow'],
     subs,
     post,
     now,

@@ -5,6 +5,7 @@
 /* The row the note keys act on: a quiet bar and a breath of tint, never an outline that jumps from note to note. */
 .list > .sel { background: color-mix(in srgb, var(--wash) 60%, transparent); box-shadow: inset 3px 0 var(--accent); }
 .note.pending { opacity: 0.7; }
+.home-draft .acts { height: 28px; }
 .note.hid { padding: 6px 12px; font-size: 12.5px; }
 .nrow { display: grid; grid-template-columns: var(--avatar, 36px) minmax(0, 1fr); gap: 0 10px; }
 .avb { align-self: start; flex: none; padding: 0; border-radius: 50%; line-height: 0; }

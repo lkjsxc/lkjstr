@@ -6,7 +6,7 @@ import { h } from '../shared/h.ts';
 import { t } from '../shared/i18n.ts';
 import { ability, failureText } from './can.ts';
 import { draftButtons, draftMedia } from './draft-row.ts';
-import { faceButton, nameButton } from './parts.ts';
+import { faceButton, nameButton, nipMark } from './parts.ts';
 import type { ViewEnv } from './registry.ts';
 
 export type HomeDraft = {
@@ -56,6 +56,9 @@ export function homeDraftForEdit(key: string | undefined, account: string): Home
   return draft?.author.pubkey === account && draft.failure ? draft : undefined;
 }
 
+// From Post until the verified note takes its place, the draft carries the Sending mark a signed note carries, however
+// long signing takes: the reader sees one steady state. Only a remote signer still waiting after ten seconds says so,
+// since the reader can act on it there. `data-phase` stays for the checks.
 function renderDraft(entry: HomeDraft, env: ViewEnv): HTMLElement {
   const { author, draft, failure, remote, signed, waiting } = entry;
   const phase = failure ? 'failed' : signed ? 'sending' : 'signing';
@@ -65,7 +68,6 @@ function renderDraft(entry: HomeDraft, env: ViewEnv): HTMLElement {
       class: `note home-draft ${failure ? 'cdraft' : 'pending'}`,
       'data-draft': entry.key,
       'data-phase': phase,
-      'aria-label': phase === 'signing' ? t('note.signingLabel') : null,
     },
     h(
       'div',
@@ -78,21 +80,16 @@ function renderDraft(entry: HomeDraft, env: ViewEnv): HTMLElement {
           'div',
           { class: 'nhead' },
           nameButton(author, env),
+          nipMark(author),
           h(
             'time',
             { title: fullTime(entry.at) },
-            failure
-              ? ''
-              : t(
-                  signed
-                    ? 'note.sending'
-                    : remote && waiting
-                      ? 'account.busy.remote'
-                      : 'note.signing',
-                ),
+            failure ? '' : t(!signed && remote && waiting ? 'account.busy.remote' : 'note.sending'),
           ),
         ),
         h('div', { class: 'content' }, h('div', { class: 'text' }, draft.text), draftMedia(draft)),
+        // The room of the action row the signed note will have, so that nothing below moves when it arrives.
+        failure ? null : h('div', { class: 'acts', 'aria-hidden': 'true' }),
         failure
           ? h('div', { class: 'cresult' }, h('span', { class: 'error' }, failureText(failure)))
           : null,

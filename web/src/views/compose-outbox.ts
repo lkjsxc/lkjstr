@@ -28,7 +28,10 @@ type Box = {
   drafts: ChannelDraft[];
   busy: Set<ChannelDraft>;
   listeners: Set<Watch>;
-  deliveryWatch?: AbortController;
+  /** Each send follows its own late answers (bound: the drafts here, plus the latest once settled). */
+  watches: Map<ChannelDraft, AbortController>;
+  /** The send the composer's result line follows. */
+  latest?: ChannelDraft;
 };
 // One entry per mounted composer or unsettled send; released when both are gone.
 const boxes = new Map<string, Box>();
@@ -61,6 +64,7 @@ export function createChannelOutbox(
       drafts: saved.drafts ?? legacy,
       busy: new Set(),
       listeners: new Set(),
+      watches: new Map(),
     };
     boxes.set(key, box);
     kv.set(`view:${key}`, { id: box.id, drafts: box.drafts });
@@ -69,7 +73,8 @@ export function createChannelOutbox(
   const { id, drafts, busy, listeners } = currentBox;
   const release = (): void => {
     if (busy.size || listeners.size || drafts.some((item) => hasHomeDraft(item.homeKey))) return;
-    currentBox.deliveryWatch?.abort();
+    for (const watch of currentBox.watches.values()) watch.abort();
+    currentBox.watches.clear();
     if (boxes.get(key) === box) boxes.delete(key);
   };
   const el = h('div', { class: 'outbox' });
@@ -150,8 +155,13 @@ export function createChannelOutbox(
   async function send(item: ChannelDraft): Promise<void> {
     if (busy.has(item)) return;
     busy.add(item);
-    currentBox.deliveryWatch?.abort();
-    const watch = (currentBox.deliveryWatch = new AbortController());
+    // Another post while this one is unsettled keeps both counts current; settled ones nobody shows are let go.
+    for (const [settled, old] of currentBox.watches)
+      if (settled === item || !drafts.includes(settled))
+        old.abort(), currentBox.watches.delete(settled);
+    const watch = new AbortController();
+    currentBox.watches.set(item, watch);
+    currentBox.latest = item;
     let entry = homeEntry(item);
     if (entry) showHomeDraft(entry);
     const remote = entry?.remote
@@ -161,7 +171,7 @@ export function createChannelOutbox(
       : undefined;
     let final = false;
     const show: Watch['delivery'] = (...args) => {
-      if (currentBox.deliveryWatch === watch) delivered(...args);
+      if (currentBox.latest === item && !watch.signal.aborted) delivered(...args);
     };
     show([], false);
     notify();

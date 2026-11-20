@@ -2,6 +2,7 @@
 import type { Author, Emoji, Segment } from '../engine/protocol.ts';
 import { type Child, h } from '../shared/h.ts';
 import { t } from '../shared/i18n.ts';
+import { icon } from '../shared/icons.ts';
 import { knownPerson, onPerson } from '../shared/people.ts';
 import { UNDO_MS } from './held.ts';
 import type { ViewEnv } from './registry.ts';
@@ -171,3 +172,17 @@ export async function copy(env: ViewEnv, text: string): Promise<void> {
     toast(env.layer, t('copyFailed'));
   }
 }
+
+/** The person's checked name beside their name (also on the reader's own unsigned draft in Home). */
+export const nipMark = (a: Author): HTMLElement | null =>
+  a.nip05
+    ? h(
+        'span',
+        {
+          class: a.verified ? 'nip ok' : 'nip',
+          title: a.verified ? t('nip05.ok') : t('nip05.unchecked'),
+        },
+        a.verified ? icon('check') : null,
+        a.nip05,
+      )
+    : null;

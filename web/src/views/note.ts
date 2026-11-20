@@ -12,7 +12,7 @@ import { actionRow, reactionChips } from './note-actions.ts';
 import { stableNoteWidths } from './note-fit-geometry.ts';
 import { mediaGrid } from './note-media.ts';
 import { quoteCard } from './note-quote.ts';
-import { displayName, faceButton, how, nameButton, plainName, segments } from './parts.ts';
+import { displayName, faceButton, how, nameButton, nipMark, plainName, segments } from './parts.ts';
 import type { ViewEnv } from './registry.ts';
 
 const timeOf = (row: NoteRow, env: ViewEnv, dated: boolean): string => {
@@ -47,17 +47,7 @@ function head(row: NoteRow, env: ViewEnv, dated: boolean): HTMLElement {
     'div',
     { class: 'nhead' },
     nameButton(a, env),
-    a.nip05
-      ? h(
-          'span',
-          {
-            class: a.verified ? 'nip ok' : 'nip',
-            title: a.verified ? t('nip05.ok') : t('nip05.unchecked'),
-          },
-          a.verified ? icon('check') : null,
-          a.nip05,
-        )
-      : null,
+    nipMark(a),
     a.bot ? h('span', { class: 'badge' }, t('note.bot')) : null,
     h('time', { title: fullTime(row.at) }, timeOf(row, env, dated)),
     // Where the tile is too narrow for a bookmark button, a set bookmark is this mark instead.
