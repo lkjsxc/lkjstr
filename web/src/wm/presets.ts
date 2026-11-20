@@ -9,26 +9,27 @@ export const GUEST = 'guest';
 /** The family for who is reading: an account's own, or the visitor's. */
 export const familyOf = (signedIn: boolean): string => (signedIn ? FAMILY : GUEST);
 
-/** Workspace 1, for a visitor and a reader alike: Global and Home at the left; at the right the composer over
- * Accounts, Notifications and Settings. What is in front fits who reads: a visitor starts on Global with the way
- * in beside it, a reader on Home with their notifications. A window too narrow for two columns gets one tile. */
+/** Workspace 1, for a visitor and a reader alike: Home at the left, Notifications in the middle, and at the right
+ * the composer over Accounts and Settings, in equal halves. Global waits behind Home; a visitor, whose Home is
+ * empty, starts on it. Under 1200px Notifications joins the lower right tile; under 760px everything is one tile. */
 export function homePreset(width = globalThis.innerWidth || 1440, family = FAMILY): LayoutNode {
-  const guest = family === GUEST;
-  const read = ['global', 'home'];
-  const own = ['account', 'notifications', 'settings'];
-  const front = guest ? 'global' : 'home';
-  if (width < 760) return pane([...read, 'compose', ...own], front);
+  const read = pane(['home', 'global'], family === GUEST ? 'global' : 'home');
+  const own = ['account', 'settings'];
+  if (width < 760) return pane([...read.tabs, 'notifications', 'compose', ...own], read.active);
+  if (width < 1200)
+    return split(
+      'row',
+      [read, split('col', [pane(['compose']), pane(['notifications', ...own])], [0.5, 0.5])],
+      [0.56, 0.44],
+    );
   return split(
     'row',
     [
-      pane(read, front),
-      split(
-        'col',
-        [pane(['compose']), pane(own, guest ? 'account' : 'notifications')],
-        [0.34, 0.66],
-      ),
+      read,
+      pane(['notifications']),
+      split('col', [pane(['compose']), pane(own, 'account')], [0.5, 0.5]),
     ],
-    width < 1200 ? [0.56, 0.44] : [0.6, 0.4],
+    [0.4, 0.3, 0.3],
   );
 }
 

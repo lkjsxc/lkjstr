@@ -11,7 +11,7 @@ import { plainName } from '../views/parts.ts';
 import { kindOf, viewOf } from '../views/registry.ts';
 import { homeTitle } from '../views/their-home.ts';
 import { CHOICES } from './choices.ts';
-import { type Choice, matchesWords } from './launcher.ts';
+import { type Choice, matchesWords, titleRank } from './launcher.ts';
 import { openPopover } from './menus.ts';
 
 export type TabFinder = {
@@ -63,19 +63,20 @@ export function tabHits(api: Pick<TabFinder, 'tabs' | 'show' | 'open'>, typed: s
         go: () => api.show(tab, workspace),
       }),
     );
-  // A view's exact name wins over a word in another view's description ("Relays" used to choose Global).
-  const exact = (c: Choice): number => Number(c.title.toLowerCase() === text.toLowerCase());
+  // A name wins over a word in another description ("Relays" used to choose Global, "terms" Documentation).
   const here = new Set(
     api
       .tabs()
       .filter((tab) => tab.here && !tab.workspace)
       .map((tab) => kindOf(tab.tab)),
   );
-  const kinds = CHOICES.choices()
-    .filter((c) => text || !here.has(c.kind))
-    .filter((c) => matchesWords(c.search, text))
-    .sort((a, b) => exact(b) - exact(a));
-  return [...tabs, ...kinds.map(kind), ...(text ? CHOICES.typed(text).map(kind) : [])];
+  const kinds = [
+    ...CHOICES.choices()
+      .filter((c) => text || !here.has(c.kind))
+      .filter((c) => matchesWords(c.search, text)),
+    ...(text ? CHOICES.typed(text) : []),
+  ].sort((a, b) => titleRank(b.title, text) - titleRank(a.title, text));
+  return [...tabs, ...kinds.map(kind)];
 }
 
 let closeSearch: (() => void) | undefined;

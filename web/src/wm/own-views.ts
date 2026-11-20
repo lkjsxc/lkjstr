@@ -30,6 +30,8 @@ export type OwnViews = {
   menu(tab: string): readonly MenuItem[];
   /** A tab id for another instance of `kind`, with no state left over from a closed one; `state` is what it starts with. */
   fresh(kind: string, used: ReadonlySet<string>, state?: object): string;
+  /** Gives a tab id back the state a retired tab left (an undone reset), before it is drawn again. */
+  revive(tab: string, state?: object): void;
   /** Unmounts a tab that is being closed and returns the state it leaves, so it can be opened again as it was. */
   retire(tab: string): object;
   /** Before a render: remembers where every mounted view is scrolled. */
@@ -55,6 +57,11 @@ export function createOwnViews(
   const mounts = new Map<string, Mounted>(); // bound: one per open tab
   const titles = new Map<string, string>(); // bound: one per open tab
   const instance = (tab: string): string => `${family}:${tab}`;
+  const revive = (tab: string, state?: object): void => {
+    dropViewState(instance(tab));
+    if (state) restoreViewState(instance(tab), state);
+    titles.delete(tab);
+  };
   return {
     el(tab) {
       const def = viewOf(tab);
@@ -164,11 +171,10 @@ export function createOwnViews(
     menu: (tab) => mounts.get(tab)?.menu?.() ?? [],
     fresh(kind, used, state) {
       const tab = freshTab(kind, used);
-      dropViewState(instance(tab));
-      if (state) restoreViewState(instance(tab), state);
-      titles.delete(tab);
+      revive(tab, state);
       return tab;
     },
+    revive,
     retire(tab) {
       mounts.get(tab)?.dispose(); // a view writes what it still held (its reading position) as it goes
       mounts.delete(tab);

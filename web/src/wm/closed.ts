@@ -12,6 +12,8 @@ export type ClosedTab = {
 export type Closed = {
   push(tab: ClosedTab): void;
   pop(): ClosedTab | undefined;
+  /** Takes back this very entry (an undone reset); false when it has already gone. */
+  take(tab: ClosedTab): boolean;
   size(): number;
 };
 
@@ -53,6 +55,13 @@ export function createClosed(space: string): Closed {
       const tab = list.pop();
       write();
       return tab;
+    },
+    take(tab) {
+      const i = list.lastIndexOf(tab);
+      if (i < 0) return false;
+      list.splice(i, 1);
+      write();
+      return true;
     },
     size: () => list.length,
   };

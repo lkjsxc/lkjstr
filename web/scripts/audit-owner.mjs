@@ -98,7 +98,7 @@ export async function auditOwner({
       await fact(
         6,
         'visitor-layout',
-        (returning || (await page.locator('.pane').count()) === (width === 390 ? 1 : 3)) &&
+        (returning || (await page.locator('.pane').count()) === (width === 390 ? 1 : 4)) &&
           (await page.locator('.tab').first().getAttribute('data-view')) !== 'write',
       );
       await find('Accounts', 'account');
@@ -257,7 +257,7 @@ export async function auditOwner({
       await page.locator('.tsearch input').fill('Global');
       await fact(7, 'tab-search', (await page.locator('.tsearch .titem.open').count()) > 0);
       await page.keyboard.press('Enter');
-      await find('Docs', 'docs');
+      await find('Documentation', 'docs');
       await page.evaluate(() => document.activeElement?.blur());
       const tabs = await page.locator('.tab').count();
       await page.keyboard.press('x');

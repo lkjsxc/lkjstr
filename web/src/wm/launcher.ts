@@ -33,13 +33,22 @@ export const matchesWords = (search: string, typed: string): boolean =>
     .filter(Boolean)
     .every((w) => search.includes(w));
 
+/** How well a title answers the typed text: named exactly, then starting so, then anything else. A page named
+ * "Terms" goes before Documentation, whose description mentions terms. Exported for tab search. */
+export const titleRank = (title: string, typed: string): number => {
+  const a = title.toLowerCase();
+  const b = typed.trim().toLowerCase();
+  return b && a === b ? 2 : b && a.startsWith(b) ? 1 : 0;
+};
+
 export function mountLauncher(el: HTMLElement, api: LauncherApi, instance = ''): Launcher {
   const state = loadViewState<{ search?: string }>(instance);
   const list = h('div');
   const shown = (): Choice[] => {
     const text = filter.value.trim();
     const views = api.choices().filter((c) => matchesWords(c.search, text));
-    return text ? [...views, ...api.typed(text)] : views;
+    const all = text ? [...views, ...api.typed(text)] : views;
+    return all.sort((a, b) => titleRank(b.title, text) - titleRank(a.title, text));
   };
   const card = (c: Choice, first: boolean): HTMLElement =>
     h(

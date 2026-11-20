@@ -2,7 +2,7 @@ import { t } from '../shared/i18n.ts';
 import { keyCaps } from '../shared/keys.ts';
 import { kindOf, type OpenOpts, viewOf } from '../views/registry.ts';
 import { CHOICES } from './choices.ts';
-import { createClosed } from './closed.ts';
+import { type ClosedTab, createClosed } from './closed.ts';
 import type { Host } from './host.ts';
 import { type Choice, NEW_TAB } from './launcher.ts';
 import * as L from './layout.ts';
@@ -11,6 +11,7 @@ import { openMenu } from './menus.ts';
 import { type BaseEnv, createOwnViews } from './own-views.ts';
 import { FAMILY, presetOf } from './presets.ts';
 import { type Rendered, renderLayout } from './render.ts';
+import { resetLayout } from './reset.ts';
 import { startResize } from './resize.ts';
 import type { Space } from './spaces.ts';
 import { keepStrips } from './strip.ts';
@@ -23,6 +24,8 @@ export type Wm = {
   go(kind: string): void;
   compose(): void;
   drop(kind: string): void;
+  /** Back to the default arrangement (`undoable`: with an Undo toast); see `reset.ts`. */
+  reset(undoable: boolean): void;
   search(): void;
   show(tab: string): void;
   dispose(): void;
@@ -48,17 +51,16 @@ export function createWmController(
   const back = new Map<string, { view: string; el?: HTMLElement }>(); // bound: one per such open tab
 
   const closed = createClosed(`${family}${at.index}`);
-  const retire = (view: string): void => {
+  const retire = (view: string): ClosedTab | undefined => {
     const p = L.paneOfView(root, view);
     const state = own.retire(view);
     if (kindOf(view) === NEW_TAB) return;
-    closed.push({
-      kind: kindOf(view),
-      state,
-      pane: p?.id ?? '',
-      index: p?.tabs.indexOf(view) ?? 0,
-    });
+    const c = { kind: kindOf(view), state, pane: p?.id ?? '', index: p?.tabs.indexOf(view) ?? 0 };
+    closed.push(c);
+    return c;
   };
+  const reset = (undoable: boolean): void =>
+    void resetLayout(resets, preset(), undoable && host.layer);
   const reopen = (): void => {
     const c = closed.pop();
     const p = L.panes(root).find((x) => x.id === c?.pane) ?? cur();
@@ -135,6 +137,7 @@ export function createWmController(
     close,
   );
 
+  const resets = { root: () => root, set, retire, own, closed, live: () => !disposed };
   const ctx = {
     title: own.title,
     onTabDown(view: string, e: PointerEvent, tab: HTMLElement) {
@@ -163,7 +166,7 @@ export function createWmController(
           label: t('pane.close'),
           run: () => (p.tabs.forEach(retire), set(L.closePane(root, p.id))),
         },
-        { label: t('pane.reset'), run: () => set(preset()) },
+        { label: t('pane.reset'), run: () => reset(true) },
       ]);
     },
     onAdd(p: L.PaneNode) {
@@ -278,6 +281,7 @@ export function createWmController(
       else openFrom('')(kind);
     },
     compose,
+    reset,
     search: () => openTabSearch(host.layer, finder),
     show,
     dispose() {

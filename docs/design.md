@@ -42,7 +42,7 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
 
 ## The frame
 - Top bar, 38px: name, nine workspace chips, tab search, new note, account.
-  The name is a menu (Settings, Relays, Stats, Docs). The relay count is a setting, off.
+  The name is a menu (Settings, Relays, Stats, Documentation). The relay count is a setting, off.
 - Signed in, the account is the active account's face (remembered on the
   device; read-only has a mark) and a menu of the reader's own: their row,
   which opens their profile, the other accounts, and Accounts. Signed out
@@ -57,19 +57,28 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
   closes the tab in front. `O` opens tab search over the tile: open tabs,
   then what a new tab could be; Enter goes there. An empty query omits kinds already open in this tile.
   Tab search also finds the tabs of the other workspaces, marked with their number.
+  The New tab page lists each kind once, Documentation among them; a page of it
+  (Shortcuts, Terms) comes up once its name is typed. A title that is the typed
+  text, or starts with it, goes before a word found in a description.
   `N` goes to the Post tab that is open (a setting: always a new one).
 - Menus close on outside press, Escape, scroll and after choosing. No close
-  buttons on menus. Shortcuts are a page of Docs, in the platform's names.
+  buttons on menus. Shortcuts are a page of Documentation, in the platform's names.
 - Opening a note or a person opens a tab in the same tile, right after the current one, in front. Shift-click splits, middle click opens behind.
 - The address bar stays `/`; `/n/<note>` and `/p/<npub>` open a tab.
-- The default layout, also what "Reset layout" gives: Global and Home at
-  the left; at the right Post over Accounts, Notifications, Settings. One
-  tile under 760px. Views respond to their tile (container queries).
+- The default layout, also what "Reset layout" gives: Home at the left
+  (Global behind it), Notifications in the middle, and at the right Post over
+  Accounts and Settings in equal halves; widths 40/30/30. Under 1200px
+  Notifications joins the lower right tile; under 760px one tile. Views
+  respond to their tile (container queries).
+- A saved arrangement is the reader's until they reset it (tile menu, or
+  Settings: Layout); one never rearranged takes up a new default once.
+  Reset closes the tabs the default lacks the ordinary way, so what they held
+  waits in the closed tabs, and offers Undo. It touches layout only.
 - A list fills its tile. Only media, single form controls and prose pages keep a measure of their own.
 
 ## Signed out, and accounts
 - A visitor's layout is their own but starts from the same arrangement, with
-  Global and the Accounts tab in front (a reader: Home and Notifications).
+  Global and the Accounts tab in front (a reader: Home and Accounts).
   No welcome page, no prose. Signing in shows the reader's own layout and
   closes the tab that signed in; signing out shows the visitor's again.
 - The Accounts tab is the sign-in surface. It starts with its content: the
@@ -179,10 +188,12 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
   and sent only when its Undo toast (8 seconds) has gone, or when the page is
   hidden or closed. Removing a bookmark, a mute or a relay offers Undo too.
 - Errors are said in words, in a toast, in the reader's language.
-## Settings, Relays, Stats, Docs
+## Settings, Relays, Stats, Documentation
 - Settings is ytenrich's settings page in a tab: one searchable list,
   "Group: Name" titles, a description, numbers where a number is meant, a
-  mark and a reset on changed entries.
+  mark and a reset on changed entries. Under the search, the group names in
+  one quiet line go to their group (the relay list is one press away).
+  Settings opens at its top unless it was opened for one entry.
 - Relays shows state and changes nothing: one flat list, the reader's own
   first, with state, latency, event counts and why each is there. The list
   is edited in Settings only (the tile menu leads to that entry, and to
@@ -194,7 +205,7 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
   Route words, followed-author coverage and weights are sortable columns. Never-connected traffic and all-zero compound cells show one dash; nonzero publication counts show even before a connection. Heads and cells name every compound part in localized tooltips.
   Narrow tiles show Relay, Received and Answer; tapping a row unfolds the other labelled values, one row at a time, retained per tab. Relay names elide inside the host and keep the tail. No horizontal scrolling.
   A second table shows request purposes, weights, counts and completion marks; narrow tiles show Purpose and Relay, with the request id and other values in retained unfolded lines.
-- Docs is a tab with a tree of groups and pages: what lkjstr is, release
+- Documentation is one tab with a tree of groups and pages: what lkjstr is, release
   and licence, keys and safety, relays, filters, shortcuts, the privacy
   policy, the terms. A page names its tab and is found by name in tab search.
   Selecting another page opens it at the top; restoring a tab keeps its position.

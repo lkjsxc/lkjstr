@@ -74,7 +74,13 @@ let picked: number | undefined; // this browser tab's workspace, once it chose o
 let incoming: (() => void) | undefined; // opens the tab of an incoming link (until the engine has spoken)
 let family = ''; // the layout family `ctl` shows: the reader's own, or the visitor's while signed out
 const active = (): number => picked ?? parseActive(store.get(spacesKey(FAMILY)));
-const env = { engine, settings, layer: host.layer, resetLayouts: () => store.reset() };
+// This workspace goes back with Undo. Every layout: this one first (its closed tabs keep what they held), then the rest
+// are forgotten.
+const resetLayouts = (every: boolean): void => {
+  ctl?.reset(!every);
+  if (every) store.reset();
+};
+const env = { engine, settings, layer: host.layer, resetLayouts };
 
 function update(): void {
   const n = active();

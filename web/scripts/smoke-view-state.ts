@@ -29,7 +29,7 @@ export async function prepareViewChecks(page: Page, check: Check): Promise<() =>
     mediaTab = await page.locator('.pane.cur .tab.active').getAttribute('data-view');
     await go('Global');
   }
-  await go('Docs');
+  await go('Documentation');
   await front('docs').getByText('Privacy policy', { exact: true }).click();
   const reset = await front('docs').evaluate(async (el) => {
     // A short tile keeps both pages scrollable, so clamping cannot hide a failed reset.
