@@ -46,6 +46,40 @@ export async function finishAccounts({ page, other, relayUrl, check, launch }) {
   check('signed-out relay edit survives reload', (await visitorRelay.count()) === 1);
 }
 
+/** The default a reset gives at 1440px (wm/presets.ts): Home with Global behind it, Notifications, then Post over
+ * Accounts and Settings. Each tile's tabs in order, its front tab starred. The seeded layout has four tiles too. */
+const RESET_1440 = ['home* global', 'notifications*', 'compose*', 'account* settings'];
+/** Workspace 1 as drawn and as stored for the signed-in reader, with the page language and Home's tab title. */
+const arrangement = (page) =>
+  page.evaluate(() => {
+    const line = (tabs, active) => tabs.map((v) => `${v}${v === active ? '*' : ''}`).join(' ');
+    const walk = (n) => (n.type === 'pane' ? [n] : n.children.flatMap(walk));
+    const raw = localStorage.getItem('lkjstr:layout:main');
+    return {
+      drawn: [...document.querySelectorAll('.pane')].map((p) => {
+        const tabs = [...p.querySelectorAll('.tab')];
+        return line(
+          tabs.map((t) => t.dataset.view),
+          tabs.find((t) => t.classList.contains('active'))?.dataset.view,
+        );
+      }),
+      stored: raw === null ? null : walk(JSON.parse(raw)).map((p) => line(p.tabs, p.active)),
+      lang: document.documentElement.lang,
+      home: document.querySelector('.tab[data-view="home"]')?.title,
+    };
+  });
+/** Whether the reset default is drawn (and, unless `stored` is false, also stored) in `lang` with Home titled `home`. */
+async function resetShown(page, lang, home, stored = true) {
+  const a = await arrangement(page);
+  const ok =
+    a.drawn.join() === RESET_1440.join() &&
+    (!stored || a.stored?.join() === RESET_1440.join()) &&
+    a.lang === lang &&
+    a.home === home;
+  if (!ok) console.error('reset-layout-diagnostic', JSON.stringify({ want: RESET_1440, ...a }));
+  return ok;
+}
+
 export async function reviewSettings({
   page,
   ctx,
@@ -67,18 +101,22 @@ export async function reviewSettings({
     await page.locator('.pane.cur .strip').getByTitle('Tile menu', { exact: true }).click();
     await page.locator('.menu button').getByText('Reset layout', { exact: true }).click();
     await page.locator('.view[data-kind="home"] .note').first().waitFor();
-    check('Reset layout brings Home forward with real notes after Channels and Stats');
+    // Its save is still pending here: the stored layout follows on pagehide, and each reload must read it back.
+    check(
+      'Reset layout brings Home forward with real notes after Channels and Stats',
+      await resetShown(page, 'en', 'Home', false),
+    );
     await page.evaluate(() => localStorage.setItem('lkjstr:settings', '{"language":"ja"}'));
     await page.reload();
     await page.locator('.view[data-kind="home"] .note').first().waitFor();
     await page.waitForTimeout(1200);
-    check('reset Home survives reload in Japanese', (await page.locator('.pane').count()) === 3);
+    check('reset Home survives reload in Japanese', await resetShown(page, 'ja', 'ホーム'));
     await shot(page, 'slice-signedin-1440-ja.png');
     await page.evaluate(() => localStorage.removeItem('lkjstr:settings'));
     await page.reload();
     await page.locator('.view[data-kind="home"] .note').first().waitFor();
+    check('reset Home survives another reload in English', await resetShown(page, 'en', 'Home'));
   }
-  if (shots) check('reset Home survives another reload in English');
   await launch('Settings', 'settings');
   await page.getByLabel('Theme', { exact: true }).selectOption('dark');
   await page.reload();

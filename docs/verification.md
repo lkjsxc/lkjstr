@@ -24,6 +24,7 @@ In web/, run pnpm check, pnpm build and pnpm smoke (mock UI plus real loopback u
 engine. The real check covers Global/Home, note/profile/thread navigation, search, compose/sign/publish, reactions, relay settings across reload and two
 tabs. All browser servers bind fresh loopback ports and use fresh local data. HTTP uses loopback TLS media fixtures or interception, relays are loopback
 fixtures, and no checks publish to public relays. browser-relay.mjs remains a shared bounded fixture helper.
+The ship-facing preflight is LKJSTR_SHOTS=1 pnpm smoke:real, exactly as scripts/ship-run.sh runs it: the flag adds checks plain smoke:real skips.
 
 The Worker harness validates replies against this worktree's protocol.ts and drives every mock message kind, action name and query source. It includes
 cache restart, signer validation, uploads, visibility release, shared clients, leader loss and a simulated idle clock. The optional cold-start benchmark is
@@ -123,7 +124,6 @@ exhausted selection versus an empty list. Worker conformance passes 224/224 chec
 test clock proves HTTP, discovery, signing and processing share one budget; a late signer reply cannot resume an expired upload. Restored Blossom endpoints
 recover through both row checks and explicit retries. The delayed profile probe also passes. All four quiet gates and frontend check/build/smoke/smoke:real
 pass. The ordinary smoke includes 128 real upload checks; the full real smoke has zero page errors.
-
 
 ## Notes, reader state, previews and branch review (2026-11-15)
 
