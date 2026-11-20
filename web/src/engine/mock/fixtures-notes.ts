@@ -396,6 +396,11 @@ export const NOTES: readonly NoteSpec[] = [
       ['😂', 9],
     ],
   },
+  {
+    by: 'kenji',
+    ago: 600,
+    text: '新しく作った絵文字 :slow-cat: を置いているサーバーが、今日はとても遅いようです。',
+  },
   { by: 'yuki', ago: 640, text: 'おはよう。さむい。' },
   {
     by: 'sam',

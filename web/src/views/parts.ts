@@ -4,6 +4,7 @@ import { type Child, h } from '../shared/h.ts';
 import { t } from '../shared/i18n.ts';
 import { icon } from '../shared/icons.ts';
 import { knownPerson, onPerson } from '../shared/people.ts';
+import { inlineEmoji } from './emoji-load.ts';
 import { UNDO_MS } from './held.ts';
 import type { ViewEnv } from './registry.ts';
 
@@ -68,20 +69,12 @@ export function withEmoji(text: string, emoji: readonly Emoji[] = []): Child[] {
     return url ? emojiImg(part, url) : part;
   });
 }
-/** A custom emoji. One whose picture cannot be had is its `:code:` as plain text, not a broken image. What it is
- * shows in a popover (emoji-peek.ts), so it has no tooltip of its own. */
-export function emojiImg(code: string, url: string): HTMLElement {
-  const img = h('img', {
-    class: 'emo',
-    src: url,
-    alt: code,
-    loading: 'lazy',
-    decoding: 'async',
-    draggable: false,
-  });
-  img.addEventListener('error', () => img.replaceWith(code));
-  return img;
-}
+/** A custom emoji in text (emoji-load.ts): a box of the line's height that does not change while in view, a picture
+ * loaded ahead of the reader, and its `:code:` when the picture cannot be had. What it is shows in a popover
+ * (emoji-peek.ts), so it has no tooltip of its own. `focusable`: it stands alone (not inside a button or link), so
+ * the keyboard can reach it and its popover. */
+export const emojiImg = (code: string, url: string, focusable = false): HTMLElement =>
+  inlineEmoji(code, url, focusable);
 
 export const displayName = (a: Author): Child[] => withEmoji(nameOf(a), a.emoji);
 /** The name as plain text (tab titles, tooltips). */
@@ -115,11 +108,12 @@ export function faceButton(a: Author, env: ViewEnv, cls = 'av'): HTMLElement {
   return el;
 }
 
-/** Note text. Links say where they go; mentions and hashtags open tabs. */
-export function segments(list: readonly Segment[], env: ViewEnv): Child[] {
+/** Note text. Links say where they go; mentions and hashtags open tabs. `inside`: drawn inside a control (a
+ * quoted note), so its custom emoji take no tab stop of their own. */
+export function segments(list: readonly Segment[], env: ViewEnv, inside = false): Child[] {
   return list.map((s) => {
     if (s.k === 'text') return s.text;
-    if (s.k === 'emoji') return emojiImg(`:${s.code}:`, s.url);
+    if (s.k === 'emoji') return emojiImg(`:${s.code}:`, s.url, !inside);
     if (s.k === 'link')
       return h(
         'a',

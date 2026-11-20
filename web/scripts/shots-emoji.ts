@@ -10,6 +10,7 @@ export const EMOJI_SCENES = [
   'emoji-search',
   'emoji-tones',
   'emoji-peek',
+  'emoji-peek-keys',
   'emoji-reaction',
 ] as const;
 
@@ -114,6 +115,19 @@ export async function emojiShots(scene: Scene): Promise<void> {
       await page.locator('.epeek').evaluate((e) => getComputedStyle(e).pointerEvents),
       'none',
     );
+  });
+  await scene('emoji-peek-keys', '/', async (page) => {
+    // Tab from the author's name to the first custom emoji in the text.
+    const emoji = page.locator('.note .text img.emo').first();
+    await emoji.scrollIntoViewIfNeeded();
+    const owner = page.locator('.note').filter({ has: page.locator('.text img.emo') });
+    await owner.first().locator('.name').first().focus();
+    for (let n = 0; n < 12; n++) {
+      if (await page.evaluate(() => document.activeElement?.matches('img.emo') === true)) break;
+      await page.keyboard.press('Tab');
+    }
+    await page.locator('.epeek').waitFor();
+    assert.ok(await page.evaluate(() => document.activeElement?.matches('.note .text img.emo')));
   });
   await scene('emoji-reaction', '/', async (page) => {
     const chip = page.locator('.note .rchip:has(img.emo)').first();

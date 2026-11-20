@@ -3,37 +3,75 @@
 // picture and, for the set's emoji, the set address. Images point at https addresses this run cannot reach, so the
 // picker's cells show their codes: the fallback is exercised too.
 
-export async function emojiRealChecks({ page, fake, check, addWish, owner, launch }) {
-  const set = `30030:${owner}:lkjstr-smoke`;
-  const own = { code: 'smoke_cat', url: 'https://emoji.invalid/cat.png' };
-  const listed = { code: 'smoke-dog', url: 'https://emoji.invalid/dog.png' };
-  await addWish(
-    30030,
-    '',
-    [
-      ['d', 'lkjstr-smoke'],
-      ['title', 'Smoke set'],
-      ['emoji', listed.code, listed.url],
-    ],
-    owner,
-  );
-  await addWish(
-    10030,
-    '',
-    [
-      ['emoji', own.code, own.url],
-      ['a', set],
-    ],
-    owner,
-  );
+const OWN = { code: 'smoke_cat', url: 'https://emoji.invalid/cat.png' };
+const LISTED = { code: 'smoke-dog', url: 'https://emoji.invalid/dog.png' };
+const setOf = (owner) => `30030:${owner}:lkjstr-smoke`;
 
+/** The reader's list and the set it names, added just before the check (so they change nothing the earlier checks
+ * see). The loopback store drops what exceeds its bound: a dropped event fails here, by name. */
+export async function seedEmoji({ fake, addWish, owner }) {
+  const events = [
+    await addWish(
+      30030,
+      '',
+      [
+        ['d', 'lkjstr-smoke'],
+        ['title', 'Smoke set'],
+        ['emoji', LISTED.code, LISTED.url],
+      ],
+      owner,
+    ),
+    await addWish(
+      10030,
+      '',
+      [
+        ['emoji', OWN.code, OWN.url],
+        ['a', setOf(owner)],
+      ],
+      owner,
+    ),
+  ];
+  if (!events.every((e) => fake.stored.some((s) => s.id === e.id)))
+    throw new Error('emoji fixtures were not stored');
+}
+
+export async function emojiRealChecks({ page, fake, check, owner, launch }) {
+  const set = setOf(owner);
+  const own = OWN;
+  const listed = LISTED;
   await launch('Post', 'compose');
   const compose = page.locator('.pane.cur .view[data-kind="compose"]:visible');
   const text = `emoji smoke ${Date.now()} `;
   await compose.locator('textarea').fill(text);
-  await compose.locator('.icon:has(.i-smile)').click();
+  const smile = compose.locator('.icon:has(.i-smile)');
+  await smile.click();
+  // One opening brings the reader's own list, drawn at the top, and the set it names: the list arrives during this
+  // opening (it was never read before), so the set is asked for on the engine's next round.
   const setCell = page.locator('.epick .egroup[data-section="set:Smoke set"] .ecell').first();
-  await setCell.waitFor({ timeout: 15000 });
+  try {
+    await setCell.waitFor({ timeout: 15000 });
+  } catch {
+    // Say what did arrive: the sections drawn, the lists asked for, and who posted last.
+    await page.screenshot({ path: 'tmp/screens/emoji-real-failure.png' });
+    const detail = {
+      sections: await page
+        .locator('.epick .egroup')
+        .evaluateAll((gs) =>
+          gs.map((g) => `${g.dataset.section}:${g.querySelectorAll('.ecell').length}`),
+        ),
+      asked: fake.activeFilters().filter((f) => f.kinds?.some((k) => k === 10030 || k === 30030)),
+      poster: fake.published.filter((e) => e.kind === 1).at(-1)?.pubkey === owner,
+      stored: fake.stored
+        .filter((e) => e.kind === 10030 || e.kind === 30030)
+        .map((e) => e.pubkey === owner),
+    };
+    throw new Error(`the reader's emoji sets did not arrive: ${JSON.stringify(detail)}`);
+  }
+  check(
+    "the picker's first opening draws the reader's own list at the top",
+    (await page.locator('.epick .egroup').first().getAttribute('data-section')) === 'set:' &&
+      (await page.locator('.epick .egrid').evaluate((g) => g.scrollTop)) === 0,
+  );
   // The pictures cannot be had here: each cell says its code instead.
   await setCell.locator('.efail').waitFor();
   await page.locator('.epick .egroup[data-section="set:"] .ecell .efail').first().waitFor();

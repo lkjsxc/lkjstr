@@ -21,7 +21,10 @@
 .name { flex: 0 1 auto; min-width: 0; padding: 0; overflow: hidden; font-weight: 600; text-align: left; text-overflow: ellipsis; white-space: nowrap; }
 .name:hover { text-decoration: underline; }
 .name.quiet { font-weight: 500; }
-.emo { height: 1.25em; width: auto; min-width: 1em; max-width: 4em; object-fit: contain; vertical-align: -0.25em; -webkit-touch-callout: none; }
+/* A custom emoji keeps its box while in view (emoji-load.ts sets its width); a failed one is its code. */
+.emo { height: 1.25em; object-fit: contain; vertical-align: -0.25em; -webkit-touch-callout: none; }
+.emo.efail { display: inline-block; height: 1.25em; line-height: 1.25em; overflow: hidden; color: var(--muted); text-overflow: ellipsis; white-space: nowrap; }
+.emo.efail.held { font-size: 0.6em; height: 2.0833em; line-height: 2.0833em; vertical-align: -0.4167em; text-align: center; }
 .nip { display: inline-flex; align-items: center; gap: 2px; flex: 0 10 auto; min-width: 0; overflow: hidden; color: var(--faint); font-size: 12.5px; text-overflow: ellipsis; white-space: nowrap; }
 .nip .i { width: 12px; height: 12px; color: var(--ok); }
 .nhead time, .qhead time, .nfaces time { flex: none; margin-left: auto; color: var(--faint); font-size: 12.5px; font-variant-numeric: tabular-nums; }
@@ -65,6 +68,7 @@
 .rchip:hover { border-color: var(--sep); color: var(--fg); }
 .rchip.on { border-color: var(--accent); background: var(--wash); color: var(--fg); }
 .rchip .emo { height: 16px; vertical-align: 0; }
+img.emo:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; border-radius: 3px; }
 /* The action row: reply, repost, reaction, then the rest. The four that carry a count share the width equally,
    so every count starts at the same distance from its icon and never moves its neighbours; the three without
    one grow on the same rhythm, up to 56px. */

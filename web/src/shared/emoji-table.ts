@@ -1,6 +1,7 @@
 // The Unicode table, fetched once from the hashed file the build wrote, and kept for the page's life. It is asked for
-// when the page has been idle for a moment, so the picker usually opens with it in hand. Without it (offline before
-// the first visit cached it, or a failed fetch) the picker offers the common emoji of emoji-data.ts.
+// when the picker first opens (frequently used and the reader's own emoji draw before it; the offline shell keeps the
+// file, so it comes from the device). Nothing is done for it before that: a reader who never opens the picker pays
+// nothing. Without it (a failed fetch) the picker offers the common emoji of emoji-data.ts.
 import { GLYPHS } from './emoji-data.ts';
 import { fold, type Glyph, glyphsOf } from './emoji-find.ts';
 
@@ -38,11 +39,4 @@ export function emojiTable(): Promise<readonly Glyph[]> {
       return list.length ? list : COMMON;
     });
   return asked;
-}
-
-/** Ask for the table once the page is idle. */
-export function warmEmojiTable(): void {
-  const go = (): void => void emojiTable();
-  if ('requestIdleCallback' in globalThis) requestIdleCallback(go, { timeout: 8000 });
-  else setTimeout(go, 3000);
 }

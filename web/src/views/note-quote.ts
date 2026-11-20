@@ -12,7 +12,7 @@ const timeOf = (at: number, env: ViewEnv): string =>
 export function quoteCard(q: Quote, env: ViewEnv, noteId: string): HTMLElement {
   if (q.state !== 'ok') return h('div', { class: 'quote muted' }, t(`quote.${q.state}`));
   const open = readNoteState(env.instance, noteId).quotes?.includes(q.id);
-  const body = (): HTMLElement => h('div', { class: 'qtext' }, segments(q.segments, env));
+  const body = (): HTMLElement => h('div', { class: 'qtext' }, segments(q.segments, env, true));
   const cover = h(
     'button',
     { class: 'cw' },

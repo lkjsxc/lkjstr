@@ -13,6 +13,8 @@ export const EMOJI: Record<string, string> = {
   yatta: emojiTile('祝', 0),
   'ocha-nomu': emojiTile('茶', 95),
   nemui: emojiTile('眠', 240),
+  /** A picture that cannot be had (in no set): the smoke delays its failure while its note is in view. */
+  'slow-cat': 'https://emoji.invalid/slow-cat.png',
 };
 /** The reader's custom emoji by set: the first is their own list (kind 10030), the others sets it names (30030). */
 export const EMOJI_SETS: readonly (readonly [set: string, d: string, codes: readonly string[]])[] =

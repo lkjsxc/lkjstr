@@ -189,6 +189,8 @@ export function openEmojiPicker(
     },
   );
   sub.window('top', 0, 400);
+  // In view while open: the engine keeps asking for the reader's lists and the sets they name (close drops it).
+  sub.visible(true);
   draw();
   if (!table)
     void emojiTable().then((list) => {

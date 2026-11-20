@@ -15,7 +15,7 @@ export function actChip(act: ActRef): HTMLElement {
   return h(
     'span',
     { class: 'rchip act-chip', title: url ? null : reactionLabel(emoji) },
-    url ? emojiImg(emoji, url) : reactionLabel(emoji),
+    url ? emojiImg(emoji, url, true) : reactionLabel(emoji),
   );
 }
 

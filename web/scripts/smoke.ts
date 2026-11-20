@@ -1274,6 +1274,71 @@ async function reading(browser: Browser, still: Record<string, unknown>): Promis
       )),
   );
   await page.mouse.move(2, 2);
+  // The keyboard reaches a custom emoji in note text with Tab, and its popover follows; a press on it is still a
+  // press on the note.
+  const owner = page
+    .locator(`${feed} .note`)
+    .filter({ has: page.locator('.text img.emo') })
+    .first();
+  await owner.locator('.name').first().focus();
+  for (let n = 0; n < 12; n++) {
+    if (await page.evaluate(() => document.activeElement?.matches('img.emo') === true)) break;
+    await page.keyboard.press('Tab');
+  }
+  await page.locator('.epeek').waitFor();
+  fact(
+    'Tab reaches a custom emoji in a note and shows its popover',
+    (await page.evaluate(() => document.activeElement?.matches('.note .text img.emo') === true)) &&
+      (await page.locator('.epeek .ename').innerText()) ===
+        (await page.evaluate(() => document.activeElement?.getAttribute('alt'))),
+  );
+  await page.keyboard.press('Shift+Tab');
+  fact('leaving it with the keyboard closes the popover', (await count(page, '.epeek')) === 0);
+  await inline.click();
+  await page.locator('.th-focus').waitFor();
+  fact('a press on a custom emoji opens its note', (await count(page, '.epeek')) === 0);
+  await page.locator('.tab[data-view^="thread"]').click({ button: 'middle' });
+  await page.locator(`${feed} .note`).first().waitFor();
+  // A picture that fails late, while its note is in view, keeps its box: nothing in the note moves, and the code is
+  // drawn small inside it. Once the note has been out of sight the code is whole.
+  await page.route('https://emoji.invalid/**', async (route) => {
+    // Long enough that, whenever it was asked for, the failure comes after the note is in view.
+    await new Promise((done) => setTimeout(done, 4000));
+    // An empty answer is a picture that cannot be had, without an error in the console.
+    await route.fulfill({ status: 204, body: '' });
+  });
+  await page.reload();
+  const slowFirst = page.locator(`${feed} .note:has([alt=":slow-cat:"])`).first();
+  await slowFirst.waitFor({ state: 'attached' });
+  // Held by its key: the picture's alt goes with the picture.
+  const slowKey = await slowFirst.getAttribute('data-key');
+  const slowNote = page.locator(`${feed} .note[data-key="${slowKey}"]`);
+  await slowNote.evaluate((n) => n.scrollIntoView({ block: 'center' }));
+  const shape = () =>
+    slowNote.evaluate((n) => {
+      const next = n.nextElementSibling?.getBoundingClientRect().top ?? 0;
+      return `${n.getBoundingClientRect().height} ${next - n.getBoundingClientRect().top}`;
+    });
+  const inView = await shape();
+  await slowNote.locator('.efail').waitFor({ timeout: 10000 });
+  const failed = await shape();
+  const held = await slowNote.locator('.efail.held').count();
+  fact(
+    'a picture that fails while its note is in view moves nothing; its code waits in its box',
+    failed === inView && held === 1,
+    { inView, failed, held },
+  );
+  await page.locator(feed).evaluate((e) => (e.scrollTop = 0));
+  await page.waitForFunction(() => !document.querySelector('.efail.held'));
+  await slowNote.evaluate((n) => n.scrollIntoView({ block: 'center' }));
+  fact(
+    'out of sight, the failed emoji becomes its whole code',
+    await slowNote
+      .locator('.efail')
+      .evaluate((e) => e.textContent === ':slow-cat:' && e.scrollWidth <= e.clientWidth),
+  );
+  await page.unroute('https://emoji.invalid/**');
+  await page.locator(feed).evaluate((e) => (e.scrollTop = 0));
 
   const notes = '.view[data-kind="notifications"]';
   fact('four notification toggles', (await count(page, `${notes} .ntype`)) === 4);

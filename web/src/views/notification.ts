@@ -65,7 +65,7 @@ export function renderNotification(row: NotificationRow, env: ViewEnv): HTMLElem
   const mark =
     row.type === 'reaction' && row.emoji
       ? row.emoji.url && row.emoji.emoji.startsWith(':')
-        ? emojiImg(row.emoji.emoji, row.emoji.url)
+        ? emojiImg(row.emoji.emoji, row.emoji.url, true)
         : reactionLabel(row.emoji.emoji)
       : icon(row.type === 'repost' ? 'repost' : row.type === 'zap' ? 'zap' : 'user');
   const target = row.target;

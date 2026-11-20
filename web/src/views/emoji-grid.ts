@@ -72,7 +72,11 @@ export function createGrid(hooks: Hooks) {
   /** `keep`: the same things arrived again or more of them (the reader's sets, the table): stay where the reader is. */
   function draw(next: readonly Section[], keep = false): void {
     const groups = [...el.querySelectorAll<HTMLElement>('.egroup')];
-    const top = keep ? groups.filter((g) => g.offsetTop <= el.scrollTop).pop() : undefined;
+    // A reader who has not scrolled stays at the top, where what arrived (their own emoji) is drawn first.
+    const top =
+      keep && el.scrollTop > 0
+        ? groups.filter((g) => g.offsetTop <= el.scrollTop).pop()
+        : undefined;
     const place = top
       ? { id: top.dataset.section ?? '', by: el.scrollTop - top.offsetTop }
       : undefined;

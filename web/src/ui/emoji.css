@@ -30,17 +30,17 @@
 .efail { max-width: 100%; overflow: hidden; color: var(--faint); font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
 .enone { padding: 24px 6px; font-size: 12.5px; text-align: center; }
 /* The strip: always this tall, takes no pointer, and only its words change. */
-.eprev { display: flex; flex: none; align-items: center; gap: 10px; box-sizing: border-box; height: 50px; margin: 0 -6px; padding: 0 12px; border-top: 1px solid var(--line); pointer-events: none; }
-.ebig { display: grid; flex: none; place-items: center; width: 36px; height: 36px; font-size: 32px; line-height: 1; object-fit: contain; }
-.etext { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+/* Owner, 2026-11-20: what is under the pointer is shown large, its name beside it. */
+.eprev { display: flex; flex: none; align-items: center; gap: 14px; box-sizing: border-box; height: 88px; margin: 0 -6px; padding: 0 12px; border-top: 1px solid var(--line); pointer-events: none; }
+.ebig { display: grid; flex: none; place-items: center; width: 72px; height: 72px; font-size: 60px; line-height: 1; object-fit: contain; }
+.etext { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .ename, .ecode { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ename { color: var(--fg); }
-.ecode { color: var(--faint); font-size: 12px; }
+.ename { color: var(--fg); font-size: 15px; }
+.ecode { color: var(--faint); font-size: 12.5px; }
 .ecode:empty { display: none; }
 .ebig.efail { width: auto; max-width: 120px; font-size: 12px; }
 /* A custom emoji's own popover: the strip's contents, larger picture, never in the way of a press. */
-.epeek { position: absolute; z-index: 11; display: flex; align-items: center; gap: 10px; max-width: 260px; padding: 8px 12px 8px 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--raised); box-shadow: 0 6px 24px rgba(0, 0, 0, 0.25); pointer-events: none !important; }
-.epeek .ebig { width: 56px; height: 56px; font-size: 44px; }
+.epeek { position: absolute; z-index: 11; display: flex; align-items: center; gap: 12px; max-width: 320px; padding: 8px 12px 8px 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--raised); box-shadow: 0 6px 24px rgba(0, 0, 0, 0.25); pointer-events: none !important; }
 @media (pointer: coarse) {
   .ehead { height: 40px; }
   .etone { width: 40px; }
