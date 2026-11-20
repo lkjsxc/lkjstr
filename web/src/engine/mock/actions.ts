@@ -6,7 +6,7 @@ import type { Action, Delivery, Draft, Failure, FromEngine, ToEngine } from '../
 import { channelAct, channelTouched, chatter } from './channels.ts';
 import type { Core } from './engine.ts';
 import { FILLER } from './fixtures-notes.ts';
-import { byHandle, byPubkey, SELF } from './people.ts';
+import { byHandle, byPubkey, type Person, SELF } from './people.ts';
 import { retryLists } from './private-lists.ts';
 import { answers, isKnown, relayUrl } from './relays.ts';
 import { createUploads } from './uploads.ts';
@@ -32,12 +32,17 @@ export function createActions(core: Core) {
   const fail = (req: string, code: Failure['code'], message?: string): void =>
     post({ t: 'result', req, ok: false, error: { code, message } });
 
-  /** Plays the per-relay answers of a publish, then the result. */
-  const deliver = (req: string, extra: { id?: string } = {}, after?: () => void): void => {
+  /** Plays the per-relay answers of a publish (`late`: that much later each), then the result. */
+  const deliver = (
+    req: string,
+    extra: { id?: string } = {},
+    after?: () => void,
+    late = 0,
+  ): void => {
     const relays: Delivery[] = RELAYS.map(([url]) => ({ url, state: 'pending' }));
     post({ t: 'delivery', req, relays: [...relays] });
     RELAYS.forEach(([url, ms, state, message], i) =>
-      later(ms, () => {
+      later(ms + late, () => {
         relays[i] = { url, state, message };
         post({ t: 'delivery', req, relays: [...relays] });
         if (i === 1) after?.(); // two relays have it: no longer pending
@@ -48,6 +53,36 @@ export function createActions(core: Core) {
   };
 
   const uploads = createUploads(core);
+
+  /** Signs a note (it arrives, pending, in the reader's lists) and sends it. */
+  function sign(
+    req: string,
+    w: Extract<Extract<Action, { a: 'publish' }>['what'], { k: 'note' }>,
+    text: string,
+    self: Person,
+    late = 0,
+  ): void {
+    const n = world.arrive(self, text, core.now(), {
+      re: w.draft.replyTo,
+      channel: w.draft.channel ?? world.byId.get(w.draft.replyTo ?? '')?.channel,
+      quote: w.draft.quote,
+      cw: w.draft.cw,
+      pending: true,
+      client: core.clientTag ? 'lkjstr' : undefined,
+      media: (w.draft.media ?? []).map((m) => ({
+        type: m.type,
+        url: m.url,
+        w: m.w,
+        h: m.h,
+        alt: m.alt,
+      })),
+    });
+    if (!n.channel) post({ t: 'publish.signed', req, id: n.id });
+    core.arrived(n);
+    if (n.re) core.changed(n.re);
+    if (n.channel) channelTouched(core, n.channel);
+    deliver(req, { id: n.id }, () => ((n.pending = false), core.changed(n.id)), late);
+  }
 
   function run(req: string, a: Action): void {
     if (a.a === 'lists.retry') return retryLists(core, req, a.as);
@@ -67,26 +102,9 @@ export function createActions(core: Core) {
           const text = expandMentions(w.draft).trim();
           if (/\bairdrop\b/i.test(text))
             return later(600, () => fail(req, 'rejected', 'blocked: spam filter'));
-          const n = world.arrive(self, text, core.now(), {
-            re: w.draft.replyTo,
-            channel: w.draft.channel ?? world.byId.get(w.draft.replyTo ?? '')?.channel,
-            quote: w.draft.quote,
-            cw: w.draft.cw,
-            pending: true,
-            client: core.clientTag ? 'lkjstr' : undefined,
-            media: (w.draft.media ?? []).map((m) => ({
-              type: m.type,
-              url: m.url,
-              w: m.w,
-              h: m.h,
-              alt: m.alt,
-            })),
-          });
-          if (!n.channel) post({ t: 'publish.signed', req, id: n.id });
-          core.arrived(n);
-          if (n.re) core.changed(n.re);
-          if (n.channel) channelTouched(core, n.channel);
-          return deliver(req, { id: n.id }, () => ((n.pending = false), core.changed(n.id)));
+          const slow = core.slow && text.includes(core.slow.when) ? core.slow : undefined;
+          if (slow?.sign) return later(slow.sign, () => sign(req, w, text, self, slow.relays));
+          return sign(req, w, text, self, slow?.relays);
         }
         const n = world.byId.get(w.id);
         if (!n) return fail(req, 'not-found');

@@ -179,10 +179,11 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
   that switches accounts), emoji, media, Post. A primary button that cannot
   act yet is neutral. Sending and failed drafts stay below the field; failed Edit swaps keep both drafts.
   Reopened tabs restore drafts; fresh tabs start empty. Hidden composers release mention lookups.
-  Delivery counts follow late answers; unanswered rows are neutral and disappear on confirmation. Only final all-refused delivery is red.
+  Delivery counts follow late answers, each post in flight its own; unanswered rows are neutral and disappear on confirmation. Only final all-refused delivery is red.
 - Pressing Post empties the field and leaves the caret in it at once, whatever the signer; what is being sent is shown below, and a failure keeps its text.
-- At Post, Home shows the retained draft with Signing in the time slot. A remote signer still waiting after ten seconds gets the existing remote
-  waiting mark. Refused or failed signing keeps the draft with Retry, Edit and discard. The draft is replaced by the verified event by its exact id.
+- At Post, Home shows the retained draft at once with the Sending mark and the room of an action row, as a signed note: a slow
+  signer looks like any send. Only a remote signer still waiting after ten seconds gets the remote waiting mark. Refused or failed
+  signing keeps the draft with Retry, Edit and discard. The verified event takes the draft's place, by its exact id, without moving it.
 - A signed note appears locally in Home, the author's profile and its thread with the existing Sending mark. At the head it follows the live list.
   While reading farther down, the new-notes pill counts arrivals above the held row and says "Your note" with an up arrow
   when the newest above is the reader's own. Pressing the pill returns to the top. Confirmation updates the same row in place.

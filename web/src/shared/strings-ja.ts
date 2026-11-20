@@ -65,8 +65,6 @@ export const ja: Record<keyof typeof en, string> = {
   'note.show': '表示する',
   'note.more': '続きを読む',
   'note.bot': 'ボット',
-  'note.signing': '署名中…',
-  'note.signingLabel': 'あなたのノート（署名待ち）',
   'note.sending': '送信中…',
   'nip05.ok': 'この名前は確認済みで、この鍵のものです',
   'nip05.unchecked': 'この名前は確認できていません',

@@ -191,6 +191,8 @@ The bounded resolution and exact representative policy follow
 Relay Stats add optional firstEventMs, requestUses and readTimeouts: verified first-event latency, session REQ envelopes and bounded read timeout score.
 Inactive routes without retained transport observations report null.
 
+Mock-only `EngineConfig.mock.slow` signs one matching note late and delays its relay answers (the pending-UI fixture); the real engine ignores `mock`.
+
 ## Public signing timing
 
 - Optional `act.signingTiming: { at, hidden, boot, restart }` records enqueue for public signing actions. Existing callers can omit it.
