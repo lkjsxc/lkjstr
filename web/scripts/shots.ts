@@ -5,6 +5,7 @@
 import { spawn } from 'node:child_process';
 import { mkdirSync } from 'node:fs';
 import { type Browser, chromium, type Page } from 'playwright-core';
+import { browserTmp } from './browser-tmp.ts';
 import { createAccountFailureShots } from './shots-account-failure.ts';
 import { actsShots } from './shots-acts.ts';
 import { dmShots } from './shots-dm.ts';
@@ -13,7 +14,7 @@ import { keysShots } from './shots-keys.ts';
 import { looksShots } from './shots-looks.ts';
 
 const here = new URL('..', import.meta.url).pathname;
-process.env.TMPDIR ??= `${here}../tmp/temp`;
+process.env.TMPDIR = browserTmp(process.env.TMPDIR ?? `${here}../tmp/temp`);
 process.env.XDG_CACHE_HOME ??= `${here}../tmp/cache`;
 process.env.XDG_CONFIG_HOME ??= `${here}../tmp/config`;
 process.env.XDG_DATA_HOME ??= `${here}../tmp/data`;

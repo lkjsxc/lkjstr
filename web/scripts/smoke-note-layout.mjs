@@ -7,6 +7,7 @@ import { loadavg } from 'node:os';
 import { join, resolve } from 'node:path';
 import { build } from 'esbuild';
 import { chromium } from 'playwright-core';
+import { browserTmp } from './browser-tmp.ts';
 
 const root = resolve(new URL('../..', import.meta.url).pathname);
 const option = (key, fallback) =>
@@ -17,7 +18,7 @@ if (!['rail', 'native', 'both'].includes(mode)) throw Error('mode must be rail, 
 const modes = mode === 'both' ? ['rail', 'native'] : [mode];
 if (!Number.isInteger(count) || count < 2 || count > 2500)
   throw Error('rows must be between 2 and 2500');
-const tmp = process.env.LKJSTR_TEST_TMPDIR ?? join(root, 'tmp/t');
+const tmp = browserTmp(process.env.LKJSTR_TEST_TMPDIR ?? join(root, 'tmp/t'));
 await mkdir(tmp, { recursive: true });
 process.env.TMPDIR = tmp;
 await mkdir(join(root, 'tmp'), { recursive: true });

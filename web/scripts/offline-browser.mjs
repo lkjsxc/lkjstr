@@ -3,6 +3,7 @@ import { mkdir, mkdtemp, readdir, realpath, rm } from 'node:fs/promises';
 import { join, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright-core';
+import { browserTmp } from './browser-tmp.ts';
 
 export async function shellBrowser() {
   const root = fileURLToPath(new URL('../../tmp/', import.meta.url));
@@ -12,7 +13,8 @@ export async function shellBrowser() {
   const owned = await realpath(root);
   const resolved = requested ? await realpath(requested).catch(() => '') : '';
   const base = resolved === owned || resolved.startsWith(owned + sep) ? requested : root;
-  const scratch = await mkdtemp(join(base, 'sw-'));
+  // mkdtemp adds `/sw-` and six characters below the base.
+  const scratch = await mkdtemp(join(browserTmp(base, 10), 'sw-'));
   const previousTmp = process.env.TMPDIR;
   let browser;
   try {

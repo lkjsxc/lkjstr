@@ -12,6 +12,7 @@ import { fakeMediaSet } from '../../scripts/browser-media.mjs';
 import { fakeRelay } from '../../scripts/browser-relay.mjs';
 import { auditFixtures } from './audit-fixtures.mjs';
 import { auditOwner } from './audit-owner.mjs';
+import { browserTmp } from './browser-tmp.ts';
 import { channelScenarios } from './smoke-channels.mjs';
 import { emojiRealChecks, seedEmoji } from './smoke-emoji-real.mjs';
 import { realReaderChecks } from './smoke-reader.mjs';
@@ -26,7 +27,7 @@ import { wishes } from './smoke-wishes.mjs';
 
 const root = new URL('../../', import.meta.url).pathname;
 process.chdir(root);
-process.env.TMPDIR ??= `${root}tmp/temp`;
+process.env.TMPDIR = browserTmp(process.env.TMPDIR ?? `${root}tmp/temp`);
 process.env.XDG_CACHE_HOME ??= `${root}tmp/cache`;
 process.env.XDG_CONFIG_HOME ??= `${root}tmp/config`;
 process.env.XDG_DATA_HOME ??= `${root}tmp/data`;

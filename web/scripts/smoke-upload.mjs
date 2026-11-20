@@ -9,6 +9,7 @@ import bundle from 'playwright-core/lib/utilsBundle';
 import { fakeBunker } from '../../scripts/browser-bunker.mjs';
 import { fakeMediaSet } from '../../scripts/browser-media.mjs';
 import { fakeRelay } from '../../scripts/browser-relay.mjs';
+import { browserTmp } from './browser-tmp.ts';
 import { uploadScenarios } from './smoke-uploads.mjs';
 
 const root = new URL('../../', import.meta.url).pathname;
@@ -23,6 +24,7 @@ for (const [key, path] of Object.entries({
   process.env[key] ??= `${root}tmp/${path}`;
 process.env.CARGO_BUILD_JOBS = '4';
 process.env.RUST_TEST_THREADS = '4';
+process.env.TMPDIR = browserTmp(process.env.TMPDIR);
 await mkdir(process.env.TMPDIR, { recursive: true });
 const signer = spawn('cargo', ['run', '-q', '-p', 'lkjstr-core', '--example', 'engine-fixtures'], {
   stdio: ['pipe', 'pipe', 'pipe'],

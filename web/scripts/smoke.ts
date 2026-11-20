@@ -8,6 +8,7 @@ import { type Browser, chromium, type Page } from 'playwright-core';
 import { PROTOCOL_VERSION } from '../src/engine/protocol.ts';
 import { dayOf } from '../src/shared/format.ts';
 import { KEYS } from '../src/shared/keys.ts';
+import { browserTmp } from './browser-tmp.ts';
 import { notesChecks } from './smoke-notes.ts';
 import { pendingChecks } from './smoke-pending.ts';
 import { resetChecks } from './smoke-reset.ts';
@@ -15,7 +16,7 @@ import { railSmoke } from './smoke-time-rail.ts';
 import { wishes } from './smoke-wishes.mjs';
 
 const here = new URL('..', import.meta.url).pathname;
-process.env.TMPDIR ??= resolve(here, '../tmp/temp');
+process.env.TMPDIR = browserTmp(process.env.TMPDIR ?? resolve(here, '../tmp/temp'));
 process.env.XDG_CACHE_HOME ??= resolve(here, '../tmp/cache');
 process.env.XDG_CONFIG_HOME ??= resolve(here, '../tmp/config');
 process.env.XDG_DATA_HOME ??= resolve(here, '../tmp/data');
