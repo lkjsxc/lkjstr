@@ -68,10 +68,8 @@ Internet path or an interactive browser session.
 
 Each attempt retains its revision, tarball, executed helper bytes and hashes,
 deployment/verification receipts and summary in `tmp/ship-<UTC>-<random>/`.
-Only a fully verified shipment sends the owner line. Notification failure
-records `SHIPPED ...; desk note failed`, so it does not invite redeployment.
-Set `LKJSTR_SHIP_NOTIFY=0` when the owner asks for a quiet shipment. The
-verified release and cooldown records still go to the normal run directory.
+Verified shipments send the owner line unless `LKJSTR_SHIP_NOTIFY=0`.
+`SHIPPED ...; desk note failed` records a successful release with a notification failure.
 
 The owner's limit is three hours between attempts. The shared successful
 timestamp must also be checked inside the acquired lock: an outer check can
