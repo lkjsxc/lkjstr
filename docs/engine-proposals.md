@@ -193,6 +193,6 @@ Inactive routes without retained transport observations report null.
 
 ## Public signing timing
 
-- Optional transport metadata on `act` carries `signingTiming: { at, hidden, boot, restart }` from its enqueue boundary. Existing callers can omit it.
+- Optional `act.signingTiming: { at, hidden, boot, restart }` records enqueue for public signing actions. Existing callers can omit it.
 - Optional `stats.signing` reports bounded `recent` and `slow` public signing timings.
   See [signing-latency.md](signing-latency.md) for stages, overlap and retention.

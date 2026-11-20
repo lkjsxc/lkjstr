@@ -66,6 +66,14 @@ struct Span {
 
 #[derive(Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
+struct Overlap {
+    phase: Activity,
+    total_ms: f64,
+    queued_ms: f64,
+}
+
+#[derive(Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
 struct Sample {
     kind: u64,
     signer: &'static str,
@@ -81,7 +89,7 @@ struct Sample {
     restart: bool,
     cache_busy_at_receipt: bool,
     account_busy_at_receipt: bool,
-    overlapping: Vec<(Activity, f64, f64)>,
+    overlapping: Vec<Overlap>,
 }
 #[derive(Default, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -195,15 +203,19 @@ impl Trace {
                 let busy = span.busy.min(overlap);
                 let blocked = (row.received_ms.min(span.end) - row.enqueue_ms.max(span.begin))
                     .clamp(0.0, span.busy);
-                if let Some((_, total, queued)) = row
+                if let Some(overlap) = row
                     .overlapping
                     .iter_mut()
-                    .find(|(k, _, _)| *k == span.activity)
+                    .find(|o| o.phase == span.activity)
                 {
-                    *total += busy;
-                    *queued += blocked;
+                    overlap.total_ms += busy;
+                    overlap.queued_ms += blocked;
                 } else {
-                    row.overlapping.push((span.activity, busy, blocked));
+                    row.overlapping.push(Overlap {
+                        phase: span.activity,
+                        total_ms: busy,
+                        queued_ms: blocked,
+                    });
                 }
             }
         }

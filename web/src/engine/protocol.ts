@@ -891,7 +891,18 @@ export type ToEngine =
       /** Let incoming rows fill the explicit before budget, including grouped rows. */
       readonly liveAbove?: boolean;
     }
-  | { readonly t: 'act'; readonly req: ReqId; readonly action: Action }
+  | {
+      readonly t: 'act';
+      readonly req: ReqId;
+      readonly action: Action;
+      /** Transport-owned monotonic enqueue metadata for public signing actions. */
+      readonly signingTiming?: {
+        readonly at: number;
+        readonly hidden: boolean;
+        readonly boot: boolean;
+        readonly restart: boolean;
+      };
+    }
   /** Answer to `sign`: the signed event as JSON text, or why not. */
   | { readonly t: 'signed'; readonly req: ReqId; readonly event?: string; readonly error?: string };
 
@@ -911,9 +922,8 @@ export type SigningSample = {
   readonly restart: boolean;
   readonly cacheBusyAtReceipt: boolean;
   readonly accountBusyAtReceipt: boolean;
-  /** Phase, milliseconds overlapping the action, and milliseconds before Worker receipt. */
-  readonly overlapping: readonly (readonly [
-    (
+  readonly overlapping: readonly {
+    readonly phase:
       | 'ingest'
       | 'verify'
       | 'plan'
@@ -924,11 +934,10 @@ export type SigningSample = {
       | 'idb'
       | 'sync'
       | 'boot'
-      | 'keyOperation'
-    ),
-    number,
-    number,
-  ])[];
+      | 'keyOperation';
+    readonly totalMs: number;
+    readonly queuedMs: number;
+  }[];
 };
 export type EngineStats = {
   /** Public-event timings in the current Worker only. All timestamps use its monotonic clock. */

@@ -28,7 +28,7 @@ export function fixture(run, fallback = false) {
   const port = () => ({ sent: [], onmessage: null, start() {}, close() { this.closed = true; },
     postMessage(message) { this.sent.push(message); } });
   set('crypto', webcrypto);
-  set('performance', { now: () => state.now });
+  set('performance', { timeOrigin: 1000, now: () => state.now });
   set('setInterval', (fn) => { state.tick = fn; return 1; });
   set('clearInterval', () => {});
   set('SharedWorker', fallback ? undefined : class {

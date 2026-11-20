@@ -159,3 +159,29 @@ test('explicit disposal and an ordinary first navigation retain their detach sem
     assert.equal(state.listeners('pageshow'), 0);
   });
 });
+
+test('public signing preserves enqueue time across boot and identifies a restarted route', () => {
+  fixture((transport, first, state) => {
+    const post = (req) => ({ t: 'act', req, action: {
+      a: 'publish', as: 'fixture', what: { k: 'note', draft: { text: 'fixture' } },
+    } });
+    state.now = 10;
+    const click = post('boot');
+    transport.post(click);
+    assert.equal(first.sent.length, 0);
+    assert.equal(click.signingTiming, undefined);
+    state.now = 100;
+    deliver(first, { t: 'ready', engine: 'fixture', version: 14 });
+    assert.deepEqual(first.sent.find((message) => message.t === 'act')?.signingTiming, {
+      at: 1010, hidden: false, boot: true, restart: false,
+    });
+
+    state.workers[0].onerror();
+    state.now = 110;
+    globalThis.document.visibilityState = 'hidden';
+    transport.post(post('restart'));
+    assert.deepEqual(state.ports[1].sent.find((message) => message.t === 'act')?.signingTiming, {
+      at: 1110, hidden: true, boot: false, restart: true,
+    });
+  });
+});

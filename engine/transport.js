@@ -1,4 +1,8 @@
 // Frontend Transport interface. No relay, event parsing or secret handling here.
+const publicSigningActions = new Set([
+  'publish', 'follow', 'mute', 'bookmark', 'profile.save', 'relays.save',
+  'servers.save', 'channel.join', 'channel.save',
+]);
 export function workerTransport(options = {}) {
   const client = crypto.randomUUID();
   // Old and new hashed engine graphs may coexist during an atomic release.
@@ -257,12 +261,14 @@ export function workerTransport(options = {}) {
         if(pending.has(msg.req)||zapReads.has(msg.req))return;
         if(pending.size>=64) {receive({t:'result',req:msg.req,ok:false,error:{code:'internal'}});return;}
         pending.add(msg.req);
-        msg = { ...msg, signingTiming: {
-          at: performance.timeOrigin + performance.now(),
-          hidden: document.visibilityState === 'hidden',
-          boot: !started,
-          restart: started && !readsReady,
-        } };
+        if (publicSigningActions.has(msg.action.a)) {
+          msg = { ...msg, signingTiming: {
+            at: performance.timeOrigin + performance.now(),
+            hidden: document.visibilityState === 'hidden',
+            boot: !started,
+            restart: started && !readsReady,
+          } };
+        }
         if(!started) {startup.push([msg,transfer]);return;}
       }
       send(msg,transfer);
