@@ -71,6 +71,8 @@ impl Engine {
         } else {
             let present: std::collections::BTreeSet<_> =
                 items.iter().map(|row| row.id.as_str()).collect();
+            let previous: std::collections::BTreeMap<_, _> =
+                v.rows.iter().map(|row| (row.id.as_str(), row)).collect();
             let mut ops: Vec<_> = v
                 .rows
                 .iter()
@@ -78,7 +80,7 @@ impl Engine {
                 .map(|r| Patch::Remove { id: r.id.clone() })
                 .collect();
             for (index, item) in items.iter().enumerate() {
-                if v.rows.get(index) != Some(item) {
+                if previous.get(item.id.as_str()) != Some(&item) {
                     ops.push(Patch::Upsert {
                         index,
                         item: Box::new(item.clone()),
@@ -86,6 +88,10 @@ impl Engine {
                 }
             }
             if !ops.is_empty()
+                || v.rows
+                    .iter()
+                    .map(|row| &row.id)
+                    .ne(items.iter().map(|row| &row.id))
                 || v.query.filters.notifications == Some(true)
                 || matches!(
                     v.query.source,
@@ -107,6 +113,7 @@ impl Engine {
                 self.outgoing.push(Output::Patch {
                     sub: sub.into(),
                     ops,
+                    order: items.iter().map(|row| row.id.clone()).collect(),
                 });
             }
         }

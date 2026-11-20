@@ -1,4 +1,3 @@
-use super::output_diff::diff;
 use super::*;
 use crate::engine::{Engine, protocol as p};
 use serde_json::json;
@@ -22,9 +21,11 @@ impl Session {
                     (at_top, at_bottom)
                 };
                 let mut rows = self.rows(&sub, &items, engine);
-                let account = self.queries.get(&sub).and_then(|q| q.account.as_deref());
-                for row in &mut rows {
-                    super::quote_state::settle(row, engine, account);
+                if self.projects_source(&sub) {
+                    let account = self.queries.get(&sub).and_then(|q| q.account.as_deref());
+                    for row in &mut rows {
+                        super::quote_state::settle(row, engine, account);
+                    }
                 }
                 self.delivered.insert(sub.clone(), rows.clone());
                 let mut out = vec![Output::Rows {
@@ -46,83 +47,7 @@ impl Session {
                 }
                 out
             }
-            p::Output::Patch { sub, ops } => {
-                // The wire protocol uses keys and insertion points, not numeric indices.
-                let mut old = self.delivered.get(&sub).cloned().unwrap_or_default();
-                let mut internal = Vec::new();
-                for op in ops {
-                    match op {
-                        p::Patch::Remove { id } => old.retain(|r| r["key"].as_str() != Some(&id)),
-                        p::Patch::Upsert { index, item } => internal.push((index, *item)),
-                    }
-                }
-                let mut next = old.clone();
-                for (index, row) in internal {
-                    next.retain(|r| r["key"].as_str() != Some(&row.id));
-                    let row = self.rows(&sub, &[row], engine).into_iter().next();
-                    if let Some(row) = row {
-                        let key = row["key"].clone();
-                        next.retain(|r| r["key"] != key);
-                        let at = index.min(next.len());
-                        next.insert(at, row);
-                    }
-                }
-                if self.queries.get(&sub).is_some_and(|q| {
-                    q.notifications == Some(true)
-                        || matches!(
-                            q.source.as_str(),
-                            "people"
-                                | "channels"
-                                | "channel"
-                                | "thread"
-                                | "profile"
-                                | "followers"
-                                | "following"
-                                | "mutes"
-                                | "list"
-                                | "notifications"
-                                | "bookmarks"
-                                | "relays"
-                                | "media-servers"
-                                | "emoji"
-                        )
-                }) {
-                    let next = self.source_rows(&sub, engine);
-                    let previous = self
-                        .delivered
-                        .insert(sub.clone(), next.clone())
-                        .unwrap_or_default();
-                    let ops = diff(&previous, &next);
-                    return if super::list_edges::finite(
-                        self.queries
-                            .get(&sub)
-                            .and_then(|q| q.convert())
-                            .map(|q| q.source),
-                    ) {
-                        let (at_top, at_bottom) = self.source_edges(&sub, engine);
-                        vec![Output::Rows {
-                            sub,
-                            rows: next,
-                            at_top,
-                            at_bottom,
-                        }]
-                    } else if ops.is_empty() {
-                        vec![]
-                    } else {
-                        vec![Output::Patch { sub, ops }]
-                    };
-                }
-                let previous = self
-                    .delivered
-                    .insert(sub.clone(), next.clone())
-                    .unwrap_or_default();
-                let ops = diff(&previous, &next);
-                if ops.is_empty() {
-                    vec![]
-                } else {
-                    vec![Output::Patch { sub, ops }]
-                }
-            }
+            p::Output::Patch { sub, ops, order } => self.patch(sub, ops, order, engine),
             p::Output::Fresh {
                 sub,
                 count,

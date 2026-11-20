@@ -18,6 +18,7 @@ mod notifications;
 mod output;
 mod output_diff;
 mod output_helpers;
+mod output_patch;
 mod people;
 mod previews;
 mod private_cache;

@@ -188,6 +188,8 @@ pub enum Output {
     Patch {
         sub: String,
         ops: Vec<Patch>,
+        // Final raw membership. A retained row can move without changing its model.
+        order: Vec<String>,
     },
     Fresh {
         sub: String,

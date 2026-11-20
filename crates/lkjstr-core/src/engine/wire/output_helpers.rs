@@ -56,14 +56,8 @@ impl Session {
             cancelled: None,
         }
     }
-    pub(super) fn rows(
-        &self,
-        sub: &str,
-        items: &[crate::engine::rows::Row],
-        engine: &Engine,
-    ) -> Vec<Value> {
-        let q = self.queries.get(sub);
-        if q.is_some_and(|q| {
+    pub(super) fn projects_source(&self, sub: &str) -> bool {
+        self.queries.get(sub).is_some_and(|q| {
             q.notifications == Some(true)
                 || matches!(
                     q.source.as_str(),
@@ -82,7 +76,16 @@ impl Session {
                         | "media-servers"
                         | "emoji"
                 )
-        }) {
+        })
+    }
+    pub(super) fn rows(
+        &self,
+        sub: &str,
+        items: &[crate::engine::rows::Row],
+        engine: &Engine,
+    ) -> Vec<Value> {
+        let q = self.queries.get(sub);
+        if self.projects_source(sub) {
             return self.source_rows(sub, engine);
         }
         items

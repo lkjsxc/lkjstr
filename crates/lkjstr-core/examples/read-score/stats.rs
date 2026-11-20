@@ -56,7 +56,7 @@ impl Stats {
                     self.rows
                         .insert(sub, items.into_iter().map(|r| r.id).collect());
                 }
-                Output::Patch { sub, ops } => {
+                Output::Patch { sub, ops, .. } => {
                     for op in ops {
                         match op {
                             Patch::Upsert { item, .. } => {
