@@ -11,6 +11,21 @@ pub struct CustomEmoji {
     pub address: Option<String>,
 }
 
+impl CustomEmoji {
+    pub fn from_parts(shortcode: &str, url: &str, address: Option<&str>) -> Option<Self> {
+        if !valid_custom_emoji_shortcode(shortcode) || !valid_custom_emoji_url(url) {
+            return None;
+        }
+        Some(Self {
+            shortcode: shortcode.to_owned(),
+            url: url.to_owned(),
+            address: address
+                .filter(|value| valid_custom_emoji_address(value))
+                .map(str::to_owned),
+        })
+    }
+}
+
 pub fn custom_emojis(event: &NostrEvent) -> Vec<CustomEmoji> {
     let mut emojis = Vec::new();
     for tag in &event.tags {
@@ -22,23 +37,10 @@ pub fn custom_emojis(event: &NostrEvent) -> Vec<CustomEmoji> {
 }
 
 pub fn custom_emoji_tag(tag: &[String]) -> Option<CustomEmoji> {
-    let name = tag.first()?;
-    let shortcode = tag.get(1)?;
-    let url = tag.get(2)?;
-    if name != "emoji" || !valid_incoming_custom_emoji_shortcode(shortcode) {
+    if tag.first()? != "emoji" {
         return None;
     }
-    if !valid_custom_emoji_url(url) {
-        return None;
-    }
-    Some(CustomEmoji {
-        shortcode: shortcode.to_owned(),
-        url: url.to_owned(),
-        address: tag
-            .get(3)
-            .filter(|value| valid_custom_emoji_address(value))
-            .cloned(),
-    })
+    CustomEmoji::from_parts(tag.get(1)?, tag.get(2)?, tag.get(3).map(String::as_str))
 }
 
 pub fn valid_custom_emoji_shortcode(value: &str) -> bool {
@@ -49,10 +51,7 @@ pub fn valid_custom_emoji_shortcode(value: &str) -> bool {
 }
 
 pub fn valid_incoming_custom_emoji_shortcode(value: &str) -> bool {
-    !value.is_empty()
-        && value
-            .bytes()
-            .all(|byte| byte.is_ascii_alphanumeric() || byte == b'_' || byte == b'-')
+    valid_custom_emoji_shortcode(value)
 }
 
 pub fn valid_custom_emoji_url(value: &str) -> bool {
@@ -66,7 +65,7 @@ pub fn valid_custom_emoji_address(value: &str) -> bool {
     let Some((pubkey, identifier)) = rest.split_once(':') else {
         return false;
     };
-    is_pubkey(pubkey) && valid_address_identifier(identifier)
+    is_pubkey(pubkey) && !identifier.is_empty()
 }
 
 pub fn custom_emoji_token_text(shortcode: &str) -> String {
@@ -125,11 +124,4 @@ fn split_url_address(value: &str) -> (&str, Option<String>) {
     } else {
         (value, None)
     }
-}
-
-fn valid_address_identifier(value: &str) -> bool {
-    !value.is_empty()
-        && !value
-            .chars()
-            .any(|item| item.is_whitespace() || item == ':')
 }

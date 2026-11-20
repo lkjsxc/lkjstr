@@ -124,9 +124,9 @@ Windows retain keys and reading anchors. Ordinary sides cap at 800 rows; retainA
 anchor as notes arrive. See [live-feed.md](live-feed.md). Time rails and ordinal seeks describe retained cache membership. Generation snapshots reject
 changed queries. Signed-out Global can filter repeated authors, duplicate bursts and absent profiles after successful untruncated metadata lookups.
 
-Notes display client tags, custom reactions, mentions, content warnings and image/video/audio metadata. Kind-30023 publishing exists as
-Draft.longForm; there is no parsed article document/reader. Note deletion checks authorship. Per-note reaction/repost detail and profile editing await
-surfaces.
+Notes display client tags, custom reactions, mentions, content warnings and image/video/audio metadata. Public notes, reactions, profile names and bios
+use their signed event's emoji tags. The picker passes known set coordinates into public note and reaction tags. See [emoji-sets.md](emoji-sets.md).
+`Draft.longForm` publishes kind 30023. Article reading, profile editing and per-note reaction/repost detail await surfaces. Deletion checks authorship.
 
 ## Accounts, routing and publication
 Account writes compare durable revisions; strict boot and schema fencing preserve rows across Worker graphs. Protocol13 separately reports account-load

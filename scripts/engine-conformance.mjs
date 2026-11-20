@@ -75,6 +75,17 @@ export async function conformance({page,send,wait,check,note,signer,lines,origin
     if(what.draft?.longForm)check('long-form draft becomes kind 30023',JSON.parse(signed.event).kind===30023);
     if(what.k!=='delete')check(`publish ${what.k} ${serial} carries client tag`,JSON.parse(signed.event).tags.some(t=>t[0]==='client'&&t[1]==='lkjstr'));
   }
+  const custom = {code:'Hi-cat',url:'https://media.engine.test/cat.png',address:`30030:${note.pubkey}:pack`};
+  const token = `:${custom.code}:`;
+  const tag = ['emoji',custom.code,custom.url,custom.address];
+  const tagged = await act({a:'publish',as:note.pubkey,what:{k:'note',draft:{text:token,emoji:[custom]}}},true);
+  check('custom emoji note is accepted by the fixture relay',tagged.ok);
+  check('signed note preserves the set coordinate',JSON.parse((await messages()).filter(m=>m.t==='sign').at(-1).event)
+    .tags.some(t=>JSON.stringify(t)===JSON.stringify(tag)));
+  const reacted = await act({a:'publish',as:note.pubkey,what:{k:'reaction',id:tagged.id,emoji:token,url:custom.url,address:custom.address}},true);
+  const reaction = JSON.parse((await messages()).filter(m=>m.t==='sign').at(-1).event);
+  check('signed kind 7 reaction carries its exact shortcode and set tag',reacted.ok && reaction.kind===7 && reaction.content===token &&
+    JSON.stringify(reaction.tags.filter(t=>t[0]==='emoji'))===JSON.stringify([tag]));
   await send({t:'configure',config:{language:'en',heuristics:true,prefetch:false,clientTag:false}});
   check('client tag can be disabled',(await act({a:'publish',as:note.pubkey,what:{k:'note',draft:{text:'untagged'}}},true)).ok);
   check('disabled client tag is absent',!JSON.parse((await messages()).filter(m=>m.t==='sign').at(-1).event).tags.some(t=>t[0]==='client'));

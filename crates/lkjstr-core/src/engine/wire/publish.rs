@@ -1,5 +1,8 @@
 use super::actions::Publish as P;
 use crate::engine::{Engine, protocol as p};
+use lkjstr_protocol::{
+    CustomEmoji, custom_emoji_reaction_shortcode, custom_emoji_tag_parts, emoji_tags,
+};
 pub(super) fn publish(what: P, engine: &Engine, account: &str) -> Result<p::Action, &'static str> {
     let (kind, content, target, tags) = match what {
         P::Note { draft } => {
@@ -14,13 +17,13 @@ pub(super) fn publish(what: P, engine: &Engine, account: &str) -> Result<p::Acti
             if let Some(cw) = draft.cw {
                 tags.push(vec!["content-warning".into(), cw]);
             }
-            for e in draft.emoji.unwrap_or_default() {
-                if lkjstr_protocol::valid_custom_emoji_shortcode(&e.code)
-                    && lkjstr_protocol::valid_custom_emoji_url(&e.url)
-                {
-                    tags.push(vec!["emoji".into(), e.code, e.url]);
-                }
-            }
+            let emoji = draft
+                .emoji
+                .unwrap_or_default()
+                .into_iter()
+                .filter_map(|e| CustomEmoji::from_parts(&e.code, &e.url, e.address.as_deref()))
+                .collect::<Vec<_>>();
+            tags.extend(emoji_tags(&text, &emoji));
             for m in draft.media.unwrap_or_default() {
                 if !m.url.starts_with("https://") {
                     return Err("unsupported");
@@ -84,15 +87,19 @@ pub(super) fn publish(what: P, engine: &Engine, account: &str) -> Result<p::Acti
             )
         }
         P::Repost { id } => ("repost", String::new(), Some(id), vec![]),
-        P::Reaction { id, emoji, url } => {
+        P::Reaction {
+            id,
+            emoji,
+            url,
+            address,
+        } => {
             let tags = url
-                .and_then(|u| {
-                    lkjstr_protocol::parse_custom_emoji_input(&format!(
-                        "{}:{u}",
-                        emoji.trim_end_matches(':')
-                    ))
+                .as_deref()
+                .and_then(|url| {
+                    let code = custom_emoji_reaction_shortcode(&emoji)?;
+                    CustomEmoji::from_parts(&code, url, address.as_deref())
                 })
-                .map(|e| vec![lkjstr_protocol::custom_emoji_tag_parts(&e)])
+                .map(|e| vec![custom_emoji_tag_parts(&e)])
                 .unwrap_or_default();
             ("reaction", emoji, Some(id), tags)
         }

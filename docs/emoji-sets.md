@@ -2,9 +2,8 @@
 
 ## Purpose
 
-Record the Core discovery and projection used by the existing emoji picker.
-No new layout, visible words, action or wire shape is required. Native and
-finite real Worker checks and the combined conformance gate pass.
+Record the Core discovery and projection used by the emoji picker. Existing
+native and real Worker conformance cover membership, replacement and bounds.
 
 ## Authority and selection
 
@@ -33,8 +32,9 @@ the last valid duplicate retains the earlier direct-entry behavior. Shortcodes
 and HTTPS image URLs use the existing protocol validator. Its outgoing code
 validator now accepts the same NIP-30 hyphens as its incoming path, so selecting
 a valid hyphenated code retains its tag in notes, reactions and private drafts.
-Referenced row `set` contains the bounded title, or the identifier when no title exists. Row keys stay
-`emoji:<code>`, so an update changes the existing row rather than duplicating it.
+Referenced row `set` contains the bounded title, or the identifier when no title
+exists. Row keys are `emoji:<code>`. The optional `address` identifies the
+containing set. A direct entry can carry a valid address from its own emoji tag.
 
 ## Bounds and unavailable data
 
@@ -62,11 +62,20 @@ cannot become a completed empty result. Invalid small values and recursive set
 references remain ignored. The existing picker consumes rows but has no per-set
 failure/retry surface.
 
-Encrypted list/set tags, set browsing/editing, recursive references and propagation
-of a selected set address into outgoing emoji tags are outside this change.
-The existing composer continues to publish the selected code and image URL.
+Public drafts emit one tag per used, validated shortcode. Custom reactions emit
+one tag for their exact `:shortcode:`. Both include the optional set address when
+supplied. Profile names and bios read tags from their signed kind-0 metadata.
+Notes and reactions use their own signed tags. Encrypted list/set tags, set
+browsing/editing and recursive references remain outside this flow. DMs send the
+selected code and URL in their encrypted rumor.
 
 ## Verification
+
+The 2026-11-20 loopback fixture checks the picker coordinate and the images
+selected by signed metadata, note and reaction tags when all use the same
+shortcode as the picker. The signing fixture covers accepted custom emoji
+notes and kind-7 reactions with the coordinate. Native cases cover unused
+draft entries, duplicate shortcodes, invalid coordinates and literal URLs.
 
 On 2026-11-16 at 14:45-14:47 UTC, the unchanged runtime failed all 13 new
 native cases; the implementation passed all 13 after two fixture corrections

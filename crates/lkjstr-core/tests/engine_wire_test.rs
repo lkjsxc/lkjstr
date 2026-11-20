@@ -25,6 +25,65 @@ fn accept(session: &mut Session, e: &mut Engine, input: Value) {
     }
 }
 #[test]
+fn public_drafts_and_reactions_preserve_the_selected_emoji_tag() {
+    let mut e = Engine::new();
+    let mut s = Session::default();
+    let target = event(1, "target".into(), vec![]);
+    e.store.insert(target.clone(), None);
+    let address = format!("30030:{}:cats:one two", target.pubkey);
+    let url = format!("https://images.test/smile?ref=:{address}").replace(' ', "%20");
+    for (req, what, expected) in [
+        (
+            "note",
+            json!({"k":"note","draft":{"text":":Hi-cat:","emoji":[
+                {"code":"Hi-cat","url":"https://images.test/old.png"},
+                {"code":"Hi-cat","url":url,"address":address},
+                {"code":"unused","url":"https://images.test/unused.png"}
+            ]}}),
+            json!([["emoji", "Hi-cat", url, address]]),
+        ),
+        (
+            "reaction",
+            json!({"k":"reaction","id":target.id,"emoji":":Hi-cat:","url":url,"address":address}),
+            json!([["emoji", "Hi-cat", url, address]]),
+        ),
+        (
+            "invalid-address",
+            json!({"k":"reaction","id":target.id,"emoji":":Hi-cat:","url":url,"address":"bogus"}),
+            json!([["emoji", "Hi-cat", url]]),
+        ),
+        (
+            "non-token",
+            json!({"k":"reaction","id":target.id,"emoji":":Hi-cat","url":url}),
+            json!([]),
+        ),
+    ] {
+        accept(
+            &mut s,
+            &mut e,
+            json!({"t":"act","req":req,"action":{"a":"publish","as":target.pubkey,"what":what}}),
+        );
+        let signed = e
+            .drain()
+            .into_iter()
+            .flat_map(|o| s.output(o, &e))
+            .find_map(|o| match o {
+                Output::Sign { event, .. } => Some(event),
+                _ => None,
+            })
+            .expect("unsigned event");
+        let event: Value = serde_json::from_str(&signed).expect("event JSON");
+        let tags: Vec<_> = event["tags"]
+            .as_array()
+            .expect("tags")
+            .iter()
+            .filter(|t| t[0] == "emoji")
+            .collect();
+        assert_eq!(json!(tags), expected, "{req}");
+    }
+}
+
+#[test]
 fn frontend_contract_flat_filters_millis_anchor_and_finished_rows() {
     let mut e = Engine::new();
     let note = event(

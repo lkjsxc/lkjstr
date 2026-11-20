@@ -161,10 +161,9 @@ and recovery still need a specification in [interface-needs.md](interface-needs.
   verified author-owned deletion; mock emits empty arrays.
 - Holds are separate from engine-delivered rows and release on close or cache-policy revocation; absence, EOSE and arbitrary cache content confer no authority.
 - `Counts.context?` carries a contributor lineage, canonical decimal generation, opaque token, restored flag and current flag.
-- `Counts.context.selection?` binds account and committed public-mute ID/time to the contributor token;
-  older/unknown/pending selection cannot replace held counts.
-- Only a restored same-lineage generation that is at least as new can replace a held count basis; equal generations require equal tokens.
-- Tokens establish equality only. Changed lineages require explicit navigation; only current committed count models are durably captured.
+- `Counts.context.selection?` binds account and committed public-mute ID/time to the token. Older, unknown or pending selection preserves held counts.
+- Restored same-lineage counts can replace a held basis at higher generations or at equal generations with equal tokens.
+- New lineages require explicit navigation. Only current committed count models persist.
 
 See [public-view-cache.md](public-view-cache.md). These cache additions remain unshipped and retain all prior protocol meanings.
 ## Protocol 14 act chains (2026-11-17, owner specified)
@@ -175,8 +174,7 @@ See [public-view-cache.md](public-view-cache.md). These cache additions remain u
 - Add `NoteRow.act?` for the selected profile person's own act; that event supplies the row time and chronological position.
 - Add `NoteRow.actOn?` for the immediately targeted act in profile Reactions/Reposts; terminal note counts and content stay unchanged.
 
-The bounded resolution and exact representative policy follow
-[interface-acts.md](interface-acts.md); source and proof limits are recorded with the implementation.
+The bounded resolution and representative policy follow [interface-acts.md](interface-acts.md). The implementation records source and proof limits.
 
 - Optional `window.liveAbove` lets newly projected rows fill the explicit before budget, including grouped notifications.
 - `publish.signed {req,id}` delivers a verified note id to the initiating client before its first signed row or a delivery result.
@@ -187,6 +185,9 @@ The bounded resolution and exact representative policy follow
 - `fresh.ownHead` is true when the newest countable row above the Home window is the reader's own note.
 - Optional `crypt.background` marks a passive inbox read.
 - `crypted.error: 'rate-limited'` defers a passive read while writing.
+- `EmojiRow.address?` identifies the selected kind-30030 set or a direct entry's declared set.
+- `Draft.emoji[].address?` carries the optional NIP-30 set coordinate into a public note tag.
+- `Publish` reactions accept optional `address` as the fourth element of their custom emoji tag.
 
 Relay Stats add optional firstEventMs, requestUses and readTimeouts: verified first-event latency, session REQ envelopes and bounded read timeout score.
 Inactive routes without retained transport observations report null.
@@ -196,5 +197,4 @@ Mock-only `EngineConfig.mock.slow` signs one matching note late and delays its r
 ## Public signing timing
 
 - Optional `act.signingTiming: { at, hidden, boot, restart }` records enqueue for public signing actions. Existing callers can omit it.
-- Optional `stats.signing` reports bounded `recent` and `slow` public signing timings.
-  See [signing-latency.md](signing-latency.md) for stages, overlap and retention.
+- Optional `stats.signing` reports bounded `recent` and `slow` timings. See [signing-latency.md](signing-latency.md) for stages and retention.

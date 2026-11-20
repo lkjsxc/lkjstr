@@ -73,11 +73,15 @@ async function run() {
   const owner = (await next()).note.pubkey;
   const maker = (await next({ fixtureActor: true })).pubkey;
   const at = Math.floor(Date.now() / 1000);
-  const sign = (pubkey, created_at, kind, tags) => next({ pubkey, created_at, kind, tags, content: '' });
+  const sign = (pubkey, created_at, kind, tags, content = '') => next({ pubkey, created_at, kind, tags, content });
   const pack = await sign(maker, at - 2, 30030, [['d', 'animals'], ['title', 'Animals'], ['emoji', 'cat', 'https://images.test/cat.png'], ['emoji', 'home', 'https://images.test/other.png']]);
   const coordinate = `30030:${maker}:animals`;
   const list = await sign(owner, at - 1, 10030, [['emoji', 'home', 'https://images.test/own.png'], ['a', coordinate]]);
-  events = [pack, list];
+  const metadata = await sign(maker, at - 3, 0, [['emoji', 'cat', 'https://images.test/profile.png']],
+    JSON.stringify({ name: 'Maker :cat:', about: 'Bio :cat: :home:' }));
+  const note = await sign(maker, at - 2, 1, [['emoji', 'cat', 'https://images.test/note.png']], 'Note :cat: :home:');
+  const reaction = await sign(owner, at - 1, 7, [['e', note.id], ['p', maker], ['emoji', 'cat', 'https://images.test/reaction.png']], ':cat:');
+  events = [pack, list, metadata, note, reaction];
   const base = `${process.env.HOME}/.cache/ms-playwright`;
   const binary = process.env.LKJSTR_CHROME ?? join(base, (await readdir(base)).filter(s => s.startsWith('chromium-')).sort().at(-1), 'chrome-linux64/chrome');
   context = await chromium.launchPersistentContext(profile, { executablePath: binary, headless: true, args: ['--no-sandbox'], serviceWorkers: 'block' });
@@ -104,11 +108,29 @@ async function run() {
   deliver(request.ws, request.sub, request.filters); held = [];
   await wait(() => window.messages.some(m => m.sub === 'emoji' && m.t === 'rows' && m.rows.some(r => r.code === 'cat')));
   let current = await rows();
-  check('set title and code use existing EmojiRow shape', current.rows.some(r => r.key === 'emoji:cat' && r.set === 'Animals' && r.url === 'https://images.test/cat.png'));
+  check('picker rows retain the verified set coordinate', current.rows.some(r => r.key === 'emoji:cat' && r.set === 'Animals' && r.url === 'https://images.test/cat.png' && r.address === coordinate));
   check('direct code wins over a referenced duplicate', current.rows.find(r => r.code === 'home')?.url === 'https://images.test/own.png');
   check('verified referenced rows finish the bounded window', current.atBottom === true);
+  await send({ t: 'open', sub: 'maker', query: { source: 'profile', pubkey: maker, account: owner } });
+  const profiled = await wait(() => window.messages.filter(m => m.sub === 'maker').flatMap(m =>
+    m.rows ?? m.ops?.flatMap(o => o.row ? [o.row] : o.rows ?? []) ?? []).find(r => r.kind === 'profile' && r.author.name === 'Maker :cat:'));
+  const profileRow = await profiled.jsonValue();
+  check('profile name and bio use their signed metadata and leave untagged codes literal',
+    profileRow.author.emoji.some(e => e.code === 'cat' && e.url === 'https://images.test/profile.png') &&
+    profileRow.about.some(e => e.k === 'emoji' && e.code === 'cat' && e.url === 'https://images.test/profile.png') &&
+    profileRow.about.some(e => e.k === 'text' && e.text.includes(':home:')));
+  await send({ t: 'open', sub: 'tagged-note', query: { source: 'thread', id: note.id, account: owner } });
+  const threaded = await wait(id => window.messages.filter(m => m.sub === 'tagged-note').flatMap(m =>
+    m.rows ?? m.ops?.flatMap(o => o.row ? [o.row] : o.rows ?? []) ?? []).find(r => r.id === id && r.reactions.some(e => e.emoji === ':cat:')), note.id);
+  const noteRow = await threaded.jsonValue();
+  check('note and reaction each use their own signed emoji tag',
+    noteRow.segments.some(e => e.k === 'emoji' && e.code === 'cat' && e.url === 'https://images.test/note.png') &&
+    noteRow.segments.some(e => e.k === 'text' && e.text.includes(':home:')) &&
+    noteRow.reactions.some(e => e.emoji === ':cat:' && e.url === 'https://images.test/reaction.png'));
+  await send({ t: 'close', sub: 'tagged-note' });
+  await send({ t: 'close', sub: 'maker' });
   validateReplies(await page.evaluate(() => window.messages));
-  check('emoji replies conform to the unchanged frontend protocol', true);
+  check('emoji replies conform to the additive frontend protocol', true);
   const cleared = await sign(owner, at, 10030, [['emoji', 'home', 'https://images.test/own.png']]);
   events = [pack, cleared]; holdSets = false;
   await send({ t: 'close', sub: 'emoji' });

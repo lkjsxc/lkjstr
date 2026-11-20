@@ -141,7 +141,7 @@ export type Anchor =
 
 // ───────────────────────────────────────── view models ─────────────────────────────────────────
 
-export type Emoji = { readonly code: string; readonly url: string };
+export type Emoji = { readonly code: string; readonly url: string; readonly address?: string };
 
 export type Author = {
   readonly pubkey: Pubkey;
@@ -443,6 +443,8 @@ export type EmojiRow = {
   readonly set: string;
   readonly code: string;
   readonly url: string;
+  /** NIP-51 coordinate of the image's set, when known. */
+  readonly address?: string;
 };
 
 /** A labelled fact (`diagnostics`): event store size, protocol version, the worker kind in use. */
@@ -565,7 +567,13 @@ export type Publish =
   | { readonly k: 'note'; readonly draft: Draft }
   | { readonly k: 'repost'; readonly id: string }
   /** `emoji`: Unicode, or `:code:` with `url`. */
-  | { readonly k: 'reaction'; readonly id: string; readonly emoji: string; readonly url?: string }
+  | {
+      readonly k: 'reaction';
+      readonly id: string;
+      readonly emoji: string;
+      readonly url?: string;
+      readonly address?: string;
+    }
   /** Deletes the reader's own event: a note, their repost of `id` (`of: 'repost'`) or their reaction to it. */
   | {
       readonly k: 'delete';

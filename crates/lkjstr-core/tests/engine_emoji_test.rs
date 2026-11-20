@@ -33,7 +33,7 @@ fn current_owner_references_project_into_the_existing_picker_shape() {
         result["rows"],
         json!([
             {"kind":"emoji","key":"emoji:home","code":"home","url":"https://images.test/own.png","set":""},
-            {"kind":"emoji","key":"emoji:cat","code":"cat","url":"https://images.test/cat.png","set":"Animals"}
+            {"kind":"emoji","key":"emoji:cat","code":"cat","url":"https://images.test/cat.png","set":"Animals","address":address(&set)}
         ])
     );
     assert_eq!(result["atBottom"], true);
@@ -95,6 +95,7 @@ fn address_selection_uses_author_identifier_newest_time_and_lowest_tied_id() {
     assert_eq!(result["rows"].as_array().expect("rows").len(), 1);
     assert_eq!(result["rows"][0]["code"], expected);
     assert_eq!(result["rows"][0]["set"], "group:one");
+    assert_eq!(result["rows"][0]["address"], address(&a));
 }
 
 #[test]

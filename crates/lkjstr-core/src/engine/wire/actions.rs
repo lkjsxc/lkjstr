@@ -178,6 +178,7 @@ pub enum Publish {
         id: String,
         emoji: String,
         url: Option<String>,
+        address: Option<String>,
     },
     Delete {
         id: String,
@@ -221,6 +222,7 @@ pub struct Uploaded {
 pub struct Emoji {
     pub code: String,
     pub url: String,
+    pub address: Option<String>,
 }
 #[derive(Debug, Deserialize)]
 pub struct RelayEntry {
@@ -236,13 +238,11 @@ pub enum MuteTarget {
     Hashtag { tag: String },
     Thread { id: String },
 }
-
 impl std::fmt::Debug for Action {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str("Action [redacted]")
     }
 }
-
 #[derive(Debug, Deserialize)]
 pub struct LongForm {
     pub identifier: String,

@@ -22,6 +22,7 @@ pub(super) struct Entry {
     pub code: String,
     pub url: String,
     pub set: String,
+    pub address: Option<String>,
 }
 
 fn references(list: &NostrEvent) -> Vec<Reference> {
@@ -132,6 +133,7 @@ fn selected(store: &Store, references: &[Reference]) -> BTreeMap<String, Event> 
 fn entries(event: &NostrEvent, set: &str) -> Vec<Entry> {
     let mut result = Vec::<Entry>::new();
     let mut positions = BTreeMap::<String, usize>::new();
+    let set_address = lkjstr_protocol::emoji_set_address(event);
     for tag in event.tags.iter().take(MAX_TAGS) {
         if tag.get(1).is_none_or(|v| v.len() > MAX_CODE)
             || tag.get(2).is_none_or(|v| v.len() > MAX_URL)
@@ -141,14 +143,21 @@ fn entries(event: &NostrEvent, set: &str) -> Vec<Entry> {
         let Some(emoji) = lkjstr_protocol::custom_emoji_tag(tag) else {
             continue;
         };
+        let address = set_address.clone().or_else(|| {
+            emoji
+                .address
+                .filter(|address| address.len() <= 6 + 64 + 1 + MAX_IDENTIFIER)
+        });
         if let Some(index) = positions.get(&emoji.shortcode) {
             result[*index].url = emoji.url;
+            result[*index].address = address;
         } else if result.len() < MAX_ROWS {
             positions.insert(emoji.shortcode.clone(), result.len());
             result.push(Entry {
                 code: emoji.shortcode,
                 url: emoji.url,
                 set: set.into(),
+                address,
             });
         }
     }

@@ -6,6 +6,13 @@ use crate::{
 };
 use lkjstr_protocol::{NostrEvent, content_warning_reason, custom_emojis, reply_parent};
 use std::collections::BTreeMap;
+pub(super) fn event_emoji(event: &NostrEvent) -> Vec<(String, String)> {
+    custom_emojis(event)
+        .into_iter()
+        .map(|emoji| (emoji.shortcode, emoji.url))
+        .collect()
+}
+
 pub fn author(store: &Store, pubkey: &str) -> Author {
     let p = store.profile(pubkey);
     Author {
@@ -24,12 +31,8 @@ pub fn author(store: &Store, pubkey: &str) -> Author {
         name_segments: store
             .replaceable(pubkey, 0)
             .map(|e| {
-                let emoji = custom_emojis(&e)
-                    .into_iter()
-                    .map(|e| (e.shortcode, e.url))
-                    .collect::<Vec<_>>();
                 let name = p.as_ref().and_then(|p| p.label()).unwrap_or(pubkey);
-                crate::reading::name_parts(name, &emoji)
+                crate::reading::name_parts(name, &event_emoji(&e))
                     .into_iter()
                     .filter_map(|part| match part {
                         Part::Text(text) => Some(NameSegment::Text { text }),
@@ -55,14 +58,10 @@ pub fn row_with_lists(
     depth: usize,
     private: &super::settings::PrivateLists,
 ) -> Row {
-    let emoji = custom_emojis(event)
-        .into_iter()
-        .map(|e| (e.shortcode, e.url))
-        .collect::<Vec<_>>();
     let mut parts = if event.kind == 6 {
         Vec::new()
     } else {
-        content::segments(&event.content, &emoji)
+        content::segments(&event.content, &event_emoji(event))
     };
     super::row_media::attachments(event, &mut parts);
     if event.kind == 6

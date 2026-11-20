@@ -51,7 +51,7 @@ impl Session {
                 facts.as_object().map(|m|m.iter().map(|(k,v)|json!({"kind":"info","key":k,"label":k,"value":v.to_string()})).collect()).unwrap_or_default()
             }
             "media-servers"=>q.account.as_deref().map(|a|e.upload_servers(a).into_iter().map(|url|e.server_row(&url)).collect()).unwrap_or_default(),
-            "emoji"=>crate::engine::emoji::rows(store,q.account.as_deref()).into_iter().map(|e|json!({"kind":"emoji","key":format!("emoji:{}",e.code),"set":e.set,"code":e.code,"url":e.url})).collect(),
+            "emoji"=>crate::engine::emoji::rows(store,q.account.as_deref()).into_iter().map(emoji).collect(),
             "notifications"=>super::notifications::notifications(q,e),
             "profile" if converted.as_ref().is_some_and(crate::engine::acts::activity) => super::acts::profile(q,e),
             "bookmarks"=>converted.as_ref().map(|q|crate::engine::list_events::events(store,q,&e.private_lists).iter().map(|event|super::note::note(&rows::row_with_lists(store,event,q.account.as_deref(),0,&e.private_lists),store,q.account.as_deref())).collect()).unwrap_or_default(),
@@ -166,6 +166,13 @@ pub(super) fn pinned_header(rows: &[Value]) -> bool {
     rows.first()
         .is_some_and(|row| matches!(row["kind"].as_str(), Some("profile" | "channel")))
 }
+fn emoji(entry: crate::engine::emoji::Entry) -> Value {
+    let mut row = json!({"kind":"emoji","key":format!("emoji:{}",entry.code),"set":entry.set,"code":entry.code,"url":entry.url});
+    if let Some(address) = entry.address {
+        row["address"] = json!(address);
+    }
+    row
+}
 pub(super) fn person(e: &Engine, p: &str, account: Option<&str>, weight: u64) -> Value {
     let store = &e.store;
     json!({"kind":"person","key":p,"weight":weight,"author":super::note::author(&rows::author(store,p)),
@@ -184,11 +191,18 @@ fn profile(e: &Engine, p: &str, account: Option<&str>) -> Value {
     result["kind"] = json!("profile");
     result["key"] = json!(format!("profile:{p}"));
     let meta = store.profile(p).unwrap_or_default();
-    let segments = crate::content::segments(&meta.about, &[])
+    let emoji = store
+        .replaceable(p, 0)
+        .map(|event| rows::event_emoji(&event))
+        .unwrap_or_default();
+    let segments = crate::content::segments(&meta.about, &emoji)
         .into_iter()
         .map(|s| match s {
             crate::content::Segment::Text(text) => json!({"k":"text","text":text}),
             crate::content::Segment::Link(url) => json!({"k":"link","text":url,"url":url}),
+            crate::content::Segment::Emoji { code, url } => {
+                json!({"k":"emoji","code":code,"url":url})
+            }
             _ => json!({"k":"text","text":""}),
         })
         .collect::<Vec<_>>();
