@@ -22,6 +22,11 @@ test('one ordinary ship binds package and HTTPS digest, defers cleanup and tells
   assert.equal(result.status, 0, result.log);
   assert.match(result.summary, /^SHIPPED /);
   const events = f.events();
+  const pnpm = events.filter(row => row.command === 'pnpm');
+  assert.deepEqual(pnpm.slice(0, 2), [
+    { command: 'pnpm', args: ['install', '--frozen-lockfile'], cwd: f.root },
+    { command: 'pnpm', args: ['check'], cwd: join(f.root, 'web') },
+  ]);
   assert.equal(deploys(events).length, 1);
   assert.equal(notices(events).length, 1);
   assert.ok(events.findIndex(row => row.command === 'push') < events.findIndex(row => row.command === 'ssh'));

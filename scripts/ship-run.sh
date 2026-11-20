@@ -54,6 +54,8 @@ sha256sum "$RUN/ship.sh" "$RUN/ship-run.sh" "$RUN/ship-receipt.mjs" "$RUN/ship-c
   > "$RUN/scripts.sha256" || fail 'cannot bind executed scripts'
 chmod a-w "$RUN/ship.sh" "$RUN/ship-run.sh" "$RUN/ship-receipt.mjs" "$RUN/ship-clean.mjs" ||
   fail 'cannot protect retained scripts'
+# Copied package fixtures resolve TypeScript from the repository root.
+timeout 300 pnpm install --frozen-lockfile || fail 'pnpm install --frozen-lockfile (root)'
 cd "$W/web" || fail 'no web/'
 timeout 1800 pnpm check || fail 'pnpm check'
 LKJSTR_SHOTS=1 timeout 2400 pnpm smoke:real || LKJSTR_SHOTS=1 timeout 2400 pnpm smoke:real || fail 'pnpm smoke:real (twice)'

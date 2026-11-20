@@ -37,7 +37,7 @@ if (name === 'credential-fixture') {
   const result = spawnSync(executable, args, { stdio: 'inherit', env: process.env });
   process.exit(result.status ?? 1);
 } else if (name === 'pnpm') {
-  log({ command: name, args });
+  log({ command: name, args, cwd: process.cwd() });
   if (process.env.LKJSTR_SHIP_TEST_SOURCE_CHANGE) writeFileSync(join(root, 'tracked.txt'), 'changed during build');
   if (args[0] === 'package') {
     const source = join(root, 'tmp/dist');

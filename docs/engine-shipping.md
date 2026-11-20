@@ -45,9 +45,9 @@ The shared ship lock precedes replacing `tmp/ship.out` and `tmp/ship.log`.
 A dry-run push checks authentication before the expensive gates. Explicit
 `GH_CONFIG_DIR` and a login in the selected XDG directory keep precedence;
 otherwise an existing home-directory gh login is selected. No credential is
-copied, printed or stored in shipment evidence. The actual pinned-revision
-push still follows verification and precedes every host operation.
-Web check, real smoke and real build/package run in that owned worktree.
+copied, printed or stored in shipment evidence. The driver installs root
+dependencies from the frozen lockfile for the copied package fixtures.
+The web gates use preinstalled web dependencies.
 The archive is copied to the unique run directory and made read-only before
 the final HEAD/clean assertion. All later hashes and uploads use that retained
 copy. The push names the pinned revision explicitly; a subsequent fetch must
