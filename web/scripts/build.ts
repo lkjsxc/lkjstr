@@ -14,6 +14,7 @@ import {
 } from 'node:fs';
 import { join } from 'node:path';
 import * as esbuild from 'esbuild';
+import { emojiTableJson } from './emoji-table.ts';
 import { engineAssets } from './engine-assets.ts';
 import { buildShellCache } from './shell-cache.ts';
 import { buildPublicPages } from './site.ts';
@@ -33,6 +34,7 @@ const CSS = [
   'stats.css',
   'channels.css',
   'dm.css',
+  'emoji.css',
 ];
 const STATIC = ['icon.svg', 'icon-192.png', 'icon-512.png', 'favicon.ico', 'manifest.webmanifest'];
 
@@ -89,8 +91,10 @@ async function build(): Promise<void> {
   const cssText = CSS.map((f) => readFileSync(join(here, 'src/ui', f), 'utf8')).join('\n');
   const css = (await esbuild.transform(cssText, { loader: 'css', minify: !watch })).code;
   const boot = await bundle('src/boot.ts', define, true);
+  const emoji = emojiTableJson();
   const app = await bundle('src/main.ts', {
     ...define,
+    __EMOJI_URL__: JSON.stringify(emit(hashed('emoji', 'json', emoji), emoji)),
     __ENGINE_URL__: JSON.stringify(engine),
     __REAL_ENGINE__: JSON.stringify(Boolean(engineDir)),
   });

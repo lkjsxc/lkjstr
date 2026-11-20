@@ -12,7 +12,7 @@ import { createComposeMedia } from './compose-media-state.ts';
 import { createMentions } from './compose-mentions.ts';
 import { type ChannelDraft, createChannelOutbox } from './compose-outbox.ts';
 import { createWho } from './compose-who.ts';
-import { openEmojiPicker } from './emoji-picker.ts';
+import { emojiTag, openEmojiPicker } from './emoji-picker.ts';
 import { homeDraftForEdit } from './home-drafts.ts';
 import type { ViewEnv } from './registry.ts';
 
@@ -78,10 +78,8 @@ export function mountCompose(el: HTMLElement, env: ViewEnv, channel?: string): (
   );
   emoji.addEventListener('click', () =>
     openEmojiPicker(env, emoji, (p) => {
-      if (p.url) {
-        const code = p.emoji.slice(1, -1);
-        state.emoji = [...(state.emoji ?? []).filter((e) => e.code !== code), { code, url: p.url }];
-      }
+      const tag = emojiTag(p);
+      if (tag) state.emoji = [...(state.emoji ?? []).filter((e) => e.code !== tag.code), tag];
       insert(p.emoji);
     }),
   );

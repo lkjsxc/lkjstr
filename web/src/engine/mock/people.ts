@@ -9,9 +9,20 @@ export const EMOJI: Record<string, string> = {
   kusa: emojiTile('草', 130),
   nostr: emojiTile('N', 270),
   ok: emojiTile('可', 160),
+  wakaru: emojiTile('分', 210),
+  yatta: emojiTile('祝', 0),
+  'ocha-nomu': emojiTile('茶', 95),
+  nemui: emojiTile('眠', 240),
 };
+/** The reader's custom emoji by set: the first is their own list (kind 10030), the others sets it names (30030). */
+export const EMOJI_SETS: readonly (readonly [set: string, d: string, codes: readonly string[]])[] =
+  [
+    ['', '', ['neko', 'sakura', 'otsu']],
+    ['ことば', 'kotoba', ['kusa', 'nostr', 'ok', 'wakaru', 'yatta']],
+    ['くらし', 'kurashi', ['ocha-nomu', 'nemui']],
+  ];
 export const emojiOf = (text: string): Emoji[] =>
-  [...new Set([...text.matchAll(/:([a-z0-9_]+):/g)].map((m) => m[1] ?? ''))]
+  [...new Set([...text.matchAll(/:([a-z0-9_-]+):/g)].map((m) => m[1] ?? ''))]
     .filter((code) => EMOJI[code])
     .map((code) => ({ code, url: EMOJI[code] ?? '' }));
 

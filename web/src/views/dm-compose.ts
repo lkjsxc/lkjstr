@@ -18,7 +18,7 @@ import { transmitDm } from './dm-draft-send.ts';
 import { createDmDraftStore } from './dm-draft-store.ts';
 import { renderDmOutbox } from './dm-outbox.ts';
 import { dmAuthor, dmError, dmNames, inboxSetup } from './dm-parts.ts';
-import { openEmojiPicker } from './emoji-picker.ts';
+import { emojiTag, openEmojiPicker } from './emoji-picker.ts';
 import { plainName } from './parts.ts';
 import type { ViewEnv } from './registry.ts';
 
@@ -221,10 +221,13 @@ export function createDmCompose(o: {
         end = area.selectionEnd;
       area.setRangeText(picked.emoji, at, end, 'end');
       let custom: readonly Emoji[] | undefined = store.get().draft.emoji;
-      if (picked.url) {
-        const code = picked.emoji.slice(1, -1);
-        custom = [...(custom ?? []).filter((e) => e.code !== code), { code, url: picked.url }];
-      }
+      const tag = emojiTag(picked);
+      // A private draft keeps code and picture only.
+      if (tag)
+        custom = [
+          ...(custom ?? []).filter((e) => e.code !== tag.code),
+          { code: tag.code, url: tag.url },
+        ];
       store.draft({ ...draft(), emoji: custom });
       area.focus({ preventScroll: true });
     }),

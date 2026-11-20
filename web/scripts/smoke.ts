@@ -1227,7 +1227,53 @@ async function reading(browser: Browser, still: Record<string, unknown>): Promis
   );
   await note.locator('.a-smile').click();
   fact('the latest emoji comes first', (await page.locator('.ecell').first().innerText()) === '🐱');
+  // The preview strip: it describes what is under the pointer or has the keyboard, and nothing else moves.
+  await page.locator('.epick .egroup[data-section="cat:0"] .ecell').first().waitFor();
+  const pickerPlace = () =>
+    page.locator('.epick').evaluate((p) => {
+      const at = (s: string) => JSON.stringify(p.querySelector(s)?.getBoundingClientRect());
+      return (
+        at('.egrid') + at('.ecats') + at('input') + (p.querySelector('.egrid')?.scrollTop ?? 0)
+      );
+    });
+  const steady = await pickerPlace();
+  await page.locator('.epick .egroup[data-section="used"] .ecell').first().hover();
+  const named = await page.locator('.eprev .ename').innerText();
+  await page.locator('.epick input').focus();
+  await page.keyboard.press('ArrowDown');
+  await page.keyboard.press('ArrowRight');
+  const keyed = await page.locator('.eprev .ename').innerText();
+  const strip = await page.locator('.eprev').boundingBox();
+  fact(
+    'the preview names the emoji under the pointer and the keyboard; the picker does not move',
+    named.length > 0 && keyed.length > 0 && (await pickerPlace()) === steady,
+    [named, keyed],
+  );
+  fact(
+    'the preview strip takes no press',
+    !!strip &&
+      (await page.evaluate(
+        ([x, y]) => !document.elementFromPoint(x ?? 0, y ?? 0)?.closest('.eprev'),
+        [strip.x + strip.width / 2, strip.y + strip.height / 2],
+      )),
+  );
   await page.keyboard.press('Escape');
+  // A custom emoji in a note says what it is in a popover that never takes the press meant for the note.
+  const inline = page.locator(`${feed} .note .text img.emo`).first();
+  await inline.scrollIntoViewIfNeeded();
+  await inline.hover();
+  await page.locator('.epeek:not([hidden])').waitFor();
+  const peek = await page.locator('.epeek').boundingBox();
+  fact(
+    'a custom emoji shows its picture and code in a popover that takes no press',
+    (await page.locator('.epeek .ename').innerText()) === (await inline.getAttribute('alt')) &&
+      !!peek &&
+      (await page.evaluate(
+        ([x, y]) => !document.elementFromPoint(x ?? 0, y ?? 0)?.closest('.epeek'),
+        [peek.x + peek.width / 2, peek.y + peek.height / 2],
+      )),
+  );
+  await page.mouse.move(2, 2);
 
   const notes = '.view[data-kind="notifications"]';
   fact('four notification toggles', (await count(page, `${notes} .ntype`)) === 4);

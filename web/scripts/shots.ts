@@ -8,6 +8,7 @@ import { type Browser, chromium, type Page } from 'playwright-core';
 import { createAccountFailureShots } from './shots-account-failure.ts';
 import { actsShots } from './shots-acts.ts';
 import { dmShots } from './shots-dm.ts';
+import { emojiShots } from './shots-emoji.ts';
 import { keysShots } from './shots-keys.ts';
 import { looksShots } from './shots-looks.ts';
 
@@ -71,6 +72,8 @@ try {
             javaScriptEnabled: !name.startsWith('site-'),
             colorScheme: theme,
             locale: lang === 'ja' ? 'ja-JP' : 'en-US',
+            // The phone emoji scenes are touched by a finger, as on a phone.
+            ...(width < 500 && name.startsWith('emoji-') ? { hasTouch: true, isMobile: true } : {}),
           });
           await ctx.route('**/*', (route) =>
             route.request().url().startsWith(base)
@@ -128,6 +131,7 @@ try {
                 throw new Error('horizontal overflow');
             });
         await looksShots(scene, lang === 'ja' ? '統計' : 'Stats');
+        await emojiShots(scene);
         await keysShots(scene, launch(lang === 'ja' ? 'アカウント' : 'Accounts', 'account'), lang);
         await dmShots(scene, launch(lang === 'ja' ? '設定' : 'Settings', 'settings'), lang);
         await accountFailureShots.run(scene, lang, tag);

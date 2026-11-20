@@ -8,7 +8,14 @@ export const UNDO_MS = 8000;
 
 export type HeldWhat =
   | { readonly k: 'repost' }
-  | { readonly k: 'reaction'; readonly emoji: string; readonly url?: string };
+  | {
+      readonly k: 'reaction';
+      readonly emoji: string;
+      /** A custom emoji's picture: one code can name different pictures by different authors. */
+      readonly url?: string;
+      /** The NIP-51 address of the custom emoji's set, when known. */
+      readonly address?: string;
+    };
 type Held = {
   readonly id: string;
   readonly what: HeldWhat;
@@ -19,7 +26,7 @@ type Held = {
 const held = new Map<string, Held>(); // bound: presses of the last UNDO_MS (plus those in flight)
 const watchers = new Set<() => void>(); // bound: one per mounted list
 const keyOf = (id: string, what: HeldWhat): string =>
-  what.k === 'repost' ? `${id} repost` : `${id} reaction ${what.emoji}`;
+  what.k === 'repost' ? `${id} repost` : `${id} reaction ${what.emoji} ${what.url ?? ''}`;
 const changed = (): void => watchers.forEach((fn) => void fn());
 const flush = (): void => [...held.values()].forEach((x) => void (x.timer && x.send()));
 let bound = false;
@@ -96,9 +103,12 @@ export function withHeld(row: NoteRow): NoteRow {
         counts: { ...out.counts, reposts: out.counts.reposts + 1 },
       };
     } else {
-      const there = out.reactions.find((r) => r.emoji === what.emoji);
+      const there = out.reactions.find(
+        (r) => r.emoji === what.emoji && (r.url ?? '') === (what.url ?? ''),
+      );
       if (there?.mine) continue;
-      const mine = { emoji: what.emoji, url: what.url, count: (there?.count ?? 0) + 1, mine: true };
+      const { emoji, url } = what;
+      const mine = { emoji, url, count: (there?.count ?? 0) + 1, mine: true };
       out = {
         ...out,
         counts: { ...out.counts, reactions: out.counts.reactions + 1 },

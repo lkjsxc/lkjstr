@@ -35,6 +35,7 @@ const PATHS = {
     'M15 9.5h.01',
   ],
   play: ['M8 5l11 7-11 7z'],
+  clock: ['M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z', 'M12 7v5l3.5 2'],
   filter: ['M4 5h16l-6 8v5l-4 2v-7z'],
   lock: ['M6 10h12v11H6z', 'M8 10V6a4 4 0 0 1 8 0v4'],
 } as const;

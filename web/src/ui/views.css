@@ -80,16 +80,6 @@
 .malt { flex: 1; padding: 0 8px; font-size: 12.5px; }
 .mscale { flex: none; min-width: 48px; height: 28px; padding: 0 6px; border-radius: 4px; color: var(--muted); font-size: 12.5px; font-variant-numeric: tabular-nums; }
 .mscale:hover { background: var(--hover); color: var(--fg); }
-/* The emoji picker: one size whatever it holds, so it never moves after it has opened. */
-.epick { position: absolute; z-index: 10; box-sizing: border-box; width: min(292px, calc(100vw - 8px)); padding: 6px; border: 1px solid var(--line); border-radius: 8px; background: var(--raised); box-shadow: 0 6px 24px rgba(0, 0, 0, 0.3); }
-.epick input { box-sizing: border-box; width: 100%; height: 30px; padding: 0 8px; border-radius: 6px; background: var(--bg); }
-.egrid { height: 216px; margin-top: 6px; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: var(--sep) transparent; }
-.egroup { display: grid; grid-template-columns: repeat(auto-fill, minmax(34px, 1fr)); }
-.egroup + .egroup { margin-top: 4px; padding-top: 4px; border-top: 1px solid var(--line); }
-.ecell { display: grid; place-items: center; height: 34px; padding: 0; border-radius: 6px; font-size: 20px; line-height: 1; }
-.ecell:hover, .ecell:focus-visible { background: var(--hover); outline: none; }
-.ecell img { width: 22px; height: 22px; object-fit: contain; }
-.enone { padding: 12px 6px; font-size: 12.5px; }
 /* A finger needs 40px: the controls of notes, bars, menus and the picker grow; a mouse keeps the dense ones. */
 @media (pointer: coarse) {
   .act { gap: 3px; flex-basis: 40px; height: 40px; padding: 0 5px; }
@@ -103,9 +93,7 @@
   .mscale { height: 40px; }
   .menu button { padding: 11px 14px; }
   .ntype { width: 44px; height: 40px; }
-  .ecell { height: 40px; }
-  .egroup { grid-template-columns: repeat(auto-fill, minmax(40px, 1fr)); }
-  .epick input, .rtoggle, .rbar input { height: 40px; }
+  .rtoggle, .rbar input { height: 40px; }
   .rtoggle { flex-basis: 40px; }
   .seg-ctl .chip { padding: 9px 12px; }
 }

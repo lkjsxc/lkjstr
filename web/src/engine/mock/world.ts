@@ -43,7 +43,7 @@ export const idOf = (n: number): string => {
 };
 
 const TOKEN =
-  /((?:nostr:)?(?:npub1|nprofile1)[a-z0-9]+)|(https?:\/\/[^\s]+)|#([\p{L}\p{N}_]+)|@([a-z][a-z-]*)|:([a-z0-9_]+):/gu;
+  /((?:nostr:)?(?:npub1|nprofile1)[a-z0-9]+)|(https?:\/\/[^\s]+)|#([\p{L}\p{N}_]+)|@([a-z][a-z-]*)|:([a-z0-9_-]+):/gu;
 const linkText = (url: string): string => {
   const u = new URL(url);
   const path = u.pathname === '/' ? '' : u.pathname;

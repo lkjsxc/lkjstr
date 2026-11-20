@@ -188,6 +188,10 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
   While reading farther down, the new-notes pill counts arrivals above the held row and says "Your note" with an up arrow
   when the newest above is the reader's own. Pressing the pill returns to the top. Confirmation updates the same row in place.
 - `@` and letters offer people under the caret: follows first; Enter takes one.
+- One emoji picker serves the composer, reactions and messages ([interface-emoji.md](interface-emoji.md)): search
+  and tone, categories, then frequently used, the reader's sets and the Unicode categories. Its strip at the foot
+  says what is under the pointer, keyboard or finger, in a fixed space that takes no press; a custom emoji anywhere
+  shows the same in a small popover. Emoji use a colour emoji font before any text font.
 - Every wrong click can be taken back. A like or a repost is drawn at once
   and sent only when its Undo toast (8 seconds) has gone, or when the page is
   hidden or closed. Removing a bookmark, a mute or a relay offers Undo too.

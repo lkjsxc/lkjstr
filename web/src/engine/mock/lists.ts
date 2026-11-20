@@ -2,7 +2,7 @@
 import type { NotificationRow, Query, Row } from '../protocol.ts';
 import { PROTOCOL_VERSION } from '../protocol.ts';
 import { actNotifications } from './fixtures-acts.ts';
-import { byHandle, byPubkey, EMOJI } from './people.ts';
+import { byHandle, byPubkey, EMOJI, EMOJI_SETS } from './people.ts';
 import { relays } from './relays.ts';
 import { ME, noteRow } from './rows.ts';
 import type { World } from './world.ts';
@@ -154,13 +154,16 @@ export function finite(w: World, q: Query): Row[] | undefined {
         checked: true,
       }));
     case 'emoji':
-      return Object.entries(EMOJI).map(([code, url], i) => ({
-        kind: 'emoji',
-        key: code,
-        set: i < 3 ? '' : 'ことば',
-        code,
-        url,
-      }));
+      return EMOJI_SETS.flatMap(([set, d, codes]) =>
+        codes.map((code) => ({
+          kind: 'emoji' as const,
+          key: code,
+          set,
+          code,
+          url: EMOJI[code] ?? '',
+          ...(d ? { address: `30030:${ME}:${d}` } : {}),
+        })),
+      );
     case 'diagnostics':
       return [
         { kind: 'info', key: 'engine', label: 'engine', value: 'mock' },

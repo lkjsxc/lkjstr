@@ -243,6 +243,7 @@ export function buildShellCache(out: string): void {
       (name) =>
         name !== 'sw.js' &&
         (/\.(js|css|wasm|png|svg|ico|webmanifest)$/.test(name) ||
+          /^emoji-[0-9a-f]{16}\.json$/.test(name) ||
           ['index.html', 'privacy.html', 'LICENSE.txt'].includes(name)),
     )
     .sort()

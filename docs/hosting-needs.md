@@ -42,6 +42,7 @@ The site is served from the root of its origin (`/`), over HTTPS.
 | `.css` | `text/css; charset=utf-8` |
 | `.wasm` | `application/wasm` (required: the engine compiles while streaming) |
 | `.webmanifest` | `application/manifest+json` |
+| `.json` | `application/json` (the picker's emoji table, `emoji-<hash>.json`) |
 | `.svg`, `.png`, `.ico`, `.txt` | The usual ones |
 
 ## Headers

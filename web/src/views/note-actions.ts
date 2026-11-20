@@ -48,8 +48,9 @@ function react(
   emoji: string,
   url: string | undefined,
   on: boolean,
+  address?: string,
 ): void {
-  const what: HeldWhat = { k: 'reaction', emoji, url };
+  const what: HeldWhat = { k: 'reaction', emoji, url, ...(url && address ? { address } : {}) };
   if (on)
     return later(
       env,
@@ -61,7 +62,8 @@ function react(
   void act(env, (as) => ({
     a: 'publish',
     as,
-    what: { k: 'delete', id: row.id, of: 'reaction', emoji },
+    // The picture says which of two reactions with one code is meant ('' for a Unicode one).
+    what: { k: 'delete', id: row.id, of: 'reaction', emoji, url: url ?? '' },
   }));
 }
 
@@ -75,7 +77,7 @@ export function reactionChips(row: NoteRow, env: ViewEnv): HTMLElement | null {
         'button',
         {
           class: r.mine ? 'rchip on' : 'rchip',
-          title: r.emoji,
+          title: r.url ? null : r.emoji,
           'data-emoji': r.emoji,
           'aria-pressed': r.mine,
           onclick: (e) => (e.stopPropagation(), react(env, row, r.emoji, r.url, !r.mine)),
@@ -184,7 +186,7 @@ export function actionRow(row: NoteRow, env: ViewEnv): HTMLElement {
     off
       ? null
       : button('smile', 'emoji.pick', '', false, (el) =>
-          openEmojiPicker(env, el, (p) => react(env, row, p.emoji, p.url, true)),
+          openEmojiPicker(env, el, (p) => react(env, row, p.emoji, p.url, true, p.address)),
         ),
     off ? null : mark,
     button('more', 'act.more', '', false, (el) => openMenu(env.layer, el, moreItems()), false),

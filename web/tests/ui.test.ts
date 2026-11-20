@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import { relayAddress, serverAddress } from '../src/shared/address.ts';
-import { findGlyphs, isEmoji } from '../src/shared/emoji-data.ts';
 import { clockOf, countText, dayOf, noteTime } from '../src/shared/format.ts';
 import { both, resolveLang } from '../src/shared/i18n.ts';
 import {
@@ -16,7 +15,6 @@ import { keyLabel } from '../src/shared/platform.ts';
 import { DEFAULT_SETTINGS, parseSettings, SETTINGS_SCHEMA } from '../src/shared/settings.ts';
 import { en } from '../src/shared/strings-en.ts';
 import { ja } from '../src/shared/strings-ja.ts';
-import { withRecent } from '../src/views/emoji-picker.ts';
 import { typesQuery } from '../src/views/feed-bar.ts';
 import { reconcile } from '../src/views/lists.ts';
 import { freshTab, kindOf, setServed, VIEWS } from '../src/views/registry.ts';
@@ -257,16 +255,6 @@ describe('formats', () => {
     expect(typesQuery(['follow'])).toBeUndefined();
     expect(typesQuery(['follow', 'reaction'])).toEqual(['reaction']);
     expect(typesQuery(['reply', 'zap'])).toEqual(['reply', 'mention', 'zap']);
-  });
-  it('emoji are found in both languages, and the latest used comes first, once', () => {
-    expect(findGlyphs('cat').map((g) => g.emoji)).toContain('🐱');
-    expect(findGlyphs('ねこ')[0]?.emoji).toBe('🐱');
-    expect(findGlyphs('').length).toBeGreaterThan(120);
-    expect(isEmoji('🫠') && isEmoji('👍🏽') && !isEmoji('ab')).toBe(true);
-    expect(withRecent([{ emoji: 'a' }, { emoji: 'b' }], { emoji: 'b' })).toEqual([
-      { emoji: 'b' },
-      { emoji: 'a' },
-    ]);
   });
   it('settings keep only valid stored values', () => {
     expect(parseSettings({ textSize: 19, theme: 'neon', uiScale: 9 })).toEqual({

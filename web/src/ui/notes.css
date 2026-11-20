@@ -21,7 +21,7 @@
 .name { flex: 0 1 auto; min-width: 0; padding: 0; overflow: hidden; font-weight: 600; text-align: left; text-overflow: ellipsis; white-space: nowrap; }
 .name:hover { text-decoration: underline; }
 .name.quiet { font-weight: 500; }
-.emo { height: 1.25em; width: auto; min-width: 1em; object-fit: contain; vertical-align: -0.25em; }
+.emo { height: 1.25em; width: auto; min-width: 1em; max-width: 4em; object-fit: contain; vertical-align: -0.25em; -webkit-touch-callout: none; }
 .nip { display: inline-flex; align-items: center; gap: 2px; flex: 0 10 auto; min-width: 0; overflow: hidden; color: var(--faint); font-size: 12.5px; text-overflow: ellipsis; white-space: nowrap; }
 .nip .i { width: 12px; height: 12px; color: var(--ok); }
 .nhead time, .qhead time, .nfaces time { flex: none; margin-left: auto; color: var(--faint); font-size: 12.5px; font-variant-numeric: tabular-nums; }

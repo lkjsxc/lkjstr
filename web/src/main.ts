@@ -6,6 +6,7 @@ import { watchAccountProfiles } from './engine/account-profiles.ts';
 import { createEngine } from './engine/client.ts';
 import { createTransport } from './engine/startup.ts';
 import { createIdleLock } from './shared/account-idle.ts';
+import { warmEmojiTable } from './shared/emoji-table.ts';
 import { rememberAccounts, rememberedAccounts, rememberFace } from './shared/face.ts';
 import { resolveLang, setLang, t } from './shared/i18n.ts';
 import { pressedAt, watchPairs } from './shared/keys.ts';
@@ -16,6 +17,7 @@ import { createSettings } from './shared/settings.ts';
 import { kv } from './shared/storage.ts';
 import { createTopBar } from './ui/topbar.ts';
 import { backupPending } from './views/account-key.ts';
+import { installEmojiPeek } from './views/emoji-peek.ts';
 import { toast } from './views/parts.ts';
 import { setServed } from './views/registry.ts';
 import { createWmController, type Wm } from './wm/controller.ts';
@@ -90,6 +92,8 @@ const resetLayouts = (every: boolean): void => {
   if (kept.size) toast(host.layer, t('set.resetLayoutsPartial'));
 };
 const env = { engine, settings, layer: host.layer, resetLayouts };
+installEmojiPeek(host.layer);
+warmEmojiTable();
 
 function update(): void {
   const n = active();

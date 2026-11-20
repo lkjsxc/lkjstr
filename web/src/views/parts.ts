@@ -63,14 +63,22 @@ export function avatar(a: Author, cls = 'av'): HTMLElement {
 export function withEmoji(text: string, emoji: readonly Emoji[] = []): Child[] {
   if (!emoji.length) return [text];
   const by = new Map(emoji.map((e) => [e.code, e.url]));
-  return text.split(/(:[a-z0-9_]+:)/g).map((part) => {
+  return text.split(/(:[A-Za-z0-9_-]+:)/g).map((part) => {
     const url = part.startsWith(':') ? by.get(part.slice(1, -1)) : undefined;
     return url ? emojiImg(part, url) : part;
   });
 }
-/** A custom emoji. One whose picture cannot be had is its `:code:` as plain text, not a broken image. */
+/** A custom emoji. One whose picture cannot be had is its `:code:` as plain text, not a broken image. What it is
+ * shows in a popover (emoji-peek.ts), so it has no tooltip of its own. */
 export function emojiImg(code: string, url: string): HTMLElement {
-  const img = h('img', { class: 'emo', src: url, alt: code, title: code, draggable: false });
+  const img = h('img', {
+    class: 'emo',
+    src: url,
+    alt: code,
+    loading: 'lazy',
+    decoding: 'async',
+    draggable: false,
+  });
   img.addEventListener('error', () => img.replaceWith(code));
   return img;
 }
@@ -79,7 +87,7 @@ export const displayName = (a: Author): Child[] => withEmoji(nameOf(a), a.emoji)
 /** The name as plain text (tab titles, tooltips). */
 export const plainName = (a: Author): string =>
   nameOf(a)
-    .replace(/\s*:[a-z0-9_]+:/g, '')
+    .replace(/\s*:[A-Za-z0-9_-]+:/g, '')
     .trim() || shortNpub(a);
 
 /** A person's name as a button that opens their profile. */

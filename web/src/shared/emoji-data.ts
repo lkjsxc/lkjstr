@@ -1,6 +1,7 @@
-// The Unicode emoji the picker offers: the ones people actually react with, each with words to find it by in
-// English and Japanese. One entry is "emoji words…", entries are separated by "|". Anything not here can still be
-// typed or pasted into the picker's field and used.
+// The emoji people actually react with, each with the words they would type for it in English and Japanese. The
+// build adds these words to the full table (scripts/emoji-table.ts) and lifts these emoji among equal matches; until
+// the table has arrived, or when it cannot be had, they are what the picker offers. One entry is "emoji words…",
+// entries are separated by "|".
 const DATA = [
   '❤️ heart love red ハート 愛 すき|👍 thumbs up good like いいね グッド|🙏 pray thanks please ありがとう お願い 感謝|😂 joy laugh tears 笑 泣き笑い わら|🤣 rofl laugh 爆笑 笑',
   '🔥 fire hot 火 炎 熱い|🎉 party tada congrats おめでとう 祝 クラッカー|👀 eyes look 目 見る|✨ sparkles shiny キラキラ|💯 hundred perfect 百点 満点|🫂 hug people ハグ|🤙 call shaka シャカ',
@@ -26,12 +27,3 @@ export const GLYPHS: readonly Glyph[] = DATA.split('|').map((entry) => {
   const at = entry.indexOf(' ');
   return { emoji: entry.slice(0, at), words: entry.slice(at + 1).toLowerCase() };
 });
-
-/** Emoji whose words contain everything typed (any order, any of the two languages). */
-export function findGlyphs(typed: string): readonly Glyph[] {
-  const words = typed.toLowerCase().split(/\s+/).filter(Boolean);
-  return words.length ? GLYPHS.filter((g) => words.every((w) => g.words.includes(w))) : GLYPHS;
-}
-/** Whether the text is itself one emoji (typed or pasted): it can be used although it is not in the table. */
-export const isEmoji = (text: string): boolean =>
-  /^\p{Extended_Pictographic}(️|‍\p{Extended_Pictographic}|[\u{1F3FB}-\u{1F3FF}])*$/u.test(text);

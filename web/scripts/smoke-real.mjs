@@ -13,6 +13,7 @@ import { fakeRelay } from '../../scripts/browser-relay.mjs';
 import { auditFixtures } from './audit-fixtures.mjs';
 import { auditOwner } from './audit-owner.mjs';
 import { channelScenarios } from './smoke-channels.mjs';
+import { emojiRealChecks } from './smoke-emoji-real.mjs';
 import { realReaderChecks } from './smoke-reader.mjs';
 import { finishAccounts, reviewSettings, seedRailArchive } from './smoke-real-finish.mjs';
 import { openKeyField, seedLayouts } from './smoke-seed.mjs';
@@ -385,6 +386,7 @@ try {
     'reaction reaches relay',
     fake.published.some((e) => e.kind === 7),
   );
+  await emojiRealChecks({ page, fake, check, addWish, owner: fixture.note.pubkey, launch });
   await channelScenarios({ page, launch, check, fake, shots, shot });
   await auditFixtures({ fake, sign: fixtureSign, owner: fixture.note.pubkey, note: fixture.note });
   check(

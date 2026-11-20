@@ -59,6 +59,9 @@ Seams worth knowing inside `src/views/`:
   both share. `gated.ts` keeps a view from an engine too old to serve it.
   `compose-media.ts` retains failed files and their retry/server controls;
   `stats.ts` is the Stats tab (`Engine.stats()`, asked while in front).
+- `emoji-picker.ts` is the one emoji picker; `emoji-sections.ts` decides what its grid holds, `emoji-grid.ts`
+  draws and walks it, `emoji-preview.ts` is its strip and `emoji-peek.ts` the popover over a custom emoji. The
+  Unicode table is made at build time by `scripts/emoji-table.ts` and fetched by `shared/emoji-table.ts`.
 - `wm/presets.ts` has two layout families: `main` for an account and `guest`
   for a visitor; `main.ts` shows the one that fits who is signed in.
 - `wm/controller.ts` owns one workspace; `wm/closed.ts` is its stored list of

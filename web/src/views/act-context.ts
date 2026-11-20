@@ -14,7 +14,7 @@ export function actChip(act: ActRef): HTMLElement {
   const url = emoji.startsWith(':') ? act.emoji?.url : undefined;
   return h(
     'span',
-    { class: 'rchip act-chip', title: reactionLabel(emoji) },
+    { class: 'rchip act-chip', title: url ? null : reactionLabel(emoji) },
     url ? emojiImg(emoji, url) : reactionLabel(emoji),
   );
 }
