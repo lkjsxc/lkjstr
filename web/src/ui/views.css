@@ -112,18 +112,24 @@
 .date-field { min-width: 0; max-width: 100%; }
 .date-hint { max-width: 270px; margin-top: 3px; font-size: 12.5px; line-height: 1.5; }
 /* Time rail: a quiet strip, with no track or border. Its width is reserved before counts arrive. */
-.feed.has-time-rail { padding-right: var(--rail-size, 16px); scrollbar-width: none; }
+.feed.has-time-rail { --rail-size: 16px; padding-right: var(--rail-size); scrollbar-width: none; }
 .feed.has-time-rail::-webkit-scrollbar { display: none; width: 0; }
 .time-pin { position: sticky; top: 0; height: 0; margin-right: calc(-1 * var(--rail-size, 16px)); z-index: 4; }
 .time-rail { position: absolute; right: 0; width: 16px; background: var(--paper); z-index: 4; touch-action: none; user-select: none; cursor: default; }
 .time-rail[hidden], .time-return[hidden] { display: none; }
-.time-rail.wide { width: 56px; }
+/* A tile of 520px or more has the wide rail with its years, decided by CSS so the first frame already has it. */
+@container pane (min-width: 520px) {
+  .feed.has-time-rail { --rail-size: 56px; }
+  .time-rail { width: 56px; }
+  .time-rail .time-year { opacity: 1; }
+  .time-rail .year-month-dot { display: none; }
+}
 .time-rail::before { content: ""; position: absolute; inset: 0; }
 .time-marks { position: absolute; top: 0; bottom: 0; right: 0; left: -40px; pointer-events: none; }
 .time-dot { position: absolute; right: 5px; width: 3px; height: 3px; border-radius: 50%; background: var(--faint); transform: translateY(-50%); pointer-events: none; }
 .time-year { position: absolute; right: 18px; color: var(--faint); font-size: 11px; line-height: 12px; font-variant-numeric: tabular-nums; text-align: right; transform: translateY(-50%); pointer-events: none; opacity: 0; }
-.time-rail.wide .time-year, .time-rail:hover .time-year, .time-rail.held .time-year { opacity: 1; }
-.time-rail.wide .year-month-dot, .time-rail:hover .year-month-dot, .time-rail.held .year-month-dot { display: none; }
+.time-rail:hover .time-year, .time-rail.held .time-year { opacity: 1; }
+.time-rail:hover .year-month-dot, .time-rail.held .year-month-dot { display: none; }
 .time-year.current { color: var(--fg); }
 .time-place { position: absolute; width: 16px; right: 0; height: 2px; background: var(--accent); pointer-events: none; }
 .time-return { position: absolute; right: 1px; width: 10px; height: 6px; border: 1px solid var(--accent); background: var(--paper); transform: translateY(-50%); }

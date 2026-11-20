@@ -100,13 +100,11 @@ export function mountTimeRail(o: {
     );
     rail.hidden = !show;
     el.classList.toggle('has-time-rail', data?.supported ?? (o.candidate && o.version() >= 5));
-    el.style.setProperty('--rail-size', el.offsetWidth >= 520 ? '56px' : '16px');
     height = Math.max(1, el.clientHeight - 16);
     bands = timeScale(data?.months ?? [], height);
     if (!show) return;
     rail.style.top = '0px';
     rail.style.height = `${el.clientHeight}px`;
-    rail.classList.toggle('wide', el.offsetWidth >= 520);
     rail.classList.toggle('open-end', data?.older === true);
     marks.replaceChildren(
       ...timeMarks(bands, height).flatMap((m) => [

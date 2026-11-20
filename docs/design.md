@@ -152,7 +152,9 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
   a quiet one without crowding it out and empty time taking no room, dots
   where months begin, numbers where years begin, a 2px accent line across only the rightmost 16px for where you are; the current year uses normal text colour;
   pressed or dragged it goes to that time and says it, and leaves a tick to
-  come back by. Other views keep a 14px scrollbar with a slim thumb that
+  come back by. The tile's own width decides the rail (56px with years from 520px, else 16px) and other tile-width
+  layouts (Documentation stacks its tree above the page under 520px) from the first frame. Other views keep a 14px
+  scrollbar with a slim thumb that
   widens under the pointer.
 - Filters are saved with the tab. The filter row (like the notification
   toggles and the settings search) is the first row of the content: it
