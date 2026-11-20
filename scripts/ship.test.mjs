@@ -48,6 +48,16 @@ test('schema-compatible baseline uses two verified copies, linked history and on
   assert.match(result.summary, /baseline=0+1/);
 });
 
+test('a quiet ship preserves the verified release and rate record without sending a note', t => {
+  const f = fixture(t);
+  const result = f.run('', { LKJSTR_SHIP_NOTIFY: '0' });
+  assert.equal(result.status, 0, result.log);
+  assert.match(result.summary, /^SHIPPED /);
+  assert.equal(deploys(f.events()).length, 1);
+  assert.equal(notices(f.events()).length, 0);
+  assert.equal(existsSync(join(f.state, 'lkjstr-last-ship')), true);
+});
+
 test('failed second baseline is incomplete, leaves the safe first copy, and can be retried', t => {
   const f = fixture(t);
   const result = f.run('--establish-rollback-baseline', { LKJSTR_SHIP_TEST_FAIL_DEPLOY: '2' });

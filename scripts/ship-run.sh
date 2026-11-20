@@ -25,6 +25,8 @@ exec >"$W/tmp/ship.log" 2>&1
 end() { printf '%s\n' "$1" >> "$W/tmp/ship.out"; exit "$2"; }
 fail() { end "NOT SHIPPED: $1" 1; }
 clean() { local STATUS; STATUS=$(git status --porcelain) && [[ -z "$STATUS" ]]; }
+NOTIFY=${LKJSTR_SHIP_NOTIFY:-1}
+[[ "$NOTIFY" == 0 || "$NOTIFY" == 1 ]] || fail 'LKJSTR_SHIP_NOTIFY must be 0 or 1'
 LAST="$STATE/lkjstr-last-ship"
 if [[ -f "$LAST" ]]; then
   read -r LAST_TIME LAST_COMMIT < "$LAST" || fail 'invalid last-ship record'
@@ -108,7 +110,9 @@ printf 'revision=%s\narchive=%s\nindex=%s\ncurrent=%s\nfirst=%s\nmode=%s\n' \
   "$REVISION" "$H" "$I" "$CURRENT" "$FIRST" "$MODE" > "$RUN/summary"
 node --input-type=module --eval "$CLEANUP_CODE" ship-clean "$W" ||
   printf '%s\n' 'Debug cleanup deferred: cleanup policy could not finish.'
-if ! desk note "lkjstr を更新: $NOTE https://lkjstr.lkjsxc.com" --from chatgpt-lkjstr; then
+if [[ "$NOTIFY" == 0 ]]; then
+  printf '%s\n' 'Owner notification deferred for the release summary.'
+elif ! desk note "lkjstr を更新: $NOTE https://lkjstr.lkjsxc.com" --from chatgpt-lkjstr; then
   end "SHIPPED $C sha256=$H current=$CURRENT; desk note failed" 1
 fi
 end "SHIPPED $C sha256=$H current=$CURRENT baseline=$FIRST" 0
