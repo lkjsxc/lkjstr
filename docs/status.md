@@ -129,7 +129,6 @@ Draft.longForm; there is no parsed article document/reader. Note deletion checks
 surfaces.
 
 ## Accounts, routing and publication
-
 Account writes compare durable revisions; strict boot and schema fencing preserve rows across Worker graphs. Protocol13 separately reports account-load
 failure, retains client accounts and uses existing feed error wording. [Completed production proof](engine-availability-verification.md).
 Read-only/external accounts cannot export local keys; Debug redacts secrets. Extension/bunker signing remains owner-bound and verified.
@@ -143,6 +142,7 @@ Publishing uses author outboxes and inbox/context routes, with first acceptance 
 Signed text notes appear in Home, Profile and Thread before any relay reply. Cached write lists and connected write-enabled relays send while discovery runs.
 Note destinations get ten seconds to connect and five seconds after the first frame; late confirmations remain available. Passive inbox checks yield to writing.
 Persisted receipts help route deletes. Lists wait for initial lookup, retain opaque content and reject unsupported private removals.
+Public signing stages and Worker contention are measured in [signing-latency.md](signing-latency.md).
 
 Blossom honors kind 10063; NIP-96 is the fallback. All signer kinds support upload authorization. Required-response evidence, explicit server
 selection, bounded processing and aggregate deadlines preserve truthful outcomes. Optional BUD-06 failure stays unknown. See

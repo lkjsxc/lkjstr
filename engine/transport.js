@@ -257,6 +257,12 @@ export function workerTransport(options = {}) {
         if(pending.has(msg.req)||zapReads.has(msg.req))return;
         if(pending.size>=64) {receive({t:'result',req:msg.req,ok:false,error:{code:'internal'}});return;}
         pending.add(msg.req);
+        msg = { ...msg, signingTiming: {
+          at: performance.timeOrigin + performance.now(),
+          hidden: document.visibilityState === 'hidden',
+          boot: !started,
+          restart: started && !readsReady,
+        } };
         if(!started) {startup.push([msg,transfer]);return;}
       }
       send(msg,transfer);

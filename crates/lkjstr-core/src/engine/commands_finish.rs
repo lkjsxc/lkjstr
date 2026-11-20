@@ -44,7 +44,18 @@ impl Engine {
         }
         Ok(())
     }
-    pub(in crate::engine) fn signed(&mut self, req: String, event: Option<NostrEvent>, now: u64) {
+    pub fn accept_signature(
+        &mut self,
+        req: String,
+        event: Option<NostrEvent>,
+        error: Option<String>,
+        now: u64,
+        verified: impl FnOnce(),
+    ) {
+        if event.is_none() && error.as_deref() == Some("signer-missing") {
+            self.refuse_sign(req, "signer-missing");
+            return;
+        }
         let Some(pending) = self.signing.remove(&req) else {
             self.error(Some(req), "unknown-sign-request");
             return;
@@ -61,6 +72,7 @@ impl Engine {
             self.error(Some(req), "signer-timeout");
             return;
         }
+        verified();
         let (routes, author_list, default_routes) = self.plan_publication(&event);
         if event.kind == 1 && !self.network.can_stage_note(&event.id) {
             self.error(Some(req), "publication-limit");

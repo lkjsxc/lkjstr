@@ -49,10 +49,18 @@ pub(in crate::worker) fn prime(h: &mut Host, account: &str) -> Result<(), JsValu
             },
         },
     );
-    h.receive(client, account_input(account, "stop-queued-account"));
+    h.receive(
+        client,
+        account_input(account, "stop-queued-account"),
+        Default::default(),
+    );
     let loaded = h.loaded;
     h.loaded = false;
-    h.receive(client, account_input(account, "stop-queued-startup"));
+    h.receive(
+        client,
+        account_input(account, "stop-queued-startup"),
+        Default::default(),
+    );
     h.loaded = loaded;
     h.engine.private_lists.insert(
         "stop-private-list".into(),
@@ -92,10 +100,18 @@ pub(in crate::worker) fn stale_input(h: &mut Host, account: &str) -> Result<(), 
     .serialize(&serde_wasm_bindgen::Serializer::json_compatible())
     .map_err(|_| JsValue::from_str("stop input encoding failed"))?;
     h.receive_value(0, value);
-    h.receive(0, account_input(account, "stop-queued-late-decoded"));
+    h.receive(
+        0,
+        account_input(account, "stop-queued-late-decoded"),
+        Default::default(),
+    );
     let loaded = h.loaded;
     h.loaded = false;
-    h.receive(0, account_input(account, "stop-queued-late-startup"));
+    h.receive(
+        0,
+        account_input(account, "stop-queued-late-startup"),
+        Default::default(),
+    );
     h.loaded = loaded;
     h.scope.direct(
         0,

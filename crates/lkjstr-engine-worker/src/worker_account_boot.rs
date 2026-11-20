@@ -3,6 +3,7 @@ use super::*;
 use crate::browser::idb_accounts::{self, Change, Reply};
 use lkjstr_core::engine::account_storage;
 pub(super) fn load(host: &Rc<RefCell<Host>>) {
+    let begin = crate::measure::now();
     let controller = match web_sys::AbortController::new() {
         Ok(value) => value,
         Err(_) => {
@@ -114,10 +115,11 @@ pub(super) fn load(host: &Rc<RefCell<Host>>) {
         let queued = std::mem::take(&mut h.startup);
         // Inspection already observed pre-boot visibility/detach input.
         h.storage.replaying_startup = true;
-        for (id, input) in queued {
-            h.receive(id, input);
+        for (id, input, stamp) in queued {
+            h.receive(id, input, stamp);
         }
         h.storage.replaying_startup = false;
+        h.sign_trace.span(sign_trace::Activity::Boot, begin);
         if cache_failed {
             post(
                 &h,

@@ -17,7 +17,7 @@ pub(super) fn stop(h: &mut Host) {
 }
 pub(super) fn detach(h: &mut Host, client: u64) {
     h.account_tasks.retain(|(id, _, _)| *id != client);
-    h.startup.retain(|(id, _)| *id != client);
+    h.startup.retain(|(id, _, _)| *id != client);
     if h.account_store
         .committing
         .as_ref()

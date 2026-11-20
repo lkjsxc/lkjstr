@@ -1,16 +1,16 @@
 //! Monotonic browser timing, usable in workers.
 use wasm_bindgen::JsCast;
+fn performance() -> Option<web_sys::Performance> {
+    js_sys::Reflect::get(&js_sys::global(), &"performance".into())
+        .ok()?
+        .dyn_into()
+        .ok()
+}
 pub(crate) fn now() -> f64 {
-    let global = js_sys::global();
-    let sample = || {
-        let performance = js_sys::Reflect::get(&global, &"performance".into()).ok()?;
-        let now = js_sys::Reflect::get(&performance, &"now".into())
-            .ok()?
-            .dyn_into::<js_sys::Function>()
-            .ok()?;
-        now.call0(&performance).ok()?.as_f64()
-    };
-    sample().unwrap_or_else(js_sys::Date::now)
+    performance().map_or_else(js_sys::Date::now, |p| p.now())
+}
+pub(crate) fn origin() -> f64 {
+    performance().map_or(0.0, |p| p.time_origin())
 }
 #[cfg(feature = "harness")]
 #[wasm_bindgen::prelude::wasm_bindgen]

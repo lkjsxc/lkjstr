@@ -101,6 +101,7 @@ pub fn start_shared() -> Result<SharedWorkerHandle, JsValue> {
         discovery: BTreeMap::new(),
         loaded: false,
         startup: vec![],
+        sign_trace: Default::default(),
         status: None,
         sessions: BTreeMap::new(),
         scope: Sink::Shared {
@@ -204,7 +205,6 @@ fn send(target: &JsValue, out: &lkjstr_core::engine::wire::Output) {
         let _ = post.call1(target, &value);
     }
 }
-
 pub(super) fn expire(host: &Rc<RefCell<Host>>) {
     let mut h = host.borrow_mut();
     let now = h.time();

@@ -2,6 +2,15 @@ use super::*;
 impl Network {
     /// Frame parsing and signature verification remain in protocol/core.
     pub fn message(&mut self, relay: &str, text: &str, now: u64) -> Option<NostrEvent> {
+        self.message_observed(relay, text, now, |_| {})
+    }
+    pub fn message_observed(
+        &mut self,
+        relay: &str,
+        text: &str,
+        now: u64,
+        on_acceptance: impl FnOnce(&str),
+    ) -> Option<NostrEvent> {
         self.now = now;
         if text.len() > 1024 * 1024 {
             return None;
@@ -135,7 +144,14 @@ impl Network {
                 if !self.auth_answer(relay, &event_id, accepted, &message, now)
                     && (accepted || !self.auth_write(relay, &event_id, &message))
                 {
+                    let before = self.output.len();
                     self.answer_delivery(&event_id, relay, accepted, &message, now);
+                    if let Some(Output::Result {
+                        req, error: None, ..
+                    }) = self.output.get(before)
+                    {
+                        on_acceptance(req);
+                    }
                 }
             }
             lkjstr_protocol::RelayMessage::Notice(message) if quality::limited(&message) => {

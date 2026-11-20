@@ -896,7 +896,47 @@ export type ToEngine =
   | { readonly t: 'signed'; readonly req: ReqId; readonly event?: string; readonly error?: string };
 
 // engine-added 2026-11-15: 4
+export type SigningSample = {
+  readonly kind: number;
+  readonly signer: 'local' | 'extension' | 'remote' | 'unknown';
+  readonly enqueueMs: number;
+  readonly receivedMs: number;
+  readonly startMs: number | null;
+  readonly responseMs: number | null;
+  readonly signedMs: number | null;
+  readonly publishedMs: number | null;
+  readonly finishedMs: number | null;
+  readonly hidden: boolean;
+  readonly boot: boolean;
+  readonly restart: boolean;
+  readonly cacheBusyAtReceipt: boolean;
+  readonly accountBusyAtReceipt: boolean;
+  /** Phase, milliseconds overlapping the action, and milliseconds before Worker receipt. */
+  readonly overlapping: readonly (readonly [
+    (
+      | 'ingest'
+      | 'verify'
+      | 'plan'
+      | 'render'
+      | 'timeline'
+      | 'output'
+      | 'cache'
+      | 'idb'
+      | 'sync'
+      | 'boot'
+      | 'keyOperation'
+    ),
+    number,
+    number,
+  ])[];
+};
 export type EngineStats = {
+  /** Public-event timings in the current Worker only. All timestamps use its monotonic clock. */
+  readonly signing?: {
+    readonly recent: readonly SigningSample[];
+    readonly slow: readonly SigningSample[];
+    readonly lastUnlockMs: number | null;
+  };
   /** At most 256 logical requests; wireId groups filters sharing one envelope. */
   readonly requests?: readonly {
     readonly id: string;

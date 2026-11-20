@@ -73,6 +73,7 @@ Engine (`crates/`):
 - [engine-retained-diff.md](engine-retained-diff.md): retained-window diff cost and bounded key lookup.
 - [engine-thread-order.md](engine-thread-order.md): relationship order across timestamp ties and clock skew.
 - [engine-proposals.md](engine-proposals.md): protocol proposals and their outcome.
+- [signing-latency.md](signing-latency.md): public signing timings and Worker contention.
 - [engine-proposals-history.md](engine-proposals-history.md): preserved earlier protocol additions.
 - [storage-inspection.md](storage-inspection.md): finite storage observations, bounds and verification limits.
 - [engine-device-verification.md](engine-device-verification.md): protocol-12 merged gates, production and historical proof.

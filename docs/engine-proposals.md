@@ -190,3 +190,9 @@ The bounded resolution and exact representative policy follow
 
 Relay Stats add optional firstEventMs, requestUses and readTimeouts: verified first-event latency, session REQ envelopes and bounded read timeout score.
 Inactive routes without retained transport observations report null.
+
+## Public signing timing
+
+- Optional transport metadata on `act` carries `signingTiming: { at, hidden, boot, restart }` from its enqueue boundary. Existing callers can omit it.
+- Optional `stats.signing` reports bounded `recent` and `slow` public signing timings.
+  See [signing-latency.md](signing-latency.md) for stages, overlap and retention.

@@ -1,8 +1,17 @@
 //! Bounded verification, replanning and view updates away from socket callbacks.
 use super::*;
+#[derive(Clone, Copy)]
+pub enum TickPhase {
+    Verify,
+    Plan,
+    Render,
+}
 impl Engine {
     /// Called away from socket callbacks. At most 32 verifications per slice.
     pub fn tick(&mut self, now: u64) {
+        self.tick_observed(now, |_| {});
+    }
+    pub fn tick_observed(&mut self, now: u64, mut observe: impl FnMut(TickPhase)) {
         self.previews.tick(now);
         let revision = self.store.revision();
         let was_verifying = self.network.verifying;
@@ -33,6 +42,7 @@ impl Engine {
                 self.rejected += 1;
             }
         }
+        observe(TickPhase::Verify);
         self.network.verifying = !self.queue.is_empty();
         self.network.profiles_changed |= was_verifying && !self.network.verifying;
         if self.reconcile_local_reads(now) || self.store.revision() != revision {
@@ -72,6 +82,7 @@ impl Engine {
             self.signing.remove(&req);
             self.error(Some(req), "signer-timeout");
         }
+        observe(TickPhase::Plan);
         if now.saturating_sub(self.last_flush) >= 75 {
             self.last_flush = now;
             let subs: Vec<_> = self
@@ -82,6 +93,7 @@ impl Engine {
                 .collect();
             for sub in subs {
                 self.render(&sub, false);
+                observe(TickPhase::Render);
             }
         }
     }

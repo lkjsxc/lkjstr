@@ -58,6 +58,7 @@ pub(super) fn persist(host: &Rc<RefCell<Host>>) {
         if let Some(h) = weak.upgrade() {
             let mut h = h.borrow_mut();
             h.flushing = false;
+            h.sign_trace.span(sign_trace::Activity::Idb, begin);
             if let Ok(contexts) = result {
                 if h.engine.contexts_committed(&work.7, contexts).is_err() {
                     post(

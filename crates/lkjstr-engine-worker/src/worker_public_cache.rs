@@ -58,6 +58,7 @@ pub(super) fn pump(host: &Rc<RefCell<Host>>) {
     };
     let weak = Rc::downgrade(host);
     wasm_bindgen_futures::spawn_local(async move {
+        let begin = crate::measure::now();
         let result = crate::browser::idb_public::references(&work.0, &work.1).await;
         let Some(host) = weak.upgrade() else { return };
         let mut h = host.borrow_mut();
@@ -65,6 +66,8 @@ pub(super) fn pump(host: &Rc<RefCell<Host>>) {
         if h.stopped {
             return;
         }
+        h.sign_trace.span(sign_trace::Activity::Idb, begin);
+        let begin = crate::measure::now();
         match result {
             Ok((rows, scanned)) => {
                 h.engine.restore_cache(&rows);
@@ -87,5 +90,6 @@ pub(super) fn pump(host: &Rc<RefCell<Host>>) {
                 );
             }
         }
+        h.sign_trace.span(sign_trace::Activity::Cache, begin);
     });
 }

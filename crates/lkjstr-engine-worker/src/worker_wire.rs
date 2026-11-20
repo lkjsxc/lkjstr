@@ -1,38 +1,7 @@
 use super::*;
 use lkjstr_core::engine::wire::{Input as W, Output as O, Session, actions::Action as A};
 impl Host {
-    pub(super) fn receive_value(&mut self, id: u64, value: JsValue) {
-        if self.stopped {
-            return;
-        }
-        if let Ok(mut input) = serde_wasm_bindgen::from_value::<W>(value.clone()) {
-            if let W::Act {
-                req,
-                action: A::Upload { bytes, .. },
-            } = &mut input
-            {
-                let raw = js_sys::Reflect::get(&value, &"action".into())
-                    .and_then(|a| js_sys::Reflect::get(&a, &"bytes".into()));
-                let Ok(raw) = raw else {
-                    return;
-                };
-                if !raw.is_instance_of::<js_sys::ArrayBuffer>() {
-                    self.scope
-                        .direct(id, &Session::failure(req.clone(), "rejected"));
-                    return;
-                }
-                let array = js_sys::Uint8Array::new(&raw);
-                if array.length() > 20 * 1024 * 1024 {
-                    self.scope
-                        .direct(id, &Session::failure(req.clone(), "too-large"));
-                    return;
-                }
-                *bytes = array.to_vec();
-            }
-            self.receive(id, input);
-        }
-    }
-    pub(super) fn receive(&mut self, id: u64, input: lkjstr_core::engine::wire::Input) {
+    pub(super) fn receive(&mut self, id: u64, input: W, stamp: sign_trace::Stamp) {
         if self.stopped {
             return;
         }
@@ -49,7 +18,7 @@ impl Host {
         }
         if !self.loaded {
             if self.startup.len() < 256 {
-                self.startup.push((id, input));
+                self.startup.push((id, input, stamp));
             } else {
                 account_failure::input(self, id, input);
             }
@@ -87,7 +56,7 @@ impl Host {
                     id,
                     &O::Stats {
                         req,
-                        stats: self.engine.stats(),
+                        stats: self.sign_trace.stats(&self.engine),
                     },
                 );
                 return;
@@ -228,7 +197,7 @@ impl Host {
                         vec![input]
                     };
                     for input in inputs {
-                        self.engine.input(input, self.time());
+                        self.sign_input(input, stamp);
                     }
                 }
             }
@@ -240,8 +209,10 @@ impl Host {
             }
             _ => {}
         }
+        let begin = crate::measure::now();
         private_lists::sync(self);
         bunker::sync(self);
+        self.sign_trace.span(sign_trace::Activity::Sync, begin);
         if refresh_previews {
             previews::refresh(self);
         }

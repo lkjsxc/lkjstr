@@ -83,10 +83,21 @@ pub(in crate::worker) fn pump_accounts(host: &Rc<RefCell<Host>>) {
             client: id,
             req: req.clone(),
         };
+        let key_start = crate::measure::now();
+        let vault = keys::is_vault(&action);
+        let unlocking = matches!(action, A::AccountUnlock { .. });
         let result = match &lock {
             Some(Err(code)) => Err(*code),
             _ => mutation::apply(action, &mut next, watermark, &caller).await,
         };
+        if vault && let Some(host) = weak.upgrade() {
+            let mut host = host.borrow_mut();
+            host.sign_trace
+                .span(sign_trace::Activity::KeyOperation, key_start);
+            if unlocking {
+                host.sign_trace.last_unlock_ms = Some(crate::measure::now() - key_start);
+            }
+        }
         // A backup remains redacted/zeroizing until its exact live success reply.
         let result = result.map(|value| value.map(SecretText::new));
         let mut storage_failure = None;

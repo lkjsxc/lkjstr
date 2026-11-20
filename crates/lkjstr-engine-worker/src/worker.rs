@@ -49,12 +49,16 @@ mod public_cache;
 mod relay_auth;
 #[path = "worker_relays.rs"]
 mod relay_config;
+#[path = "worker_sign_trace.rs"]
+mod sign_trace;
 #[path = "worker_sign.rs"]
 mod signing;
 #[path = "worker_storage.rs"]
 mod storage;
 #[path = "worker_upload.rs"]
 mod uploads;
+#[path = "worker_value.rs"]
+mod value_boundary;
 #[path = "worker_zaps.rs"]
 mod zaps;
 use effects::pump;
@@ -84,7 +88,8 @@ struct Host {
     account_store: account_store::State,
     discovery: BTreeMap<(u64, String), u64>,
     loaded: bool,
-    startup: Vec<(u64, lkjstr_core::engine::wire::Input)>,
+    startup: Vec<(u64, lkjstr_core::engine::wire::Input, sign_trace::Stamp)>,
+    sign_trace: sign_trace::Trace,
     status: Option<(usize, usize)>,
     engine: Engine,
     sessions: BTreeMap<u64, RefCell<lkjstr_core::engine::wire::Session>>,
@@ -138,6 +143,7 @@ pub fn start() -> Result<WorkerHandle, JsValue> {
         discovery: BTreeMap::new(),
         loaded: false,
         startup: vec![],
+        sign_trace: Default::default(),
         status: None,
         sessions: [(0, RefCell::default())].into_iter().collect(),
         scope: Sink::Dedicated(scope.clone()),
@@ -182,12 +188,25 @@ fn schedule(host: &Rc<RefCell<Host>>) {
                 let mut h = h.borrow_mut();
                 let at = h.time();
                 let begin = crate::measure::now();
-                h.engine.tick(at);
+                let mut phase_begin = begin;
+                let h = &mut *h;
+                h.engine.tick_observed(at, |phase| {
+                    use lkjstr_core::engine::TickPhase;
+                    let activity = match phase {
+                        TickPhase::Verify => sign_trace::Activity::Verify,
+                        TickPhase::Plan => sign_trace::Activity::Plan,
+                        TickPhase::Render => sign_trace::Activity::Render,
+                    };
+                    h.sign_trace.span(activity, phase_begin);
+                    phase_begin = crate::measure::now();
+                });
                 for (id, session) in &h.sessions {
                     for out in session.borrow_mut().timeline_tick(&h.engine, at) {
                         h.scope.direct(*id, &out);
                     }
                 }
+                h.sign_trace
+                    .span(sign_trace::Activity::Timeline, phase_begin);
                 let elapsed = crate::measure::now() - begin;
                 h.engine.metrics.tick(elapsed);
             }

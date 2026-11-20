@@ -91,14 +91,9 @@ impl Engine {
                 account,
                 action,
             } => self.action(req, account, action, now),
-            Input::Signed {
-                req,
-                event: None,
-                error: Some(error),
-            } if error == "signer-missing" => {
-                self.refuse_sign(req, "signer-missing");
+            Input::Signed { req, event, error } => {
+                self.accept_signature(req, event, error, now, || {});
             }
-            Input::Signed { req, event, .. } => self.signed(req, event, now),
         }
     }
 }

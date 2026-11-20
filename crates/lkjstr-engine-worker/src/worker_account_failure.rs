@@ -23,7 +23,7 @@ pub(super) fn fail(h: &mut Host) {
     for id in h.sessions.keys().copied() {
         ready(h, id, matches!(h.scope, Sink::Shared { .. }));
     }
-    for (id, message) in std::mem::take(&mut h.startup) {
+    for (id, message, _) in std::mem::take(&mut h.startup) {
         input(h, id, message);
     }
 }

@@ -15,6 +15,7 @@ pub(super) fn stop(h: &mut Host) {
     h.accounts = Default::default();
     h.account_tasks.clear();
     h.startup.clear();
+    h.sign_trace = Default::default();
     // The handle cannot resume. Drop private policy, core anchors, pending output
     // and per-client projections rather than retaining an unusable cache.
     h.engine = Engine::new();

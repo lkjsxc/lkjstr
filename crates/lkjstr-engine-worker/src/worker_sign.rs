@@ -1,6 +1,22 @@
 use super::*;
 pub(super) fn process(host: &Rc<RefCell<Host>>, o: &Output) -> bool {
     if let Output::Sign { req, event } = &o {
+        let signer = {
+            let h = host.borrow();
+            match h
+                .accounts
+                .entries
+                .iter()
+                .find(|a| a.pubkey == event.pubkey)
+                .map(|a| a.signer.as_str())
+            {
+                Some("local") => "local",
+                Some("extension") => "extension",
+                Some("remote") => "remote",
+                _ => "unknown",
+            }
+        };
+        host.borrow_mut().sign_trace.start(req, event.kind, signer);
         let remote = host.borrow().accounts.remote(&event.pubkey);
         if let Some(remote) = remote {
             let captured = bunker::authority(&host.borrow(), &event.pubkey);
@@ -55,19 +71,11 @@ pub(super) fn process(host: &Rc<RefCell<Host>>, o: &Output) -> bool {
                 });
                 let mut h = host.borrow_mut();
                 if !h.stopped && h.engine.signing_deadline(&req, &event) == Some(deadline) {
-                    let at = h.time();
                     if let Err(code) = signed {
                         h.engine.refuse_sign(req, code);
                         return;
                     }
-                    h.engine.input(
-                        lkjstr_core::engine::protocol::Input::Signed {
-                            req,
-                            event: signed.ok(),
-                            error: None,
-                        },
-                        at,
-                    );
+                    h.signature(req, signed.ok(), None);
                 }
             });
             return true;
@@ -76,15 +84,7 @@ pub(super) fn process(host: &Rc<RefCell<Host>>, o: &Output) -> bool {
         match signed {
             Ok(Some(event)) => {
                 let mut h = host.borrow_mut();
-                let at = h.time();
-                h.engine.input(
-                    lkjstr_core::engine::protocol::Input::Signed {
-                        req: req.clone(),
-                        event: Some(event),
-                        error: None,
-                    },
-                    at,
-                );
+                h.signature(req.clone(), Some(event), None);
                 return true;
             }
             Ok(None) => {}
@@ -96,4 +96,38 @@ pub(super) fn process(host: &Rc<RefCell<Host>>, o: &Output) -> bool {
     }
 
     false
+}
+
+impl Host {
+    pub(super) fn sign_input(
+        &mut self,
+        input: lkjstr_core::engine::protocol::Input,
+        stamp: sign_trace::Stamp,
+    ) {
+        use lkjstr_core::engine::protocol::Input;
+        let now = self.time();
+        match input {
+            Input::Action { ref req, .. } => {
+                self.sign_trace
+                    .enqueue(req, stamp, self.flushing, self.account_busy);
+                self.engine.input(input, now);
+            }
+            Input::Signed { req, event, error } => self.signature(req, event, error),
+            _ => self.engine.input(input, now),
+        }
+    }
+    pub(super) fn signature(
+        &mut self,
+        req: String,
+        event: Option<lkjstr_protocol::NostrEvent>,
+        error: Option<String>,
+    ) {
+        self.sign_trace.response(&req);
+        let mut verified = None;
+        self.engine
+            .accept_signature(req.clone(), event, error, self.time(), || {
+                verified = Some(crate::measure::now());
+            });
+        self.sign_trace.signed(&req, verified);
+    }
 }

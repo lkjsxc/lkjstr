@@ -51,6 +51,7 @@ pub mod settings;
 pub mod storage_inspection;
 mod thread;
 mod tick;
+pub use tick::TickPhase;
 pub mod upload;
 pub mod upload_jobs;
 mod wants;

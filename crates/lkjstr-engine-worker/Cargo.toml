@@ -28,7 +28,7 @@ web-sys = { version = "0.3.99", features = [
  "WorkerGlobalScope", "MessagePort", "IdbFactory", "IdbDatabase", "IdbRequest",
  "IdbOpenDbRequest", "IdbVersionChangeEvent", "IdbTransaction", "IdbTransactionMode", "IdbObjectStore",
  "IdbObjectStoreParameters", "IdbKeyRange", "IdbIndex", "IdbCursorWithValue", "IdbCursorDirection",
- "DomStringList"
+ "DomStringList", "Performance"
 ] }
 [features]
 harness = []

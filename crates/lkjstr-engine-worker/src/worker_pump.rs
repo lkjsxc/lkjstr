@@ -9,7 +9,9 @@ pub(super) fn pump(host: &Rc<RefCell<Host>>) {
         let mut h = host.borrow_mut();
         (h.engine.network.drain_effects(), h.engine.drain())
     };
+    let start = crate::measure::now();
     for o in outputs {
+        host.borrow_mut().sign_trace.output(&o);
         if direct_messages::output(host, &o) {
             continue;
         }
@@ -17,6 +19,9 @@ pub(super) fn pump(host: &Rc<RefCell<Host>>) {
             post(&host.borrow(), &o);
         }
     }
+    host.borrow_mut()
+        .sign_trace
+        .span(sign_trace::Activity::Output, start);
     for effect in effects {
         match effect {
             Effect::Inspect(url) => relay_info(host, url),
@@ -43,10 +48,20 @@ pub(super) fn pump(host: &Rc<RefCell<Host>>) {
                                     }
                                 }
                                 SocketEvent::Message(text) => {
+                                    let begin = crate::measure::now();
                                     let at = h.time();
-                                    if let Some(e) = h.engine.network.message(&relay, &text, at) {
+                                    let h = &mut *h;
+                                    if let Some(e) = h.engine.network.message_observed(
+                                        &relay,
+                                        &text,
+                                        at,
+                                        |req| {
+                                            h.sign_trace.accepted(req);
+                                        },
+                                    ) {
                                         h.engine.enqueue(relay.clone(), e);
                                     }
+                                    h.sign_trace.span(sign_trace::Activity::Ingest, begin);
                                 }
                             }
                         }
@@ -79,9 +94,13 @@ pub(super) fn pump(host: &Rc<RefCell<Host>>) {
             }
         }
     }
+    let cache_start = crate::measure::now();
     storage::pump(host);
     public_cache::pump(host);
     persist(host);
+    host.borrow_mut()
+        .sign_trace
+        .span(sign_trace::Activity::Cache, cache_start);
     identity::identities(host);
     accounts::pump_accounts(host);
     zaps::pump(host);
