@@ -47,7 +47,7 @@ export async function emojiRealChecks({ page, fake, check, owner, launch }) {
   await smile.click();
   // One opening brings the reader's own list, drawn at the top, and the set it names: the list arrives during this
   // opening (it was never read before), so the set is asked for on the engine's next round.
-  const setCell = page.locator('.epick .egroup[data-section="set:Smoke set"] .ecell').first();
+  const setCell = page.locator(`.epick .egroup[data-section="set:${set}"] .ecell`).first();
   try {
     await setCell.waitFor({ timeout: 15000 });
   } catch {
@@ -69,16 +69,16 @@ export async function emojiRealChecks({ page, fake, check, owner, launch }) {
   }
   check(
     "the picker's first opening draws the reader's own list at the top",
-    (await page.locator('.epick .egroup').first().getAttribute('data-section')) === 'set:' &&
+    (await page.locator('.epick .egroup').first().getAttribute('data-section')) === 'mine' &&
       (await page.locator('.epick .egrid').evaluate((g) => g.scrollTop)) === 0,
   );
   // The pictures cannot be had here: each cell says its code instead.
   await setCell.locator('.efail').waitFor();
-  await page.locator('.epick .egroup[data-section="set:"] .ecell .efail').first().waitFor();
+  await page.locator('.epick .egroup[data-section="mine"] .ecell .efail').first().waitFor();
   check(
     "the picker shows the reader's own list and the set it names, a failed picture as its code",
     (await page
-      .locator('.epick .egroup[data-section="set:"] .ecell', { hasText: `:${own.code}:` })
+      .locator('.epick .egroup[data-section="mine"] .ecell', { hasText: `:${own.code}:` })
       .count()) === 1 && (await setCell.innerText()) === `:${listed.code}:`,
   );
   await setCell.hover();

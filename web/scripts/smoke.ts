@@ -1259,6 +1259,65 @@ async function reading(browser: Browser, still: Record<string, unknown>): Promis
       )),
   );
   await page.keyboard.press('Escape');
+  // The custom tab: one button after frequently used, reached by the arrows too, goes to the reader's own list and
+  // lights while any of their sets is in view; a typed code finds custom and standard emoji under their headings.
+  await note.locator('.a-smile').click();
+  await page.locator('.epick .egroup[data-cat="custom"] .ecell').first().waitFor();
+  await page.locator('.epick .ecats button').first().focus();
+  await page.keyboard.press('ArrowRight');
+  await page.keyboard.press('Enter');
+  const customTab = await page.locator('.epick').evaluate((p) => {
+    const grid = p.querySelector<HTMLElement>('.egrid');
+    const first = p.querySelector<HTMLElement>('.egroup[data-cat="custom"]');
+    return {
+      keyed: document.activeElement?.getAttribute('data-section'),
+      lit: p.querySelector('.ecats button.on')?.getAttribute('data-section'),
+      top: !!grid && !!first && Math.abs(grid.scrollTop - first.offsetTop) <= 1,
+      groups: [...p.querySelectorAll<HTMLElement>('.egroup[data-cat="custom"]')].map(
+        (g) => g.dataset.section,
+      ),
+    };
+  });
+  fact(
+    "the custom tab goes to the reader's own list, then each set under its own key",
+    customTab.keyed === 'custom' &&
+      customTab.lit === 'custom' &&
+      customTab.top &&
+      /^mine,set:30030:\w+:kotoba,set:30030:\w+:kurashi$/.test(customTab.groups.join()),
+    customTab,
+  );
+  const typedCode = async (code: string) => {
+    await page.locator('.epick input').fill(code);
+    return [
+      (await page.locator('.epick .egrid .ehd').allTextContents()).join(),
+      await page.locator('.epick .ecell').first().getAttribute('aria-label'),
+      await page
+        .locator('.epick .ecats')
+        .evaluate((c) => c.querySelector('button.on')?.getAttribute('data-section') ?? ''),
+    ].join();
+  };
+  const inTab = await typedCode(':ok');
+  await page.locator('.epick input').fill('');
+  const back = await page
+    .locator('.epick .egrid')
+    .evaluate(
+      (g) =>
+        g.scrollTop ===
+        (g.querySelector<HTMLElement>('.egroup[data-cat="custom"]')?.offsetTop ?? -1),
+    );
+  await page.locator('.epick .ecats button[data-section="used"]').click();
+  const elsewhere = (await typedCode(':ok')).split(',').slice(0, 3).join();
+  fact(
+    'in the custom tab a typed code finds custom emoji first under their heading, and back',
+    inTab === 'Custom emoji,Standard emoji,:ok:,custom' && back,
+    [inTab, back],
+  );
+  fact(
+    'elsewhere the best match leads, so Enter takes what it took before',
+    elsewhere === 'Standard emoji,Custom emoji,OK button',
+    elsewhere,
+  );
+  await page.keyboard.press('Escape');
   // A custom emoji in a note says what it is in a popover that never takes the press meant for the note.
   const inline = page.locator(`${feed} .note .text img.emo`).first();
   await inline.scrollIntoViewIfNeeded();

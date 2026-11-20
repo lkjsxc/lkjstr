@@ -35,6 +35,11 @@ const PATHS = {
     'M15 9.5h.01',
   ],
   play: ['M8 5l11 7-11 7z'],
+  /** The picker's custom emoji tab: two sparkles. */
+  sparkle: [
+    'M10 4l1.6 4.4L16 10l-4.4 1.6L10 16l-1.6-4.4L4 10l4.4-1.6z',
+    'M18 14l.8 2.2L21 17l-2.2.8L18 20l-.8-2.2L15 17l2.2-.8z',
+  ],
   clock: ['M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z', 'M12 7v5l3.5 2'],
   filter: ['M4 5h16l-6 8v5l-4 2v-7z'],
   lock: ['M6 10h12v11H6z', 'M8 10V6a4 4 0 0 1 8 0v4'],

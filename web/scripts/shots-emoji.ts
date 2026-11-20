@@ -4,7 +4,12 @@
 import assert from 'node:assert/strict';
 import type { Page } from 'playwright-core';
 
-type Scene = (name: string, path: string, act: (page: Page) => Promise<void>) => Promise<void>;
+export type Scene = (
+  name: string,
+  path: string,
+  act: (page: Page) => Promise<void>,
+  mock?: string,
+) => Promise<void>;
 export const EMOJI_SCENES = [
   'emoji-preview',
   'emoji-search',
@@ -19,22 +24,22 @@ export const EMOJI_SCENES = [
   'emoji-peek-name-keys',
 ] as const;
 
-const phone = (page: Page): boolean => (page.viewportSize()?.width ?? 1000) < 500;
+export const phone = (page: Page): boolean => (page.viewportSize()?.width ?? 1000) < 500;
 /** A finger resting on a point, as long as a long press. */
-async function hold(page: Page, x: number, y: number): Promise<void> {
+export async function hold(page: Page, x: number, y: number): Promise<void> {
   const cdp = await page.context().newCDPSession(page);
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y }] });
   await page.waitForTimeout(650);
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
   await cdp.detach();
 }
-const centre = async (page: Page, selector: string): Promise<[number, number]> => {
+export const centre = async (page: Page, selector: string): Promise<[number, number]> => {
   const box = await page.locator(selector).first().boundingBox();
   assert.ok(box, `${selector} is drawn`);
   return [box.x + box.width / 2, box.y + box.height / 2];
 };
 /** Earlier picks on this device, so "Frequently used" has something in it. */
-async function seed(page: Page): Promise<void> {
+export async function seed(page: Page): Promise<void> {
   const otsu = await page.locator('.note img.emo[alt=":otsu:"]').first().getAttribute('src');
   const at = Date.now();
   const used = [
@@ -55,7 +60,7 @@ async function openFromComposer(page: Page): Promise<void> {
   await page.locator('.epick .ecell').first().waitFor();
   await page.locator('.epick .egroup[data-section="cat:0"] .ecell').first().waitFor();
 }
-const gridBox = (page: Page) =>
+export const gridBox = (page: Page) =>
   page.locator('.epick .egrid').evaluate((g) => {
     const r = g.getBoundingClientRect();
     return `${r.x},${r.y},${r.width},${r.height},${g.scrollTop}`;

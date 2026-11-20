@@ -43,6 +43,7 @@ what the engine offers and no surface reaches yet.
 | E1 | One emoji picker: frequent, sets, categories, tones, search | [interface-emoji.md](interface-emoji.md#e1-the-picker) | built |
 | E2 | The picker's fixed preview strip | [interface-emoji.md](interface-emoji.md#e2-the-preview-strip) | built |
 | E3 | The emoji popover (custom and Unicode) in notes, names and reactions | [interface-emoji.md](interface-emoji.md#e3-the-emoji-popover) | built |
+| E4 | The picker's custom emoji tab: list and sets, empty line, headed search | [interface-emoji.md](interface-emoji.md#e4-the-custom-emoji-tab) | built |
 | Q1 | Tabs state wants; the engine makes one plan | [read-plan.md](read-plan.md#q1-tabs-state-wants-the-engine-makes-one-plan) | ready |
 | Q2 | Ask where the answer is | [read-plan.md](read-plan.md#q2-ask-where-the-answer-is) | ready |
 | Q3 | Weights made from the past | [read-plan.md](read-plan.md#q3-weights-made-from-the-past) | ready |

@@ -1,6 +1,7 @@
-// The picker's grid: sections (frequently used, the reader's sets, the Unicode categories, or the matches of a
-// search) of equal cells. The first screenful is drawn at once and the rest in the next frames, so the picker opens
-// without waiting for two thousand buttons. One cell takes Tab; the arrows walk the cells row by row.
+// The picker's grid: sections (frequently used, the custom tab's sub-groups, the Unicode categories, or the matches of
+// a search) of equal cells; a section with no cells may hold one line instead. The first screenful is drawn at once
+// and the rest in the next frames, so the picker opens without waiting for two thousand buttons. One cell takes Tab;
+// the arrows walk the cells row by row.
 import { toned } from '../shared/emoji-find.ts';
 import { h, replaceChildren } from '../shared/h.ts';
 import { t } from '../shared/i18n.ts';
@@ -11,12 +12,19 @@ export type Section = {
   /** Shown above the cells; '' for none (search matches). */
   readonly label: string;
   readonly items: readonly Item[];
+  /** The button of the row of categories it lights, when several sections share one (the custom tab). */
+  readonly cat?: string;
+  /** One line shown, with the heading, when there are no cells. */
+  readonly note?: string;
 };
+/** The category a section belongs to. */
+export const catOf = (s: Section): string => s.cat ?? s.id;
 type Hooks = {
   readonly choose: (item: Item) => void;
   /** The item to describe: under the pointer, with the keyboard, or held by a finger; undefined: the default. */
   readonly preview: (item: Item | undefined) => void;
-  readonly section: (id: string) => void;
+  /** The category in view. */
+  readonly section: (cat: string) => void;
   /** Up from the first row, or `lost`: the cell with the keyboard was redrawn away. */
   readonly leaveTop: (lost?: boolean) => void;
   readonly tone: () => number;
@@ -26,6 +34,8 @@ const FIRST = 200;
 
 export function createGrid(hooks: Hooks) {
   const el = h('div', { class: 'egrid' });
+  /** Everything drawn; `sections`, the ones with cells, which the keyboard walks. */
+  let shown: readonly Section[] = [];
   let sections: readonly Section[] = [];
   let items: Item[] = [];
   let starts: number[] = [];
@@ -78,11 +88,16 @@ export function createGrid(hooks: Hooks) {
         ? groups.filter((g) => g.offsetTop <= el.scrollTop).pop()
         : undefined;
     const place = top
-      ? { id: top.dataset.section ?? '', by: el.scrollTop - top.offsetTop }
+      ? {
+          id: top.dataset.section ?? '',
+          cat: top.dataset.cat ?? '',
+          by: el.scrollTop - top.offsetTop,
+        }
       : undefined;
     const focused = el.contains(document.activeElement);
     cancelAnimationFrame(frame);
-    sections = next.filter((s) => s.items.length);
+    shown = next.filter((s) => s.items.length || s.note);
+    sections = shown.filter((s) => s.items.length);
     items = sections.flatMap((s) => s.items);
     starts = [];
     let n = 0;
@@ -93,17 +108,18 @@ export function createGrid(hooks: Hooks) {
     replaceChildren(
       el,
       sections.length
-        ? sections.map((s, i) =>
+        ? shown.map((s) =>
             h(
               'div',
               {
                 class: 'egroup',
                 role: 'group',
                 'data-section': s.id,
+                'data-cat': catOf(s),
                 'aria-label': s.label || null,
               },
               s.label ? h('div', { class: 'ehd' }, s.label) : null,
-              boxes[i],
+              s.items.length ? boxes[sections.indexOf(s)] : h('p', { class: 'enote' }, s.note),
             ),
           )
         : h('div', { class: 'muted enone' }, t('emoji.none')),
@@ -113,21 +129,26 @@ export function createGrid(hooks: Hooks) {
     while (drawn < sections.length && cells < FIRST)
       (cells += sections[drawn]?.items.length ?? 0), drawTo(drawn);
     frame = requestAnimationFrame(more);
-    hooks.section(sections[0]?.id ?? '');
-    if (place && sections.some((x) => x.id === place.id)) {
+    hooks.section(shown[0] ? catOf(shown[0]) : '');
+    if (place && shown.some((x) => x.id === place.id)) {
       jump(place.id);
       el.scrollTop += place.by;
-    }
+      // Its section was replaced (the custom tab's line by the sets that arrived): the reader stays in its category.
+    } else if (place && shown.some((x) => catOf(x) === place.cat)) jump(place.cat);
     // The cell that had the keyboard is gone: the keyboard goes back to the field, not to the page.
     if (focused) hooks.leaveTop(true);
   }
+  /** To a section by its id, or to the first of a category. */
   function jump(id: string): void {
-    const s = sections.findIndex((x) => x.id === id);
-    if (s < 0) return;
-    drawTo(s);
-    const g = el.querySelector<HTMLElement>(`.egroup[data-section="${CSS.escape(id)}"]`);
+    const at = shown.findIndex((x) => x.id === id);
+    const to = shown[at < 0 ? shown.findIndex((x) => catOf(x) === id) : at];
+    if (!to) return;
+    // Everything above it is drawn, so it is where it will stay.
+    const above = shown.slice(0, shown.indexOf(to) + 1);
+    drawTo(sections.findLastIndex((x) => above.includes(x)));
+    const g = el.querySelector<HTMLElement>(`.egroup[data-section="${CSS.escape(to.id)}"]`);
     if (g) el.scrollTop = g.offsetTop;
-    hooks.section(id);
+    hooks.section(catOf(to));
   }
 
   const sectionOf = (i: number): number => {
@@ -223,10 +244,10 @@ export function createGrid(hooks: Hooks) {
     'scroll',
     () => {
       const top = el.scrollTop + 4;
-      let id = sections[0]?.id ?? '';
+      let cat = shown[0] ? catOf(shown[0]) : '';
       for (const g of el.querySelectorAll<HTMLElement>('.egroup'))
-        if (g.offsetTop <= top) id = g.dataset.section ?? id;
-      hooks.section(id);
+        if (g.offsetTop <= top) cat = g.dataset.cat ?? cat;
+      hooks.section(cat);
     },
     { passive: true },
   );

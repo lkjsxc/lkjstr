@@ -52,4 +52,5 @@ export const REVIEW_BATCHES: Record<string, readonly string[]> = {
   A1: ACT_SPEC_SCENES,
   K1: KEY_MESSAGE_SCENES,
   'A1-verification': ACT_VERIFICATION_SCENES,
+  E4: ['emoji-custom', 'emoji-custom-search', 'emoji-custom-empty'],
 };

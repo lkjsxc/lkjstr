@@ -154,6 +154,7 @@ export function finite(w: World, q: Query): Row[] | undefined {
         checked: true,
       }));
     case 'emoji':
+      if (!w.customEmoji) return [];
       return EMOJI_SETS.flatMap(([set, d, codes]) =>
         codes.map((code) => ({
           kind: 'emoji' as const,

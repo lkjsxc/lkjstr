@@ -191,7 +191,7 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
   when the newest above is the reader's own. Pressing the pill returns to the top. Confirmation updates the same row in place.
 - `@` and letters offer people under the caret: follows first; Enter takes one.
 - One emoji picker serves the composer, reactions and messages ([interface-emoji.md](interface-emoji.md)): search
-  and tone, categories, then frequently used, the reader's sets and the Unicode categories. Its strip at the foot
+  and tone, categories, then frequently used, the custom tab (own list and sets) and the Unicode categories. Its strip at the foot
   says what is under the pointer, keyboard or finger, in a fixed space that takes no press; any emoji anywhere,
   custom or Unicode, shows the same in a small popover. Emoji use a colour emoji font before any text font.
 - Every wrong click can be taken back. A like or a repost is drawn at once

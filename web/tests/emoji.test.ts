@@ -11,6 +11,7 @@ import {
   wordFit,
 } from '../src/shared/emoji-find.ts';
 import { ordered, withPick } from '../src/shared/emoji-used.ts';
+import { catOf } from '../src/views/emoji-grid.ts';
 import { emojiTag } from '../src/views/emoji-picker.ts';
 import { emojiSections, patched } from '../src/views/emoji-sections.ts';
 import { withHeld } from '../src/views/held.ts';
@@ -155,14 +156,16 @@ describe('what the picker holds', () => {
       address,
     }) as const;
   const custom = [row('neko', ''), row('blob-cat', 'Cats', '30030:ab:cats'), row('kusa', '')];
-  it('frequently used, then the reader’s sets in order, then the nine categories', () => {
+  it('frequently used, then the custom tab by list and set, then the nine categories', () => {
     const list = emojiSections(custom, table, [{ emoji: '👋🏽' }], '');
     expect(list.map((s) => s.id)).toEqual([
       'used',
-      'set:',
-      'set:Cats',
+      'mine',
+      'set:30030:ab:cats',
       ...Array.from({ length: 9 }, (_, i) => `cat:${i}`),
     ]);
+    expect(list.map(catOf).slice(0, 4)).toEqual(['used', 'custom', 'custom', 'cat:0']);
+    expect(list.slice(1, 3).map((s) => s.label)).toEqual(['Your emoji', 'Cats']);
     // A toned pick keeps its tone and still has its name.
     expect(list[0]?.items[0]?.glyph).toMatchObject({ emoji: '👋🏽', en: 'waving hand' });
     expect(list[1]?.items.map((i) => i.picked.emoji)).toEqual([':neko:', ':kusa:']);
@@ -171,15 +174,43 @@ describe('what the picker holds', () => {
       address: '30030:ab:cats',
     });
   });
-  it('typed words find custom and Unicode emoji together, a custom code first', () => {
-    const [found] = emojiSections(custom, table, [], 'neko');
+  it('two sets with one title stay apart, each under its own address', () => {
+    const twins = [row('a', 'Cats', '30030:ab:cats'), row('b', 'Cats', '30030:cd:cats')];
+    const ids = emojiSections(twins, table, [], '').map((s) => s.id);
+    expect(ids.slice(1, 3)).toEqual(['set:30030:ab:cats', 'set:30030:cd:cats']);
+    // A direct entry naming a set of its own is still the reader's own list.
+    const own = emojiSections([row('c', '', '30030:ab:cats')], table, [], '');
+    expect(own[1]?.id).toBe('mine');
+  });
+  it('the custom tab with nothing in it says, in one line, how to get some', () => {
+    const list = emojiSections([], table, [], '');
+    expect(list[1]).toMatchObject({
+      id: 'custom',
+      cat: 'custom',
+      label: 'Custom emoji',
+      items: [],
+    });
+    expect(list[1]?.note).toMatch(/Nostr/);
+  });
+  it('typed words find custom and standard emoji under their headings, the best match first', () => {
+    const [found, rest] = emojiSections(custom, table, [], 'neko');
+    expect(found?.id).toBe('found:custom');
     expect(found?.items[0]?.picked.emoji).toBe(':neko:');
-    const [cats] = emojiSections(custom, table, [], 'cat');
-    expect(cats?.items.map((i) => i.picked.emoji).slice(0, 3)).toEqual(['🐱', '🐈', ':blob-cat:']);
+    expect(rest?.label).toBe('Standard emoji');
+    const [cats, them] = emojiSections(custom, table, [], 'cat');
+    expect(cats?.items.map((i) => i.picked.emoji).slice(0, 2)).toEqual(['🐱', '🐈']);
+    expect(them?.items.map((i) => i.picked.emoji)).toEqual([':blob-cat:']);
     const [pasted] = emojiSections(custom, table, [], '🫨');
     expect(pasted?.items[0]?.glyph?.en).toBe('shaking face');
     const [unknown] = emojiSections(custom, table, [], '🐱‍🚀');
     expect(unknown?.items.map((i) => i.picked.emoji)).toEqual(['🐱‍🚀']);
+    // Begun in the custom tab, a search puts the reader's matches first; a typed emoji still leads.
+    expect(emojiSections(custom, table, [], 'cat', true)[0]?.id).toBe('found:custom');
+    expect(emojiSections(custom, table, [], '🫨', true)[0]?.id).toBe('found:standard');
+    expect(emojiSections(custom, table, [], 'smile', true)[0]?.id).toBe('found:standard');
+    // A reader with no custom emoji sees one unnamed list, as before.
+    const plain = emojiSections([], table, [], 'cat');
+    expect(plain.map((s) => s.label)).toEqual(['']);
   });
   it('a patch of the engine adds, changes and removes custom emoji in place', () => {
     const next = patched(custom, [

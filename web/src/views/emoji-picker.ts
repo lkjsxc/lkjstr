@@ -1,7 +1,8 @@
 // The emoji picker, one for the composer, reactions and private messages: a panel under the button that opened it.
-// A search field and the skin tone; a row of categories; the grid (frequently used first, then the reader's custom
-// emoji by set (NIP-30 and NIP-51, from the engine), then the Unicode categories); and a strip at the foot that says
-// what is under the pointer, the keyboard or a resting finger. Every part has a fixed size, so nothing moves.
+// A search field and the skin tone; a row of categories (frequently used, the custom tab, the Unicode categories);
+// the grid (frequently used first, then the reader's custom emoji by list and set (NIP-30 and NIP-51, from the
+// engine), then the Unicode categories); and a strip at the foot that says what is under the pointer, the keyboard or
+// a resting finger. Every part has a fixed size, so nothing moves.
 import type { Emoji, EmojiRow, Row } from '../engine/protocol.ts';
 import { toned } from '../shared/emoji-find.ts';
 import { COMMON, emojiTable, emojiTableNow } from '../shared/emoji-table.ts';
@@ -10,9 +11,9 @@ import { h, replaceChildren } from '../shared/h.ts';
 import { type Key, t } from '../shared/i18n.ts';
 import { icon } from '../shared/icons.ts';
 import { openPopover } from '../wm/menus.ts';
-import { createGrid, type Section } from './emoji-grid.ts';
-import { createPreview, emojiPicture, type Item } from './emoji-preview.ts';
-import { CAT_ICONS, emojiSections, patched } from './emoji-sections.ts';
+import { catOf, createGrid, type Section } from './emoji-grid.ts';
+import { createPreview, type Item } from './emoji-preview.ts';
+import { CAT_ICONS, CUSTOM, emojiSections, patched } from './emoji-sections.ts';
 import type { ViewEnv } from './registry.ts';
 
 export type { Picked } from '../shared/emoji-used.ts';
@@ -35,6 +36,10 @@ export function openEmojiPicker(
   let custom: readonly EmojiRow[] = seen.get(account) ?? [];
   let table = emojiTableNow();
   let tone = skinTone();
+  /** The category in view; what the grid was last drawn for; whether the search typed began in the custom tab. */
+  let lit = '';
+  let drawnFor = '';
+  let scoped = false;
 
   const input = h('input', {
     type: 'search',
@@ -66,9 +71,10 @@ export function openEmojiPicker(
   const grid = createGrid({
     choose,
     preview: (item) => preview.show(item ?? (input.value.trim() ? grid.first() : undefined), tone),
-    section: (id) => {
+    section: (cat) => {
+      lit = cat;
       for (const b of cats.children)
-        b.classList.toggle('on', (b as HTMLElement).dataset.section === id);
+        b.classList.toggle('on', (b as HTMLElement).dataset.section === cat);
     },
     // On a touch screen a redraw does not call up the on-screen keyboard.
     leaveTop: (lost) => void ((lost && coarse()) || input.focus({ preventScroll: true })),
@@ -106,50 +112,56 @@ export function openEmojiPicker(
   }
   toneButton.addEventListener('click', () => showTones(true));
 
+  /** One button per category: frequently used, the custom tab (always, so its one line on getting sets is found),
+   * and each Unicode category. The row never grows with the reader's sets. */
   function drawCats(list: readonly Section[]): void {
-    const button = (s: Section, face: Node): HTMLElement =>
+    const button = (cat: string, label: string, face: Node): HTMLElement =>
       h(
         'button',
         {
-          'data-section': s.id,
-          'aria-label': s.label,
-          title: s.label,
+          'data-section': cat,
+          'aria-label': label,
+          title: label,
           tabindex: -1,
           onclick: () => {
             if (input.value) {
               input.value = '';
               draw();
             }
-            grid.jump(s.id);
+            grid.jump(cat);
           },
         },
         face,
       );
-    replaceChildren(
-      cats,
-      list
-        .filter((s) => s.label && s.items.length)
-        .map((s) => {
-          if (s.id === 'used') return button(s, icon('clock'));
-          if (s.id.startsWith('cat:'))
-            return button(s, h('span', null, CAT_ICONS[Number(s.id.slice(4))] ?? ''));
-          const first = s.items[0]?.picked;
-          return button(
-            s,
-            first?.url ? emojiPicture(first.emoji, first.url, 'eimg') : h('span', null, '?'),
-          );
-        }),
-    );
+    const seenCats = new Set<string>();
+    const row: HTMLElement[] = [];
+    for (const s of list) {
+      const cat = catOf(s);
+      if (seenCats.has(cat) || !(s.items.length || s.note)) continue;
+      seenCats.add(cat);
+      if (cat === 'used') row.push(button(cat, s.label, icon('clock')));
+      else if (cat === CUSTOM) row.push(button(cat, t('emoji.custom'), icon('sparkle')));
+      else if (cat.startsWith('cat:'))
+        row.push(button(cat, s.label, h('span', null, CAT_ICONS[Number(cat.slice(4))] ?? '')));
+    }
+    replaceChildren(cats, row);
     (cats.firstElementChild as HTMLElement | null)?.setAttribute('tabindex', '0');
   }
   function draw(keep = false): void {
-    const list = emojiSections(custom, table, usedEmoji(), input.value.trim());
+    drawnFor = input.value.trim();
+    const list = emojiSections(custom, table, usedEmoji(), drawnFor, scoped);
     if (!input.value.trim()) drawCats(list);
     grid.draw(list, keep);
     preview.show(input.value.trim() ? grid.first() : undefined, tone);
   }
 
-  input.addEventListener('input', () => draw());
+  input.addEventListener('input', () => {
+    const typed = !!input.value.trim();
+    if (typed && !drawnFor) scoped = lit === CUSTOM;
+    draw();
+    // A search begun in the custom tab, emptied, gives the reader back the tab.
+    if (!typed && scoped) (scoped = false), grid.jump(CUSTOM);
+  });
   input.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && !e.isComposing) {
       e.preventDefault();

@@ -29,6 +29,8 @@
 .ecell .eimg { width: 28px; height: 28px; object-fit: contain; pointer-events: none; }
 .efail { max-width: 100%; overflow: hidden; color: var(--faint); font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
 .enone { padding: 24px 6px; font-size: 12.5px; text-align: center; }
+/* The custom tab with nothing in it: one quiet line under its heading, where its emoji would be. */
+.enote { margin: 0; padding: 4px 4px 12px; color: var(--faint); font-size: 12.5px; line-height: 1.45; }
 /* The strip: always this tall, takes no pointer, and only its words change. */
 /* Owner, 2026-11-20: what is under the pointer is shown large, its name beside it. */
 .eprev { display: flex; flex: none; align-items: center; gap: 14px; box-sizing: border-box; height: 88px; margin: 0 -6px; padding: 0 12px; border-top: 1px solid var(--line); pointer-events: none; }

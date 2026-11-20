@@ -24,13 +24,13 @@ Structure, top to bottom, in a floating panel under the button that opened it (a
 1. Search field and the skin tone button (an open hand in the chosen tone). Pressing the tone button puts six
    tones in the field's place as a radio group (`emoji.tone`, `emoji.tone0` to `emoji.tone5`); a choice puts the
    field back. The tone is kept on the device and applies to every emoji that has tones.
-2. Categories (`emoji.cats`): a clock for frequently used, the first picture of each of the reader's sets, then one
-   emoji for each Unicode category (`emoji.cat0` to `emoji.cat8`). At rest they are grey; the one in view is in
-   colour with the tab bar's indigo line. A press goes to that section, and empties a search first. The row
-   scrolls sideways when it holds more than fits.
-3. The grid: sections with a sticky quiet heading. Frequently used (`emoji.frequent`), then the reader's own list
-   (`emoji.mine`, kind 10030 direct entries), then each set it names (kind 30030, by title), then the nine
-   Unicode categories. A search replaces the sections with one unnamed list of matches, best first.
+2. Categories (`emoji.cats`): a clock for frequently used, the custom tab (E4), then one emoji for each Unicode
+   category (`emoji.cat0` to `emoji.cat8`). At rest they are grey; the one in view is in colour with the tab bar's
+   indigo line. A press goes to that section, and empties a search first. The row scrolls sideways when it holds
+   more than fits; it never grows with the reader's sets.
+3. The grid: sections with a sticky quiet heading. Frequently used (`emoji.frequent`), then the custom tab's
+   sub-groups (E4), then the nine Unicode categories. A search replaces the sections with the matches, best first:
+   one unnamed list, or for a reader with custom emoji, two headed lists (E4).
 4. The preview strip (E2).
 
 Frequently used: the latest pick first, then the others by a count that halves every two weeks without a pick; at
@@ -96,11 +96,33 @@ half tile heights of what the tile shows (a browser's own lazy loading waits ins
 view), so its width, or the code that replaces a failed one, settles out of sight; above the reading place the
 anchor absorbs it. Until then it is a quiet box of the line's height.
 
+## E4 The custom emoji tab
+
+The owner asked for it on 2026-11-21 (overnight goal 1, mail 2188); Layout A of the Gemini design of 2026-11-20.
+
+- One button in the row of categories, after the clock: two sparkles, named `emoji.custom`. It is there for every
+  reader, so the help below can be found. It is lit while any of its sub-groups is in view, and a press (or Enter
+  on it, after the arrows) goes to the first of them.
+- Its sub-groups, in the engine's order, each under its own sticky heading: the reader's own list (`emoji.mine`,
+  kind 10030 direct entries), then each set the list names (kind 30030, by title). A sub-group is kept apart by a
+  stable key: `mine`, or `set:` and the set's address (its title only when the engine knows no address), so two sets
+  with one title stay two. The keyboard walks them row by row like any section.
+- Nothing yet (no list, or none cached): under the `emoji.custom` heading, one quiet line, `emoji.customHelp`. It is
+  help, not a claim, so it stays true while a first opening is still asking for the sets; they replace it on arrival.
+- Search stays global. For a reader with custom emoji the matches come in two headed lists, `emoji.custom` and
+  `emoji.standard`; the list holding the best match goes first, so Enter and Down take the same emoji as before. A
+  typed `:code` searches by shortcode, colons ignored. A reader with no custom emoji sees one unnamed list.
+- Frequently used stays one list for both kinds (custom picks keep their picture and set). The strip (E2) shows a
+  custom emoji at 72 px with its `:code:` and its set.
+- Not built: browsing and adding sets seen on other people's notes. It needs an engine action that edits the
+  reader's kind-10030 list; none exists ([emoji-sets.md](emoji-sets.md)), so the help line points elsewhere.
+
 ## Scenes
 
 `pnpm shots -- --scenes=emoji-preview,emoji-search,emoji-tones,emoji-peek,emoji-peek-keys,emoji-reaction` and the
-Unicode `emoji-peek-unicode`, `-unicode-name`, `-unicode-keys` and `-unicode-reaction` (in `web/`). Desktop points
+Unicode `emoji-peek-unicode`, `-unicode-name`, `-unicode-keys` and `-unicode-reaction` (in `web/`); E4 has
+`emoji-custom`, `emoji-custom-search` and `emoji-custom-empty` (the mock's `emoji: 'none'`). Desktop points
 with a mouse, and the `-keys` scenes use Tab; at 390 the scenes use touch and a long press.
 Each scene checks what it shows: the grid does not move while the preview changes, the strip and the popover take no
-press, and a long press neither picks, opens nor reacts. `pnpm smoke` adds the keyboard path through the picker and
-to a note's custom and Unicode emoji, a name and a mention, and that a press on either emoji still opens its note.
+press, and a long press neither picks, opens nor reacts. `pnpm smoke` adds the keyboard path through the picker, to the custom tab
+and to a note's custom and Unicode emoji, a name and a mention, and that a press on either emoji still opens its note.

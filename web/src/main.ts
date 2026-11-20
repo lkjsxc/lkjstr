@@ -4,6 +4,7 @@ import { installShell } from './engine/offline-shell.ts';
 
 import { watchAccountProfiles } from './engine/account-profiles.ts';
 import { createEngine } from './engine/client.ts';
+import type { EngineConfig } from './engine/protocol.ts';
 import { createTransport } from './engine/startup.ts';
 import { createIdleLock } from './shared/account-idle.ts';
 import { rememberAccounts, rememberedAccounts, rememberFace } from './shared/face.ts';
@@ -43,7 +44,7 @@ const configure = (): void =>
     linkPreviews: settings.get().linkPreviews,
     heuristics: true,
     prefetch: true,
-    mock: kv.get('mock') as { live: boolean; accounts?: 'none' } | undefined,
+    mock: kv.get('mock') as EngineConfig['mock'],
   });
 configure();
 engine.info.subscribe((i) => setServed(i?.version ?? 0));

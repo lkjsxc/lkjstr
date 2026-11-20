@@ -1,5 +1,6 @@
-// What the picker's grid holds: frequently used, then the reader's custom emoji set by set, then the Unicode
-// categories; or, once something is typed, everything that matches it, best first. Tested.
+// What the picker's grid holds: frequently used, then the custom emoji tab (the reader's own list and each set it
+// names, or one line on how to get some), then the Unicode categories; or, once something is typed, everything that
+// matches it, best first, custom and standard emoji under their own headings for a reader who has custom ones. Tested.
 import type { EmojiRow, PatchOp, Row } from '../engine/protocol.ts';
 import {
   customBonus,
@@ -15,6 +16,13 @@ import type { Picked } from '../shared/emoji-used.ts';
 import { type Key, t } from '../shared/i18n.ts';
 import type { Section } from './emoji-grid.ts';
 import type { Item } from './emoji-preview.ts';
+
+/** The category of every custom sub-group: one tab in the row of categories. */
+export const CUSTOM = 'custom';
+/** A custom sub-group's stable key: the reader's own list (kind 10030), or a set (kind 30030) by its address, by its
+ * title only when the engine knows no address. Two sets with one title stay apart. */
+const groupOf = (r: EmojiRow): string =>
+  r.set === '' ? 'mine' : `set:${r.address ?? `~${r.set}`}`;
 
 /** What each Unicode category shows in the row of categories. */
 export const CAT_ICONS = ['😀', '👋', '🐱', '🍙', '🚃', '⚽', '💡', '❤️', '🏁'];
@@ -63,14 +71,23 @@ export function emojiSections(
   table: readonly Glyph[] | undefined,
   used: readonly Picked[],
   typed: string,
+  /** The search began in the custom tab: its matches lead, unless an emoji itself was typed. */
+  customFirst = false,
 ): Section[] {
   const by = table ? lookup(table) : undefined;
-  const mine = custom.map(
-    (r): Item => ({
+  const mine: Item[] = [];
+  const sets = new Map<string, { id: string; cat: string; label: string; items: Item[] }>();
+  for (const r of custom) {
+    const it: Item = {
       picked: { emoji: `:${r.code}:`, url: r.url, ...(r.address ? { address: r.address } : {}) },
       set: r.set,
-    }),
-  );
+    };
+    mine.push(it);
+    const id = groupOf(r);
+    const known = sets.get(id);
+    if (known) known.items.push(it);
+    else sets.set(id, { id, cat: CUSTOM, label: r.set || t('emoji.mine'), items: [it] });
+  }
   const words = typedWords(typed);
   if (words.length) {
     const found = rank(
@@ -87,10 +104,20 @@ export function emojiSections(
       : isEmoji(typed)
         ? [{ picked: { emoji: typed } }]
         : [];
-    return [{ id: 'found', label: '', items: [...raw, ...found] }];
+    if (!mine.length) return [{ id: 'found', label: '', items: [...raw, ...found] }];
+    const matches = found.filter((it) => !it.glyph);
+    const groups: Section[] = [
+      { id: 'found:custom', cat: CUSTOM, label: t('emoji.custom'), items: matches },
+      {
+        id: 'found:standard',
+        label: t('emoji.standard'),
+        items: [...raw, ...found.filter((it) => it.glyph)],
+      },
+    ];
+    // Elsewhere the heading of the best match comes first, so Enter and Down take what they always took.
+    const lead = !raw.length && ((customFirst && matches.length > 0) || !found[0]?.glyph);
+    return lead ? groups : groups.reverse();
   }
-  const sets = new Map<string, Item[]>();
-  for (const it of mine) sets.set(it.set ?? '', [...(sets.get(it.set ?? '') ?? []), it]);
   return [
     {
       id: 'used',
@@ -102,11 +129,17 @@ export function emojiSections(
         );
       }),
     },
-    ...[...sets].map(([set, items]) => ({
-      id: `set:${set}`,
-      label: set || t('emoji.mine'),
-      items,
-    })),
+    ...(sets.size
+      ? sets.values()
+      : [
+          {
+            id: CUSTOM,
+            cat: CUSTOM,
+            label: t('emoji.custom'),
+            items: [],
+            note: t('emoji.customHelp'),
+          },
+        ]),
     ...(table
       ? CAT_ICONS.map((_, c) => ({
           id: `cat:${c}`,

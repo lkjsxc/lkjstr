@@ -264,6 +264,7 @@ export function createWorld(now: number) {
 
   return {
     linkPreviews: true,
+    customEmoji: true, // off: the mock's `emoji: 'none'`, a reader with no custom emoji list
     base,
     notes,
     byId,

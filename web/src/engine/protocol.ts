@@ -784,10 +784,12 @@ export type EngineConfig = {
   /** Fetch link and media metadata ahead of the viewport. */
   readonly prefetch: boolean;
   /** The mock only: arrivals on a timer, or a still world for screenshots and tests. `slow`: a note whose text
-   * holds `when` is signed `sign` ms late and its relays answer `relays` ms late (a rare outlier among sends). */
+   * holds `when` is signed `sign` ms late and its relays answer `relays` ms late (a rare outlier among sends).
+   * `emoji: 'none'`: the reader has no custom emoji list. */
   readonly mock?: {
     readonly live: boolean;
     readonly accounts?: 'none';
+    readonly emoji?: 'none';
     readonly slow?: { readonly when: string; readonly sign?: number; readonly relays?: number };
   };
 };

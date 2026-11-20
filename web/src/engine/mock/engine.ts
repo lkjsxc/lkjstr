@@ -135,6 +135,7 @@ export function createMockEngine(
       else if (msg.t === 'configure') {
         config = msg.config;
         world.linkPreviews = config.linkPreviews !== false;
+        world.customEmoji = config.mock?.emoji !== 'none';
         core.clientTag = config.clientTag !== false;
         core.slow = config.mock?.slow;
         if (!started && config.mock?.accounts === 'none') core.who.clear();
