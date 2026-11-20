@@ -9,6 +9,7 @@ import { PROTOCOL_VERSION } from '../src/engine/protocol.ts';
 import { dayOf } from '../src/shared/format.ts';
 import { KEYS } from '../src/shared/keys.ts';
 import { notesChecks } from './smoke-notes.ts';
+import { resetChecks } from './smoke-reset.ts';
 import { railSmoke } from './smoke-time-rail.ts';
 import { wishes } from './smoke-wishes.mjs';
 
@@ -294,6 +295,19 @@ async function run(browser: Browser): Promise<void> {
 
   // The New tab page finds views in Japanese while the interface is English, and searches typed words.
   await page.locator('.pane').first().locator('.icon[title="New tab"]').click();
+  const cards = await page.locator('.ncard b').allInnerTexts();
+  fact(
+    'New tab offers Documentation once, and none of its pages until one is named',
+    cards.filter((c) => c === 'Documentation').length === 1 &&
+      !cards.some((c) => /^(Shortcuts|Terms|Privacy policy|What lkjstr is)$/.test(c)),
+    cards,
+  );
+  await page.keyboard.type('shortcuts');
+  fact(
+    'a typed page name comes first',
+    (await page.locator('.ncard b').first().innerText()) === 'Shortcuts',
+  );
+  await page.locator('.view.launcher:visible > input').fill('');
   await page.keyboard.type('通知');
   fact(
     'launcher matches Japanese in English mode',
@@ -437,6 +451,7 @@ async function run(browser: Browser): Promise<void> {
   await place(browser, still);
   await keyboard(browser, still);
   await defaults(browser, still);
+  await resetChecks((given) => open(browser, '/', { ...still, ...given }), fact);
   await scrolling(still);
   await filtering(browser, still);
   await rooms(browser, still);
@@ -661,7 +676,8 @@ async function filtering(browser: Browser, still: Record<string, unknown>): Prom
   await page.context().close();
 }
 
-/** The layout of a device that holds nothing yet, for a reader and a visitor, and what "Reset layout" gives. */
+/** The layout of a device that holds nothing yet, for a reader and a visitor; a saved arrangement kept until it is
+ * reset; a reset that loses no draft and can be undone; Settings one press from the relay list. */
 async function defaults(browser: Browser, still: Record<string, unknown>): Promise<void> {
   const tiles = (page: Page): Promise<string[]> =>
     page
@@ -674,9 +690,10 @@ async function defaults(browser: Browser, still: Record<string, unknown>): Promi
         ),
       );
   const want = (front: string): string[] => [
-    front === 'home' ? 'global home*' : 'global* home',
+    front === 'home' ? 'home* global' : 'home global*',
+    'notifications*',
     'compose*',
-    front === 'home' ? 'account notifications* settings' : 'account* notifications settings',
+    'account* settings',
   ];
   const page = await open(browser, '/', { ...still, fresh: true });
   fact(
@@ -687,17 +704,25 @@ async function defaults(browser: Browser, still: Record<string, unknown>): Promi
   const boxes = await page.locator('.pane').evaluateAll((panes) =>
     panes.map((p) => {
       const r = p.getBoundingClientRect();
-      return [Math.round(r.left), Math.round(r.top)];
+      return [Math.round(r.left), Math.round(r.top), Math.round(r.height)];
     }),
   );
+  const [a = [], b = [], c = [], d = []] = boxes;
   fact(
-    'left tile, then the composer over the account tile at the right',
-    boxes[0]?.[0] === 0 &&
-      (boxes[1]?.[0] ?? 0) > 700 &&
-      boxes[1]?.[0] === boxes[2]?.[0] &&
-      (boxes[2]?.[1] ?? 0) > (boxes[1]?.[1] ?? 0),
+    'Home, Notifications, then the composer over Accounts in equal halves',
+    a[0] === 0 &&
+      (b[0] ?? 0) > 500 &&
+      (c[0] ?? 0) > (b[0] ?? 0) + 380 &&
+      c[0] === d[0] &&
+      (d[1] ?? 0) > (c[1] ?? 0) &&
+      Math.abs((c[2] ?? 0) - (d[2] ?? 0)) <= 2,
     boxes,
   );
+  await page.locator('.tab[data-view="settings"]').click();
+  const fresh = page.locator('.view[data-kind="settings"]:visible');
+  await fresh.locator('[data-entry]').first().waitFor();
+  await page.waitForTimeout(400);
+  fact('Settings opens at its top', (await fresh.evaluate((el) => el.scrollTop)) === 0);
   await page.context().close();
   const guest = await open(browser, '/', { mock: { live: false, accounts: 'none' }, fresh: true });
   fact(
@@ -710,16 +735,92 @@ async function defaults(browser: Browser, still: Record<string, unknown>): Promi
     (await count(guest, '.view[data-kind="account"] [data-f="extension"]:visible')) === 1,
   );
   await guest.context().close();
-  const arrangedPage = await open(browser, '/', still);
-  await arrangedPage.locator('.pane .strip > .icon').first().click();
-  await arrangedPage.locator('.menu button').getByText('Reset layout', { exact: true }).click();
-  await arrangedPage.waitForSelector('.tab[data-view="settings"]');
+
+  // A saved arrangement stays the reader's through a reload, until they reset it.
+  const p = await open(browser, '/', still);
+  const own = await tiles(p);
+  await p.reload();
+  await p.waitForSelector('.note');
+  fact('a saved arrangement survives the new default', (await tiles(p)).join() === own.join(), [
+    own,
+    await tiles(p),
+  ]);
+  // A second Post tab holding a draft, which the default does not have.
+  await p.keyboard.press('Alt+Shift+N');
+  await p.keyboard.type('Post');
+  await p.keyboard.press('Enter');
+  const draft = p.locator('.pane:has(.tab.active[data-view="compose~2"]) textarea');
+  await draft.fill('kept through a reset');
+  const mine = await tiles(p);
+  await p.waitForTimeout(500);
+  await p.locator('.pane .strip > .icon').first().click();
+  await p.locator('.menu button').getByText('Reset layout', { exact: true }).click();
+  await p.waitForSelector('.tab[data-view="settings"]');
   fact(
     'Reset layout gives the default layout',
-    (await tiles(arrangedPage)).join() === want('home').join(),
-    await tiles(arrangedPage),
+    (await tiles(p)).join() === want('home').join(),
+    await tiles(p),
   );
-  await arrangedPage.context().close();
+  await p.locator('.toast.undo .lnk').click();
+  await p.waitForSelector('.tab[data-view="compose~2"]');
+  fact(
+    'Undo puts the arrangement and the draft back',
+    (await tiles(p)).join() === mine.join() &&
+      (await draft.inputValue()) === 'kept through a reset',
+    await tiles(p),
+  );
+  // From Settings: this workspace only, its closed tabs keep what they held, and a reload keeps the result.
+  await p.locator('.bar [data-tab-search]').click();
+  await p.locator('.tsearch input').fill('Settings');
+  await p.locator('.tsearch input').press('Enter');
+  const set = p.locator('.view[data-kind="settings"]:visible');
+  await set.locator('[data-entry]').first().waitFor();
+  await set.getByRole('button', { name: 'Reset this workspace', exact: true }).click();
+  await p.waitForSelector('.tab[data-view="account"]');
+  fact(
+    'Settings resets this workspace to the default',
+    (await tiles(p)).join() === want('home').join(),
+    await tiles(p),
+  );
+  await p.waitForTimeout(600);
+  await p.reload();
+  await p.waitForSelector('.note');
+  fact(
+    'a reset survives a reload',
+    (await tiles(p)).join() === want('home').join(),
+    await tiles(p),
+  );
+  // Bookmarks closed last, so it comes back first; then the Post tab with its draft.
+  for (const kind of ['bookmarks', 'compose~']) {
+    await p.locator('.pane .strip > .icon').first().click();
+    await p.locator('.menu button', { hasText: 'Reopen closed tab' }).click();
+    await p.waitForSelector(`.tab.active[data-view^="${kind}"]`);
+  }
+  fact(
+    'the draft waits in the closed tabs',
+    (await p.locator('.pane:has(.tab.active[data-view^="compose~"]) textarea').inputValue()) ===
+      'kept through a reset',
+  );
+  // Settings, beside Accounts: its index brings the relay list up with one press, keyboard included.
+  await p.locator('.tab[data-view="settings"]').click();
+  await set.locator('.sindex button', { hasText: 'Relays' }).focus();
+  await p.keyboard.press('Enter');
+  await p.waitForTimeout(500);
+  const at = await set.evaluate((el) => {
+    const head = document.activeElement as HTMLElement;
+    return [
+      head.matches('h3.sgroup') ? head.textContent : '',
+      Math.round(head.getBoundingClientRect().top - el.getBoundingClientRect().top),
+    ];
+  });
+  fact(
+    'Settings index goes to Relays',
+    at[0] === 'Relays' &&
+      Number(at[1]) < 40 &&
+      (await set.locator('[data-entry="set.relayList"]').isVisible()),
+    at,
+  );
+  await p.context().close();
 }
 
 async function place(browser: Browser, still: Record<string, unknown>): Promise<void> {
@@ -1399,7 +1500,7 @@ async function pages(browser: Browser, still: Record<string, unknown>): Promise<
   await page.locator('.tab.active[data-view^="settings"] > .x').click();
 
   // Docs: a tree about lkjstr; the shortcuts, the version facts and the policy are pages of it, each an ordinary tab.
-  await menu('Docs');
+  await menu('Documentation');
   const sv = '.pane.cur .view[data-kind="docs"]';
   await page.locator(`${sv} .dtree`).waitFor();
   const tree = await page

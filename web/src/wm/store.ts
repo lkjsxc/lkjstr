@@ -11,10 +11,18 @@ export type WmStore = {
   /** Kept at once, written a moment later. */
   save(key: string, value: unknown): void;
   space(family: string, index: number): Space;
-  /** Forgets every saved layout, here and in the other browser tabs. */
-  reset(): void;
+  /** Forgets every saved layout but those in `keep`, here and in the other browser tabs. */
+  reset(keep?: ReadonlySet<string>): void;
   dispose(): void;
 };
+
+/** A value as text whatever the order of its keys. */
+const canon = (value: unknown): string | undefined =>
+  JSON.stringify(value, (_, x: unknown) =>
+    x && typeof x === 'object' && !Array.isArray(x)
+      ? Object.fromEntries(Object.entries(x).sort(([a], [b]) => (a < b ? -1 : 1)))
+      : x,
+  );
 
 export function createWmStore(): WmStore {
   // Bounds of the four maps: one entry per `layout:*` key (families × (workspaces + 1)).
@@ -31,6 +39,9 @@ export function createWmStore(): WmStore {
   };
   const flush = (): void => [...timers.keys()].forEach(write);
   const save = (key: string, value: unknown): void => {
+    // Nothing new (a page that just loaded saves what it read): writing it would undo another browser tab's change
+    // made meanwhile, since a foreign write wins.
+    if (canon(value) === canon(values.get(key))) return;
     values.set(key, value);
     clearTimeout(timers.get(key));
     timers.set(
@@ -67,8 +78,9 @@ export function createWmStore(): WmStore {
         },
       };
     },
-    reset() {
-      for (const key of [...values.keys()]) kv.remove(key), changed(key, undefined);
+    reset(keep) {
+      for (const key of [...values.keys()])
+        if (!keep?.has(key)) kv.remove(key), changed(key, undefined);
     },
     dispose() {
       flush();

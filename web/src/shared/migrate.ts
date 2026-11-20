@@ -37,7 +37,38 @@ export function oldDefault(value: unknown, family: string): boolean {
   );
 }
 
+/** Workspace 1 as it started from 2026-11-15 to 2026-11-20: Global and Home at the left, Post over Accounts,
+ * Notifications and Settings at the right. The first page load saved it, so an untouched one is this, exactly. */
+const twoColumns = (width: number, family: string): LayoutNode => {
+  const guest = family === 'guest';
+  const own = ['account', 'notifications', 'settings'];
+  const read = pane(['global', 'home'], guest ? 'global' : 'home');
+  if (width < 760) return pane([...read.tabs, 'compose', ...own], read.active);
+  const right = split(
+    'col',
+    [pane(['compose']), pane(own, guest ? 'account' : 'notifications')],
+    [0.34, 0.66],
+  );
+  return split('row', [read, right], width < 1200 ? [0.56, 0.44] : [0.6, 0.4]);
+};
+const DEFAULTS = 'three-columns-1';
+/** A workspace 1 never rearranged takes up today's default; one that differs in anything is the reader's and stays
+ * until they reset it. Runs once, apart from `migrateStorage`, so that one's steps do not run again. */
+export function adoptDefault(): void {
+  if (kv.get('defaults') === DEFAULTS) return;
+  for (const family of ['main', 'guest']) {
+    const key = `layout:${family}`;
+    const value = kv.get(key);
+    const same = (w: number): boolean =>
+      parseLayout(value) !== null &&
+      JSON.stringify(withIds(twoColumns(w, family), value as LayoutNode)) === JSON.stringify(value);
+    if ([1440, 1024, 390].some(same)) kv.set(key, homePreset(undefined, family));
+  }
+  kv.set('defaults', DEFAULTS);
+}
+
 export function migrateStorage(): void {
+  adoptDefault();
   if (kv.get('migration') === VERSION) return;
   for (const family of ['main', 'guest']) {
     const key = `layout:${family}`;

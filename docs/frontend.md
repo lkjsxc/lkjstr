@@ -43,7 +43,7 @@ Seams worth knowing inside `src/views/`:
   reading position as an anchor row plus offset, `feed-keys.ts` is the
   keyboard, `feed-bar.ts` and `filter-bar.ts` are the filter row,
   `feed-scrub.ts` the time beside a held scrollbar, `profile-kinds.ts` the
-  kinds of a profile. `docs.ts` is the Docs tab (its pages include the
+  kinds of a profile. `docs.ts` is the Documentation tab (its pages include the
   shortcuts and the release facts of `pages.ts`); `wm/tab-search.ts` finds
   a tab.
 - `note.ts` draws a note, `note-media.ts` its pictures, `note-actions.ts`
@@ -62,7 +62,12 @@ Seams worth knowing inside `src/views/`:
 - `wm/presets.ts` has two layout families: `main` for an account and `guest`
   for a visitor; `main.ts` shows the one that fits who is signed in.
 - `wm/controller.ts` owns one workspace; `wm/closed.ts` is its stored list of
-  closed tabs, `wm/choices.ts` what the New tab page offers.
+  closed tabs (read before every change, so browser tabs share it; entries
+  have ids), `wm/choices.ts` what the New tab page offers (Documentation
+  once; its pages by typed name), `wm/reset.ts` the reset that sends the tabs
+  a default lacks to the closed tabs, and whose Undo lapses once it could lose
+  a tab's state. `wm/store.ts` never writes back a layout it already holds.
+  `shared/migrate.ts` moves an untouched old default to the current one once.
 
 ## The engine boundary
 

@@ -42,7 +42,10 @@ describe('undo', () => {
   });
   it('the stored list of closed tabs keeps only what can be opened', () => {
     const ok = { kind: 'thread', state: { id: 'x' }, pane: 'p1', index: 1 };
-    expect(parseClosed([ok, { ...ok, kind: 'gone' }, { ...ok, index: -1 }, null, 3])).toEqual([ok]);
+    expect(parseClosed([ok, { ...ok, kind: 'gone' }, { ...ok, index: -1 }, null, 3])).toEqual([
+      { ...ok, id: 'old.0' },
+    ]);
+    expect(parseClosed([{ ...ok, id: 'k', batch: 'b' }])).toEqual([{ ...ok, id: 'k', batch: 'b' }]);
     expect(parseClosed('x')).toEqual([]);
   });
 });

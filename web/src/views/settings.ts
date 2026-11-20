@@ -16,7 +16,7 @@ import { relayEntry } from './settings-relays.ts';
 const MODIFIED = '@modified';
 
 /** An entry that is a button, not a stored value. */
-function actionEntry(name: 'set.resetLayouts', run: () => void): Entry {
+function actionEntry(name: 'set.resetLayout' | 'set.resetLayouts', run: () => void): Entry {
   const [group = '', title = ''] = t(name).split(': ');
   const node = frame(
     group,
@@ -25,6 +25,7 @@ function actionEntry(name: 'set.resetLayouts', run: () => void): Entry {
     h('div', { class: 'muted' }, t(`${name}.d`)),
     h('div', { class: 'actions' }, h('button', { onclick: run }, title)),
   );
+  node.dataset.entry = name.slice(4);
   return { group, text: searchText(both(name), both(`${name}.d`)), node, sync: () => false };
 }
 
@@ -33,19 +34,42 @@ export function mountSettings(el: HTMLElement, env: ViewEnv): () => void {
   const lists = listEntries(env);
   const relays = relayEntry(env);
   const inbox = inboxRelayEntry(env);
+  // Resetting this workspace leads its group, so a saved arrangement can take up the default in one press.
   const entries = [
-    ...SETTINGS_SCHEMA.filter((f) => f.key !== 'dmWatch').map((f) => fieldEntry(f, env.settings)),
+    ...SETTINGS_SCHEMA.filter((f) => f.key !== 'dmWatch').flatMap((f) => [
+      ...(f.key === 'uiScale'
+        ? [actionEntry('set.resetLayout', () => env.resetLayouts(false))]
+        : []),
+      fieldEntry(f, env.settings),
+    ]),
     relays.entry,
     inbox.entry,
     ...SETTINGS_SCHEMA.filter((f) => f.key === 'dmWatch').map((f) => fieldEntry(f, env.settings)),
     ...lists.entries,
-    actionEntry('set.resetLayouts', env.resetLayouts),
+    actionEntry('set.resetLayouts', () => env.resetLayouts(true)),
   ];
-  const groups = [...new Set(entries.map((e) => e.group))].map((name) => ({
-    name,
-    head: h('h3', { class: 'sgroup' }, name),
-    entries: entries.filter((e) => e.group === name),
-  }));
+  const groups = [...new Set(entries.map((e) => e.group))].map((name) => {
+    const head = h('h3', { class: 'sgroup', tabindex: -1 }, name);
+    // The index: a press brings the group's heading to the top and gives it the keyboard (Relays, from anywhere).
+    const go = (): void => {
+      const show = (): void => head.scrollIntoView({ block: 'start' });
+      show();
+      head.focus({ preventScroll: true });
+      clearTimeout(seat);
+      seat = setTimeout(show, 300); // once more when the rows above it have arrived
+    };
+    return {
+      name,
+      head,
+      jump: h('button', { onclick: go }, name),
+      entries: entries.filter((e) => e.group === name),
+    };
+  });
+  const index = h(
+    'nav',
+    { class: 'sindex', 'aria-label': t('settings.index') },
+    groups.map((g) => g.jump),
+  );
   let changed = new Set<Entry>(); // bound: the entries of this view
   let seat: ReturnType<typeof setTimeout> | undefined;
 
@@ -67,7 +91,7 @@ export function mountSettings(el: HTMLElement, env: ViewEnv): () => void {
       e.node.hidden = !hit;
       if (hit) shown++;
     }
-    for (const g of groups) g.head.hidden = g.entries.every((e) => e.node.hidden);
+    for (const g of groups) g.jump.hidden = g.head.hidden = g.entries.every((e) => e.node.hidden);
     count.textContent =
       shown === available.length
         ? t('settings.count', { n: shown })
@@ -100,14 +124,16 @@ export function mountSettings(el: HTMLElement, env: ViewEnv): () => void {
   el.classList.add('pad');
   el.replaceChildren(
     h('div', { class: 'ssearch' }, search, h('div', { class: 'scount' }, count, modified)),
+    index,
     ...groups.flatMap((g) => [g.head, ...g.entries.map((e) => e.node)]),
   );
   const drafts = keepPublicDrafts(el, env.instance);
   sync(env.settings.get());
   const off = env.settings.subscribe(sync);
   const infoOff = env.engine.info.subscribe(filter);
-  // Opened for one entry (the relay list, from the Relays tab): it is brought to the top, once.
-  const target = entries.find((e) => e.node.dataset.entry === state.at);
+  // Opened for one entry (the relay list, from the Relays tab): it is brought to the top, once. Without one, Settings
+  // opens at its top (an action entry has no stored key, and must not match a missing one).
+  const target = state.at ? entries.find((e) => e.node.dataset.entry === state.at) : undefined;
   if (state.at) {
     delete state.at;
     saveViewState(env.instance, state);

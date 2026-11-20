@@ -30,8 +30,17 @@ export type OwnViews = {
   menu(tab: string): readonly MenuItem[];
   /** A tab id for another instance of `kind`, with no state left over from a closed one; `state` is what it starts with. */
   fresh(kind: string, used: ReadonlySet<string>, state?: object): string;
+  /** Gives a tab id back the state a retired tab left (an undone reset), before it is drawn again; false when the
+   * device had no room to keep it. */
+  revive(tab: string, state?: object): boolean;
   /** Unmounts a tab that is being closed and returns the state it leaves, so it can be opened again as it was. */
   retire(tab: string): object;
+  /** Takes a tab off the page; what it held, and wrote as it went, stays stored (a render mounts it again). */
+  unmount(tab: string): void;
+  /** What a tab holds in storage now, its input and outboxes included. */
+  held(tab: string): object;
+  /** Forgets what a tab held, once it is kept elsewhere. */
+  drop(tab: string): void;
   /** Before a render: remembers where every mounted view is scrolled. */
   stash(): void;
   /** After a render: unmounts closed tabs, restores scroll positions, tells views whether they are in front. */
@@ -55,6 +64,15 @@ export function createOwnViews(
   const mounts = new Map<string, Mounted>(); // bound: one per open tab
   const titles = new Map<string, string>(); // bound: one per open tab
   const instance = (tab: string): string => `${family}:${tab}`;
+  const revive = (tab: string, state?: object): boolean => {
+    dropViewState(instance(tab));
+    titles.delete(tab);
+    return !state || restoreViewState(instance(tab), state);
+  };
+  const unmount = (tab: string): void => {
+    mounts.get(tab)?.dispose(); // a view writes what it still held (its reading position) as it goes
+    mounts.delete(tab);
+  };
   return {
     el(tab) {
       const def = viewOf(tab);
@@ -164,17 +182,21 @@ export function createOwnViews(
     menu: (tab) => mounts.get(tab)?.menu?.() ?? [],
     fresh(kind, used, state) {
       const tab = freshTab(kind, used);
-      dropViewState(instance(tab));
-      if (state) restoreViewState(instance(tab), state);
-      titles.delete(tab);
+      revive(tab, state);
       return tab;
     },
+    revive,
     retire(tab) {
-      mounts.get(tab)?.dispose(); // a view writes what it still held (its reading position) as it goes
-      mounts.delete(tab);
+      unmount(tab);
       const state = snapshotViewState(instance(tab));
       dropViewState(instance(tab));
       return state;
+    },
+    unmount,
+    held: (tab) => snapshotViewState(instance(tab)),
+    drop(tab) {
+      dropViewState(instance(tab));
+      titles.delete(tab);
     },
     stash() {
       for (const m of mounts.values()) if (m.el.isConnected) m.top = m.el.scrollTop;

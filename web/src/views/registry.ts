@@ -43,8 +43,8 @@ export type ViewEnv = {
   readonly close: () => void;
   /** What this tab adds to its tile's "…" menu, asked each time the menu opens. */
   readonly menu: (items: () => readonly MenuItem[]) => void;
-  /** Forgets every saved layout. */
-  readonly resetLayouts: () => void;
+  /** Puts this workspace back to its default arrangement, with Undo (`every`: all saved layouts, without). */
+  readonly resetLayouts: (every: boolean) => void;
 };
 export type ViewDef = {
   readonly id: string;

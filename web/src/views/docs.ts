@@ -52,8 +52,9 @@ export const DOC_TREE: readonly { readonly title: Key; readonly pages: readonly 
   },
 ];
 export const DOC_PAGES: readonly Page[] = DOC_TREE.flatMap((g) => g.pages);
-/** What a search for a page matches: its title in both languages and its id. */
-export const docSearch = (p: Page): string => `${both(p.title)} ${p.id} docs ドキュメント`;
+/** What a search for a page matches: its title in both languages and its id, in lower case. */
+export const docSearch = (p: Page): string =>
+  `${both(p.title)} ${p.id} docs ドキュメント`.toLowerCase();
 
 /** Prose as elements: blank lines part paragraphs, `## ` starts a heading, lines of `- ` are a list. */
 export function prose(source: string): HTMLElement[] {

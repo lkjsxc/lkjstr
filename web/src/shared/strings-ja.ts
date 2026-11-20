@@ -23,6 +23,8 @@ export const ja: Record<keyof typeof en, string> = {
   'pane.splitDown': '下に分割',
   'pane.close': 'タイルを閉じる',
   'pane.reset': '配置を初期状態に戻す',
+  'pane.wasReset': '配置を初期状態に戻しました',
+  'pane.resetFailed': '配置は変えていません。閉じたタブを保存する空き容量がこの端末にありません。',
   'space.title': 'ワークスペース {n}',
   'launcher.placeholder': '入力して絞り込み・検索。Enter で先頭を開きます',
   'launcher.none': '当てはまるものがありません。',
@@ -227,8 +229,14 @@ export const ja: Record<keyof typeof en, string> = {
   'set.clientTag.d':
     '投稿、リポスト、リアクションに、lkjstr から送ったことを示すクライアントタグを付けます。',
   'tabs.search': 'タブを検索',
+  'settings.index': '設定のグループ',
+  'set.resetLayout': 'レイアウト: このワークスペースを初期状態に戻す',
+  'set.resetLayout.d':
+    'このワークスペースを最初の配置に戻します。閉じたタブは開き直せて、「元に戻す」で元の配置に戻せます。',
   'set.resetLayouts': 'レイアウト: すべての配置を初期状態に戻す',
   'set.resetLayouts.d': '9つのワークスペースを最初の状態に戻します。',
+  'set.resetLayoutsPartial':
+    '一部のワークスペースは配置を変えていません。閉じたタブを保存する空き容量がこの端末にありません。',
   'opt.auto': 'ブラウザに合わせる',
   'opt.ja': '日本語',
   'opt.en': 'English',
@@ -612,7 +620,7 @@ export const ja: Record<keyof typeof en, string> = {
   'stats.slow': '遅い',
   'stats.none': 'このエンジンは統計を持っていません。',
   'view.docs': 'ドキュメント',
-  'view.docs.hint': 'lkjstr の手引き',
+  'view.docs.hint': '使い方、ショートカット、プライバシー、規約',
   'docs.g.about': 'lkjstr について',
   'docs.g.use': '使い方',
   'docs.g.legal': '規約',
