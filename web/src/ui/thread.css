@@ -1,0 +1,64 @@
+/* Threads (docs/interface-thread.md). One avatar column; 2px lines in --line say who answers whom, one step deep.
+   Every row keeps the note's top padding, so lines meet faces where the face is. A compact note above the focus and
+   the room of one still being looked for have exactly the same height: one replaces the other without a jump. */
+.view[data-kind="thread"] { --step: calc(var(--avatar, 36px) / 2 + 14px); --railx: calc(12px + var(--avatar, 36px) / 2 - 1px); --textx: calc(22px + var(--avatar, 36px)); }
+.th-ancestor, .th-focus, .th-reply, .tpart { position: relative; }
+.th-below::after, .th-above::before, .th-step::before, .th-step:not(.th-last)::after { content: ""; position: absolute; left: var(--railx); width: 2px; background: var(--sep); }
+.th-below::after { top: calc(13px + var(--ctx, 0px) + var(--avatar, 36px)); bottom: 0; }
+/* A line over the header (whom a reply answers) moves the face down by its height. */
+.th-reply:has(> .ctx) { --ctx: 20.5px; }
+.th-above::before { top: 0; height: 5px; }
+/* One step in: an elbow from the line of the branch's first note into the face. */
+.th-step { padding-left: calc(12px + var(--step)); }
+.th-step::before { top: 0; height: calc(8px + var(--ctx, 0px) + var(--avatar, 36px) / 2); width: calc(var(--step) - var(--avatar, 36px) / 2 - 3px); border: solid var(--sep); border-width: 0 0 2px 2px; border-bottom-left-radius: 10px; background: none; }
+.th-step:not(.th-last)::after { top: 0; bottom: 0; }
+/* A branch, and the notes above, read as one group: hairlines only between groups. */
+.th-ancestor, .th-reply.th-below, .th-step:not(.th-last) { border-bottom-color: transparent; }
+
+/* The notes above: compact, two lines in a fixed height; a press opens one in place. */
+.th-compact { padding-bottom: 8px; cursor: pointer; }
+.th-compact .nhead { height: 19px; }
+.th-compact .content { margin: 0; }
+.th-compact .content > .text { display: -webkit-box; height: 42px; max-height: none; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; color: var(--muted); font-size: 14px; line-height: 21px; white-space: normal; }
+.tholds { display: inline-flex; align-items: center; gap: 2px; margin-left: 6px; color: var(--faint); font-size: 12.5px; vertical-align: -2px; }
+.tholds .i { width: 13px; height: 13px; }
+
+/* The focus: whole, larger, untinted; the reply field follows it and a stronger rule opens the conversation. */
+.th-focus { border-bottom: 0; padding-bottom: 2px; }
+.th-focus .content > .text { max-height: none; font-size: calc(var(--text, 15px) + 1.5px); }
+.tsay.compose { gap: 4px; padding: 2px 12px 10px var(--textx); border-bottom: 1px solid var(--sep); }
+.tsay .cinput { flex: none; min-height: 0; }
+.tsay .cinput > .ctext, .tsay .ctext { flex: none; height: auto; min-height: 40px; max-height: 40vh; padding: 7px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--raised); field-sizing: content; }
+.tsay .ctext:focus { border-color: var(--accent); }
+.tsay .cbar { padding-top: 2px; border-top: 0; }
+/* Until first used the field stands alone; its bar then stays, so leaving the field never moves what is below. */
+.tsay:not(.used):has(.ctext:placeholder-shown):not(:has(.thumbs > *)) .cbar { display: none; }
+/* A sent reply shows its progress on its own row in the thread: under the field only a failure stays, with Retry,
+   Edit and discard, so the conversation below never moves while a reply is on its way. */
+.tsay > .cresult > :not(.error), .tsay .cdraft:not(:has(> .error)) { display: none; }
+
+/* Full dates are long: the NIP-05 gives way before the name does, and in a narrow tile the clock before the date
+   (the tooltip keeps both); the name always keeps some room. */
+.view[data-kind="thread"] .nhead > .nip { flex: 1 1 0; }
+.view[data-kind="thread"] .nhead > .name { min-width: min(5em, 40%); }
+@container (max-width: 340px) { .view[data-kind="thread"] .nhead .tclock { display: none; } }
+
+/* Rows that are not notes. */
+.tpart { display: grid; grid-template-columns: var(--avatar, 36px) minmax(0, 1fr); gap: 0 10px; width: 100%; padding: 9px 12px 8px; border-bottom: 1px solid transparent; text-align: left; }
+.tface { width: var(--avatar, 36px); height: var(--avatar, 36px); border-radius: 50%; background: var(--hold); }
+.tlines { display: grid; grid-template-rows: 19px 21px 21px; align-items: center; }
+.tbar { width: 34%; height: 9px; border-radius: 5px; background: var(--hold); }
+.tbar + .tbar { width: 88%; }
+.tbar.short { width: 56%; }
+.tslot.missing .tface { box-sizing: border-box; border: 1.5px dashed var(--sep); background: none; }
+.tsays { align-self: center; height: 61px; color: var(--faint); font-size: 13px; line-height: 61px; }
+.tskel { border-bottom-color: var(--line); }
+.tskel .tlines { grid-template-rows: 19px 24px 24px; }
+.tskel.focus .tlines { grid-template-rows: 19px 26px 26px 26px 30px; }
+.tskel.focus .tbar:last-child { width: 40%; }
+/* Folds: the hidden earlier notes on a dotted rail; the rest of a branch on its elbow. */
+.tfold { display: block; padding: 7px 12px 8px var(--textx); font-size: 13px; line-height: 19px; }
+.tfold.th-below::after { top: 0; background: none; border-left: 2px dotted var(--sep); }
+.tfold.th-above::before { display: none; }
+.tfold.th-step { padding-left: calc(var(--textx) + var(--step)); }
+.tfold.th-step::before { height: calc(50% - 1px); }

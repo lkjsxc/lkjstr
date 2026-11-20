@@ -12,12 +12,14 @@ import { actionRow, reactionChips } from './note-actions.ts';
 import { stableNoteWidths } from './note-fit-geometry.ts';
 import { mediaGrid } from './note-media.ts';
 import { quoteCard } from './note-quote.ts';
+import { compactBody, lookOf, threadClass, threadMark, threadTime } from './note-thread.ts';
 import { displayName, faceButton, how, nameButton, nipMark, plainName, segments } from './parts.ts';
 import type { ViewEnv } from './registry.ts';
 
-const timeOf = (row: NoteRow, env: ViewEnv, dated: boolean): string => {
+const timeOf = (row: NoteRow, env: ViewEnv, dated: boolean): Child => {
   if (row.pending) return t(row.connecting ? 'note.connecting' : 'note.sending');
   const relative = env.settings.get().relativeTime;
+  if (row.thread && !relative) return threadTime(row.at);
   // Absolute dates compare with the divider's local day; relative ages use the current time.
   const now = dated && !relative ? (row.repostedBy?.at ?? row.at) : Date.now();
   return noteTime(row.at, now, { relative, lang: getLang() });
@@ -97,7 +99,8 @@ export function renderNote(row: NoteRow, env: ViewEnv, dated = false): HTMLEleme
     env.open('thread', { id: row.id, title: plainName(row.author) }, how(e));
   };
   const context: Child[] = [];
-  if (row.repostedBy && !(row.act && row.actOn)) {
+  // In a thread what a note answers is in view, and a repost says nothing about the conversation.
+  if (row.repostedBy && !(row.act && row.actOn) && !row.thread) {
     const { actors, others } = row.repostedBy;
     const names = actors.flatMap((a, i) => [
       i ? t('list.sep') : '',
@@ -112,7 +115,9 @@ export function renderNote(row: NoteRow, env: ViewEnv, dated = false): HTMLEleme
       ),
     );
   }
-  if (row.replyTo)
+  const answers = threadMark(row, env);
+  if (answers) context.push(answers);
+  if (row.replyTo && !row.thread)
     context.push(
       h(
         'div',
@@ -128,7 +133,7 @@ export function renderNote(row: NoteRow, env: ViewEnv, dated = false): HTMLEleme
       ),
     );
 
-  if (row.channel) {
+  if (row.channel && (!row.thread || row.thread.role === 'focus')) {
     // A channel message read outside its channel says where it was said, and leads there.
     const { id, name } = row.channel;
     const go = (e: Event): void => {
@@ -144,7 +149,9 @@ export function renderNote(row: NoteRow, env: ViewEnv, dated = false): HTMLEleme
     );
   }
 
-  const covered = row.cw !== undefined && !env.settings.get().showSensitive && !state.warning;
+  const look = lookOf(row);
+  const covered =
+    row.cw !== undefined && !env.settings.get().showSensitive && !state.warning && !look?.compact;
   let text = h('div');
   const makeContent = (): HTMLElement => {
     text = h('div', { class: state.unfolded ? 'text open' : 'text' }, segments(row.segments, env));
@@ -172,16 +179,14 @@ export function renderNote(row: NoteRow, env: ViewEnv, dated = false): HTMLEleme
       text.dispatchEvent(new CustomEvent('note-revealed', { bubbles: true }));
       fold(text);
     });
-  } else body = makeContent();
-  const thread = row.thread;
+  } else body = look?.compact ? compactBody(row, env) : makeContent();
   const el = h(
     'article',
     {
-      class: `note${thread ? ` th-${thread.role}` : ''}${row.pending ? ' pending' : ''}`,
+      class: `note${threadClass(row)}${row.pending ? ' pending' : ''}`,
       'data-note': row.id,
       'data-previews': row.previews ? '' : null,
       'data-instance': env.instance,
-      style: thread?.depth ? `--depth:${thread.depth}` : null,
     },
     context,
     h(
@@ -193,8 +198,7 @@ export function renderNote(row: NoteRow, env: ViewEnv, dated = false): HTMLEleme
         { class: 'nmain' },
         head(row, env, dated),
         body,
-        actionRow(row, env),
-        reactionChips(row, env),
+        look?.compact ? null : [actionRow(row, env), reactionChips(row, env)],
       ),
     ),
   );
@@ -202,7 +206,13 @@ export function renderNote(row: NoteRow, env: ViewEnv, dated = false): HTMLEleme
   drawnBy.set(el, JSON.stringify(row.author));
   const plain = (e: Event): boolean =>
     !(e.target as Element).closest('button, a, input, textarea, video, audio, .quote');
-  el.addEventListener('click', (e) => void (plain(e) && openThread(e)));
+  // A compact note above a thread's focus opens in place first (thread.ts keeps that with the tab).
+  const expand = (): unknown =>
+    el.dispatchEvent(new CustomEvent('thread-open', { bubbles: true, detail: row.id }));
+  el.addEventListener(
+    'click',
+    (e) => void (plain(e) && (look?.compact ? expand() : openThread(e))),
+  );
   // A middle click opens the thread behind (and never starts the browser's autoscroll).
   el.addEventListener('mousedown', (e) => void (e.button === 1 && plain(e) && e.preventDefault()));
   el.addEventListener('auxclick', (e) => void (e.button === 1 && plain(e) && openThread(e)));
@@ -261,6 +271,7 @@ const heldMark = (el: Element | null): string => {
 const overflowingText = (el: HTMLElement): HTMLElement | undefined => {
   const text = el.querySelector<HTMLElement>('.content > .text');
   return text &&
+    !el.classList.contains('th-compact') &&
     !el.querySelector('.fold') &&
     !text.classList.contains('open') &&
     text.scrollHeight > text.clientHeight + 2

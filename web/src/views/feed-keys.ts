@@ -2,9 +2,10 @@
 // selection is a row key, not a focused element: rows are redrawn all the time and focus would be lost or jump.
 // It is only drawn once the keyboard is used, and a key that would act on a selection nobody can see shows it
 // first instead of acting.
-import type { NoteRow, Row } from '../engine/protocol.ts';
+import type { NoteRow } from '../engine/protocol.ts';
 import { type KeyId, pressed, typing } from '../shared/keys.ts';
 import { popoverOpen } from '../wm/menus.ts';
+import type { ListRow } from './feed-draw.ts';
 import { plainName } from './parts.ts';
 import type { ViewEnv } from './registry.ts';
 
@@ -26,7 +27,7 @@ const BUTTONS: readonly (readonly [KeyId, string])[] = [
   ['bookmark', '.acts > .a-bookmark'],
   ['media', '.content > .media a.mbox'],
 ];
-const noteOf = (row: Row | undefined): NoteRow | undefined =>
+const noteOf = (row: ListRow | undefined): NoteRow | undefined =>
   row?.kind === 'note' ? row : row?.kind === 'notification' ? row.note : undefined;
 
 export function mountFeedKeys(o: {
@@ -35,7 +36,7 @@ export function mountFeedKeys(o: {
   readonly env: ViewEnv;
   /** Whether Escape closes this tab once nothing is selected (a thread, a profile: tabs opened from a note). */
   readonly closes: boolean;
-  readonly row: (key: string) => Row | undefined;
+  readonly row: (key: string) => ListRow | undefined;
   readonly node: (key: string) => HTMLElement | undefined;
   /** The selection scrolled the list, or was set or dropped. */
   readonly moved: () => void;
@@ -52,8 +53,11 @@ export function mountFeedKeys(o: {
     node?.classList.add('sel');
     drawn = node;
   };
+  // Day dividers and a thread's skeletons, reply field and placeholders are passed over.
   const rowEls = (): HTMLElement[] =>
-    [...list.children].filter((c) => !c.classList.contains('day')) as HTMLElement[];
+    [...list.children].filter(
+      (c) => !c.classList.contains('day') && !c.hasAttribute('data-pass'),
+    ) as HTMLElement[];
   /** Scrolls only as far as needed, and never smoothly: a held key must keep up. */
   const reveal = (node: HTMLElement): void => {
     const box = el.getBoundingClientRect();
@@ -114,7 +118,9 @@ export function mountFeedKeys(o: {
     const note = noteOf(row);
     const from = { beside: true, from: el };
     if (which === 'thread') {
-      if (note && note.thread?.role !== 'focus')
+      // A fold or a compact note above a thread's focus opens in place, as a press does.
+      if (node.hasAttribute('data-press') || node.classList.contains('th-compact')) node.click();
+      else if (note && note.thread?.role !== 'focus')
         env.open('thread', { id: note.id, title: plainName(note.author) }, from);
       else if (row?.kind === 'person')
         env.open('profile', { pubkey: row.author.pubkey, title: plainName(row.author) }, from);

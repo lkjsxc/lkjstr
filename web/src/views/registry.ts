@@ -1,5 +1,6 @@
 // View registry: every kind of tab a pane can show.
 import type { Engine } from '../engine/client.ts';
+import type { NoteRow } from '../engine/protocol.ts';
 import type { Key } from '../shared/i18n.ts';
 import type { SettingsStore } from '../shared/settings.ts';
 import type { Disposer, Signal } from '../shared/signal.ts';
@@ -45,6 +46,8 @@ export type ViewEnv = {
   readonly menu: (items: () => readonly MenuItem[]) => void;
   /** Puts this workspace back to its default arrangement, with Undo (`every`: all saved layouts, without). */
   readonly resetLayouts: (every: boolean) => void;
+  /** A reply pressed on a note: true when this tab answers it itself (a thread's own field). */
+  readonly reply?: (row: NoteRow) => boolean;
 };
 export type ViewDef = {
   readonly id: string;

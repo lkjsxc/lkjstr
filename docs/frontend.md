@@ -46,6 +46,9 @@ Seams worth knowing inside `src/views/`:
   kinds of a profile. `docs.ts` is the Documentation tab (its pages include the
   shortcuts and the release facts of `pages.ts`); `wm/tab-search.ts` finds
   a tab.
+- `thread.ts` is a thread tab's own part of `feed.ts`: `thread-plan.ts` arranges its rows (compact notes above,
+  folds, the room of a missing note, grouped replies), `thread-parts.ts` draws what is not a note, the reply
+  field is the composer under `:say`, and `note-thread.ts` is what a note in a thread draws differently.
 - `note.ts` draws a note, `note-media.ts` its pictures, `note-actions.ts`
   its action row and menus, `held.ts` holds a like or repost back until its
   Undo has lapsed.
@@ -79,7 +82,8 @@ Seams worth knowing inside `src/views/`:
 
 - `open {sub, query}`, `window {sub, anchor, before, after}`, `close {sub}`
   from the interface; `rows`, batched `patch`, `fresh` and `state` back. A row
-  is a finished view model; the interface virtualises and never reorders.
+  is a finished view model; the interface virtualises and never reorders
+  (a thread groups replies under what they answer for drawing; paging keeps the engine's order).
 - `act {req, action}` with a `result`, `publish.signed` for the signed note id, and
   `progress` or per-relay `delivery`. A publication result can settle before
   the remaining relay answers. The composer retains delivery callbacks while its

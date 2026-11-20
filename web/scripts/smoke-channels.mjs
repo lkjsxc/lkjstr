@@ -55,13 +55,18 @@ export async function channelScenarios({ page, launch, check, fake, shots, shot 
   await page.locator(`${room} .note`).filter({ hasText: text }).waitFor();
   check('Channels list opens the published channel feed');
   await page.locator(`${room} .note`).filter({ hasText: text }).locator('.text').click();
+  // Reply on a thread's focus is the thread's own field (interface-thread.md T4); the reply joins the thread.
   await page.locator('.th-focus .a-reply').click();
   const replyText = `Channel UI thread reply ${Date.now()}`;
-  const composer = page.locator('.pane.cur .view[data-kind="compose"]:visible');
+  const composer = page.locator('.pane.cur .view[data-kind="thread"]:visible .tsay');
   await composer.locator('textarea').fill(replyText);
   await composer.getByRole('button', { name: 'Reply', exact: true }).click();
-  await composer.locator('.cresult', { hasText: 'Delivered' }).waitFor();
-  const reply = fake.published.find((e) => e.content === replyText);
+  const sent = () => fake.published.find((e) => e.content === replyText);
+  for (let n = 0; n < 400 && !sent(); n++) await page.waitForTimeout(25);
+  await page
+    .locator('.pane.cur .view[data-kind="thread"]:visible .th-reply', { hasText: replyText })
+    .waitFor();
+  const reply = sent();
   check(
     'Thread reply inherits the channel through the real engine',
     reply?.kind === 42 &&

@@ -7,7 +7,7 @@ import { loadViewState, saveViewState } from '../shared/view-state.ts';
 import { ability } from './can.ts';
 import { mountChannelDesk } from './channel-desk.ts';
 import { mountFeedBar } from './feed-bar.ts';
-import { createRowList } from './feed-draw.ts';
+import { createRowList, type ListRow } from './feed-draw.ts';
 import { createFresh } from './feed-fresh.ts';
 import { mountFeedKeys } from './feed-keys.ts';
 import { createKeeper, createThreadSeat } from './feed-place.ts';
@@ -15,7 +15,7 @@ import { feedQuery } from './feed-query.ts';
 import { mountScrub } from './feed-scrub.ts';
 import { CHILD, DATED, hasDaySeparators, OWN } from './feed-sources.ts';
 import { type FeedState, showFeedState } from './feed-state.ts';
-import { feedTitle } from './feed-title.ts';
+import { feedTitle, showFeedTitle } from './feed-title.ts';
 import { feedWindow, heldFresh, isOwnNote } from './feed-window.ts';
 import { onHeld } from './held.ts';
 import { mountHomeDrafts } from './home-drafts.ts';
@@ -25,6 +25,7 @@ import { createPreviewWants } from './preview-wants.ts';
 import { mountProfileKinds } from './profile-kinds.ts';
 import type { ViewEnv } from './registry.ts';
 import { watchHomeTitle } from './their-home.ts';
+import { mountThread } from './thread.ts';
 import { mountTimeRail } from './time-rail.ts';
 
 const PAGE = 60;
@@ -44,8 +45,12 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
   const fresh = createFresh(el, env, kind, () => toTop());
   const barSlot = h('div', { class: 'fslot' });
   const tail = h('div', { class: 'ftail' });
-  const drawn = createRowList(list, env, () => hasDaySeparators(kind, state.show));
+  const thread =
+    kind === 'thread' ? mountThread({ el, env, state, save, redraw: () => sync() }) : null;
+  const dates = (): boolean => hasDaySeparators(kind, state.show);
+  const drawn = createRowList(list, thread?.env ?? env, dates, thread?.part);
   let rows: Row[] = [];
+  let shown: readonly ListRow[] = []; // what is drawn: the rows, or a thread's arrangement of them
   let sub: Subscription | undefined;
   const previews = createPreviewWants(el, () => sub);
   let atTop = true;
@@ -66,7 +71,7 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
     saved: state.pos,
     active: () => el.isConnected && env.visible.get(),
     node: (key) => drawn.node(key),
-    anchors: (key) => !key.startsWith('day:'),
+    anchors: (key) => !/^(day|th):/.test(key), // dividers and a thread's other parts never anchor
     save: (place) => ((state.pos = place), save()),
   });
   const query = (): Query => feedQuery(kind, account, state, env.engine, kinds?.query());
@@ -96,7 +101,7 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
   const sync = (): void => {
     const settle = keeper.hold(keys.held());
     drafts?.draw(rows);
-    drawn.draw(rows);
+    drawn.draw((shown = thread?.plan(rows, sstate) ?? rows));
     kinds?.seat(rows[0] && drawn.node(rows[0].key), rows[0]);
     showState();
     seat();
@@ -106,12 +111,12 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
     keys.paint(), previews.sync(), rail.sync();
   };
   const seatThread = createThreadSeat(el, tail, keeper, Boolean(state.pos), drawn.node);
-  const seat = (): void => void (kind === 'thread' && env.visible.get() && seatThread(rows));
+  const seat = (): void => void (thread && env.visible.get() && seatThread(shown));
   const showState = (): void =>
     showFeedState(
       status,
       !account && OWN.has(kind) ? signIn : undefined,
-      rows,
+      shown,
       sstate,
       atBottom,
       kind === 'search' && !state.text,
@@ -148,12 +153,7 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
     if (!frame) frame = requestAnimationFrame(() => ((frame = 0), follow()));
   };
   el.addEventListener('scroll', onScroll, { passive: true });
-  const title = (): void => {
-    const next = feedTitle(kind, rows, state);
-    if (!next) return;
-    if (next !== state.title) (state.title = next), save();
-    env.setTitle(next);
-  };
+  const title = (): void => showFeedTitle(env, feedTitle(kind, rows, state), state, save);
   const open = (keep = false): void => {
     sub?.close();
     rail.reset();
@@ -196,7 +196,7 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
       },
       state(s) {
         sstate = s;
-        showState();
+        thread ? sync() : showState();
         if (s.privateLists?.phase === 'ready') follow();
       },
     });
@@ -289,7 +289,7 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
       off();
     kinds?.dispose();
     scrub();
-    previews.dispose(), drawn.dispose(), rail.dispose();
+    previews.dispose(), drawn.dispose(), rail.dispose(), thread?.dispose();
     keys.dispose();
     keeper.dispose();
     sub?.close();

@@ -160,10 +160,12 @@ export function actionRow(row: NoteRow, env: ViewEnv): HTMLElement {
     'div',
     { class: 'acts' },
     button('reply', 'act.reply', n(row.counts.replies), false, () =>
-      env.open('compose', {
-        replyTo: row.id,
-        replyOf: { name: plainName(row.author), text: excerpt(row) },
-      }),
+      env.reply?.(row)
+        ? undefined
+        : env.open('compose', {
+            replyTo: row.id,
+            replyOf: { name: plainName(row.author), text: excerpt(row) },
+          }),
     ),
     button('repost', 'act.repost', n(row.counts.reposts), row.mine.reposted, (el) =>
       openMenu(env.layer, el, [

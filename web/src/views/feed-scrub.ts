@@ -1,15 +1,16 @@
 // While the scrollbar of a list is held, a small label beside the thumb says the time of the row at the top of
 // the tile, so a long list can be travelled by time. How much it says follows the span of what is loaded: the
 // time of day within one day, the date with the time across days, the date alone across months.
-import type { Row } from '../engine/protocol.ts';
+
 import { clockOf, dayOf } from '../shared/format.ts';
 import { h } from '../shared/h.ts';
+import type { ListRow } from './feed-draw.ts';
 
 const DAY = 86_400_000;
 const IDLE_MS = 1500; // a held thumb that does not move for this long lets the label go
 
 /** When a row happened (0: a row without a time, such as a profile's header). */
-export const rowTime = (row: Row | undefined): number =>
+export const rowTime = (row: ListRow | undefined): number =>
   row?.kind === 'note' ? (row.repostedBy?.at ?? row.at) : row?.kind === 'notification' ? row.at : 0;
 /** The label for `at` in a list that spans `from` to `to`. Pure, tested. */
 export function scrubText(at: number, from: number, to: number): string {
@@ -23,7 +24,7 @@ export function mountScrub(o: {
   readonly el: HTMLElement;
   readonly pin: HTMLElement;
   readonly list: HTMLElement;
-  readonly row: (key: string) => Row | undefined;
+  readonly row: (key: string) => ListRow | undefined;
 }): () => void {
   const { el, list } = o;
   const label = h('div', { class: 'scrub', hidden: true, 'aria-hidden': 'true' });

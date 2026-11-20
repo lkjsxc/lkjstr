@@ -691,4 +691,10 @@ export const ja: Record<keyof typeof en, string> = {
   'site.faq': 'よくある質問',
   'site.nips': '対応 NIP',
   'site.changelog': '更新履歴',
+  'thread.earlier': '前のノート {n} 件',
+  'thread.more': 'ほかの返信 {n} 件',
+  'thread.missing': '返信先のノートが見つかりませんでした。',
+  'thread.looking': 'ノートを探しています…',
+  'thread.replyHint': '{name}に返信',
+  'thread.answers': '{name}への返信',
 };

@@ -8,6 +8,7 @@ import { failedAccountInput } from './account-failure.ts';
 import { createActions } from './actions.ts';
 import { createCore } from './core.ts';
 import { createPrivateMock } from './dm.ts';
+import { addThreads } from './fixtures-thread.ts';
 import { liveWindow } from './live-window.ts';
 import { privateListState } from './private-lists.ts';
 import { select } from './query.ts';
@@ -138,6 +139,7 @@ export function createMockEngine(
         world.customEmoji = config.mock?.emoji !== 'none';
         core.clientTag = config.clientTag !== false;
         core.slow = config.mock?.slow;
+        if (config.mock?.threads) addThreads(world);
         if (!started && config.mock?.accounts === 'none') core.who.clear();
         if (started) live();
         else start();

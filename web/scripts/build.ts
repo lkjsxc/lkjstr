@@ -27,6 +27,7 @@ const engineDir = process.argv.find((a) => a.startsWith('--engine='))?.slice(9);
 const CSS = [
   'ui.css',
   'notes.css',
+  'thread.css',
   'views.css',
   'compose-media.css',
   'people.css',

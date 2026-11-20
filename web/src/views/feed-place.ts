@@ -1,7 +1,7 @@
 // Where the reader is in a list: the first row on screen and how far its top is from the top of the tile. Not a
 // scroll offset, which means nothing once rows above change, a tile gets another width or a picture arrives. The
 // place is read from the screen whenever the reader scrolls and put back whenever anything else moves the rows.
-import type { Row } from '../engine/protocol.ts';
+import type { ListRow } from './feed-draw.ts';
 
 export type Place = { readonly key: string; readonly off: number };
 
@@ -170,7 +170,7 @@ export function createThreadSeat(
   seated: boolean,
   nodeFor: (key: string) => HTMLElement | undefined,
 ) {
-  return (rows: readonly Row[]): void => {
+  return (rows: readonly ListRow[]): void => {
     const focus = rows.find((row) => row.kind === 'note' && row.thread?.role === 'focus');
     const node = focus && nodeFor(focus.key);
     if (!node) return;

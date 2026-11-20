@@ -186,8 +186,8 @@ The bounded resolution and representative policy follow [interface-acts.md](inte
 - `crypted.error: 'rate-limited'` defers a passive read while writing.
 - `EmojiRow.address?` identifies the selected kind-30030 set or a direct entry's declared set.
 - `Draft.emoji[].address?` carries the optional NIP-30 set coordinate into a public note tag.
-- `Publish` reactions accept optional `address` as the fourth element of their custom emoji tag.
-- `Publish` reaction deletes accept optional `url` to select an exact image. An empty string selects a reaction rendered as text.
+- `Publish` reactions take optional `address` (4th custom emoji tag element); deletes take optional `url` for an exact image ('' for text).
+- `NoteRow.thread.parent` (thread source): the id of the note a row answers, also when it is not stored.
 
 Relay Stats add optional firstEventMs, requestUses and readTimeouts: verified first-event latency, session REQ envelopes and bounded read timeout score.
 Inactive routes without retained transport observations report null.

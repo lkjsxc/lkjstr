@@ -126,12 +126,15 @@ function thread(w: World, q: Query, me: string): Entry[] {
     p = p.re ? w.byId.get(p.re) : undefined
   )
     up.unshift(p);
-  const out: Entry[] = up.map((n) => entry(w, n, { me, thread: { role: 'ancestor', depth: 0 } }));
-  out.push(entry(w, focus, { me, thread: { role: 'focus', depth: 0 } }));
+  const answers = (n: MNote) => (n.re ? { parent: n.re } : {});
+  const out: Entry[] = up.map((n) =>
+    entry(w, n, { me, thread: { role: 'ancestor', depth: 0, ...answers(n) } }),
+  );
+  out.push(entry(w, focus, { me, thread: { role: 'focus', depth: 0, ...answers(focus) } }));
   const walk = (parent: string, depth: number): void => {
     for (const n of w.repliesTo(parent)) {
       if (w.isMuted(n)) continue;
-      out.push(entry(w, n, { me, thread: { role: 'reply', depth } }));
+      out.push(entry(w, n, { me, thread: { role: 'reply', depth, parent } }));
       walk(n.id, Math.min(depth + 1, 4));
     }
   };

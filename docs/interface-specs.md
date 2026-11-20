@@ -44,6 +44,10 @@ what the engine offers and no surface reaches yet.
 | E2 | The picker's fixed preview strip | [interface-emoji.md](interface-emoji.md#e2-the-preview-strip) | built |
 | E3 | The emoji popover (custom and Unicode) in notes, names and reactions | [interface-emoji.md](interface-emoji.md#e3-the-emoji-popover) | built |
 | E4 | The picker's custom emoji tab: list and sets, empty line, headed search | [interface-emoji.md](interface-emoji.md#e4-the-custom-emoji-tab) | built |
+| T1 | Thread: the focused note | [interface-thread.md](interface-thread.md#t1-the-focused-note) | built |
+| T2 | Thread: the notes above, compact, and the room of a missing one | [interface-thread.md](interface-thread.md#t2-the-notes-above) | built |
+| T3 | Thread: replies as a conversation, long branches folded | [interface-thread.md](interface-thread.md#t3-replies) | built |
+| T4 | Thread: the reply field under the focus | [interface-thread.md](interface-thread.md#t4-the-reply-field) | built |
 | Q1 | Tabs state wants; the engine makes one plan | [read-plan.md](read-plan.md#q1-tabs-state-wants-the-engine-makes-one-plan) | ready |
 | Q2 | Ask where the answer is | [read-plan.md](read-plan.md#q2-ask-where-the-answer-is) | ready |
 | Q3 | Weights made from the past | [read-plan.md](read-plan.md#q3-weights-made-from-the-past) | ready |

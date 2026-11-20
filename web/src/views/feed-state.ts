@@ -1,9 +1,11 @@
 // Reuse the existing feed status node for relay and private-list completion.
-import type { Row, SubState } from '../engine/protocol.ts';
+import type { SubState } from '../engine/protocol.ts';
 import { fullTime } from '../shared/format.ts';
 import { type Key, t } from '../shared/i18n.ts';
 import type { BarState } from './feed-bar.ts';
+import type { ListRow } from './feed-draw.ts';
 import type { Place } from './feed-place.ts';
+import type { ThreadState } from './thread.ts';
 
 export type FeedState = BarState & {
   title?: string;
@@ -15,12 +17,12 @@ export type FeedState = BarState & {
   pos?: Place;
   extent?: number;
   head?: string;
-};
+} & ThreadState;
 
 export function showFeedState(
   status: HTMLElement,
   signIn: HTMLElement | undefined,
-  rows: readonly Row[],
+  rows: readonly ListRow[],
   state: SubState | undefined,
   atBottom: boolean,
   searchHint: boolean,
@@ -36,7 +38,7 @@ export function showFeedState(
     : '';
 }
 export function feedState(
-  rows: readonly Row[],
+  rows: readonly ListRow[],
   state: SubState | undefined,
   bottom: boolean,
   searchHint: boolean,

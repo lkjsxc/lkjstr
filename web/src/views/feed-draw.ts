@@ -10,13 +10,17 @@ import { bodySig, fitNotes, patchNote, renderNote } from './note.ts';
 import { disposeNoteAudio, reuseNoteAudio } from './note-audio.ts';
 import type { ViewEnv } from './registry.ts';
 import { renderNotification, renderPerson, renderProfile } from './rows.ts';
+import type { ThreadPart } from './thread-plan.ts';
+
+/** A row of a list, or a part of a thread that is not a note (thread-parts.ts). */
+export type ListRow = Row | ThreadPart;
 
 export type RowList = {
   /** Makes the list's children exactly these rows, in order. */
-  draw(rows: readonly Row[]): void;
+  draw(rows: readonly ListRow[]): void;
   node(key: string): HTMLElement | undefined;
   /** The row as drawn. */
-  row(key: string): Row | undefined;
+  row(key: string): ListRow | undefined;
   /** Makes the next draw rebuild every row, retaining native playback elements by address. */
   clear(): void;
   dispose(): void;
@@ -26,11 +30,13 @@ export function createRowList(
   list: HTMLElement,
   env: ViewEnv,
   dates: boolean | (() => boolean),
+  part?: (p: ThreadPart) => HTMLElement,
 ): RowList {
   let dated = typeof dates === 'function' ? dates() : dates;
   const nodes = new Map<string, { el: HTMLElement; sig: string; body?: string }>(); // bound: rows of the window plus day dividers
-  let shown: readonly Row[] = [];
-  const render = (row: Row): HTMLElement | null => {
+  let shown: readonly ListRow[] = [];
+  const render = (row: ListRow): HTMLElement | null => {
+    if (row.kind === 'thread-part') return part?.(row) ?? null;
     if (row.kind === 'note') return renderNote(row, env, dated);
     if (row.kind === 'profile') return renderProfile(row, env);
     if (row.kind === 'person') return renderPerson(row, env);

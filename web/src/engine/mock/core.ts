@@ -80,7 +80,10 @@ export function createCore(post: (msg: FromEngine) => void, now: () => number) {
         const reply = s.query.source === 'thread' && s.entries.some((e) => e.key === n.re);
         if (!note && !reply) continue;
         if (reply) {
-          const e = entry(world, n, { me: me(), thread: { role: 'reply', depth: 1 } });
+          const up = s.entries.find((x) => x.key === n.re)?.row();
+          const depth = (up?.kind === 'note' ? (up.thread?.depth ?? 0) : 0) + 1;
+          const thread = { role: 'reply', depth, parent: n.re } as const;
+          const e = entry(world, n, { me: me(), thread });
           s.entries.push(e);
           if (s.windowed && s.end === s.entries.length - 1)
             s.end++, push(s, { op: 'insert', before: null, rows: [e.row()] });

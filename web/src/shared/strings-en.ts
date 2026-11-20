@@ -685,4 +685,10 @@ export const en = {
   'site.faq': 'FAQ',
   'site.nips': 'Supported NIPs',
   'site.changelog': 'Changelog',
+  'thread.earlier': '{n} earlier notes',
+  'thread.more': '{n} more replies',
+  'thread.missing': 'The note this answers was not found.',
+  'thread.looking': 'Looking for this note…',
+  'thread.replyHint': 'Reply to {name}',
+  'thread.answers': 'Answers {name}',
 };

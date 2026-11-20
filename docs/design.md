@@ -140,9 +140,12 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
 - New notes are always loaded into the feed as they arrive, after a reload too. At the top they show at once and the list stays at the top. Anywhere else they are inserted above while the reading position holds (the anchor note keeps its place on screen); the pill counts the unread notes above, scrolling up reaches them with no click, and pressing the pill goes to the top. A row selected by the keyboard holds the list too. The feed keeps its bounded window: when more arrive above than the window holds, the pill says so, and pressing it reloads the head.
 - The reading position is an anchor note plus offset: it survives reload,
   another tile width, a moved or reopened tab, late media.
-- A thread opens on its focused note at the top of the tile. The notes it
-  answers are above, joined by a rail in the avatar column that ends in a
-  stub on the focused note. Replies are indented by depth, at most four.
+- A thread ([interface-thread.md](interface-thread.md)) opens on its focused note at the top of the tile, whole,
+  its text 1.5px larger, untinted; the reply field is under it. The notes it answers are above, compact (two
+  lines, one height) and joined by a rail that ends in a stub on the focus; more than three fold behind one row.
+  Replies read as a conversation: one step in at most, quiet elbows in `--sep`, whom a reply answers above its
+  header when its line does not say it, branches past three folded. Thread times carry the date (date alone under 340px). A note still
+  looked for, or not found, holds the room of the note it would be; skeletons hold the focus and first replies.
 - A profile's header (banner, bio, counts, "Follows you") scrolls away with
   the notes. The npub copies on click. A count is shown once it is known;
   until then the label stands alone and still opens the list.
@@ -173,7 +176,7 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
   The field is free at once. Pending and failed messages stay below it, with
   Retry, Edit and discard for failures, preserving attachments across reload. Elsewhere a message says `# name` above it.
 - What the engine cannot serve (protocol below 3; channels: 4) is not drawn.
-- Loading, empty, failed and end-of-list are one quiet centred line.
+- Loading, empty, failed and end-of-list are one quiet centred line (a thread holds skeletons instead).
 - A profile offers its owner's Home: the notes of the people they follow, as a tab of its own.
 
 ## Writing and acting

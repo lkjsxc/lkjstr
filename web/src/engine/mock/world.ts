@@ -74,7 +74,7 @@ export function segment(text: string): Segment[] {
   push(text.slice(last));
   return out;
 }
-const media = ([w, h, hue, alt]: MediaSpec, sensitive: boolean): Media => ({
+export const media = ([w, h, hue, alt]: MediaSpec, sensitive: boolean): Media => ({
   type: 'image',
   url: photo(w, h, hue),
   w,

@@ -1,13 +1,14 @@
 // The composer saves typed drafts and retains failed posts and channel messages for retry.
 import type { Delivery, Draft, Emoji, Failure, Mention, Uploaded } from '../engine/protocol.ts';
 import { h, replaceChildren } from '../shared/h.ts';
-import { type Key, t } from '../shared/i18n.ts';
+import { t } from '../shared/i18n.ts';
 import { icon } from '../shared/icons.ts';
 import { keyCaps, pressed } from '../shared/keys.ts';
 import { kv } from '../shared/storage.ts';
 import { loadViewState, saveViewState } from '../shared/view-state.ts';
 import { openMenu } from '../wm/menus.ts';
 import { ability, abilityText, denied, failureText } from './can.ts';
+import { contextLine, type Ref } from './compose-context.ts';
 import { createComposeMedia } from './compose-media-state.ts';
 import { createMentions } from './compose-mentions.ts';
 import { type ChannelDraft, createChannelOutbox } from './compose-outbox.ts';
@@ -16,7 +17,6 @@ import { emojiTag, openEmojiPicker } from './emoji-picker.ts';
 import { homeDraftForEdit } from './home-drafts.ts';
 import type { ViewEnv } from './registry.ts';
 
-type Ref = { name: string; text: string };
 type State = {
   text?: string;
   outbox?: ChannelDraft[];
@@ -31,14 +31,23 @@ type State = {
   media?: Uploaded[];
   mentions?: Mention[];
 };
-/** `channel`: the composer of a channel tab; what it sends is a message in that channel. */
-export function mountCompose(el: HTMLElement, env: ViewEnv, channel?: string): () => void {
+/** `channel`: the composer of a channel tab; what it sends is a message in that channel. `reply`: the field under a
+ * thread's focus, which always answers that note and takes the keyboard only when asked. */
+export function mountCompose(
+  el: HTMLElement,
+  env: ViewEnv,
+  channel?: string,
+  reply?: { readonly id: string; readonly name: string },
+): () => void {
   const state: State = loadViewState<State>(env.instance);
+  if (reply) (state.replyTo = reply.id), (state.replyOf = undefined);
   const save = (): void => saveViewState(env.instance, state);
   const area = h('textarea', {
     class: 'ctext',
     rows: channel ? 2 : 4,
-    placeholder: t(state.replyTo ? 'compose.replyHint' : channel ? 'channel.say' : 'compose.hint'),
+    placeholder: reply
+      ? t('thread.replyHint', { name: reply.name })
+      : t(state.replyTo ? 'compose.replyHint' : channel ? 'channel.say' : 'compose.hint'),
     'aria-label': t('view.compose'),
   });
   area.value = state.text ?? '';
@@ -88,34 +97,16 @@ export function mountCompose(el: HTMLElement, env: ViewEnv, channel?: string): (
     { class: 'btn primary', title: keyCaps('send')[0] },
     t(state.replyTo ? 'compose.reply' : 'compose.post'),
   );
-  const context = (label: Key, ref: Ref | undefined, clear: () => void): HTMLElement | null =>
-    ref
-      ? h(
-          'div',
-          { class: 'cctx' },
-          h('span', { class: 'muted clip' }, t(label, { name: ref.name }), ' ', ref.text),
-          h(
-            'button',
-            {
-              class: 'x',
-              title: t('compose.drop'),
-              'aria-label': t('compose.drop'),
-              onclick: clear,
-            },
-            '×',
-          ),
-        )
-      : null;
   const head = h('div');
   const drawHead = (): void =>
     replaceChildren(
       head,
-      context(
+      contextLine(
         'compose.replyingTo',
         state.replyOf,
         () => ((state.replyTo = state.replyOf = undefined), save(), drawHead()),
       ),
-      context(
+      contextLine(
         'compose.quoting',
         state.quoteOf,
         () => ((state.quote = state.quoteOf = undefined), save(), drawHead()),
@@ -233,6 +224,7 @@ export function mountCompose(el: HTMLElement, env: ViewEnv, channel?: string): (
       state.mentions = [];
       mentions.reset();
       state.replyTo = state.replyOf = state.quote = state.quoteOf = state.emoji = undefined;
+      state.replyTo = reply?.id;
       save();
       media.clear();
       drawHead();
@@ -285,7 +277,7 @@ export function mountCompose(el: HTMLElement, env: ViewEnv, channel?: string): (
     save();
     fromHome.discard();
   }
-  if (state.replyTo || state.quote) requestAnimationFrame(() => area.focus());
+  if (!reply && (state.replyTo || state.quote)) requestAnimationFrame(() => area.focus());
   return () => {
     state.text = area.value;
     save();

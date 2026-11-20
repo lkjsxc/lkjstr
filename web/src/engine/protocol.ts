@@ -296,8 +296,13 @@ export type NoteRow = {
   };
   /** A heuristic hid this note; the interface shows one quiet line with the reason and a way to see it. */
   readonly hidden?: { readonly reason: string };
-  /** `thread` source only. `depth` 0 for ancestors and the focus, 1+ for replies. */
-  readonly thread?: { readonly role: 'ancestor' | 'focus' | 'reply'; readonly depth: number };
+  /** `thread` source only. `depth` 0 for ancestors and the focus, 1+ for replies. `parent` (additive): the id of
+   * the note this one answers, also when that note is not known; absent for the note a thread starts from. */
+  readonly thread?: {
+    readonly role: 'ancestor' | 'focus' | 'reply';
+    readonly depth: number;
+    readonly parent?: string;
+  };
   /** The client that wrote it, when tagged. */
   readonly client?: string;
   /** Since version 4. The note is a channel message (kind 42): which channel, and its name ('' until known).
@@ -791,6 +796,8 @@ export type EngineConfig = {
     readonly accounts?: 'none';
     readonly emoji?: 'none';
     readonly slow?: { readonly when: string; readonly sign?: number; readonly relays?: number };
+    /** A long thread and one whose first note answers a missing note (the thread scenes). */
+    readonly threads?: boolean;
   };
 };
 

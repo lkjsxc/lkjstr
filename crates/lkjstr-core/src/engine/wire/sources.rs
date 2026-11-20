@@ -75,6 +75,10 @@ impl Session {
                         }
                         if let Some((role, depth)) = position {
                             value["thread"] = json!({"role":role,"depth":depth});
+                            // The answered note's id, also when it is not stored (the interface holds its room).
+                            if let Some(parent) = crate::engine::thread::parent(&shown) {
+                                value["thread"]["parent"] = json!(parent);
+                            }
                         }
                         Some(value)
                     }).collect()

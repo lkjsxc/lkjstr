@@ -2,7 +2,8 @@ use crate::store::{Event, Store};
 use lkjstr_protocol::{NostrEvent, reply_parent, reply_root};
 use std::collections::{HashMap, VecDeque};
 
-fn parent(event: &NostrEvent) -> Option<String> {
+/// The note an event answers in a thread: its reply parent, else (outside channels) its root.
+pub(crate) fn parent(event: &NostrEvent) -> Option<String> {
     reply_parent(event).or_else(|| (event.kind != 42).then(|| reply_root(event)).flatten())
 }
 

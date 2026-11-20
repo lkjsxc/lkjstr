@@ -13,6 +13,7 @@ import { emojiShots } from './shots-emoji.ts';
 import { emojiCustomShots } from './shots-emoji-custom.ts';
 import { keysShots } from './shots-keys.ts';
 import { looksShots } from './shots-looks.ts';
+import { threadShots } from './shots-thread.ts';
 
 const here = new URL('..', import.meta.url).pathname;
 process.env.TMPDIR = browserTmp(process.env.TMPDIR ?? `${here}../tmp/temp`);
@@ -176,7 +177,10 @@ try {
         await scene('thread', '/', async (page) => {
           await page.locator('.note:has(.ctx .clip) .text').first().click();
           await page.waitForSelector('.th-focus');
+          // After the relays answered: the waiting look is the thread-wait scene.
+          await page.waitForSelector('.view[data-kind="thread"] .tskel', { state: 'detached' });
         });
+        await threadShots(scene);
         await scene('notifications', '/', async (page) => {
           await page.keyboard.press('g');
           await page.keyboard.press('n');

@@ -65,15 +65,19 @@ fn ancestors_and_nested_replies_use_relationships_not_timestamps_or_root_tags() 
             5,
             "sibling branches are not replies to the focus"
         );
-        for (note, role, depth) in [
-            (&root, "ancestor", 0),
-            (&parent, "ancestor", 0),
-            (&focus, "focus", 0),
-            (&child, "reply", 1),
-            (&grandchild, "reply", 2),
+        for (note, role, depth, answers) in [
+            (&root, "ancestor", 0, None),
+            (&parent, "ancestor", 0, Some(&root)),
+            (&focus, "focus", 0, Some(&parent)),
+            (&child, "reply", 1, Some(&focus)),
+            (&grandchild, "reply", 2, Some(&child)),
         ] {
             let row = rows.iter().find(|r| r["id"] == note.id).expect("note row");
-            assert_eq!(row["thread"], json!({"role":role,"depth":depth}));
+            let mut want = json!({"role":role,"depth":depth});
+            if let Some(up) = answers {
+                want["parent"] = json!(up.id);
+            }
+            assert_eq!(row["thread"], want);
         }
     }
     // The child is filtered out, but its edge must still count toward depth.
@@ -113,6 +117,13 @@ fn root_only_replies_and_cached_roots_across_missing_parents_are_classified() {
     let rows = rows(&mut e, json!({"source":"thread","id":focus.id}), None);
     assert_eq!(rows.len(), 3);
     assert_eq!(rows[0]["thread"], json!({"role":"ancestor","depth":0}));
-    assert_eq!(rows[1]["thread"], json!({"role":"focus","depth":0}));
-    assert_eq!(rows[2]["thread"], json!({"role":"reply","depth":1}));
+    // The focus names its missing parent; the root-only reply names the focus through its root tag.
+    assert_eq!(
+        rows[1]["thread"],
+        json!({"role":"focus","depth":0,"parent":missing.id})
+    );
+    assert_eq!(
+        rows[2]["thread"],
+        json!({"role":"reply","depth":1,"parent":focus.id})
+    );
 }

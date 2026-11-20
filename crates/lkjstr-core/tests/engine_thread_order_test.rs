@@ -85,6 +85,12 @@ fn ancestor_chain_precedes_clock_skewed_focus_with_chronological_replies() -> Te
     );
     assert_eq!(rows[3]["thread"]["depth"], 2);
     assert_eq!(rows[4]["thread"]["depth"], 1);
+    // Each row names the note it answers, so the interface can group replies and hold room for gaps.
+    assert!(rows[0]["thread"].get("parent").is_none());
+    assert_eq!(rows[1]["thread"]["parent"], root.id.as_str());
+    assert_eq!(rows[2]["thread"]["parent"], parent.id.as_str());
+    assert_eq!(rows[3]["thread"]["parent"], child.id.as_str());
+    assert_eq!(rows[4]["thread"]["parent"], focus.id.as_str());
     Ok(())
 }
 #[test]
@@ -139,6 +145,8 @@ fn cached_root_across_missing_parent_precedes_focus_despite_clock_skew() -> Test
             .collect::<Vec<_>>(),
         [&root.id, &focus.id]
     );
+    // The missing parent is still named: the interface shows its room between the root and the focus.
+    assert_eq!(rows[1]["thread"]["parent"], missing.id.as_str());
     Ok(())
 }
 

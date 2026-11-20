@@ -12,6 +12,7 @@ import { browserTmp } from './browser-tmp.ts';
 import { notesChecks } from './smoke-notes.ts';
 import { pendingChecks } from './smoke-pending.ts';
 import { resetChecks } from './smoke-reset.ts';
+import { threadChecks } from './smoke-thread.ts';
 import { railSmoke } from './smoke-time-rail.ts';
 import { wishes } from './smoke-wishes.mjs';
 
@@ -455,6 +456,7 @@ async function run(browser: Browser): Promise<void> {
   await defaults(browser, still);
   await resetChecks((given) => open(browser, '/', { ...still, ...given }), fact);
   await pendingChecks((given) => open(browser, '/', given), fact);
+  await threadChecks((path, given, size) => open(browser, path, given, size), fact);
   await scrolling(still);
   await filtering(browser, still);
   await rooms(browser, still);
