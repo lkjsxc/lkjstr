@@ -78,7 +78,8 @@ its name in the interface language (the Japanese name when the table has one, th
 It appears after a moment under the pointer, under a resting finger (whose press then neither opens the note nor
 reacts), and at once while the keyboard is on it. An emoji standing alone (note text, a message, a bio, an act, a
 notification's mark) is one tab stop; one inside a name, a quoted note or a button (a reaction, a mention, a
-notification's excerpt) takes none of its own, and a reaction button with the keyboard shows its emoji's popover.
+notification's excerpt) takes none of its own: that name, mention, reaction button or excerpt with the keyboard
+shows the popover of its first emoji.
 The popover takes no pointer events and closes on the next press, key, scroll or blur.
 The emoji it describes have no tooltip of their own.
 
@@ -102,4 +103,4 @@ Unicode `emoji-peek-unicode`, `-unicode-name`, `-unicode-keys` and `-unicode-rea
 with a mouse, and the `-keys` scenes use Tab; at 390 the scenes use touch and a long press.
 Each scene checks what it shows: the grid does not move while the preview changes, the strip and the popover take no
 press, and a long press neither picks, opens nor reacts. `pnpm smoke` adds the keyboard path through the picker and
-to a note's custom and Unicode emoji, and that a press on either still opens its note.
+to a note's custom and Unicode emoji, a name and a mention, and that a press on either emoji still opens its note.

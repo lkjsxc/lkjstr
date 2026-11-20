@@ -1319,7 +1319,55 @@ async function reading(browser: Browser, still: Record<string, unknown>): Promis
     (await on('.note .text .uemo')) && (await page.locator('.epeek .ebig').innerText()) === glyph,
   );
   await page.keyboard.press('Shift+Tab');
-  fact('leaving it with the keyboard closes the popover', (await count(page, '.epeek')) === 0);
+  // What has the keyboard next decides: nothing, or a name that holds an emoji and shows that one instead.
+  const after = await page.evaluate(() => {
+    const at = document.activeElement;
+    const held = at?.matches('.name, .lnk') ? at.querySelector('img.emo, .uemo') : null;
+    return held instanceof HTMLImageElement ? held.alt : (held?.textContent ?? '');
+  });
+  fact(
+    'leaving it with the keyboard closes the popover, or shows the one of what has the keyboard',
+    !(await on('.uemo, img.emo')) &&
+      (after
+        ? (await page.locator('.epeek .ename').innerText()) === after ||
+          (await page.locator('.epeek .ebig').innerText()) === after
+        : (await count(page, '.epeek')) === 0),
+    after,
+  );
+  // A name or a mention takes the keyboard for the emoji inside it: Tab onto one shows the popover, and no emoji
+  // inside a control is a tab stop of its own.
+  const nameWithEmoji = page.locator(`${feed} .note .nhead .name:has(.uemo)`).first();
+  await nameWithEmoji.scrollIntoViewIfNeeded();
+  await nameWithEmoji.locator('xpath=ancestor::article[1]').locator('.avb').first().focus();
+  await page.keyboard.press('Tab');
+  await page.locator('.epeek .ename:not(:empty)').waitFor();
+  fact(
+    'Tab onto a name shows the popover of its emoji',
+    (await on('.nhead .name')) &&
+      (await page.locator('.epeek .ebig').innerText()) ===
+        (await nameWithEmoji.locator('.uemo').first().innerText()),
+  );
+  await page.keyboard.press('Shift+Tab');
+  fact('leaving the name closes its popover', (await count(page, '.epeek')) === 0);
+  const mention = page.locator(`${feed} .note .text .lnk:has(.uemo)`).first();
+  await mention.scrollIntoViewIfNeeded();
+  await mention.locator('xpath=ancestor::article[1]').locator('.nhead .name').first().focus();
+  for (let n = 0; n < 8 && !(await on('.text .lnk')); n++) await page.keyboard.press('Tab');
+  await page.locator('.epeek .ename:not(:empty)').waitFor();
+  fact(
+    'Tab onto a mention shows the popover of its emoji',
+    (await on('.text .lnk')) &&
+      (await page.locator('.epeek .ebig').innerText()) ===
+        (await mention.locator('.uemo').first().innerText()),
+  );
+  fact(
+    'no emoji inside a control is a tab stop of its own',
+    await page.evaluate(
+      () =>
+        document.querySelectorAll(':is(button, a, [role="link"]) :is(.uemo, .emo)[tabindex]')
+          .length === 0,
+    ),
+  );
   await owner.locator('.text .uemo').first().click();
   await page.locator('.th-focus').waitFor();
   fact('a press on a Unicode emoji opens its note', (await count(page, '.epeek')) === 0);

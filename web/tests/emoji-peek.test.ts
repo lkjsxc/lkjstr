@@ -112,4 +112,21 @@ describe('the popover over a Unicode emoji', () => {
     expect(peek()?.querySelector('.ebig')?.textContent).toBe('🦀');
     expect(peek()?.querySelector('.ename')?.textContent).toBe('');
   });
+  it('a name, a mention or an excerpt with the keyboard shows its emoji, which has no tab stop', () => {
+    state.table = undefined;
+    document.body.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+    for (const cls of ['name', 'lnk', 'excerpt']) {
+      const button = document.createElement('button');
+      button.className = cls;
+      button.append('山田 ', mark('🦀'));
+      document.body.append(button);
+      const visible = vi.spyOn(button, 'matches').mockImplementation((q) => q === ':focus-visible');
+      button.dispatchEvent(new FocusEvent('focusin', { bubbles: true }));
+      expect(peek()?.querySelector('.ebig')?.textContent).toBe('🦀');
+      expect(button.querySelector('[tabindex]')).toBeNull();
+      visible.mockRestore();
+      button.dispatchEvent(new FocusEvent('focusout', { bubbles: true }));
+      expect(peek()).toBeNull();
+    }
+  });
 });

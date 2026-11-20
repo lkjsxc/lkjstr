@@ -16,6 +16,7 @@ export const EMOJI_SCENES = [
   'emoji-peek-unicode-name',
   'emoji-peek-unicode-keys',
   'emoji-peek-unicode-reaction',
+  'emoji-peek-name-keys',
 ] as const;
 
 const phone = (page: Page): boolean => (page.viewportSize()?.width ?? 1000) < 500;
@@ -197,5 +198,15 @@ export async function emojiShots(scene: Scene): Promise<void> {
     await named(page, '❤️‍🔥', /炎|ハート/, /fire/i);
     assert.equal(await page.locator(chip).first().getAttribute('aria-pressed'), 'false');
     assert.equal(await page.locator(chip).first().getAttribute('title'), null);
+  });
+  await scene('emoji-peek-name-keys', '/', async (page) => {
+    // Tab from the face onto a name: the name takes the keyboard for its emoji, which has no tab stop of its own.
+    const name = page.locator('.note .nhead .name:has(.uemo:text-is("🦀")):visible').first();
+    await name.scrollIntoViewIfNeeded();
+    await name.locator('xpath=ancestor::article[1]').locator('.avb').first().focus();
+    await page.keyboard.press('Tab');
+    await named(page, '🦀', /カニ|蟹|かに/, /Crab/);
+    assert.ok(await page.evaluate(() => document.activeElement?.matches('.nhead .name') === true));
+    assert.equal(await name.locator('[tabindex]').count(), 0);
   });
 }

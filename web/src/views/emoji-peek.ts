@@ -11,6 +11,9 @@ import { describe, onLongPress } from './emoji-preview.ts';
 
 const EMOJI = 'img.emo, .uemo';
 const CHIP = '.rchip, .act-chip';
+/** Controls that take the keyboard for the emoji inside them, which have no tab stop of their own: a reaction chip,
+ * a name, a mention, a notification's excerpt. With the keyboard on one, the popover shows its first emoji. */
+const HOLDER = `${CHIP}, .name, .lnk, .excerpt`;
 const DELAY = 300;
 
 export function installEmojiPeek(layer: HTMLElement): void {
@@ -66,11 +69,11 @@ export function installEmojiPeek(layer: HTMLElement): void {
       place(img);
     });
   };
-  const emojiIn = (node: EventTarget | null): HTMLElement | null => {
+  const emojiIn = (node: EventTarget | null, holders = CHIP): HTMLElement | null => {
     const e = node as Element | null;
     return (
       e?.closest?.<HTMLElement>(EMOJI) ??
-      e?.closest?.(CHIP)?.querySelector<HTMLElement>(EMOJI) ??
+      e?.closest?.(holders)?.querySelector<HTMLElement>(EMOJI) ??
       null
     );
   };
@@ -88,9 +91,9 @@ export function installEmojiPeek(layer: HTMLElement): void {
     if (!over || e.pointerType === 'touch') return;
     if (!(e.relatedTarget instanceof Node && over.contains(e.relatedTarget))) hide();
   });
-  // The keyboard reaches a custom emoji that stands alone, or a reaction button that holds one.
+  // The keyboard reaches an emoji that stands alone, or a reaction chip, a name or a mention that holds one.
   document.addEventListener('focusin', (e) => {
-    const img = emojiIn(e.target);
+    const img = emojiIn(e.target, HOLDER);
     if (img && (e.target as Element).matches(':focus-visible')) show(img, 'key');
     else if (el.isConnected && by === 'key') hide();
   });

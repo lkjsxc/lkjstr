@@ -8,7 +8,8 @@ import { emojiImg, nameButton } from './parts.ts';
 import type { ViewEnv } from './registry.ts';
 
 /** A display-only act: the existing reaction chip without a count, or the repost mark. A Unicode emoji chip is
- * itself the emoji's mark (emoji-peek.ts); `alone`: it is not inside a button, so it is a tab stop of its own. */
+ * itself the emoji's mark (emoji-peek.ts). `alone`: it is not inside a button, so its emoji is a tab stop of its
+ * own; inside one (a notification's excerpt) the button takes the keyboard for it. */
 export function actChip(act: ActRef, alone = false): HTMLElement {
   if (act.type === 'repost')
     return h('span', { class: 'act-chip act-repost', title: t('act.repost') }, icon('repost'));
@@ -23,7 +24,7 @@ export function actChip(act: ActRef, alone = false): HTMLElement {
       title: url || mark ? null : label,
       tabindex: mark && alone ? 0 : null,
     },
-    url ? emojiImg(emoji, url, true) : label,
+    url ? emojiImg(emoji, url, alone) : label,
   );
 }
 
