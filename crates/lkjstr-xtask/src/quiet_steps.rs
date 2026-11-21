@@ -45,6 +45,16 @@ pub fn rust_steps() -> Vec<Step> {
     ]
 }
 
+pub fn test_steps() -> Vec<Step> {
+    let mut steps = rust_steps();
+    steps.push(step(
+        "ship wrapper tests",
+        OsString::from("node"),
+        &["--test", "scripts/ship.test.mjs"],
+    ));
+    steps
+}
+
 /// Build the sole frontend together with the real Worker package.
 pub fn build_steps() -> Vec<Step> {
     vec![step(

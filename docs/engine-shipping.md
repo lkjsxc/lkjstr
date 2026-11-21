@@ -146,8 +146,9 @@ The ship command never removes another worktree or an active proof's package.
 
 ## Local regression evidence
 
-`node --test scripts/ship.test.mjs` executes the actual shell against isolated
-Git repositories, owned archive copies and simulated commands. It makes no
+`pnpm test:quiet` and the full verification gates run `scripts/ship.test.mjs`.
+The suite executes the actual shell against isolated Git repositories, owned
+archive copies and simulated commands. It makes no
 actual SSH, Desk, Cargo or browser calls and does not push the project.
 The watchdog fixture checks that a SIGTERM survivor can finish writing, that
 it and its detached child are reaped before hashing, and that an unrelated

@@ -1,12 +1,12 @@
 use std::path::Path;
 
-use crate::quiet_steps::{Step, build_steps, run_quiet_step, rust_steps};
+use crate::quiet_steps::{Step, build_steps, run_quiet_step, rust_steps, test_steps};
 
 /// Quiet gates print one `ok <target>` line on success and a bounded tail on failure.
 pub fn quiet(root: &Path, target: &str) -> Result<(), String> {
     match target {
         "repo" => repo_checks(root)?,
-        "test" => run_steps(root, rust_steps())?,
+        "test" => run_steps(root, test_steps())?,
         "rust-wasm" => {
             run_steps(root, rust_steps())?;
             run_steps(root, build_steps())?;
@@ -14,7 +14,7 @@ pub fn quiet(root: &Path, target: &str) -> Result<(), String> {
         }
         "verify" | "ci" | "docker-verify" => {
             repo_checks(root)?;
-            run_steps(root, rust_steps())?;
+            run_steps(root, test_steps())?;
             run_steps(root, build_steps())?;
             crate::dist_check::check(root)?;
         }

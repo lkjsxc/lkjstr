@@ -5,14 +5,14 @@
 Gates for the sole TypeScript frontend and Rust/WASM Worker product.
 ## Quiet gates
 
-Each root gate prints one ok line on success and a bounded tail on failure.
+Each root gate prints one ok line on success and a bounded tail on failure. Ship wrapper tests require Linux with Python 3 and `/proc`.
 
 | Command | Runs |
 | --- | --- |
 | pnpm check:repo | doc topology, line caps and Rust style rules |
-| pnpm test:quiet | fmt, native/WASM clippy, cargo test --workspace |
+| pnpm test:quiet | fmt, native/WASM clippy, cargo test --workspace, ship wrapper tests |
 | pnpm rust-wasm:quiet | Rust gates, real frontend/Worker build, dist check |
-| pnpm verify:quiet | repo checks plus the rust-wasm gate |
+| pnpm verify:quiet | repo checks, test gate, real frontend/Worker build, dist check |
 | sh scripts/engine-check.sh | loopback Worker conformance and delayed profile probe |
 
 Use CARGO_BUILD_JOBS=4 and RUST_TEST_THREADS=4, one browser harness and worktree-local caches; [artifact bounds](engine-shipping.md) apply.

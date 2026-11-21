@@ -15,6 +15,8 @@ RUN pnpm install --frozen-lockfile --store-dir /app/tmp/pnpm-store \
   && pnpm --dir web install --frozen-lockfile --store-dir /app/tmp/pnpm-store
 
 FROM deps AS verify
+RUN apt-get update && apt-get install -y --no-install-recommends python3 \
+  && rm -rf /var/lib/apt/lists/*
 CMD ["cargo", "run", "-q", "-p", "lkjstr-xtask", "--", "quiet", "docker-verify"]
 
 FROM deps AS app-build
