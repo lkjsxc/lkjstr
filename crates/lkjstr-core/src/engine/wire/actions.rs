@@ -3,6 +3,12 @@ use serde::Deserialize;
 #[derive(Deserialize)]
 #[serde(tag = "a", rename_all = "camelCase")]
 pub enum Action {
+    #[serde(rename = "note.reveal")]
+    NoteReveal {
+        sub: String,
+        key: String,
+        reveal: bool,
+    },
     #[serde(rename = "link.check")]
     LinkCheck {
         route: String,

@@ -66,10 +66,9 @@ Per-relay limits and deadlines bound socket work. A visible profile request may
 pause another request, which resumes when a slot becomes available.
 
 Windows accept 800 rows on either side; retainAbove caps retained history at 6000.
-Signed-out Global refills within a 6000-event cached slice. Its deterministic
-policy and count semantics are in engine-polish.md. Signed-in
-feeds bypass that policy. Secret keys remain entirely inside Rust and storage,
-except for the explicit backup action. No diagnostics contain secret keys.
+Visitor Global classifies a bounded slice of at most 6000 events. Signed-in feeds bypass its repeat and author limits.
+See [hidden-note-visibility.md](hidden-note-visibility.md) for covered slots, expiry and missing-row evidence.
+Secret keys remain inside Rust and storage except for the explicit backup action. Diagnostics contain no secret keys.
 
 ## Verification and hosting
 

@@ -9,6 +9,7 @@ impl Engine {
     }
 
     pub fn input(&mut self, input: Input, now: u64) {
+        self.advance_visibility_clock(now);
         match input {
             Input::Open { sub, query } => self.open_view(sub, query, true, now),
             Input::OpenVisible {
@@ -87,7 +88,10 @@ impl Engine {
                 }
             }
             Input::GlobalPolicy { enabled } => {
-                self.signed_out_global_filter = enabled;
+                if self.signed_out_global_filter != enabled {
+                    self.signed_out_global_filter = enabled;
+                    self.replan(now);
+                }
                 let subs: Vec<_> = self.views.keys().cloned().collect();
                 for sub in subs {
                     self.render(&sub, true);

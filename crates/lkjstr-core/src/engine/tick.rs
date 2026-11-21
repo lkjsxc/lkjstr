@@ -14,15 +14,23 @@ impl Engine {
     pub fn tick_observed(&mut self, now: u64, mut observe: impl FnMut(TickPhase)) {
         self.previews.tick(now);
         let revision = self.store.revision();
+        self.advance_visibility_clock(now);
         let was_verifying = self.network.verifying;
         for _ in 0..32 {
-            let Some((relay, e)) = self.queue.pop_front() else {
+            let Some(ingest::QueuedEvent {
+                relay,
+                event: e,
+                wire,
+                sequence,
+            }) = self.queue.pop_front()
+            else {
                 break;
             };
             self.queue_bytes = self
                 .queue_bytes
                 .saturating_sub(crate::store::event_payload_bytes(&e));
-            if self.store.get(&e.id).is_some() {
+            if self.store.get(&e.id).is_some_and(|known| *known == e) {
+                self.network.observe_verified(&relay, &e, now);
                 continue;
             }
             if matches!(verify_event(&e), VerificationResult::Ok(_)) {
@@ -31,15 +39,24 @@ impl Engine {
                 if let Some(nested) = lkjstr_protocol::verified_nested_repost(&e) {
                     self.insert_verified(nested, Some(&relay));
                 }
-                if relay != "cache" {
-                    self.pending.push(e.clone(), true);
+                let outcome = self.insert_verified(e.clone(), Some(&relay));
+                if outcome == crate::store::Inserted::InvalidExpiration {
+                    self.record_invalid_delivery(&relay, wire.as_deref(), sequence);
                 }
-                self.insert_verified(e, Some(&relay));
+                if relay != "cache"
+                    && !matches!(
+                        outcome,
+                        crate::store::Inserted::Expired | crate::store::Inserted::InvalidExpiration
+                    )
+                {
+                    self.pending.push(e, true);
+                }
                 for v in self.views.values_mut() {
                     v.dirty = true;
                 }
             } else {
                 self.rejected += 1;
+                self.record_invalid_delivery(&relay, wire.as_deref(), sequence);
             }
         }
         observe(TickPhase::Verify);

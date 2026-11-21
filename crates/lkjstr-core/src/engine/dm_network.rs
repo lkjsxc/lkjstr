@@ -99,16 +99,19 @@ impl Engine {
     /// Other accounts and ordinary public traffic do not hold private history.
     fn dm_verifying(&self, account: &str) -> bool {
         self.network.verifying
-            && self.queue.iter().any(|(_, event)| match event.kind {
-                10050 => event.pubkey == account,
-                4 | 1059 => {
-                    (event.kind == 4 && event.pubkey == account)
-                        || event.tags.iter().any(|tag| {
-                            tag.first().is_some_and(|name| name == "p")
-                                && tag.get(1).is_some_and(|peer| peer == account)
-                        })
+            && self.queue.iter().any(|queued| {
+                let event = &queued.event;
+                match event.kind {
+                    10050 => event.pubkey == account,
+                    4 | 1059 => {
+                        (event.kind == 4 && event.pubkey == account)
+                            || event.tags.iter().any(|tag| {
+                                tag.first().is_some_and(|name| name == "p")
+                                    && tag.get(1).is_some_and(|peer| peer == account)
+                            })
+                    }
+                    _ => false,
                 }
-                _ => false,
             })
     }
     fn dm_read_phase(&self, sub: &str) -> (&'static str, Option<&'static str>) {

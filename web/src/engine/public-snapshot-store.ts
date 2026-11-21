@@ -13,7 +13,7 @@ export type PublicSnapshot = {
   readonly atTop: boolean;
   readonly atBottom: boolean;
 };
-type Envelope = { version: 1; seen: number; body: string; check: number };
+type Envelope = { version: 2; seen: number; body: string; check: number };
 const rowKinds = new Set(['note', 'notification', 'profile', 'person', 'channel', 'mute', 'emoji']);
 const fingerprint = (text: string): number => {
   let value = 2166136261;
@@ -29,8 +29,20 @@ const backend = (): Storage | undefined => {
 };
 const canonical = (query: Query): string =>
   JSON.stringify(Object.fromEntries(Object.entries(query).sort(([a], [b]) => a.localeCompare(b))));
-export const snapshotIdentity = (query: Query, language: string, previews: boolean): string =>
-  JSON.stringify([language, previews, canonical(query)]);
+export const snapshotIdentity = (
+  query: Query,
+  language: string,
+  previews: boolean,
+  visitorFilter = true,
+): string => JSON.stringify([language, previews, visitorFilter, canonical(query)]);
+
+export function snapshotSafe(row: Row): boolean {
+  if (row.kind === 'notification')
+    return row.expiresAt === undefined && (!row.note || snapshotSafe(row.note));
+  return (
+    row.kind !== 'note' || (!row.revealed && !row.hidden?.detail && row.expiresAt === undefined)
+  );
+}
 const keyFor = (identity: string, top: boolean): string =>
   PREFIX + (top ? 'top:' : 'read:') + identity;
 
@@ -39,7 +51,7 @@ function decode(raw: string | null): PublicSnapshot | undefined {
   try {
     const value = JSON.parse(raw) as Envelope;
     if (
-      value.version !== 1 ||
+      value.version !== 2 ||
       typeof value.body !== 'string' ||
       value.check !== fingerprint(value.body)
     )
@@ -60,6 +72,7 @@ function decode(raw: string | null): PublicSnapshot | undefined {
           row.key.length <= 512 &&
           rowKinds.has(row.kind),
       ) ||
+      !body.rows.every(snapshotSafe) ||
       !body.rows.some((row) => row.key === body.anchor)
     )
       return;
@@ -168,7 +181,7 @@ export function writePublicSnapshot(
   )
     return;
   const body = JSON.stringify({ ...snapshot, rows });
-  const record = JSON.stringify({ version: 1, seen: Date.now(), body, check: fingerprint(body) });
+  const record = JSON.stringify({ version: 2, seen: Date.now(), body, check: fingerprint(body) });
   const key = keyFor(identity, top);
   if ((record.length + key.length) * 2 > MAX_ENTRY_BYTES) return;
   try {
@@ -200,4 +213,9 @@ export function writePublicSnapshot(
   } catch {
     // Quota or unavailable storage means the already-rendered session keeps working.
   }
+}
+
+export function discardUnsaveableRows(identity: string, rows: readonly Row[]): void {
+  const unsafe = rows.filter((row) => !snapshotSafe(row) || (row.kind === 'note' && row.hidden));
+  if (unsafe.length) removePublicSnapshotRows(identity, new Set(unsafe.map((row) => row.key)));
 }

@@ -55,13 +55,14 @@ fn decrypted_mutes_hide_notes_and_mark_nested_quotes_without_mutating_events() {
     );
     let out = output(&mut s, &mut e);
     let rows = &out.iter().find(|o| o["t"] == "rows").expect("rows")["rows"];
-    assert!(
-        !rows
-            .as_array()
-            .expect("array")
-            .iter()
-            .any(|r| r["key"] == note.id)
-    );
+    let covered = rows
+        .as_array()
+        .expect("array")
+        .iter()
+        .find(|r| r["key"] == note.id)
+        .expect("covered slot");
+    assert_eq!(covered["hidden"]["reason"], "muted-person");
+    assert_eq!(covered["segments"], json!([]));
     assert_eq!(rows[0]["quotes"][0]["state"], "muted");
     accept(
         &mut s,

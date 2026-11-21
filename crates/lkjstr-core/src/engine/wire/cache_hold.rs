@@ -105,7 +105,11 @@ impl Session {
                     .flat_map(HeldRow::ids)
                     .filter(|id| !held.loaded.contains(*id))
             })
-            .filter(|id| engine.store.get(id).is_none() && !engine.store.verified_deleted(id))
+            .filter(|id| {
+                engine.store.get(id).is_none()
+                    && !engine.store.verified_deleted(id)
+                    && !engine.store.verified_expired(id)
+            })
             .cloned()
             .collect::<BTreeSet<_>>()
             .into_iter()
@@ -136,6 +140,7 @@ impl Session {
                             held.loaded.contains(*id)
                                 && engine.store.get(id).is_none()
                                 && !engine.store.verified_deleted(id)
+                                && !engine.store.verified_expired(id)
                         })
                         .cloned()
                         .collect::<BTreeSet<_>>()
@@ -166,11 +171,9 @@ impl Session {
             let mut invalid_profile_ids = BTreeSet::new();
             let mut removed_quote_ids = BTreeSet::new();
             held.rows.retain_mut(|row| {
-                if row
-                    .id
-                    .as_deref()
-                    .is_some_and(|id| engine.store.verified_deleted(id))
-                {
+                if row.id.as_deref().is_some_and(|id| {
+                    engine.store.verified_deleted(id) || engine.store.verified_expired(id)
+                }) {
                     removed_keys.insert(row.key.clone());
                     return false;
                 }
@@ -183,7 +186,8 @@ impl Session {
                     }
                 });
                 row.quotes.retain(|q| {
-                    if engine.store.verified_deleted(&q.id) {
+                    if engine.store.verified_deleted(&q.id) || engine.store.verified_expired(&q.id)
+                    {
                         removed_quote_ids.insert(q.id.clone());
                         false
                     } else {

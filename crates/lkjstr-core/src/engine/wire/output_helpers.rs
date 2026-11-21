@@ -8,6 +8,7 @@ impl Session {
         if let Some(fields) = base.as_object_mut() {
             fields.remove("privateLists");
             fields.remove("zapEvidence");
+            fields.remove("unshown");
         }
         base
     }
@@ -90,10 +91,9 @@ impl Session {
         }
         items
             .iter()
-            .filter(|r| !r.own.muted && !matches!(r.kind, 6 | 16))
+            .filter(|r| !matches!(r.kind, 6 | 16))
             .map(|r| {
-                let mut row =
-                    super::note::note(r, &engine.store, q.and_then(|q| q.account.as_deref()));
+                let mut row = self.project_note(sub, engine, r);
                 super::quote_state::settle(&mut row, engine, q.and_then(|q| q.account.as_deref()));
                 if let Some(q) = q.filter(|q| q.source == "home") {
                     super::quote_state::home_delivery(&mut row, engine, q.account.as_deref());

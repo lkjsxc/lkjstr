@@ -80,7 +80,7 @@ fn finished_note_reply_and_quote_text_derive_discoverable_tags() {
     }
 }
 #[test]
-fn mute_updates_remove_previously_delivered_rows_and_unmute_restores_them() {
+fn mute_and_unmute_replace_the_previously_delivered_row_in_place() {
     let mut e = Engine::new();
     let mut s = Session::default();
     let note = event(1, 1, "visible", vec![]);
@@ -104,11 +104,12 @@ fn mute_updates_remove_previously_delivered_rows_and_unmute_restores_them() {
     let out = output(&mut s, &mut e);
     assert!(out.iter().any(|o| {
         o["t"] == "patch"
-            && o["ops"]
-                .as_array()
-                .expect("ops")
-                .iter()
-                .any(|op| op["op"] == "remove" && op["key"] == note.id)
+            && o["ops"].as_array().expect("ops").iter().any(|op| {
+                op["op"] == "update"
+                    && op["row"]["key"] == note.id
+                    && op["row"]["hidden"]["reason"] == "muted-person"
+                    && op["row"]["segments"] == json!([])
+            })
     }));
     // A newer cache entry exercises the same replacement path without printing keys.
     mute.id = "f".repeat(64);
@@ -121,11 +122,12 @@ fn mute_updates_remove_previously_delivered_rows_and_unmute_restores_them() {
     let out = output(&mut s, &mut e);
     assert!(out.iter().any(|o| {
         o["t"] == "patch"
-            && o["ops"]
-                .as_array()
-                .expect("ops")
-                .iter()
-                .any(|op| op["op"] == "insert" && op["rows"][0]["key"] == note.id)
+            && o["ops"].as_array().expect("ops").iter().any(|op| {
+                op["op"] == "update"
+                    && op["row"]["key"] == note.id
+                    && op["row"]["hidden"].is_null()
+                    && op["row"]["segments"][0]["text"] == "visible"
+            })
     }));
 }
 #[test]

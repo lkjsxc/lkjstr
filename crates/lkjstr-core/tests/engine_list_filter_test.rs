@@ -8,7 +8,7 @@ use lkjstr_core::engine::{
 };
 use serde_json::json;
 #[test]
-fn search_refills_past_a_cached_window_full_of_muted_rows() {
+fn search_mutes_keep_bounded_slots_and_history_remains_reachable() {
     let mut e = Engine::new();
     let visible = event(1, 1, "visible", vec![]);
     e.store.insert(visible.clone(), None);
@@ -29,8 +29,27 @@ fn search_refills_past_a_cached_window_full_of_muted_rows() {
     let rows = out.iter().find(|o| o["t"] == "rows").expect("rows")["rows"]
         .as_array()
         .expect("rows");
-    assert_eq!(rows.len(), 1);
-    assert_eq!(rows[0]["id"], visible.id);
+    assert_eq!(rows.len(), 51);
+    assert!(
+        rows.iter()
+            .all(|row| row["hidden"]["reason"] == "muted-word")
+    );
+    let anchor = rows.last().expect("covered tail")["key"].clone();
+    accept(
+        &mut s,
+        &mut e,
+        json!({"t":"window","sub":"feed","anchor":{"key":anchor},"before":0,"after":50}),
+        0,
+    );
+    let out = output(&mut s, &mut e);
+    let rows = out.iter().find(|o| o["t"] == "rows").expect("older rows");
+    assert_eq!(
+        rows["rows"]
+            .as_array()
+            .and_then(|rows| rows.last())
+            .expect("visible tail")["id"],
+        visible.id
+    );
 }
 #[test]
 fn decrypted_people_set_hydrates_its_member_window() {
@@ -108,7 +127,7 @@ fn thread_event_window_excludes_unrelated_sibling_branches() {
     assert_eq!(rows.len(), 3);
 }
 #[test]
-fn a_full_hidden_search_page_continues_without_a_scroll_anchor() {
+fn a_full_hidden_search_page_keeps_history_available_from_a_covered_anchor() {
     let mut e = Engine::new();
     let mute = event(1, 10000, "", vec![vec!["word".into(), "blocked".into()]]);
     let owner = mute.pubkey.clone();
@@ -137,8 +156,12 @@ fn a_full_hidden_search_page_continues_without_a_scroll_anchor() {
         .into_iter()
         .find(|f| f[0] == "REQ" && f[2]["kinds"] == json!([1, 6]) && f[2]["#e"].is_null())
         .expect("head");
+    let mut anchor = None;
     for at in 100..160 {
         let note = event(at, 1, "blocked", vec![]);
+        if at == 109 {
+            anchor = Some(note.id.clone());
+        }
         let note = e
             .network
             .message(RELAY, &json!(["EVENT", req[1], note]).to_string(), 2)
@@ -150,6 +173,19 @@ fn a_full_hidden_search_page_continues_without_a_scroll_anchor() {
         .message(RELAY, &json!(["EOSE", req[1]]).to_string(), 3);
     let mut sent = Vec::new();
     for now in [4, 100, 200, 300] {
+        e.tick(now);
+        sent.extend(frames(&mut e));
+    }
+    e.input(
+        Input::Window {
+            sub: "feed".into(),
+            anchor,
+            before: 0,
+            after: 50,
+        },
+        401,
+    );
+    for now in [402, 500, 600] {
         e.tick(now);
         sent.extend(frames(&mut e));
     }

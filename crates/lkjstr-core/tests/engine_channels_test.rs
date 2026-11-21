@@ -147,14 +147,14 @@ fn channel_threads_notifications_bookmarks_filters_and_global_have_separate_doma
         vec![vec!["p".into(), b.pubkey.clone()]],
     );
     e.store.insert(mute, None);
-    assert_eq!(
-        rows(
-            &mut e,
-            json!({"source":"channel","id":c.id,"account":a.pubkey})
-        )
-        .len(),
-        2
+    let covered = rows(
+        &mut e,
+        json!({"source":"channel","id":c.id,"account":a.pubkey}),
     );
+    assert_eq!(covered.len(), 3);
+    assert_eq!(covered[1]["key"], b.id);
+    assert_eq!(covered[1]["hidden"]["reason"], "muted-person");
+    assert_eq!(covered[1]["segments"], json!([]));
 }
 #[test]
 fn drafts_inherit_channels_and_authored_actions_keep_nip28_tags() {

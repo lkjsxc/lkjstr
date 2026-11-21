@@ -143,8 +143,8 @@ export async function channels({page,send,wait,check,note,signer,lines,fake,orig
   await wait(id=>window.channelRows['ch-bookmarks'].some(r=>r.id===id&&r.channel),incoming.id);
   check('bookmarks retain channel context',true);
   check('ordinary mute applies inside a channel',(await act({a:'mute',as:note.pubkey,target:{k:'person',pubkey:incoming.pubkey},on:true},true)).ok);
-  await wait(id=>!window.channelRows['ch-created'].some(r=>r.id===id),incoming.id);
-  check('muted channel author disappears from open messages',true);
+  await wait(id=>window.channelRows['ch-created'].some(r=>r.id===id&&r.hidden?.reason==='muted-person'&&!r.segments.length),incoming.id);
+  check('muted channel author keeps one covered message slot',true);
   await act({a:'mute',as:note.pubkey,target:{k:'person',pubkey:incoming.pubkey},on:false},true);
   const fresh=await page.context().browser().newContext();
   await fresh.route('**/*',r=>r.request().url().startsWith(origin)?r.continue():r.abort());

@@ -27,7 +27,9 @@ impl Store {
             {
                 continue;
             }
-            if self.events.contains_key(&target) {
+            if self.events.contains_key(&target)
+                || self.expired_author(&target) == Some(deletion.pubkey.as_str())
+            {
                 self.confirm_verified_deletion(&target);
             }
             self.remove(&target);
@@ -58,8 +60,7 @@ impl Store {
                 .take(count.saturating_sub(cap))
                 .collect();
             for id in victims {
-                self.remove(&id);
-                self.evictions += 1;
+                self.evict_one(&id);
             }
         }
         while self.payload_bytes > self.byte_cap {
@@ -71,8 +72,26 @@ impl Store {
             else {
                 break;
             };
-            self.remove(&id);
-            self.evictions += 1;
+            self.evict_one(&id);
         }
+    }
+    fn evict_one(&mut self, id: &str) {
+        self.remove(id);
+        self.evictions = self.evictions.saturating_add(1);
+        if self.evicted.len() >= MAX_DELETED
+            && !self.evicted.contains_key(id)
+            && let Some(oldest) = self
+                .evicted
+                .iter()
+                .min_by_key(|(id, n)| (**n, *id))
+                .map(|(id, _)| id.clone())
+        {
+            self.evicted.remove(&oldest);
+        }
+        self.evicted.insert(id.into(), self.evictions);
+    }
+
+    pub fn was_evicted(&self, id: &str) -> bool {
+        !self.events.contains_key(id) && self.evicted.contains_key(id)
     }
 }

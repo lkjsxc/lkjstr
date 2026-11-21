@@ -102,3 +102,12 @@ export function holdPublicRows(
   }
   return true;
 }
+
+export function markPublicReplay(sub: string, source: string, rows: number): void {
+  try {
+    performance.clearMarks('lkjstr.public-cache');
+    performance.mark('lkjstr.public-cache', { detail: { sub, source, rows } });
+  } catch {
+    // Optional measurement never delays replay.
+  }
+}

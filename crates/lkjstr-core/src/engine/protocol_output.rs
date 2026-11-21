@@ -62,6 +62,11 @@ pub enum Output {
         asked_relays: usize,
         answered_relays: usize,
     },
+    Visibility {
+        sub: String,
+        invalid_deliveries: u64,
+        unavailable_reposts: usize,
+    },
     Diagnostics {
         sub: String,
         data: serde_json::Value,

@@ -24,9 +24,10 @@ Visible note count lookups batch at 120 IDs, with 200-event pages; a full page
 stays partial. Zap receipt trust remains incomplete, so observed untrusted
 receipts keep note totals partial. No estimate objects cross the wire.
 
-## Signed-out Global policy
+## Historical signed-out Global policy
 
-EngineConfig.signedOutGlobalFilter is optional, default true. Only Global
+This section describes the dated sample policy. [Current visibility policy](hidden-note-visibility.md)
+keeps covered slots and permits authors without profiles. EngineConfig.signedOutGlobalFilter is optional, default true. Only Global
 without an account is filtered. Signed-in feeds and other sources are unchanged.
 The policy refills up to 301 retained rows, scanning at most 6000 cached rows,
 newest first, with three retained notes per author. Exact or near copies collapse within ten

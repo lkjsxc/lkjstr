@@ -1,11 +1,8 @@
 #![allow(clippy::expect_used)]
-use lkjstr_core::{
-    engine::{
-        Engine,
-        global::{Held, classify},
-        protocol::{Input, Output, Query},
-    },
-    store::Store,
+use lkjstr_core::engine::{
+    Engine,
+    global::{Held, classify},
+    protocol::{Input, Output, Query},
 };
 use lkjstr_protocol::{EventTemplate, NostrEvent, finalize_event, generate_secret_key};
 fn event(content: &str, at: u64) -> NostrEvent {
@@ -23,7 +20,6 @@ fn event(content: &str, at: u64) -> NostrEvent {
 }
 #[test]
 fn burst_copies_are_deterministic_and_short_conversation_is_preserved() {
-    let store = Store::new(100);
     let notes = vec![
         event(
             "A thoughtful long message about the future of open networks https://a.test/1",
@@ -50,12 +46,11 @@ fn burst_copies_are_deterministic_and_short_conversation_is_preserved() {
         None,
         Some(Held::Duplicate),
     ];
-    assert_eq!(classify(&store, &notes, |_| false), expected);
-    assert_eq!(classify(&store, &notes, |_| false), expected);
+    assert_eq!(classify(&notes), expected);
+    assert_eq!(classify(&notes), expected);
 }
 #[test]
-fn profile_absence_only_applies_after_lookup_and_author_cap_is_per_window() {
-    let store = Store::new(100);
+fn lack_of_profile_metadata_does_not_imply_exclusion() {
     let mut notes = vec![];
     for i in 0..5 {
         let mut note = event(&format!("distinct content {i}"), 100 - i);
@@ -63,7 +58,7 @@ fn profile_absence_only_applies_after_lookup_and_author_cap_is_per_window() {
         notes.push(std::sync::Arc::new(note));
     }
     assert_eq!(
-        classify(&store, &notes, |_| false),
+        classify(&notes),
         vec![
             None,
             None,
@@ -72,11 +67,7 @@ fn profile_absence_only_applies_after_lookup_and_author_cap_is_per_window() {
             Some(Held::AuthorCap)
         ]
     );
-    assert_eq!(
-        classify(&store, &notes, |_| true),
-        vec![Some(Held::NoProfile); 5]
-    );
-    assert_eq!(classify(&store, &notes[3..], |_| false), vec![None, None]);
+    assert_eq!(classify(&notes[3..]), vec![None, None]);
 }
 #[test]
 fn signed_in_and_other_sources_are_untouched_and_setting_disables_policy() {
@@ -96,12 +87,18 @@ fn signed_in_and_other_sources_are_untouched_and_setting_disables_policy() {
         e.drain()
             .into_iter()
             .find_map(|o| match o {
-                Output::Rows { items, .. } => Some(items.len()),
+                Output::Rows { items, .. } => Some(items),
                 _ => None,
             })
             .expect("rows")
     };
-    assert_eq!(open(&mut e, "anon", Query::default()), 1);
+    let visitor = open(&mut e, "anon", Query::default());
+    assert_eq!(visitor.len(), 2);
+    assert_eq!(
+        visitor[1].hidden_reason,
+        Some(lkjstr_core::engine::visibility::Reason::RepeatedContent)
+    );
+    assert!(visitor[1].content.is_empty());
     assert_eq!(
         open(
             &mut e,
@@ -110,10 +107,17 @@ fn signed_in_and_other_sources_are_untouched_and_setting_disables_policy() {
                 account: Some("f".repeat(64)),
                 ..Default::default()
             }
-        ),
+        )
+        .iter()
+        .filter(|row| row.hidden_reason.is_none())
+        .count(),
         2
     );
     e.input(Input::GlobalPolicy { enabled: false }, 1);
     e.drain();
-    assert_eq!(open(&mut e, "disabled", Query::default()), 2);
+    assert!(
+        open(&mut e, "disabled", Query::default())
+            .iter()
+            .all(|row| row.hidden_reason.is_none())
+    );
 }

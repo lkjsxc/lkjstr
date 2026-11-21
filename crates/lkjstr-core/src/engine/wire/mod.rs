@@ -35,6 +35,9 @@ mod sources;
 use super::thread;
 mod timeline;
 mod translate;
+mod visibility;
+mod visibility_state;
+mod visibility_terminal;
 mod window;
 use queries::{Anchor, Config, Query};
 use serde::{Deserialize, Serialize};
@@ -65,6 +68,10 @@ pub struct Session {
     pub(super) windows: std::collections::BTreeMap<String, (Option<String>, usize, usize)>,
     // One delivered tail key per head-following subscription, cleared on navigation.
     head_tails: std::collections::BTreeMap<String, String>,
+    visibility_states: std::collections::BTreeMap<String, visibility_state::Cached>,
+    // At most one pending navigation marker per open subscription.
+    visibility_navigation: std::collections::BTreeSet<String>,
+    reveals: std::collections::BTreeMap<String, visibility::Reveals>,
     pub(super) delivered: std::collections::BTreeMap<String, Vec<serde_json::Value>>,
 }
 impl Session {

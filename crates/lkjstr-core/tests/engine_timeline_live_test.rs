@@ -78,7 +78,7 @@ fn live_and_backfilled_notes_do_not_starve_initial_counts_or_rebuilds() {
     );
 }
 #[test]
-fn deletion_and_mute_changes_invalidate_partial_snapshots() {
+fn deletion_changes_rail_membership_and_mutes_keep_slots() {
     for mute in [false, true] {
         let (mut e, mut s, base) = setup();
         for turn in 0..10 {
@@ -105,7 +105,7 @@ fn deletion_and_mute_changes_invalidate_partial_snapshots() {
         for turn in 10..60 {
             published.extend(counts(&mut s, &e, NOW + turn * 25));
         }
-        assert_eq!(published, vec![if mute { 0 } else { 6999 }]);
+        assert_eq!(published, vec![if mute { 7000 } else { 6999 }]);
     }
 }
 

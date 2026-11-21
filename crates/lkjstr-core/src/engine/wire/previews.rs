@@ -4,6 +4,14 @@ use crate::engine::{Engine, preview, protocol as p};
 use serde_json::{Value, json};
 impl Session {
     pub fn output(&mut self, out: p::Output, engine: &Engine) -> Vec<Output> {
+        if let p::Output::Visibility {
+            sub,
+            invalid_deliveries,
+            unavailable_reposts,
+        } = out
+        {
+            return self.update_visibility(sub, invalid_deliveries, unavailable_reposts);
+        }
         let sub = match &out {
             p::Output::Rows { sub, .. }
             | p::Output::Patch { sub, .. }
@@ -17,6 +25,7 @@ impl Session {
             self.search_after(context, &mut output, engine);
         }
         self.notification_state(sub.as_deref(), &mut output, engine);
+        self.visibility_state(&mut output);
         for out in &mut output {
             self.preview_output(out, engine);
             self.private_output(out, engine);

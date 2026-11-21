@@ -1,4 +1,4 @@
-use super::{Selection, projection, query};
+use super::{Selection, projection};
 use crate::engine::{View, global, network, protocol::Source, rich, settings};
 use crate::store::{Event, Store};
 
@@ -38,7 +38,7 @@ fn plan(store: &Store, v: &View, events: &[Event]) -> (usize, usize) {
 /// Hydration and history use this same raw span, including withheld authors.
 pub(in crate::engine) fn selection(
     store: &Store,
-    network: &network::Network,
+    _network: &network::Network,
     v: &View,
     enabled: bool,
     events: &[Event],
@@ -50,10 +50,9 @@ pub(in crate::engine) fn selection(
     let (start, quota) = plan(store, v, events);
     let held = if enabled && v.query.account.is_none() && v.query.source == Source::Global {
         global::classify_window(
-            store,
             &events[start..],
-            |p| network.profile_absent(p),
             |e| projection::unavailable(store, &v.query, e),
+            |e| crate::engine::visibility::reason(store, &v.query, e, private),
             quota,
         )
     } else {
@@ -65,7 +64,7 @@ pub(in crate::engine) fn selection(
                     return None;
                 }
                 let reason = reason(store, v, event, private);
-                if reason.is_none() {
+                if global::has_slot(reason) {
                     visible += 1;
                 }
                 Some(reason)
@@ -86,14 +85,22 @@ pub(in crate::engine) fn reason(
     private: &settings::PrivateLists,
 ) -> Option<global::Held> {
     // Person membership is independent of contact-list payloads and note mutes.
-    if !crate::engine::acts::notification_visible(store, &v.query, event)
-        || (v.query.source != Source::Followers
-            && query::hidden_with_lists(store, &v.query, event, private).is_some())
-    {
-        Some(global::Held::Filtered)
-    } else if projection::unavailable(store, &v.query, event) {
-        Some(global::Held::UnavailableRepost)
-    } else {
-        None
+    if !crate::engine::acts::notification_visible(store, &v.query, event) {
+        return Some(global::Held::NoRow);
     }
+    if matches!(
+        v.query.source,
+        Source::Followers | Source::Following | Source::Mutes | Source::List
+    ) {
+        return None;
+    }
+    let reason = crate::engine::visibility::reason(store, &v.query, event, private);
+    if projection::unavailable(store, &v.query, event) {
+        return Some(if reason.is_some() {
+            global::Held::NoRow
+        } else {
+            global::Held::UnavailableRepost
+        });
+    }
+    reason.map(global::Held::Hidden)
 }

@@ -46,6 +46,23 @@ impl Host {
         match input {
             W::Act {
                 req,
+                action: A::NoteReveal { sub, key, reveal },
+            } => {
+                let at = self.time();
+                self.engine.advance_visibility_clock(at);
+                if let Some(session) = self.sessions.get(&id) {
+                    for output in
+                        session
+                            .borrow_mut()
+                            .note_reveal(req, &sub, &key, reveal, &self.engine)
+                    {
+                        self.scope.direct(id, &output);
+                    }
+                }
+                return;
+            }
+            W::Act {
+                req,
                 action: A::ServersCheck { server },
             } => {
                 uploads::checks::start(self, id, req, server);

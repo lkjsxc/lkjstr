@@ -50,6 +50,11 @@ impl Engine {
             projection::fresh(&self.store, &v.query, &events[..start])
         };
         let window = &events[start..end];
+        let unavailable = selected
+            .held
+            .iter()
+            .filter(|reason| **reason == Some(super::global::Held::UnavailableRepost))
+            .count();
         let order = v
             .time_window
             .as_ref()
@@ -57,18 +62,20 @@ impl Engine {
         let items: Vec<_> = window
             .iter()
             .zip(selected.held)
-            .filter(|(_, reason)| reason.is_none())
-            .map(|(e, _)| {
-                let mut r = rows::row_with_lists(
-                    &self.store,
-                    e,
-                    v.query.account.as_deref(),
-                    0,
-                    &self.private_lists,
-                );
-                r.hidden_reason =
-                    query::hidden_with_lists(&self.store, &v.query, e, &self.private_lists)
-                        .or(r.hidden_reason);
+            .filter(|(_, held)| super::global::has_slot(*held))
+            .map(|(e, held)| {
+                let hidden = held.and_then(super::global::Held::reason);
+                let mut r = if let Some(reason) = hidden {
+                    super::visibility::covered_row(&self.store, e, reason)
+                } else {
+                    rows::row_with_lists(
+                        &self.store,
+                        e,
+                        v.query.account.as_deref(),
+                        0,
+                        &self.private_lists,
+                    )
+                };
                 if let Some(order) = &order {
                     order.project(&mut r);
                 }
@@ -145,6 +152,11 @@ impl Engine {
         }
         v.at_bottom = at_bottom;
         v.rows = items;
+        self.outgoing.push(Output::Visibility {
+            sub: sub.into(),
+            invalid_deliveries: v.invalid_deliveries,
+            unavailable_reposts: unavailable,
+        });
         if query::signed_out(&v.query) {
             self.outgoing.push(Output::Status {
                 sub: sub.into(),

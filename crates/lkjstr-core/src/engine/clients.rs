@@ -214,7 +214,8 @@ impl Clients {
             | Output::Fresh { sub, .. }
             | Output::TimeWindow { sub, .. }
             | Output::Status { sub, .. }
-            | Output::Diagnostics { sub, .. } => sub,
+            | Output::Diagnostics { sub, .. }
+            | Output::Visibility { sub, .. } => sub,
             Output::Sign { req, .. }
             | Output::PublishSigned { req, .. }
             | Output::PublishFallback { req }

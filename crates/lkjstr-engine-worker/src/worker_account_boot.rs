@@ -94,6 +94,7 @@ pub(super) fn load(host: &Rc<RefCell<Host>>) {
         if let Some(quality) = quality {
             h.engine.network.restore_quality(&quality, now());
         }
+        h.engine.store.advance_clock(now() / 1000);
         // Resolve stored names/follows before any view can plan relay work.
         let mut cache_failed = metadata.is_err() || cached.is_err() || contexts.is_err();
         match metadata {

@@ -22,6 +22,7 @@ impl Session {
             )
         });
         self.delivered.clear();
+        self.reveals.clear();
         self.cache_policies.clear();
         self.cache_held.clear();
         self.searches.clear();

@@ -67,13 +67,32 @@ fn parts(row: &Row) -> (Vec<Value>, Vec<Value>, Vec<Value>) {
                 media.push(m);
             }
             Segment::Quote { id, row } => {
-                quotes.push(if let Some(row)=row{let (s,m,_)=parts(row);let mut q=json!({"state":if row.own.muted{"muted"}else{"ok"},"id":id,"author":author(&row.author),"at":row.created_at.saturating_mul(1000),"segments":s,"media":m});if let Some(cw)=&row.warning{q["cw"]=json!(cw);}q}else{json!({"state":"loading","id":id})});
+                let quote = match row.as_deref() {
+                    Some(row) if row.hidden_reason.is_some() => json!({"state":"muted","id":id}),
+                    Some(row) => {
+                        let (segments, media, _) = parts(row);
+                        let mut quote = json!({"state":"ok","id":id,"author":author(&row.author),
+                            "at":row.created_at.saturating_mul(1000),"segments":segments,"media":media});
+                        if let Some(warning) = &row.warning {
+                            quote["cw"] = json!(warning);
+                        }
+                        quote
+                    }
+                    None => json!({"state":"loading","id":id}),
+                };
+                quotes.push(quote);
             }
         }
     }
     (segments, media, quotes)
 }
 pub(super) fn note(row: &Row, store: &Store, account: Option<&str>) -> Value {
+    if let Some(reason) = row.hidden_reason {
+        return covered(
+            json!({"key":row.id,"id":row.id,"author":author(&row.author),"at":row.created_at.saturating_mul(1000)}),
+            reason,
+        );
+    }
     let (segments, media, quotes) = parts(row);
     let mut v = json!({"kind":"note","key":row.id,"id":row.id,"bech32":lkjstr_protocol::encode_note(&row.id).unwrap_or_else(|_|row.id.clone()),
         "author":author(&row.author),"at":row.created_at.saturating_mul(1000),"segments":segments,"media":media,"quotes":quotes,
@@ -91,8 +110,8 @@ pub(super) fn note(row: &Row, store: &Store, account: Option<&str>) -> Value {
     if let Some(cw) = &row.warning {
         v["cw"] = json!(cw);
     }
-    if let Some(reason) = &row.hidden_reason {
-        v["hidden"] = json!({"reason":reason});
+    if let Some(at) = store.expires_at(&row.id) {
+        v["expiresAt"] = json!(at.saturating_mul(1000));
     }
     if let Some(parent) = row.reply.as_ref().and_then(|p| store.get(&p.id)) {
         v["replyTo"] = json!({"id":parent.id,"author":author(&crate::engine::rows::author(store,&parent.pubkey)),"excerpt":parent.content.lines().next().unwrap_or("").chars().take(160).collect::<String>()});
@@ -102,4 +121,22 @@ pub(super) fn note(row: &Row, store: &Store, account: Option<&str>) -> Value {
         v["repostedBy"] = json!({"actors":row.reposts.iter().take(3).map(author).collect::<Vec<_>>(),"others":row.reposts.len().saturating_sub(3),"at":at.saturating_mul(1000)});
     }
     v
+}
+
+/// The existing note fields keep the row protocol compatible. Zero/empty fields
+/// are reserved slots for the old shape, with no actionable or body data.
+pub(super) fn covered(mut identity: Value, reason: crate::engine::visibility::Reason) -> Value {
+    let pubkey = &identity["author"]["pubkey"];
+    let minimal_author =
+        json!({"pubkey":pubkey,"npub":identity["author"]["npub"],"name":pubkey,"verified":false});
+    let mut value = json!({"kind":"note","key":identity["key"],"id":identity["id"],
+        "bech32":"","author":minimal_author,"at":identity["at"],
+        "segments":[],"media":[],"quotes":[],"reactions":[],
+        "counts":{"replies":0,"reposts":0,"reactions":0,"zaps":0,"partial":false},
+        "mine":{"reposted":false,"bookmarked":false,"own":false},
+        "hidden":{"reason":reason,"revealable":reason.revealable()}});
+    if let Some(thread) = identity.get_mut("thread") {
+        value["thread"] = thread.take();
+    }
+    value
 }

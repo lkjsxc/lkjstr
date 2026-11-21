@@ -7,7 +7,9 @@ pub use bytes::event_payload_bytes;
 mod address;
 mod context_pins;
 mod directory;
+mod expiration;
 mod identity;
+mod index;
 mod profile;
 mod query;
 mod retention;
@@ -16,7 +18,7 @@ mod snapshot;
 pub use profile::Profile;
 pub use query::Query;
 
-use std::collections::{BTreeSet, HashMap, HashSet};
+use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::sync::Arc;
 
 use lkjstr_protocol::{NostrEvent, is_replaceable_kind, tags::tag_values};
@@ -36,6 +38,8 @@ pub enum Inserted {
     Replaced,
     Stale,
     Deleted,
+    Expired,
+    InvalidExpiration,
 }
 
 pub struct Store {
@@ -54,6 +58,13 @@ pub struct Store {
     context_pins: HashSet<String>,
     context_deleted: HashSet<(String, String)>,
     verified_deleted: HashMap<String, u64>,
+    now_seconds: u64,
+    // One deadline per retained public note or act with a valid NIP-40 tag.
+    expiry_deadlines: BTreeSet<Key>,
+    // At most MAX_DELETED checked expiry IDs, ordered by observation revision.
+    expired: BTreeMap<String, (u64, String)>,
+    expired_events: u64,
+    invalid_expiration: u64,
     cap: usize,
     replaceable_cap: usize,
     revision: u64,
@@ -61,6 +72,8 @@ pub struct Store {
     generations: HashMap<String, u64>,
     snapshot_revision: u64,
     evictions: u64,
+    // At most MAX_DELETED recent evictions, with verified IDs only.
+    evicted: BTreeMap<String, u64>,
     payload_bytes: usize,
     byte_cap: usize,
 }
@@ -88,12 +101,18 @@ impl Store {
             context_pins: HashSet::new(),
             context_deleted: HashSet::new(),
             verified_deleted: HashMap::new(),
+            now_seconds: 0,
+            expiry_deadlines: BTreeSet::new(),
+            expired: BTreeMap::new(),
+            expired_events: 0,
+            invalid_expiration: 0,
             cap,
             replaceable_cap,
             revision: 0,
             generations: HashMap::new(),
             snapshot_revision: 0,
             evictions: 0,
+            evicted: BTreeMap::new(),
             payload_bytes: 0,
             byte_cap: 64 * 1024 * 1024,
         }
@@ -136,6 +155,17 @@ impl Store {
             }
             return Inserted::Duplicate;
         }
+        let deadline = match expiration::deadline(&event) {
+            Ok(Some(at)) if at <= self.now_seconds => {
+                self.record_expiration(&event.id, &event.pubkey);
+                return Inserted::Expired;
+            }
+            Ok(at) => at,
+            Err(_) => {
+                self.invalid_expiration = self.invalid_expiration.saturating_add(1);
+                return Inserted::InvalidExpiration;
+            }
+        };
         let mut outcome = Inserted::New;
         if is_replaceable_kind(event.kind) {
             let slot = (event.pubkey.clone(), event.kind);
@@ -161,90 +191,13 @@ impl Store {
         if let Some(relay) = relay {
             self.note_relay(&event.id, relay);
         }
+        if let Some(deadline) = deadline {
+            self.expiry_deadlines.insert((deadline, event.id.clone()));
+        }
         self.record_insert(&event);
         self.index(Arc::new(event));
         self.revision += 1;
         self.evict();
         outcome
-    }
-
-    fn note_relay(&mut self, id: &str, relay: &str) {
-        let seen = self.seen_on.entry(id.to_owned()).or_default();
-        if seen.len() < MAX_SEEN_RELAYS && !seen.iter().any(|r| r == relay) {
-            seen.push(relay.to_owned());
-        }
-    }
-
-    fn index(&mut self, event: Event) {
-        self.payload_bytes += event_payload_bytes(&event);
-        let key = (event.created_at, event.id.clone());
-        self.by_time.insert(key.clone());
-        self.by_author
-            .entry(event.pubkey.clone())
-            .or_default()
-            .insert(key.clone());
-        for pubkey in tag_values(&event, "p") {
-            self.by_tag_p.entry(pubkey).or_default().insert(key.clone());
-        }
-        for target in tag_values(&event, "e")
-            .into_iter()
-            .chain(tag_values(&event, "q"))
-        {
-            let list = self.by_tag_e.entry(target).or_default();
-            if !list.contains(&event.id) {
-                list.push(event.id.clone());
-            }
-        }
-        self.events.insert(event.id.clone(), event);
-    }
-
-    fn remove(&mut self, id: &str) {
-        let Some(event) = self.events.remove(id) else {
-            return;
-        };
-        self.generations.remove(id);
-        self.snapshot_revision = self.revision;
-        self.payload_bytes = self
-            .payload_bytes
-            .saturating_sub(event_payload_bytes(&event));
-        if is_replaceable_kind(event.kind) {
-            self.replaceable.remove(&(event.pubkey.clone(), event.kind));
-            if event.kind == 0 {
-                self.profiles.remove(&event.pubkey);
-                self.verified_nip05.remove(&event.pubkey);
-            }
-        }
-        let key = (event.created_at, event.id.clone());
-        self.by_time.remove(&key);
-        if let Some(set) = self.by_author.get_mut(&event.pubkey) {
-            set.remove(&key);
-        }
-        if self
-            .by_author
-            .get(&event.pubkey)
-            .is_some_and(BTreeSet::is_empty)
-        {
-            self.by_author.remove(&event.pubkey);
-        }
-        for pubkey in tag_values(&event, "p") {
-            if let Some(set) = self.by_tag_p.get_mut(&pubkey) {
-                set.remove(&key);
-                if set.is_empty() {
-                    self.by_tag_p.remove(&pubkey);
-                }
-            }
-        }
-        for target in tag_values(&event, "e")
-            .into_iter()
-            .chain(tag_values(&event, "q"))
-        {
-            if let Some(list) = self.by_tag_e.get_mut(&target) {
-                list.retain(|item| item != id);
-                if list.is_empty() {
-                    self.by_tag_e.remove(&target);
-                }
-            }
-        }
-        self.seen_on.remove(id);
     }
 }

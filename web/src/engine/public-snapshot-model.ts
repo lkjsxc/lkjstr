@@ -1,7 +1,7 @@
 // Reconciliation preserves held public values while an incomplete engine cache hydrates.
 import type { Author, NoteRow, Row } from './protocol.ts';
 import { mergePublicCounts } from './public-snapshot-counts.ts';
-import { type PublicSnapshot, SNAPSHOT_ROWS } from './public-snapshot-store.ts';
+import { type PublicSnapshot, SNAPSHOT_ROWS, snapshotSafe } from './public-snapshot-store.ts';
 
 const author = (old: Author, next: Author): Author =>
   old.pubkey === next.pubkey && old.profileId && !next.profileId ? { ...next, ...old } : next;
@@ -11,6 +11,7 @@ const authors = (old: readonly Author[], next: readonly Author[]): readonly Auth
     return previous ? author(previous, value) : value;
   });
 function note(old: NoteRow, next: NoteRow): NoteRow {
+  if (next.hidden) return next;
   return {
     ...next,
     ...mergePublicCounts(old, next),
@@ -97,7 +98,7 @@ export function capturePublicWindow(
   const slice = rows.slice(start, start + SNAPSHOT_ROWS);
   const anchor =
     slice.find((row) => row.kind === 'note' || row.kind === 'notification') ?? slice[0];
-  if (!anchor) return;
+  if (!anchor || !slice.every(snapshotSafe)) return;
   return {
     rows: slice,
     anchor: anchor.key,

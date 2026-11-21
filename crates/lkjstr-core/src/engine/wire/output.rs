@@ -27,6 +27,21 @@ impl Session {
                         super::quote_state::settle(row, engine, account);
                     }
                 }
+                let same_window = !self.visibility_navigation.remove(&sub);
+                if let Some(previous) = self.delivered.remove(&sub) {
+                    self.evidence_of_pruning(&sub, &previous, engine);
+                    let anchor = self
+                        .windows
+                        .get(&sub)
+                        .and_then(|(anchor, _, _)| anchor.as_deref());
+                    super::visibility_terminal::retain_terminal(
+                        &previous,
+                        &mut rows,
+                        engine,
+                        anchor,
+                        same_window,
+                    );
+                }
                 self.delivered.insert(sub.clone(), rows.clone());
                 let mut out = vec![Output::Rows {
                     sub: sub.clone(),

@@ -12,6 +12,7 @@ import {
   reconcilePublicView,
 } from './public-snapshot-reconcile.ts';
 import {
+  discardUnsaveableRows,
   forgetPublicSnapshot,
   type PublicSnapshot,
   readPublicSnapshot,
@@ -22,6 +23,7 @@ import {
 import {
   flushPublicView as flushView,
   holdPublicRows as heldRows,
+  markPublicReplay,
   type PublicView as View,
 } from './public-snapshot-view.ts';
 
@@ -31,6 +33,7 @@ export function publicSnapshots(inner: Transport): Transport {
   let receive: (message: FromEngine) => void = () => {};
   let language = 'en',
     previews = true,
+    visitorFilter = true,
     closed = false;
   let timer: ReturnType<typeof setTimeout> | undefined;
   let visible: Set<string> | undefined;
@@ -54,14 +57,7 @@ export function publicSnapshots(inner: Transport): Transport {
     if (anchor === 'top') view.topAnchor = snapshot.anchor;
     queueMicrotask(() => {
       if (closed || views.get(sub) !== view || view.held !== snapshot) return;
-      try {
-        performance.clearMarks('lkjstr.public-cache');
-        performance.mark('lkjstr.public-cache', {
-          detail: { sub, source: view.source, rows: snapshot.rows.length },
-        });
-      } catch {
-        /* Optional measurement never delays replay. */
-      }
+      markPublicReplay(sub, view.source, snapshot.rows.length);
       receive({ t: 'state', sub, state: { phase: 'cache', relaysAsked: 0, relaysAnswered: 0 } });
       receive({
         t: 'rows',
@@ -109,6 +105,7 @@ export function publicSnapshots(inner: Transport): Transport {
     }
     if (message.t === 'rows' && view) {
       view.received = true;
+      discardUnsaveableRows(view.identity, message.rows);
       if (view.allow === true) {
         view.rows = mergePublicRows(view, message.rows);
         if (view.intentTop)
@@ -127,6 +124,12 @@ export function publicSnapshots(inner: Transport): Transport {
       // An older/denying engine remains authoritative; no new snapshot is retained.
       view.held = undefined;
     } else if (message.t === 'patch' && view && view.allow === true) {
+      discardUnsaveableRows(
+        view.identity,
+        message.ops.flatMap((op) =>
+          op.op === 'update' ? [op.row] : op.op === 'insert' ? op.rows : [],
+        ),
+      );
       const ops = publicPatchOps(view, message.ops);
       for (const op of ops) {
         if (op.op === 'update') rememberPublicCounts([op.row], view.counts);
@@ -187,7 +190,8 @@ export function publicSnapshots(inner: Transport): Transport {
       if (message.t === 'configure') {
         const changed =
           language !== message.config.language ||
-          previews !== (message.config.linkPreviews !== false);
+          previews !== (message.config.linkPreviews !== false) ||
+          visitorFilter !== (message.config.signedOutGlobalFilter !== false);
         if (changed)
           for (const view of views.values()) {
             flushView(view);
@@ -198,6 +202,7 @@ export function publicSnapshots(inner: Transport): Transport {
           }
         language = message.config.language;
         previews = message.config.linkPreviews !== false;
+        visitorFilter = message.config.signedOutGlobalFilter !== false;
       } else if (message.t === 'hint') {
         visible = new Set(message.hint.visibleSubs);
         if (message.hint.pageHidden) flush();
@@ -205,7 +210,7 @@ export function publicSnapshots(inner: Transport): Transport {
         const view: View = {
           source: message.query.source,
           counts: new Map(),
-          identity: snapshotIdentity(message.query, language, previews),
+          identity: snapshotIdentity(message.query, language, previews, visitorFilter),
           rows: [],
           atTop: true,
           atBottom: false,

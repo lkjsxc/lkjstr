@@ -28,6 +28,7 @@ impl Session {
                 .as_ref()
                 .is_some_and(crate::engine::time_window::supported)
             {
+                self.visibility_navigation.insert(sub.clone());
                 self.windows.remove(&sub);
                 self.return_keys.remove(&sub);
                 self.head_tails.remove(&sub);
@@ -64,6 +65,13 @@ impl Session {
         });
         if let Some(through) = tail {
             let after = request.after.clamp(1, HEAD_ROWS);
+            if self
+                .windows
+                .get(&sub)
+                .is_some_and(|(key, _, _)| key.is_some())
+            {
+                self.visibility_navigation.insert(sub.clone());
+            }
             self.windows.insert(sub.clone(), (None, 0, after));
             self.head_tails.insert(sub.clone(), through.clone());
             return Ok(vec![Input::FollowHead {
@@ -111,6 +119,14 @@ impl Session {
             before = self.notification_before(&sub, engine, anchor.as_deref(), before);
         }
         self.head_tails.remove(&sub);
+        if self
+            .windows
+            .get(&sub)
+            .and_then(|(key, _, _)| key.as_deref())
+            != anchor.as_deref()
+        {
+            self.visibility_navigation.insert(sub.clone());
+        }
         self.windows.insert(
             sub.clone(),
             (anchor.clone(), before, request.after.min(800)),

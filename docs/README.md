@@ -58,6 +58,7 @@ Engine (`crates/`):
 - [engine.md](engine.md): the engine Worker and how it serves the protocol.
 - [engine-package.md](engine-package.md): building the Worker assets for `web/`.
 - [engine-polish.md](engine-polish.md): author hydration, count estimates and Global sample.
+- [hidden-note-visibility.md](hidden-note-visibility.md): timeline selection, covered slots, reveal, and missing-row evidence.
 - [engine-startup.md](engine-startup.md): real-build WASM preload regression and scoped correction.
 - [engine-shipping.md](engine-shipping.md): exact-source shipping, host validation and schema-compatible rollback.
 - [engine-performance.md](engine-performance.md): measurements.

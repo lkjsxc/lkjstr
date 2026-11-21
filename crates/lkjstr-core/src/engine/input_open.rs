@@ -26,6 +26,8 @@ impl Engine {
                 before: 0,
                 after: 50,
                 rows: vec![],
+                opened_after: self.delivery_sequence,
+                invalid_deliveries: 0,
                 visible,
                 dirty: true,
                 history: None,

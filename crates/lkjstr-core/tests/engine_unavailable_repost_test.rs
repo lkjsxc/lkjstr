@@ -78,7 +78,7 @@ fn unavailable_global_wrappers_do_not_consume_author_slots() {
         limit: 10,
         ..Default::default()
     });
-    let held = global::classify(&f.engine.store, &events, |_| false);
+    let held = global::classify(&events);
     assert_eq!(held.iter().filter(|value| value.is_none()).count(), 3);
     assert!(held[..3].iter().all(Option::is_some));
 }

@@ -87,7 +87,7 @@ impl Engine {
         let queued: BTreeSet<_> = self
             .queue
             .iter()
-            .map(|(_, event)| event.id.clone())
+            .map(|queued| queued.event.id.clone())
             .collect();
         for id in members {
             if let Some(entry) = self.local_reads.entries.get_mut(&id) {
