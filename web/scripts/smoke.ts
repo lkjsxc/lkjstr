@@ -614,18 +614,25 @@ async function filtering(browser: Browser, still: Record<string, unknown>): Prom
   );
   await field.fill('has:image -霧');
   await settle();
-  const pics = await page
-    .locator(`${feed} .list > .note`)
-    .evaluateAll((notes) =>
-      notes.map((n) => [
-        n.querySelector('.mbox img, .mgrid img, .media img') !== null,
-        n.textContent?.includes('霧'),
-      ]),
-    );
+  const pics = await page.locator(`${feed} .list > .note`).evaluateAll((notes) =>
+    notes.map((n) => ({
+      covered: n.classList.contains('hid') || Boolean(n.querySelector('.nrow > .nmain > .cw')),
+      body: Boolean(n.querySelector('.nrow > .nmain > .content')),
+      image: Boolean(n.querySelector('.mbox img, .mgrid img, .media img')),
+      fog: n.textContent?.includes('霧'),
+    })),
+  );
+  const visible = pics.filter((p) => !p.covered);
+  const covered = pics.filter((p) => p.covered);
   fact(
-    'has:image and -word narrow together',
-    pics.length > 0 && pics.length < all && pics.every(([img, fog]) => img && !fog),
-    pics.length,
+    'has:image and -word narrow visible notes together',
+    pics.length < all && visible.length > 0 && visible.every(({ image, fog }) => image && !fog),
+    { all, filtered: pics.length, visible: visible.length },
+  );
+  fact(
+    'has:image leaves covered slots without a body or image',
+    covered.length > 0 && covered.every(({ body, image }) => !body && !image),
+    covered.length,
   );
   await page.locator(`${feed} .rclear`).click();
   await settle();

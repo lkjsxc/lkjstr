@@ -162,9 +162,15 @@ export async function channels({page,send,wait,check,note,signer,lines,fake,orig
   await open('ch-global',{source:'global',account:note.pubkey});await page.waitForTimeout(300);
   check('Global never includes channel message rows',await page.evaluate(()=>window.channelRows['ch-global'].every(r=>!r.channel)));
   const deleted=await act({a:'publish',as:note.pubkey,what:{k:'delete',id:published.id}},true);
-  check('channel message deletion publishes kind 5',deleted.ok&&fake.published.some(e=>e.id===deleted.id&&e.kind===5&&e.tags.some(t=>t[0]==='e'&&t[1]===published.id)));
-  await wait(id=>!window.channelRows['ch-created'].some(r=>r.id===id),published.id);
-  check('deleted channel message leaves the open window',true);
+  check('channel message deletion publishes kind 5 by its author',deleted.ok&&fake.published.some(e=>e.id===deleted.id&&e.kind===5&&e.pubkey===note.pubkey&&e.tags.some(t=>t[0]==='e'&&t[1]===published.id)));
+  await wait(id=>window.channelRows['ch-created'].some(r=>r.id===id&&r.hidden?.reason==='deleted'),published.id);
+  check('deleted channel message keeps a body-free slot at its original key',await page.evaluate(id=>{
+    const slots=window.channelRows['ch-created'].filter(r=>r.id===id);
+    if(slots.length!==1)return false;
+    const [slot]=slots;
+    return slot.key===id&&slot.hidden.revealable===false&&
+      ['segments','media','quotes','reactions'].every(field=>slot[field].length===0);
+  },published.id));
   // Persisted joined state is also independently recoverable from signed relay data.
   check('latest joined-channel list names the created channel',fake.published.filter(e=>e.kind===10005).at(-1).tags.some(t=>t[0]==='e'&&t[1]===created.id));
   for(const sub of ['ch-list','ch-room','ch-created','ch-global'])await send({t:'close',sub});
