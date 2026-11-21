@@ -153,7 +153,9 @@ export function renderProfile(row: ProfileRow, env: ViewEnv): HTMLElement {
             t('profile.known', {
               names:
                 known.actors.map(plainName).join(t('list.sep')) +
-                (known.others ? t('ctx.others', { n: known.others }) : ''),
+                (known.others
+                  ? t(known.others === 1 ? 'ctx.other' : 'ctx.others', { n: known.others })
+                  : ''),
             }),
           ),
         )

@@ -131,6 +131,7 @@ export const ja: Record<keyof typeof en, string> = {
   'list.sep': '、',
   'list.dot': ' · ',
   'ctx.others': ' ほか{n}人',
+  'ctx.other': ' ほか1人',
   'ctx.reposted': 'がリポスト',
   'error.signed-out': 'ログインすると使えます',
   'error.read-only': 'このアカウントは閲覧のみです（署名する鍵がありません）',

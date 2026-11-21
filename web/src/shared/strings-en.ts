@@ -128,6 +128,7 @@ export const en = {
   'list.sep': ', ',
   'list.dot': ' · ',
   'ctx.others': ' and {n} others',
+  'ctx.other': ' and 1 other',
   'ctx.reposted': ' reposted',
   'error.signed-out': 'Sign in to do this',
   'error.read-only': 'This account is read-only: it has no key to sign with',

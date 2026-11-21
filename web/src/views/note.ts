@@ -74,7 +74,13 @@ export function renderNote(row: NoteRow, env: ViewEnv, dated = false): HTMLEleme
         'div',
         { class: 'ctx' },
         icon('repost'),
-        h('span', null, names, others ? t('ctx.others', { n: others }) : '', t('ctx.reposted')),
+        h(
+          'span',
+          null,
+          names,
+          others ? t(others === 1 ? 'ctx.other' : 'ctx.others', { n: others }) : '',
+          t('ctx.reposted'),
+        ),
       ),
     );
   }

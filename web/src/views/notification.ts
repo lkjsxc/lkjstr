@@ -100,7 +100,7 @@ export function renderNotification(row: NotificationRow, env: ViewEnv): HTMLElem
         'div',
         null,
         names,
-        rest ? t('ctx.others', { n: rest }) : '',
+        rest ? t(rest === 1 ? 'ctx.other' : 'ctx.others', { n: rest }) : '',
         t(headline(row), { sats: row.sats ?? 0 }),
       ),
       row.comment ? h('div', { class: 'text' }, row.comment) : null,
