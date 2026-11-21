@@ -8,6 +8,13 @@ carries year, month and day marks that are pressed or dragged to jump, loading a
 on the time rail ([time-rail.md](time-rail.md)), which already maps every retained cached note, jumps, and leaves a
 return tick. Index and rules: [interface-specs.md](interface-specs.md). The look is in [design.md](design.md).
 
+## Reach
+
+Today the engine refuses the rail for a Home with any resolved repost, and for a list whose cache was evicted or cut
+short (time-rail.md, native fallbacks). Most real Homes are therefore native lists: they get C1 at once, but C2
+and C3 reach them only after an engine slice that counts a repost wrapper at its repost time (as `rowTime` already
+reads it) and keeps the rail across eviction. That slice comes before `days` in value.
+
 ## Shared rules
 
 - The rail measures the retained cache and nothing else. It draws no counts, and no text says "of N". The faded
