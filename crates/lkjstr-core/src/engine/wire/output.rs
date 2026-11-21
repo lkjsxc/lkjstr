@@ -30,16 +30,15 @@ impl Session {
                 let same_window = !self.visibility_navigation.remove(&sub);
                 if let Some(previous) = self.delivered.remove(&sub) {
                     self.evidence_of_pruning(&sub, &previous, engine);
-                    let anchor = self
-                        .windows
-                        .get(&sub)
-                        .and_then(|(anchor, _, _)| anchor.as_deref());
+                    let window = self.windows.get(&sub);
+                    let anchor = window.and_then(|(anchor, _, _)| anchor.as_deref());
                     super::visibility_terminal::retain_terminal(
                         &previous,
                         &mut rows,
                         engine,
                         anchor,
                         same_window,
+                        window.is_none(),
                     );
                 }
                 self.delivered.insert(sub.clone(), rows.clone());

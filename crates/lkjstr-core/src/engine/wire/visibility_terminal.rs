@@ -22,6 +22,7 @@ pub(super) fn retain_terminal(
     engine: &Engine,
     anchor: Option<&str>,
     update: bool,
+    keep_reading_time: bool,
 ) {
     let positions: BTreeMap<_, _> = next
         .iter()
@@ -70,10 +71,12 @@ pub(super) fn retain_terminal(
             continue;
         };
         let before = successor.or(preceding).unwrap_or(next.len());
-        inserts
-            .entry(before)
-            .or_default()
-            .push(note::covered(row.clone(), reason));
+        let mut covered = note::covered(row.clone(), reason);
+        // The same retained slot can survive a move from an absolute window to an ordinary one.
+        if !keep_reading_time && let Some(fields) = covered.as_object_mut() {
+            fields.remove("readingAt");
+        }
+        inserts.entry(before).or_default().push(covered);
     }
     if inserts.is_empty() {
         return;

@@ -12,11 +12,12 @@ struct Shared {
     engine: Engine,
     clients: Clients,
     sessions: BTreeMap<u64, Session>,
+    now: u64,
 }
 
 impl Shared {
     fn connect(&mut self) -> u64 {
-        let id = self.clients.connect(30_000).unwrap();
+        let id = self.clients.connect(self.now).unwrap();
         self.sessions.insert(id, Session::default());
         id
     }
@@ -30,8 +31,8 @@ impl Shared {
             .input(wire, &self.engine)
             .unwrap()
         {
-            for routed in self.clients.input(id, input, 30_000) {
-                self.engine.input(routed, 30_000);
+            for routed in self.clients.input(id, input, self.now) {
+                self.engine.input(routed, self.now);
             }
         }
     }
@@ -63,10 +64,18 @@ fn rows(messages: &[Value]) -> &[Value] {
 
 #[test]
 fn shared_covered_repost_keeps_its_pivot_time_through_show_and_hide() {
-    let mut shared = Shared::default();
+    let mut shared = Shared {
+        now: 30_000,
+        ..Shared::default()
+    };
     let reader = shared.connect();
     let neighbor = shared.connect();
-    let original = event(4, 1, "body https://example.invalid/picture.png", vec![]);
+    let original = event(
+        4,
+        1,
+        "body https://example.invalid/picture.png",
+        vec![vec!["expiration".into(), "40".into()]],
+    );
     let older = event(9, 1, "older", vec![]);
     let newer = event(15, 1, "newer", vec![]);
     let target = || vec![vec!["e".into(), original.id.clone()]];
@@ -194,6 +203,25 @@ fn shared_covered_repost_keeps_its_pivot_time_through_show_and_hide() {
     let top = json!({"t":"window","sub":"moment","anchor":"top","before":0,"after":10});
     shared.send(neighbor, top.clone());
     assert_ordinary(&shared.drain()[&neighbor]);
+
+    shared.now = 40_000;
+    shared.engine.tick(shared.now);
+    shared.drain();
+    shared.send(reader, seek);
+    let expired = shared.drain();
+    let tombstone = rows(&expired[&reader])
+        .iter()
+        .find(|row| row["key"] == original.id)
+        .unwrap();
+    assert_slot(tombstone);
+    assert_eq!(tombstone["hidden"]["reason"], "expired");
+
     shared.send(reader, top);
-    assert_ordinary(&shared.drain()[&reader]);
+    let ordinary = shared.drain();
+    let retained = rows(&ordinary[&reader])
+        .iter()
+        .find(|row| row["key"] == original.id)
+        .unwrap();
+    assert_eq!(retained["hidden"]["reason"], "expired");
+    assert_ordinary(&ordinary[&reader]);
 }

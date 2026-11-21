@@ -15,6 +15,8 @@ side caps at 800 notes, with up to `before` strictly newer than `at` and up to
 `after` at or before `at`.
 The row's `readingAt` carries that placement time through Show and Hide.
 A covered slot carries no repost actors, body or media.
+When an ordinary window replaces the pivot, a retained terminal slot keeps its
+identity and reason. Its `readingAt` belongs only to the absolute window.
 The existing mute and repost projection still apply. An ordinary top, key or
 month window replaces the pivot. Repeating the same `{at}` with new row counts
 keeps the pivot, the selected reading key and its in-progress relay pages.

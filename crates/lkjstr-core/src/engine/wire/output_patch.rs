@@ -31,7 +31,14 @@ impl Session {
             }
             join_rows(order, &retained, &mut updated)
         };
-        super::visibility_terminal::retain_terminal(&previous, &mut next, engine, None, true);
+        super::visibility_terminal::retain_terminal(
+            &previous,
+            &mut next,
+            engine,
+            None,
+            true,
+            !self.windows.contains_key(&sub),
+        );
         if super::list_edges::finite(
             self.queries
                 .get(&sub)
