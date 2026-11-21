@@ -155,7 +155,8 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
   a quiet one without crowding it out and empty time taking no room, dots
   where months begin, numbers where years begin, a 2px accent line across only the rightmost 16px for where you are; the current year uses normal text colour;
   pressed or dragged it goes to that time and says it, and leaves a tick to
-  come back by. The tile's own width decides the rail (56px with years from 520px, else 16px) and other tile-width
+  come back by. The tile's own width decides the rail (56px with years from 520px, else 16px); a list the engine
+  refused last time on this device starts without the rail's room, so its notes never widen after a second. Other tile-width
   layouts (Documentation stacks its tree above the page under 520px) from the first frame. Other views keep a 14px
   scrollbar with a slim thumb that
   widens under the pointer.

@@ -26,7 +26,10 @@ Loaded and unloaded jumps both retain the original row and offset. Home/End
 belong to an open popover until it closes.
 
 The sticky holder moves with its view when the WM reparents tiles. Width is
-reserved before marks arrive: 56px at 520px tile width, otherwise 16px.
+reserved before marks arrive: 56px at 520px tile width, otherwise 16px. The
+first frame follows the engine's last answer for the same tab kind on this
+device (`lkjstr:rails`), so a refused list starts at native width. A refusal
+holds for the page's session; an acceptance without months is no answer.
 Narrow year labels appear over content on hover/hold; touch has a 28px hit
 area. No animation is used. The rail is aria-hidden and the original list
 remains the keyboard scroller. A nonoverflowing list hides the rail; one

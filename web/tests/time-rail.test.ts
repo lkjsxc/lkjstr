@@ -126,3 +126,50 @@ it('leaves Home and End with an open button-based popover, then resumes after cl
   expect(x.key('End').defaultPrevented).toBe(true);
   expect(x.set).toHaveBeenCalled();
 });
+
+it('starts at the width the engine last gave the same kind of tab', () => {
+  localStorage.clear();
+  const reserved = (el: HTMLElement) => el.classList.contains('has-time-rail');
+  const answer = (supported: boolean, count = 1) =>
+    ({ supported, months: count ? [{ at: month, count }] : [], positions: [] }) as const;
+  const open = (kind: string) => {
+    const el = document.createElement('div');
+    const list = document.createElement('div');
+    const tail = document.createElement('div');
+    el.dataset.kind = kind;
+    el.append(list, tail);
+    document.body.append(el);
+    const rail = mountTimeRail({
+      ...{ candidate: true, version: () => 5, el, list, tail, rows: () => [] },
+      ...{ keeper: { set: vi.fn() } as unknown as Keeper, seek: vi.fn(), active: () => true },
+    });
+    const say = (supported: boolean, count?: number) => {
+      rail.timeline({ ...answer(supported, count), newest: month, oldest: month, older: false });
+      vi.advanceTimersByTime(16);
+    };
+    return { el, say, dispose: rail.dispose };
+  };
+  const first = open('home');
+  expect(reserved(first.el)).toBe(true); // a kind never answered reserves the rail
+  first.say(true, 0); // accepted with nothing counted yet: no answer about the width
+  first.say(false);
+  expect(reserved(first.el)).toBe(false);
+  first.dispose();
+  const again = open('home');
+  expect(reserved(again.el)).toBe(false); // refused before: native width from the first frame
+  again.say(true, 0);
+  expect(reserved(again.el)).toBe(false);
+  again.say(true);
+  expect(reserved(again.el)).toBe(true);
+  again.dispose();
+  expect(reserved(open('home').el)).toBe(false); // refused earlier in this page: still its next start
+  const tag = open('hashtag');
+  expect(reserved(tag.el)).toBe(true); // other kinds keep their own answer
+  tag.say(false, 0);
+  tag.dispose();
+  expect(reserved(open('hashtag').el)).toBe(false);
+  const search = open('search');
+  search.say(true);
+  search.dispose();
+  expect(reserved(open('search').el)).toBe(true);
+});

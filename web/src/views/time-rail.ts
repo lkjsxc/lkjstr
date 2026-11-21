@@ -5,6 +5,7 @@ import { typing } from '../shared/keys.ts';
 import { popoverOpen } from '../wm/menus.ts';
 import type { Keeper, Place } from './feed-place.ts';
 import { rowTime, scrubText } from './feed-scrub.ts';
+import { railGuess, railSaid } from './rail-guess.ts';
 import { noteToPlace, placeToNote, type TimePlace, timeMarks, timeScale } from './time-scale.ts';
 export function mountTimeRail(o: {
   candidate: boolean;
@@ -27,7 +28,10 @@ export function mountTimeRail(o: {
   rail.append(marks, line, tick, label);
   const pin = h('div', { class: 'time-pin' }, rail);
   el.prepend(pin);
-  el.classList.toggle('has-time-rail', o.candidate && o.version() >= 5);
+  // The view's tab kind (set before mounting) keys what the engine last said, so the first frame has the final width.
+  const kind = el.dataset.kind ?? '';
+  const guess = (): boolean => o.candidate && o.version() >= 5 && railGuess(kind);
+  el.classList.toggle('has-time-rail', guess());
   let data: Timeline | undefined;
   let bands = timeScale([], 0);
   let height = 0;
@@ -99,7 +103,9 @@ export function mountTimeRail(o: {
       data?.supported && data.months.length && el.scrollHeight > el.clientHeight + 1,
     );
     rail.hidden = !show;
-    el.classList.toggle('has-time-rail', data?.supported ?? (o.candidate && o.version() >= 5));
+    // An answer with no months yet (a Home before its follows arrive) still says nothing about the width.
+    const said = data && (!data.supported || data.months.length) ? data.supported : undefined;
+    el.classList.toggle('has-time-rail', said ?? guess());
     height = Math.max(1, el.clientHeight - 16);
     bands = timeScale(data?.months ?? [], height);
     if (!show) return;
@@ -253,6 +259,7 @@ export function mountTimeRail(o: {
         back = undefined;
       }
       data = next;
+      if (o.candidate && (!next.supported || next.months.length)) railSaid(kind, next.supported);
       timelineVersion = windowVersion;
       const returned = back && next.positions.find((p) => p.key === back?.place.key);
       if (back && returned) back = { ...back, time: returned };
