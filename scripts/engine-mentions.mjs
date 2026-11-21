@@ -94,7 +94,18 @@ async function start(browser) {
     await send({ t: 'close', sub: id });
     return row.jsonValue();
   };
-  return { send, receive, read };
+  const people = async (sub, account, id, expected) => {
+    await send({ t: 'open', sub, query: { source: 'people', text: '', account, id } });
+    await send({ t: 'window', sub, anchor: 'top', before: 0, after: 6 });
+    const found = await page.waitForFunction(({ sub, expected }) => window.messages
+      .filter((message) => message.sub === sub && message.t === 'rows')
+      .find((message) => message.rows.length === expected.length &&
+        message.rows.every((row, index) => row.author.pubkey === expected[index] &&
+          row.author.profileId)), { sub, expected }, { timeout: 15000 });
+    await send({ t: 'close', sub });
+    return (await found.jsonValue()).rows.map(({ author }) => author);
+  };
+  return { send, receive, read, people };
 }
 
 function draftFor(route, recipient, target) {
@@ -138,7 +149,9 @@ try {
     content: 'mention thread root', tags: [] });
   const target = await sign({ pubkey: targetActor.pubkey, kind: 1, created_at: 1700000001,
     content: 'mention reply and quote target', tags: [['e', root.id, '', 'root'], ['p', note.pubkey]] });
-  for (const event of [root, target, targetActor, recipient]) fake.add(event);
+  const follows = await sign({ pubkey: note.pubkey, kind: 3, created_at: 1700000000,
+    content: '', tags: [['p', recipient.pubkey], ['p', note.pubkey]] });
+  for (const event of [root, target, targetActor, recipient, follows]) fake.add(event);
   const cache = `${process.env.HOME}/.cache/ms-playwright`;
   const executablePath = process.env.LKJSTR_CHROME ??
     join(cache, (await readdir(cache)).filter((name) => name.startsWith('chromium-'))
@@ -150,6 +163,12 @@ try {
   await writer.send({ t: 'publicKey', req: 'account', pubkey: note.pubkey });
   assert.equal((await writer.receive('result', 'account')).ok, true);
   await writer.read(target.id);
+  report.people = {
+    post: await writer.people('post-people', note.pubkey, undefined, [recipient.pubkey]),
+    contextual: await writer.people('contextual-people', note.pubkey, target.id,
+      [target.pubkey, recipient.pubkey]),
+  };
+  console.log('ok bare mention follows and context load their profiles');
 
   for (const route of ['Post', 'inline Reply', 'Quote']) {
     const { draft, expected, references } = draftFor(route, recipient.pubkey, target);

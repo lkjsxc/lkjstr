@@ -8,7 +8,9 @@ local context through `people`; prefix search and explicit person lookups
 retain their existing paths. [Owner wishes](wishes.md) describes the contract.
 
 `pnpm engine:check` runs the mention witness on an isolated Worker, signed
-fixture events and a loopback WebSocket relay. The three draft shapes compare
+fixture events and a loopback WebSocket relay. It checks the verified follow
+list and conversation candidates, including their profile metadata. The three
+draft shapes compare
 the complete signed event received by the relay with the disposable signer's
 event and match the Worker result to the relay OK by event ID. The witness
 checks exact content and exact p, e and q tag arrays. It repeats a selected
