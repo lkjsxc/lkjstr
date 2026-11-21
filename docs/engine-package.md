@@ -23,9 +23,11 @@ worktree paths; Cargo jobs and test workers are capped at four.
 
 The package remains usable independently with sh scripts/engine-package.sh.
 It writes transport.js, shared.js, worker.js, lkjstr_engine.js and its WASM
-module to tmp/engine-dist. The frontend hashes the full dependency graph,
-rewrites every import/Worker/WASM URL, and references the adapter and WASM
-by absolute path in index.html. No mutable engine asset names are shipped.
+module to tmp/engine-dist. The build uses `wasm-bindgen --remove-name-section`
+to omit the WASM `name` section. Keep the raw Cargo module and matching
+symbolized binding output in private build evidence when needed for diagnostics.
+The frontend hashes the full dependency graph, rewrites every import/Worker/WASM
+URL and preloads the hashed adapter in index.html. The Worker fetches the WASM.
 
 Startup uses workerTransport from the package instead of the mock Worker.
 The frontend selects saved relay settings for the cached account when present;
