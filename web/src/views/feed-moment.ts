@@ -151,11 +151,14 @@ export function momentOf(
   const tail = (): HTMLElement | null => o.el.querySelector(':scope > .ftail');
   /** The room under the list that lets a seated line stay a third down while older rows are still on their way
    * (a short list cannot scroll there otherwise); it gives way as they arrive and as the reader scrolls. */
+  /** Where the room starts: the height of everything above it (it is the scroller's last child). Not scrollHeight,
+   * which never reports less than the tile. */
+  const above = (t: HTMLElement): number =>
+    t.getBoundingClientRect().top - o.el.getBoundingClientRect().top + o.el.scrollTop;
   const fit = (): void => {
     const t = tail();
     if (!t?.offsetHeight) return;
-    const content = o.el.scrollHeight - t.offsetHeight;
-    t.style.height = `${Math.max(0, Math.ceil(o.el.scrollTop + o.el.clientHeight - content))}px`;
+    t.style.height = `${Math.max(0, Math.ceil(o.el.scrollTop + o.el.clientHeight - above(t)))}px`;
   };
   const seat = (): void => {
     if (seated || !answer?.key) return;
@@ -165,9 +168,8 @@ export function momentOf(
     const third = Math.round(o.el.clientHeight / 3);
     const top = line.getBoundingClientRect().top;
     const want = o.el.scrollTop + top - o.el.getBoundingClientRect().top - third;
-    const room = o.el.scrollHeight - o.el.clientHeight;
     const t = tail();
-    if (t && want > room) t.style.height = `${t.offsetHeight + Math.ceil(want - room)}px`;
+    if (t) t.style.height = `${Math.max(0, Math.ceil(want + o.el.clientHeight - above(t)))}px`;
     const content = (n: Element | null): n is HTMLElement =>
       n instanceof HTMLElement && !/^(day|moment):/.test(n.dataset.key ?? 'moment:');
     let next: Element | null = line.nextElementSibling;
