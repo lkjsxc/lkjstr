@@ -211,8 +211,19 @@ impl Engine {
     }
 }
 
-pub(super) fn people(store: &Store, query: &Query) -> Vec<NostrFilter> {
-    let authors = super::rich::authors(store, query).unwrap_or_default();
+pub(super) fn people(
+    store: &Store,
+    query: &Query,
+    private: &super::settings::PrivateLists,
+) -> Vec<NostrFilter> {
+    let authors = super::rich::authors(store, query).unwrap_or_else(|| {
+        let account = query.account.as_deref();
+        if query.filters.text.as_deref() != Some("") {
+            return vec![];
+        }
+        let weights = super::weights::Weights::new(store, private, account);
+        super::mention_people::context(store, account, query.target.as_deref(), &weights)
+    });
     if authors.is_empty() {
         vec![]
     } else {

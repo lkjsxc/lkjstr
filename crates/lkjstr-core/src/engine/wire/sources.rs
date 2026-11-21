@@ -39,7 +39,7 @@ impl Session {
                 .map_or_else(Default::default, |id| super::thread::positions(store, &id))
         });
         let mut out=match q.source.as_str() {
-            "people"=>super::people::people(e,q),
+            "people"=>super::people::people(e,q,&weights),
             "channels"=>super::channels::list(e,q),
             "following"=>store.follows(target).unwrap_or_default().iter().map(|p|person(e,p,q.account.as_deref(), weights.person(p))).collect(),
             "followers"=>store.feed(&crate::store::Query{kinds:vec![3],mention:Some(target.into()),limit:store.len(),..Default::default()})

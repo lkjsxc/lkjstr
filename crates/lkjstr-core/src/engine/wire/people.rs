@@ -1,13 +1,22 @@
 //! Device directory: bounded by retained metadata, at most six ranked suggestions.
 use super::{Query, sources::person};
-use crate::{engine::Engine, store};
+use crate::{
+    engine::{Engine, mention_people, weights::Weights},
+    store,
+};
 use serde_json::Value;
 use unicode_normalization::UnicodeNormalization;
 fn fold(s: &str) -> String {
     s.nfkc().collect::<String>().to_lowercase()
 }
-pub(super) fn people(e: &Engine, q: &Query) -> Vec<Value> {
+pub(super) fn people(e: &Engine, q: &Query, weights: &Weights<'_>) -> Vec<Value> {
     let store = &e.store;
+    if q.authors.is_none() && q.reference.is_none() && q.text.as_deref() == Some("") {
+        return mention_people::context(store, q.account.as_deref(), q.id.as_deref(), weights)
+            .into_iter()
+            .map(|p| person(e, &p, q.account.as_deref(), weights.person(&p)))
+            .collect();
+    }
     let mut keys = if let Some(authors) = &q.authors {
         authors.iter().take(32).cloned().collect::<Vec<_>>()
     } else if let Some(reference) = &q.reference {
@@ -70,8 +79,6 @@ pub(super) fn people(e: &Engine, q: &Query) -> Vec<Value> {
         )
     });
     keys.dedup();
-    let weights =
-        crate::engine::weights::Weights::new(store, &e.private_lists, q.account.as_deref());
     keys.into_iter()
         .take(if q.authors.is_some() { 32 } else { 6 })
         .map(|p| person(e, &p, q.account.as_deref(), weights.person(&p)))

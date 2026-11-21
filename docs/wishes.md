@@ -21,7 +21,11 @@ requests can also interrupt a settled watch. Routing is unchanged.
 `id`'s thread, then the device directory. Matching uses NFKC and lowercase over
 display name, name and NIP-05. `authors` instead requests up to 32 profiles;
 `ref` explicitly resolves a person, including an opt-in NIP-05 lookup. Directory
-scans are bounded by 6000 retained metadata events. Queries release on dismiss,
+scans are bounded by 6000 retained metadata events. Explicit empty text gives a
+bare @ up to six suggestions from the retained reply or quote conversation
+and the active account's follows. The target author and other participants
+precede follows. The active account is excluded, and visible candidates can
+load metadata even when only their public keys are known. Queries release on dismiss,
 visibility changes or unmount. The frontend requests all device account profiles
 at startup and when the device account set changes; fetch priority is unchanged.
 

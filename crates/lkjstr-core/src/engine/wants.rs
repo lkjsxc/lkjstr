@@ -101,7 +101,7 @@ fn requests(
         return vec![];
     }
     if q.source == Source::People {
-        return super::hydration::people(store, q);
+        return super::hydration::people(store, q, private);
     }
     let mut result = vec![query::filter(store, q)];
     if q.source == Source::TheirHome {

@@ -26,6 +26,7 @@ mod input;
 mod input_open;
 mod list_events;
 pub mod local_reads;
+mod mention_people;
 pub mod metrics;
 mod nearby;
 pub mod network;
