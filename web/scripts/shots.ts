@@ -177,9 +177,10 @@ try {
           ['time-native', 'notifications'],
         ] as const)
           await scene(name, '/', async (page) => {
-            if (kind === 'notifications')
+            // Notifications has a tile of its own on a desktop; a phone brings it to the front.
+            if (kind === 'notifications' && width < 760)
               await page.keyboard.press('g'), await page.keyboard.press('n');
-            const feed = page.locator(`.view[data-kind="${kind}"]:visible`);
+            const feed = page.locator(`.view[data-kind="${kind}"]:visible`).first();
             const box = await feed.boundingBox();
             if (box) await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
             await page.mouse.wheel(0, 1600);
