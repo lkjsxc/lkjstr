@@ -25,7 +25,7 @@ and plain facts when it cannot. Content warnings stay ordinary rows. Index and r
 | `machine-payload` | Looks like machine data, not a post. | yes |
 | `language` | In another language. | yes |
 | `deleted` | Deleted by its author. | never |
-| `expired` | Past the end time its author set. | never |
+| `expired` | Expired at the time its author set. | never |
 | anything else | Hidden. | as the engine says |
 
 - In a thread the same line holds the room of a hidden reply or note above the focus. The thread's rail goes on
@@ -36,7 +36,8 @@ and plain facts when it cannot. Content warnings stay ordinary rows. Index and r
 ## H2 Why
 
 - `Why` opens a short detail under the line, inline (no popover; `aria-expanded` on the button), and closes the same
-  way. It says what happened in one sentence and offers the reason's own setting where one exists:
+  way. It says what happened in one sentence and offers the reason's own setting where one exists, through a link
+  that always reads `hidden.setting` ("Settings"), since the sentence already names the setting:
   - muted person, word, hashtag or thread: the matching mute list, opened at its entry
     (`env.open('settings', { at: 'set.mute.person' | 'set.mute.word' | 'set.mute.hashtag' | 'set.mute.thread' })`).
     For a word or hashtag it names the matching entry when the engine says which;

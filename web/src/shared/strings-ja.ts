@@ -102,6 +102,7 @@ export const ja: Record<keyof typeof en, string> = {
   'hidden.expired': '投稿者が決めた期限を過ぎました。',
   'hidden.other': '非表示です。',
   'hidden.why': '理由',
+  'hidden.setting': '設定を開く',
   'hidden.why.muted-person': 'この端末で投稿者をミュートしています。',
   'hidden.why.muted-thread': 'このノートのスレッドをミュートしています。',
   'hidden.why.muted-word': 'ミュートした語のどれかを含みます。',

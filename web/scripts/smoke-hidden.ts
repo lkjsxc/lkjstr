@@ -27,7 +27,7 @@ const REASONS: [string, boolean][] = [
   ['Deleted by its author.', false],
   ['From someone you muted.', true],
   ['Looks like machine data, not a post.', true],
-  ['Past the end time its author set.', false],
+  ['Expired at the time its author set.', false],
 ];
 const lineOf = (page: Page, text: string): Locator =>
   page.locator(`${list} .note.hid`, { hasText: text }).first();

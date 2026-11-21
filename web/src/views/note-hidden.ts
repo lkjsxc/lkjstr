@@ -20,14 +20,16 @@ const REASONS = new Set([
   'deleted',
   'expired',
 ]);
-/** The settings entry each reason's Why opens (its name there, and its label); a reason without one has no switch. */
-const SETTING: Record<string, readonly [string, Key]> = {
-  'muted-person': ['set.mute.person', 'set.mute.person'],
-  'muted-thread': ['set.mute.thread', 'set.mute.thread'],
-  'muted-word': ['set.mute.word', 'set.mute.word'],
-  'muted-hashtag': ['set.mute.hashtag', 'set.mute.hashtag'],
-  'repeated-content': ['visitorFilter', 'set.visitorFilter'],
-  'author-limit': ['visitorFilter', 'set.visitorFilter'],
+/** The settings entry each reason's Why opens; a reason without one has no switch. The link always reads
+ * `hidden.setting`: the sentence before it already names the setting, and a setting's own title can be a single
+ * kanji in Japanese or repeat that sentence (the visitor filter). */
+const SETTING: Record<string, string> = {
+  'muted-person': 'set.mute.person',
+  'muted-thread': 'set.mute.thread',
+  'muted-word': 'set.mute.word',
+  'muted-hashtag': 'set.mute.hashtag',
+  'repeated-content': 'visitorFilter',
+  'author-limit': 'visitorFilter',
 };
 const known = (reason: string): string => (REASONS.has(reason) ? reason : 'other');
 /** The one-line reason (also the wording of a shown note's line). */
@@ -54,16 +56,15 @@ export function hiddenRow(row: NoteRow, env: ViewEnv): HTMLElement {
     if (open && !detail.firstChild) detail.append(...explain());
   });
   function explain(): (HTMLElement | string)[] {
-    const target = SETTING[reason];
+    const at = SETTING[reason];
     // A muted word or hashtag is named when the engine says which of the reader's own entries matched.
     const named = hidden.detail && (reason === 'muted-word' || reason === 'muted-hashtag');
     const words = t(`hidden.why.${reason}${named ? '.named' : ''}` as Key, {
       detail: hidden.detail ?? '',
     });
-    if (!target) return [words];
-    const [at, label] = target;
+    if (!at) return [words];
     const go = (e: Event): void => (e.stopPropagation(), void env.open('settings', { at }));
-    return [words, ' ', h('button', { class: 'lnk', onclick: go }, t(label).split(': ').pop())];
+    return [words, ' ', h('button', { class: 'lnk', onclick: go }, t('hidden.setting'))];
   }
   function show(): HTMLElement {
     const ask = async (): Promise<void> => {
