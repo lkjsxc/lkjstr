@@ -14,6 +14,7 @@ import { auditFixtures } from './audit-fixtures.mjs';
 import { auditOwner } from './audit-owner.mjs';
 import { browserTmp } from './browser-tmp.ts';
 import { channelScenarios } from './smoke-channels.mjs';
+import { deepLinkChecks } from './smoke-deep-links.mjs';
 import { emojiRealChecks, seedEmoji } from './smoke-emoji-real.mjs';
 import { realReaderChecks } from './smoke-reader.mjs';
 import { finishAccounts, reviewSettings, seedRailArchive } from './smoke-real-finish.mjs';
@@ -42,11 +43,13 @@ const fixture = JSON.parse((await lines.next()).value);
 const fake = fakeRelay({ maxEvents: 2000 });
 // The archive/audit can fill one 1000-event store; reader arrivals get their own bounded fixture.
 const readerFake = fakeRelay();
+const deepLinkFake = fakeRelay();
 const bunker = await fakeBunker();
 const media = await fakeMediaSet();
 for (const event of [fixture.note, ...fixture.events]) {
   fake.add(event);
   readerFake.add(event);
+  deepLinkFake.add(event);
 }
 let signing = Promise.resolve();
 const relay = createServer();
@@ -77,7 +80,9 @@ ws.on('connection', (socket, req) => {
       socketProbe.live.set(req.url, Math.max(0, (socketProbe.live.get(req.url) ?? 0) - 1));
     mainSockets.delete(socket);
   });
-  (req.url === '/reader' ? readerFake : fake).route({
+  const fixtureRelay =
+    req.url === '/deep-links' ? deepLinkFake : req.url === '/reader' ? readerFake : fake;
+  fixtureRelay.route({
     send: (text) => socket.send(text),
     onMessage: (fn) => socket.on('message', fn),
     onClose: (fn) => socket.on('close', fn),
@@ -261,6 +266,17 @@ try {
   await page.locator('.view[data-kind="global"] .note').first().waitFor();
   check('global renders verified fixture notes');
   await visitorChecks({ page, browser, base, relayUrl, errors, shots, shot, check });
+  await deepLinkChecks({
+    browser,
+    base,
+    relayUrl: `${relayUrl}/deep-links`,
+    fixture,
+    otherAuthor: actor.pubkey,
+    sign: fixtureSign,
+    add: deepLinkFake.add,
+    errors,
+    check,
+  });
   await openKeyField(page);
   await page.locator(`${accounts} input`).fill('not a key');
   await page.locator(`${accounts} input`).press('Enter');

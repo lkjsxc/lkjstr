@@ -85,6 +85,7 @@ export const ja: Record<keyof typeof en, string> = {
   'shell.updateReady': '新しい版があります。再読み込みで更新します。',
   'error.rejected': '拒否されました',
   'error.too-large': 'ファイルが大きすぎます',
+  'link.invalid': 'このリンクは、lkjstr で開けるノート・人・アドレスではありません。',
   'error.unsupported': '対応していません',
   'error.offline': 'オフラインです',
   'error.not-found': '見つかりません',

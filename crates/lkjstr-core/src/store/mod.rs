@@ -4,6 +4,7 @@
 mod author_feed;
 mod bytes;
 pub use bytes::event_payload_bytes;
+mod address;
 mod context_pins;
 mod directory;
 mod identity;

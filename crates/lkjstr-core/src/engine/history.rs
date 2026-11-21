@@ -52,7 +52,16 @@ impl Engine {
         let Some(v) = self.views.get_mut(sub) else {
             return false;
         };
-        if !v.visible || !paged(v) || exhausted(&self.network, &self.store, v) {
+        if !v.visible
+            || !paged(v)
+            || exhausted(&self.network, &self.store, v)
+            || (v.query.source == Source::Thread
+                && v.query
+                    .target
+                    .as_deref()
+                    .and_then(super::thread::address)
+                    .is_some())
+        {
             return false;
         }
         let events = super::list_events::events(&self.store, &v.query, &self.private_lists);

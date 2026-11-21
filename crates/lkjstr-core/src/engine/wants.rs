@@ -118,15 +118,8 @@ fn requests(
         result.push(f);
         result.extend(v.notification_history.clone());
     }
-    if q.source == Source::Thread
-        && let Some(id) = &q.target
-        && store.get(id).is_none()
-    {
-        result.push(NostrFilter {
-            ids: Some(vec![id.clone()]),
-            limit: Some(1),
-            ..Default::default()
-        });
+    if q.source == Source::Thread {
+        result.extend(super::thread::extra_filter(store, q));
     }
     if let Some(account) = &q.account {
         let kinds: Vec<_> = [0, 3, 10000, 10003, 10002, 10030, 10063]
@@ -184,6 +177,14 @@ fn requests(
     if q.source == Source::Profile
         && let Some(p) = &q.target
     {
+        if !q.filters.relay_hints.is_empty() {
+            result.push(NostrFilter {
+                kinds: Some(vec![0]),
+                authors: Some(vec![p.clone()]),
+                limit: Some(1),
+                ..Default::default()
+            });
+        }
         let mut followers = NostrFilter {
             kinds: Some(vec![3]),
             limit: Some(200),

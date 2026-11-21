@@ -27,9 +27,10 @@ The site is served from the root of its origin (`/`), over HTTPS.
 ## Routing
 
 - A path that names an existing file serves that file.
-- Any other path without a dot in it (`/`, `/n/<note>`, `/p/<npub>`) serves
-  `index.html` with status 200. The app opens the link as a tab and puts the
-  address back to `/`.
+- A missing path without a dot serves `index.html` with status 200. This
+  includes direct navigation to `/n/<bech32>`, `/p/<bech32>` and
+  `/a/<bech32>`. Keep the original path in the browser until the app opens it.
+  The app then replaces the address with `/`.
 - A missing path with a dot is a 404, so a stale hashed file never comes back
   as HTML.
 
@@ -100,7 +101,7 @@ one predecessor cache. Cleanup also retains the active, waiting and current
 installer. An interrupted activation retries cleanup on the first controlled
 fetch; fetches never recreate retired caches. Short Web Locks
 serialize allocation, completion and cleanup; network downloads hold no lock.
-Root/note/profile navigation works from the cached shell. Only packaged static
+Root, note, profile and address navigation work from the cached shell. Only packaged static
 assets are cached: no events, keys, uploads or remote media. Serve sw.js with
 no-cache as above; no new headers or backend are required. CacheStorage and
 Web Locks must be available for shell installation. Storage or locking denial

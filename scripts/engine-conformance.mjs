@@ -1,3 +1,4 @@
+import { bech32 } from '../web/scripts/smoke-visitors.mjs';
 import { relayAuth } from './engine-relay-auth.mjs';
 import { directMessages } from './engine-dm.mjs';
 import { hiddenDirectMessages } from './engine-dm-hidden.mjs';
@@ -33,6 +34,9 @@ export async function conformance({page,send,wait,check,note,signer,lines,origin
     }
     return result(req);
   }
+  const ref = bech32('note', note.id);
+  check('public note link is validated without an account parameter',(await act({a:'link.check',route:'n',ref})).ok);
+  check('public note link is rejected on the profile path',(await act({a:'link.check',route:'p',ref})).error?.code==='rejected');
   await authenticate(note.pubkey,'extension');
   check('private-list retry is account-scoped and additive',(await act({a:'lists.retry',as:note.pubkey})).ok);
   await send({t:'configure',config:{language:'en',heuristics:true,prefetch:false}});

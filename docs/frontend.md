@@ -23,7 +23,7 @@ test double. The Rust/WASM engine replaces it at build time with
 
 | Path | What it holds |
 | --- | --- |
-| `src/main.ts`, `src/boot.ts` | Start: theme and scale before first paint, engine, window manager, incoming `/n/` and `/p/` links |
+| `src/main.ts`, `src/boot.ts` | Start: theme and scale before first paint, engine, window manager, incoming `/n/`, `/p/` and `/a/` links |
 | `src/engine/protocol.ts` | The contract with the engine. Owned by the frontend; the engine mirrors it |
 | `src/engine/client.ts` | Subscriptions, actions as promises, hints, NIP-07 signing requests |
 | `src/engine/mock/` | Mock engine and fixtures (Japanese and English notes, media, threads, slow and failing relays) |

@@ -30,6 +30,15 @@ impl Host {
                 }
                 *bytes = array.to_vec();
             }
+            if let W::Act {
+                req,
+                action: A::LinkCheck { route, reference },
+            } = input
+            {
+                self.scope
+                    .direct(id, &Session::check_link(req, &route, &reference));
+                return;
+            }
             let stamp = if matches!(input, W::Act { .. }) {
                 sign_trace::Stamp::read(&value, !self.loaded)
             } else {

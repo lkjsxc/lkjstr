@@ -608,8 +608,9 @@ export type ChannelEdit = {
 
 export type RelayEntry = { readonly url: string; readonly read: boolean; readonly write: boolean };
 
-/** Everything the reader can do. Every action acts as `as` and is answered by exactly one `result`. */
+/** Every action is answered by exactly one `result`. */
 export type Action =
+  | { readonly a: 'link.check'; readonly route: 'n' | 'p' | 'a'; readonly ref: string }
   | { readonly a: 'zap.invoice'; readonly as: Pubkey; readonly intent: ZapInvoiceInput }
   | { readonly a: 'lists.retry'; readonly as: Pubkey }
   /** Register a mounted private editor before allowing input; closed leases cannot hold a lock. */

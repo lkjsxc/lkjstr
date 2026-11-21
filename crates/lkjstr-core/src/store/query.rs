@@ -84,7 +84,10 @@ impl Store {
             if !seen.insert(id.clone()) {
                 continue;
             }
-            if let Some(event) = self.get(&id).filter(|event| matches!(event.kind, 1 | 42)) {
+            if let Some(event) = self
+                .get(&id)
+                .filter(|event| matches!(event.kind, 1 | 42) || (id == root && event.kind == 30023))
+            {
                 queue.extend(
                     [
                         reply_parent(&event),

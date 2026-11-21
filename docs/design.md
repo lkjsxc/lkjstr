@@ -66,7 +66,9 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
 - Menus close on outside press, Escape, scroll and after choosing. No close
   buttons on menus. Shortcuts are a page of Documentation, in the platform's names.
 - Opening a note or a person opens a tab in the same tile, right after the current one, in front. Shift-click splits, middle click opens behind.
-- The address bar stays `/`; `/n/<note>` and `/p/<npub>` open a tab.
+- Incoming note, profile and address paths open a Thread or Profile tab, then
+  return the address bar to `/`. An invalid path keeps the workspace as it was
+  and shows one toast.
 - The default layout, also what "Reset layout" gives: Home at the left
   (Global behind it), Notifications in the middle, and at the right Post over
   Accounts and Settings in equal halves; widths 40/30/30. Under 1200px

@@ -9,6 +9,7 @@ import { createTransport } from './engine/startup.ts';
 import { createIdleLock } from './shared/account-idle.ts';
 import { rememberAccounts, rememberedAccounts, rememberFace } from './shared/face.ts';
 import { resolveLang, setLang, t } from './shared/i18n.ts';
+import { openIncomingLink } from './shared/incoming-link.ts';
 import { pressedAt, watchPairs } from './shared/keys.ts';
 import { layoutKey, spacesKey } from './shared/layout-store.ts';
 import { migrateStorage } from './shared/migrate.ts';
@@ -172,11 +173,11 @@ window.addEventListener(
   true,
 );
 
-// Incoming links (/n/<note>, /p/<npub>) open as a tab; the address bar then returns to "/" and stays there.
-const link = /^\/(n|p)\/([a-z0-9]+)\/?$/.exec(location.pathname);
-if (link) (incoming = () => ctl?.open(link[1] === 'p' ? 'profile' : 'thread', { ref: link[2] }))();
-if (location.pathname !== '/' || location.search || location.hash)
-  history.replaceState(null, '', '/');
+void openIncomingLink(
+  engine,
+  (kind, ref) => (incoming = () => ctl?.open(kind, { ref }))(),
+  (text) => toast(host.layer, text),
+);
 
 if (__REAL_ENGINE__)
   installShell(

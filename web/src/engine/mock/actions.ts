@@ -6,7 +6,7 @@ import type { Action, Delivery, Draft, Failure, FromEngine, ToEngine } from '../
 import { channelAct, channelTouched, chatter } from './channels.ts';
 import type { Core } from './engine.ts';
 import { FILLER } from './fixtures-notes.ts';
-import { byHandle, byPubkey, type Person, SELF } from './people.ts';
+import { byHandle, byPubkey, byRef, type Person, SELF } from './people.ts';
 import { retryLists } from './private-lists.ts';
 import { answers, isKnown, relayUrl } from './relays.ts';
 import { createUploads } from './uploads.ts';
@@ -85,6 +85,12 @@ export function createActions(core: Core) {
   }
 
   function run(req: string, a: Action): void {
+    if (a.a === 'link.check') {
+      // Mock screenshots and smoke use fixture handles and synthetic note references.
+      const found =
+        a.route === 'p' ? byRef(a.ref) : a.route === 'n' && /^note1[0-9a-f]{58}$/.test(a.ref);
+      return found ? done(req) : fail(req, 'rejected');
+    }
     if (a.a === 'lists.retry') return retryLists(core, req, a.as);
     const me = core.me();
     if (!a.a.startsWith('account.') && !me) return fail(req, 'signed-out');

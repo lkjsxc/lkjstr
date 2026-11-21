@@ -34,7 +34,10 @@ impl Session {
             .and_then(|q| q.target.as_deref())
             .or(q.account.as_deref())
             .unwrap_or("");
-        let thread = (q.source == "thread").then(|| super::thread::positions(store, target));
+        let thread = (q.source == "thread").then(|| {
+            super::thread::focus(store, target)
+                .map_or_else(Default::default, |id| super::thread::positions(store, &id))
+        });
         let mut out=match q.source.as_str() {
             "people"=>super::people::people(e,q),
             "channels"=>super::channels::list(e,q),

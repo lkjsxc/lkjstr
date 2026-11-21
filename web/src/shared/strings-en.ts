@@ -83,6 +83,7 @@ export const en = {
   'shell.updateReady': 'A new version is ready. Reload to update.',
   'error.rejected': 'Refused',
   'error.too-large': 'The file is too large',
+  'link.invalid': 'That link is not a note, a person or an address lkjstr can open.',
   'error.unsupported': 'Not supported',
   'error.offline': 'You are offline',
   'error.not-found': 'Not found',

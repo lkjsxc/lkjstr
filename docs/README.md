@@ -14,6 +14,7 @@ Frontend (`web/`):
 - [frontend.md](frontend.md): structure of `web/`, the engine boundary, gates.
 - [frontend-layout.md](frontend-layout.md): batched overflow measurement and retained-row layout evidence.
 - [integration-release.md](integration-release.md): real-engine release candidate and UI gaps.
+- [public-deep-links.md](public-deep-links.md) lists public Nostr paths.
 - [hosting-needs.md](hosting-needs.md): what the static host must serve.
 - [offline-shell.md](offline-shell.md): verified shell storage, update lifetimes and bounds.
 - [public-view-cache.md](public-view-cache.md): public rendering snapshots, privacy authorization and reconciliation.

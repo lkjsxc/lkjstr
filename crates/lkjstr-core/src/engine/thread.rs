@@ -1,6 +1,47 @@
 use crate::store::{Event, Store};
-use lkjstr_protocol::{NostrEvent, reply_parent, reply_root};
+use lkjstr_nips::address::Coordinate;
+use lkjstr_protocol::{NostrEvent, NostrFilter, is_event_id, reply_parent, reply_root};
 use std::collections::{HashMap, VecDeque};
+
+pub(super) fn address(target: &str) -> Option<Coordinate> {
+    Coordinate::parse(target)
+        .ok()
+        .filter(|address| address.kind == 30023)
+}
+
+pub(super) fn address_filter(address: Coordinate) -> NostrFilter {
+    let mut filter = NostrFilter {
+        authors: Some(vec![address.pubkey]),
+        kinds: Some(vec![address.kind.into()]),
+        limit: Some(1),
+        ..Default::default()
+    };
+    filter.tags.insert("d".into(), vec![address.identifier]);
+    filter
+}
+
+pub(super) fn focus(store: &Store, target: &str) -> Option<String> {
+    if is_event_id(target) {
+        return Some(target.to_owned());
+    }
+    store
+        .addressed(&address(target)?)
+        .map(|event| event.id.clone())
+}
+
+pub(super) fn extra_filter(store: &Store, query: &super::Query) -> Option<NostrFilter> {
+    let target = query.target.as_deref()?;
+    if let Some(address) = address(target) {
+        let mut replies = query.clone();
+        replies.target = Some(store.addressed(&address)?.id.clone());
+        return Some(super::query::filter(store, &replies));
+    }
+    (is_event_id(target) && store.get(target).is_none()).then(|| NostrFilter {
+        ids: Some(vec![target.to_owned()]),
+        limit: Some(1),
+        ..Default::default()
+    })
+}
 
 /// The note an event answers in a thread: its reply parent, else (outside channels) its root.
 pub(crate) fn parent(event: &NostrEvent) -> Option<String> {

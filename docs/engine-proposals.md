@@ -3,7 +3,6 @@
 ## Purpose
 
 Additive protocol ledger under the 2026-11-16 owner delegation. See status.md and parity.md for current behavior and limits.
-
 Earlier context through protocol 5 is preserved in [engine-proposals-history.md](engine-proposals-history.md).
 
 ## Protocol 6 engine additions (2026-11-16, owner authorized)
@@ -165,8 +164,9 @@ and recovery still need a specification in [interface-needs.md](interface-needs.
 - New lineages require explicit navigation. Only current committed count models persist.
 
 See [public-view-cache.md](public-view-cache.md). These cache additions remain unshipped and retain all prior protocol meanings.
-## Protocol 14 act chains (2026-11-17, owner specified)
+## Protocol 14 act chains and public link validation
 
+- `Action.link.check {route,ref}` validates a public NIP-19 entity for its path and returns a result without a signer or relay lookup.
 - Add `ActRef {type:'reaction'|'repost',actor,emoji?}` for one verified act link, without its counts.
 - Add `NotificationRow.target.act?` for the reader's own targeted reaction/repost; existing target fields describe only the terminal note.
 - Add `NotificationRow.pendingAct? {act,state:'loading'|'missing'|'failed'}` while that note is unresolved; `target` remains absent.

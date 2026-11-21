@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Current limits: [parity.md](parity.md), [engine-performance.md](engine-performance.md).
+Current limits: [parity.md](parity.md), [engine-performance.md](engine-performance.md). [Public deep links](public-deep-links.md) work signed out.
 Claude owns the interface. Account-safe and A1/A2 (972ef776) are live;
 [Q1](engine-q1-progress.md) passes matched public scoring; Worker and ship gates remain. Q2-Q5 remain.
 

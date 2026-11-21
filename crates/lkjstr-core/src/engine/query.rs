@@ -50,6 +50,9 @@ pub fn filter(store: &Store, q: &Query) -> NostrFilter {
             });
         }
         Source::Thread => {
+            if let Some(address) = super::thread::address(&target) {
+                return super::thread::address_filter(address);
+            }
             f.kinds = Some(vec![1, 42]);
             f.tags.insert("e".into(), vec![target]);
         }
@@ -124,7 +127,14 @@ pub(super) fn select(store: &Store, q: &Query, collapse_acts: bool) -> Vec<Event
         return vec![];
     }
     if q.source == Source::Thread {
-        return super::thread::ordered(store, q.target.as_deref().unwrap_or(""))
+        let Some(focus) = q
+            .target
+            .as_deref()
+            .and_then(|target| super::thread::focus(store, target))
+        else {
+            return vec![];
+        };
+        return super::thread::ordered(store, &focus)
             .into_iter()
             .filter(|e| {
                 matches_extra(e, q)

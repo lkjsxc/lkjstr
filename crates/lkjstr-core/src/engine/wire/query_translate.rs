@@ -32,38 +32,22 @@ impl Query {
             .or(self.id.clone())
             .or(self.tag.clone())
             .or(self.relay.clone());
-        if target.is_none()
-            && let Some(reference) = &self.reference
-        {
-            if self.source == "people" {
-                target = Some(reference.clone());
-            } else if let Some((id, _)) = crate::engine::channels::reference(reference) {
-                target = Some(id);
-            } else {
-                target = Some(
-                    match lkjstr_protocol::decode_nip19(
-                        reference.strip_prefix("nostr:").unwrap_or(reference),
-                    )? {
-                        lkjstr_protocol::NostrEntity::Npub(p) => p,
-                        lkjstr_protocol::NostrEntity::Nprofile(p) => p.pubkey,
-                        lkjstr_protocol::NostrEntity::Note(id) => id,
-                        lkjstr_protocol::NostrEntity::Nevent(p) => p.id,
-                        lkjstr_protocol::NostrEntity::Naddr(p) => {
-                            format!("{}:{}:{}", p.kind, p.pubkey, p.identifier)
-                        }
-                        _ => return None,
-                    },
-                );
-            }
-        }
         let reference = if source == p::Source::Channels {
             self.text.as_deref()
         } else {
             self.reference.as_deref()
         };
-        let resolved = reference.and_then(crate::engine::channels::reference);
+        let resolved = reference.and_then(|raw| resolve_reference(raw, source));
         if source == p::Source::Channels {
             target = resolved.as_ref().map(|r| r.0.clone());
+        } else if target.is_none()
+            && let Some(reference) = reference
+        {
+            target = Some(if source == p::Source::People {
+                reference.to_owned()
+            } else {
+                resolved.as_ref()?.0.clone()
+            });
         }
         Some(p::Query {
             source,
@@ -111,4 +95,43 @@ impl Query {
             },
         })
     }
+}
+
+fn resolve_reference(raw: &str, source: p::Source) -> Option<(String, Vec<String>)> {
+    use lkjstr_protocol::{NostrEntity, decode_nip19, is_event_id};
+    if source == p::Source::Channels {
+        return crate::engine::channels::reference(raw);
+    }
+    let raw = raw.trim().strip_prefix("nostr:").unwrap_or(raw.trim());
+    if is_event_id(raw) {
+        return Some((raw.to_owned(), vec![]));
+    }
+    let (target, hints) = match decode_nip19(raw)? {
+        NostrEntity::Npub(pubkey) => (pubkey, None),
+        NostrEntity::Nprofile(pointer) => (
+            pointer.pubkey,
+            pointer.relays.filter(|_| source == p::Source::Profile),
+        ),
+        NostrEntity::Note(id) => (id, None),
+        NostrEntity::Nevent(pointer) => (pointer.id, pointer.relays),
+        NostrEntity::Naddr(pointer) => {
+            if source == p::Source::Thread && pointer.kind != 30023 {
+                return None;
+            }
+            (
+                format!("{}:{}:{}", pointer.kind, pointer.pubkey, pointer.identifier),
+                pointer.relays.filter(|_| source == p::Source::Thread),
+            )
+        }
+        NostrEntity::Nsec(_) => return None,
+    };
+    Some((
+        target,
+        hints
+            .into_iter()
+            .flatten()
+            .filter_map(|url| crate::engine::settings::strict_relay(&url))
+            .take(8)
+            .collect(),
+    ))
 }
