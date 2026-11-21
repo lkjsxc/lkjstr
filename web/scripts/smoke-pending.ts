@@ -101,6 +101,11 @@ export async function pendingChecks(open: Open, check: Check): Promise<void> {
     `${COMPOSE} .outbox`,
     { timeout: 8000 },
   );
+  const sent = page.locator(`${COMPOSE} .csend[data-phase=sent]`);
+  check(
+    'pending: Sent begins at one acceptance while slow relays still answer',
+    (await sent.getAttribute('data-ok')) === '1' && (await sent.getAttribute('data-all')) === '4',
+  );
   check(
     'pending: confirmed, the outlier reads as an ordinary note',
     (await top(page))[0]?.time !== 'sending…',
@@ -150,5 +155,38 @@ export async function pendingChecks(open: Open, check: Check): Promise<void> {
         'kept while editing the refused one',
       ),
   );
+  await post('An unanswered note');
+  const unanswered = page.locator(`${COMPOSE} .cdraft[data-phase=unconfirmed]`);
+  await unanswered.waitFor();
+  check(
+    'pending: without an OK the draft and Home mark are unconfirmed and Retry stays available',
+    (await unanswered.innerText()).includes('No relay has confirmed it yet.') &&
+      (await unanswered.getByRole('button', { name: 'Retry' }).isEnabled()) &&
+      (await sent.count()) === 0 &&
+      (await page
+        .locator(`${HOME} [data-send=unconfirmed]`)
+        .filter({ hasText: 'An unanswered note' })
+        .count()) > 0,
+  );
   await page.context().close();
+
+  const extension = await open({
+    fresh: true,
+    mock: { live: false, slow: { when: 'extension fixture', sign: 13000, relays: 0 } },
+  });
+  await extension.locator(`${COMPOSE} .cwho`).click();
+  const option = extension.locator('.menu button').nth(1);
+  const name = await option.innerText();
+  await option.click();
+  await extension.locator(`${COMPOSE} .cwho`).filter({ hasText: name.trim() }).waitFor();
+  const entry = extension.locator(`${COMPOSE} textarea`);
+  await entry.fill('A slow extension fixture');
+  await entry.press('Control+Enter');
+  const draft = extension.locator(`${COMPOSE} .cdraft[data-phase=signing]`);
+  await draft.getByText('Waiting for the extension…', { exact: true }).waitFor({ timeout: 12500 });
+  check(
+    'pending: an extension still waiting after ten seconds names the extension',
+    await draft.isVisible(),
+  );
+  await extension.context().close();
 }

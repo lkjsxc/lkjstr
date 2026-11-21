@@ -223,7 +223,7 @@ it('settles a publication across remount without overwriting the next ordinary d
   await vi.waitFor(() => expect(x.el.querySelector('.cdraft')).toBeNull());
   expect(loadViewState<{ text: string }>(x.env.instance).text).toBe('next draft');
   expect(next.value).toBe('next draft');
-  expect(x.el.querySelector('[role="status"]')?.textContent).toContain('Delivered');
+  expect(x.el.querySelector('[role="status"]')?.textContent).toContain('Sent');
   off();
 });
 

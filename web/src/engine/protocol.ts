@@ -314,6 +314,7 @@ export type NoteRow = {
   /** Not confirmed by any relay yet (the reader's own note, just sent). */
   readonly pending?: boolean;
   readonly connecting?: boolean;
+  readonly unconfirmed?: boolean;
 };
 
 export type ProfileRow = {

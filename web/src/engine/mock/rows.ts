@@ -97,6 +97,7 @@ export function noteRow(w: World, n: MNote, o: RowOpts): NoteRow {
     thread: o.thread,
     client: n.client,
     pending: n.pending,
+    unconfirmed: n.unconfirmed,
     channel: n.channel
       ? { id: n.channel, name: w.state.channels.find((c) => c.id === n.channel)?.name ?? '' }
       : undefined,

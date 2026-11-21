@@ -8,13 +8,15 @@ import { ability, failureText } from './can.ts';
 import { draftButtons, draftMedia, draftText } from './draft-row.ts';
 import { faceButton, nameButton, nipMark } from './parts.ts';
 import type { ViewEnv } from './registry.ts';
+import { type Asking, waitKey } from './send-state.ts';
 
 export type HomeDraft = {
   readonly key: string;
   readonly draft: Draft;
   readonly author: Author;
   readonly at: number;
-  readonly remote: boolean;
+  /** An extension or remote signer, which may be waiting on the reader. */
+  readonly asks?: Asking;
   retry(): void;
   discard(): void;
   release(): void;
@@ -57,10 +59,10 @@ export function homeDraftForEdit(key: string | undefined, account: string): Home
 }
 
 // From Post until the verified note takes its place, the draft carries the Sending mark a signed note carries, however
-// long signing takes: the reader sees one steady state. Only a remote signer still waiting after ten seconds says so,
-// since the reader can act on it there. `data-phase` stays for the checks.
+// long signing takes: the reader sees one steady state. Only an extension or remote signer still waiting after ten
+// seconds says so, since the reader can act on it there. `data-phase` and `data-event` stay for the checks.
 function renderDraft(entry: HomeDraft, env: ViewEnv): HTMLElement {
-  const { author, draft, failure, remote, signed, waiting } = entry;
+  const { asks, author, draft, failure, signed, waiting } = entry;
   const phase = failure ? 'failed' : signed ? 'sending' : 'signing';
   return h(
     'article',
@@ -68,6 +70,7 @@ function renderDraft(entry: HomeDraft, env: ViewEnv): HTMLElement {
       class: `note home-draft ${failure ? 'cdraft' : 'pending'}`,
       'data-draft': entry.key,
       'data-phase': phase,
+      'data-event': signed ?? null,
     },
     h(
       'div',
@@ -84,7 +87,7 @@ function renderDraft(entry: HomeDraft, env: ViewEnv): HTMLElement {
           h(
             'time',
             { title: fullTime(entry.at) },
-            failure ? '' : t(!signed && remote && waiting ? 'account.busy.remote' : 'note.sending'),
+            failure ? '' : t((!signed && waiting && waitKey(asks)) || 'note.sending'),
           ),
         ),
         h('div', { class: 'content' }, draftText(draft, env), draftMedia(draft)),

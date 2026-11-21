@@ -43,7 +43,7 @@ it('redraws a late result and removes its unanswered row without changing the ne
     { url: 'wss://b.test/', state: 'timeout' },
   ]);
   await vi.waitFor(() =>
-    expect(x.el.querySelector('[role="status"]')?.textContent).toContain('Delivered to 1 of 2'),
+    expect(x.el.querySelector('[role="status"]')?.textContent).toContain('Sent · 1 of 2'),
   );
   const status = x.el.querySelector('[role="status"]')!;
   expect(status.textContent).toContain('b.test/: no answer yet');
@@ -55,7 +55,7 @@ it('redraws a late result and removes its unanswered row without changing the ne
     { url: 'wss://a.test/', state: 'ok' },
     { url: 'wss://b.test/', state: 'ok' },
   ]);
-  expect(status.textContent).toContain('Delivered to 2 of 2');
+  expect(status.textContent).toContain('Sent · 2 of 2');
   expect(status.textContent).not.toContain('b.test');
   expect(field.value).toBe('next draft');
   expect(x.signal()?.aborted).toBe(false);
@@ -104,17 +104,17 @@ it('keeps late updates when a pending composer remounts before its first result'
   expect(x.signal()?.aborted).toBe(false);
   const off = mountCompose(x.el, x.env);
   await vi.waitFor(() =>
-    expect(x.el.querySelector('[role="status"]')?.textContent).toContain('Delivered to 1 of 2'),
+    expect(x.el.querySelector('[role="status"]')?.textContent).toContain('Sent · 1 of 2'),
   );
   x.late([
     { url: 'wss://a.test/', state: 'ok' },
     { url: 'wss://b.test/', state: 'ok' },
   ]);
-  expect(x.el.querySelector('[role="status"]')?.textContent).toContain('Delivered to 2 of 2');
+  expect(x.el.querySelector('[role="status"]')?.textContent).toContain('Sent · 2 of 2');
   off();
   expect(x.signal()?.aborted).toBe(true);
 });
-it('updates the sending count and unanswered rows before the first result', async () => {
+it('updates the sending count while other relays are still answering', async () => {
   setLang('en');
   const relays: Delivery[] = [
     { url: 'wss://a.test/', state: 'ok' },
@@ -123,7 +123,7 @@ it('updates the sending count and unanswered rows before the first result', asyn
   const x = start(relays);
   x.late(relays);
   expect(x.el.querySelector('[role="status"]')?.textContent).toContain('Sending… 1 of 2');
-  expect(x.el.querySelector('[role="status"]')?.textContent).toContain('no answer yet');
+  expect(x.el.querySelector('[role="status"]')?.textContent).not.toContain('no answer yet');
   await Promise.resolve();
   x.off();
 });

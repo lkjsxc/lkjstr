@@ -4,29 +4,39 @@ import { h } from '../shared/h.ts';
 import { t } from '../shared/i18n.ts';
 import { kv } from '../shared/storage.ts';
 import { loadViewState } from '../shared/view-state.ts';
-import { failureText } from './can.ts';
 import { draftButtons, draftMedia, draftText } from './draft-row.ts';
 import { type HomeDraft, hasHomeDraft, removeHomeDraft, showHomeDraft } from './home-drafts.ts';
 import { ownPublished } from './own-published.ts';
 import { toast } from './parts.ts';
 import type { ViewEnv } from './registry.ts';
+import { asking, sendClass, sendPhase, sendWords, waitKey } from './send-state.ts';
 
 export type ChannelDraft = {
   as: string;
   draft: Draft;
   error?: Failure;
   delivery?: readonly Delivery[];
+  /** The signed note's id, once the engine has it; a retry signs anew. */
+  signed?: string;
   homeKey?: string;
   homeAt?: number;
 };
 type Watch = {
   draw(): void;
-  delivery(relays: readonly Delivery[], final: boolean, error?: Failure): void;
+  delivery(
+    relays: readonly Delivery[],
+    final: boolean,
+    error?: Failure,
+    id?: string,
+    ms?: number,
+  ): void;
 };
 type Box = {
   id: string;
   drafts: ChannelDraft[];
   busy: Set<ChannelDraft>;
+  /** Sends whose extension or remote signer has kept the reader waiting ten seconds (bound: `busy`). */
+  waiting: Set<ChannelDraft>;
   listeners: Set<Watch>;
   /** Each send follows its own late answers (bound: the drafts here, plus the latest once settled). */
   watches: Map<ChannelDraft, AbortController>;
@@ -63,6 +73,7 @@ export function createChannelOutbox(
       id: crypto.randomUUID(),
       drafts: saved.drafts ?? legacy,
       busy: new Set(),
+      waiting: new Set(),
       listeners: new Set(),
       watches: new Map(),
     };
@@ -70,7 +81,7 @@ export function createChannelOutbox(
     kv.set(`view:${key}`, { id: box.id, drafts: box.drafts });
   }
   const currentBox = box;
-  const { id, drafts, busy, listeners } = currentBox;
+  const { id, drafts, busy, waiting, listeners } = currentBox;
   const release = (): void => {
     if (busy.size || listeners.size || drafts.some((item) => hasHomeDraft(item.homeKey))) return;
     for (const watch of currentBox.watches.values()) watch.abort();
@@ -97,34 +108,14 @@ export function createChannelOutbox(
     el.replaceChildren(
       ...drafts.map((item) => {
         const pending = busy.has(item);
-        const unknown =
-          !pending && item.delivery?.some((r) => r.state === 'timeout' || r.state === 'pending');
+        const phase = sendPhase(pending, item.signed, item.delivery);
+        const who = waiting.has(item) ? waitKey(asking(signerOf(item))) : undefined;
         return h(
           'div',
-          { class: 'cresult cdraft' },
+          { class: 'cresult cdraft', 'data-phase': phase, 'data-event': item.signed ?? null },
           draftText(item.draft, env),
           ...draftMedia(item.draft),
-          unknown
-            ? null
-            : h(
-                'div',
-                { class: pending ? 'muted' : 'error' },
-                pending
-                  ? t('compose.pending')
-                  : item.error
-                    ? failureText(item.error)
-                    : t('compose.retained'),
-              ),
-          item.delivery?.length
-            ? h(
-                'div',
-                null,
-                t(pending ? 'compose.sending' : 'compose.delivered', {
-                  ok: item.delivery.filter((r) => r.state === 'ok').length,
-                  all: item.delivery.length,
-                }),
-              )
-            : null,
+          h('div', { class: sendClass(phase) }, sendWords(phase, item.delivery, item.error, who)),
           draftButtons(
             pending,
             () => void send(item),
@@ -138,15 +129,18 @@ export function createChannelOutbox(
     );
     changed();
   };
+  const accountOf = (item: ChannelDraft) =>
+    env.engine.accounts.get().accounts.find((a) => a.author.pubkey === item.as);
+  const signerOf = (item: ChannelDraft) => accountOf(item)?.signer;
   const homeEntry = (item: ChannelDraft): HomeDraft | undefined => {
-    const account = env.engine.accounts.get().accounts.find((a) => a.author.pubkey === item.as);
+    const account = accountOf(item);
     if (item.draft.channel || !account) return;
     return {
       key: (item.homeKey ??= crypto.randomUUID()),
       at: (item.homeAt ??= Date.now()),
       draft: item.draft,
       author: account.author,
-      remote: account.signer === 'remote',
+      asks: asking(account.signer),
       retry: () => void send(item),
       discard: () => remove(item),
       release,
@@ -162,16 +156,26 @@ export function createChannelOutbox(
     const watch = new AbortController();
     currentBox.watches.set(item, watch);
     currentBox.latest = item;
+    item.signed = item.error = item.delivery = undefined;
+    const pressed = performance.now();
+    let sentMs: number | undefined;
     let entry = homeEntry(item);
     if (entry) showHomeDraft(entry);
-    const remote = entry?.remote
-      ? setTimeout(() => {
-          if (entry && !entry.signed) showHomeDraft((entry = { ...entry, waiting: true }));
-        }, 10000)
-      : undefined;
+    const asks =
+      entry && asking(signerOf(item))
+        ? setTimeout(() => {
+            if (item.signed) return;
+            waiting.add(item);
+            if (entry) showHomeDraft((entry = { ...entry, waiting: true }));
+            notify();
+          }, 10000)
+        : undefined;
     let final = false;
-    const show: Watch['delivery'] = (...args) => {
-      if (currentBox.latest === item && !watch.signal.aborted) delivered(...args);
+    const show = (relays: readonly Delivery[], settled: boolean, error?: Failure): void => {
+      if (settled && sentMs === undefined && relays.some((r) => r.state === 'ok'))
+        sentMs = performance.now() - pressed;
+      if (currentBox.latest === item && !watch.signal.aborted)
+        delivered(relays, settled, error, item.signed, sentMs);
     };
     show([], false);
     notify();
@@ -179,8 +183,11 @@ export function createChannelOutbox(
       { a: 'publish', as: item.as, what: { k: 'note', draft: item.draft } },
       {
         signed(id) {
-          clearTimeout(remote);
+          clearTimeout(asks);
+          item.signed = id;
+          waiting.delete(item);
           if (entry) showHomeDraft((entry = { ...entry, signed: id }));
+          notify();
         },
         fallback() {
           announceDefaults(env);
@@ -195,8 +202,10 @@ export function createChannelOutbox(
         },
       },
     );
-    clearTimeout(remote);
+    clearTimeout(asks);
     busy.delete(item);
+    waiting.delete(item);
+    item.signed ??= r.id;
     if (
       entry &&
       r.error &&

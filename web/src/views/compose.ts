@@ -16,6 +16,7 @@ import { createWho } from './compose-who.ts';
 import { emojiTag, openEmojiPicker } from './emoji-picker.ts';
 import { homeDraftForEdit } from './home-drafts.ts';
 import type { ViewEnv } from './registry.ts';
+import { sendLine } from './send-state.ts';
 
 type State = {
   text?: string;
@@ -182,27 +183,16 @@ export function mountCompose(
   const outbox = createChannelOutbox(env, state.outbox ?? [], ready, showDelivery, restore);
   state.outbox = undefined;
   const media = createComposeMedia(thumbs, env, state, save, ready);
-  function showDelivery(relays: readonly Delivery[], final: boolean, error?: Failure): void {
+  function showDelivery(
+    relays: readonly Delivery[],
+    final: boolean,
+    error?: Failure,
+    id?: string,
+    ms?: number,
+  ): void {
     if (error) return replaceChildren(result, h('div', { class: 'error' }, failureText(error)));
     if (!relays.length) return replaceChildren(result);
-    const ok = relays.filter((r) => r.state === 'ok').length;
-    const failed = relays.filter((r) => r.state === 'failed');
-    const unanswered = relays.filter((r) => r.state === 'pending' || r.state === 'timeout');
-    replaceChildren(
-      result,
-      h(
-        'div',
-        { class: final && failed.length === relays.length ? 'error' : '' },
-        t(final ? 'compose.delivered' : 'compose.sending', { ok, all: relays.length }),
-      ),
-      [...failed, ...unanswered].map((r) =>
-        h(
-          'div',
-          { class: 'muted' },
-          `${r.url.replace(/^wss:\/\//, '')}: ${r.state === 'failed' ? (r.message ?? '') : t('compose.noAnswer')}`,
-        ),
-      ),
-    );
+    replaceChildren(result, sendLine(relays, final, id, ms));
   }
   function send(): void {
     ready();

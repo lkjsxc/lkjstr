@@ -2,28 +2,16 @@
 
 import { serverAddress } from '../../shared/address.ts';
 import { reactionLabel } from '../../shared/reactions.ts';
-import type { Action, Delivery, Draft, Failure, FromEngine, ToEngine } from '../protocol.ts';
+import type { Action, Draft, Failure, FromEngine, ToEngine } from '../protocol.ts';
 import { channelAct, channelTouched, chatter } from './channels.ts';
 import type { Core } from './engine.ts';
 import { FILLER } from './fixtures-notes.ts';
 import { byHandle, byPubkey, byRef, type Person, SELF } from './people.ts';
 import { retryLists } from './private-lists.ts';
+import { createDelivery } from './publication.ts';
 import { answers, isKnown, relayUrl } from './relays.ts';
 import { createUploads } from './uploads.ts';
 import { vaultAct } from './vault.ts';
-
-/** How the mock's write relays answer a publish: two at once, one slowly, one with a refusal. */
-const RELAYS: readonly (readonly [
-  url: string,
-  ms: number,
-  state: Delivery['state'],
-  message?: string,
-])[] = [
-  ['wss://relay.example.jp', 180, 'ok'],
-  ['wss://nos.example.net', 420, 'ok'],
-  ['wss://slow.example.org', 2400, 'ok'],
-  ['wss://down.example.net', 900, 'failed', 'connection refused'],
-];
 
 export function createActions(core: Core) {
   const { world, post, later } = core;
@@ -32,28 +20,8 @@ export function createActions(core: Core) {
   const fail = (req: string, code: Failure['code'], message?: string): void =>
     post({ t: 'result', req, ok: false, error: { code, message } });
 
-  /** Plays the per-relay answers of a publish (`late`: that much later each), then the result. */
-  const deliver = (
-    req: string,
-    extra: { id?: string } = {},
-    after?: () => void,
-    late = 0,
-  ): void => {
-    const relays: Delivery[] = RELAYS.map(([url]) => ({ url, state: 'pending' }));
-    post({ t: 'delivery', req, relays: [...relays] });
-    RELAYS.forEach(([url, ms, state, message], i) =>
-      later(ms + late, () => {
-        relays[i] = { url, state, message };
-        post({ t: 'delivery', req, relays: [...relays] });
-        if (i === 1) after?.(); // two relays have it: no longer pending
-        if (relays.every((r) => r.state !== 'pending'))
-          done(req, { delivery: [...relays], ...extra });
-      }),
-    );
-  };
-
+  const deliver = createDelivery(core);
   const uploads = createUploads(core);
-
   /** Signs a note (it arrives, pending, in the reader's lists) and sends it. */
   function sign(
     req: string,
@@ -81,7 +49,22 @@ export function createActions(core: Core) {
     core.arrived(n);
     if (n.re) core.changed(n.re);
     if (n.channel) channelTouched(core, n.channel);
-    deliver(req, { id: n.id }, () => ((n.pending = false), core.changed(n.id)), late);
+    const outcome = /\bunanswered\b/i.test(text)
+      ? 'unanswered'
+      : text.includes('all relays refuse')
+        ? 'refused'
+        : 'normal';
+    deliver(
+      req,
+      { id: n.id },
+      () => {
+        n.pending = false;
+        if (outcome !== 'normal' && !n.channel) n.unconfirmed = true;
+        core.changed(n.id);
+      },
+      late,
+      outcome,
+    );
   }
 
   function run(req: string, a: Action): void {

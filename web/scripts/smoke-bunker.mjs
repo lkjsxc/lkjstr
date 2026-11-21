@@ -34,9 +34,7 @@ async function remote(options, secret) {
     await signerFace(page, `NIP-46 ${secret} sign-in`, check);
     const text = `bunker ${secret} before reload`;
     await post(page, text);
-    await page.waitForFunction(() =>
-      [...document.querySelectorAll('.cresult')].some((e) => e.textContent.includes('Delivered')),
-    );
+    await page.waitForFunction(() => Boolean(document.querySelector('.csend[data-phase=sent]')));
     check(
       `NIP-46 signs ${secret ? 'with' : 'without'} secret`,
       fake.published.some((e) => e.pubkey === bunker.pubkey && e.content === text),
@@ -48,9 +46,7 @@ async function remote(options, secret) {
     await signerFace(page, `NIP-46 ${secret} reload`, check);
     const reloaded = `bunker ${secret} after reload`;
     await post(page, reloaded);
-    await page.waitForFunction(() =>
-      [...document.querySelectorAll('.cresult')].some((e) => e.textContent.includes('Delivered')),
-    );
+    await page.waitForFunction(() => Boolean(document.querySelector('.csend[data-phase=sent]')));
     check(
       `NIP-46 reload reuses authorized credentials ${secret}`,
       fake.published.some((e) => e.pubkey === bunker.pubkey && e.content === reloaded) &&
@@ -109,9 +105,7 @@ async function remote(options, secret) {
       .filter({ hasText: 'keep bunker outage draft' })
       .getByRole('button', { name: 'Retry', exact: true })
       .click();
-    await page.waitForFunction(() =>
-      [...document.querySelectorAll('.cresult')].some((e) => e.textContent.includes('Delivered')),
-    );
+    await page.waitForFunction(() => Boolean(document.querySelector('.csend[data-phase=sent]')));
     check(
       `NIP-46 recovers without new authorization ${secret}`,
       fake.published.some((e) => e.content === 'keep bunker outage draft'),

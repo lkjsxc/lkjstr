@@ -116,7 +116,8 @@ describe('mock engine', () => {
     expect((rows[0] as NoteRow).pending).toBe(false);
     const result = last('result');
     expect(result?.ok).toBe(true);
-    expect(result?.delivery?.map((d) => d.state)).toEqual(['ok', 'ok', 'ok', 'failed']);
+    expect(result?.delivery?.map((d) => d.state)).toEqual(['ok', 'pending', 'pending', 'pending']);
+    expect(last('delivery')?.relays.map((d) => d.state)).toEqual(['ok', 'ok', 'ok', 'failed']);
     expect(of('delivery').length).toBeGreaterThan(2);
   });
 

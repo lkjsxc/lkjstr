@@ -7,7 +7,6 @@ import { toneUrl, VIDEO, VIDEO_URL } from './fixtures-media.ts';
 import { FILLER, type MediaSpec, NOTES, type NoteSpec } from './fixtures-notes.ts';
 import { byHandle, EMOJI, FOLLOWING, PEOPLE, type Person } from './people.ts';
 import { initialRelays } from './relays.ts';
-
 export type React = { count: number; mine: boolean };
 export type MNote = {
   readonly id: string;
@@ -28,6 +27,7 @@ export type MNote = {
   readonly hidden?: string;
   readonly client?: string;
   pending?: boolean;
+  unconfirmed?: boolean;
   /** A channel message (kind 42): the channel's id. */
   readonly channel?: string;
 };

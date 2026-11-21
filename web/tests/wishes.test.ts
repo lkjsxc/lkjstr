@@ -220,9 +220,9 @@ it('clears an earlier delivery result when a new post starts', async () => {
   };
   send('first');
   await Promise.resolve();
-  expect(x.el.querySelector('.cresult')?.textContent).toContain('Delivered');
+  expect(x.el.querySelector('.cresult')?.textContent).toContain('Sent');
   send('second');
-  expect(x.el.querySelector('.cresult')?.textContent).not.toContain('Delivered');
+  expect(x.el.querySelector('.cresult')?.textContent).not.toContain('Sent');
   expect(x.el.querySelector('.outbox')?.textContent).toContain('second');
   finish({ t: 'result', req: 'two', ok: true });
   await Promise.resolve();

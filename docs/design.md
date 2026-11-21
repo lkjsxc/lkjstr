@@ -203,14 +203,15 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
   a name, NIP-05 address or npub narrows or finds one. Arrows with Enter or Tab, or a tap, choose; Escape closes. No match
   is one quiet line and Enter stays a new line. Chosen people are chips under the field, and a waiting or failed draft
   already shows them as the links the published note will have.
-  Delivery counts follow late answers, each post in flight its own; unanswered rows are neutral and disappear on confirmation. Only final all-refused delivery is red.
+- Sent appears on the first accepting relay answer. Each post keeps its own count as later answers arrive. The composer lists at most five
+  refused or unanswered relays and points to the remaining count. Without any acceptance, the unconfirmed draft keeps Retry, Edit and Remove.
 - Pressing Post empties the field and leaves the caret in it at once, whatever the signer; what is being sent is shown below, and a failure keeps its text.
 - At Post, Home shows the retained draft at once with the Sending mark and the room of an action row, as a signed note: a slow
-  signer looks like any send. Only a remote signer still waiting after ten seconds gets the remote waiting mark. Refused or failed
+  signer looks like any send. An extension or remote signer still waiting after ten seconds gets its own waiting mark. Refused or failed
   signing keeps the draft with Retry, Edit and discard. The verified event takes the draft's place, by its exact id, without moving it.
 - A signed note appears locally in Home, the author's profile and its thread with the existing Sending mark. At the head it follows the live list.
   While reading farther down, the new-notes pill counts arrivals above the held row and says "Your note" with an up arrow
-  when the newest above is the reader's own. Pressing the pill returns to the top. Confirmation updates the same row in place.
+  when the newest above is the reader's own. Pressing the pill returns to the top. The same row shows its time after confirmation, or remains marked unconfirmed.
 - `@` and letters offer people under the caret: follows first; Enter takes one.
 - One emoji picker serves the composer, reactions and messages ([interface-emoji.md](interface-emoji.md)): search
   and tone, categories, then frequently used, the custom tab (own list and sets) and the Unicode categories. Its strip at the foot

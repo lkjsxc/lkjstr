@@ -383,9 +383,7 @@ try {
     .locator('.pane.cur .view[data-kind="compose"]:visible')
     .getByRole('button', { name: 'Post', exact: true })
     .click();
-  await page.waitForFunction(() =>
-    [...document.querySelectorAll('.cresult')].some((e) => e.textContent?.includes('Delivered')),
-  );
+  await page.waitForFunction(() => Boolean(document.querySelector('.csend[data-phase=sent]')));
   check(
     'note signed and published',
     fake.published.some((e) => e.kind === 1 && e.content === text),

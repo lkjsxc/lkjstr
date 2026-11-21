@@ -1,9 +1,8 @@
 // A note, drawn from the engine's view model exactly as it arrives. A press on a person opens their profile, on the
 // text the thread, on the time the author's Home then, on a quoted card the quoted note: the same everywhere.
 import type { NoteRow } from '../engine/protocol.ts';
-import { noteTime } from '../shared/format.ts';
 import { type Child, h } from '../shared/h.ts';
-import { getLang, t } from '../shared/i18n.ts';
+import { t } from '../shared/i18n.ts';
 import { icon } from '../shared/icons.ts';
 import { readNoteState, writeNoteState } from '../shared/note-state.ts';
 import { patchActContext } from './act-context.ts';
@@ -12,19 +11,11 @@ import { actionRow, reactionChips } from './note-actions.ts';
 import { stableNoteWidths } from './note-fit-geometry.ts';
 import { mediaGrid } from './note-media.ts';
 import { quoteCard } from './note-quote.ts';
-import { compactBody, lookOf, threadClass, threadMark, threadTime } from './note-thread.ts';
+import { compactBody, lookOf, threadClass, threadMark } from './note-thread.ts';
+import { deliveryMark, timeOf } from './note-time.ts';
 import { displayName, faceButton, how, nameButton, nipMark, plainName, segments } from './parts.ts';
 import type { ViewEnv } from './registry.ts';
 import { momentTime } from './their-home.ts';
-
-const timeOf = (row: NoteRow, env: ViewEnv, dated: boolean): Child => {
-  if (row.pending) return t(row.connecting ? 'note.connecting' : 'note.sending');
-  const relative = env.settings.get().relativeTime;
-  if (row.thread && !relative) return threadTime(row.at);
-  // Absolute dates compare with the divider's local day; relative ages use the current time.
-  const now = dated && !relative ? (row.repostedBy?.at ?? row.at) : Date.now();
-  return noteTime(row.at, now, { relative, lang: getLang() });
-};
 
 /** Long text folds by whole lines; the button appears only when something is actually cut off. */
 function fold(text: HTMLElement): void {
@@ -186,6 +177,7 @@ export function renderNote(row: NoteRow, env: ViewEnv, dated = false): HTMLEleme
     {
       class: `note${threadClass(row)}${row.pending ? ' pending' : ''}`,
       'data-note': row.id,
+      'data-send': deliveryMark(row) ?? null,
       'data-previews': row.previews ? '' : null,
       'data-instance': env.instance,
     },
@@ -228,6 +220,7 @@ export const bodySig = (row: NoteRow): string =>
     author: 0,
     pending: 0,
     connecting: 0,
+    unconfirmed: 0,
     counts: 0,
     reactions: 0,
     mine: 0,
@@ -242,6 +235,9 @@ export function patchNote(el: HTMLElement, row: NoteRow, env: ViewEnv, dated = f
   if (!main) return;
   patchActContext(el, row, env);
   el.classList.toggle('pending', row.pending === true);
+  const delivery = deliveryMark(row);
+  if (delivery) el.dataset.send = delivery;
+  else delete el.dataset.send;
   const was = main.querySelector<HTMLElement>(':scope > .nhead');
   const name = was?.querySelector('.name');
   const keep = name !== null && name === document.activeElement;

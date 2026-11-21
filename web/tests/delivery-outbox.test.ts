@@ -56,7 +56,14 @@ for (const remount of [false, true])
         delivery.mockClear();
         const confirmed: Delivery[] = relays.map((relay) => ({ ...relay, state: 'ok' }));
         receive({ t: 'delivery', req: newer!.req, relays: confirmed });
-        if (remount) expect(delivery).toHaveBeenCalledWith(confirmed, true);
+        if (remount)
+          expect(delivery).toHaveBeenCalledWith(
+            confirmed,
+            true,
+            undefined,
+            undefined,
+            expect.any(Number),
+          );
         else expect(delivery).not.toHaveBeenCalled();
         box.dispose();
         await Promise.resolve();

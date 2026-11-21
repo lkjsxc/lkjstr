@@ -13,6 +13,7 @@ import { emojiShots } from './shots-emoji.ts';
 import { emojiCustomShots } from './shots-emoji-custom.ts';
 import { keysShots } from './shots-keys.ts';
 import { looksShots } from './shots-looks.ts';
+import { sendingShots } from './shots-sending.ts';
 import { threadShots } from './shots-thread.ts';
 
 const here = new URL('..', import.meta.url).pathname;
@@ -212,6 +213,8 @@ try {
             .click();
           await page.waitForSelector('.epick .ecell');
         });
+        if ((width === 1440 && theme === 'dark') || (width === 390 && theme === 'light'))
+          await sendingShots(scene);
         await scene('media', '/', async (page) => {
           await page.locator('.mbox:not(.audio)').first().click();
           await page.waitForSelector(
