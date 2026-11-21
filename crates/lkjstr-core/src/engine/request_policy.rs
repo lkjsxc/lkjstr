@@ -53,6 +53,12 @@ impl Network {
                             "visible"
                         },
                     )
+                } else if let Some(sub) = crate::engine::time_window_older::view_owner(member) {
+                    if self.focused_sub.as_deref() == Some(sub) {
+                        (0, "focused")
+                    } else {
+                        (1, "history")
+                    }
                 } else if primary && self.focused_sub.as_ref() == Some(member) {
                     (0, "focused")
                 } else if primary && q.is_some_and(|q| q.source == Source::Notifications) {

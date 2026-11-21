@@ -95,8 +95,8 @@ pub enum Output {
         at: u64,
         #[serde(skip_serializing_if = "Option::is_none")]
         key: Option<String>,
-        newer: &'static str,
-        older: &'static str,
+        newer: crate::engine::protocol::TimeEdge,
+        older: crate::engine::protocol::TimeEdge,
         #[serde(rename = "followList", skip_serializing_if = "Option::is_none")]
         follow_list: Option<crate::engine::protocol::FollowList>,
     },

@@ -33,6 +33,8 @@ export async function absoluteTimeWindow({page, send, wait, check, note, signer,
       rows.some(row=>row.key===reposted&&row.repostedBy?.at===at);
   },{seed,ids:notes.map(event=>event.id),reposted:notes[1].id,at:unrelated.created_at*1000});
   await send({t:'close',sub:seed});
+  const remoteOnly = await request({pubkey:note.pubkey,kind:1,tags:[],created_at:at-9,content:'older relay-only'});
+  fake.add(remoteOnly);
   await send({t:'open',sub,visible:false,query:{source:'their-home',pubkey:owner.pubkey}});
   await seek(at*1000+999,1,3);
   await hint([sub]);
@@ -46,9 +48,10 @@ export async function absoluteTimeWindow({page, send, wait, check, note, signer,
   fake.add(list);
   const sorted = [notes[4],...notes.slice(2,4).sort((a,b)=>b.id.localeCompare(a.id)),notes[0]];
   await wait(({sub,id})=>window.messages.some(m=>m.t==='timeWindow'&&m.sub===sub&&m.followList?.id===id),{sub,id:list.id});
+  await wait(({sub,id})=>window.messages.some(m=>m.t==='timeWindow'&&m.sub===sub&&m.followList?.id===id&&m.older==='end'),{sub,id:list.id});
   const observed = await report();
-  check('absolute window names the actual follow list and leaves both relay edges unresolved',
-    observed.key===sorted[1].id&&observed.at===at*1000+999&&observed.newer==='cache-only'&&observed.older==='cache-only'&&observed.followList.at===list.created_at*1000);
+  check('absolute window names the verified list and settles only the older relay edge',
+    observed.key===sorted[1].id&&observed.at===at*1000+999&&observed.newer==='cache-only'&&observed.older==='end'&&observed.followList.at===list.created_at*1000);
 
   await seek(at*1000,1,3);
   await waitReport(at*1000);
@@ -56,13 +59,18 @@ export async function absoluteTimeWindow({page, send, wait, check, note, signer,
   check('absolute window selects nearest rows on both sides in timestamp and id order',
     window.rows.map(r=>r.key).join(',')===sorted.map(e=>e.id).join(',')&&!window.atTop&&!window.atBottom);
 
+  await seek(at*1000,1,4);
+  await wait(({sub,id})=>window.messages.some(m=>m.t==='rows'&&m.sub===sub&&m.rows.some(r=>r.key===id)),{sub,id:remoteOnly.id});
+  check('same-pivot growth includes a note read only from the older relay span',
+    (await rows()).rows.at(-1)?.key===remoteOnly.id&&(await report()).at===at*1000);
+
   await seek(repost.created_at*1000,0,1);
   await waitReport(repost.created_at*1000);
   const seated = (await rows()).rows[0];
   check('signed-out Their Home seats the scoped rendered repost time',
     (await report()).key===seated?.key&&seated.key===notes[1].id&&
     seated.repostedBy?.at===repost.created_at*1000&&seated.at===notes[1].created_at*1000);
-  check('absolute cache window retains no followee note history filter',
-    !fake.activeFilters().some(f=>f.authors?.includes(note.pubkey)&&f.kinds?.includes(1)));
+  check('absolute window never retains an unbounded followee note head',
+    !fake.activeFilters().some(f=>f.authors?.includes(note.pubkey)&&f.kinds?.includes(1)&&f.until===undefined));
   await send({t:'close',sub});
 }

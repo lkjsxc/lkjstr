@@ -10,7 +10,7 @@ impl Engine {
         self.release_local_read_owner(&sub, now);
         self.network.reset_observation(&sub);
         self.outgoing
-            .retain(|out| !matches!(out, Output::Status { sub: old, .. } if old == &sub));
+            .retain(|out| !matches!(out, Output::Status { sub: old, .. } | Output::TimeWindow { sub: old, .. } if old == &sub));
         self.metrics.served_from_cache +=
             super::list_events::events(&self.store, &query, &self.private_lists)
                 .len()

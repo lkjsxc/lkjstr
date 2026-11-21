@@ -12,7 +12,8 @@ impl Engine {
         wants.extend(self.nearby_wants());
         wants.extend(self.discovery_wants());
         wants.extend(self.channel_action_wants());
-        for (sub, v) in self.views.iter().filter(|(_, v)| v.visible) {
+        for (sub, v) in self.views.iter_mut().filter(|(_, v)| v.visible) {
+            v.dirty |= v.time_window.is_some();
             if matches!(v.query.source, Source::Relays | Source::Diagnostics) {
                 continue;
             }
@@ -24,6 +25,7 @@ impl Engine {
                 );
                 continue;
             }
+            wants.extend(super::time_window_older::intent(&self.store, sub, v));
             for f in requests(
                 &self.store,
                 &self.network,
@@ -207,8 +209,7 @@ fn requests(
             });
         }
     }
-    let prefetch = crate::prefetch::collect_window(&references, store);
-    let mut ids = prefetch.notes;
+    let mut ids = crate::prefetch::collect_window(&references, store).notes;
     ids.extend(
         visible
             .iter()

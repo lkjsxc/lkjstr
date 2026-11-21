@@ -1,7 +1,7 @@
 //! Structured-clone contract. Keep transport serialization at the host boundary.
 #[path = "protocol_output.rs"]
 mod output;
-pub use output::{FollowList, Output, Patch};
+pub use output::{FollowList, Output, Patch, TimeEdge};
 #[path = "protocol_delivery.rs"]
 mod delivery;
 pub use delivery::Delivery;

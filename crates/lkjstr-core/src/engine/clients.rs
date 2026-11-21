@@ -207,50 +207,34 @@ impl Clients {
             .map(|(id, _)| *id)
             .collect()
     }
-    pub fn output(&self, out: Output) -> Vec<(u64, Output)> {
-        let key = match &out {
+    pub fn output(&self, mut out: Output) -> Vec<(u64, Output)> {
+        let key = match &mut out {
             Output::Rows { sub, .. }
             | Output::Patch { sub, .. }
             | Output::Fresh { sub, .. }
             | Output::TimeWindow { sub, .. }
             | Output::Status { sub, .. }
-            | Output::Diagnostics { sub, .. } => Some(sub.as_str()),
+            | Output::Diagnostics { sub, .. } => sub,
             Output::Sign { req, .. }
             | Output::PublishSigned { req, .. }
             | Output::PublishFallback { req }
             | Output::Delivery { req, .. }
-            | Output::Result { req, .. } => Some(req.as_str()),
-            Output::Error { req, .. } => req.as_deref(),
+            | Output::Result { req, .. }
+            | Output::Error { req: Some(req), .. } => req,
+            Output::Error { req: None, .. } => {
+                return self.clients.keys().map(|id| (*id, out.clone())).collect();
+            }
         };
-        if let Some(key) = key {
-            let Some((id, local)) = key.split_once(':') else {
-                return vec![];
-            };
-            let Ok(id) = id.parse::<u64>() else {
-                return vec![];
-            };
-            if !self.clients.contains_key(&id) {
-                return vec![];
-            }
-            let local = local.to_owned();
-            let mut out = out;
-            match &mut out {
-                Output::Rows { sub, .. }
-                | Output::Patch { sub, .. }
-                | Output::Fresh { sub, .. }
-                | Output::TimeWindow { sub, .. }
-                | Output::Status { sub, .. }
-                | Output::Diagnostics { sub, .. } => *sub = local,
-                Output::Sign { req, .. }
-                | Output::PublishSigned { req, .. }
-                | Output::PublishFallback { req }
-                | Output::Delivery { req, .. }
-                | Output::Result { req, .. } => *req = local,
-                Output::Error { req, .. } => *req = Some(local),
-            }
-            vec![(id, out)]
-        } else {
-            self.clients.keys().map(|id| (*id, out.clone())).collect()
+        let Some((id, local)) = key.split_once(':') else {
+            return vec![];
+        };
+        let Ok(id) = id.parse::<u64>() else {
+            return vec![];
+        };
+        if !self.clients.contains_key(&id) {
+            return vec![];
         }
+        *key = local.to_owned();
+        vec![(id, out)]
     }
 }

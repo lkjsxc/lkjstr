@@ -14,7 +14,9 @@ impl Network {
             .requests
             .iter()
             .filter(|(key, r)| {
-                key.as_str() != id
+                first.owns_older(None)
+                    && r.owns_older(None)
+                    && key.as_str() != id
                     && r.relay == relay
                     && r.live == first.live
                     && !r.sent

@@ -2,7 +2,7 @@
 use super::{
     Engine, View,
     global::Held,
-    protocol::{FollowList, Output, Query, Source},
+    protocol::{FollowList, Output, Query, Source, TimeEdge},
     rows::Row,
     settings::PrivateLists,
     windows::{Selection, reason},
@@ -18,6 +18,7 @@ pub(super) use order::Order;
 pub(super) struct Pivot {
     pub(super) at: u64,
     key: Option<String>,
+    older: TimeEdge,
     follow_list: Option<FollowList>,
 }
 
@@ -51,23 +52,27 @@ impl Engine {
                 sub: sub.into(),
                 at,
                 key: None,
-                supported: false,
+                newer: TimeEdge::Unsupported,
+                older: TimeEdge::Unsupported,
                 follow_list: None,
             });
             return;
         };
         view.anchor = None;
         view.head_through = None;
-        view.reading = None;
+        if view.time_window.as_ref().is_none_or(|pivot| pivot.at != at) {
+            view.reading = None;
+            view.time_window = Some(Pivot {
+                at,
+                key: None,
+                older: TimeEdge::CacheOnly,
+                follow_list: None,
+            });
+        }
         view.before = before.min(800);
         view.after = after.min(800);
         view.history = None;
         view.notification_history = None;
-        view.time_window = Some(Pivot {
-            at,
-            key: None,
-            follow_list: None,
-        });
         self.replan(now);
         self.render(sub, true);
     }
@@ -79,6 +84,7 @@ impl Pivot {
         sub: &str,
         rows: &[Row],
         follow_list: Option<FollowList>,
+        older: TimeEdge,
         full: bool,
         output: &mut Vec<Output>,
     ) {
@@ -87,14 +93,16 @@ impl Pivot {
             .find(|row| row.reposted_at.unwrap_or(row.created_at) <= self.at / 1000)
             .or_else(|| rows.last())
             .map(|row| row.id.clone());
-        if full || self.key != key || self.follow_list != follow_list {
+        if full || self.key != key || self.follow_list != follow_list || self.older != older {
+            self.older = older;
             self.key.clone_from(&key);
             self.follow_list.clone_from(&follow_list);
             output.push(Output::TimeWindow {
                 sub: sub.into(),
                 at: self.at,
                 key,
-                supported: true,
+                newer: TimeEdge::CacheOnly,
+                older,
                 follow_list,
             });
         }

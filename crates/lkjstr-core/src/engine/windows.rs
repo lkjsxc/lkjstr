@@ -138,9 +138,17 @@ impl Engine {
             count: fresh,
             own_head,
         });
+        let owner = super::time_window_older::owner(&self.store, sub, v);
         if let Some(pivot) = &mut v.time_window {
             let follow_list = super::time_window::follow_list(&self.store, &v.query);
-            pivot.report(sub, &items, follow_list, full, &mut self.outgoing);
+            let older = owner.map_or(super::protocol::TimeEdge::CacheOnly, |owner| {
+                let row_time = |row: &rows::Row| row.reposted_at.unwrap_or(row.created_at);
+                let older = items.partition_point(|row| row_time(row) > pivot.at / 1000);
+                let through = items.get(older + v.after - 1).map(row_time);
+                self.network.advance_older(&owner, &self.store, through);
+                self.network.older_edge(&owner, &self.store)
+            });
+            pivot.report(sub, &items, follow_list, older, full, &mut self.outgoing);
         }
         v.at_bottom = at_bottom;
         v.rows = items;

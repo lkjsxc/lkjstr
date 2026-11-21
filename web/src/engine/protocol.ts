@@ -1142,7 +1142,7 @@ export type FromEngine =
       readonly at: Millis;
       readonly key?: RowKey;
       readonly newer: 'cache-only' | 'unsupported';
-      readonly older: 'cache-only' | 'unsupported';
+      readonly older: 'cache-only' | 'unsupported' | 'loading' | 'partial' | 'stalled' | 'end';
       readonly followList?:
         | { readonly state: 'unknown' }
         | { readonly state: 'latest-verified'; readonly at: Millis; readonly id: string };

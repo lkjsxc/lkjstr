@@ -6,7 +6,10 @@ impl Network {
             .requests
             .values()
             .filter(|r| {
-                r.relay == relay && r.sent && lkjstr_protocol::matches_filter(event, &r.filter)
+                r.relay == relay
+                    && r.sent
+                    && lkjstr_protocol::matches_filter(event, &r.filter)
+                    && (r.owns_older(None) || r.received.contains(&event.id))
             })
             .map(|r| r.wire_id.clone())
             .collect();

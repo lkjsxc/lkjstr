@@ -21,6 +21,9 @@ impl PageFrontier {
     pub(in crate::engine) fn iter(&self) -> impl Iterator<Item = &String> {
         self.times.keys()
     }
+    pub(super) fn timestamp(&self, id: &str) -> Option<u64> {
+        self.times.get(id).copied()
+    }
     pub(in crate::engine) fn clear(&mut self) {
         self.times.clear();
         self.oldest = None;

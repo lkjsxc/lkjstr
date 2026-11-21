@@ -30,7 +30,8 @@ pub enum Output {
         sub: String,
         at: u64,
         key: Option<String>,
-        supported: bool,
+        newer: TimeEdge,
+        older: TimeEdge,
         follow_list: Option<FollowList>,
     },
     Sign {
@@ -82,4 +83,15 @@ pub enum Patch {
 pub enum FollowList {
     Unknown,
     LatestVerified { at: u64, id: String },
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum TimeEdge {
+    CacheOnly,
+    Unsupported,
+    Loading,
+    Partial,
+    Stalled,
+    End,
 }

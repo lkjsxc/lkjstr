@@ -188,14 +188,13 @@ The bounded resolution and representative policy follow [interface-acts.md](inte
 - `Draft.emoji[].address?` carries the optional NIP-30 set coordinate into a public note tag.
 - `Publish` reactions take optional `address` (4th custom emoji tag element); deletes take optional `url` for an exact image ('' for text).
 - `NoteRow.thread.parent` (thread source): the id of the note a row answers, also when it is not stored.
-
 Relay Stats add optional firstEventMs, requestUses and readTimeouts: verified first-event latency, session REQ envelopes and bounded read timeout score.
 Inactive routes without retained transport observations report null.
-- Protocol 15 adds absolute `Anchor.at` and `timeWindow` for [cache windows and edge coverage](absolute-time-window.md).
+- Protocol 15 adds absolute `Anchor.at` and `timeWindow` for [absolute windows and edge coverage](absolute-time-window.md).
+- Protocol 15 Their Home adds `loading | partial | stalled | end` on the older `timeWindow` edge.
 Mock-only `EngineConfig.mock.slow` signs one matching note late and delays its relay answers (the pending-UI fixture); the real engine ignores `mock`.
 
 ## Public signing timing
-
 - Optional `act.signingTiming: { at, hidden, boot, restart }` records enqueue for public signing actions. Existing callers can omit it.
 - Optional `stats.signing` reports bounded `recent` and `slow` timings. See [signing-latency.md](signing-latency.md) for stages and retention.
 - Optional `window.headThrough` on a top window retains its delivered tail key while following new rows, up to 6800 rows.

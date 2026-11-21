@@ -76,23 +76,17 @@ impl Session {
                 sub,
                 at,
                 key,
-                supported,
+                newer,
+                older,
                 follow_list,
-            } => {
-                let coverage = if supported {
-                    "cache-only"
-                } else {
-                    "unsupported"
-                };
-                vec![Output::TimeWindow {
-                    sub,
-                    at,
-                    key,
-                    newer: coverage,
-                    older: coverage,
-                    follow_list,
-                }]
-            }
+            } => vec![Output::TimeWindow {
+                sub,
+                at,
+                key,
+                newer,
+                older,
+                follow_list,
+            }],
             p::Output::Sign { req, event } => vec![Output::Sign {
                 action_req: None,
                 req,

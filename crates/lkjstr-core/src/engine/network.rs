@@ -40,6 +40,8 @@ mod metadata;
 mod note_delivery;
 #[path = "network_stats.rs"]
 mod observations;
+#[path = "network_older.rs"]
+mod older;
 #[path = "network_outbox.rs"]
 mod outbox;
 #[path = "network_paging.rs"]
@@ -143,6 +145,7 @@ pub(super) struct Request {
     // At most the transmitted page limit (<= 200) distinct IDs.
     pub received: PageFrontier,
     pub page_limit: usize,
+    pub older_pages: Option<u8>, // Scoped finite page count, including the initial request.
     pub oldest: Option<u64>,
     pub retry_delay: u64,
 }
