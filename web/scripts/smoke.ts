@@ -9,6 +9,7 @@ import { PROTOCOL_VERSION } from '../src/engine/protocol.ts';
 import { dayOf } from '../src/shared/format.ts';
 import { KEYS } from '../src/shared/keys.ts';
 import { browserTmp } from './browser-tmp.ts';
+import { mentionChecks } from './smoke-mentions.ts';
 import { notesChecks } from './smoke-notes.ts';
 import { pendingChecks } from './smoke-pending.ts';
 import { replyChecks } from './smoke-reply.ts';
@@ -94,6 +95,7 @@ async function open(
   given: Record<string, unknown>,
   size = { width: 1440, height: 900 },
   locale = 'en-US',
+  touch = false,
 ): Promise<Page> {
   const { fresh, ...rest } = given;
   const store = fresh
@@ -104,7 +106,12 @@ async function open(
         'layout:guest': tile('g', ['global']),
         ...rest,
       };
-  const ctx = await isolatedContext(browser, { viewport: size, locale, deviceScaleFactor: 1 });
+  const ctx = await isolatedContext(browser, {
+    viewport: size,
+    locale,
+    deviceScaleFactor: 1,
+    hasTouch: touch,
+  });
   await ctx.addInitScript((s) => {
     for (const [k, v] of Object.entries(s))
       if (!localStorage.getItem(`lkjstr:${k}`))
@@ -456,6 +463,10 @@ async function run(browser: Browser): Promise<void> {
   await pendingChecks((given) => open(browser, '/', given), fact);
   await threadChecks((path, given, size) => open(browser, path, given, size), fact);
   await replyChecks((path, given, size) => open(browser, path, given, size), fact);
+  await mentionChecks(
+    (path, given, size, touch) => open(browser, path, given, size, 'en-US', touch),
+    fact,
+  );
   await timeLabelChecks((path, given, size) => open(browser, path, given, size), fact);
   await scrolling(still);
   await filtering(browser, still);

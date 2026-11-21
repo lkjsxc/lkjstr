@@ -67,19 +67,26 @@ it('takes a mention using Tab, shifts it with text, dissolves an edited name, an
     area.setSelectionRange(text.length, text.length);
     area.dispatchEvent(new Event('input'));
   };
+  const chips = () =>
+    [...x.el.querySelectorAll('.mention-preview .mchip .clip')].map((c) => c.textContent).join();
   area.focus();
+  // A bare @ already asks for people: follows and the thread's people, by an empty name.
+  type('@');
+  await Promise.resolve();
+  expect(x.requests.at(-1)?.query).toMatchObject({ source: 'people', text: '' });
+  expect(x.el.querySelector('.mention-menu')?.hasAttribute('hidden')).toBe(false);
   type('@ali');
   await Promise.resolve();
   expect(x.el.querySelector('.mention-menu')?.hasAttribute('hidden')).toBe(false);
   area.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', cancelable: true }));
   expect(area.value).toBe('@Alice ');
-  expect(x.el.querySelector('.mention-preview')?.textContent).toBe('@Alice');
+  expect(chips()).toBe('@Alice');
   area.setRangeText('🌿 ', 0, 0, 'end');
   area.dispatchEvent(new Event('input'));
-  expect(x.el.querySelector('.mention-preview')?.textContent).toBe('@Alice');
+  expect(chips()).toBe('@Alice');
   area.setRangeText('x', 5, 5, 'end');
   area.dispatchEvent(new Event('input'));
-  expect(x.el.querySelector('.mention-preview')?.textContent).toBe('');
+  expect(chips()).toBe('');
   area.dispatchEvent(new CompositionEvent('compositionstart'));
   type('@ali');
   expect(x.el.querySelector('.mention-menu')?.hasAttribute('hidden')).toBe(true);

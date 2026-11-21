@@ -157,6 +157,20 @@ export function select(w: World, q: Query, me: string): Entry[] {
     const thread = w.notes
       .filter((n) => n.id === q.id || n.re === q.id)
       .map((n) => n.by.author.pubkey);
+    // A bare @ (empty text, as in the engine): the target's author, the thread's people, then follows; never me.
+    if (!q.authors && !q.ref && q.text === '') {
+      const target = w.notes.find((n) => n.id === q.id)?.by.author.pubkey;
+      const rank = (p: Person) =>
+        p.author.pubkey === target ? 0 : thread.includes(p.author.pubkey) ? 1 : 2;
+      return PEOPLE.filter(
+        (p) =>
+          p.author.pubkey !== me &&
+          (thread.includes(p.author.pubkey) || w.state.following.has(p.author.pubkey)),
+      )
+        .sort((a, b) => rank(a) - rank(b) || norm(a.author.name).localeCompare(norm(b.author.name)))
+        .slice(0, 6)
+        .map((p) => fixed(personRow(w, p, me)));
+    }
     return PEOPLE.filter((p) =>
       q.authors
         ? q.authors.includes(p.author.pubkey)

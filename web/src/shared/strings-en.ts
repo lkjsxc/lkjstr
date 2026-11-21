@@ -6,6 +6,10 @@ export const en = {
   'compose.saveFailed':
     'The draft could not be saved on this device. Free some space and try again.',
   'mention.lookup': 'Look up {name}',
+  'mention.hint': 'Type a name, NIP-05 address or npub',
+  'mention.none': 'Nobody seen on this device matches “{name}”',
+  'mention.looking': 'Looking up {name}…',
+  'mention.chips': 'Mentions',
   'home.theirs': "{name}'s Home",
   'home.openTheirs': 'Their Home',
   'home.unsupported': 'This engine cannot show another person’s Home yet.',

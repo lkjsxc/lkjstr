@@ -8,6 +8,10 @@ export const ja: Record<keyof typeof en, string> = {
   'compose.saveFailed':
     'この端末に下書きを保存できません。空き容量を増やしてからもう一度お試しください。',
   'mention.lookup': '{name}を探す',
+  'mention.hint': '名前、NIP-05アドレス、npubを入力',
+  'mention.none': '「{name}」に合う人はこの端末で見かけていません',
+  'mention.looking': '{name}を探しています…',
+  'mention.chips': 'メンション',
   'home.theirs': '{name}のホーム',
   'home.openTheirs': 'この人のホーム',
   'home.unsupported': 'このエンジンはまだ他の人のホームを表示できません。',

@@ -1,11 +1,25 @@
+// @mentions in a composer: a bare @ offers the people the reader follows and the thread's people, a name, NIP-05
+// address or npub narrows or finds one, the keyboard or a tap chooses, and chips under the field name who the note
+// will mention. Every composer (Post, the field under a thread's focus, Quote, a channel) mounts this one picker.
 import type { Subscription } from '../engine/client.ts';
-import type { Author, Mention, Row } from '../engine/protocol.ts';
+import type { Author, Mention, Query, Row } from '../engine/protocol.ts';
 import { h } from '../shared/h.ts';
 import { t } from '../shared/i18n.ts';
-import { avatar, plainName } from './parts.ts';
+import {
+  chip,
+  lookupOption,
+  option,
+  placeMenu,
+  type Quiet,
+  quietLine,
+} from './compose-mention-menu.ts';
+import { plainName } from './parts.ts';
 import type { ViewEnv } from './registry.ts';
 
-type State = { mentions?: Mention[]; replyTo?: string };
+type State = { mentions?: Mention[]; replyTo?: string; quote?: string };
+const ADDRESS = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+const PERSON_REF = /^(?:nostr:)?(?:npub1|nprofile1)[a-z0-9]{20,}$/i;
+const fold = (s: string): string => s.normalize('NFKC').toLowerCase();
 export function createMentions(
   area: HTMLTextAreaElement,
   env: ViewEnv,
@@ -14,7 +28,7 @@ export function createMentions(
 ) {
   const el = h('div', { class: 'cinput' }, area);
   const menu = h('div', { class: 'mention-menu', role: 'listbox', hidden: true });
-  const preview = h('div', { class: 'mention-preview muted' });
+  const preview = h('div', { class: 'mention-preview', 'aria-label': t('mention.chips') });
   el.append(menu);
   let previous = area.value;
   let composing = false;
@@ -25,33 +39,23 @@ export function createMentions(
   let end = 0;
   let needle = '';
   let candidates: Author[] = [];
-  let lookup = false;
+  let answered = false;
+  let looking = false;
   let sub: Subscription | undefined;
+  const faces = new Map<string, Author>(); // bound: 32 chosen people, for their chips
   const pasted = new Map<string, { sub: Subscription; author?: Author }>(); // bound: 32 current addresses
-  const hide = (): void => {
-    menu.hidden = true;
+  const lookup = (): boolean => !candidates.length && !looking && ADDRESS.test(needle);
+  const choices = (): number => candidates.length + Number(lookup());
+  const release = (): void => {
     sub?.close();
     sub = undefined;
-    request = '';
   };
-  const position = (): void => {
-    const css = getComputedStyle(area);
-    const marker = h('span', null, '\u200b');
-    const mirror = h(
-      'div',
-      {
-        style: `position:absolute;visibility:hidden;pointer-events:none;white-space:pre-wrap;overflow-wrap:break-word;box-sizing:border-box;width:${area.clientWidth}px;font:${css.font};line-height:${css.lineHeight};padding:${css.padding}`,
-      },
-      area.value.slice(0, area.selectionStart),
-      marker,
-    );
-    el.append(mirror);
-    menu.style.top = `${Math.max(0, marker.offsetTop - area.scrollTop) + (Number.parseFloat(css.lineHeight) || 24)}px`;
-    menu.style.left = `${Math.max(0, Math.min(marker.offsetLeft, area.clientWidth - 300))}px`;
-    mirror.remove();
-    const tile = area.closest('.view')?.getBoundingClientRect();
-    const room = (tile?.bottom ?? innerHeight) - menu.getBoundingClientRect().top - 8;
-    menu.style.maxHeight = `${Math.max(44, Math.min(264, room))}px`;
+  const hide = (): void => {
+    menu.hidden = true;
+    release();
+    request = '';
+    candidates = [];
+    answered = looking = false;
   };
   const take = (author: Author): void => {
     const label = `@${plainName(author)}`;
@@ -63,6 +67,8 @@ export function createMentions(
       label,
       pubkey: author.pubkey,
     });
+    if (faces.size >= 32) faces.delete(faces.keys().next().value ?? '');
+    faces.set(author.pubkey, author);
     previous = area.value;
     closed = area.value;
     hide();
@@ -76,68 +82,44 @@ export function createMentions(
       .filter((r) => r.kind === 'person')
       .map((r) => r.author)
       .slice(0, 6);
-    lookup = !candidates.length && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(needle);
-    at = Math.min(at, Math.max(0, candidates.length + Number(lookup) - 1));
+    answered = true;
+    if (candidates.length) looking = false;
+    at = Math.min(at, Math.max(0, choices() - 1));
     draw();
   };
+  const ask = (query: Query): void => {
+    release();
+    const opened = env.engine.open(query, { rows, patch: () => opened.window('top', 0, 6) });
+    sub = opened;
+    opened.window('top', 0, 6);
+    opened.visible(true);
+  };
   const resolve = (): void => {
-    sub?.close();
-    lookup = false;
-    sub = env.engine.open(
-      { source: 'people', ref: needle },
-      { rows, patch: () => sub?.window('top', 0, 6) },
-    );
-    sub.window('top', 0, 6);
-    sub.visible(true);
+    looking = true;
+    draw();
+    ask({ source: 'people', ref: needle });
   };
+  const quiet = (): Quiet | undefined =>
+    looking ? 'looking' : !needle ? 'hint' : lookup() ? undefined : 'none';
   const draw = (): void => {
+    const why = candidates.length || !answered ? undefined : quiet();
     menu.replaceChildren(
-      ...candidates.map((author, i) =>
-        h(
-          'button',
-          {
-            class: i === at ? 'on' : '',
-            role: 'option',
-            'aria-selected': i === at,
-            tabindex: -1,
-            onpointerdown: (e) => e.preventDefault(),
-            onclick: () => take(author),
-          },
-          avatar(author, 'av sm'),
-          h(
-            'span',
-            { class: 'clip' },
-            h('b', null, plainName(author)),
-            h('small', { class: 'muted' }, author.nip05 ?? ''),
-          ),
-        ),
-      ),
-      ...(lookup
-        ? [
-            h(
-              'button',
-              {
-                class: at === candidates.length ? 'on' : '',
-                role: 'option',
-                'aria-selected': at === candidates.length,
-                onpointerdown: (e) => e.preventDefault(),
-                onclick: resolve,
-              },
-              t('mention.lookup', { name: needle }),
-            ),
-          ]
-        : []),
+      ...candidates.map((author, i) => option(author, i === at, () => take(author))),
+      ...(answered && lookup() ? [lookupOption(needle, at === candidates.length, resolve)] : []),
+      ...(why ? [quietLine(why, needle)] : []),
     );
-    menu.hidden = composing || (!candidates.length && !lookup);
-    if (!menu.hidden) position();
+    menu.hidden = composing || !menu.childElementCount;
+    if (!menu.hidden) placeMenu(menu, area, el);
   };
+  // One chip per person, whether chosen from the menu or pasted as an address.
   const drawPreview = (): void => {
-    preview.replaceChildren(
-      ...(state.mentions ?? []).map((m) => h('span', null, m.label)),
-      ...[...pasted.values()].flatMap((p) =>
-        p.author ? [h('span', null, `@${plainName(p.author)}`)] : [],
-      ),
-    );
+    const people = new Map<string, HTMLElement>();
+    for (const m of state.mentions ?? [])
+      if (!people.has(m.pubkey)) people.set(m.pubkey, chip(m.label, faces.get(m.pubkey)));
+    for (const { author } of pasted.values())
+      if (author && !people.has(author.pubkey))
+        people.set(author.pubkey, chip(`@${plainName(author)}`, author));
+    preview.replaceChildren(...people.values());
   };
   const releasePasted = (): void => {
     for (const item of pasted.values()) item.sub.close();
@@ -184,22 +166,36 @@ export function createMentions(
     )
       return hide();
     const before = area.value.slice(0, area.selectionStart);
-    const found = /(?:^|[\s(])@([^\s@]+(?:@[^\s@]*)?)$/u.exec(before);
-    if (!found || !/^[\p{L}\p{N}]/u.test(found[1] ?? '')) return hide();
-    needle = found[1] ?? '';
+    const found = /(?:^|[\s(])@([^\s@]*(?:@[^\s@]*)?)$/u.exec(before);
+    const typed = found?.[1] ?? '';
+    if (!found || (typed && !/^[\p{L}\p{N}]/u.test(typed))) return hide();
     end = area.selectionStart;
-    start = end - needle.length - 1;
-    const key = `${start}:${needle}`;
+    start = end - typed.length - 1;
+    const key = `${start}:${typed}`;
     if (key === request) return;
-    hide();
-    request = key;
+    // Until the new answer arrives the menu keeps the choices that still fit what is typed, so it does not blink and a
+    // quick Enter cannot take someone the name has already ruled out.
+    const fits = fold(typed);
+    candidates = PERSON_REF.test(typed)
+      ? []
+      : candidates.filter((a) =>
+          [plainName(a), a.nip05 ?? ''].some((v) => fold(v).startsWith(fits)),
+        );
     at = 0;
-    sub = env.engine.open(
-      { source: 'people', text: needle, account: env.engine.me() || undefined, id: state.replyTo },
-      { rows, patch: () => sub?.window('top', 0, 6) },
+    request = key;
+    needle = typed;
+    answered = looking = false;
+    draw();
+    ask(
+      PERSON_REF.test(typed)
+        ? { source: 'people', ref: typed }
+        : {
+            source: 'people',
+            text: typed,
+            account: env.engine.me() || undefined,
+            id: state.replyTo ?? state.quote,
+          },
     );
-    sub.window('top', 0, 6);
-    sub.visible(true);
   };
   // An edit crossing a selected name dissolves that mention; edits elsewhere move the range with the text.
   const adjust = (): void => {
@@ -232,13 +228,14 @@ export function createMentions(
   const key = (e: KeyboardEvent): void => {
     if (composing || e.isComposing || e.keyCode === 229 || menu.hidden || e.ctrlKey || e.metaKey)
       return;
-    const count = candidates.length + Number(lookup);
+    const count = choices();
     if (e.key === 'Escape') {
       e.preventDefault();
       e.stopPropagation();
       closed = area.value;
       hide();
-    } else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+    } else if (!count) return;
+    else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
       e.preventDefault();
       at = (at + (e.key === 'ArrowDown' ? 1 : -1) + count) % count;
       draw();

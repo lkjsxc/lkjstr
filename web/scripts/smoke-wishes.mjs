@@ -118,7 +118,12 @@ export async function wishes({
       });
       const candidate = suggestions.find((r) => r.kind === 'person');
       const prefix = real ? 'eng' : 'ao';
-      await area.fill(`@${prefix}`);
+      // A bare @ opens the picker before any name (owner, 2026-11-21): people to choose, or how to find them.
+      await area.fill('');
+      await area.pressSequentially('@');
+      await page.locator('.mention-menu:not([hidden]) > *').first().waitFor();
+      fact('5 a bare @ opens the person picker', true);
+      await area.pressSequentially(prefix);
       await page.locator('.mention-menu:not([hidden]) [role="option"]').first().waitFor();
       fact(
         '5 at most six local mention choices',
@@ -204,6 +209,20 @@ export async function wishes({
           await events({ kind: 'mentionSent', author: candidate.author, width }),
         );
       }
+      await front(page, 'home');
+      const sent = page.locator(`${view('home')} .note:not(.home-draft)`, {
+        hasText: 'wish queued',
+      });
+      await sent.first().locator('.content > .text .lnk').first().click();
+      await page.locator(`${view('profile')} .profile`).waitFor();
+      fact(
+        '5 the published mention opens its person',
+        (await page.locator(`${view('profile')} .profile`).innerText()).includes(
+          candidate.author.name,
+        ),
+      );
+      await page.locator('.pane.cur .tab.active[data-view^="profile"]').click({ button: 'middle' });
+      await front(page, 'compose');
       await page.reload();
       await page.locator(`${view('compose')} textarea`).waitFor();
       fact(

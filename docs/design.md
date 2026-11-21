@@ -194,6 +194,11 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
   that switches accounts), emoji, media, Post. A primary button that cannot
   act yet is neutral. Sending and failed drafts stay below the field; failed Edit swaps keep both drafts.
   Reopened tabs restore drafts; fresh tabs start empty. Hidden composers release mention lookups.
+- @ in any composer (Post, the field under a thread's focus, Quote, a channel) opens one person picker at the caret, or
+  above it when there is more room there. A bare @ offers the answered note's author, its thread's people, then follows;
+  a name, NIP-05 address or npub narrows or finds one. Arrows with Enter or Tab, or a tap, choose; Escape closes. No match
+  is one quiet line and Enter stays a new line. Chosen people are chips under the field, and a waiting or failed draft
+  already shows them as the links the published note will have.
   Delivery counts follow late answers, each post in flight its own; unanswered rows are neutral and disappear on confirmation. Only final all-refused delivery is red.
 - Pressing Post empties the field and leaves the caret in it at once, whatever the signer; what is being sent is shown below, and a failure keeps its text.
 - At Post, Home shows the retained draft at once with the Sending mark and the room of an action row, as a signed note: a slow

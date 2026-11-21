@@ -104,8 +104,13 @@
 .mention-menu > button { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 40px; padding: 4px 8px; text-align: left; border-radius: 4px; }
 .mention-menu > button.on, .mention-menu > button:hover { background: var(--wash); }
 .mention-menu b, .mention-menu small { display: block; }
-.mention-preview { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12.5px; }
+.mention-quiet { padding: 8px; font-size: 13px; line-height: 1.4; }
+@media (pointer: coarse) { .mention-menu > button { min-height: 44px; } }
+/* Who the note will mention, as reaction chips look when on: one per person, with their face when known. */
+.mention-preview { display: flex; flex-wrap: wrap; gap: 6px; }
 .mention-preview:empty { display: none; }
+.mchip { display: inline-flex; align-items: center; gap: 5px; max-width: 100%; height: 24px; padding: 0 9px; border: 1px solid var(--line); border-radius: 12px; background: var(--wash); color: var(--fg); font-size: 12.5px; }
+.mchip:has(> .av) { padding-left: 3px; }
 
 .person-chips { display: contents; }
 
