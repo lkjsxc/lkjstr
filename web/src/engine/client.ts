@@ -253,11 +253,14 @@ export function createEngine(transport: Transport): Engine {
         );
     },
     async reveal(from, key, on) {
-      const subs = [...owners].filter(([, owner]) => owner.contains(from)).map(([id]) => id);
-      const results = await Promise.all(
-        subs.map((sub) => actions.act({ a: 'note.reveal', sub, key, reveal: on })),
-      );
-      return results.some((r) => r.ok);
+      let scope: [string, HTMLElement] | undefined;
+      for (const [sub, owner] of owners) {
+        if (visible.has(sub) && owner.contains(from) && (!scope || scope[1].contains(owner)))
+          scope = [sub, owner];
+      }
+      return scope
+        ? (await actions.act({ a: 'note.reveal', sub: scope[0], key, reveal: on })).ok
+        : false;
     },
     stats() {
       const req = `q${++serial}`;

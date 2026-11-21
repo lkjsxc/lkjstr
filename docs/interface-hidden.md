@@ -40,7 +40,7 @@ and plain facts when it cannot. Content warnings stay ordinary rows. Index and r
   - muted person, word, hashtag or thread: the matching mute list, opened at its entry
     (`env.open('settings', { at: 'set.mute.person' | 'set.mute.word' | 'set.mute.hashtag' | 'set.mute.thread' })`).
     For a word or hashtag it names the matching entry when the engine says which;
-  - language: the reading language setting;
+  - language: a mock fixture with no visibility setting. The real Worker uses the query language selection;
   - repeated content and author limit apply only to a visitor's Global (the engine's signed-out filter,
     `signedOutGlobalFilter`, on by default). Why says so and opens the setting this slice adds for it,
     `set.visitorFilter` ("Reading: While signed out, fold repeats and floods in Global"). Off, Global shows them as

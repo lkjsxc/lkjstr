@@ -99,6 +99,7 @@ describe('a hidden note', () => {
     document.body.append(el);
     [...el.querySelectorAll('button')].find((b) => b.textContent === 'Show')?.click();
     expect(reveal).toHaveBeenCalledWith(el, 'n1', true);
+    await Promise.resolve();
     expect(readNoteState('hid', 'n1').shown).toBe(true);
     const again = renderNote(
       row({ hidden: { reason: 'language', revealable: true }, id: 'n1' }),

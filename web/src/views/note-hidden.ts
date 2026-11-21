@@ -32,13 +32,12 @@ const SETTING: Record<string, readonly [string, Key]> = {
 const known = (reason: string): string => (REASONS.has(reason) ? reason : 'other');
 /** The one-line reason (also the wording of a shown note's line). */
 export const hiddenText = (reason: string): string => t(`hidden.${known(reason)}` as Key);
-const asked = new Set<string>(); // bound: notes the reader showed, asked once per page per list
 
 /** The line that holds a hidden note's slot. */
 export function hiddenRow(row: NoteRow, env: ViewEnv): HTMLElement {
   const hidden = row.hidden ?? { reason: 'other' };
   const reason = known(hidden.reason);
-  const can = hidden.revealable !== false && reason !== 'deleted' && reason !== 'expired';
+  const can = hidden.revealable === true && reason !== 'deleted' && reason !== 'expired';
   const detail = h('div', { class: 'hwhy', hidden: true });
   const why = h('button', { class: 'lnk', 'aria-expanded': 'false' }, t('hidden.why'));
   const el = h(
@@ -68,18 +67,17 @@ export function hiddenRow(row: NoteRow, env: ViewEnv): HTMLElement {
   }
   function show(): HTMLElement {
     const ask = async (): Promise<void> => {
-      writeNoteState(env.instance, row.id, { shown: true });
-      if (!(await env.engine.reveal?.(el, row.key, true))) {
+      if (await env.engine.reveal?.(el, row.key, true)) {
+        writeNoteState(env.instance, row.id, { shown: true });
+      } else {
         detail.hidden = false;
+        why.setAttribute('aria-expanded', 'true');
         detail.replaceChildren(t('hidden.failed'));
       }
     };
     // A note the reader showed is shown again when its row comes back (scrolled to, or after a reload).
-    const tag = `${env.instance}:${row.id}`;
-    if (readNoteState(env.instance, row.id).shown && !asked.has(tag)) {
-      asked.add(tag);
+    if (readNoteState(env.instance, row.id).shown)
       requestAnimationFrame(() => void (el.isConnected && ask()));
-    }
     return h(
       'button',
       { class: 'lnk', onclick: (e: Event) => (e.stopPropagation(), void ask()) },
@@ -95,7 +93,6 @@ export function shownLine(row: NoteRow, env: ViewEnv, el: () => HTMLElement): HT
   const hide = (e: Event): void => {
     e.stopPropagation();
     writeNoteState(env.instance, row.id, { shown: false });
-    asked.delete(`${env.instance}:${row.id}`);
     void env.engine.reveal?.(el(), row.key, false);
   };
   return h(

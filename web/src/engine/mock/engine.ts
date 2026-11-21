@@ -9,7 +9,7 @@ import { createActions } from './actions.ts';
 import { createCore } from './core.ts';
 import { createPrivateMock } from './dm.ts';
 import { addThreads } from './fixtures-thread.ts';
-import { unshownOf } from './hidden.ts';
+import { projectHidden, unshownOf } from './hidden.ts';
 import { liveWindow } from './live-window.ts';
 import { privateListState } from './private-lists.ts';
 import { select } from './query.ts';
@@ -36,10 +36,10 @@ export function createMockEngine(
 ): MockEngine {
   let zapObserve: ((msg: FromEngine) => void) | undefined;
   let authObserve: ((msg: FromEngine) => void) | undefined;
-  const core = createCore((msg) => {
+  const core: Core = createCore((msg) => {
     zapObserve?.(msg);
     authObserve?.(msg);
-    post(msg);
+    post(projectHidden(msg, 'sub' in msg ? core.subs.get(msg.sub)?.revealed : undefined));
   }, now);
   const { world, subs, later } = core;
   const act = createActions(core);

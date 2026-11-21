@@ -25,7 +25,7 @@ export function reactionsOf(n: MNote): Reaction[] {
 function quoteOf(w: World, id: string): Quote {
   const q = w.byId.get(id);
   if (!q) return { state: 'missing', id };
-  if (w.isMuted(q)) return { state: 'muted', id };
+  if (q.hidden || w.isMuted(q)) return { state: 'muted', id };
   return {
     state: 'ok',
     id,
@@ -63,7 +63,7 @@ export function noteRow(w: World, n: MNote, o: RowOpts): NoteRow {
     media: n.media,
     quotes: n.quote ? [quoteOf(w, n.quote)] : [],
     replyTo:
-      parent && !o.thread
+      parent && !parent.hidden && !o.thread
         ? { id: parent.id, author: parent.by.author, excerpt: firstLine(parent.text) }
         : undefined,
     repostedBy:
@@ -94,7 +94,7 @@ export function noteRow(w: World, n: MNote, o: RowOpts): NoteRow {
       bookmarked: w.state.bookmarks.has(n.id),
       own: n.by.author.pubkey === o.me,
     },
-    ...hiddenOf(n.id, n.hidden),
+    ...hiddenOf(n.hidden),
     thread: o.thread,
     client: n.client,
     pending: n.pending,

@@ -8,6 +8,7 @@ import { createInterface } from 'node:readline';
 import { chromium } from 'playwright-core';
 import bundle from 'playwright-core/lib/utilsBundle';
 import { fakeRelay } from './browser-relay.mjs';
+import { validateReplies } from './engine-contract.mjs';
 import { fixtureProcess } from './engine-fixture-process.mjs';
 import { workerBoot } from './engine-harness-boot.mjs';
 import { browserTmp } from '../web/scripts/browser-tmp.ts';
@@ -65,6 +66,7 @@ try {
   const { note: reader } = await receiveFixture();
   const friend = (await fixture({ fixtureActor: true })).pubkey;
   outsider = (await fixture({ fixtureActor: true })).pubkey;
+  const other = (await fixture({ fixtureActor: true })).pubkey;
   const root = await sign(friend, 1, -50, 'loopback root');
   const offNetwork = await sign(outsider, 1, -49, 'verified note from an author without metadata');
   const word = await sign(friend, 1, -48, 'COVERED_TOKEN https://example.test/private-cover.png');
@@ -75,12 +77,15 @@ try {
   const upcoming = await sign(outsider, 1, -43, 'body before expiry', [['expiration', String(at + 120)]]);
   const expired = await sign(outsider, 1, -42, 'already expired body', [['expiration', String(at - 10)]]);
   const invalid = await sign(outsider, 1, -41, 'FORGED_BODY');
-  const mutes = await sign(reader.pubkey, 10000, -39, '', [['word', 'covered_token'], ['t', 'TOPIC'], ['e', root.id]]);
+  const original = await sign(friend, 1, -39, 'same delivery text in independent signed notes');
+  const repeated = await sign(other, 1, -40, original.content);
+  const machine = await sign(other, 1, -38, '{"fixture":"machine payload"}');
+  const mutes = await sign(reader.pubkey, 10000, -39, '', [['word', 'covered_token'], ['t', 'TOPIC'], ['e', root.id], ['p', other]]);
   const follows = await sign(reader.pubkey, 3, -38, '', [['p', friend]]);
   const badDelete = await sign(friend, 5, -37, '', [['e', deletionTarget.id]]);
   const trueDelete = await sign(outsider, 5, -36, '', [['e', deletionTarget.id]]);
   for (const event of [root, offNetwork, word, hashtag, reply, cw, deletionTarget, upcoming, expired,
-    { ...invalid, sig: '0'.repeat(128) }, mutes, follows, badDelete]) fake.add(event);
+    { ...invalid, sig: '0'.repeat(128) }, original, repeated, machine, mutes, follows, badDelete]) fake.add(event);
 
   const cache = `${process.env.HOME}/.cache/ms-playwright`;
   const executables = (await readdir(cache).catch(() => [])).filter((folder) => /^chromium-\d+$/.test(folder));
@@ -131,11 +136,16 @@ try {
   check('ordinary off-network note survives completed metadata lookup',
     await page.evaluate(({ id, author }) => window.rows.visitor.some((r) => r.id === id && !r.hidden && r.author.pubkey === author),
       { id: offNetwork.id, author: outsider }));
+  check('visitor author cap keeps a verified covered slot', !(await row('visitor', root.id, 'author-limit')).segments.length);
+  check('signed repeated content has its own reason', (await row('visitor', repeated.id, 'repeated-content')).hidden.revealable);
+  check('machine payload stays body-free', !(await row('visitor', machine.id, 'machine-payload')).segments.length);
 
   await open('home', { source: 'home', account: reader.pubkey, replies: false });
   const covered = await row('home', word.id, 'muted-word');
   check('word mute keeps a single safe slot with its matching entry', covered.key === word.id && covered.hidden.detail === 'covered_token' &&
     !covered.segments.length && !covered.media.length && !covered.quotes.length && !JSON.stringify(covered).includes('https://example.test'));
+  await open('signed-global', { source: 'global', account: reader.pubkey });
+  check('person mute takes precedence over machine payload', (await row('signed-global', machine.id, 'muted-person')).hidden.revealable);
   check('hashtag mute identifies its own entry', (await row('home', hashtag.id, 'muted-hashtag')).hidden.detail === 'TOPIC');
   check('ordinary Home retains follows-only membership and explicit reply selection',
     await page.evaluate((ids) => window.rows.home.every((r) => !ids.includes(r.id)), [offNetwork.id, reply.id]));
@@ -168,6 +178,7 @@ try {
   const dead = await row('visitor', upcoming.id, 'expired');
   check('validated expiry replaces its observed slot', dead.key === upcoming.id && !dead.hidden.revealable && !dead.segments.length);
   check('expired note cannot be revealed', !(await act('expired', 'visitor', upcoming.id, true)).ok);
+  validateReplies(await page.evaluate(() => window.messages));
   check('fixture ran read-only with no browser errors', !report.errors.length && !fake.published.length);
   console.log(`ok engine-note-visibility (${report.checks.length} checks)`);
 } catch (error) {

@@ -309,7 +309,7 @@ export const NOTES: readonly NoteSpec[] = [
     client: 'release-bot',
   },
   {
-    by: 'marco',
+    by: 'sam',
     ago: 214,
     text: 'Qualcuno sa se esiste un relay italiano con ricerca NIP-50? Asking for a friend.',
     hidden: 'language',

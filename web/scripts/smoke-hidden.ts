@@ -1,6 +1,8 @@
 // Hidden notes (docs/interface-hidden.md) on the mock: one line per reason in the note's slot, Why inline with the
 // reason's own setting, Show and Hide in place with the reading place held, a reload keeps a shown note shown, the
 // keys pass over the line, a content warning folds only the body, and end lines per cause only where reported.
+import { mkdirSync } from 'node:fs';
+import { resolve } from 'node:path';
 import type { Locator, Page } from 'playwright-core';
 
 type Check = (name: string, ok: boolean, detail?: unknown) => void;
@@ -8,9 +10,16 @@ type Open = (
   path: string,
   given: Record<string, unknown>,
   size?: { width: number; height: number },
+  touch?: boolean,
 ) => Promise<Page>;
 
 const list = '.view[data-kind="global"]:visible';
+const warningRow = (page: Page): Locator =>
+  page
+    .locator(`${list} .note`, {
+      has: page.locator('.nmain > .cw', { hasText: '今期のアニメ最終回' }),
+    })
+    .first();
 const one = (tabs: string[]) => ({ type: 'pane', id: 'a', tabs, active: tabs[0] });
 const REASONS: [string, boolean][] = [
   ['In another language.', true],
@@ -25,6 +34,7 @@ const lineOf = (page: Page, text: string): Locator =>
 
 /** Scrolls the list down until `loc` is drawn, then brings it to the middle. */
 async function reach(page: Page, loc: Locator): Promise<boolean> {
+  if (!(await loc.count())) await page.locator(list).evaluate((v) => (v.scrollTop = 0));
   for (let i = 0; i < 60 && !(await loc.count()); i++) {
     await page.locator(list).evaluate((v) => v.scrollBy(0, 500));
     await page.waitForTimeout(60);
@@ -40,13 +50,27 @@ const box = (loc: Locator) =>
     return { top: Math.round(r.top), height: Math.round(r.height) };
   });
 
+const sizes = [
+  { width: 1440, height: 900 },
+  { width: 390, height: 844 },
+];
+async function capture(page: Page, label: string): Promise<void> {
+  if (process.env.LKJSTR_SHOTS !== '1') return;
+  const directory = resolve('../tmp/hidden-note-shots');
+  mkdirSync(directory, { recursive: true });
+  await page.screenshot({ path: resolve(directory, `${label}.png`) });
+}
+
 export async function hiddenChecks(open: Open, fact: Check): Promise<void> {
-  for (const size of [
-    { width: 1440, height: 900 },
-    { width: 390, height: 844 },
-  ]) {
+  for (const size of sizes) {
     const on = size.width > 600 ? 'desktop' : 'phone';
-    const page = await open('/', { mock: { live: false }, 'layout:main': one(['global']) }, size);
+    const phone = on === 'phone';
+    const page = await open(
+      '/',
+      { mock: { live: false }, 'layout:main': one(['global']) },
+      size,
+      phone,
+    );
     const seen: unknown[] = [];
     let lines = true;
     for (const [text, show] of REASONS) {
@@ -74,11 +98,15 @@ export async function hiddenChecks(open: Open, fact: Check): Promise<void> {
     const why = word.getByRole('button', { name: 'Why' });
     const before = await box(word);
     const touch = await why.evaluate((b) => Math.round(b.getBoundingClientRect().height));
-    await why.focus();
-    await page.keyboard.press('Enter');
+    if (phone) await why.tap();
+    else {
+      await why.focus();
+      await page.keyboard.press('Enter');
+    }
+    await capture(page, `${size.width}-en-why`);
     const detail = word.locator('.hwhy');
     fact(
-      `${on}: Why opens inline from the keyboard, names the matched word, and its button has touch height`,
+      `${on}: Why opens inline by ${phone ? 'touch' : 'keyboard'}, names the matched word, and has touch height`,
       (await why.getAttribute('aria-expanded')) === 'true' &&
         (await detail.isVisible()) &&
         (await detail.innerText()).includes('“spoiler”') &&
@@ -122,14 +150,17 @@ export async function hiddenChecks(open: Open, fact: Check): Promise<void> {
     }
     fact(`${on}: j never stops on a hidden line`, onLine === 0, onLine);
     // A content warning: the row keeps its header and actions; only the body folds, with Hide once shown.
-    const cover = page.locator(`${list} .note:has(.nmain > .cw)`).first();
+    const cover = warningRow(page);
     await reach(page, cover);
-    const cw = page.locator(`${list} .note[data-note="${await cover.getAttribute('data-note')}"]`);
+    const warningId = await cover.getAttribute('data-note');
+    const cw = page.locator(`${list} .note[data-note="${warningId}"]`);
     const folded = await cw.evaluate((n) => ({
       head: n.querySelectorAll('.nhead').length,
       acts: n.querySelectorAll('.acts').length,
-      body: n.querySelectorAll('.content, img').length,
+      face: n.querySelectorAll('.nrow > .av').length,
+      body: n.querySelectorAll('.nmain .content, .nmain img').length,
     }));
+    await capture(page, `${size.width}-en-warning`);
     await cw.locator('.nmain > .cw').click();
     const line = cw.locator('.cwline');
     const opened =
@@ -138,6 +169,7 @@ export async function hiddenChecks(open: Open, fact: Check): Promise<void> {
     fact(
       `${on}: a content warning folds only the body, nothing drawn behind it, and Hide folds it again`,
       folded.head === 1 &&
+        folded.face === 1 &&
         folded.acts === 1 &&
         folded.body === 0 &&
         opened &&
@@ -159,24 +191,63 @@ export async function hiddenChecks(open: Open, fact: Check): Promise<void> {
       { quiet, ends },
     );
     await page.context().close();
+    if (!warningId) throw new Error('missing content warning fixture');
+    const thread = await open(
+      `/n/note1${warningId.slice(0, 58)}`,
+      {
+        mock: { live: false },
+        'layout:main': one(['global']),
+      },
+      size,
+      phone,
+    );
+    const focus = thread.locator('.view[data-kind="thread"] .th-focus');
+    await focus.locator('.nmain > .cw').waitFor();
+    fact(
+      `${on}: a warned thread focus keeps its author and actions while its body is folded`,
+      (await focus.locator('.nhead').count()) === 1 &&
+        (await focus.locator('.acts').count()) === 1 &&
+        (await focus.locator('.nmain .content').count()) === 0,
+    );
+    await thread.context().close();
   }
-  // Why opens the reason's own setting, in the same tile; and Japanese says each reason in Japanese.
-  const page = await open(
-    '/',
-    { mock: { live: false }, 'layout:main': one(['global']), settings: { language: 'ja' } },
-    { width: 1440, height: 900 },
-  );
-  const person = page
-    .locator(`${list} .note.hid`, { hasText: 'ミュートした人のノートです。' })
-    .first();
-  const ja = await reach(page, person);
-  await person.getByRole('button', { name: '理由' }).click();
-  await person.locator('.hwhy button').click();
-  const entry = page.locator('.view[data-kind="settings"]:visible [data-entry="set.mute.person"]');
-  await entry.waitFor();
-  fact(
-    'ja: a hidden line says its reason in Japanese, and Why opens its mute list in the same tile',
-    ja && (await page.locator('.pane').count()) === 1 && (await entry.isVisible()),
-  );
-  await page.context().close();
+  // Why opens the reason's own setting in the same tile, with Japanese labels.
+  for (const size of sizes) {
+    const phone = size.width === 390;
+    const page = await open(
+      '/',
+      {
+        mock: { live: false },
+        'layout:main': one(['global']),
+        settings: { language: 'ja' },
+      },
+      size,
+      phone,
+    );
+    const cover = warningRow(page);
+    const reached = await reach(page, cover);
+    fact(
+      `${size.width} ja: localized content warning retains the author and actions`,
+      reached &&
+        (await cover.locator('.nhead').count()) === 1 &&
+        (await cover.locator('.acts').count()) === 1,
+    );
+    await capture(page, `${size.width}-ja-warning`);
+    const person = lineOf(page, 'ミュートした人のノートです。');
+    const ja = await reach(page, person);
+    const why = person.getByRole('button', { name: '理由' });
+    if (phone) await why.tap();
+    else await why.click();
+    await capture(page, `${size.width}-ja-why`);
+    await person.locator('.hwhy button').click();
+    const entry = page.locator(
+      '.view[data-kind="settings"]:visible [data-entry="set.mute.person"]',
+    );
+    await entry.waitFor();
+    fact(
+      `${size.width} ja: Why opens the mute list in the same tile`,
+      ja && (await page.locator('.pane').count()) === 1 && (await entry.isVisible()),
+    );
+    await page.context().close();
+  }
 }

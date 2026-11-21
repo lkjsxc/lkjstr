@@ -9,6 +9,7 @@ import { PROTOCOL_VERSION } from '../src/engine/protocol.ts';
 import { dayOf } from '../src/shared/format.ts';
 import { KEYS } from '../src/shared/keys.ts';
 import { browserTmp } from './browser-tmp.ts';
+import { hiddenChecks } from './smoke-hidden.ts';
 import { mentionChecks } from './smoke-mentions.ts';
 import { momentChecks } from './smoke-moment.ts';
 import { notesChecks } from './smoke-notes.ts';
@@ -2347,15 +2348,22 @@ base = await new Promise<string>((done, fail) => {
 });
 let browser: Browser | undefined;
 try {
-  browser = await chromium.launch({ executablePath: chrome, args: ['--no-sandbox'] });
-  await wishes({ browser, base, check: fact });
-  await run(browser);
-  const auditModule = './audit-owner.mjs';
-  const { auditOwner } = await import(auditModule);
-  await auditOwner({ browser, base, check: fact });
-  for (const ref of ['af8c915e', 'dbd66e59']) {
-    if (existsSync(`../tmp/history/${ref}/state-1440.json`))
-      await auditOwner({ browser, base, check: fact, returning: ref });
+  const launched = await chromium.launch({ executablePath: chrome, args: ['--no-sandbox'] });
+  browser = launched;
+  await hiddenChecks(
+    (path, given, size, touch) => open(launched, path, given, size, 'en-US', touch),
+    fact,
+  );
+  if (!process.argv.includes('--only=hidden')) {
+    await wishes({ browser, base, check: fact });
+    await run(browser);
+    const auditModule = './audit-owner.mjs';
+    const { auditOwner } = await import(auditModule);
+    await auditOwner({ browser, base, check: fact });
+    for (const ref of ['af8c915e', 'dbd66e59']) {
+      if (existsSync(`../tmp/history/${ref}/state-1440.json`))
+        await auditOwner({ browser, base, check: fact, returning: ref });
+    }
   }
 } catch (e) {
   const at = /smoke\.ts:(\d+)/.exec((e as Error).stack ?? '')?.[1] ?? '?';
