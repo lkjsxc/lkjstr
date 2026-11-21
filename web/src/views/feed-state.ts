@@ -1,10 +1,13 @@
 // Reuse the existing feed status node for relay and private-list completion.
 import type { SubState } from '../engine/protocol.ts';
 import { fullTime } from '../shared/format.ts';
+import { h } from '../shared/h.ts';
 import { type Key, t } from '../shared/i18n.ts';
 import type { BarState } from './feed-bar.ts';
 import type { ListRow } from './feed-draw.ts';
+import type { MomentState } from './feed-moment.ts';
 import type { Place } from './feed-place.ts';
+import type { ViewEnv } from './registry.ts';
 import type { ThreadState } from './thread.ts';
 
 export type FeedState = BarState & {
@@ -17,7 +20,12 @@ export type FeedState = BarState & {
   pos?: Place;
   extent?: number;
   head?: string;
-} & ThreadState;
+} & ThreadState &
+  MomentState;
+
+/** What an account's own list shows a visitor in place of an empty line. */
+export const signInButton = (env: ViewEnv): HTMLElement =>
+  h('button', { class: 'btn primary', onclick: () => env.open('account') }, t('bar.signedOut'));
 
 export function showFeedState(
   status: HTMLElement,

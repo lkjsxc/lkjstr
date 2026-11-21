@@ -4,6 +4,7 @@
 import type { Row } from '../engine/protocol.ts';
 import { dayOf } from '../shared/format.ts';
 import { h } from '../shared/h.ts';
+import { type MomentPart, renderMoment } from './feed-moment.ts';
 import { withHeld } from './held.ts';
 import { disposeLinkCards } from './link-cards.ts';
 import { bodySig, fitNotes, patchNote, renderNote } from './note.ts';
@@ -12,8 +13,8 @@ import type { ViewEnv } from './registry.ts';
 import { renderNotification, renderPerson, renderProfile } from './rows.ts';
 import type { ThreadPart } from './thread-plan.ts';
 
-/** A row of a list, or a part of a thread that is not a note (thread-parts.ts). */
-export type ListRow = Row | ThreadPart;
+/** A row of a list, a part of a thread that is not a note (thread-parts.ts) or a moment tab's line. */
+export type ListRow = Row | ThreadPart | MomentPart;
 
 export type RowList = {
   /** Makes the list's children exactly these rows, in order. */
@@ -37,6 +38,7 @@ export function createRowList(
   let shown: readonly ListRow[] = [];
   const render = (row: ListRow): HTMLElement | null => {
     if (row.kind === 'thread-part') return part?.(row) ?? null;
+    if (row.kind === 'moment-part') return renderMoment(row, env);
     if (row.kind === 'note') return renderNote(row, env, dated);
     if (row.kind === 'profile') return renderProfile(row, env);
     if (row.kind === 'person') return renderPerson(row, env);
@@ -68,7 +70,13 @@ export function createRowList(
         want.push(n.el);
       };
       for (const row of shown) {
-        const at = row.kind === 'note' ? (row.repostedBy?.at ?? row.at) : 0;
+        // A moment line counts as an item at its time: a divider for its own day goes above it.
+        const at =
+          row.kind === 'note'
+            ? (row.repostedBy?.at ?? row.at)
+            : row.kind === 'moment-part' && !row.end
+              ? row.at
+              : 0;
         if (at && day && dayOf(at) !== day) {
           day = dayOf(at);
           put(`day:${day}`, day, () => h('div', { class: 'day' }, day));

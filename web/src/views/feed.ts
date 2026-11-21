@@ -2,7 +2,6 @@ import type { Subscription } from '../engine/client.ts';
 import { applyOps } from '../engine/ops.ts';
 import type { Anchor, Query, Row, SubState } from '../engine/protocol.ts';
 import { h } from '../shared/h.ts';
-import { t } from '../shared/i18n.ts';
 import { loadViewState, saveViewState } from '../shared/view-state.ts';
 import { ability } from './can.ts';
 import { mountChannelDesk } from './channel-desk.ts';
@@ -10,12 +9,13 @@ import { mountFeedBar } from './feed-bar.ts';
 import { createRowList, type ListRow } from './feed-draw.ts';
 import { createFresh } from './feed-fresh.ts';
 import { mountFeedKeys } from './feed-keys.ts';
+import { momentOf } from './feed-moment.ts';
 import { clampFeedWindow, createFeedPaging, LIMIT, PAGE } from './feed-paging.ts';
 import { createKeeper, createThreadSeat } from './feed-place.ts';
 import { feedQuery } from './feed-query.ts';
 import { mountScrub } from './feed-scrub.ts';
 import { CHILD, DATED, hasDaySeparators, OWN } from './feed-sources.ts';
-import { type FeedState, showFeedState } from './feed-state.ts';
+import { type FeedState, showFeedState, signInButton } from './feed-state.ts';
 import { feedTitle, showFeedTitle } from './feed-title.ts';
 import { feedWindow, heldFresh, isOwnNote } from './feed-window.ts';
 import { onHeld } from './held.ts';
@@ -35,11 +35,7 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
   const list = h('div', { class: 'list' });
   const drafts = kind === 'home' ? mountHomeDrafts(env) : undefined;
   const status = h('div', { class: 'fstate muted' });
-  const signIn = h(
-    'button',
-    { class: 'btn primary', onclick: () => env.open('account') },
-    t('bar.signedOut'),
-  );
+  const signIn = signInButton(env);
   const fresh = createFresh(el, env, kind, () => toTop());
   const barSlot = h('div', { class: 'fslot' });
   const tail = h('div', { class: 'ftail' });
@@ -69,7 +65,7 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
     saved: state.pos,
     active: () => el.isConnected && env.visible.get(),
     node: (key) => drawn.node(key),
-    anchors: (key) => !/^(day|th):/.test(key), // dividers and a thread's other parts never anchor
+    anchors: (key) => !/^(day|th|moment):/.test(key), // dividers and drawn parts never anchor
     save: (place) => ((state.pos = place), save()),
   });
   const query = (): Query => feedQuery(kind, account, state, env.engine, kinds?.query());
@@ -82,6 +78,7 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
     outsideBaseline = anchor === 'top' || mode === 'held-head' ? 0 : undefined;
     sub?.window(anchor, before, after, liveAbove);
   };
+  const moment = momentOf(kind, { el, state, save, keeper, drawn, request, sync: () => sync() });
   const paintFresh = (): void => {
     const staged = drafts?.count() ?? 0;
     if (mode === 'top') {
@@ -97,7 +94,7 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
   const sync = (): void => {
     const settle = keeper.hold(keys.held());
     drafts?.draw(rows);
-    drawn.draw((shown = thread?.plan(rows, sstate) ?? rows));
+    drawn.draw((shown = thread?.plan(rows, sstate) ?? moment?.plan(rows) ?? rows));
     kinds?.seat(rows[0] && drawn.node(rows[0].key), rows[0]);
     showState();
     seat();
@@ -122,6 +119,7 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
   const follow = (): void => {
     if (rail.busy() || !sub || !env.visible.get()) return;
     sub.reading?.(keeper.get()?.key ?? rows[0]?.key ?? null);
+    if (moment) return moment.follow(rows);
     if (kind === 'bookmarks' && sstate?.privateLists?.phase === 'loading') return;
     const head = atTop || mode === 'held-head' || (mode === 'top' && outside.count > 0);
     const overflow = fresh.overflow() && !waiting;
@@ -181,6 +179,7 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
         paging.schedule();
       },
       timeline: (next) => rail.timeline(next),
+      timeWindow: (w) => moment?.answer(w),
       fresh(count, ownHead) {
         outside = { count, own: ownHead };
         outsideBaseline ??= count;
@@ -194,7 +193,8 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
       },
     });
     sub.visible(env.visible.get());
-    if (place) request({ key: place.key }, live ? LIMIT - PAGE : PAGE, PAGE, live);
+    if (moment) moment.ask();
+    else if (place) request({ key: place.key }, live ? LIMIT - PAGE : PAGE, PAGE, live);
     else request('top', 0, Math.max(PAGE, state.extent ?? PAGE));
     sync();
   };
@@ -220,13 +220,13 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
     row: (key) => drawn.row(key),
     node: (key) => drawn.node(key),
     moved: () => (keeper.read(), follow()),
-    top: toTop,
+    top: () => (moment ? void (el.scrollTop = 0) : toTop()), // a moment's top: its first drawn row
   });
   el.classList.add('feed');
   const pin = h('div', { class: 'fpin' }, fresh.el);
   el.replaceChildren(barSlot, pin, ...(drafts ? [drafts.el] : []), list, status, tail);
   const rail = mountTimeRail({
-    candidate: DATED.has(kind) && kind !== 'bookmarks',
+    candidate: DATED.has(kind) && kind !== 'bookmarks' && !moment,
     version: () => env.engine.info.get()?.version ?? 5,
     el,
     list,
@@ -260,7 +260,7 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
         : undefined;
   if (state.title) env.setTitle(state.title);
   open(true);
-  const owner = kind === 'their-home' ? watchHomeTitle(env, state, save) : undefined;
+  const owner = kind === 'their-home' ? watchHomeTitle(env, state, save, moment?.met) : undefined;
   const offVisible = env.visible.subscribe((on) => {
     sub?.visible(on);
     if (!on) pauseNoteAudio(list);

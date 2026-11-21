@@ -188,6 +188,10 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
 - What the engine cannot serve (protocol below 3; channels: 4) is not drawn.
 - Loading, empty, failed and end-of-list are one quiet centred line (a thread holds skeletons instead).
 - A profile offers its owner's Home: the notes of the people they follow, as a tab of its own.
+- A note's time opens that Home around the note's moment ([interface-moment.md](interface-moment.md)): a tab of its
+  own, `name yyyy/mm/dd hh:mm`, with no live head and no filter row. A moment line where the time falls carries the
+  author's face, the time, the follow list's own date and "From this device only" while that is true; each end says
+  its own state. The text of a note still opens its thread.
 
 ## Writing and acting
 - The composer is the Post tab: text at note size, who is posting (a button

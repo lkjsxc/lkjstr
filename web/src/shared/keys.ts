@@ -59,6 +59,7 @@ export const KEYS = {
   bookmark: one('note', 'B'),
   media: one('note', 'M'),
   profile: one('note', 'U'),
+  moment: one('note', 'A'),
   send: one('compose', 'Mod+Enter'),
   viewerClose: one('viewer', 'Escape'),
   viewerLeft: held('viewer', 'ArrowLeft'),

@@ -42,7 +42,7 @@ Seams worth knowing inside `src/views/`:
   ask for. `feed-draw.ts` turns rows into nodes, `feed-place.ts` keeps the
   reading position as an anchor row plus offset, `feed-keys.ts` is the
   keyboard, `feed-bar.ts` and `filter-bar.ts` are the filter row,
-  `feed-scrub.ts` the time beside a held scrollbar, `profile-kinds.ts` the
+  `feed-scrub.ts` the time beside the thumb while the reader scrolls, `feed-moment.ts` a moment tab, `profile-kinds.ts` the
   kinds of a profile. `docs.ts` is the Documentation tab (its pages include the
   shortcuts and the release facts of `pages.ts`); `wm/tab-search.ts` finds
   a tab.

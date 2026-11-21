@@ -26,6 +26,7 @@ const BUTTONS: readonly (readonly [KeyId, string])[] = [
   ['repost', '.acts > .a-repost'],
   ['bookmark', '.acts > .a-bookmark'],
   ['media', '.content > .media a.mbox'],
+  ['moment', '.nhead > .tmoment'],
 ];
 const noteOf = (row: ListRow | undefined): NoteRow | undefined =>
   row?.kind === 'note' ? row : row?.kind === 'notification' ? row.note : undefined;

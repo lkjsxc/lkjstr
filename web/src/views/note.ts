@@ -1,7 +1,7 @@
-// A note, drawn from the engine's view model exactly as it arrives. A press on a person opens their profile, on
-// the text or the time the note's thread, on a quoted card the quoted note: the same everywhere.
+// A note, drawn from the engine's view model exactly as it arrives. A press on a person opens their profile, on the
+// text the thread, on the time the author's Home then, on a quoted card the quoted note: the same everywhere.
 import type { NoteRow } from '../engine/protocol.ts';
-import { fullTime, noteTime } from '../shared/format.ts';
+import { noteTime } from '../shared/format.ts';
 import { type Child, h } from '../shared/h.ts';
 import { getLang, t } from '../shared/i18n.ts';
 import { icon } from '../shared/icons.ts';
@@ -15,6 +15,7 @@ import { quoteCard } from './note-quote.ts';
 import { compactBody, lookOf, threadClass, threadMark, threadTime } from './note-thread.ts';
 import { displayName, faceButton, how, nameButton, nipMark, plainName, segments } from './parts.ts';
 import type { ViewEnv } from './registry.ts';
+import { momentTime } from './their-home.ts';
 
 const timeOf = (row: NoteRow, env: ViewEnv, dated: boolean): Child => {
   if (row.pending) return t(row.connecting ? 'note.connecting' : 'note.sending');
@@ -51,7 +52,7 @@ function head(row: NoteRow, env: ViewEnv, dated: boolean): HTMLElement {
     nameButton(a, env),
     nipMark(a),
     a.bot ? h('span', { class: 'badge' }, t('note.bot')) : null,
-    h('time', { title: fullTime(row.at) }, timeOf(row, env, dated)),
+    momentTime(row, env, timeOf(row, env, dated)),
     // Where the tile is too narrow for a bookmark button, a set bookmark is this mark instead.
     h(
       'span',
@@ -295,5 +296,4 @@ export function fitNotes(elements: readonly HTMLElement[]): void {
   const overflowing = elements.map(overflowingText);
   for (const text of overflowing) if (text) fold(text);
 }
-
 export { displayName };

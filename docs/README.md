@@ -110,6 +110,7 @@ Engine (`crates/`):
 - [interface-emoji.md](interface-emoji.md): the emoji picker, its preview and the emoji popover.
 - [interface-thread.md](interface-thread.md): the thread tab: focus, compact notes above, replies, reply field.
 - [interface-time.md](interface-time.md): travelling by time: the scroll label, the wide scrubber, jumps.
+- [interface-moment.md](interface-moment.md): a note's time opens the author's Home at that moment.
 - [engine-acts.md](engine-acts.md): bounded act chains, ownership, profile selection and verification.
 - [read-plan.md](read-plan.md): one plan for everything the tabs want, with weights made from the past.
 

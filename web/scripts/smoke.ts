@@ -10,6 +10,7 @@ import { dayOf } from '../src/shared/format.ts';
 import { KEYS } from '../src/shared/keys.ts';
 import { browserTmp } from './browser-tmp.ts';
 import { mentionChecks } from './smoke-mentions.ts';
+import { momentChecks } from './smoke-moment.ts';
 import { notesChecks } from './smoke-notes.ts';
 import { pendingChecks } from './smoke-pending.ts';
 import { replyChecks } from './smoke-reply.ts';
@@ -462,6 +463,7 @@ async function run(browser: Browser): Promise<void> {
   await resetChecks((given) => open(browser, '/', { ...still, ...given }), fact);
   await pendingChecks((given) => open(browser, '/', given), fact);
   await threadChecks((path, given, size) => open(browser, path, given, size), fact);
+  await momentChecks((path, given, size) => open(browser, path, given, size), fact);
   await replyChecks((path, given, size) => open(browser, path, given, size), fact);
   await mentionChecks(
     (path, given, size, touch) => open(browser, path, given, size, 'en-US', touch),

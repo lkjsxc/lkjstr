@@ -2,6 +2,7 @@ import type { FromEngine, NoteRow } from '../protocol.ts';
 import type { Sub } from './subscription.ts';
 
 type Post = (message: FromEngine) => void;
+const FOLLOWS_AT = Date.UTC(2026, 10, 21, 0, 12); // 09:12 in Tokyo
 
 export function seekTime(s: Sub, at: number, before: number, after: number, post: Post): void {
   if (
@@ -46,7 +47,14 @@ export function timeWindow(s: Sub, post: Post): void {
     sub: s.id,
     at,
     ...(key && { key }),
-    ...(s.query.source === 'their-home' && { followList: { state: 'unknown' } as const }),
+    // The mock holds one verified contact list per author, dated the same fixed morning.
+    ...(s.query.source === 'their-home' && {
+      followList: {
+        state: 'latest-verified',
+        at: FOLLOWS_AT,
+        id: `contacts-${s.query.pubkey ?? ''}`,
+      } as const,
+    }),
     newer: 'cache-only',
     older: 'cache-only',
   });

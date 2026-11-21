@@ -94,6 +94,25 @@ img.emo:focus-visible, .uemo:focus-visible { outline: 2px solid var(--accent); o
 .act.off:hover { background: none; color: inherit; }
 .act.on .i-heart, .act.on .i-bookmark { fill: currentColor; }
 .badge { flex: none; margin: 0; padding: 0 6px; border-radius: 8px; background: var(--hover); color: var(--muted); font-size: 11px; line-height: 16px; white-space: nowrap; }
+/* A note's time opens the author's Home at that time (interface-moment.md C4): quiet until pointed at, and its
+   larger hit area takes no room in the header's fixed height. */
+.nhead > .tmoment { flex: none; margin: -6px 0 -6px auto; padding: 6px 0 6px 4px; line-height: inherit; }
+.nhead > .tmoment > time { margin-left: 0; }
+@media (pointer: fine) { .nhead > .tmoment:hover > time { color: var(--fg); text-decoration: underline; text-underline-offset: 3px; } }
+/* A moment tab: no filter row; the moment line is a day divider made stronger, the end lines are quiet. */
+.moment-tab > .fslot { display: none; }
+.moment { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 0 6px; padding: 5px 12px; border-top: 1px solid var(--sep); border-bottom: 1px solid var(--sep); background: var(--paper); font-variant-numeric: tabular-nums; text-align: center; }
+.moment .mwhen { display: inline-flex; align-items: center; gap: 6px; }
+.moment .av.mface { width: 16px; height: 16px; font-size: 8px; }
+.moment .mtime { color: var(--accent); font-size: 12.5px; }
+.moment .mdot, .moment .msaid { color: var(--faint); font-size: 12px; }
+.moment .mshort { display: none; }
+@container pane (max-width: 419px) {
+  .moment { flex-direction: column; }
+  .moment .mdot, .moment .msaid:has(> .mshort) > .mlong { display: none; }
+  .moment .mshort { display: inline; }
+}
+.mend { padding: 14px 12px; color: var(--faint); font-size: 12.5px; text-align: center; }
 .day { padding: 3px 12px; border-bottom: 1px solid var(--line); background: var(--paper); color: var(--faint); font-size: 12px; font-variant-numeric: tabular-nums; text-align: center; }
 
 /* Link cards share the quoted-note surface. Loading reserves 88px; failed slots close via the reading keeper. */
