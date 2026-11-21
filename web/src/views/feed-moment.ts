@@ -177,7 +177,7 @@ export function momentOf(
     const line = o.drawn.node('moment:');
     const row = beside();
     if (seated || !answer || !line?.isConnected || !row?.dataset.key) return;
-    seated = true;
+    seated = landing = true;
     const third = Math.round(o.el.clientHeight / 3);
     const top = line.getBoundingClientRect().top;
     const want = o.el.scrollTop + top - o.el.getBoundingClientRect().top - third;
@@ -185,16 +185,16 @@ export function momentOf(
     if (t) t.style.height = `${Math.max(0, Math.ceil(want + o.el.clientHeight - above(t)))}px`;
     o.keeper.set({ key: row.dataset.key, off: third + row.getBoundingClientRect().top - top });
   };
-  // Until the reader moves, redraws hold the row beside the line, so notes arriving on either side of it (nearer
-  // newer ones land right above it) never push the moment off its third.
-  let landing = true;
+  // Until the reader moves, redraws hold the line where the seat put it (see `hold`).
+  let landing = false; // from this session's seat until the reader moves; a restored place is never held
   const moved = (): void => void (landing = false);
   for (const type of ['wheel', 'touchstart', 'pointerdown', 'keydown'] as const)
-    o.el.addEventListener(type, moved, { passive: true, once: true });
+    o.el.addEventListener(type, moved, { passive: true });
 
   return {
-    /** The row a redraw holds in place: beside the line while the moment is landing. */
-    hold: (): string | undefined => (landing && seated ? beside()?.dataset.key : undefined),
+    /** What a redraw holds in place while the moment is landing: the line itself, so notes arriving on either side
+     * of it, even between it and its neighbours, never move it. */
+    hold: (): string | undefined => (landing ? 'moment:' : undefined),
     /** The window around the time, as large as the sides have grown. */
     ask: (): void => o.request({ at }, ...sides),
     /** The author whose Home this is, once known: their face goes on the moment line. */
