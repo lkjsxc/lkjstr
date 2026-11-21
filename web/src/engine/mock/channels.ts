@@ -4,6 +4,7 @@ import type { Core } from './engine.ts';
 import { CHANNEL_LIVE } from './fixtures-channels.ts';
 import { byHandle, byPubkey, type Person, SELF } from './people.ts';
 import type { Entry } from './query.ts';
+import { noteExcerpt } from './rows.ts';
 import { idOf, type World } from './world.ts';
 
 export type MChannel = {
@@ -15,7 +16,6 @@ export type MChannel = {
   readonly by?: Person;
 };
 
-const firstLine = (text: string): string => (text.split('\n')[0] ?? '').slice(0, 120);
 const bech32 = (id: string): string => `nevent1${id.slice(0, 58)}`;
 const REF = /^((nevent1|note1)[a-z0-9]+|[0-9a-f]{64})$/;
 export const channelKey = (id: string): string => `channel:${id}`;
@@ -37,7 +37,7 @@ export function channelRow(w: World, c: MChannel, me: string): ChannelRow {
     creator: c.by?.author,
     joined,
     own: Boolean(me) && c.by?.author.pubkey === me,
-    last: last ? { at: last.at, author: last.by.author, excerpt: firstLine(last.text) } : undefined,
+    last: last ? { at: last.at, author: last.by.author, excerpt: noteExcerpt(last) } : undefined,
     unread: Math.min(99, unread),
   };
 }

@@ -4,7 +4,7 @@ import { PROTOCOL_VERSION } from '../protocol.ts';
 import { actNotifications } from './fixtures-acts.ts';
 import { byHandle, byPubkey, EMOJI, EMOJI_SETS } from './people.ts';
 import { relays } from './relays.ts';
-import { ME, noteRow } from './rows.ts';
+import { ME, noteExcerpt, noteRow } from './rows.ts';
 import type { World } from './world.ts';
 
 const firstLine = (text: string): string => (text.split('\n')[0] ?? '').slice(0, 120);
@@ -14,7 +14,9 @@ export function notifications(w: World, q: Query): NotificationRow[] {
   const a = (h: string) => byHandle(h).author;
   const own = (tag: string) => {
     const n = w.byId.get(w.tags.get(tag) ?? '');
-    return n ? { id: n.id, excerpt: firstLine(n.text), media: n.media.length } : undefined;
+    return n
+      ? { id: n.id, excerpt: noteExcerpt(n), media: n.cw === undefined ? n.media.length : 0 }
+      : undefined;
   };
   const noteBy = (handle: string, has: string) => {
     const n = w.notes.find((x) => x.by.handle === handle && x.text.includes(has));

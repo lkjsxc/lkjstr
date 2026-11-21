@@ -129,14 +129,14 @@ export function renderNote(row: NoteRow, env: ViewEnv, dated = false): HTMLEleme
       env.settings.get().linkPreviews ? linkCards(row.previews) : null,
     );
   };
-  const opened = (): void => {
-    text.dispatchEvent(new CustomEvent('note-revealed', { bubbles: true }));
-    fold(text);
+  const warningChanged = (open: boolean): void => {
+    el.dispatchEvent(new CustomEvent('note-warning-changed', { bubbles: true }));
+    if (open) fold(text);
   };
   const body = look?.compact
     ? compactBody(row, env)
     : row.cw !== undefined
-      ? warned(row, env, covered, makeContent, opened)
+      ? warned(row, env, covered, makeContent, warningChanged)
       : makeContent();
   const el = h(
     'article',
@@ -144,7 +144,7 @@ export function renderNote(row: NoteRow, env: ViewEnv, dated = false): HTMLEleme
       class: `note${threadClass(row)}${row.pending ? ' pending' : ''}`,
       'data-note': row.id,
       'data-send': deliveryMark(row) ?? null,
-      'data-previews': row.previews ? '' : null,
+      'data-previews': row.previews && !look?.compact ? '' : null,
       'data-instance': env.instance,
     },
     context,

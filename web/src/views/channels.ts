@@ -40,7 +40,7 @@ export function mountChannels(el: HTMLElement, env: ViewEnv): () => void {
         h(
           'div',
           { class: 'muted clip' },
-          c.last ? `${plainName(c.last.author)}: ${c.last.excerpt}` : c.about,
+          c.last ? [plainName(c.last.author), c.last.excerpt].filter(Boolean).join(': ') : c.about,
         ),
       ),
       c.joined

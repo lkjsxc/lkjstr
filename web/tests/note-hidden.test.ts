@@ -5,6 +5,7 @@ import { readNoteState } from '../src/shared/note-state.ts';
 import { createSettings } from '../src/shared/settings.ts';
 import { createSignal } from '../src/shared/signal.ts';
 import { renderNote } from '../src/views/note.ts';
+import { createPreviewWants } from '../src/views/preview-wants.ts';
 import type { ViewEnv } from '../src/views/registry.ts';
 
 afterEach(() => {
@@ -133,22 +134,52 @@ describe('a hidden note', () => {
 });
 
 describe('a content warning', () => {
-  it('keeps the row and folds only its body, drawing nothing behind it before Show', () => {
+  it('keeps the row and folds only its body, drawing nothing behind it before Show', async () => {
     const { env } = envOf();
     const media = [{ type: 'image', url: 'https://example.test/p.png', sensitive: true }];
-    const el = renderNote(row({ cw: 'spoilers', media } as Partial<NoteRow>), env, false);
+    const warned = row({
+      cw: 'spoilers',
+      client: 'Fixture Client',
+      media,
+      previews: [],
+      unconfirmed: true,
+    } as Partial<NoteRow>);
+    const el = renderNote(warned, env, false);
+    expect(el.querySelector('.nhead > .via')?.textContent).toBe('via Fixture Client');
+    expect(el.dataset.send).toBe('unconfirmed');
     expect(el.querySelector('.nhead')).not.toBeNull();
     expect(el.querySelector('.acts')).not.toBeNull();
     expect(el.querySelector('.content, img')).toBeNull();
     expect(el.querySelector('.cw')?.textContent).toBe('Content warning: spoilersShow');
+
+    const compact = renderNote({ ...warned, look: { compact: true } } as NoteRow, env);
+    expect(compact.querySelector('.content')?.textContent).toContain('Content warning: spoilers');
+    expect(compact.hasAttribute('data-previews')).toBe(false);
+    const list = document.createElement('div');
+    const bounds = new DOMRect(0, 0, 100, 100);
+    vi.spyOn(list, 'getBoundingClientRect').mockReturnValue(bounds);
+    vi.spyOn(el, 'getBoundingClientRect').mockReturnValue(bounds);
+    list.append(compact, el);
+    document.body.append(list);
+    const near = vi.fn();
+    const previews = createPreviewWants(list, () => ({ id: 'test', near }));
+    const nextFrame = () => new Promise((done) => requestAnimationFrame(done));
+    previews.sync();
+    await nextFrame();
+    expect(near).toHaveBeenLastCalledWith([]);
     el.querySelector<HTMLButtonElement>('.cw')?.click();
+    await nextFrame();
+    expect(near).toHaveBeenLastCalledWith(['n1']);
     expect(el.querySelector('.content .text')?.textContent).toBe('the hidden body');
     const line = el.querySelector('.cwline');
     expect(line?.textContent).toBe('Content warning: spoilersHide');
     expect(readNoteState('hid', 'n1').warning).toBe(true);
     line?.querySelector<HTMLButtonElement>('button')?.click();
+    await nextFrame();
+    expect(near).toHaveBeenLastCalledWith([]);
     expect(el.querySelector('.content, .cwline')).toBeNull();
     expect(el.querySelector('.cw')).not.toBeNull();
     expect(readNoteState('hid', 'n1').warning).toBe(false);
+    previews.dispose();
   });
 });

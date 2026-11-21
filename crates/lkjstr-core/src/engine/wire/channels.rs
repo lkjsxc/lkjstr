@@ -28,7 +28,13 @@ pub(super) fn row(e: &Engine, id: &str, account: Option<&str>, hints: &[String])
     }
     let messages = channels::messages(&e.store, id);
     if let Some(last) = messages.first() {
-        v["last"] = json!({"at":last.created_at.saturating_mul(1000),"author":note::author(&rows::author(&e.store,&last.pubkey)),"excerpt":last.content.lines().next().unwrap_or("").chars().take(160).collect::<String>()});
+        let excerpt = note::excerpt_content(last)
+            .and_then(|text| text.lines().next())
+            .unwrap_or_default()
+            .chars()
+            .take(160)
+            .collect::<String>();
+        v["last"] = json!({"at":last.created_at.saturating_mul(1000),"author":note::author(&rows::author(&e.store,&last.pubkey)),"excerpt":excerpt});
     }
     if joined {
         let mark = account

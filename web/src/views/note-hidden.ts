@@ -110,7 +110,7 @@ export function warned(
   env: ViewEnv,
   covered: boolean,
   content: () => HTMLElement,
-  opened: () => void,
+  changed: (open: boolean) => void,
 ): HTMLElement[] {
   const said = t('note.cw', { reason: row.cw ?? '' });
   const cover = (): HTMLElement => {
@@ -119,7 +119,7 @@ export function warned(
       e.stopPropagation();
       writeNoteState(env.instance, row.id, { warning: true });
       b.replaceWith(...open());
-      opened();
+      changed(true);
     });
     return b;
   };
@@ -130,6 +130,7 @@ export function warned(
       writeNoteState(env.instance, row.id, { warning: false });
       line.remove();
       box.replaceWith(cover());
+      changed(false);
     };
     const line = h(
       'div',

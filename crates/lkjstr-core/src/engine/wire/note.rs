@@ -3,6 +3,11 @@ use crate::{
     store::Store,
 };
 use serde_json::{Value, json};
+
+pub(super) fn excerpt_content(event: &lkjstr_protocol::NostrEvent) -> Option<&str> {
+    (!lkjstr_protocol::has_content_warning(event)).then_some(event.content.as_str())
+}
+
 pub fn author(a: &Author) -> Value {
     let npub = lkjstr_protocol::encode_npub(&a.pubkey).unwrap_or_else(|_| a.pubkey.clone());
     let emoji = a
@@ -117,7 +122,13 @@ pub(super) fn note(row: &Row, store: &Store, account: Option<&str>) -> Value {
         v["expiresAt"] = json!(at.saturating_mul(1000));
     }
     if let Some(parent) = row.reply.as_ref().and_then(|p| store.get(&p.id)) {
-        v["replyTo"] = json!({"id":parent.id,"author":author(&crate::engine::rows::author(store,&parent.pubkey)),"excerpt":parent.content.lines().next().unwrap_or("").chars().take(160).collect::<String>()});
+        let excerpt = excerpt_content(&parent)
+            .and_then(|text| text.lines().next())
+            .unwrap_or_default()
+            .chars()
+            .take(160)
+            .collect::<String>();
+        v["replyTo"] = json!({"id":parent.id,"author":author(&crate::engine::rows::author(store,&parent.pubkey)),"excerpt":excerpt});
     }
     if !row.reposts.is_empty() {
         let at = row.reposted_at.unwrap_or(row.created_at);

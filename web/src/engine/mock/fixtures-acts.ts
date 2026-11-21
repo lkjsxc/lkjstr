@@ -1,6 +1,7 @@
 // Fixed view-model answers for A1/A2. They never change the terminal note's counters.
 import type { ActRef, NoteRow, NotificationRow, Query } from '../protocol.ts';
 import { byHandle, byPubkey, byRef, EMOJI, SELF } from './people.ts';
+import { noteExcerpt } from './rows.ts';
 import type { MNote, World } from './world.ts';
 
 const MIN = 60000;
@@ -12,8 +13,8 @@ export function actNotifications(w: World, me: string): Omit<NotificationRow, 'k
   const repost: ActRef = { type: 'repost', actor };
   const target = {
     id: n.id,
-    excerpt: (n.text.split('\n')[0] ?? '').slice(0, 120),
-    media: n.media.length,
+    excerpt: noteExcerpt(n),
+    media: n.cw === undefined ? n.media.length : 0,
   };
   return [
     {

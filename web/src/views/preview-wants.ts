@@ -3,7 +3,7 @@ import type { Subscription } from '../engine/client.ts';
 /** Pixels only: supply near, uncovered ids to the engine. Hiding and unmounting release all wants. */
 export function createPreviewWants(
   el: HTMLElement,
-  sub: () => Subscription | undefined,
+  sub: () => Pick<Subscription, 'id' | 'near'> | undefined,
 ): { sync(): void; dispose(): void } {
   let frame = 0;
   let previous = '';
@@ -34,7 +34,7 @@ export function createPreviewWants(
     if (!frame) frame = requestAnimationFrame(read);
   };
   el.addEventListener('scroll', sync, { passive: true });
-  el.addEventListener('note-revealed', sync);
+  el.addEventListener('note-warning-changed', sync);
   const sizes = new ResizeObserver(sync);
   sizes.observe(el);
   return {
@@ -43,7 +43,7 @@ export function createPreviewWants(
       cancelAnimationFrame(frame);
       sizes.disconnect();
       el.removeEventListener('scroll', sync);
-      el.removeEventListener('note-revealed', sync);
+      el.removeEventListener('note-warning-changed', sync);
       sub()?.near([]);
     },
   };

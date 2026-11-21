@@ -11,6 +11,8 @@ import { EMOJI, FOLLOWERS, type Person, SELF } from './people.ts';
 import type { MNote, World } from './world.ts';
 
 const firstLine = (text: string): string => (text.split('\n')[0] ?? '').slice(0, 120);
+export const noteExcerpt = (note: MNote): string =>
+  note.cw === undefined ? firstLine(note.text) : '';
 
 export function reactionsOf(n: MNote): Reaction[] {
   return groupReactions(
@@ -65,7 +67,7 @@ export function noteRow(w: World, n: MNote, o: RowOpts): NoteRow {
     quotes: n.quote ? [quoteOf(w, n.quote)] : [],
     replyTo:
       parent && !parent.hidden && !o.thread
-        ? { id: parent.id, author: parent.by.author, excerpt: firstLine(parent.text) }
+        ? { id: parent.id, author: parent.by.author, excerpt: noteExcerpt(parent) }
         : undefined,
     repostedBy:
       o.activity?.act?.type === 'repost'

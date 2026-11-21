@@ -65,8 +65,16 @@ pub(super) fn target(row: &mut Value, engine: &Engine, id: &str, account: Option
         .as_ref()
         .filter(|note| trusted && !super::visibility::nested_hidden(engine, account, note))
     {
-        let mut value = json!({"id":note.id,"excerpt":note.content.chars().take(160).collect::<String>(),
-            "media":lkjstr_protocol::embedded_media_attachments(note).len()});
+        let content = super::note::excerpt_content(note);
+        let excerpt = content
+            .unwrap_or_default()
+            .chars()
+            .take(160)
+            .collect::<String>();
+        let media = content.map_or(0, |_| {
+            lkjstr_protocol::embedded_media_attachments(note).len()
+        });
+        let mut value = json!({"id":note.id,"excerpt":excerpt,"media":media});
         if let Some(context) = context {
             value["act"] = context;
         }

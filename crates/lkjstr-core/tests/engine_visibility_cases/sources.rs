@@ -35,6 +35,13 @@ fn covered_rows_keep_one_verified_slot_across_sources_and_reveal_only_in_its_vie
         "covered by NIP-36 only",
         &[&["content-warning", "spoiler"]],
     );
+    let warning_reply = sign(
+        &writer,
+        19,
+        1,
+        "reply to warned note",
+        &[&["e", &warning.id, "", "reply"]],
+    );
     let mutes = sign(
         &reader,
         20,
@@ -68,6 +75,7 @@ fn covered_rows_keep_one_verified_slot_across_sources_and_reveal_only_in_its_vie
             &quote,
             &off_network,
             &warning,
+            &warning_reply,
             &mutes,
             &follows,
             &bookmarks,
@@ -108,6 +116,8 @@ fn covered_rows_keep_one_verified_slot_across_sources_and_reveal_only_in_its_vie
     );
     assert_eq!(row(&global, &warning)["cw"], "spoiler");
     assert!(row(&global, &warning)["hidden"].is_null());
+    assert_eq!(row(&global, &warning_reply)["replyTo"]["id"], warning.id);
+    assert_eq!(row(&global, &warning_reply)["replyTo"]["excerpt"], "");
     assert_eq!(
         row(&global, &warning)["segments"][0]["text"],
         "covered by NIP-36 only"

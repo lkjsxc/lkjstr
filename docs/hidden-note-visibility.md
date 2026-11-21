@@ -35,6 +35,10 @@ choices. The browser can reapply an explicit choice when it sees that row.
 No local reveal publishes, modifies a mute, or creates a lookup. Revealed
 rows and rows containing expiring content never seed public snapshot replay.
 
+Content-warned notes keep attribution and delivery state in their headers.
+Reply, notification and channel-list excerpts omit warned text. Compact thread
+rows and closed warning bodies do not request link previews.
+
 The outside-window evidence describes observed conditions, not a hidden-note
 total. No invalid payload, alleged author, event ID or timestamp is emitted
 as part of that evidence. EOSE describes a queried page and cannot certify
