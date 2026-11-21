@@ -307,6 +307,8 @@ export type NoteRow = {
   };
   /** The client that wrote it, when tagged. */
   readonly client?: string;
+  /** The `client` tag's handler, only when it is a well-formed kind-31990 coordinate (`31990:<hex>:<d>`). */
+  readonly clientAddress?: string;
   /** Since version 4. The note is a channel message (kind 42): which channel, and its name ('' until known).
    * Present in every source; inside the channel's own list the interface does not repeat it. `replyTo` is set
    * only when the message answers another message, never for the channel itself. */
@@ -613,6 +615,8 @@ export type RelayEntry = { readonly url: string; readonly read: boolean; readonl
 /** Every action is answered by exactly one `result`. */
 export type Action =
   | { readonly a: 'link.check'; readonly route: 'n' | 'p' | 'a'; readonly ref: string }
+  /** A note's client handler, asked on a press: `clientInfo` when the newest 31990 of that author and d verifies. */
+  | { readonly a: 'client.info'; readonly address: string }
   | { readonly a: 'zap.invoice'; readonly as: Pubkey; readonly intent: ZapInvoiceInput }
   | { readonly a: 'lists.retry'; readonly as: Pubkey }
   /** Register a mounted private editor before allowing input; closed leases cannot hold a lock. */
@@ -1182,6 +1186,8 @@ export type FromEngine =
       /** Explicit encrypted backup; never logged or stored by the interface. */
       readonly encryptedKey?: string;
       readonly zapIntent?: ZapIntent;
+      /** Of `client.info`: the verified handler's name and its website (http or https only). */
+      readonly clientInfo?: { readonly name: string; readonly website?: string };
       /** Distinct participants whose wrapper reached an inbox, including the sender. */
       readonly dmDelivery?: { readonly accepted: number; readonly total: number };
       /** Private draft answers are scoped to the requesting client and never learned as public rows. */
