@@ -48,6 +48,9 @@ what the engine offers and no surface reaches yet.
 | T2 | Thread: the notes above, compact, and the room of a missing one | [interface-thread.md](interface-thread.md#t2-the-notes-above) | built |
 | T3 | Thread: replies as a conversation, long branches folded | [interface-thread.md](interface-thread.md#t3-replies) | built |
 | T4 | Thread: the reply field under the focus | [interface-thread.md](interface-thread.md#t4-the-reply-field) | built |
+| C1 | Time label beside the thumb while a timeline scrolls | [interface-time.md](interface-time.md#c1-the-scroll-label) | ready |
+| C2 | Wide scrubber: local year, month and day marks, hover | [interface-time.md](interface-time.md#c2-the-wide-scrubber) | ready |
+| C3 | Time jumps by mouse, touch and keyboard, and their loading | [interface-time.md](interface-time.md#c3-jumps-and-loading) | ready |
 | Q1 | Tabs state wants; the engine makes one plan | [read-plan.md](read-plan.md#q1-tabs-state-wants-the-engine-makes-one-plan) | ready |
 | Q2 | Ask where the answer is | [read-plan.md](read-plan.md#q2-ask-where-the-answer-is) | ready |
 | Q3 | Weights made from the past | [read-plan.md](read-plan.md#q3-weights-made-from-the-past) | ready |
@@ -56,6 +59,8 @@ what the engine offers and no surface reaches yet.
 | Q6 | Lists are kept, not asked again at every start | [read-plan.md](read-plan.md#q6-lists-are-kept-not-asked-again-at-every-start) | ready |
 | Q7 | A wider set to start from | [read-plan.md](read-plan.md#q7-a-wider-set-to-start-from) | ready |
 
+C1 to C3 are the owner's item 5 of 2026-11-21. C1 needs no engine change and lands alone; C2 and C3 draw local
+day marks once the engine answers `days`, and until then fall back to today's marks without inventing a day.
 Keys come first because a locked account changes what the Messages tab says. A1 and A2 are the owner's request of
 2026-11-17 and are the next interface work: build them before anything under "Not specified yet".
 Q1 to Q5 are the owner's direction of 2026-11-17 and replace S1, which is withdrawn: the moment at which each tab
