@@ -5,7 +5,7 @@ import { t } from '../shared/i18n.ts';
 import { kv } from '../shared/storage.ts';
 import { loadViewState } from '../shared/view-state.ts';
 import { failureText } from './can.ts';
-import { draftButtons, draftMedia } from './draft-row.ts';
+import { draftButtons, draftMedia, draftText } from './draft-row.ts';
 import { type HomeDraft, hasHomeDraft, removeHomeDraft, showHomeDraft } from './home-drafts.ts';
 import { ownPublished } from './own-published.ts';
 import { toast } from './parts.ts';
@@ -102,7 +102,7 @@ export function createChannelOutbox(
         return h(
           'div',
           { class: 'cresult cdraft' },
-          h('div', { class: 'text' }, item.draft.text),
+          draftText(item.draft, env),
           ...draftMedia(item.draft),
           unknown
             ? null
