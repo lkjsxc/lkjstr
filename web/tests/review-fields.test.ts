@@ -56,6 +56,11 @@ it('only reopens search for changed text, flushing pending edits once on blur or
   off();
 });
 
+// Distinct person-address-shaped codes (bech32 characters); the composer reads only standalone, full-length ones.
+const BECH32 = 'qpzry9x8gf2tvdw0s3jn54khce6mua7l';
+const code = (i: number): string =>
+  `npub1${'q'.repeat(56)}${BECH32[(i >> 5) % 32]}${BECH32[i % 32]}`;
+
 it('closes all mention and pasted-address requests on hide and restores them on show', async () => {
   const x = setup();
   const off = mountCompose(x.el, x.env);
@@ -65,7 +70,7 @@ it('closes all mention and pasted-address requests on hide and restores them on 
     area.setSelectionRange(text.length, text.length);
     area.dispatchEvent(new Event('input'));
   };
-  const addresses = Array.from({ length: 35 }, (_, i) => `npub1test${i}`).join(' ');
+  const addresses = Array.from({ length: 35 }, (_, i) => code(i)).join(' ');
   type(`${addresses} @ali`);
   await Promise.resolve();
   expect(x.requests.filter((r) => !r.closed)).toHaveLength(33);
@@ -73,12 +78,12 @@ it('closes all mention and pasted-address requests on hide and restores them on 
   x.visible.set(false);
   expect(x.requests.every((r) => r.closed)).toBe(true);
   expect(x.el.querySelector<HTMLElement>('.mention-menu')?.hidden).toBe(true);
-  type('npub1new @alice');
+  type(`${code(99)} @alice`);
   expect(x.requests.every((r) => r.closed)).toBe(true);
   x.visible.set(true);
   await Promise.resolve();
   expect(x.requests.filter((r) => !r.closed).map((r) => r.query)).toEqual([
-    { source: 'people', ref: 'npub1new' },
+    { source: 'people', ref: code(99) },
     { source: 'people', text: 'alice', account: x.engine.me(), id: undefined },
   ]);
   expect(x.el.querySelector<HTMLElement>('.mention-menu')?.hidden).toBe(false);
@@ -95,7 +100,7 @@ it('does not open pasted-address or mention requests for an initially hidden com
   x.visible.set(false);
   const off = mountCompose(x.el, x.env);
   const area = x.el.querySelector('textarea')!;
-  area.value = 'npub1test @ali';
+  area.value = `${code(0)} @ali`;
   area.setSelectionRange(area.value.length, area.value.length);
   area.dispatchEvent(new Event('input'));
   expect(x.requests).toHaveLength(0);
