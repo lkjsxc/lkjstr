@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import type { NoteRow } from '../src/engine/protocol.ts';
 import { clientName, safeSite, stamp } from '../src/views/note-via.ts';
 import type { ViewEnv } from '../src/views/registry.ts';
@@ -40,6 +40,33 @@ describe('via <client>', () => {
     const shown = via(row(name))?.textContent ?? '';
     expect(shown).toBe(`via ${'a'.repeat(46)}👩‍💻…`);
     expect(clientName(`${'b'.repeat(127)}😀😀`)).toBe(`${'b'.repeat(127)}😀`);
+  });
+  it('passes an engine-projected long and spaced coordinate through the press', async () => {
+    const address = `31990:${'a'.repeat(64)}:synthetic app ${'word '.repeat(30)}handler`;
+    const act = vi.fn(async () => ({
+      ok: true,
+      clientInfo: { name: 'Verified fixture' },
+    }));
+    const layer = document.createElement('div');
+    const view = { ...env, layer, engine: { ...env.engine, act } } as unknown as ViewEnv;
+    const button = (stamp(row('Fixture', address), view, '12:00') as HTMLElement[]).find(
+      (element) => element.classList?.contains('via'),
+    );
+    try {
+      expect(button?.tagName).toBe('BUTTON');
+      expect(act).not.toHaveBeenCalled();
+      expect(button).toBeDefined();
+      if (!button) return;
+      layer.append(button);
+      document.body.append(layer);
+      button.click();
+      await Promise.resolve();
+      expect(act).toHaveBeenCalledExactlyOnceWith({ a: 'client.info', address });
+      expect(layer.querySelector('.vname')?.textContent).toBe('Verified fixture');
+    } finally {
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      layer.remove();
+    }
   });
   it('offers only an http or https website', () => {
     expect(safeSite('https://lkjstr.lkjsxc.com')?.host).toBe('lkjstr.lkjsxc.com');
