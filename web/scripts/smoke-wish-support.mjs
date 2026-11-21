@@ -1,6 +1,7 @@
 // Shared product checks: use real browser input and the ordinary Worker boundary.
+
 import { mkdir } from 'node:fs/promises';
-export const wishRoot = new URL('../../tmp/', import.meta.url).pathname;
+import { smokePath } from './smoke-output.ts';
 export const view = (kind) => `.pane.cur .view[data-kind="${kind}"]:visible`;
 export async function front(page, kind) {
   await page.locator(`.pane.cur .tab[data-view="${kind}"]`).click();
@@ -105,19 +106,19 @@ export async function seedWishes(ctx) {
 }
 export async function wishShot(page, item, engine, width) {
   if (process.env.LKJSTR_SHOTS !== '1') return;
-  await mkdir(`${wishRoot}screens`, { recursive: true });
-  await page.screenshot({ path: `${wishRoot}screens/wish-${item}-${engine}-${width}-dark.png` });
+  await mkdir(smokePath('screens'), { recursive: true });
+  await page.screenshot({ path: smokePath(`screens/wish-${item}-${engine}-${width}-dark.png`) });
 }
 
 export async function wishFailure(page, engine, width, error) {
-  await page.screenshot({ path: `${wishRoot}wish-failure-${engine}-${width}.png` });
+  await page.screenshot({ path: smokePath(`wish-failure-${engine}-${width}.png`) });
   const { writeFileSync } = await import('node:fs');
   writeFileSync(
-    `${wishRoot}wish-failure-${engine}-${width}.txt`,
+    smokePath(`wish-failure-${engine}-${width}.txt`),
     await page.locator('body').innerText(),
   );
   writeFileSync(
-    `${wishRoot}wish-state-${engine}-${width}.json`,
+    smokePath(`wish-state-${engine}-${width}.json`),
     JSON.stringify(
       await page.evaluate(() => ({
         lists: [...document.querySelectorAll('.view.feed')].map((el) => ({

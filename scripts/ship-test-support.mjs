@@ -15,11 +15,15 @@ export function fixture(t, options = {}) {
   const root = join(base, 'work');
   const origin = join(base, 'remote.git');
   const state = join(base, 'state');
-  for (const path of [root, join(root, 'scripts'), join(root, 'web'), join(root, 'tmp'), join(root, '.test-bin')]) {
+  for (const path of [root, join(root, 'scripts'), join(root, 'web/scripts'), join(root, 'tmp'), join(root, '.test-bin')]) {
     mkdirSync(path, { recursive: true });
   }
   for (const name of ['ship.sh', 'ship-clean.mjs', 'ship-receipt.mjs', 'ship-fixture.mjs', 'ship-fixture-change.mjs', 'ship-run.sh'].filter(name => existsSync(join(source, name)))) {
     copyFileSync(join(source, name), join(root, 'scripts', name));
+  }
+  for (const name of ['smoke-output.ts', 'smoke-real-results.mjs']) {
+    const file = join('web/scripts', name);
+    copyFileSync(join(source, '..', file), join(root, file));
   }
   if (options.mutableDriver) {
     const path = join(root, 'scripts', existsSync(join(root, 'scripts/ship-run.sh')) ? 'ship-run.sh' : 'ship.sh');

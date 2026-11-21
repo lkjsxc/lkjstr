@@ -1,4 +1,3 @@
-import { mkdir, writeFile } from 'node:fs/promises';
 import { seedLayouts } from './smoke-seed.mjs';
 
 // Shared loopback-only real-product signer helpers. No action/key payloads are recorded.
@@ -141,21 +140,4 @@ export async function signerFace(page, label, check) {
     );
   });
   check(`wish-7 ${label} draws the active account face in the bar and composer`);
-}
-
-export async function writeReport(checks, errors, fake) {
-  await mkdir('tmp/smoke-real', { recursive: true });
-  await writeFile(
-    'tmp/smoke-real/report.json',
-    JSON.stringify(
-      {
-        checks,
-        errors,
-        publications: fake.published.map((e) => ({ id: e.id, kind: e.kind })),
-        searches: fake.searches,
-      },
-      null,
-      2,
-    ),
-  );
 }

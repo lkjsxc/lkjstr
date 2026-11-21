@@ -52,7 +52,17 @@ chmod a-w "$RUN/ship.sh" "$RUN/ship-run.sh" "$RUN/ship-receipt.mjs" "$RUN/ship-c
 timeout 300 pnpm install --frozen-lockfile || fail 'pnpm install --frozen-lockfile (root)'
 cd "$W/web" || fail 'no web/'
 timeout 1800 pnpm check || fail 'pnpm check'
-LKJSTR_SHOTS=1 timeout 2400 pnpm smoke:real || LKJSTR_SHOTS=1 timeout 2400 pnpm smoke:real || fail 'pnpm smoke:real (twice)'
+smoke_attempt() {
+  local ATTEMPT="$RUN/smoke-$1" CODE=0
+  mkdir "$ATTEMPT" || fail 'cannot create smoke evidence directory'
+  printf 'Smoke attempt %s evidence: %s\n' "$1" "$ATTEMPT"
+  LKJSTR_SHOTS=1 LKJSTR_SMOKE_OUTPUT="$ATTEMPT" timeout 2400 pnpm smoke:real \
+    > "$ATTEMPT/stdout" 2> "$ATTEMPT/stderr" || CODE=$?
+  printf '%s\n' "$CODE" > "$ATTEMPT/status" || fail 'cannot retain smoke status'
+  cat "$ATTEMPT/stdout" && cat "$ATTEMPT/stderr" >&2 || fail 'cannot read smoke logs'
+  return "$CODE"
+}
+smoke_attempt 1 || smoke_attempt 2 || fail 'pnpm smoke:real (twice)'
 timeout 1200 pnpm build:real && pnpm package || fail 'build:real or package'
 cd "$W" || fail 'no worktree after build'
 T="$RUN/lkjstr-dist.tar.gz"

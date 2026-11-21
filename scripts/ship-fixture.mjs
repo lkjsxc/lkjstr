@@ -39,6 +39,21 @@ if (name === 'credential-fixture') {
 } else if (name === 'pnpm') {
   log({ command: name, args, cwd: process.cwd() });
   if (process.env.LKJSTR_SHIP_TEST_SOURCE_CHANGE) writeFileSync(join(root, 'tracked.txt'), 'changed during build');
+  if (args[0] === 'smoke:real' && process.env.LKJSTR_SHIP_TEST_SMOKE) {
+    const attempt = basename(process.env.LKJSTR_SMOKE_OUTPUT);
+    if (process.env.LKJSTR_SHOTS !== '1') throw new Error('smoke capture flag is missing');
+    const mode = process.env.LKJSTR_SHIP_TEST_SMOKE.split(',')[Number(attempt.at(-1)) - 1];
+    console.log(`stdout ${attempt}`);
+    console.error(`stderr ${attempt}`);
+    if (mode === 'timeout') process.exit(124); // Simulate a timed-out build before the harness writes anything.
+    const { createSmokeResults } = await import('../web/scripts/smoke-real-results.mjs');
+    const results = createSmokeResults();
+    const page = { locator: () => ({ innerText: async () => `failure DOM ${attempt}` }) };
+    await results.observe('independent socket observation', mode === 'pass', page);
+    results.check('later check');
+    await results.writeReport([], { published: [], searches: [] });
+    results.finish([]);
+  }
   if (args[0] === 'package') {
     const source = join(root, 'tmp/dist');
     mkdirSync(source, { recursive: true });

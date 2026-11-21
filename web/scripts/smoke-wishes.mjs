@@ -1,4 +1,5 @@
 import { appendFileSync } from 'node:fs';
+import { smokePath } from './smoke-output.ts';
 import { installExtension } from './smoke-visitors.mjs';
 import { wishFaces } from './smoke-wish-faces.mjs';
 import { wishFields } from './smoke-wish-fields.mjs';
@@ -11,7 +12,6 @@ import {
   slowly,
   view,
   wishFailure,
-  wishRoot,
   wishShot,
 } from './smoke-wish-support.mjs';
 export async function wishes({
@@ -51,7 +51,7 @@ export async function wishes({
     page.on('pageerror', (e) => errors.push(String(e)));
     const fact = (name, ok) => {
       appendFileSync(
-        `${wishRoot}wishes-progress.log`,
+        smokePath('wishes-progress.log'),
         `${ok ? 'ok' : 'FAIL'} ${engine} ${width} ${name}\n`,
       );
       check(`wish ${engine} ${width}: ${name}`, ok);

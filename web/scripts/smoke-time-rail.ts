@@ -1,6 +1,8 @@
 // Shared mock/release browser checks. Notes must span several years and exceed the first window.
+
 import { mkdir } from 'node:fs/promises';
 import type { Page } from 'playwright-core';
+import { smokePath } from './smoke-output.ts';
 export async function railSmoke(
   page: Page,
   check: (name: string, ok: boolean) => void,
@@ -66,14 +68,12 @@ export async function railSmoke(
   );
   check('return tick restores the row and disappears', (await top()).key === origin.key);
   if (shots) {
-    // Paths are absolute because the release driver runs from the repository root.
-    const root = new URL('../../tmp/screens/', import.meta.url).pathname;
-    await mkdir(root, { recursive: true });
+    await mkdir(smokePath('screens'), { recursive: true });
     const themeBefore = await page.evaluate(() => document.documentElement.dataset.theme);
     for (const theme of ['dark', 'light'] as const) {
       await page.evaluate((theme) => (document.documentElement.dataset.theme = theme), theme);
       await page.waitForTimeout(180);
-      await page.screenshot({ path: `${root}rail-1440-${theme}.png` });
+      await page.screenshot({ path: smokePath(`screens/rail-1440-${theme}.png`) });
     }
     const layout = await page.evaluate(() => localStorage.getItem('lkjstr:layout:main'));
     const mobile = await page.context().newPage();
@@ -115,7 +115,7 @@ export async function railSmoke(
       check('hover reveals narrow year numbers', await yearOpacity(true));
       await mobile.mouse.move(20, 20);
       await yearOpacity(false);
-      await mobile.screenshot({ path: `${root}rail-390-dark.png` });
+      await mobile.screenshot({ path: smokePath('screens/rail-390-dark.png') });
     } finally {
       await mobile.close();
       await page.evaluate(

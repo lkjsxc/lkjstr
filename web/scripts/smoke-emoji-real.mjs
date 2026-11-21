@@ -3,6 +3,8 @@
 // picture and, for the set's emoji, the set address. Images point at https addresses this run cannot reach, so the
 // picker's cells show their codes: the fallback is exercised too.
 
+import { smokePath } from './smoke-output.ts';
+
 const OWN = { code: 'smoke_cat', url: 'https://emoji.invalid/cat.png' };
 const LISTED = { code: 'smoke-dog', url: 'https://emoji.invalid/dog.png' };
 const setOf = (owner) => `30030:${owner}:lkjstr-smoke`;
@@ -52,7 +54,7 @@ export async function emojiRealChecks({ page, fake, check, owner, launch }) {
     await setCell.waitFor({ timeout: 15000 });
   } catch {
     // Say what did arrive: the sections drawn, the lists asked for, and who posted last.
-    await page.screenshot({ path: 'tmp/screens/emoji-real-failure.png' });
+    await page.screenshot({ path: smokePath('screens/emoji-real-failure.png') });
     const detail = {
       sections: await page
         .locator('.epick .egroup')

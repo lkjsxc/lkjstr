@@ -1,4 +1,5 @@
 // Both media protocols, all account signers, real cross-origin preflights and UI retry.
+import { smokePath } from './smoke-output.ts';
 import { openKeyField } from './smoke-seed.mjs';
 import { serverMarkScenarios } from './smoke-server-marks.mjs';
 import { accounts, compose, launch, setup } from './smoke-signer-support.mjs';
@@ -39,7 +40,7 @@ export async function uploadScenarios(options) {
         if (process.env.LKJSTR_SHOTS === '1')
           await page
             .locator('[data-entry="set.servers"]')
-            .screenshot({ path: `tmp/screens/upload-defaults-${signer}-en.png` });
+            .screenshot({ path: smokePath(`screens/upload-defaults-${signer}-en.png`) });
         await launch(page, 'Post', 'compose');
         const text = 'keep upload draft';
         await page.locator(`${compose} textarea`).fill(text);
@@ -112,9 +113,9 @@ export async function uploadScenarios(options) {
               await page.locator(`${compose} .thumb.failed`).last().waitFor({ timeout: 45000 });
               const failure = await thumb.innerText();
               if (process.env.LKJSTR_SHOTS === '1' && mode === 'refuse')
-                await page
-                  .locator(compose)
-                  .screenshot({ path: `tmp/screens/upload-failed-${signer}-${protocol}-en.png` });
+                await page.locator(compose).screenshot({
+                  path: smokePath(`screens/upload-failed-${signer}-${protocol}-en.png`),
+                });
               check(
                 `upload ${signer} ${protocol} ${mode} names server and reason`,
                 failure.includes(origin.replace('https://', '')) &&
@@ -225,7 +226,7 @@ export async function uploadScenarios(options) {
           if (process.env.LKJSTR_SHOTS === '1')
             await page
               .locator(compose)
-              .screenshot({ path: 'tmp/screens/upload-failed-extension-390-ja.png' });
+              .screenshot({ path: smokePath('screens/upload-failed-extension-390-ja.png') });
           media.set('nip96', 'ok');
           await failed.getByRole('button', { name: '再送信', exact: true }).click();
           await page.locator(`${compose} .thumb.done`).waitFor();

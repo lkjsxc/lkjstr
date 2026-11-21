@@ -1,5 +1,7 @@
 // Shared by smoke and smoke:real: real Worker, TLS, CORS, persisted-profile reload.
+
 import { mkdir } from 'node:fs/promises';
+import { smokePath } from './smoke-output.ts';
 import { compose, setup } from './smoke-signer-support.mjs';
 
 const entry = '[data-entry="set.servers"]';
@@ -161,7 +163,7 @@ export async function serverMarkScenarios(options) {
   await settings();
   if (process.env.LKJSTR_SHOTS === '1') {
     await saveServers(page, [origin, media.origins.nip96, 'https://blossom.band']);
-    await mkdir('tmp/shots', { recursive: true });
+    await mkdir(smokePath('shots'), { recursive: true });
     await page.getByLabel('Theme', { exact: true }).selectOption('dark');
     await page.waitForTimeout(500); // finish the WM's bounded save before a second app page
     const layout = await page.evaluate(() => localStorage.getItem('lkjstr:layout:main'));
@@ -183,7 +185,7 @@ export async function serverMarkScenarios(options) {
       for (const width of [1440, 390]) {
         await shot.setViewportSize({ width, height: 900 });
         await shot.locator(entry).scrollIntoViewIfNeeded();
-        await shot.screenshot({ path: `tmp/shots/servers-${width}-dark.png` });
+        await shot.screenshot({ path: smokePath(`shots/servers-${width}-dark.png`) });
       }
       check('server marks agree in a second app page');
     } finally {

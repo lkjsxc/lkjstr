@@ -13,6 +13,39 @@ const retained = f => {
   return join(f.root, 'tmp', names[0]);
 };
 
+for (const [retry, exit] of [['pass', 0], ['timeout', 1]]) {
+  test(`failed smoke evidence survives a ${retry} retry`, t => {
+    const f = fixture(t);
+    const result = f.run('', { LKJSTR_SHIP_TEST_SMOKE: `fail,${retry}` });
+    assert.equal(result.status, exit, result.log);
+    const run = retained(f);
+    const read = (attempt, file) => readFileSync(join(run, `smoke-${attempt}`, file), 'utf8');
+    for (const attempt of [1, 2]) {
+      assert.equal(read(attempt, 'stdout').split('\n')[0], `stdout smoke-${attempt}`);
+      assert.equal(read(attempt, 'stderr').split('\n')[0], `stderr smoke-${attempt}`);
+    }
+    assert.equal(read(1, 'status'), '1\n');
+    assert.equal(read(1, 'smoke-real-progress.log'), 'FAIL independent socket observation\nok later check\n');
+    assert.equal(read(1, 'smoke-real-observation-1.txt'), 'failure DOM smoke-1');
+    const first = JSON.parse(read(1, 'smoke-real/report.json'));
+    assert.deepEqual(first.checks, { 'independent socket observation': 'FAIL', 'later check': 'ok' });
+    assert.match(first.failures[0].stack, /Error: independent socket observation/);
+    assert.equal(existsSync(join(f.root, 'tmp/smoke-real/report.json')), false);
+    assert.equal(read(2, 'status'), retry === 'pass' ? '0\n' : '124\n');
+    assert.equal(existsSync(join(run, 'smoke-2/smoke-real-observation-1.txt')), false);
+    if (retry === 'pass') {
+      const second = JSON.parse(read(2, 'smoke-real/report.json'));
+      assert.deepEqual(second.checks, { 'independent socket observation': 'ok', 'later check': 'ok' });
+      assert.deepEqual(second.failures, []);
+      assert.match(result.summary, /^SHIPPED /);
+    } else {
+      assert.equal(existsSync(join(run, 'smoke-2/smoke-real/report.json')), false);
+      assert.match(result.summary, /NOT SHIPPED: pnpm smoke:real \(twice\)/);
+      assert.equal(f.events().some(row => row.args?.includes('package') || ['push', 'ssh'].includes(row.command)), false);
+    }
+  });
+}
+
 test('a baseline no-op cannot certify a distinct compatible rollback release', t => {
   const f = fixture(t);
   const result = f.run('--establish-rollback-baseline', { LKJSTR_SHIP_TEST_NOOP_BASELINE: '1' });

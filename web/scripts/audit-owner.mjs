@@ -5,6 +5,7 @@ import { SELF } from '../src/engine/mock/people.ts';
 import { rebaseStorageState } from './audit-browser.ts';
 import { auditExtra } from './audit-owner-extra.mjs';
 import { auditReading } from './audit-owner-reading.mjs';
+import { smokePath } from './smoke-output.ts';
 import { bech32 } from './smoke-visitors.mjs';
 
 const root = new URL('../../', import.meta.url).pathname;
@@ -63,9 +64,9 @@ export async function auditOwner({
         /* record all independent items */
       }
       if (process.env.LKJSTR_SHOTS === '1') {
-        await mkdir(`${root}tmp/screens`, { recursive: true });
+        await mkdir(smokePath('screens'), { recursive: true });
         await page.screenshot({
-          path: `${root}tmp/screens/audit-${String(n).padStart(2, '0')}-${prefix}-${name}.png`,
+          path: smokePath(`screens/audit-${String(n).padStart(2, '0')}-${prefix}-${name}.png`),
         });
       }
     };
@@ -280,9 +281,9 @@ export async function auditOwner({
       );
     } catch (e) {
       results[`${prefix}-error`] = e.message;
-      await mkdir(`${root}tmp/screens`, { recursive: true });
-      await page.screenshot({ path: `${root}tmp/screens/audit-failure-${prefix}.png` });
-      await writeFile(`${root}tmp/audit-dom-${prefix}.txt`, await page.locator('body').innerText());
+      await mkdir(smokePath('screens'), { recursive: true });
+      await page.screenshot({ path: smokePath(`screens/audit-failure-${prefix}.png`) });
+      await writeFile(smokePath(`audit-dom-${prefix}.txt`), await page.locator('body').innerText());
       try {
         check(`audit ${prefix}: ${e.message.split('\n')[0]}`, false);
       } catch {
@@ -293,7 +294,7 @@ export async function auditOwner({
     }
   }
   await writeFile(
-    `${root}tmp/audit-${returning ? `returning-${returning}` : real ? 'real' : 'mock'}.json`,
+    smokePath(`audit-${returning ? `returning-${returning}` : real ? 'real' : 'mock'}.json`),
     JSON.stringify(results, null, 2),
   );
 }

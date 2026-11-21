@@ -90,6 +90,7 @@ export async function reviewSettings({
   mainPathsSeen,
   socketProbe,
   check,
+  observe,
   launch,
   shots,
   shot,
@@ -162,6 +163,9 @@ export async function reviewSettings({
       (await other.locator('lkjstr-spaces button.on', { hasText: /^1$/ }).isVisible()),
   );
   const shared = [...socketProbe.peak.values()].every((peak) => peak === 1);
+  const learnedRelays =
+    mainPathsSeen.has('/owner') &&
+    [...socketProbe.seen].every((path) => path === '/owner' || path === '/');
   if (!shared || socketProbe.seen.size === 0 || !mainPathsSeen.has('/owner')) {
     console.error(
       'shared-socket-diagnostic',
@@ -174,11 +178,16 @@ export async function reviewSettings({
       }),
     );
   }
-  check('two app tabs share one socket per relay', shared && socketProbe.seen.size > 0);
-  check(
+  // Both tabs are ready for the workspace reset even when these observations fail.
+  await observe(
+    'two app tabs share one socket per relay',
+    shared && socketProbe.seen.size > 0,
+    page,
+  );
+  await observe(
     'learned owner relays survive reload and another tab bootstrap',
-    mainPathsSeen.has('/owner') &&
-      [...socketProbe.seen].every((path) => path === '/owner' || path === '/'),
+    learnedRelays,
+    page,
   );
   await page.locator('lkjstr-spaces button', { hasText: /^1$/ }).click();
   await page.waitForFunction(

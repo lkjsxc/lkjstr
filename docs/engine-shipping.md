@@ -68,6 +68,10 @@ Internet path or an interactive browser session.
 
 Each attempt retains its revision, tarball, executed helper bytes and hashes,
 deployment/verification receipts and summary in `tmp/ship-<UTC>-<random>/`.
+The first smoke and its retry write to `smoke-1/` and `smoke-2/` there.
+Each keeps the raw gate `status`, `stdout`, `stderr`, and any browser report
+at `smoke-real/report.json` with the progress log and captures from that attempt.
+Socket and learned-relay assertion failures fail the attempt after later checks run.
 Verified shipments send the owner line unless `LKJSTR_SHIP_NOTIFY=0`.
 `SHIPPED ...; desk note failed` records a successful release with a notification failure.
 

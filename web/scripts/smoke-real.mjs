@@ -1,117 +1,43 @@
 // End-to-end app check. Serve the release with its production CSP; workers can
 // reach only the loopback fixture relay. Public HTTP is blocked in all contexts.
-import { spawn } from 'node:child_process';
-import { appendFileSync } from 'node:fs';
-import { mkdir, writeFile } from 'node:fs/promises';
-import { createServer } from 'node:http';
-import { createInterface } from 'node:readline';
+import { writeFile } from 'node:fs/promises';
 import { chromium } from 'playwright-core';
-import bundle from 'playwright-core/lib/utilsBundle';
-import { fakeBunker } from '../../scripts/browser-bunker.mjs';
-import { fakeMediaSet } from '../../scripts/browser-media.mjs';
-import { fakeRelay } from '../../scripts/browser-relay.mjs';
 import { auditFixtures } from './audit-fixtures.mjs';
 import { auditOwner } from './audit-owner.mjs';
-import { browserTmp } from './browser-tmp.ts';
 import { channelScenarios } from './smoke-channels.mjs';
 import { deepLinkChecks } from './smoke-deep-links.mjs';
 import { emojiRealChecks, seedEmoji } from './smoke-emoji-real.mjs';
+import { smokePath } from './smoke-output.ts';
 import { realReaderChecks } from './smoke-reader.mjs';
 import { finishAccounts, reviewSettings, seedRailArchive } from './smoke-real-finish.mjs';
+import { createRealFixture } from './smoke-real-fixture.mjs';
+import { createSmokeResults } from './smoke-real-results.mjs';
+import { runRealWishes } from './smoke-real-wishes.mjs';
 import { openKeyField, seedLayouts } from './smoke-seed.mjs';
-import { signerFace, writeReport } from './smoke-signer-support.mjs';
+import { signerFace } from './smoke-signer-support.mjs';
 import { signerScenarios } from './smoke-signers.mjs';
 import { railSmoke } from './smoke-time-rail.ts';
 import { uploadScenarios } from './smoke-uploads.mjs';
 import { accounts, installExtension, npub, visitorChecks } from './smoke-visitors.mjs';
-import { wishes } from './smoke-wishes.mjs';
 
-const root = new URL('../../', import.meta.url).pathname;
-process.chdir(root);
-process.env.TMPDIR = browserTmp(process.env.TMPDIR ?? `${root}tmp/temp`);
-process.env.XDG_CACHE_HOME ??= `${root}tmp/cache`;
-process.env.XDG_CONFIG_HOME ??= `${root}tmp/config`;
-process.env.XDG_DATA_HOME ??= `${root}tmp/data`;
-await mkdir(process.env.TMPDIR, { recursive: true });
-const signer = spawn('cargo', ['run', '-q', '-p', 'lkjstr-core', '--example', 'engine-fixtures'], {
-  stdio: ['pipe', 'pipe', 'pipe'],
-});
-signer.stderr.resume();
-const lines = createInterface({ input: signer.stdout })[Symbol.asyncIterator]();
-const fixture = JSON.parse((await lines.next()).value);
-// Combined wishes, archive and owner-audit data retain at most 2000 loopback events.
-const fake = fakeRelay({ maxEvents: 2000 });
-// The archive/audit can fill one 1000-event store; reader arrivals get their own bounded fixture.
-const readerFake = fakeRelay();
-const deepLinkFake = fakeRelay();
-const bunker = await fakeBunker();
-const media = await fakeMediaSet();
-for (const event of [fixture.note, ...fixture.events]) {
-  fake.add(event);
-  readerFake.add(event);
-  deepLinkFake.add(event);
-}
-let signing = Promise.resolve();
-const relay = createServer();
-const ws = new bundle.wsServer({ server: relay });
-const activePaths = new Map(); // all isolated test contexts share the loopback server
-const mainSockets = new Set(); // tagged browser context that actually owns the two app tabs
-const mainPathsSeen = new Set();
-const socketProbe = { active: false, seen: new Set(), live: new Map(), peak: new Map() };
-ws.on('connection', (socket, req) => {
-  if (req.url === '/bunker' || req.url === '/bunker-secret')
-    return bunker.route(socket, req.url === '/bunker-secret');
-  activePaths.set(socket, req.url);
-  if (
-    req.headers.cookie?.split(';').some((value) => value.trim() === 'lkjstr_smoke_context=main')
-  ) {
-    mainSockets.add(socket);
-    mainPathsSeen.add(req.url);
-    if (socketProbe.active && req.url !== '/reader') {
-      socketProbe.seen.add(req.url);
-      const live = (socketProbe.live.get(req.url) ?? 0) + 1;
-      socketProbe.live.set(req.url, live);
-      socketProbe.peak.set(req.url, Math.max(live, socketProbe.peak.get(req.url) ?? 0));
-    }
-  }
-  socket.on('close', () => {
-    activePaths.delete(socket);
-    if (socketProbe.active && mainSockets.has(socket) && req.url !== '/reader')
-      socketProbe.live.set(req.url, Math.max(0, (socketProbe.live.get(req.url) ?? 0) - 1));
-    mainSockets.delete(socket);
-  });
-  const fixtureRelay =
-    req.url === '/deep-links' ? deepLinkFake : req.url === '/reader' ? readerFake : fake;
-  fixtureRelay.route({
-    send: (text) => socket.send(text),
-    onMessage: (fn) => socket.on('message', fn),
-    onClose: (fn) => socket.on('close', fn),
-  });
-});
-await new Promise((done) => relay.listen(0, '127.0.0.1', done));
-const relayUrl = `ws://127.0.0.1:${relay.address().port}`;
-signer.stdin.write(
-  `${JSON.stringify({ pubkey: fixture.note.pubkey, created_at: Math.floor(Date.now() / 1000), kind: 10002, tags: [['r', `${relayUrl}/owner`]], content: '' })}\n`,
-);
-fake.add(JSON.parse((await lines.next()).value));
-const server = spawn(
-  process.execPath,
-  [
-    'web/scripts/serve.ts',
-    '--port=0',
-    '--test-previews',
-    `--test-relay=${relayUrl}`,
-    `--test-media=${Object.values(media.origins).join(',')}`,
-  ],
-  { stdio: ['ignore', 'pipe', 'pipe'] },
-);
-const errors = [],
-  checks = {};
-const check = (name, ok = true) => {
-  checks[name] = ok ? 'ok' : 'FAIL';
-  appendFileSync('tmp/smoke-real-progress.log', `${checks[name]} ${name}\n`);
-  if (!ok) throw new Error(name);
-};
+const errors = [];
+const { check, observe, fail, writeReport, finish } = createSmokeResults();
+const {
+  fixture,
+  fixtureSign,
+  fake,
+  readerFake,
+  deepLinkFake,
+  bunker,
+  media,
+  activePaths,
+  mainSockets,
+  mainPathsSeen,
+  socketProbe,
+  relayUrl,
+  server,
+  close,
+} = await createRealFixture();
 let browser, page;
 try {
   const base = await new Promise((done, fail) => {
@@ -130,116 +56,20 @@ try {
   await ctx.route('**/*', (route) =>
     route.request().url().startsWith(`${base}/`) ? route.continue() : route.abort(),
   );
-  const fixtureSign = (event) => {
-    const task = signing.then(async () => {
-      signer.stdin.write(`${JSON.stringify(event)}\n`);
-      return JSON.parse((await lines.next()).value);
-    });
-    signing = task.then(() => undefined);
-    return task;
-  };
   await ctx.exposeFunction('fixtureSign', fixtureSign);
   await installExtension(ctx, relayUrl, fixture.note.pubkey, errors);
-  // LKJSTR_SHOTS=1 also writes the review captures of this run to tmp/screens/.
   const shots = process.env.LKJSTR_SHOTS === '1';
-  const shot = (p, name) => p.screenshot({ path: `tmp/screens/${name}` });
-  const actor = await fixtureSign({ fixtureActor: true });
-  fake.add(actor);
-  let wishAt = Math.floor(Date.now() / 1000);
-  const wishVersions = new Map();
-  const addWish = async (kind, content, tags = [], as = actor.pubkey) => {
-    const event = await fixtureSign({
-      pubkey: as,
-      created_at:
-        kind === 0 || kind === 3
-          ? (() => {
-              const key = `${as}:${kind}`;
-              const at = Math.max(Math.floor(Date.now() / 1000), (wishVersions.get(key) ?? 0) + 1);
-              wishVersions.set(key, at);
-              return at;
-            })()
-          : Math.floor(Date.now() / 1000),
-      kind,
-      content,
-      tags,
-    });
-    fake.add(event);
-    return event;
-  };
-  // Enough honest notification targets for scrolling, using a distinct signed actor.
-  for (let i = 0; i < 18; i++) {
-    const target = await addWish(1, `wish target ${i}`, [], fixture.note.pubkey);
-    await addWish(7, '+', [
-      ['e', target.id],
-      ['p', fixture.note.pubkey],
-    ]);
-  }
-  const wishEvents = async ({ kind, target, author }) => {
-    wishAt++;
-    if (kind === 'mentionSent') {
-      const matches = () =>
-        fake.published.some(
-          (e) =>
-            e.kind === 1 &&
-            e.content.includes(`nostr:${author.npub}`) &&
-            e.content.includes('wish queued note') &&
-            !e.content.includes('@engine') &&
-            e.tags.some((tag) => tag[0] === 'p' && tag[1] === author.pubkey),
-        );
-      for (let i = 0; i < 200 && !matches(); i++) await new Promise((done) => setTimeout(done, 25));
-      return matches();
-    }
-    if (kind === 'face') {
-      const picture = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36'%3E%3Crect width='36' height='36' fill='purple'/%3E%3C/svg%3E`;
-      await addWish(
-        0,
-        JSON.stringify({ name: 'engine-fixture', picture }),
-        [],
-        fixture.note.pubkey,
-      );
-      return picture;
-    }
-    if (kind === 'arrival')
-      return addWish(1, `Engine wish arrival ${wishAt}`, [], fixture.note.pubkey);
-    if (kind === 'reactions') {
-      for (const content of ['+', '', '❤️', '-'])
-        await addWish(7, content, [
-          ['e', target.id],
-          ['p', target.author.pubkey],
-        ]);
-    }
-    if (kind === 'notifications') {
-      const target = await addWish(1, `wish new target ${wishAt}`, [], fixture.note.pubkey);
-      for (const content of ['+', '', '❤️'])
-        await addWish(7, content, [
-          ['e', target.id],
-          ['p', fixture.note.pubkey],
-        ]);
-    }
-  };
-  await wishes({
+  const shot = (p, name) => p.screenshot({ path: smokePath(`screens/${name}`) });
+  const { actor, addWish } = await runRealWishes({
     browser,
     base,
-    real: true,
-    sign: fixtureSign,
-    relayUrl,
-    pubkey: fixture.note.pubkey,
+    fixture,
+    fixtureSign,
     fake,
-    events: wishEvents,
+    relayUrl,
     errors,
     check,
   });
-  // The field regression intentionally publishes an owner relay edit. Restore
-  // the shared fixture before independent account/bootstrap scenarios begin.
-  fake.add(
-    await fixtureSign({
-      pubkey: fixture.note.pubkey,
-      created_at: Math.floor(Date.now() / 1000) + 1,
-      kind: 10002,
-      tags: [['r', `${relayUrl}/owner`]],
-      content: '',
-    }),
-  );
   const scenario = {
     browser,
     base,
@@ -323,7 +153,7 @@ try {
       document.querySelectorAll('.note .act.a-reply:not(.off)').length === 0,
   );
   await writeFile(
-    'tmp/read-only-state.json',
+    smokePath('read-only-state.json'),
     JSON.stringify(
       {
         postDisabled: await page
@@ -433,6 +263,7 @@ try {
     mainPathsSeen,
     socketProbe,
     check,
+    observe,
     launch,
     shots,
     shot,
@@ -450,19 +281,16 @@ try {
   });
   check('no page errors', errors.length === 0);
 } catch (error) {
-  checks.failure = String(error);
-  if (page) await writeFile('tmp/smoke-real-dom.txt', await page.locator('body').innerText());
+  await fail(error, page);
 } finally {
-  await writeReport(checks, errors, fake);
-  await browser?.close();
-  server.kill();
-  signer.stdin.end();
-  await bunker.close();
-  await media.close();
-  ws.close();
-  await new Promise((done) => relay.close(done));
+  try {
+    await writeReport(errors, fake);
+  } finally {
+    try {
+      await browser?.close();
+    } finally {
+      await close();
+    }
+  }
 }
-if (Object.values(checks).some((v) => v !== 'ok')) {
-  console.error(JSON.stringify({ checks, errors }));
-  process.exitCode = 1;
-} else console.log('ok smoke-real');
+finish(errors);

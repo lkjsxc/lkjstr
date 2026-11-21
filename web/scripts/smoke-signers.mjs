@@ -1,6 +1,8 @@
 // NIP-07 rejection/deadlines and NIP-46 sessions through the shipped UI.
+
 import { writeFile } from 'node:fs/promises';
 import { remote } from './smoke-bunker.mjs';
+import { smokePath } from './smoke-output.ts';
 import { accounts, code, compose, launch, setup, signerFace } from './smoke-signer-support.mjs';
 
 async function failure(options, mode) {
@@ -79,7 +81,7 @@ async function failure(options, mode) {
           .isEnabled()) &&
         (await page.locator(`${compose} textarea`).inputValue()) === draft;
       await writeFile(
-        `tmp/signer-${mode}.json`,
+        smokePath(`signer-${mode}.json`),
         JSON.stringify({
           saved,
           restored,
