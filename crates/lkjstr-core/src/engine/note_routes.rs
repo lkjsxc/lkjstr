@@ -181,7 +181,7 @@ pub(super) fn refreshed_destinations(
     list: &WriteRelayList,
     policy: &NoteRoutePolicy,
 ) -> Vec<Destination> {
-    super::publication_plan::plan(PublicationInput {
+    super::publication_plan::plan_note(PublicationInput {
         own: list
             .urls
             .iter()

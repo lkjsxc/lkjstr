@@ -21,7 +21,7 @@ impl Network {
                 "skipped"
             }
             .into();
-            p.note_route_deadlines.remove(url);
+            p.route_deadlines.remove(url);
             changed.push(Delivery {
                 relay: url.clone(),
                 state: state.clone(),
@@ -34,6 +34,7 @@ impl Network {
                 deliveries: p.delivery(),
             });
             self.update_publication(id, &changed);
+            self.cancel_publication_sends(id, |relay| blocked.contains(relay));
         }
     }
 
@@ -55,6 +56,16 @@ impl Network {
             p.default_routes = defaults;
         }
     }
+    pub(in crate::engine) fn note_unconfirmed(&self, id: &str) -> bool {
+        self.receipts.get(id).is_some_and(|r| {
+            !r.echo_confirmation
+                && !r.deliveries.iter().any(|d| d.state == "accepted")
+                && r.deliveries
+                    .iter()
+                    .any(|d| matches!(d.state.as_str(), "timeout" | "rejected"))
+        })
+    }
+
     pub(in crate::engine) fn connecting_event(&self, id: &str) -> bool {
         self.publications
             .get(id)
@@ -72,18 +83,30 @@ impl Network {
         changed
     }
 
-    pub(super) fn expire_note_routes(&mut self, now: u64) {
+    pub(super) fn expire_publish_routes(&mut self, now: u64) {
         let mut updates = Vec::new();
         for (id, p) in &mut self.publications {
             let mut expired = Vec::new();
-            for (relay, (connect, ack)) in &p.note_route_deadlines {
+            p.route_deadlines.retain(|relay, (connect, ack)| {
                 let Some(state) = p.deliveries.get_mut(relay) else {
-                    continue;
+                    return false;
                 };
-                if now < ack.unwrap_or(*connect) || *state != "pending" {
-                    continue;
+                let until = ack.unwrap_or(*connect);
+                if *state == "timeout" {
+                    return now < until.saturating_add(10_000);
                 }
-                *state = if p.observed.contains(relay) {
+                if *state != "pending" {
+                    return false;
+                }
+                let unavailable = p.event.kind == 1
+                    && self.relays.get(relay).is_some_and(|r| {
+                        r.cooldown_until >= until
+                            || (!r.online && !r.connecting && r.retry_at >= until)
+                    });
+                if now < until && !unavailable {
+                    return true;
+                }
+                *state = if p.event.kind != 1 && p.observed.contains(relay) {
                     "accepted"
                 } else {
                     "timeout"
@@ -94,7 +117,15 @@ impl Network {
                     state: state.clone(),
                     message: None,
                 });
-            }
+                if *state == "timeout" && p.attempted.contains(relay) {
+                    // Start the late-reply opportunity when the Worker observes expiry.
+                    *connect = now;
+                    *ack = None;
+                    true
+                } else {
+                    false
+                }
+            });
             if !expired.is_empty()
                 && (p.discovery_pending || p.deliveries.values().any(|s| s == "pending"))
             {

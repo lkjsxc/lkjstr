@@ -8,9 +8,9 @@ use lkjstr_core::engine::{
 };
 use serde_json::json;
 const R: &str = "wss://delivery.test/";
-fn setup() -> (Network, lkjstr_protocol::NostrEvent) {
+fn setup(kind: u64) -> (Network, lkjstr_protocol::NostrEvent) {
     let mut n = Network::default();
-    let e = event(1, 1, "transport", vec![]);
+    let e = event(1, kind, "transport", vec![]);
     n.configure(vec![R.into()], 0);
     n.publish(
         "post".into(),
@@ -29,7 +29,7 @@ fn setup() -> (Network, lkjstr_protocol::NostrEvent) {
 #[test]
 fn failed_first_socket_send_is_not_counted_but_failed_retry_preserves_evidence() {
     for first_succeeded in [false, true] {
-        let (mut n, e) = setup();
+        let (mut n, e) = setup(1);
         let frame = json!(["EVENT", e]).to_string();
         if first_succeeded {
             n.publication_frame_sent(R, &frame, true);
@@ -56,7 +56,7 @@ fn failed_first_socket_send_is_not_counted_but_failed_retry_preserves_evidence()
 }
 #[test]
 fn an_early_echo_is_remembered_without_resolving_before_the_wait_ends() {
-    let (mut n, e) = setup();
+    let (mut n, e) = setup(7);
     n.observe_verified(R, &e, 1);
     assert!(n.drain_output().is_empty());
     assert!(n.pending_event(&e.id));
@@ -92,7 +92,7 @@ fn unanswered_wire_result_does_not_invent_a_relay_refusal() {
 }
 #[test]
 fn standalone_confirmation_keeps_an_open_socket_without_reconnecting_and_releases_it() {
-    let (mut n, _) = setup();
+    let (mut n, _) = setup(7);
     n.tick(30000);
     assert!(n.relays[R].online);
     n.drain_effects();

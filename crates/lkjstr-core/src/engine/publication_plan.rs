@@ -31,7 +31,12 @@ pub fn plan(input: PublicationInput) -> Vec<Destination> {
         if selected.contains(&url) {
             return;
         }
-        let capacity = selected.len() >= 64;
+        let capacity = selected.len()
+            >= if input.deletion {
+                NOTE_ROUTE_LIMIT + 64
+            } else {
+                64
+            };
         let skipped = capacity || *used >= limit;
         if !skipped {
             selected.insert(url.clone());
@@ -53,7 +58,11 @@ pub fn plan(input: PublicationInput) -> Vec<Destination> {
         add(
             url,
             if input.deletion { "delete" } else { "reply" },
-            if input.deletion { 64 } else { 8 },
+            if input.deletion {
+                NOTE_ROUTE_LIMIT + 64
+            } else {
+                8
+            },
             &mut extra,
             "inbox-cap",
         );
@@ -75,6 +84,33 @@ pub fn plan(input: PublicationInput) -> Vec<Destination> {
             }
             person += 1;
         }
+    }
+    out
+}
+
+/// Note fanout includes long write and inbox lists. Keep the active plan bounded.
+pub(super) const NOTE_ROUTE_LIMIT: usize = 128;
+
+pub(super) fn plan_note(input: PublicationInput) -> Vec<Destination> {
+    let mut seen = BTreeSet::new();
+    let mut out = Vec::new();
+    let mut add = |urls: Vec<String>, rule: &str| {
+        for url in urls.into_iter().filter_map(|url| strict_relay(&url)) {
+            if seen.insert(url.clone()) {
+                let skipped = out.len() >= NOTE_ROUTE_LIMIT;
+                out.push(Destination {
+                    url,
+                    rule: rule.into(),
+                    state: if skipped { "skipped" } else { "pending" }.into(),
+                    reason: skipped.then(|| "capacity".into()),
+                });
+            }
+        }
+    };
+    add(input.own, "own");
+    add(input.context, "reply");
+    for urls in input.inboxes {
+        add(urls, "inbox");
     }
     out
 }

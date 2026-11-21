@@ -2,13 +2,24 @@ use super::*;
 impl Network {
     /// Frame parsing and signature verification remain in protocol/core.
     pub fn message(&mut self, relay: &str, text: &str, now: u64) -> Option<NostrEvent> {
-        self.message_observed(relay, text, now, |_| {})
+        self.message_with_transport(relay, text, now, false, |_| {})
     }
     pub fn message_observed(
         &mut self,
         relay: &str,
         text: &str,
         now: u64,
+        on_acceptance: impl FnOnce(&str),
+    ) -> Option<NostrEvent> {
+        self.message_with_transport(relay, text, now, true, on_acceptance)
+    }
+
+    fn message_with_transport(
+        &mut self,
+        relay: &str,
+        text: &str,
+        now: u64,
+        require_transport: bool,
         on_acceptance: impl FnOnce(&str),
     ) -> Option<NostrEvent> {
         self.now = now;
@@ -141,6 +152,13 @@ impl Network {
                 accepted,
                 message,
             } => {
+                if require_transport
+                    && self.publications.get(&event_id).is_some_and(|p| {
+                        p.event.kind == 1 && !p.transport_confirmed.contains(relay)
+                    })
+                {
+                    return None;
+                }
                 if !self.auth_answer(relay, &event_id, accepted, &message, now)
                     && (accepted || !self.auth_write(relay, &event_id, &message))
                 {

@@ -1,5 +1,4 @@
 # Engine proposals
-
 ## Purpose
 
 Additive protocol ledger under the 2026-11-16 owner delegation. See status.md and parity.md for current behavior and limits.
@@ -198,3 +197,4 @@ Mock-only `EngineConfig.mock.slow` signs one matching note late and delays its r
 - Optional `act.signingTiming: { at, hidden, boot, restart }` records enqueue for public signing actions. Existing callers can omit it.
 - Optional `stats.signing` reports bounded `recent` and `slow` timings. See [signing-latency.md](signing-latency.md) for stages and retention.
 - Optional `window.headThrough` on a top window retains its delivered tail key while following new rows, up to 6800 rows.
+- Optional `NoteRow.unconfirmed` marks the signed-in author's settled note while a retained receipt still has zero accepted deliveries.

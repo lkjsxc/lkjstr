@@ -4,7 +4,8 @@ use lkjstr_protocol::{NostrEvent, NostrFilter, filter_to_value, normalize_relay_
 use serde_json::{Value, json};
 use std::collections::{BTreeMap, BTreeSet};
 pub(super) const NOTE_CONNECT_WAIT_MS: u64 = 10_000;
-pub(super) const NOTE_ACK_WAIT_MS: u64 = 5_000;
+pub(super) const NOTE_ACK_WAIT_MS: u64 = 8_000;
+const PUBLICATION_WAIT_MS: u64 = 30_000;
 #[path = "network_auth.rs"]
 pub mod auth;
 #[path = "network_batch.rs"]
@@ -23,6 +24,8 @@ mod delivery;
 mod eviction;
 #[path = "network_frontier.rs"]
 mod frontier;
+#[path = "network_publish_slots.rs"]
+mod publish_slots;
 use frontier::PageFrontier;
 #[path = "network_cache_gaps.rs"]
 mod cache_gaps;
@@ -85,6 +88,8 @@ pub enum Effect {
 }
 #[derive(Default)]
 pub struct Relay {
+    pub(super) publish_only: bool,
+    pub(super) publish_slot: bool,
     pub(super) auth: auth::Authentication,
     pub cooldown_until: u64,
     pub quality_at: u64,
@@ -153,19 +158,21 @@ pub(super) struct Publication {
     pub req: String,
     pub event: NostrEvent,
     pub auth_account: String, // Original sender; never infer a gift-wrap identity.
-    pub deadline: u64,
+    pub deadline: u64,        // Discovery may add destinations until this time.
     pub deliveries: BTreeMap<String, String>,
-    // Kind 1 only, connection deadline and optional first-frame ACK deadline (<= 20).
-    pub note_route_deadlines: BTreeMap<String, (u64, Option<u64>)>,
+    // Pending destinations in rule order. Slot wait does not consume the send deadline.
+    pub waiting: std::collections::VecDeque<String>,
+    // Once admitted: a connection deadline and, for a note, a first-frame ACK deadline.
+    pub route_deadlines: BTreeMap<String, (u64, Option<u64>)>,
     pub sent: BTreeMap<String, u64>,
-    // Ever attempted, independent of reconnect/retry markers; <= 20 planned routes.
+    // Ever attempted, independent of reconnect/retry markers.
     pub attempted: BTreeSet<String>,
     pub messages: BTreeMap<String, String>,
     pub observed: BTreeSet<String>,
     pub transport_confirmed: BTreeSet<String>,
     pub reported_success: bool,
     pub recipients: Vec<String>,
-    pub inbox_routes: BTreeSet<String>,
+    pub inbox_routes: usize,
     pub discovery_pending: bool,
     pub author_list: Option<String>,
     pub author_route_wait_until: u64,
@@ -196,12 +203,13 @@ pub struct Network {
     pub(super) effects: Vec<Effect>,
     pub(super) output: Vec<Output>,
     pub(super) publications: BTreeMap<String, Publication>,
+    publish_cursor: Option<String>, // Last publication to take a transient slot.
     // Last 32 receipts plus results still displayed (<= 128 per client, 32 clients).
     receipts: BTreeMap<String, delivery::Receipt>,
     delivery_watches: BTreeSet<String>,
     // Last 32 plans (<= 2240 destinations each); no event bodies.
     publication_history: std::collections::VecDeque<publication_history::Record>,
-    // At most 2048 authored events, <= 64 destinations each; persisted by Worker.
+    // At most 2048 authored events and 4 MiB of destination URLs; persisted by Worker.
     pub(super) publication_routes: BTreeMap<String, Vec<String>>,
     // FIFO keys for the same 2048 route sets; persisted in this order.
     pub(super) publication_route_order: std::collections::VecDeque<String>,

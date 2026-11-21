@@ -15,11 +15,9 @@ impl Network {
             .writes
             .iter()
             .filter(|id| {
-                self.publications.get(*id).is_some_and(|p| {
-                    p.auth_account == *account
-                        && now < p.deadline
-                        && p.deliveries.get(relay).is_some_and(|s| s == "pending")
-                })
+                self.publications
+                    .get(*id)
+                    .is_some_and(|p| p.auth_account == *account && p.pending_on(relay, now))
             })
             .cloned()
             .collect::<Vec<_>>();

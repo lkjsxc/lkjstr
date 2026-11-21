@@ -69,20 +69,7 @@ impl Network {
             .collect();
         self.read_outboxes = read_plan::select(&candidates, 12).into_iter().collect();
         for url in self.read_outboxes.clone() {
-            if self.relays.contains_key(&url) || self.relays.len() >= 64 {
-                continue;
-            }
-            self.relays.insert(
-                url.clone(),
-                Relay {
-                    retry_at: now,
-                    max_reqs: 4,
-                    max_limit: 200,
-                    ..Default::default()
-                },
-            );
-            self.effects.push(Effect::Inspect(url.clone()));
-            self.apply_quality(&url, now);
+            self.admit_reader(&url, now);
         }
     }
 
@@ -105,7 +92,7 @@ impl Network {
         urls.into_iter()
             .filter(|url| seen.insert(url.clone()))
             .filter_map(|url| {
-                let relay = self.relays.get(&url)?;
+                let relay = self.relays.get(&url).filter(|r| !r.publish_only)?;
                 let usage = self.known.get(&url);
                 let configured = usage.is_some_and(|usage| match q.source {
                     Source::Search => usage.search,

@@ -59,11 +59,9 @@ impl Network {
                     && request_needs(&q.filter, account, self.auth_active.as_deref())
             })
         }) || r.auth.writes.iter().any(|id| {
-            self.publications.get(id).is_some_and(|p| {
-                p.auth_account == account
-                    && now < p.deadline
-                    && p.deliveries.get(relay).is_some_and(|s| s == "pending")
-            })
+            self.publications
+                .get(id)
+                .is_some_and(|p| p.auth_account == account && p.pending_on(relay, now))
         })
     }
     /// A revoked identity or removed demand is cancellation, not failure of other work.

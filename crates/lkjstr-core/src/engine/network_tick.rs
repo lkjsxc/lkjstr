@@ -2,50 +2,11 @@ use super::*;
 impl Network {
     pub fn tick(&mut self, now: u64) {
         self.now = now;
-        self.expire_note_routes(now);
+        self.expire_publish_routes(now);
         self.wake_reads(now);
         self.auth_tick(now);
-        self.admit_configured(now);
-        let relays: Vec<_> = self.relays.keys().cloned().collect();
-        for url in relays {
-            let r = &self.relays[&url];
-            let wanted = self
-                .requests
-                .values()
-                .any(|q| q.relay == url && !q.complete && (!q.speculative() || r.online))
-                || (r.online && self.delivery_connection_wanted(&url, now))
-                || self.publications.values().any(|p| {
-                    now < p.deadline && p.deliveries.get(&url).is_some_and(|s| s == "pending")
-                });
-            if !wanted {
-                if r.online || r.connecting {
-                    self.effects.push(Effect::Disconnect(url.clone()));
-                    if let Some(r) = self.relays.get_mut(&url) {
-                        r.auth.reset();
-                        r.online = false;
-                        r.connected_since = None;
-                        r.connecting = false;
-                        r.retry_at = now;
-                    }
-                }
-                continue;
-            }
-            if (r.online && now.saturating_sub(r.last_rx) > 120000)
-                || (r.connecting && now >= r.retry_at)
-            {
-                self.disconnected(&url, now);
-            }
-            let r = &mut self.relays.get_mut(&url);
-            if let Some(r) = r
-                && !r.online
-                && !r.connecting
-                && now >= r.retry_at
-            {
-                r.connecting = true;
-                r.retry_at = now + 15000;
-                self.effects.push(Effect::Connect(url.clone()));
-            }
-        }
+        self.drive_connections(now);
+        self.send_pending(now);
         let stale: BTreeSet<_> = self
             .requests
             .values()
@@ -206,7 +167,6 @@ impl Network {
             }
             self.send_group(&id, now);
         }
-        self.send_pending(now);
         self.settle(now);
     }
 }

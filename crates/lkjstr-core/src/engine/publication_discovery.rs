@@ -1,7 +1,7 @@
-//! Missing inbox lists are read while own delivery proceeds; all work shares its deadline.
+//! Missing inbox lists are read during the discovery window while own delivery proceeds.
 use super::{
     Engine,
-    network::{Effect, NOTE_CONNECT_WAIT_MS, Network, Relay},
+    network::Network,
     protocol::{Query, Source},
     publication_plan::Destination,
 };
@@ -28,17 +28,21 @@ impl Engine {
             .network
             .publications
             .iter()
-            .filter(|(_, p)| p.event.kind == 1 && now < p.deadline)
+            .filter(|(_, p)| p.event.kind == 1 && now < p.delivery_until())
             .map(|(id, p)| {
                 (
                     id.clone(),
                     p.author_list.clone(),
+                    now < p.deadline,
                     self.note_route_policy(&p.event.pubkey),
                 )
             })
             .collect();
-        for (id, previous, policy) in updates {
+        for (id, previous, discover, policy) in updates {
             self.network.apply_note_opt_out(&id, &policy.blocked);
+            if !discover {
+                continue;
+            }
             let Some(list) = policy
                 .list
                 .as_ref()
@@ -51,7 +55,7 @@ impl Engine {
                 p.author_route_wait_until = 0;
             }
             let routes = super::note_routes::refreshed_destinations(list, &policy);
-            self.network.extend_publication(&id, routes, now, true);
+            self.network.extend_publication(&id, routes, true);
         }
         let jobs: Vec<_> = self
             .network
@@ -71,7 +75,7 @@ impl Engine {
                 .collect();
             self.network.set_unresolved_recipients(&id, missing.len());
             let routes = self.publication_routes(&event);
-            self.network.extend_publication(&id, routes, now, false);
+            self.network.extend_publication(&id, routes, false);
             if let Some(p) = self.network.publications.get_mut(&id) {
                 p.discovery_pending = !missing.is_empty();
                 p.recipients = missing.clone();
@@ -124,77 +128,47 @@ impl Engine {
     }
 }
 impl Network {
-    fn extend_publication(
-        &mut self,
-        id: &str,
-        mut routes: Vec<Destination>,
-        now: u64,
-        author_update: bool,
-    ) {
-        let Some(p) = self.publications.get(id) else {
+    fn extend_publication(&mut self, id: &str, mut routes: Vec<Destination>, author_update: bool) {
+        let Some(p) = self.publications.get_mut(id) else {
             return;
         };
+        // Author refresh adds outboxes; recipient discovery adds inbox/context.
         routes.retain(|d| {
-            p.deliveries
-                .get(&d.url)
-                .is_none_or(|state| state == "skipped")
+            (d.rule == "own") == author_update
+                && p.deliveries
+                    .get(&d.url)
+                    .is_none_or(|state| state == "skipped")
         });
-        // Author refresh adds only new outboxes; recipient discovery adds only inbox/context.
-        routes.retain(|d| (d.rule == "own") == author_update);
-        let mut extra = p.inbox_routes.len();
-        let mut admitted = p.deliveries.len();
+        if routes.is_empty() {
+            return;
+        }
+        let limit = if p.event.kind == 1 {
+            super::publication_plan::NOTE_ROUTE_LIMIT
+        } else {
+            20
+        };
         for d in routes.iter_mut().filter(|d| d.state == "pending") {
-            if admitted >= 20 || (!author_update && extra >= 8) {
+            let reason = if p.deliveries.len() >= limit && !p.deliveries.contains_key(&d.url) {
+                Some("capacity")
+            } else if p.event.kind != 1 && p.inbox_routes >= 8 && d.rule != "own" {
+                Some("inbox-cap")
+            } else {
+                None
+            };
+            if let Some(reason) = reason {
                 d.state = "skipped".into();
-                d.reason = Some(
-                    if admitted >= 20 {
-                        "capacity"
-                    } else {
-                        "inbox-cap"
-                    }
-                    .into(),
-                );
+                d.reason = Some(reason.into());
                 continue;
             }
-            extra += 1;
-            if !self.relays.contains_key(&d.url) {
-                if self.relays.len() >= 64 {
-                    d.state = "skipped".into();
-                    d.reason = Some("capacity".into());
-                    continue;
-                }
-                self.effects.push(Effect::Inspect(d.url.clone()));
-                self.relays.insert(
-                    d.url.clone(),
-                    Relay {
-                        retry_at: now,
-                        max_reqs: 4,
-                        max_limit: 200,
-                        ..Default::default()
-                    },
-                );
-            }
-            if let Some(p) = self.publications.get_mut(id) {
-                admitted += 1;
-                p.deliveries.insert(d.url.clone(), "pending".into());
-                if !author_update {
-                    p.inbox_routes.insert(d.url.clone());
-                }
-                if p.event.kind == 1 {
-                    p.note_route_deadlines.insert(
-                        d.url.clone(),
-                        (now.saturating_add(NOTE_CONNECT_WAIT_MS), None),
-                    );
-                }
-            }
+            p.inbox_routes += usize::from(d.rule != "own");
+            p.deliveries.insert(d.url.clone(), "pending".into());
+            p.waiting.push_back(d.url.clone());
         }
-        let added = routes.iter().any(|d| d.state == "pending");
+        let output = super::protocol::Output::Delivery {
+            req: p.req.clone(),
+            deliveries: p.delivery(),
+        };
         self.extend_publication_history(id, routes);
-        if added && let Some(p) = self.publications.get(id) {
-            self.output.push(super::protocol::Output::Delivery {
-                req: p.req.clone(),
-                deliveries: p.delivery(),
-            });
-        }
+        self.output.push(output);
     }
 }

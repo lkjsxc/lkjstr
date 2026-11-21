@@ -61,8 +61,9 @@ impl Network {
                     record.messages.insert(d.relay.clone(), message.clone());
                 }
             }
+            let by_url: BTreeMap<_, _> = deliveries.iter().map(|d| (&d.relay, d)).collect();
             for d in &mut record.deliveries {
-                if let Some(next) = deliveries.iter().find(|next| next.relay == d.url) {
+                if let Some(next) = by_url.get(&d.url) {
                     d.state.clone_from(&next.state);
                 }
             }
@@ -75,7 +76,7 @@ impl Network {
     ) {
         let mut retained = self.published_routes(id);
         for route in &routes {
-            if route.state != "skipped" && !retained.contains(&route.url) && retained.len() < 64 {
+            if route.state != "skipped" && !retained.contains(&route.url) {
                 retained.push(route.url.clone());
             }
         }
@@ -171,7 +172,7 @@ impl Network {
             let routes = rs
                 .into_iter()
                 .filter_map(|r| crate::engine::settings::strict_relay(&r))
-                .take(64)
+                .take(crate::engine::publication_plan::NOTE_ROUTE_LIMIT + 64)
                 .collect();
             self.retain_routes(id, routes);
         }

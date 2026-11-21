@@ -33,7 +33,21 @@ pub(super) fn settle(row: &mut Value, e: &Engine, account: Option<&str>) {
     }
 }
 
+pub(super) fn unconfirmed(row: &mut Value, e: &Engine, account: Option<&str>) {
+    let unconfirmed = row["kind"] == "note"
+        && row["author"]["pubkey"].as_str() == account
+        && row["id"]
+            .as_str()
+            .is_some_and(|id| e.network.note_unconfirmed(id));
+    if unconfirmed {
+        row["unconfirmed"] = Value::Bool(true);
+    } else if let Some(fields) = row.as_object_mut() {
+        fields.remove("unconfirmed");
+    }
+}
+
 pub(super) fn home_delivery(row: &mut Value, e: &Engine, account: Option<&str>) {
+    unconfirmed(row, e, account);
     if row["kind"] == "note" && row["author"]["pubkey"].as_str() == account {
         if row["id"]
             .as_str()

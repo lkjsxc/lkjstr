@@ -7,7 +7,7 @@ use lkjstr_core::{
     },
     store::Store,
 };
-use lkjstr_protocol::{NostrEvent, NostrFilter};
+use lkjstr_protocol::NostrFilter;
 use serde_json::{Value, json};
 fn urls(prefix: &str, count: usize) -> Vec<String> {
     (0..count)
@@ -28,12 +28,12 @@ fn frames(network: &mut Network) -> Vec<Value> {
 fn deletion_has_one_global_delivery_bound_with_explicit_capacity_exclusions() {
     let routes = plan(PublicationInput {
         own: urls("own", 12),
-        context: urls("previous", 64),
+        context: urls("previous", 192),
         deletion: true,
         ..Default::default()
     });
-    assert_eq!(routes.len(), 76);
-    assert_eq!(routes.iter().filter(|d| d.state == "pending").count(), 64);
+    assert_eq!(routes.len(), 204);
+    assert_eq!(routes.iter().filter(|d| d.state == "pending").count(), 192);
     assert_eq!(
         routes
             .iter()
@@ -41,51 +41,6 @@ fn deletion_has_one_global_delivery_bound_with_explicit_capacity_exclusions() {
             .count(),
         12
     );
-}
-#[test]
-fn configured_routes_wait_for_capacity_without_dropping_publications_then_resume() {
-    let mut network = Network::default();
-    let original = urls("original", 64);
-    let event = NostrEvent {
-        id: "a".repeat(64),
-        pubkey: "b".repeat(64),
-        created_at: 1,
-        kind: 5,
-        tags: vec![],
-        content: String::new(),
-        sig: "0".repeat(128),
-    };
-    network.publish(
-        "delete".into(),
-        event.clone(),
-        plan(PublicationInput {
-            context: original.clone(),
-            deletion: true,
-            ..Default::default()
-        }),
-        0,
-    );
-    let configured = urls("configured", 24);
-    network.configure(configured.clone(), 1);
-    assert_eq!(network.relays.len(), 64);
-    assert_eq!(network.deferred_relays.len(), 24);
-    assert!(network.pending_event(&event.id));
-    assert!(original.iter().all(|url| network.relays.contains_key(url)));
-    assert!(configured.iter().all(|url| network.known.contains_key(url)));
-    assert_eq!(network.published_routes(&event.id).len(), 64);
-    let mut restored = Network::default();
-    restored.restore_publication_routes(&network.publication_routes_json());
-    assert_eq!(restored.published_routes(&event.id).len(), 64);
-    network.tick(30000);
-    network.tick(30001);
-    assert_eq!(network.relays.len(), 24);
-    assert!(network.deferred_relays.is_empty());
-    assert!(
-        configured
-            .iter()
-            .all(|url| network.relays.contains_key(url))
-    );
-    assert!(!network.pending_event(&event.id));
 }
 #[test]
 fn inbox_lookup_waits_for_first_feed_page_then_rotates_single_slot() {

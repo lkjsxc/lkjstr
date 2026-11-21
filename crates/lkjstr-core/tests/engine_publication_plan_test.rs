@@ -105,6 +105,8 @@ fn twelve_deliveries_connect_retry_and_finish_after_early_success() {
     assert_eq!(sends(&mut n), 0);
     assert_eq!(n.publication_stats()[own[2].as_str()].publish_failed, 0);
     n.tick(5010);
+    assert_eq!(sends(&mut n), 10);
+    n.tick(8010);
     assert_eq!(sends(&mut n), 0);
     assert_eq!(n.publication_stats()[own[2].as_str()].publish_failed, 0);
     assert_eq!(n.publication_stats()[own[2].as_str()].publish_pending, 1);
@@ -114,9 +116,9 @@ fn twelve_deliveries_connect_retry_and_finish_after_early_success() {
             if deliveries.iter().filter(|d| d.state == "timeout").count() == 11
     )));
     for url in own.iter().skip(1) {
-        n.message(url, &json!(["OK", event.id, true, ""]).to_string(), 6000);
+        n.message(url, &json!(["OK", event.id, true, ""]).to_string(), 9000);
     }
-    n.tick(6001);
+    n.tick(9001);
     assert!(!n.pending_event(&event.id));
     assert!(
         !n.drain_output()
@@ -189,14 +191,14 @@ fn slow_connection_gets_its_own_ack_window_after_the_first_frame() {
     assert_eq!(sends(&mut n), 0);
     n.connected(&own[1], 7000);
     assert_eq!(sends(&mut n), 1);
-    n.tick(11999);
+    n.tick(14999);
     assert!(
         n.drain_output()
             .iter()
             .any(|o| matches!(o, Output::Delivery { deliveries, .. }
         if deliveries.iter().any(|d| d.relay == own[1] && d.state == "pending")))
     );
-    n.tick(12000);
+    n.tick(15000);
     assert!(
         n.drain_output()
             .iter()

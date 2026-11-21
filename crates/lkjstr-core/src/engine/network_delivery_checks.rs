@@ -6,9 +6,10 @@ impl Network {
     pub(super) fn delivery_connection_wanted(&self, url: &str, now: u64) -> bool {
         self.publications.values().any(|p| {
             p.attempted.contains(url)
-                && p.deliveries
-                    .get(url)
-                    .is_some_and(|s| (s == "pending" && now >= p.deadline) || s == "timeout")
+                && p.deliveries.get(url).is_some_and(|s| s == "timeout")
+                && p.route_deadlines.get(url).is_some_and(|(connect, ack)| {
+                    now < ack.unwrap_or(*connect).saturating_add(10_000)
+                })
         }) || self.receipts.values().any(|r| {
             r.checks.contains_key(url)
                 || (now <= r.finished_at.saturating_add(10000)
@@ -49,7 +50,7 @@ impl Network {
         let mut sends = Vec::new();
         for (id, r) in &mut self.receipts {
             let elapsed = now.saturating_sub(r.finished_at);
-            if !(7000..=10000).contains(&elapsed) {
+            if !r.echo_confirmation || !(7000..=10000).contains(&elapsed) {
                 continue;
             }
             for d in &r.deliveries {

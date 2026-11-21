@@ -39,8 +39,9 @@ the existing transport contract does not need to change with the crate name.
 ## Relay decisions
 
 publication_plan.rs makes explicit kind-aware delivery plans; publication_discovery
-fills missing inbox lists under the same deadline. Network owns retries and early
-success, plus bounded Stats receipts and a durable deletion-route ledger.
+fills missing inbox lists while writes proceed. Network batches new write sockets
+independently of reads and resolves public notes on their first matching positive
+OK. Later answers use the bounded Stats receipts and durable deletion-route ledger.
 read_plan.rs ranks configured fallback and bounded verified NIP-65 routes by
 coverage and measured first-event/EOSE quality without changing chronological
 feeds. Progressive readiness does not wait for all EOSE. Route-local cursors

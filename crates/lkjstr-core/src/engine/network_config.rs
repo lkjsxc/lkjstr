@@ -49,17 +49,31 @@ impl Network {
     }
     pub(super) fn admit_configured(&mut self, now: u64) {
         for url in self.relay_order.clone() {
-            if self.relays.contains_key(&url) {
-                self.deferred_relays.remove(&url);
-                continue;
-            }
-            if self.relays.len() >= 64 {
+            if !self.admit_reader(&url, now) {
                 self.deferred_relays.insert(url);
-                continue;
+            } else if self.deferred_relays.remove(&url) {
+                self.profiles_changed = true;
             }
-            self.effects.push(Effect::Inspect(url.clone()));
+        }
+    }
+
+    pub(super) fn has_reader(&self, url: &str) -> bool {
+        self.relays.get(url).is_some_and(|r| !r.publish_only)
+    }
+
+    pub(super) fn admit_reader(&mut self, url: &str, now: u64) -> bool {
+        if self.has_reader(url) {
+            return true;
+        }
+        if self.relays.values().filter(|r| !r.publish_only).count() >= 64 {
+            return false;
+        }
+        self.effects.push(Effect::Inspect(url.to_owned()));
+        if let Some(relay) = self.relays.get_mut(url) {
+            relay.publish_only = false;
+        } else {
             self.relays.insert(
-                url.clone(),
+                url.to_owned(),
                 Relay {
                     retry_at: now,
                     max_reqs: 4,
@@ -67,10 +81,8 @@ impl Network {
                     ..Default::default()
                 },
             );
-            self.apply_quality(&url, now);
-            if self.deferred_relays.remove(&url) {
-                self.profiles_changed = true;
-            }
+            self.apply_quality(url, now);
         }
+        true
     }
 }

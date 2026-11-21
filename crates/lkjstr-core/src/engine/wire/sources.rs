@@ -114,6 +114,7 @@ impl Session {
         }
         for row in &mut out {
             super::quote_state::settle(row, e, q.account.as_deref());
+            super::quote_state::unconfirmed(row, e, q.account.as_deref());
             if row["id"]
                 .as_str()
                 .is_some_and(|id| e.network.pending_event(id))

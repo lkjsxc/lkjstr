@@ -2,6 +2,15 @@
 use super::*;
 use crate::engine::protocol::Delivery;
 impl Network {
+    pub(super) fn cancel_publication_sends(&mut self, id: &str, blocked: impl Fn(&str) -> bool) {
+        self.effects.retain(|effect| {
+            !matches!(effect, Effect::Send(url, text)
+                if blocked(url) && text.starts_with("[\"EVENT\",")
+                    && serde_json::from_str::<Value>(text)
+                        .is_ok_and(|frame| frame[1]["id"] == id))
+        });
+    }
+
     pub(in crate::engine) fn cancel_publication(&mut self, id: &str) {
         if let Some(r) = self.receipts.remove(id) {
             for (url, (wire, _)) in r.checks {
@@ -11,6 +20,7 @@ impl Network {
         let Some(p) = self.publications.remove(id) else {
             return;
         };
+        self.cancel_publication_sends(id, |_| true);
         let mut deliveries: Vec<_> = p
             .deliveries
             .into_iter()
@@ -76,6 +86,9 @@ mod tests {
         n.connected("wss://cancel.test/", 1);
         n.drain_output();
         n.cancel_publication(&e.id);
+        assert!(!n.drain_effects().iter().any(|effect| matches!(
+            effect, Effect::Send(_, frame) if frame.contains(&e.id)
+        )));
         assert!(n.drain_output().iter().any(|o| matches!(o, Output::Delivery { deliveries, .. } if deliveries.iter().all(|d| d.message.is_none()))));
     }
 }

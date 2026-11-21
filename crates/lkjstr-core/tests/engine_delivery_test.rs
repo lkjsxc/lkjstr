@@ -13,8 +13,8 @@ use lkjstr_protocol::NostrFilter;
 use serde_json::{Value, json};
 const A: &str = "wss://a.test/";
 const B: &str = "wss://b.test/";
-fn setup() -> (Network, lkjstr_protocol::NostrEvent) {
-    let e = event(1, 1, "delivery", vec![]);
+fn setup(kind: u64) -> (Network, lkjstr_protocol::NostrEvent) {
+    let e = event(1, kind, "delivery", vec![]);
     let mut n = Network::default();
     n.configure(vec![A.into(), B.into()], 0);
     n.publish(
@@ -57,7 +57,7 @@ fn frames(n: &mut Network) -> Vec<Value> {
 }
 #[test]
 fn late_ok_corrects_timeout_and_emits_delivery_without_second_result() {
-    let (mut n, e) = setup();
+    let (mut n, e) = setup(1);
     n.message(A, &json!(["OK", e.id, true, ""]).to_string(), 10);
     n.tick(30000);
     n.drain_output();
@@ -74,7 +74,7 @@ fn late_ok_corrects_timeout_and_emits_delivery_without_second_result() {
 }
 #[test]
 fn verified_echo_corrects_only_attempted_relay_and_suppresses_check() {
-    let (mut n, e) = setup();
+    let (mut n, e) = setup(7);
     n.tick(30000);
     n.drain_output();
     n.observe_verified("wss://rebroadcast.test/", &e, 31000);
@@ -90,14 +90,14 @@ fn verified_echo_corrects_only_attempted_relay_and_suppresses_check() {
 }
 #[test]
 fn acknowledgement_survives_disconnect_before_retry() {
-    let (mut n, e) = setup();
+    let (mut n, e) = setup(1);
     n.disconnected(B, 10);
     n.message(B, &json!(["OK", e.id, true, ""]).to_string(), 11);
     assert_eq!(state(&n, B), "accepted");
 }
 #[test]
 fn one_confirmation_on_open_connection_in_seven_seconds_and_close_on_eose() {
-    let (mut n, e) = setup();
+    let (mut n, e) = setup(7);
     let store = Store::new(10);
     let f = NostrFilter {
         kinds: Some(vec![1]),
@@ -163,7 +163,7 @@ fn only_attempted_destinations_are_exposed_to_the_composer() {
 }
 #[test]
 fn true_duplicate_is_success_and_relay_refusal_words_survive_history_and_wire() {
-    let (mut n, e) = setup();
+    let (mut n, e) = setup(1);
     n.message(
         A,
         &json!(["OK", e.id, true, "duplicate: saved"]).to_string(),
@@ -225,7 +225,7 @@ fn normalized_routes_share_the_same_acknowledgement_key() {
 }
 #[test]
 fn watched_receipt_outlives_history_and_release_removes_its_late_callback() {
-    let (mut n, e) = setup();
+    let (mut n, e) = setup(1);
     n.watch_deliveries(vec!["post".into()]);
     n.tick(30000);
     for i in 0..33 {

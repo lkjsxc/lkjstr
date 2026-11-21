@@ -8,70 +8,41 @@ the Worker executes effects. Feeds remain chronological.
 
 ## Publishing
 
-The signed author's verified kind 10002 write routes override configured fallback
-write routes. Up to 12 distinct own routes are selected. Replies also use retained
-parent origins and signed e-tag relay hints; addressed kinds 1, 6, 7, 16, 42 and
-30023 use recipients' verified read routes, up to two per person and eight extra
-routes including reply context. Duplicate URLs consume no extra connection.
-People-list p tags are not recipients: changing mutes/follows does not contact
-those people's inboxes. Kind 10002 updates include new and previous outboxes.
+The signed author's verified kind 10002 write routes take priority over configured
+fallback writers. Public notes also use retained parent origins, signed relay
+hints and up to 32 recipients' verified read routes. Explicit write opt-outs and
+read-only routes are respected. A note plan admits up to 128 distinct destinations
+and records capacity exclusions. Other kinds retain the existing own and inbox
+planning limits. Relay-list edits include the new and previous outboxes.
+Missing lists get limit-one lookups on up to two selected routes while sends proceed.
 
-Up to 32 recipients are considered. Missing kind 10002 lists get independent,
-limit-one lookups on up to two existing chosen routes while own delivery proceeds.
-A write-only configuration can use its chosen write routes for these lookups.
-Unresolved recipients remain counted in recentPublications; absence is not a
-successful delivery. Cached inbox lists are used immediately. Relay discovery
-cannot exceed the publication's deadline or introduce unrelated relay URLs.
+Publications reuse open and already-connecting reader sockets. Up to 12 new
+publication handshakes run at once, independently of the 64-reader pool. Queued
+jobs rotate through the free slots. Each admitted note route has 10 seconds to
+connect and 8 seconds from the first EVENT send for an OK. A route in known
+backoff that cannot meet its deadline times out early. A disconnected socket
+retries with the existing bounded connection backoff and the same event id.
+On a stable socket, an unanswered note gets one resend during its OK window.
+Rate-limited note routes retain their negative OK and observe relay cooldown.
 
-Each job has a 30-second deadline. Offline destinations connect with existing
-exponential connection backoff. Pending EVENT frames retry every five seconds;
-reconnect clears the send marker. The first positive OK resolves success once;
-remaining destinations keep attempting and emit delivery updates. A negative OK
-is terminal except rate-limited responses, which remain pending. The 30-second
-wait is unchanged: measured public OKs needed less than two seconds. Deadline
-expiry means timeout/unknown. Late OKs still correct the record; true duplicate
-OKs are acceptance. Sent evidence survives reconnects independently of retry
-markers. Failed socket sends are removed from the composer list unless an
-earlier send succeeded. Unsolicited OK before sending cannot resolve a publication.
+Only the first matching positive OK on a sent note frame resolves success.
+Transport sends and verified echoes have no effect on note acceptance. The
+remaining routes continue and publish receipt updates. Initial delivery and
+discovery are bounded by 30 seconds, with accepted notes and deletions allowed
+up to 120 seconds for later waves. A late positive OK can update a retained
+timeout receipt. Other kinds also retain verified-echo confirmation and at most
+one finite ids check on an open socket.
 
-The composer count includes only destinations actually sent an EVENT. The first
-action result does not end its delivery listener. Frontend hint.deliveryWatches
-retains one result per mounted composer (up to 128 per client, 32 clients);
-replacement, unmount after settlement and detach release it. Engine receipts retain the last 32
-publications plus displayed results. They contain no event bodies; every route
-collection is bounded by the publication plan (12 own plus eight context/inbox).
-Recent history retains updated states and bounded refusal messages. Timeout
-receipts remain pending/unknown in aggregate engine counts; Stats columns and
-wording stay unchanged.
+The composer counts relays that received a frame. Stats retains the last 32
+plans, including rejected, timed-out and unattempted destinations.
+The existing delivery watch retains results while a composer displays them.
+Receipt tracking retains no event bodies. Channel creation still requires both
+its creation event and joined-list success.
 
-A verified copy from an attempted relay also confirms delivery. A timeout gets
-at most one finite ids request, seven to ten seconds after the wait ended, only
-on an already-open socket with a free subscription slot and no cooldown. No new
-connection is opened for confirmation. Already-open sent sockets stay wanted
-through the opportunity/check, at most 15 seconds after waiting. The check closes
-on an event, EOSE, CLOSED,
-five-second expiry, disconnect, deletion or receipt release. An earlier verified
-copy suppresses it. Echoes during the wait are remembered without resolving
-the action before its OK; they confirm an otherwise unanswered result at expiry.
-Unsent or unrelated rebroadcast relays never change the count.
-Channel creation still requires both its creation event and joined-list success.
-
-Limits: 64 simultaneous publications and 64 active transports including the
-existing configured read routes. Capacity exclusions are explicit. Initial plans
-retain up to 2240 valid candidates (128 own candidates for list transitions,
-32 people x 64 list entries and 64 context URLs). Own, per-person, inbox and
-capacity caps are retained with reason codes. URL length is at most 2048 bytes.
-Invalid addresses are rejected; secret-bearing URLs are never candidates.
-
-Deletion cancels outstanding original sends/discovery to prevent late fanout.
-It reuses attempted destinations, including missing acknowledgements, plus
-current outboxes and retained event origins. A FIFO ledger retains at most 2048
-authored route sets, with at most 64 routes each and a 4 MiB URL byte bound. It is
-saved in IndexedDB with event persistence and restored before queued actions.
-Pending sends do not resume after Worker termination. After ledger eviction,
-complete historical delivery destinations are unknown; no guarantee is made for
-those older deletions. Recent Stats history is session-only and bounded to 32
-publications. Transport resources are released after their remaining wants end.
+Deletion cancels the original note's outstanding sends and discovery. It reuses
+the original routes, current outboxes and event origins. The persisted FIFO
+ledger keeps up to 2048 authored route sets under a 4 MiB URL byte bound and
+includes destinations without an ACK. The Worker restores it before queued actions.
 
 ## Reading and freshness
 

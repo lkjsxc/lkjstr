@@ -75,6 +75,11 @@ impl Engine {
                     .unwrap_or_default(),
             );
         }
+        let context_limit = if input.deletion {
+            publication_plan::NOTE_ROUTE_LIMIT + 64
+        } else {
+            64
+        };
         if matches!(event.kind, 1 | 5 | 6 | 7 | 16 | 41 | 42) {
             for tag in event
                 .tags
@@ -92,12 +97,12 @@ impl Engine {
                 if let Some(hint) = tag.get(2) {
                     input.context.push(hint.clone());
                 }
-                if input.context.len() >= 64 {
+                if input.context.len() >= context_limit {
                     break;
                 }
             }
         }
-        input.context.truncate(64);
+        input.context.truncate(context_limit);
         let (author_list, default_routes) = if event.kind == 1 {
             let policy = self.note_route_policy(&event.pubkey);
             let defaults = self.note_write_routes(&event.pubkey, &mut input, &policy);
@@ -109,6 +114,11 @@ impl Engine {
         } else {
             (None, Vec::new())
         };
-        (publication_plan::plan(input), author_list, default_routes)
+        let routes = if event.kind == 1 {
+            publication_plan::plan_note(input)
+        } else {
+            publication_plan::plan(input)
+        };
+        (routes, author_list, default_routes)
     }
 }

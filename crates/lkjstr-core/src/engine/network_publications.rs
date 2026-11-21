@@ -1,4 +1,14 @@
 use super::*;
+
+impl Publication {
+    pub(in crate::engine) fn delivery_until(&self) -> u64 {
+        if self.reported_success && matches!(self.event.kind, 1 | 5) {
+            self.deadline.saturating_add(90_000)
+        } else {
+            self.deadline
+        }
+    }
+}
 impl Network {
     pub fn pending_event(&self, id: &str) -> bool {
         self.publications
@@ -12,7 +22,7 @@ impl Network {
         &mut self,
         req: String,
         event: NostrEvent,
-        mut routes: Vec<crate::engine::publication_plan::Destination>,
+        routes: Vec<crate::engine::publication_plan::Destination>,
         now: u64,
         auth_account: String,
     ) {
@@ -23,63 +33,32 @@ impl Network {
             });
             return;
         }
-        self.release_publication_relays();
-        for d in routes.iter_mut().filter(|d| d.state == "pending") {
-            if !self.relays.contains_key(&d.url) {
-                // Idle transient transports are released before accepting a new job.
-                if self.relays.len() >= 64 {
-                    d.state = "skipped".into();
-                    d.reason = Some("capacity".into());
-                    continue;
-                }
-                self.effects.push(Effect::Inspect(d.url.clone()));
-                self.relays.insert(
-                    d.url.clone(),
-                    Relay {
-                        retry_at: now,
-                        max_reqs: 4,
-                        max_limit: 200,
-                        ..Default::default()
-                    },
-                );
-                self.apply_quality(&d.url, now);
-            }
+        let mut pending: Vec<_> = routes.iter().filter(|d| d.state == "pending").collect();
+        if event.kind == 1 {
+            pending.sort_by_key(|d| self.publication_priority(&d.url, now));
         }
-        let deliveries: BTreeMap<String, String> = routes
+        let waiting = pending
             .iter()
-            .filter(|d| d.state == "pending")
-            .map(|d| (d.url.clone(), "pending".into()))
-            .collect();
-        let inbox_routes = routes
-            .iter()
-            .filter(|d| d.rule != "own" && d.state == "pending")
             .map(|d| d.url.clone())
+            .collect::<std::collections::VecDeque<_>>();
+        let inbox_routes = pending.iter().filter(|d| d.rule != "own").count();
+        let deliveries = waiting
+            .iter()
+            .map(|url| (url.clone(), "pending".into()))
             .collect();
         self.remember_publication(&event, routes, now);
         let recipients = crate::engine::publication_discovery::recipients(&event);
         let discovery_pending = !recipients.is_empty();
-        let note_route_deadlines = if event.kind == 1 {
-            deliveries
-                .keys()
-                .map(|url| {
-                    (
-                        url.clone(),
-                        (now.saturating_add(NOTE_CONNECT_WAIT_MS), None),
-                    )
-                })
-                .collect()
-        } else {
-            BTreeMap::new()
-        };
         self.publications.insert(
             event.id.clone(),
             Publication {
                 req,
                 event,
                 auth_account,
-                deadline: now.saturating_add(30000),
+                deadline: now.saturating_add(PUBLICATION_WAIT_MS),
                 deliveries,
-                note_route_deadlines,
+                waiting,
+                route_deadlines: BTreeMap::new(),
                 sent: BTreeMap::new(),
                 attempted: BTreeSet::new(),
                 messages: BTreeMap::new(),
@@ -100,10 +79,14 @@ impl Network {
     pub(super) fn send_pending(&mut self, now: u64) {
         let mut frames = Vec::new();
         let mut updates = Vec::new();
-        for p in self.publications.values_mut().filter(|p| now < p.deadline) {
+        for p in self
+            .publications
+            .values_mut()
+            .filter(|p| now < p.delivery_until())
+        {
             let before = p.attempted.len();
-            for (relay, state) in &p.deliveries {
-                if state == "pending"
+            for (relay, (_, ack)) in &mut p.route_deadlines {
+                if p.deliveries.get(relay).is_some_and(|s| s == "pending")
                     && p.sent
                         .get(relay)
                         .is_none_or(|at| now.saturating_sub(*at) >= 5000)
@@ -112,9 +95,7 @@ impl Network {
                     })
                 {
                     p.sent.insert(relay.clone(), now);
-                    if p.attempted.insert(relay.clone())
-                        && let Some((_, ack)) = p.note_route_deadlines.get_mut(relay)
-                    {
+                    if p.attempted.insert(relay.clone()) && p.event.kind == 1 {
                         *ack = Some(now.saturating_add(NOTE_ACK_WAIT_MS));
                     }
                     frames.push((relay.clone(), p.event.clone()));
@@ -136,7 +117,7 @@ impl Network {
             .relays
             .keys()
             .filter(|url| {
-                !self.relay_order.contains(url)
+                (self.relays[*url].publish_only || !self.relay_order.contains(url))
                     && !(self.relays[*url].online && self.delivery_connection_wanted(url, self.now))
                     && !self.requests.values().any(|r| &r.relay == *url)
                     && !self
@@ -166,8 +147,8 @@ impl Network {
             .publications
             .iter()
             .filter(|(_, p)| {
-                now >= p.deadline
-                    || (!p.discovery_pending
+                now >= p.delivery_until()
+                    || ((!p.discovery_pending || now >= p.deadline)
                         && (p.reported_success || now >= p.author_route_wait_until)
                         && p.deliveries.values().all(|s| s != "pending"))
             })

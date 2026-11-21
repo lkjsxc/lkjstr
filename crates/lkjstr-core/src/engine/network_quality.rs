@@ -135,6 +135,32 @@ impl Network {
             r.last_error = Some("rate-limited: cooldown".into());
         }
     }
+    pub(super) fn publication_priority(
+        &self,
+        url: &str,
+        now: u64,
+    ) -> (bool, std::cmp::Reverse<u64>) {
+        if let Some(relay) = self.relays.get(url) {
+            let blocked = now < relay.cooldown_until
+                || (!relay.online && !relay.connecting && now < relay.retry_at);
+            return (blocked, std::cmp::Reverse(relay.quality_weight(now)));
+        }
+        let Some(observation) = self.observations.get(url) else {
+            return (false, std::cmp::Reverse(600));
+        };
+        let age = now.saturating_sub(observation.at);
+        let blocked = age < observation.retry.max(observation.cooldown);
+        let weight = read_plan::weight(
+            observation.useful,
+            observation.received,
+            observation.first_event.or(observation.latency),
+            observation.failures.saturating_add(observation.timeouts),
+            blocked,
+            false,
+        );
+        (blocked, std::cmp::Reverse(weight))
+    }
+
     pub(super) fn cool_down(&mut self, url: &str, now: u64) {
         if let Some(r) = self.relays.get_mut(url) {
             r.failures = r.failures.saturating_add(1).min(8);

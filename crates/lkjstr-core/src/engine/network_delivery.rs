@@ -6,7 +6,8 @@ pub(super) struct Receipt {
     pub deliveries: Vec<Delivery>,
     pub finished_at: u64,
     pub checked: BTreeSet<String>,
-    // At most one five-second finite check per sent relay (<= 20 routes).
+    pub echo_confirmation: bool,
+    // At most one five-second finite check per sent relay.
     pub checks: BTreeMap<String, (String, u64)>,
 }
 impl Publication {
@@ -59,7 +60,8 @@ impl Network {
         if sent {
             let first = p.transport_confirmed.is_empty();
             if p.transport_confirmed.insert(relay.into())
-                && let Some((_, ack)) = p.note_route_deadlines.get_mut(relay)
+                && p.event.kind == 1
+                && let Some((_, ack)) = p.route_deadlines.get_mut(relay)
             {
                 *ack = Some(now.saturating_add(NOTE_ACK_WAIT_MS));
             }
@@ -75,7 +77,7 @@ impl Network {
         } else {
             if !p.transport_confirmed.contains(relay) && p.attempted.remove(relay) {
                 p.observed.remove(relay);
-                if let Some((_, ack)) = p.note_route_deadlines.get_mut(relay) {
+                if let Some((_, ack)) = p.route_deadlines.get_mut(relay) {
                     *ack = None;
                 }
                 self.output.push(Output::Delivery {
@@ -109,17 +111,16 @@ impl Network {
         }
     }
     pub(super) fn finish_delivery(&mut self, id: String, mut p: Publication, now: u64) {
-        for (url, state) in p
-            .deliveries
-            .iter_mut()
-            .filter(|(url, s)| *s == "pending" || (*s == "timeout" && p.observed.contains(*url)))
-        {
-            *state = if p.observed.contains(url) {
-                "accepted"
-            } else {
-                "timeout"
+        let echo_confirmation = p.event.kind != 1;
+        for (url, state) in &mut p.deliveries {
+            if *state == "pending" || (*state == "timeout" && echo_confirmation) {
+                *state = if echo_confirmation && p.observed.contains(url) {
+                    "accepted"
+                } else {
+                    "timeout"
+                }
+                .into();
             }
-            .into();
         }
         let all = p
             .deliveries
@@ -151,6 +152,7 @@ impl Network {
                 deliveries,
                 finished_at: now,
                 checked: BTreeSet::new(),
+                echo_confirmation,
                 checks: BTreeMap::new(),
             },
         );
@@ -164,7 +166,8 @@ impl Network {
         message: &str,
         now: u64,
     ) {
-        let retry = !accepted && quality::limited(message);
+        let limited = !accepted && quality::limited(message);
+        let retry = limited && self.publications.get(id).is_some_and(|p| p.event.kind != 1);
         let update = if let Some(p) = self.publications.get_mut(id) {
             if !p.attempted.contains(relay)
                 || !p
@@ -175,6 +178,7 @@ impl Network {
                 return;
             }
             if !retry {
+                p.route_deadlines.remove(relay);
                 p.deliveries.insert(
                     relay.into(),
                     if accepted { "accepted" } else { "rejected" }.into(),
@@ -221,25 +225,21 @@ impl Network {
             }
             self.profiles_changed = true;
             self.quality_revision = self.quality_revision.wrapping_add(1);
-            if retry && self.publications.contains_key(id) {
+            if limited && self.publications.contains_key(id) {
                 self.cool_down(relay, now);
             }
         }
     }
     pub(super) fn confirm_delivery(&mut self, relay: &str, id: &str, now: u64) {
         if let Some(p) = self.publications.get_mut(id) {
-            if p.attempted.contains(relay) {
+            if p.event.kind != 1 && p.attempted.contains(relay) {
                 p.observed.insert(relay.into());
             }
             return;
         }
-        self.answer_delivery(id, relay, true, "", now);
-        let wire = self
-            .receipts
-            .get_mut(id)
-            .and_then(|r| r.checks.remove(relay));
-        if let Some((wire, _)) = wire {
-            self.send(relay, json!(["CLOSE", wire]));
+        if self.receipts.get(id).is_none_or(|r| !r.echo_confirmation) {
+            return;
         }
+        self.answer_delivery(id, relay, true, "", now);
     }
 }

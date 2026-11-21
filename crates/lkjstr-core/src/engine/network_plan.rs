@@ -40,7 +40,7 @@ impl Network {
                     routes: q
                         .target
                         .iter()
-                        .filter(|r| self.relays.contains_key(*r))
+                        .filter(|r| self.has_reader(r))
                         .cloned()
                         .collect(),
                     primary: BTreeSet::new(),
@@ -52,7 +52,7 @@ impl Network {
             // Keep unfinished or full preceding, still-permitted routes when a
             // healthy route advances. Their remaining span is still owed.
             routes.extend(self.pending_page_routes(sub, f).into_iter().filter(|url| {
-                self.relays.contains_key(url)
+                self.has_reader(url)
                     && (q.filters.relay_hints.contains(url)
                         || (q.source == Source::Relay && q.target.as_ref() == Some(url))
                         || self.known.get(url).is_some_and(|usage| match q.source {
@@ -66,7 +66,7 @@ impl Network {
                 q.filters
                     .relay_hints
                     .iter()
-                    .filter(|u| self.relays.contains_key(*u))
+                    .filter(|u| self.has_reader(u))
                     .cloned(),
             );
             routes.sort();

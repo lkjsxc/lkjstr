@@ -98,8 +98,7 @@ fn replies_use_author_write_recipient_read_and_parent_origin() {
     );
     let stats = e.network.recent_publications();
     let ds = stats[0]["deliveries"].as_array().expect("deliveries");
-    assert_eq!(ds.iter().filter(|d| d["state"] == "pending").count(), 14);
-    assert_eq!(ds.iter().filter(|d| d["reason"] == "own-cap").count(), 2);
+    assert_eq!(ds.iter().filter(|d| d["state"] == "pending").count(), 16);
     assert!(ds.iter().any(|d| d["url"] == "wss://inbox.test/"));
     assert!(ds.iter().any(|d| d["url"] == "wss://origin.test/"));
     assert!(!ds.iter().any(|d| d["url"] == "wss://recipient-write.test/"));
@@ -107,7 +106,7 @@ fn replies_use_author_write_recipient_read_and_parent_origin() {
 #[test]
 fn delete_retains_original_destinations_after_reload_and_list_change() {
     let mut e = Engine::new();
-    e.store.insert(write_list(1, 12), None);
+    e.store.insert(write_list(1, 64), None);
     let id = publish(
         &mut e,
         Action::Publish {
@@ -139,8 +138,8 @@ fn delete_retains_original_destinations_after_reload_and_list_change() {
     );
     let stats = next.network.recent_publications();
     let ds = stats[0]["deliveries"].as_array().expect("deliveries");
-    assert_eq!(ds.len(), 13);
-    assert_eq!(ds.iter().filter(|d| d["rule"] == "delete").count(), 12);
+    assert_eq!(ds.len(), 65);
+    assert_eq!(ds.iter().filter(|d| d["rule"] == "delete").count(), 64);
 }
 #[test]
 fn mute_list_does_not_notify_every_muted_person() {

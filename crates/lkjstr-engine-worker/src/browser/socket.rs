@@ -1,5 +1,6 @@
 //! One WebSocket with owned handlers. Dropping it detaches handlers and closes.
 
+use std::{cell::Cell, rc::Rc};
 use wasm_bindgen::{JsCast, JsValue, closure::Closure};
 use web_sys::{CloseEvent, MessageEvent, WebSocket};
 
@@ -36,9 +37,14 @@ impl Socket {
                 }
             })
         };
+        let ended = Rc::new(Cell::new(false));
         let close = {
             let sink = sink.clone();
+            let ended = ended.clone();
             Handler::new(move |value: JsValue| {
+                if ended.replace(true) {
+                    return;
+                }
                 let reason = value
                     .dyn_into::<CloseEvent>()
                     .ok()
@@ -51,7 +57,9 @@ impl Socket {
             })
         };
         let error = Handler::new(move |_| {
-            (sink.borrow_mut())(SocketEvent::Closed("connection failed".to_owned()));
+            if !ended.replace(true) {
+                (sink.borrow_mut())(SocketEvent::Closed("connection failed".to_owned()));
+            }
         });
         ws.set_onopen(Some(open.as_ref().unchecked_ref()));
         ws.set_onmessage(Some(message.as_ref().unchecked_ref()));
