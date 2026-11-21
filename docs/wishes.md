@@ -99,7 +99,9 @@ Frontend tests cover focused field identity/selection, IME, mention edits,
 immediate reply/channel input release, complete failure editing, storage refusal
 and in-place picture fallback/retry.
 
-Both product smokes run owner-wish scenarios. They type individual characters
+Both product smokes run owner-wish scenarios. The composer wish types a bare @
+before the name. With the real signer held, Home's waiting draft and then the
+published note must link the same person under the same mention label. They type individual characters
 with pauses while actual engine updates arrive, checking value, node identity,
 focus and both caret endpoints after each. They cover query, period, people,
 settings search, relay and server fields. Signer checks cover pending extension

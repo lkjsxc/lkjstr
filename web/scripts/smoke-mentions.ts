@@ -210,6 +210,15 @@ async function waiting(open: Open, fact: Check): Promise<void> {
     (await draft.locator('.content > .text .lnk', { hasText: `@${NAME}` }).count()) === 1,
     await draft.locator('.content > .text').innerText(),
   );
+  const waited = await draft.locator('.content > .text .lnk').first().innerText();
+  const note = page.locator(`${HOME} .note:not(.home-draft)`, {
+    hasText: 'pending mention slowly',
+  });
+  await note.first().waitFor({ timeout: 15000 });
+  fact(
+    'pending Post: the published note links the same label the waiting one did',
+    (await note.first().locator('.content > .text .lnk').first().innerText()) === waited,
+  );
   await field.fill('');
   await field.pressSequentially('@zqx', { delay: 30 });
   await page.locator(`${MENU} .mention-quiet`).waitFor();

@@ -2,6 +2,7 @@ import { appendFileSync } from 'node:fs';
 import { installExtension } from './smoke-visitors.mjs';
 import { wishFaces } from './smoke-wish-faces.mjs';
 import { wishFields } from './smoke-wish-fields.mjs';
+import { mentionCompare } from './smoke-wish-mentions.mjs';
 import { wishNotifications } from './smoke-wish-notifications.mjs';
 import {
   front,
@@ -201,28 +202,24 @@ export async function wishes({
         '2 composer',
         real ? () => events({ kind: 'arrival', width }) : undefined,
       );
-      if (real) {
-        await page.waitForFunction(() => !!window.wish.release);
-        await page.evaluate(() => window.wish.release());
-        fact(
-          '5 Post expands selected and pasted mentions with p tags',
-          await events({ kind: 'mentionSent', author: candidate.author, width }),
-        );
-      }
-      await front(page, 'home');
-      const sent = page.locator(`${view('home')} .note:not(.home-draft)`, {
-        hasText: 'wish queued',
+      await mentionCompare({
+        page,
+        real,
+        fact,
+        candidate,
+        release: async () => {
+          if (!real) return;
+          await page.waitForFunction(() => !!window.wish.release);
+          await page.evaluate(() => window.wish.release());
+        },
+        sent: async () => {
+          if (real)
+            fact(
+              '5 Post expands selected and pasted mentions with p tags',
+              await events({ kind: 'mentionSent', author: candidate.author, width }),
+            );
+        },
       });
-      await sent.first().locator('.content > .text .lnk').first().click();
-      await page.locator(`${view('profile')} .profile`).waitFor();
-      fact(
-        '5 the published mention opens its person',
-        (await page.locator(`${view('profile')} .profile`).innerText()).includes(
-          candidate.author.name,
-        ),
-      );
-      await page.locator('.pane.cur .tab.active[data-view^="profile"]').click({ button: 'middle' });
-      await front(page, 'compose');
       await page.reload();
       await page.locator(`${view('compose')} textarea`).waitFor();
       fact(
