@@ -6,11 +6,16 @@ const SOFT_MS: u64 = 1_500;
 const HARD_MS: u64 = 5_000;
 
 impl Network {
-    pub(super) fn hedge_due(&self, filter: &NostrFilter, now: u64, older: Option<&str>) -> bool {
+    pub(super) fn hedge_due(
+        &self,
+        filter: &NostrFilter,
+        now: u64,
+        time_owner: Option<&str>,
+    ) -> bool {
         let current: Vec<_> = self
             .requests
             .values()
-            .filter(|r| r.owns_older(older) && want_key::same(&r.page_filter, filter))
+            .filter(|r| r.owns_time(time_owner) && want_key::same(&r.page_filter, filter))
             .collect();
         current
             .iter()
@@ -53,7 +58,7 @@ impl Network {
             .values()
             .flat_map(|r| r.members.iter().cloned())
             .filter(|sub| {
-                !background_member(sub) && !crate::engine::time_window_older::is_owner(sub)
+                !background_member(sub) && !crate::engine::time_window_relay::is_owner(sub)
             })
             .collect();
         for sub in subs {
@@ -110,7 +115,7 @@ impl Network {
                     && !r.complete
                     && now >= r.ready_at
                     && ((r.sent && now >= r.deadline)
-                        || (r.older_pages.is_some()
+                        || (r.time_pages.is_some()
                             && !r.verification_retry
                             && now >= r.initial_deadline)
                         || self.unopened_expired(r, now))
@@ -149,7 +154,7 @@ impl Network {
     fn unopened_expired(&self, r: &Request, now: u64) -> bool {
         !r.asked
             && now.saturating_sub(r.created_at) >= r.wait_bound()
-            && (r.older_pages.is_some()
+            && (r.time_pages.is_some()
                 || self
                     .relays
                     .get(&r.relay)

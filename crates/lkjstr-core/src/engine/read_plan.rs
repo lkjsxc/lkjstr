@@ -97,13 +97,13 @@ impl super::Network {
         store: &crate::store::Store,
         weights: &mut crate::engine::weights::PlanWeights<'a>,
         now: u64,
-        older: Option<&str>,
+        time_owner: Option<&str>,
     ) -> ReadRoutes {
         use crate::engine::protocol::Source;
         let mut candidates = self.read_candidates(f, q, store, now);
         let limit = if matches!(q.source, Source::Channel | Source::Channels) {
             24
-        } else if self.hedge_due(f, now, older) {
+        } else if self.hedge_due(f, now, time_owner) {
             3
         } else {
             2
@@ -111,7 +111,7 @@ impl super::Network {
         let current = self.count_routes(f, now).unwrap_or_else(|| {
             self.requests
                 .values()
-                .filter(|r| r.owns_older(older) && super::want_key::same(&r.page_filter, f))
+                .filter(|r| r.owns_time(time_owner) && super::want_key::same(&r.page_filter, f))
                 .map(|r| (r.relay.as_str(), r))
                 .collect()
         });
@@ -119,7 +119,7 @@ impl super::Network {
             .iter()
             .filter(|c| {
                 let request = current.get(c.url.as_str()).copied().or_else(|| {
-                    if older.is_some() {
+                    if time_owner.is_some() {
                         return None;
                     }
                     self.requests
@@ -167,7 +167,7 @@ impl super::Network {
                 // An actual inclusive continuation inherits a full predecessor's
                 // ordinary slot. Reranking must not discard its unqueried tail.
                 // Short pages and unrelated filters cannot acquire this authority.
-                let continuing = older.is_none()
+                let continuing = time_owner.is_none()
                     && current_route.is_none()
                     && self.requests.values().any(|r| {
                         r.relay == c.url

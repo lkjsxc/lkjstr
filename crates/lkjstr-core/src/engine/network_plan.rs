@@ -33,7 +33,8 @@ impl Network {
         let mut desired = Desired::new();
         let mut primary_reads = BTreeSet::new();
         for (sub, f, q) in &wants {
-            let older = crate::engine::time_window_older::is_owner(sub).then_some(sub.as_str());
+            let time_owner =
+                crate::engine::time_window_relay::is_owner(sub).then_some(sub.as_str());
             let selected = if q.source == Source::Relay {
                 read_plan::ReadRoutes {
                     routes: q
@@ -45,7 +46,7 @@ impl Network {
                     primary: BTreeSet::new(),
                 }
             } else {
-                self.read_route_plan(f, q, store, &mut weights, now, older)
+                self.read_route_plan(f, q, store, &mut weights, now, time_owner)
             };
             let mut routes = selected.routes;
             // Keep unfinished or full preceding, still-permitted routes when a
@@ -74,7 +75,7 @@ impl Network {
                 let primary = selected.primary.contains(&r);
                 let key = (
                     r,
-                    older.map_or_else(|| want_key::key(f), |owner| owner.to_owned()),
+                    time_owner.map_or_else(|| want_key::key(f), |owner| owner.to_owned()),
                 );
                 if primary {
                     primary_reads.insert(key.clone());
@@ -88,9 +89,9 @@ impl Network {
         let mut retained = BTreeSet::new();
         for ((relay, key), (filter, members)) in desired {
             let read_slot = primary_reads.contains(&(relay.clone(), key));
-            let older = members
+            let time_owner = members
                 .iter()
-                .find(|m| crate::engine::time_window_older::is_owner(m));
+                .find(|m| crate::engine::time_window_relay::is_owner(m));
             let list_watch = lists::watch(&filter, &members, &live_lists);
             let live = (filter_live(&filter) && filter.kinds.as_deref() != Some(&[10002]))
                 || members.contains("~account-discovery")
@@ -98,7 +99,7 @@ impl Network {
             let union_safe = union::allowed(&filter, &members, &queries, store, private);
             let existing = self.requests.iter_mut().find(|(_, r)| {
                 r.relay == relay
-                    && r.owns_older(older.map(String::as_str))
+                    && r.owns_time(time_owner.map(String::as_str))
                     && want_key::same(&r.page_filter, &filter)
             });
             if let Some((id, r)) = existing {
@@ -117,7 +118,7 @@ impl Network {
                     self.close_group(&relay, &wire);
                 }
             } else {
-                let (mut wire_filter, exhausted, pending) = if older.is_some() {
+                let (mut wire_filter, exhausted, pending) = if time_owner.is_some() {
                     (filter.clone(), false, None)
                 } else {
                     self.page_request(&relay, &filter, &members)
@@ -163,7 +164,7 @@ impl Network {
                     Request {
                         relay,
                         wire_id: id.clone(),
-                        older_pages: older.map(|_| 1),
+                        time_pages: time_owner.map(|owner| time_window::TimePages::new(owner)),
                         priority: 4,
                         purpose: "prefetch",
                         weight: 1,

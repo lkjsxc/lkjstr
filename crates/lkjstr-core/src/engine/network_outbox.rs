@@ -48,7 +48,7 @@ impl Network {
     ) {
         let mut needed: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
         for (_, filter, query) in wants.iter().filter(|(sub, _, _)| {
-            !sub.starts_with('~') || crate::engine::time_window_older::is_owner(sub)
+            !sub.starts_with('~') || crate::engine::time_window_relay::is_owner(sub)
         }) {
             for (url, authors) in advertised(filter, query, store) {
                 if needed.len() < 256 || needed.contains_key(&url) {

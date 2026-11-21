@@ -40,8 +40,6 @@ mod metadata;
 mod note_delivery;
 #[path = "network_stats.rs"]
 mod observations;
-#[path = "network_older.rs"]
-mod older;
 #[path = "network_outbox.rs"]
 mod outbox;
 #[path = "network_paging.rs"]
@@ -66,6 +64,8 @@ mod routing_observations;
 mod scheduler;
 #[path = "network_startup.rs"]
 mod startup;
+#[path = "network_time_window.rs"]
+mod time_window;
 #[path = "network_union.rs"]
 mod union;
 #[path = "network_verification.rs"]
@@ -145,7 +145,7 @@ pub(super) struct Request {
     // At most the transmitted page limit (<= 200) distinct IDs.
     pub received: PageFrontier,
     pub page_limit: usize,
-    pub older_pages: Option<u8>, // Scoped finite page count, including the initial request.
+    time_pages: Option<time_window::TimePages>,
     pub oldest: Option<u64>,
     pub retry_delay: u64,
 }

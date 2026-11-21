@@ -103,7 +103,7 @@ mod tests {
             ready_at: at,
             received: PageFrontier::default(),
             page_limit: 200,
-            older_pages: None,
+            time_pages: None,
             oldest: None,
             retry_delay: 1000,
         }

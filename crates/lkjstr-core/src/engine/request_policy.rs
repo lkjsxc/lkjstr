@@ -53,7 +53,7 @@ impl Network {
                             "visible"
                         },
                     )
-                } else if let Some(sub) = crate::engine::time_window_older::view_owner(member) {
+                } else if let Some(sub) = crate::engine::time_window_relay::view_owner(member) {
                     if self.focused_sub.as_deref() == Some(sub) {
                         (0, "focused")
                     } else {

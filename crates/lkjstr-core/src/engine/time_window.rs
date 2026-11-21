@@ -17,7 +17,9 @@ pub(super) use order::Order;
 
 pub(super) struct Pivot {
     pub(super) at: u64,
+    pub(super) newer_until: u64,
     key: Option<String>,
+    newer: TimeEdge,
     older: TimeEdge,
     follow_list: Option<FollowList>,
 }
@@ -64,7 +66,9 @@ impl Engine {
             view.reading = None;
             view.time_window = Some(Pivot {
                 at,
+                newer_until: now / 1000,
                 key: None,
+                newer: TimeEdge::CacheOnly,
                 older: TimeEdge::CacheOnly,
                 follow_list: None,
             });
@@ -84,16 +88,29 @@ impl Pivot {
         sub: &str,
         rows: &[Row],
         follow_list: Option<FollowList>,
-        older: TimeEdge,
+        [older, newer]: [TimeEdge; 2],
         full: bool,
         output: &mut Vec<Output>,
     ) {
         let key = rows
             .iter()
             .find(|row| row.reposted_at.unwrap_or(row.created_at) <= self.at / 1000)
-            .or_else(|| rows.last())
+            .or_else(|| {
+                // A newer-only fallback would seat on a provisional relay row.
+                if matches!(newer, TimeEdge::CacheOnly | TimeEdge::End) {
+                    rows.last()
+                } else {
+                    None
+                }
+            })
             .map(|row| row.id.clone());
-        if full || self.key != key || self.follow_list != follow_list || self.older != older {
+        if full
+            || self.key != key
+            || self.follow_list != follow_list
+            || self.older != older
+            || self.newer != newer
+        {
+            self.newer = newer;
             self.older = older;
             self.key.clone_from(&key);
             self.follow_list.clone_from(&follow_list);
@@ -101,7 +118,7 @@ impl Pivot {
                 sub: sub.into(),
                 at: self.at,
                 key,
-                newer: TimeEdge::CacheOnly,
+                newer,
                 older,
                 follow_list,
             });

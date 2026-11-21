@@ -1,5 +1,8 @@
+import { newerTimeWindow } from './engine-time-newer.mjs';
+export { newerTimeRelay } from './engine-time-newer.mjs';
+
 // The signed-out Worker seeds its cache and discovers a follow list over loopback.
-export async function absoluteTimeWindow({page, send, wait, check, note, signer, lines, fake, origin}) {
+export async function absoluteTimeWindow({page, send, wait, check, note, signer, lines, fake, timeRelay, origin}) {
   const request = async (fields) => {
     signer.stdin.write(`${JSON.stringify(fields)}\n`);
     return JSON.parse((await lines.next()).value);
@@ -48,10 +51,10 @@ export async function absoluteTimeWindow({page, send, wait, check, note, signer,
   fake.add(list);
   const sorted = [notes[4],...notes.slice(2,4).sort((a,b)=>b.id.localeCompare(a.id)),notes[0]];
   await wait(({sub,id})=>window.messages.some(m=>m.t==='timeWindow'&&m.sub===sub&&m.followList?.id===id),{sub,id:list.id});
-  await wait(({sub,id})=>window.messages.some(m=>m.t==='timeWindow'&&m.sub===sub&&m.followList?.id===id&&m.older==='end'),{sub,id:list.id});
+  await wait(({sub,id})=>window.messages.some(m=>m.t==='timeWindow'&&m.sub===sub&&m.followList?.id===id&&m.older==='end'&&m.newer==='end'),{sub,id:list.id});
   const observed = await report();
-  check('absolute window names the verified list and settles only the older relay edge',
-    observed.key===sorted[1].id&&observed.at===at*1000+999&&observed.newer==='cache-only'&&observed.older==='end'&&observed.followList.at===list.created_at*1000);
+  check('absolute window names the verified list and settles both bounded relay edges',
+    observed.key===sorted[1].id&&observed.at===at*1000+999&&observed.newer==='end'&&observed.older==='end'&&observed.followList.at===list.created_at*1000);
 
   await seek(at*1000,1,3);
   await waitReport(at*1000);
@@ -73,4 +76,5 @@ export async function absoluteTimeWindow({page, send, wait, check, note, signer,
   check('absolute window never retains an unbounded followee note head',
     !fake.activeFilters().some(f=>f.authors?.includes(note.pubkey)&&f.kinds?.includes(1)&&f.until===undefined));
   await send({t:'close',sub});
+  await newerTimeWindow({page,send,wait,check,signer,lines,timeRelay,origin});
 }

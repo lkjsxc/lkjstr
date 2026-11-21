@@ -12,7 +12,7 @@ import { uploadReview } from './engine-upload-review.mjs';
 import { uploadCancel } from './engine-upload-cancel.mjs';
 import { privateRevocation } from './engine-private-revoke.mjs';
 import { timeRail } from './engine-time-rail.mjs';
-import { absoluteTimeWindow } from './engine-time-window.mjs';
+import { absoluteTimeWindow, newerTimeRelay } from './engine-time-window.mjs';
 import { rich } from './engine-rich.mjs';
 import { createServer } from 'node:http';
 import { readFile, writeFile, readdir, mkdir } from 'node:fs/promises';
@@ -22,13 +22,14 @@ import bundle from 'playwright-core/lib/utilsBundle';
 import { fakeRelay } from './browser-relay.mjs';
 import { fakeBunker } from './browser-bunker.mjs';
 import { createInterface } from 'node:readline';
+import { workerBoot } from './engine-harness-boot.mjs';
 const root = resolve(process.env.LKJSTR_ENGINE_PKG ?? 'tmp/engine-pkg'), out = resolve(process.env.LKJSTR_ENGINE_REPORT ?? 'tmp/engine-harness');
 const run = { startedAt: new Date().toISOString(), loadStart: loadavg(), package: root, diagnosticFixtureClock: process.env.LKJSTR_CONTINUITY_DIAGNOSTIC==='1', wasmSha256: createHash('sha256').update(await readFile(join(root, 'lkjstr_engine_bg.wasm'))).digest('hex') };let continuityEvidence;
 await mkdir(out, { recursive: true });
-import { workerBoot } from './engine-harness-boot.mjs';
 const server = createServer(async (req, res) => {
   const path = new URL(req.url, 'http://x').pathname;
   if (path === '/') return res.writeHead(200, {'content-type':'text/html'}).end('<!doctype html><title>Engine harness</title>');
+  if (path === '/absolute-time') return res.writeHead(200, {'content-type':'application/nostr+json'}).end('{"limitation":{"max_limit":3,"max_subscriptions":8}}');
   if (path === '/bench.js') return res.writeHead(200, {'content-type':'text/javascript'}).end(`import init,{benchmark} from './lkjstr_engine.js';await init();postMessage(benchmark());`);
   if (path === '/shared.js') return res.writeHead(200, {'content-type':'text/javascript'}).end(`import init,{start_shared} from './lkjstr_engine.js';const queued=[];self.onconnect=e=>queued.push(e);await init();self.engineHandle=start_shared();for(const e of queued)self.onconnect(e);`);
   if (path === '/worker.js' || path === '/archive-worker.js') return res.writeHead(200, {'content-type':'text/javascript'}).end(workerBoot(path, origin));
@@ -50,7 +51,7 @@ const binary = process.env.LKJSTR_CHROME ?? `${base}/${(await readdir(base)).fil
 const browser = await chromium.launch({executablePath:binary,args:['--no-sandbox']});
 const context = await browser.newContext({ignoreHTTPSErrors:true});
 const history=[], historyTrace=continuityRelay(history), historyRequests=historyTrace.filters;
-const fake = fakeRelay(), authFake = fakeRelay({requireAuth:true}), errors = [], checks = {};
+const timeRelay = newerTimeRelay(), fake = fakeRelay(), authFake = fakeRelay({requireAuth:true}), errors = [], checks = {};
 const channelRequests=[];
 const channelFake=fakeRelay({request(ws,sub,filters){
   for(const f of filters){
@@ -62,9 +63,8 @@ const channelFake=fakeRelay({request(ws,sub,filters){
 }});
 channelFake.requests=channelRequests;
 const bunker=await fakeBunker();
-const bunkerKey=bunker.pubkey;
-const wsServer=new bundle.wsServer({server});
-wsServer.on('connection',(ws,req)=>{if(req.url==='/bunker'){return bunker.route(ws);}if(req.url==='/continuity')return historyTrace.route(ws,req.url);const target=req.url.startsWith('/auth-')?authFake:req.url==='/channels'?channelFake:fake;target.route({send:(text)=>{if(req.url==='/channels'&&JSON.parse(text)[0]==='OK')setTimeout(()=>{if(ws.readyState===1)ws.send(text);},250);else ws.send(text);},onMessage:(fn)=>ws.on('message',fn),onClose:(fn)=>ws.on('close',fn)});});
+const bunkerKey=bunker.pubkey, wsServer=new bundle.wsServer({server});
+wsServer.on('connection',(ws,req)=>{if(req.url==='/bunker'){return bunker.route(ws);}if(req.url==='/continuity')return historyTrace.route(ws,req.url);const target=req.url.startsWith('/auth-')?authFake:req.url==='/channels'?channelFake:req.url==='/absolute-time'?timeRelay.relay:fake;target.route({send:(text)=>{if(req.url==='/channels'&&JSON.parse(text)[0]==='OK')setTimeout(()=>{if(ws.readyState===1)ws.send(text);},250);else ws.send(text);},onMessage:(fn)=>ws.on('message',fn),onClose:(fn)=>ws.on('close',fn)});});
 await context.route('**/*', (r) => {
   if(r.request().url().startsWith('https://nip96.engine.test/')) {
     if(r.request().url().endsWith('/upload'))return r.fulfill({status:404,body:''});
@@ -106,7 +106,7 @@ try {
   const note=all.find((e)=>e.kind===1);if(!note)throw new Error('fixture has no note');
   all.forEach((e)=>fake.add(e));
   await send({t:'test.relays',relays:[origin.replace('http:','ws:')]});
-  await absoluteTimeWindow({page,send,wait,check,note,signer,lines,fake,origin});
+  await absoluteTimeWindow({page,send,wait,check,note,signer,lines,fake,timeRelay,origin});
   await send({t:'heartbeat'});
   await send({t:'preview',sub:'global',ids:[]});
   await wait(()=>window.messages.some(m=>m.t==='heartbeat'));

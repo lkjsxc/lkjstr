@@ -12,7 +12,7 @@ fn inclusive_older_pages_grow_and_a_stalled_route_does_not_claim_end() {
     let mut f = RelayFixture::new(&[A, B]);
     f.engine.store.insert(newer.clone(), None);
     f.open("feed", &list);
-    f.seek("feed", AT, 1, 3);
+    f.seek("feed", AT, 0, 3);
     f.hint(&["feed"]);
     f.tick(150);
     assert_eq!(f.report("feed")["followList"]["state"], "unknown");
@@ -36,7 +36,7 @@ fn inclusive_older_pages_grow_and_a_stalled_route_does_not_claim_end() {
         1,
         "full visible window waits for growth"
     );
-    f.seek("feed", AT, 1, 4);
+    f.seek("feed", AT, 0, 4);
     f.tick(150);
     let continued = f.request(A, 1);
     assert_ne!(continued[1], first[1]);
@@ -60,7 +60,6 @@ fn inclusive_older_pages_grow_and_a_stalled_route_does_not_claim_end() {
         [&newer.id, ties[0], ties[1], &overlap.id, &deep.id].map(|id| id.clone())
     );
     assert_eq!(f.report("feed")["at"], AT);
-    assert_eq!(f.report("feed")["newer"], "cache-only");
     assert_eq!(
         f.report("feed")["followList"],
         json!({"state":"latest-verified","at":110000,"id":list.id})

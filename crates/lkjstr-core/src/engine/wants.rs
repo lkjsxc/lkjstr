@@ -25,7 +25,7 @@ impl Engine {
                 );
                 continue;
             }
-            wants.extend(super::time_window_older::intent(&self.store, sub, v));
+            wants.extend(super::time_window_relay::intents(&self.store, sub, v));
             for f in requests(
                 &self.store,
                 &self.network,

@@ -18,9 +18,10 @@ month window replaces the pivot. Repeating the same `{at}` with new row counts
 keeps the pivot, the selected reading key and its in-progress relay pages.
 
 The `timeWindow` message follows the rows or patch and repeats the requested
-`at`. Its optional `key` seats the first matching row at or before `at`, or
-the nearest newer cached row when no older one is present in the window.
-An empty window omits the key. The engine applies the same pivot as cache or
+`at`. Its optional `key` seats the first matching row at or before `at`. When there
+is no older row, a cache-only or settled newer edge can seat on its nearest
+retained row. The key is omitted while the newer-only seat is unresolved
+or the window is empty. The engine applies the same pivot as cache or
 follow membership changes. Their Home includes `followList.state` as
 `unknown` or `latest-verified`; the latter includes the list timestamp and id. Unsupported sources
 report `unsupported` on both sides and keep their prior window. Page
@@ -53,10 +54,30 @@ new span. The signed kind-3 watch and keyed hydration remain active while
 visible. The store keeps the latest verified list it holds, which may be newer
 than the selected moment. Historical follows need their own evidence.
 
-## Newer relay proof
+## Newer relay span
 
-`newer` remains `cache-only`. A future newer span starts at the next second
-with a finite upper bound. A full newest-first page requires narrowing toward
-the pivot before making a nearest-row or present-time coverage claim. Signed
-loopback proof still needs to exercise full newer pages, narrowing, ties,
-and a stalled route on one side while the other side settles independently.
+A visible Their Home with a verified list and a nonzero newer row count
+reads from the second after the pivot through the wall-clock second pinned
+when that pivot was set. Signed event times are whole seconds. A row stamped
+at the pivot second is at or before the pivot, including at an exact second.
+The query's own bounds can narrow either end. An empty interval sends no
+request. Growing the window at the same pivot keeps the upper bound.
+
+Relays return newest-first pages. Each full page narrows its own route's
+inclusive upper bound to the oldest event in the page, even if the cache
+already fills the newer rows. The overlap preserves ties and verified event
+ids deduplicate them. A full page that cannot move past its upper second
+leaves that second unresolved and looks below it when there is room.
+Each route reads at most eight pages of up to 200 events. Reaching the cap
+or leaving a saturated second unresolved yields `partial`. A route without
+a verified frontier yields `stalled`. Only a verified short page after the
+preceding pages have resolved can establish `end` for that route.
+
+Rows can enter the window as verified events arrive. Until coverage settles,
+the rows describe the nearest eligible notes retained so far. If the window
+contains newer rows only, seating waits for the newer edge to settle. The newer
+edge describes coverage of the selected relay requests through the pinned
+upper bound.
+The two edges own separate requests, cursors and evidence. Each edge takes
+the least resolved state among its selected routes and releases its
+requests on the same lifecycle boundaries as the older span.

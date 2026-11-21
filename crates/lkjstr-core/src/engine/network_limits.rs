@@ -99,7 +99,7 @@ impl Network {
         let requests: Vec<_> = self
             .requests
             .values()
-            .filter(|r| r.older_pages.is_none() && r.page_filter == filter)
+            .filter(|r| r.owns_time(None) && r.page_filter == filter)
             .collect();
         !requests.is_empty()
             && requests
