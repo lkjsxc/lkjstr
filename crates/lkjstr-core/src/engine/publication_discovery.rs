@@ -55,7 +55,7 @@ impl Engine {
                 p.author_route_wait_until = 0;
             }
             let routes = super::note_routes::refreshed_destinations(list, &policy);
-            self.network.extend_publication(&id, routes, true);
+            self.network.extend_publication(&id, routes, now, true);
         }
         let jobs: Vec<_> = self
             .network
@@ -75,7 +75,7 @@ impl Engine {
                 .collect();
             self.network.set_unresolved_recipients(&id, missing.len());
             let routes = self.publication_routes(&event);
-            self.network.extend_publication(&id, routes, false);
+            self.network.extend_publication(&id, routes, now, false);
             if let Some(p) = self.network.publications.get_mut(&id) {
                 p.discovery_pending = !missing.is_empty();
                 p.recipients = missing.clone();
@@ -128,8 +128,14 @@ impl Engine {
     }
 }
 impl Network {
-    fn extend_publication(&mut self, id: &str, mut routes: Vec<Destination>, author_update: bool) {
-        let Some(p) = self.publications.get_mut(id) else {
+    fn extend_publication(
+        &mut self,
+        id: &str,
+        mut routes: Vec<Destination>,
+        now: u64,
+        author_update: bool,
+    ) {
+        let Some(p) = self.publications.get(id) else {
             return;
         };
         // Author refresh adds outboxes; recipient discovery adds inbox/context.
@@ -142,16 +148,26 @@ impl Network {
         if routes.is_empty() {
             return;
         }
-        let limit = if p.event.kind == 1 {
+        let note = p.event.kind == 1;
+        let deadline = p.deadline;
+        let limit = if note {
             super::publication_plan::NOTE_ROUTE_LIMIT
         } else {
             20
         };
+        let mut count = p.deliveries.len();
+        let mut inbox = p.inbox_routes;
         for d in routes.iter_mut().filter(|d| d.state == "pending") {
-            let reason = if p.deliveries.len() >= limit && !p.deliveries.contains_key(&d.url) {
+            let previously_admitted = self
+                .publications
+                .get(id)
+                .is_some_and(|p| p.deliveries.contains_key(&d.url));
+            let reason = if count >= limit && !previously_admitted {
                 Some("capacity")
-            } else if p.event.kind != 1 && p.inbox_routes >= 8 && d.rule != "own" {
+            } else if !note && inbox >= 8 && d.rule != "own" {
                 Some("inbox-cap")
+            } else if !note && !self.admit_non_note_route(&d.url, now) {
+                Some("capacity")
             } else {
                 None
             };
@@ -160,10 +176,25 @@ impl Network {
                 d.reason = Some(reason.into());
                 continue;
             }
-            p.inbox_routes += usize::from(d.rule != "own");
-            p.deliveries.insert(d.url.clone(), "pending".into());
-            p.waiting.push_back(d.url.clone());
+            let Some(p) = self.publications.get_mut(id) else {
+                return;
+            };
+            count += usize::from(
+                p.deliveries
+                    .insert(d.url.clone(), "pending".into())
+                    .is_none(),
+            );
+            inbox += usize::from(d.rule != "own");
+            p.inbox_routes = inbox;
+            if note {
+                p.waiting.push_back(d.url.clone());
+            } else {
+                p.route_deadlines.insert(d.url.clone(), (deadline, None));
+            }
         }
+        let Some(p) = self.publications.get(id) else {
+            return;
+        };
         let output = super::protocol::Output::Delivery {
             req: p.req.clone(),
             deliveries: p.delivery(),

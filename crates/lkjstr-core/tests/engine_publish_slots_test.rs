@@ -152,16 +152,20 @@ fn full_reader_pool_never_skips_publication_routes_and_late_waves_get_their_turn
 #[test]
 fn configuration_and_queued_work_do_not_wait_for_each_other() {
     let mut network = Network::default();
-    let note = event(1, 5, "delete", vec![]);
-    let routes = urls("original", 64);
+    let note = event(1, 1, "queued note", vec![]);
+    let routes = urls("original", 20);
     network.publish(
-        "delete".into(),
+        "note".into(),
         note.clone(),
-        plan(PublicationInput {
-            context: routes.clone(),
-            deletion: true,
-            ..Default::default()
-        }),
+        routes
+            .iter()
+            .map(|url| Destination {
+                url: url.clone(),
+                rule: "own".into(),
+                state: "pending".into(),
+                reason: None,
+            })
+            .collect(),
         0,
     );
     assert_eq!(connects(&mut network).len(), 12);

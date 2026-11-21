@@ -22,7 +22,7 @@ impl Network {
         &mut self,
         req: String,
         event: NostrEvent,
-        routes: Vec<crate::engine::publication_plan::Destination>,
+        mut routes: Vec<crate::engine::publication_plan::Destination>,
         now: u64,
         auth_account: String,
     ) {
@@ -33,19 +33,34 @@ impl Network {
             });
             return;
         }
-        let mut pending: Vec<_> = routes.iter().filter(|d| d.state == "pending").collect();
-        if event.kind == 1 {
-            pending.sort_by_key(|d| self.publication_priority(&d.url, now));
+        let deadline = now.saturating_add(PUBLICATION_WAIT_MS);
+        let mut waiting = std::collections::VecDeque::new();
+        let mut route_deadlines = BTreeMap::new();
+        let mut deliveries = BTreeMap::new();
+        let mut inbox_routes = 0;
+        if event.kind != 1 {
+            self.release_publication_relays();
         }
-        let waiting = pending
-            .iter()
-            .map(|d| d.url.clone())
-            .collect::<std::collections::VecDeque<_>>();
-        let inbox_routes = pending.iter().filter(|d| d.rule != "own").count();
-        let deliveries = waiting
-            .iter()
-            .map(|url| (url.clone(), "pending".into()))
-            .collect();
+        for route in routes.iter_mut().filter(|d| d.state == "pending") {
+            let url = &route.url;
+            if event.kind != 1 && self.admit_non_note_route(url, now) {
+                route_deadlines.insert(url.clone(), (deadline, None));
+            } else if matches!(event.kind, 1 | 5) {
+                // Expanded deletion plans can have more destinations than the common pool.
+                waiting.push_back(url.clone());
+            } else {
+                route.state = "skipped".into();
+                route.reason = Some("capacity".into());
+                continue;
+            }
+            deliveries.insert(url.clone(), "pending".into());
+            inbox_routes += usize::from(route.rule != "own");
+        }
+        if event.kind == 1 {
+            waiting
+                .make_contiguous()
+                .sort_by_key(|url| self.publication_priority(url, now));
+        }
         self.remember_publication(&event, routes, now);
         let recipients = crate::engine::publication_discovery::recipients(&event);
         let discovery_pending = !recipients.is_empty();
@@ -55,10 +70,10 @@ impl Network {
                 req,
                 event,
                 auth_account,
-                deadline: now.saturating_add(PUBLICATION_WAIT_MS),
+                deadline,
                 deliveries,
                 waiting,
-                route_deadlines: BTreeMap::new(),
+                route_deadlines,
                 sent: BTreeMap::new(),
                 attempted: BTreeSet::new(),
                 messages: BTreeMap::new(),
@@ -76,6 +91,10 @@ impl Network {
             },
         );
     }
+    pub(in crate::engine) fn admit_non_note_route(&mut self, url: &str, now: u64) -> bool {
+        self.relays.contains_key(url) || self.admit_reader(url, now)
+    }
+
     pub(super) fn send_pending(&mut self, now: u64) {
         let mut frames = Vec::new();
         let mut updates = Vec::new();

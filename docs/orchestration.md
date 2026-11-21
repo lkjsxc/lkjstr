@@ -17,8 +17,9 @@ planning limits. Relay-list edits include the new and previous outboxes.
 Missing lists get limit-one lookups on up to two selected routes while sends proceed.
 
 Publications reuse open and already-connecting reader sockets. Up to 12 new
-publication handshakes run at once, independently of the 64-reader pool. Queued
-jobs rotate through the free slots. Each admitted note route has 10 seconds to
+note handshakes run at once, independently of the 64 shared transports that
+admit other kinds as before. Deletions can use spare note slots for expanded
+route sets. Queued jobs rotate through the free slots. Each admitted note route has 10 seconds to
 connect and 8 seconds from the first EVENT send for an OK. A route in known
 backoff that cannot meet its deadline times out early. A disconnected socket
 retries with the existing bounded connection backoff and the same event id.
