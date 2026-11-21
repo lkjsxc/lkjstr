@@ -32,8 +32,14 @@ describe('via <client>', () => {
   it('is absent without a tag, plain text without a handler, a button with a well-formed one', () => {
     expect(via(row())).toBeUndefined();
     expect(via(row('   '))).toBeUndefined();
-    expect(via(row('bot', '31990:zz:bad'))?.tagName).toBe('SPAN');
+    expect(via(row('bot'))?.tagName).toBe('SPAN');
     expect(via(row('lkjstr', `31990:${'a'.repeat(64)}:lkjstr`))?.tagName).toBe('BUTTON');
+  });
+  it('never cuts a character in two', () => {
+    const name = `${'a'.repeat(46)}👩‍💻 and more`;
+    const shown = via(row(name))?.textContent ?? '';
+    expect(shown).toBe(`via ${'a'.repeat(46)}👩‍💻…`);
+    expect(clientName(`${'b'.repeat(127)}😀😀`)).toBe(`${'b'.repeat(127)}😀`);
   });
   it('offers only an http or https website', () => {
     expect(safeSite('https://lkjstr.lkjsxc.com')?.host).toBe('lkjstr.lkjsxc.com');
