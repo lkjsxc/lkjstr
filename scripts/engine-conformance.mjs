@@ -61,6 +61,8 @@ export async function conformance({page,send,wait,check,note,signer,lines,origin
   await wait(id=>window.messages.some(m=>m.t==='cache.reconcile'&&m.sub==='cache-held'&&m.removedKeys.includes(id)),held.id);
   const reconciled=(await messages()).find(m=>m.t==='cache.reconcile'&&m.sub==='cache-held');
   check('verified deletion reconciles the exact held public reference',reconciled.removedKeys.join()===held.id&&!reconciled.invalidProfileIds.length&&!reconciled.removedQuoteIds.length);
+  const reveal = await act({a:'note.reveal',sub:'cache-held',key:held.id,reveal:true});
+  check('a verified deleted note cannot be revealed',!reveal.ok&&reveal.error?.code==='not-found');
   await send({t:'cache.hold',sub:'cache-held',rows:[]});
   await send({t:'close',sub:'cache-held'});
   check('bad relay save rejects the entire action',(await act({a:'relays.save',as:note.pubkey,relays:[{url:'https://bad.test',read:true,write:true}] })).error?.code==='rejected');
