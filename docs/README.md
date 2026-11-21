@@ -50,6 +50,7 @@ Engine (`crates/`):
 - [race-open.md](race-open.md): browser first-screen race evidence.
 - [cache-context.md](cache-context.md): durable contributors, held-reference authority, selection policy and bounds.
 - [verification.md](verification.md): gates, browser checks and their results.
+- [mention-verification.md](mention-verification.md): exact signed mentions and loopback readback.
 - [engine-stream-verification.md](engine-stream-verification.md): first stream gate evidence and limits.
 - [engine-lifetime-verification.md](engine-lifetime-verification.md): ownership, queue and retained-history follow-up gates.
 - [decisions.md](decisions.md): durable decisions and why.

@@ -24,7 +24,7 @@ In web/, run pnpm check, pnpm build and pnpm smoke (mock UI plus real loopback u
 engine. The real check covers Global/Home, clean note/profile/article paths while signed out, search, compose/sign/publish, reactions, relay settings
 across reload and two tabs. All browser servers bind fresh loopback ports and use fresh local data. HTTP uses loopback TLS media fixtures or
 interception. Relays are loopback fixtures and never publish to public relays. browser-relay.mjs remains a shared bounded fixture helper.
-The ship-facing preflight is LKJSTR_SHOTS=1 pnpm smoke:real, exactly as scripts/ship-run.sh runs it: the flag adds checks plain smoke:real skips.
+The ship-facing preflight is LKJSTR_SHOTS=1 pnpm smoke:real, as in scripts/ship-run.sh. The [mention witness](mention-verification.md) runs in engine:check.
 
 The Worker harness validates replies against this worktree's protocol.ts and drives every mock message kind, action name and query source. It includes
 cache restart, signer validation, uploads, visibility release, shared clients, leader loss and a simulated idle clock. The optional cold-start benchmark is
