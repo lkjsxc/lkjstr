@@ -296,8 +296,11 @@ export type NoteRow = {
     /** The reader wrote it (delete is offered). */
     readonly own: boolean;
   };
-  /** A heuristic hid this note; the interface shows one quiet line with the reason and a way to see it. */
-  readonly hidden?: { readonly reason: string };
+  /** Hidden for a reason (interface-hidden.md): the row keeps its slot with no body, counts or controls. `detail` is
+   * the reader's own matching mute entry; `revealable` says whether `note.reveal` may show it. */
+  readonly hidden?: { readonly reason: string; readonly revealable?: boolean; readonly detail?: string };
+  /** Shown by `note.reveal` although hidden for this reason. */
+  readonly revealed?: { readonly reason: string };
   /** `thread` source only. `depth` 0 for ancestors and the focus, 1+ for replies. `parent` (additive): the id of
    * the note this one answers, also when that note is not known; absent for the note a thread starts from. */
   readonly thread?: {
@@ -512,6 +515,12 @@ export type PatchOp =
 
 /** How a subscription is doing, for honest empty and loading states. */
 export type SubState = {
+  /** Events that never became a trustworthy row in this list, per cause; `count` only for observed, exact totals. */
+  readonly unshown?: readonly {
+    readonly reason: 'invalid' | 'pruned' | 'undelivered' | 'unavailable-repost';
+    readonly count?: number;
+    readonly exact: boolean;
+  }[];
   /** Receipt/read evidence is independent of the relay lifecycle below. */
   readonly zapEvidence?: ZapEvidence;
   readonly privateLists?: {
@@ -613,6 +622,8 @@ export type RelayEntry = { readonly url: string; readonly read: boolean; readonl
 /** Every action is answered by exactly one `result`. */
 export type Action =
   | { readonly a: 'link.check'; readonly route: 'n' | 'p' | 'a'; readonly ref: string }
+  /** Shows (or hides again) one hidden note in one subscription, in its slot; idempotent. */
+  | { readonly a: 'note.reveal'; readonly sub: SubId; readonly key: RowKey; readonly reveal: boolean }
   | { readonly a: 'zap.invoice'; readonly as: Pubkey; readonly intent: ZapInvoiceInput }
   | { readonly a: 'lists.retry'; readonly as: Pubkey }
   /** Register a mounted private editor before allowing input; closed leases cannot hold a lock. */
@@ -784,6 +795,8 @@ export type EngineConfig = {
   // engine-added 2026-11-15: 2
   /** Include the lkjstr client tag on authored events (default true). */
   readonly clientTag?: boolean;
+  /** A visitor's Global folds repeated content and floods from one author (default true). */
+  readonly signedOutGlobalFilter?: boolean;
   // end engine-added
   /** Interface language, for the engine's language heuristics. */
   readonly language: string;
