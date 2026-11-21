@@ -123,7 +123,7 @@ other readers keep public tags. The reproduced isolation fix is documented in [p
 Window sides cap at 800 rows; retainAbove caps at 6000. Returning to the newest rows retains the loaded tail within the 6800-row bound.
 Older pages start two and a half pane heights from the end with a 60-row buffer. See [live-feed.md](live-feed.md). Time rails use retained cache.
 Visitor Global covers repeats and author bursts. Missing profile metadata never excludes a valid post. See [note visibility](hidden-note-visibility.md).
-[Absolute windows](absolute-time-window.md) provide bounded relay coverage on both sides for Their Home.
+[Absolute windows](absolute-time-window.md) provide bounded relay coverage on both sides for Their Home and keep covered reposts at their verified reading time.
 Notes project client names and valid NIP-89 handler coordinates. Explicit presses resolve verified app metadata; signing honors the account preference.
 Custom reactions, mentions, warnings and media remain in note rows. See [client attribution](client-attribution.md).
 Notes, reactions, names and bios use signed emoji tags. The picker preserves set coordinates in note and reaction tags. See [emoji-sets.md](emoji-sets.md).

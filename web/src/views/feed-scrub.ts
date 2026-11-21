@@ -9,7 +9,11 @@ import { scrollIntent } from './scroll-intent.ts';
 
 /** When a row happened (0: a row without a time, such as a profile's header). A repost reads as the repost's time. */
 export const rowTime = (row: ListRow | undefined): number =>
-  row?.kind === 'note' ? (row.repostedBy?.at ?? row.at) : row?.kind === 'notification' ? row.at : 0;
+  row?.kind === 'note'
+    ? (row.readingAt ?? row.repostedBy?.at ?? row.at)
+    : row?.kind === 'notification'
+      ? row.at
+      : 0;
 /** The label for `at`: always the whole local date and time, whatever the list spans. Pure, tested. */
 export const timeText = (at: number): string => `${dayOf(at)} ${clockOf(at)}`;
 

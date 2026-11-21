@@ -175,6 +175,7 @@ Relay Stats add optional firstEventMs, requestUses and readTimeouts: verified fi
 Inactive routes without retained transport observations report null.
 - Protocol 15 adds absolute `Anchor.at` and `timeWindow` for [absolute windows and edge coverage](absolute-time-window.md).
 - Protocol 15 Their Home uses `loading | partial | stalled | end` on both `timeWindow` edges for bounded relay reads.
+- Absolute-time windows carry optional `NoteRow.readingAt`, the verified slot time in Unix milliseconds, preserved through Show and Hide.
 Mock-only `EngineConfig.mock.slow` signs one matching note late and delays its relay answers (the pending-UI fixture); the real engine ignores `mock`.
 
 ## Public signing timing

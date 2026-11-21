@@ -33,7 +33,7 @@ export function timeWindow(s: Sub, post: Post): void {
   const middle = split < 0 ? notes.length : split;
   const start = Math.max(0, middle - before);
   const end = Math.min(notes.length, middle + after);
-  const rows = notes.slice(start, end);
+  const rows = notes.slice(start, end).map((row) => ({ ...row, readingAt: time(row) }));
   const key = (end > middle ? notes[middle] : rows.at(-1))?.key;
   s.anchor = key;
   s.start = start;

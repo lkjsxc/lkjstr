@@ -277,6 +277,8 @@ export type NoteRow = {
   readonly bech32: string;
   readonly author: Author;
   readonly at: Millis;
+  /** Absolute-time windows only: the verified reading time used to place the slot, including while covered. */
+  readonly readingAt?: Millis;
   readonly segments: readonly Segment[];
   readonly media: readonly Media[];
   readonly quotes: readonly Quote[];

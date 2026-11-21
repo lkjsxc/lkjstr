@@ -59,9 +59,9 @@ before and after, loading in both directions, titled by the author and the time.
 ### The moment line
 
 - **What it is.** A row the UI draws, with key `moment:`. Like `day:`, it never anchors. It goes directly above the
-  first drawn row whose reading time (`repostedBy?.at ?? at`, the rail's `rowTime`) is at or before `at`, or after
-  the last row when every row is newer. Rows in the same second as `at` go below it. For day dividers it counts as
-  an item at `at`, so a divider for the moment's own day goes above it.
+  first drawn row whose reading time (`readingAt ?? repostedBy?.at ?? at`) is at or before `at`, or after the last
+  row when every row is newer. Rows in the same second as `at` go below it. Show and Hide keep the slot's reading
+  time. For day dividers the line counts as an item at `at`, so a divider for the moment's own day goes above it.
 - **Look.** It is in the day-divider family: a `--paper` band with hairlines above and below in `--sep`, which is
   stronger than a divider's `--line`. Padding 5px 12px, centred, tabular digits, and nothing new coloured. There
   are two groups:

@@ -5,6 +5,7 @@ import type { Row } from '../engine/protocol.ts';
 import { dayOf } from '../shared/format.ts';
 import { h } from '../shared/h.ts';
 import { type MomentPart, renderMoment } from './feed-moment.ts';
+import { rowTime } from './feed-scrub.ts';
 import { withHeld } from './held.ts';
 import { disposeLinkCards } from './link-cards.ts';
 import { bodySig, fitNotes, patchNote, renderNote } from './note.ts';
@@ -72,11 +73,7 @@ export function createRowList(
       for (const row of shown) {
         // A moment line counts as an item at its time: a divider for its own day goes above it.
         const at =
-          row.kind === 'note'
-            ? (row.repostedBy?.at ?? row.at)
-            : row.kind === 'moment-part' && !row.end
-              ? row.at
-              : 0;
+          row.kind === 'note' ? rowTime(row) : row.kind === 'moment-part' && !row.end ? row.at : 0;
         if (at && day && dayOf(at) !== day) {
           day = dayOf(at);
           put(`day:${day}`, day, () => h('div', { class: 'day' }, day));

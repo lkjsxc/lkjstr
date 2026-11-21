@@ -181,8 +181,10 @@ fn reposts_use_the_displayed_time_of_a_matching_repost() {
     let rows = messages.iter().find(|out| out["t"] == "rows").unwrap();
     assert_eq!(rows["rows"][0]["id"], original.id);
     assert_eq!(rows["rows"][0]["repostedBy"]["at"], 25_000);
+    assert_eq!(rows["rows"][0]["readingAt"], 25_000);
     assert_eq!(rows["rows"][1]["id"], hidden.id);
     assert_eq!(rows["rows"][1]["hidden"]["reason"], "muted-person");
+    assert_eq!(rows["rows"][1]["readingAt"], 9_000);
     assert_eq!(report(&messages)["key"], original.id);
 }
 

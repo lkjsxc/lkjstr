@@ -176,6 +176,7 @@ pub fn row_with_lists(
         }),
         reposts,
         reposted_at,
+        window_reading_at: None,
         warning: content_warning_reason(event),
         counts: Counts {
             replies,

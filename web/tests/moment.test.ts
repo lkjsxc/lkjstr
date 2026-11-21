@@ -1,5 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
-import type { NoteRow, Row } from '../src/engine/protocol.ts';
+import { projectHidden, revealMockNote } from '../src/engine/mock/hidden.ts';
+import type { Sub } from '../src/engine/mock/subscription.ts';
+import { seekTime, timeWindow } from '../src/engine/mock/time-window.ts';
+import type { FromEngine, NoteRow, Row } from '../src/engine/protocol.ts';
 import type { RowList } from '../src/views/feed-draw.ts';
 import { type MomentPart, momentOf, renderMoment } from '../src/views/feed-moment.ts';
 import type { Keeper } from '../src/views/feed-place.ts';
@@ -124,6 +127,64 @@ describe('a moment tab', () => {
     ];
     expect(keys(m?.plan(rows) ?? [])).toBe('a b moment: c d'); // a repost reads as the repost; a tie goes below
     expect(keys(m?.plan([note('a', at + 1), note('b', at + 2)]) ?? [])).toBe('a b moment:');
+  });
+  it('keeps a crossed-pivot repost on the same side through Show and Hide', () => {
+    const author = { pubkey: 'author', npub: 'author', name: 'Author' };
+    const reposter = { pubkey: 'reposter', npub: 'reposter', name: 'Reposter' };
+    const repost: NoteRow = {
+      ...note('repost', at - 6000),
+      author,
+      repostedBy: { at: at + 15_000, actors: [reposter], others: 0 },
+      hidden: { reason: 'muted-person', revealable: true },
+      segments: [{ k: 'text', text: 'body' }],
+      media: [{ type: 'image', url: 'https://example.invalid/picture.png' }],
+    };
+    const sub: Sub = {
+      id: 's',
+      query: { source: 'their-home' },
+      entries: [repost, note('newer', at + 5000), note('older', at - 1000)].map((row) => ({
+        key: row.key,
+        row: () => row,
+      })),
+      start: 0,
+      end: 0,
+      live: false,
+      windowed: false,
+      fresh: 0,
+      ops: [],
+    };
+    const m = moment();
+    let rows: readonly Row[] = [];
+    const post = (message: FromEngine) => {
+      const projected = projectHidden(message, sub.revealed);
+      if (projected.t === 'rows') rows = projected.rows;
+      if (projected.t === 'timeWindow') m?.answer(projected);
+    };
+    seekTime(sub, at, 2, 1, post);
+    const plan = () =>
+      keys(
+        (m?.plan(rows) ?? []).filter(
+          (row) => row.key !== 'moment:newer' && row.key !== 'moment:older',
+        ),
+      );
+    const order = 'repost newer moment: older';
+    const covered = {
+      hidden: { reason: 'muted-person' },
+      segments: [],
+      media: [],
+    };
+    expect.soft(plan()).toBe(order);
+    expect(rows[0]).toMatchObject(covered);
+    expect(rows[0]).not.toHaveProperty('repostedBy');
+    expect(revealMockNote(sub, repost.key, true)).toBe(true);
+    timeWindow(sub, post);
+    expect(plan()).toBe(order);
+    expect(rows[0]).toMatchObject({ revealed: { reason: 'muted-person' }, media: repost.media });
+    expect(revealMockNote(sub, repost.key, false)).toBe(true);
+    timeWindow(sub, post);
+    expect.soft(plan()).toBe(order);
+    expect(rows[0]).toMatchObject(covered);
+    expect(rows[0]).not.toHaveProperty('repostedBy');
   });
   it('says what it knows of the follow list, and nothing about ends before the engine answers', () => {
     const env = { settings: { get: () => ({}) } } as unknown as ViewEnv;

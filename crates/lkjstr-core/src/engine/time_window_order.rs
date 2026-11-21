@@ -46,5 +46,6 @@ impl<'a> Order<'a> {
             .collect();
         row.reposts.sort_by(|a, b| a.pubkey.cmp(&b.pubkey));
         row.reposts.dedup_by(|a, b| a.pubkey == b.pubkey);
+        row.window_reading_at = Some(row.reposted_at.unwrap_or(row.created_at));
     }
 }

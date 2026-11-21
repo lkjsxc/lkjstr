@@ -22,13 +22,14 @@ function project(row: NoteRow, revealed?: ReadonlySet<string>): NoteRow {
     const { hidden, ...full } = row;
     return { ...full, revealed: { reason: hidden.reason } };
   }
-  const { key, id, author, at, hidden, thread } = row;
+  const { key, id, author, at, readingAt, hidden, thread } = row;
   return {
     kind: 'note',
     key,
     id,
     author: { pubkey: author.pubkey, npub: author.npub, name: author.pubkey, verified: false },
     at,
+    ...(readingAt !== undefined && { readingAt }),
     hidden,
     thread,
     bech32: '',

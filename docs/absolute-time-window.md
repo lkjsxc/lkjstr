@@ -13,6 +13,8 @@ note id as the tie-breaker. When a matching repost is present, the engine uses
 the newest matching repost time for both placement and row projection. Each
 side caps at 800 notes, with up to `before` strictly newer than `at` and up to
 `after` at or before `at`.
+The row's `readingAt` carries that placement time through Show and Hide.
+A covered slot carries no repost actors, body or media.
 The existing mute and repost projection still apply. An ordinary top, key or
 month window replaces the pivot. Repeating the same `{at}` with new row counts
 keeps the pivot, the selected reading key and its in-progress relay pages.

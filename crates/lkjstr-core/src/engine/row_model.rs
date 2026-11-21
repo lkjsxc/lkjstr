@@ -53,6 +53,9 @@ pub struct Row {
     pub reposts: Vec<Author>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub reposted_at: Option<u64>,
+    /// Placement time in seconds, set only by the absolute-window projection.
+    #[serde(skip)]
+    pub window_reading_at: Option<u64>,
     pub warning: Option<String>,
     pub counts: Counts,
     pub reactions: Vec<Reaction>,

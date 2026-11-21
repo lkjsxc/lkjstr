@@ -56,10 +56,13 @@ impl Session {
 
     pub(super) fn project_note(&self, sub: &str, engine: &Engine, row: &rows::Row) -> Value {
         let account = self.queries.get(sub).and_then(|q| q.account.as_deref());
-        let Some(reason) = row.hidden_reason else {
-            return note::note(row, &engine.store, account);
-        };
         let mut value = note::note(row, &engine.store, account);
+        if let Some(reading_at) = row.window_reading_at {
+            value["readingAt"] = json!(reading_at.saturating_mul(1000));
+        }
+        let Some(reason) = row.hidden_reason else {
+            return value;
+        };
         if let Some(event) = engine.store.get(&row.id) {
             if reason.revealable()
                 && self
@@ -92,7 +95,7 @@ impl Session {
     ) -> Value {
         let model = rows::row_with_lists(&engine.store, event, account, 0, &engine.private_lists);
         let mut value = note::note(&model, &engine.store, account);
-        for field in ["key", "at", "thread"] {
+        for field in ["key", "at", "thread", "readingAt"] {
             if let Some(old) = identity.get(field) {
                 value[field] = old.clone();
             }

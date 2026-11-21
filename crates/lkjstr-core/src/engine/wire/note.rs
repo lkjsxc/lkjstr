@@ -149,8 +149,10 @@ pub(super) fn covered(mut identity: Value, reason: crate::engine::visibility::Re
         "counts":{"replies":0,"reposts":0,"reactions":0,"zaps":0,"partial":false},
         "mine":{"reposted":false,"bookmarked":false,"own":false},
         "hidden":{"reason":reason,"revealable":reason.revealable()}});
-    if let Some(thread) = identity.get_mut("thread") {
-        value["thread"] = thread.take();
+    for field in ["thread", "readingAt"] {
+        if let Some(old) = identity.get_mut(field) {
+            value[field] = old.take();
+        }
     }
     value
 }

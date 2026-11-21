@@ -46,6 +46,7 @@ pub(super) fn covered_row(store: &Store, event: &NostrEvent, reason: Reason) -> 
         reply: None,
         reposts: vec![],
         reposted_at: None,
+        window_reading_at: None,
         warning: None,
         counts: rows::Counts {
             replies: 0,
