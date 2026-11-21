@@ -12,6 +12,8 @@ import { faceButton } from './parts.ts';
 import type { ViewEnv } from './registry.ts';
 
 type TimeWindow = Extract<FromEngine, { t: 'timeWindow' }>;
+/** What one side of the window reports: this device alone, or the state of its bounded relay span. */
+type Edge = 'cache-only' | 'unsupported' | 'loading' | 'partial' | 'stalled' | 'end';
 const STEP = 60; // rows asked on each side at first and per growth, as a rail seek asks
 const LIMIT = 800; // rows a window may hold, both sides together
 const NEAR_PX = 1400; // a side grows when the reader comes this close to its end
@@ -30,11 +32,13 @@ export type MomentPart = {
     | 'older'
     | 'newerDevice'
     | 'olderDevice'
+    | 'newerNone'
+    | 'olderNone'
+    | 'partial'
     | 'bound'
     | 'unsupported'
     | 'loading'
-    | 'stalled'
-    | 'none';
+    | 'stalled';
 };
 export type MomentState = { at?: number; sides?: readonly [number, number] };
 
@@ -46,7 +50,9 @@ const ENDS: Record<NonNullable<MomentPart['end']>, Key> = {
   unsupported: 'home.unsupported',
   loading: 'feed.loading',
   stalled: 'moment.stalled',
-  none: 'moment.olderNone',
+  olderNone: 'moment.olderNone',
+  newerNone: 'moment.newerNone',
+  partial: 'moment.partial',
   newerDevice: 'moment.newerDevice',
   olderDevice: 'moment.olderDevice',
 };
@@ -115,12 +121,14 @@ export function momentOf(
    * or, for a side this device alone answers, whether its rows ran out before the window did. */
   const end = (side: 0 | 1, rows: readonly Row[]): MomentPart['end'] => {
     if (!answer || !answered || answer.followList?.state === 'unknown') return undefined;
-    const edge = side ? answer.older : answer.newer;
+    // Each side reads its own relay span (older from R1, newer from R2) or this device alone.
+    const edge = (side ? answer.older : answer.newer) as Edge;
     if (edge === 'unsupported') return side ? undefined : 'unsupported';
     if (edge === 'loading' || edge === 'stalled') return edge;
     if (sides[side] >= LIMIT) return 'bound';
+    if (edge === 'partial') return 'partial'; // unresolved, said as such: never an end
     const short = counts(rows)[side] < answered[side];
-    if (edge === 'end') return short ? 'none' : undefined;
+    if (edge === 'end') return short ? (side ? 'olderNone' : 'newerNone') : undefined;
     if (edge !== 'cache-only') return undefined;
     if (short) return side ? 'older' : 'newer';
     // A side this device alone answers, beside a side that reads relays, says so at its own end.
@@ -140,6 +148,15 @@ export function momentOf(
     return !r || (side ? r.top - box.bottom : box.top - r.bottom) > 2 * o.el.clientHeight;
   };
   /** Once per tab, on the first answer that names a row: the moment line's top a third down the tile. */
+  const tail = (): HTMLElement | null => o.el.querySelector(':scope > .ftail');
+  /** The room under the list that lets a seated line stay a third down while older rows are still on their way
+   * (a short list cannot scroll there otherwise); it gives way as they arrive and as the reader scrolls. */
+  const fit = (): void => {
+    const t = tail();
+    if (!t?.offsetHeight) return;
+    const content = o.el.scrollHeight - t.offsetHeight;
+    t.style.height = `${Math.max(0, Math.ceil(o.el.scrollTop + o.el.clientHeight - content))}px`;
+  };
   const seat = (): void => {
     if (seated || !answer?.key) return;
     const line = o.drawn.node('moment:');
@@ -147,6 +164,10 @@ export function momentOf(
     seated = true;
     const third = Math.round(o.el.clientHeight / 3);
     const top = line.getBoundingClientRect().top;
+    const want = o.el.scrollTop + top - o.el.getBoundingClientRect().top - third;
+    const room = o.el.scrollHeight - o.el.clientHeight;
+    const t = tail();
+    if (t && want > room) t.style.height = `${t.offsetHeight + Math.ceil(want - room)}px`;
     const content = (n: Element | null): n is HTMLElement =>
       n instanceof HTMLElement && !/^(day|moment):/.test(n.dataset.key ?? 'moment:');
     let next: Element | null = line.nextElementSibling;
@@ -200,6 +221,7 @@ export function momentOf(
     /** As the reader nears an end that has more, that side grows; past the bound the far side gives way, only
      * while it is out of sight. Undefined: nothing to ask. */
     follow(rows: readonly Row[]): void {
+      fit();
       if (asked || !answered || !answer || answer.newer === 'unsupported') return;
       const { el } = o;
       const [newer, older] = counts(rows);

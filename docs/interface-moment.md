@@ -125,11 +125,13 @@ unknown follows). The mock answers `latest-verified` for every author, dated one
 
 ## Spec: C5 Both directions from relays (needs engine R1 to R6; UI only after them)
 
-Built so far (engine R1, older side): `loading` says `feed.loading` at the older end, `stalled` says `moment.stalled`
-(Retry waits for an engine contract for re-asking a stalled span), `partial` says nothing while that side grows, and
-`end` says `moment.olderNone` once the window's older rows also ran short. The newer side stays `cache-only`: the
-line then drops `moment.deviceOnly`, and the newer end says `moment.newerDevice` (or `moment.newerEnd` once this
-device ran out), so each end is labelled by its own coverage.
+Built (engine R1 older side, R2 newer side): each end reads its own span. `loading` says `feed.loading`, `stalled`
+says `moment.stalled` (Retry waits for an engine contract for re-asking a stalled span), `partial` says
+`moment.partial` (unresolved, never an end), and `end` says `moment.olderNone` or `moment.newerNone` ("Relays sent
+nothing older/newer": what the span returned, not that nothing exists) once that side's rows also ran short. A side
+this device alone answers beside one that reads relays says `moment.newerDevice` or `moment.olderDevice`.
+The line is seated a third down even while the older side is still loading: room under the list holds it there and
+gives way as rows arrive.
 
 The moment line carries `moment.deviceOnly` only while both sides are `cache-only`. Each end shows its own state:
 

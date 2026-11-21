@@ -84,7 +84,7 @@ export async function momentChecks(open: Open, fact: Check): Promise<void> {
         STAMP.test(s.time) &&
         s.face &&
         s.above.every((t) => t > (s.below[0] ?? 0)) &&
-        (Math.abs(s.top - s.third) <= 1 || s.scrolled === 0) &&
+        (Math.abs(s.top - s.third) <= 1 || (s.scrolled === 0 && s.top < s.third)) &&
         s.below.length > 0,
       s,
     );

@@ -25,18 +25,30 @@ const moment = () =>
   });
 const keys = (rows: readonly (Row | MomentPart)[]) => rows.map((r) => r.key).join(' ');
 
-const answer = (older: string) =>
+const answer = (older: string, newer = 'cache-only') =>
   ({
     t: 'timeWindow',
     sub: 's',
     at,
     key: 'b',
-    newer: 'cache-only',
+    newer,
     older,
     followList: { state: 'latest-verified', at: at + 1, id: 'k' },
   }) as never;
 
 describe('a moment tab', () => {
+  it('says each relay span by itself: a newer end beside an older stall, a partial span never an end', () => {
+    const rows = [note('a', at + 1), note('b', at - 1)];
+    const ends = (older: string, newer: string) => {
+      const m = moment();
+      m?.answer(answer(older, newer));
+      const plan = m?.plan(rows) ?? [];
+      return [plan[0], plan.at(-1)].map((p) => (p as MomentPart).end ?? 'none drawn');
+    };
+    expect(ends('stalled', 'end')).toEqual(['newerNone', 'stalled']);
+    expect(ends('end', 'partial')).toEqual(['partial', 'olderNone']); // partial newer: never "nothing newer"
+    expect(ends('partial', 'loading')).toEqual(['loading', 'partial']);
+  });
   it('labels each end by its own coverage, and the whole window only when both sides are local', () => {
     const newer = Array.from({ length: 60 }, (_, i) => note(`n${i}`, at + 60 - i));
     const draw = (older: string) => {
@@ -61,8 +73,8 @@ describe('a moment tab', () => {
     };
     expect(last('loading')).toBe('loading');
     expect(last('stalled')).toBe('stalled');
-    expect(last('partial')).toBe('none drawn');
-    expect(last('end')).toBe('none'); // 1 older row of 60 asked: relays and this device both ran out
+    expect(last('partial')).toBe('partial'); // unresolved, said so
+    expect(last('end')).toBe('olderNone'); // 1 older row of 60 asked: relays and this device both ran out
     expect(last('cache-only')).toBe('older');
     const full = Array.from({ length: 60 }, (_, i) => note(`o${i}`, at - 1 - i));
     expect(last('end', full)).toBe('none drawn'); // the window is full: more may follow in the cache
