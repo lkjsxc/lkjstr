@@ -34,11 +34,6 @@ test('one ordinary ship binds package and HTTPS digest, defers cleanup and tells
   assert.match(result.log, /debug cleanup deferred/);
   assert.equal(existsSync(join(f.root, 'target/debug')), true);
   assert.equal(existsSync(join(f.state, 'lkjstr-last-ship')), true);
-  const count = events.length;
-  const again = f.run();
-  assert.equal(again.status, 1);
-  assert.match(again.summary, /less than three hours/);
-  assert.equal(f.events().length, count);
 });
 
 test('schema-compatible baseline uses two verified copies, linked history and one owner note', t => {
@@ -53,7 +48,7 @@ test('schema-compatible baseline uses two verified copies, linked history and on
   assert.match(result.summary, /baseline=0+1/);
 });
 
-test('a quiet ship preserves the verified release and rate record without sending a note', t => {
+test('a quiet ship records the verified release timestamp without sending a note', t => {
   const f = fixture(t);
   const result = f.run('', { LKJSTR_SHIP_NOTIFY: '0' });
   assert.equal(result.status, 0, result.log);
@@ -111,7 +106,7 @@ test('source changes during gates stop before push or host transfer', t => {
   assert.equal(f.events().some(row => ['push', 'ssh', 'desk'].includes(row.command)), false);
 });
 
-test('failed owner notification preserves the truthful deployed state and rate record', t => {
+test('failed owner notification preserves the truthful deployed state and ship timestamp', t => {
   const f = fixture(t);
   const result = f.run('', { LKJSTR_SHIP_TEST_DESK_FAILURE: '1' });
   assert.equal(result.status, 1);

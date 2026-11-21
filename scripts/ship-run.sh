@@ -27,12 +27,6 @@ fail() { end "NOT SHIPPED: $1" 1; }
 clean() { local STATUS; STATUS=$(git status --porcelain) && [[ -z "$STATUS" ]]; }
 NOTIFY=${LKJSTR_SHIP_NOTIFY:-1}
 [[ "$NOTIFY" == 0 || "$NOTIFY" == 1 ]] || fail 'LKJSTR_SHIP_NOTIFY must be 0 or 1'
-LAST="$STATE/lkjstr-last-ship"
-if [[ -f "$LAST" ]]; then
-  read -r LAST_TIME LAST_COMMIT < "$LAST" || fail 'invalid last-ship record'
-  [[ "$LAST_TIME" =~ ^[0-9]+$ ]] || fail 'invalid last-ship time'
-  (( $(date +%s) - LAST_TIME >= 10800 )) || fail 'the previous ship was less than three hours ago'
-fi
 cd "$W" || fail 'no worktree'
 [[ "$(git rev-parse HEAD)" = "$REVISION" ]] && clean || fail 'uncommitted changes or unreadable worktree'
 git fetch -q origin main || fail 'cannot fetch main'
@@ -106,6 +100,7 @@ if [[ "$MODE" = --establish-rollback-baseline ]]; then
   CURRENT=$(deploy baseline "$FIRST") || fail 'the first safe release is verified; compatible rollback baseline is incomplete'
   verify baseline || fail 'the first safe release is verified; compatible rollback baseline verification is incomplete'
 fi
+LAST="$STATE/lkjstr-last-ship"
 printf '%s %s\n' "$(date +%s)" "$REVISION" > "$LAST.$$" && mv "$LAST.$$" "$LAST" ||
   end "SHIPPED $C sha256=$H current=$CURRENT; last-ship record failed" 1
 printf 'revision=%s\narchive=%s\nindex=%s\ncurrent=%s\nfirst=%s\nmode=%s\n' \

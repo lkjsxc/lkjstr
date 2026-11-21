@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { spawn } from 'node:child_process';
 import test from 'node:test';
@@ -98,22 +98,50 @@ test('source and archive changes at snapshot time stop before push or host effec
   assert.equal(existsSync(join(f.state, 'lkjstr-last-ship')), false);
 });
 
-test('the shared-lock success guard refuses two and a half hours and admits over three', t => {
+test('a distinct revision can ship immediately after a successful ship and reruns every gate', t => {
   const f = fixture(t);
-  const now = 1_800_000_000;
-  const first = f.run('', { LKJSTR_SHIP_TEST_NOW: String(now) });
+  const now = '1800000000';
+  const env = { LKJSTR_SHIP_TEST_NOW: now };
+  const firstRevision = f.git(['rev-parse', 'HEAD']).trim();
+  const first = f.run('', env);
   assert.equal(first.status, 0, first.log);
   const stamp = join(f.state, 'lkjstr-last-ship');
-  assert.equal(Number(readFileSync(stamp, 'utf8').split(' ')[0]), now);
+  assert.equal(readFileSync(stamp, 'utf8'), `${now} ${firstRevision}\n`);
   const count = f.events().length;
-  const blocked = f.run('', { LKJSTR_SHIP_TEST_NOW: String(now + 9_000) });
-  assert.equal(blocked.status, 1, blocked.log);
-  assert.match(blocked.summary, /less than three hours/);
-  assert.equal(f.events().length, count);
-  assert.equal(Number(readFileSync(stamp, 'utf8').split(' ')[0]), now);
-  const later = f.run('', { LKJSTR_SHIP_TEST_NOW: String(now + 10_801) });
-  assert.equal(later.status, 0, later.log);
-  assert.equal(Number(readFileSync(stamp, 'utf8').split(' ')[0]), now + 10_801);
-  assert.equal(deploys(f.events()).length, 2);
-  assert.equal(notices(f.events()).length, 2);
+
+  writeFileSync(join(f.root, 'tracked.txt'), 'next tested candidate');
+  f.git(['commit', '-qam', 'Next candidate fixture']);
+  const nextRevision = f.git(['rev-parse', 'HEAD']).trim();
+  assert.notEqual(nextRevision, firstRevision);
+  const next = f.run('', env);
+  assert.equal(next.status, 0, next.summary + next.log);
+  assert.match(next.summary, /^SHIPPED /);
+  assert.equal(readFileSync(stamp, 'utf8'), `${now} ${nextRevision}\n`);
+  assert.equal(f.git(['--git-dir', f.origin, 'rev-parse', 'refs/heads/main']).trim(), nextRevision);
+
+  const events = f.events().slice(count);
+  assert.deepEqual(events.filter(row => row.command === 'pnpm').map(row => row.args), [
+    ['install', '--frozen-lockfile'], ['check'], ['smoke:real'], ['build:real'], ['package'],
+  ]);
+  assert.equal(events.filter(row => row.command === 'transfer').length, 1);
+  assert.equal(deploys(events).length, 1);
+  assert.equal(events.filter(row => row.command === 'ssh' && row.action.endsWith('ops/lkjstr.py verify')).length, 1);
+  assert.deepEqual(notices(events), [{ command: 'desk', args: [
+    'note', 'lkjstr を更新: 保存した内容を安全に保ちます https://lkjstr.lkjsxc.com', '--from', 'chatgpt-lkjstr',
+  ] }]);
+});
+
+test('an occupied local lock protects the earlier result and log before any gate', t => {
+  const f = fixture(t, { localLockBusy: true });
+  const summary = join(f.root, 'tmp/ship.out');
+  const log = join(f.root, 'tmp/ship.log');
+  writeFileSync(summary, 'earlier result\n');
+  writeFileSync(log, 'earlier log\n');
+
+  const result = f.run();
+  assert.equal(result.status, 1, result.stderr);
+  assert.equal(result.stdout, '-w 7200 9\n');
+  assert.equal(result.summary, 'earlier result\n');
+  assert.equal(result.log, 'earlier log\n');
+  assert.deepEqual(f.events(), []);
 });

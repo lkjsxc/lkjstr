@@ -65,10 +65,18 @@ export function fixture(t, options = {}) {
   for (const name of ['pnpm', 'ssh', 'desk', 'cargo', 'sleep', 'sha256sum', 'cp', 'date', ...(options.auth ? ['git', 'credential-fixture'] : [])]) {
     writeFileSync(join(root, '.test-bin', name), `#!${process.execPath}\nimport ${JSON.stringify(join(root, 'scripts/ship-fixture.mjs'))};\n`, { mode: 0o755 });
   }
+  const lock = join(state, 'lkjstr-ship.lock');
+  if (options.localLockBusy) {
+    mkdirSync(state);
+    // Keep the real lock through the driver invocation and shorten its wait in the fixture.
+    writeFileSync(join(root, '.test-bin/flock'), '#!/bin/bash\nprintf "%s\\n" "$*"\nexec /usr/bin/flock -n "$3"\n', { mode: 0o755 });
+  }
   const events = () => existsSync(join(root, 'tmp/actions.jsonl'))
     ? readFileSync(join(root, 'tmp/actions.jsonl'), 'utf8').trim().split('\n').filter(Boolean).map(JSON.parse) : [];
   const run = (mode = '', env = {}) => {
-    const result = spawnSync('bash', ['scripts/ship.sh', '保存した内容を安全に保ちます', ...(mode ? [mode] : [])], {
+    const ship = ['bash', 'scripts/ship.sh', '保存した内容を安全に保ちます', ...(mode ? [mode] : [])];
+    const [command, ...args] = options.localLockBusy ? ['/usr/bin/flock', '--close', lock, ...ship] : ship;
+    const result = spawnSync(command, args, {
       cwd: root, encoding: 'utf8', timeout: 30_000,
       env: { ...process.env, PATH: `${join(root, '.test-bin')}:${process.env.PATH}`,
         CARGO_TARGET_DIR: join(root, 'target'), LKJSTR_SHIP_STATE_DIR: state, LKJSTR_SHIP_TEST_ROOT: root, ...authEnv, ...env },

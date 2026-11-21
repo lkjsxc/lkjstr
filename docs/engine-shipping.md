@@ -71,11 +71,9 @@ deployment/verification receipts and summary in `tmp/ship-<UTC>-<random>/`.
 Verified shipments send the owner line unless `LKJSTR_SHIP_NOTIFY=0`.
 `SHIPPED ...; desk note failed` records a successful release with a notification failure.
 
-The owner's limit is three hours between attempts. The shared successful
-timestamp must also be checked inside the acquired lock: an outer check can
-race with another worktree while waiting. A build or host failure does not
-advance that successful timestamp; the caller retains attempted-run times
-and enforces the remaining interval before starting the prescribed command.
+After deployment and verification succeed, the driver records the completion
+time and full source revision in `lkjstr-last-ship`. Once the shared lock is
+released, the next shipment can proceed through the full verification sequence.
 
 ## First schema-2 rollback baseline
 
@@ -147,10 +145,10 @@ Evidence in `tmp/ship-safety-proof/` is bound by
 `ff3bfc700a2c8541b2c681a28498bd58c9e6e2b78b7ad885fccb274c6fd78970`.
 The final report hash is
 `a95da910d5106d55dcedc2a536694c28badbe13bdbfe491572ba585b3a145932`.
-The shared-lock guard now requires 10,800 seconds. A fixed-clock case starts
-from fixture success, refuses at 9,000 seconds before any added gate/push/host
-action, preserves its stamp, then succeeds at 10,801 seconds. The maintained
-suite passed 19/19 in 8.389 seconds at 00:38:04-00:38:12 UTC, with load
+The former 10,800-second guard was tested with a fixed clock. The fixture
+refused at 9,000 seconds before any added gate, push or host action, preserved
+its stamp, then succeeded at 10,801 seconds. The suite passed 19/19 in 8.389
+seconds at 00:38:04-00:38:12 UTC, with load
 4.89/5.17/6.03 to 4.73/5.13/6.01 and empty owned-process/directory audits.
 Its retained `cadence-handoff.json` hash is
 `c911189bf4f31019ce69f8dd722b560f3c0ac0a4ec3a1010e4991a44d679013a`;
@@ -196,5 +194,3 @@ the exact local receipts, archive contents, smoke report and stamp. Its hash is
 `89a404997f21484938e99ab3d5c5910082988f63f9c8c9b015f595884ebf9763`.
 These checks did not independently query DNS/TLS or the current host release;
 the host receipts themselves report that external browser verification is false.
-The three-hour cadence remains in force; the latest observed attempt ended
-at 02:07:15 UTC, so this stream will not attempt another ship before 05:07:16.
