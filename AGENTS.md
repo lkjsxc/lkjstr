@@ -41,6 +41,8 @@ Engine work:
   store. Everything goes through `web/src/engine/protocol.ts`. The 2026-11-16
   owner delegation permits additive engine messages and fields, with one line
   per addition in `docs/engine-proposals.md`; existing contracts stay intact.
+- When window-scoped row fields or ordering change, verify persisted snapshots.
+  Test capture and replay for ordinary and scoped windows on the same query.
 - Claude owns layout, CSS and visible words. Implement new surfaces only from
   written `docs/interface-specs.md` items; describe engine operations awaiting
   a surface in `docs/interface-needs.md`. This preserves the agreed division.
