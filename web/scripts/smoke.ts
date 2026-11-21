@@ -11,10 +11,12 @@ import { KEYS } from '../src/shared/keys.ts';
 import { browserTmp } from './browser-tmp.ts';
 import { notesChecks } from './smoke-notes.ts';
 import { pendingChecks } from './smoke-pending.ts';
+import { replyChecks } from './smoke-reply.ts';
 import { resetChecks } from './smoke-reset.ts';
 import { threadChecks } from './smoke-thread.ts';
 import { railSmoke } from './smoke-time-rail.ts';
 import { wishes } from './smoke-wishes.mjs';
+import { seated, seatOf } from './thread-seat.ts';
 
 const here = new URL('..', import.meta.url).pathname;
 process.env.TMPDIR = browserTmp(process.env.TMPDIR ?? resolve(here, '../tmp/temp'));
@@ -179,28 +181,23 @@ async function run(browser: Browser): Promise<void> {
       (await count(page, '.tab.active[data-view="home"]')) === 1,
   );
 
-  // A reply's thread opens on the reply itself, at the top of the tile, with what it answers above it.
-  const seatOf = (): Promise<{ top: number; above: number; scrolled: number } | null> =>
-    page.evaluate(() => {
-      const view = document.querySelector('.view[data-kind="thread"]');
-      const focus = view?.querySelector('.th-focus');
-      if (!view || !focus) return null;
-      return {
-        top: Math.round(focus.getBoundingClientRect().top - view.getBoundingClientRect().top),
-        above: view.querySelectorAll('.th-ancestor').length,
-        scrolled: Math.round(view.scrollTop),
-      };
-    });
+  // A reply's thread opens on the reply itself, about a third down the tile, with what it answers above it in view.
+  const seatNow = () => seatOf(page);
   await page.locator(`${home} .note:has(.ctx .clip) .text`).first().click();
   await page.locator('.th-focus').waitFor();
-  const seat = await seatOf();
+  await page.waitForTimeout(300);
+  const seat = await seatNow();
   fact(
-    'a thread opens on its focused note, the ancestors above',
-    seat !== null && Math.abs(seat.top) <= 1 && seat.above > 0 && seat.scrolled > 0,
+    'a thread opens on its focused note, the ancestors above in view',
+    seated(seat) && (seat?.above ?? 0) > 0 && (seat?.top ?? 0) > 0,
     seat,
   );
   await page.waitForTimeout(400);
-  fact('and stays there', JSON.stringify(await seatOf()) === JSON.stringify(seat), await seatOf());
+  fact(
+    'and stays there',
+    JSON.stringify(await seatNow()) === JSON.stringify(seat),
+    await seatNow(),
+  );
   // Closed tabs outlive a reload: the thread comes back, on the same note.
   await page.locator('.tab[data-view^="thread"]').click({ button: 'middle' });
   await page.waitForTimeout(600);
@@ -210,7 +207,7 @@ async function run(browser: Browser): Promise<void> {
   await page.keyboard.press('Alt+Shift+T');
   await page.locator('.th-focus').waitFor();
   await page.waitForTimeout(300);
-  fact('a tab closed before a reload opens again as it was', (await seatOf())?.top === seat?.top);
+  fact('a tab closed before a reload opens again as it was', (await seatNow())?.top === seat?.top);
   // The tab in front is never hidden past an edge of its bar, however many tabs the tile holds.
   await page.setViewportSize({ width: 390, height: 844 });
   for (let i = 0; i < 3; i++) await page.locator(`.note .name`).first().click();
@@ -457,6 +454,7 @@ async function run(browser: Browser): Promise<void> {
   await resetChecks((given) => open(browser, '/', { ...still, ...given }), fact);
   await pendingChecks((given) => open(browser, '/', given), fact);
   await threadChecks((path, given, size) => open(browser, path, given, size), fact);
+  await replyChecks((path, given, size) => open(browser, path, given, size), fact);
   await scrolling(still);
   await filtering(browser, still);
   await rooms(browser, still);

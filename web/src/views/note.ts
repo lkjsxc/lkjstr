@@ -198,7 +198,7 @@ export function renderNote(row: NoteRow, env: ViewEnv, dated = false): HTMLEleme
         { class: 'nmain' },
         head(row, env, dated),
         body,
-        look?.compact ? null : [actionRow(row, env), reactionChips(row, env)],
+        look?.compact ? actionRow(row, env, false) : [actionRow(row, env), reactionChips(row, env)],
       ),
     ),
   );
@@ -255,9 +255,10 @@ export function patchNote(el: HTMLElement, row: NoteRow, env: ViewEnv, dated = f
   const held = document.activeElement?.closest('.acts, .chips')?.parentElement === main;
   const mark = held ? heldMark(document.activeElement) : '';
   main.querySelector(':scope > .chips')?.remove();
-  const acts = actionRow(row, env);
+  const compact = el.classList.contains('th-compact');
+  const acts = actionRow(row, env, !compact);
   main.querySelector(':scope > .acts')?.replaceWith(acts);
-  const chips = reactionChips(row, env);
+  const chips = compact ? null : reactionChips(row, env);
   if (chips) acts.after(chips);
   if (mark) main.querySelector<HTMLElement>(mark)?.focus({ preventScroll: true });
 }

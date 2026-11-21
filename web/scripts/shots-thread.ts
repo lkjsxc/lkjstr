@@ -4,6 +4,7 @@
 import assert from 'node:assert/strict';
 import type { Page } from 'playwright-core';
 import { idOf } from '../src/engine/mock/world.ts';
+import { seated, seatOf } from './thread-seat.ts';
 
 type Scene = (
   name: string,
@@ -42,10 +43,10 @@ export async function threadShots(scene: Scene): Promise<void> {
       const focus = page.locator(`${view} .th-focus`);
       await focus.waitFor();
       await page.locator(`${view} .tfold.th-step`).first().waitFor();
-      // It opens on its focus, at the top of the tile; what it answers is above.
-      const top = await page.locator(view).evaluate((v) => v.getBoundingClientRect().top);
-      const box = await focus.boundingBox();
-      assert.ok(box && Math.abs(box.y - top) < 2, 'the focus is at the top of the tile');
+      // It opens on its focus, about a third down the tile, with what it answers in view above it.
+      await page.waitForTimeout(300);
+      const seat = await seatOf(page);
+      assert.ok(seated(seat), `the focus is seated with its context: ${JSON.stringify(seat)}`);
       assert.ok(
         (await page.locator(`${view} .th-reply > .ctx`).count()) >= 2,
         'nested replies say whom they answer',

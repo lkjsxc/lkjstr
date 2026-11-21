@@ -85,6 +85,10 @@ export function mountFeedKeys(o: {
     const r = all[at]?.getBoundingClientRect();
     // Scrolled away from the selection (or none yet): start from what is on screen.
     if (!r || r.bottom <= top || r.top >= box.bottom) {
+      // A thread's first press starts on the note it was opened on while that is in view, not on what it answers.
+      const focus = all.find((n) => n.classList.contains('th-focus'))?.getBoundingClientRect();
+      if (!cursor && focus && focus.bottom > top + 1 && focus.top < box.bottom)
+        return select(all.find((n) => n.classList.contains('th-focus')));
       const first = all.findIndex((n) => n.getBoundingClientRect().bottom > top + 1);
       return select(all[Math.max(0, first)]);
     }

@@ -140,9 +140,11 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
 - New notes are always loaded into the feed as they arrive, after a reload too. At the top they show at once and the list stays at the top. Anywhere else they are inserted above while the reading position holds (the anchor note keeps its place on screen); the pill counts the unread notes above, scrolling up reaches them with no click, and pressing the pill goes to the top. A row selected by the keyboard holds the list too. The feed keeps its bounded window: when more arrive above than the window holds, the pill says so, and pressing it reloads the head.
 - The reading position is an anchor note plus offset: it survives reload,
   another tile width, a moved or reopened tab, late media.
-- A thread ([interface-thread.md](interface-thread.md)) opens on its focused note at the top of the tile, whole,
-  its text 1.5px larger, untinted; the reply field is under it. The notes it answers are above, compact (two
-  lines, one height) and joined by a rail that ends in a stub on the focus; more than three fold behind one row.
+- A thread ([interface-thread.md](interface-thread.md)) opens on its focused note about a third down the tile, with
+  what it answers in view above it, whole, its text 1.5px larger, untinted; the reply field is under it. The notes it
+  answers are above, compact (two lines and the action row, one height) and joined by a rail that ends in a stub on
+  the focus; more than three fold behind one row. Reply anywhere (a list, Notifications, a profile, R) opens the
+  note's thread in the same tile with the keyboard in that field; nothing opens a separate reply screen.
   Replies read as a conversation: one step in at most, quiet elbows in `--sep`, whom a reply answers above its
   header when its line does not say it, branches past three folded. Thread times carry the date (date alone under 340px). A note still
   looked for, or not found, holds the room of the note it would be; skeletons hold the focus and first replies.

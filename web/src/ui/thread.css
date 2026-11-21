@@ -15,8 +15,8 @@
 /* A branch, and the notes above, read as one group: hairlines only between groups. */
 .th-ancestor, .th-reply.th-below, .th-step:not(.th-last) { border-bottom-color: transparent; }
 
-/* The notes above: compact, two lines in a fixed height; a press opens one in place. */
-.th-compact { padding-bottom: 8px; cursor: pointer; }
+/* The notes above: compact, two lines and the action row in a fixed height; a press elsewhere opens one in place. */
+.th-compact { cursor: pointer; }
 .th-compact .nhead { height: 19px; }
 .th-compact .content { margin: 0; }
 .th-compact .content > .text { display: -webkit-box; height: 42px; max-height: none; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; color: var(--muted); font-size: 14px; line-height: 21px; white-space: normal; }
@@ -47,11 +47,14 @@
 .tpart { display: grid; grid-template-columns: var(--avatar, 36px) minmax(0, 1fr); gap: 0 10px; width: 100%; padding: 9px 12px 8px; border-bottom: 1px solid transparent; text-align: left; }
 .tface { width: var(--avatar, 36px); height: var(--avatar, 36px); border-radius: 50%; background: var(--hold); }
 .tlines { display: grid; grid-template-rows: 19px 21px 21px; align-items: center; }
+/* The room of a note above: its header, two lines and its action row (29px), with a note's bottom padding. */
+.tslot { padding-bottom: 4px; }
+.tslot .tlines { grid-template-rows: 19px 21px 21px 29px; }
 .tbar { width: 34%; height: 9px; border-radius: 5px; background: var(--hold); }
 .tbar + .tbar { width: 88%; }
 .tbar.short { width: 56%; }
 .tslot.missing .tface { box-sizing: border-box; border: 1.5px dashed var(--sep); background: none; }
-.tsays { align-self: center; height: 61px; color: var(--faint); font-size: 13px; line-height: 61px; }
+.tsays { align-self: center; height: 90px; color: var(--faint); font-size: 13px; line-height: 90px; }
 .tskel { border-bottom-color: var(--line); }
 .tskel .tlines { grid-template-rows: 19px 24px 24px; }
 .tskel.focus .tlines { grid-template-rows: 19px 26px 26px 26px 30px; }

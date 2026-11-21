@@ -91,7 +91,9 @@ export function reactionChips(row: NoteRow, env: ViewEnv): HTMLElement | null {
   );
 }
 
-export function actionRow(row: NoteRow, env: ViewEnv): HTMLElement {
+/** `chips`: whether reaction chips are drawn under the row; without them (a compact note above a thread's focus) the
+ * heart carries the total. */
+export function actionRow(row: NoteRow, env: ViewEnv, chips = true): HTMLElement {
   const lang = getLang();
   const n = (v: number): string => (v ? countText(v, row.counts.partial, lang) : '');
   // Signed out or read-only: what would publish is drawn off and says why; the counts stay readable.
@@ -159,13 +161,12 @@ export function actionRow(row: NoteRow, env: ViewEnv): HTMLElement {
   return h(
     'div',
     { class: 'acts' },
+    // Wherever Reply is pressed, the reply is written in the note's thread, in the field under it (a channel
+    // message's reply stays in its channel); a thread answers its own focus itself.
     button('reply', 'act.reply', n(row.counts.replies), false, () =>
       env.reply?.(row)
         ? undefined
-        : env.open('compose', {
-            replyTo: row.id,
-            replyOf: { name: plainName(row.author), text: excerpt(row) },
-          }),
+        : env.open('thread', { id: row.id, title: plainName(row.author), reply: true }),
     ),
     button('repost', 'act.repost', n(row.counts.reposts), row.mine.reposted, (el) =>
       openMenu(env.layer, el, [
@@ -181,7 +182,7 @@ export function actionRow(row: NoteRow, env: ViewEnv): HTMLElement {
     button(
       'heart',
       'act.react',
-      row.reactions.length ? '' : n(row.counts.reactions),
+      chips && row.reactions.length ? '' : n(row.counts.reactions),
       Boolean(mine),
       () => react(env, row, mine?.emoji ?? DEFAULT_REACTION, mine?.url, !mine),
     ),

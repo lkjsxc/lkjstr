@@ -1,10 +1,11 @@
 // The thread tab (docs/interface-thread.md), by keyboard and pointer, from the mock's thread fixtures: it opens on
-// its focus without taking the keyboard; j and k walk notes and folds and pass the reply field; Enter opens a fold or
+// its focus, seated a third down, without taking the keyboard; j and k walk notes and folds and pass the reply field; Enter opens a fold or
 // a compact note in place; R on the focus is the field, on another note that note's thread; a draft outlives another
 // tab in front, a reload and a closed tab reopened; a sent reply joins its branch; a missing note above holds its
 // room while it is looked for and after; a long thread fits a phone.
 import type { Page } from 'playwright-core';
 import { idOf } from '../src/engine/mock/world.ts';
+import { seated, seatOf } from './thread-seat.ts';
 
 type Check = (name: string, ok: boolean, detail?: unknown) => void;
 type Open = (
@@ -37,7 +38,16 @@ export async function threadChecks(open: Open, fact: Check): Promise<void> {
   const page = await open(at(7004), given(['home']));
   await page.locator(`${view} .th-focus`).waitFor();
   await page.waitForTimeout(700);
-  fact('a thread opens on its focus, which is whole', (await focusTop(page)) === 0);
+  fact(
+    'a thread opens on its focus, whole, a third down with what it answers in view',
+    seated(await seatOf(page)),
+    await seatOf(page),
+  );
+  fact(
+    'every note above has the action row; a compact one keeps its fixed height',
+    (await page.locator(`${view} .th-compact`).count()) ===
+      (await page.locator(`${view} .th-compact > .nrow > .nmain > .acts`).count()),
+  );
   fact('the reply field waits without taking the keyboard', !(await inField(page)));
   // The keyboard walks notes and folds; the reply field and placeholders are passed over.
   await page.locator(view).focus();
@@ -122,18 +132,18 @@ export async function threadChecks(open: Open, fact: Check): Promise<void> {
   const missing = await slot.boundingBox();
   fact(
     'a missing note above holds the same room, looked for and then not found, and the focus stays',
-    looking?.height === missing?.height && seat === 0 && (await focusTop(lost)) === 0,
+    looking?.height === missing?.height && seat > 0 && (await focusTop(lost)) === seat,
     { looking, missing, seat },
   );
   await lost.context().close();
 
-  // The long thread on a phone: one tile, nothing wider than the screen, the focus at the top.
+  // The long thread on a phone: one tile, nothing wider than the screen, seated on its focus.
   const phone = await open(at(7004), given(['home']), { width: 390, height: 844 });
   await phone.locator(`${view} .th-focus`).waitFor();
   await phone.waitForTimeout(700);
   fact(
     'a long thread fits a phone, on its focus',
-    (await focusTop(phone)) === 0 &&
+    seated(await seatOf(phone)) &&
       (await phone.evaluate(() => document.documentElement.scrollWidth <= innerWidth)) &&
       (await phone.locator(`${view} .tfold`).count()) >= 2,
   );

@@ -22,7 +22,11 @@ Index and rules: [interface-specs.md](interface-specs.md). The look is in [desig
 
 ## T1 The focused note
 
-The note the tab was opened on. It is drawn whole: never folded, its text 1.5 px larger than a note's, its media at
+The note the tab was opened on. The tab opens with it about a third down the tile and what it answers in view above
+it (all of that when it is shorter), as far as the focus and its reply field still fit under it; when they fill the
+tile, the focus is at the top. Until the reader scrolls, presses or types, notes arriving above in the first three
+seconds keep it there. A saved reading place wins over this.
+The keyboard's first j or k starts on the focus. It is drawn whole: never folded, its text 1.5 px larger than a note's, its media at
 full size, its action row and reaction chips as everywhere. No tint (the wash is the keyboard's). When it answers
 something, the rail from the notes above ends in a short stub over its face. Until it is known, a focused-note
 skeleton holds its place: a face, a name bar and three line bars in `--hold`, no motion. A note that cannot be
@@ -30,11 +34,12 @@ found is the quiet centred line of every list (`feed.empty`, `feed.failed`).
 
 ## T2 The notes above
 
-What the focus answers, oldest first, joined by the rail. Each is compact: the face, the header line, and at most
-two lines of text in `--muted` at 14 px, with a quiet mark for pictures or a quote; no action row, no media. Every
-compact row has the same height, two text lines, so one that arrives replaces its placeholder without moving
-anything. A press (or Enter) on a compact note opens it in place, whole, with its action row; a press on it then
-opens its thread as anywhere. What was opened stays opened with the tab.
+What the focus answers, oldest first, joined by the rail. Each is compact: the face, the header line, at most two
+lines of text in `--muted` at 14 px, with a quiet mark for pictures or a quote, and the action row (owner,
+2026-11-21: every note in a thread can be answered, reacted to, reposted and zapped); no media and no reaction chips,
+so the heart carries the total. Every compact row has the same height, two text lines and the action row, so one that
+arrives replaces its placeholder without moving anything. A press (or Enter) elsewhere on a compact note opens it in
+place, whole, with its chips; a press on it then opens its thread as anywhere. What was opened stays with the tab.
 
 More than three notes above: the first (where the conversation began), one row `thread.earlier` ("{n} earlier
 notes"), and the note the focus answers. Pressing it shows them all, and that stays with the tab.
@@ -69,14 +74,17 @@ with Retry, Edit and discard. Its draft, pictures and failed sends are the tab's
 with it (reload, another layout, a closed tab reopened). Sending empties it and leaves the caret there; the reply
 appears in the thread with the Sending mark. Read-only and signed out are said as in the Post tab.
 
-Reply on the focus (the button or R) puts the keyboard in the field. Reply on any other note in the thread opens
-that note's thread, right after this tab, with the keyboard in its field.
+Reply on the focus (the button or R) puts the keyboard in the field. Reply on any other note, in this thread or
+anywhere else (Home and every list, Notifications, a profile, a channel, R on a chosen note), opens that note's
+thread in the same tile, right after the tab it was pressed in, seated as in T1, with the keyboard in its field.
+Nothing opens a separate reply screen any more; a Post tab left answering a note from before keeps its draft.
 
 ## States and scenes
 
 `pnpm shots -- --scenes=thread,thread-long,thread-whole,thread-earlier,thread-wait,thread-missing,thread-reply` (in
 `web/`, from the mock's `mock.threads` fixtures): an ordinary thread, a long thread on its focus and whole, its
 earlier notes and one opened, a note above being looked for and then missing, and a reply being written. `pnpm smoke`
-walks it by keyboard, keeps a draft through another tab, a reload and a reopened tab, and sends a reply.
+walks it by keyboard, keeps a draft through another tab, a reload and a reopened tab, and sends a reply;
+`smoke-reply.ts` presses Reply from Home, R, Notifications and a profile on a desktop and a phone.
 
 Strings: `thread.earlier`, `thread.more`, `thread.missing`, `thread.looking`, `thread.replyHint`, `thread.answers`.

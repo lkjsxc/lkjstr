@@ -162,7 +162,12 @@ export function createKeeper(o: {
   };
 }
 
-/** Give the focused thread note enough space to sit at the top of its tile. */
+/** How long after a thread first shows its focus the place may still follow notes arriving above it. */
+const LAND_MS = 3000;
+
+/** Seats a thread on its focused note about a third down the tile, with what it answers above it, as far as the
+ * focus and its reply field still fit under that; the tail gives the focus room to sit there however few replies
+ * there are. Until the reader scrolls, presses or types, or LAND_MS has passed, notes arriving above keep it there. */
 export function createThreadSeat(
   el: HTMLElement,
   tail: HTMLElement,
@@ -170,14 +175,27 @@ export function createThreadSeat(
   seated: boolean,
   nodeFor: (key: string) => HTMLElement | undefined,
 ) {
+  let until = 0; // when landing ends; 0 before the focus is first seated, -1 once the reader has moved
+  const moved = (): void => void (until = -1);
+  for (const type of ['wheel', 'touchstart', 'pointerdown', 'keydown'] as const)
+    el.addEventListener(type, moved, { passive: true, once: true });
   return (rows: readonly ListRow[]): void => {
     const focus = rows.find((row) => row.kind === 'note' && row.thread?.role === 'focus');
     const node = focus && nodeFor(focus.key);
     if (!node) return;
-    const below = tail.getBoundingClientRect().top - node.getBoundingClientRect().top;
-    tail.style.height = `${Math.max(0, Math.ceil(el.clientHeight - below))}px`;
-    if (seated) return;
-    seated = true;
-    if (rows[0] !== focus) keeper.set({ key: focus.key, off: 0 });
+    const top = node.getBoundingClientRect().top;
+    const above = top - el.getBoundingClientRect().top + el.scrollTop; // the room of everything above the focus
+    const say = el.querySelector('.tsay')?.getBoundingClientRect().bottom ?? 0;
+    const whole = Math.max(node.getBoundingClientRect().bottom, say) - top; // the focus and its reply field
+    const want = Math.round(
+      Math.max(0, Math.min(above, el.clientHeight / 3, el.clientHeight - whole)),
+    );
+    const below = tail.getBoundingClientRect().top - top;
+    tail.style.height = `${Math.max(0, Math.ceil(el.clientHeight - want - below))}px`;
+    if (!seated) (seated = true), until || (until = performance.now() + LAND_MS);
+    else if (until <= 0 || performance.now() > until) return;
+    const at = keeper.get();
+    if (above > 0 && !(at?.key === focus.key && Math.abs(at.off - want) < 1))
+      keeper.set({ key: focus.key, off: want });
   };
 }
