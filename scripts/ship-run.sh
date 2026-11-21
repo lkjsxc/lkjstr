@@ -38,27 +38,32 @@ git push --dry-run -q origin "$REVISION:refs/heads/main" ||
 RUN=$(mktemp -d "$W/tmp/ship-$(date -u +%Y%m%dT%H%M%SZ)-XXXXXX") || fail 'cannot retain ship evidence'
 RECEIPT_CODE=$(git show "$REVISION:scripts/ship-receipt.mjs") || fail 'cannot snapshot receipt validator'
 CLEANUP_CODE=$(git show "$REVISION:scripts/ship-clean.mjs") || fail 'cannot snapshot cleanup policy'
-# These are the exact argument bytes that bash and Node execute, never reread from the worktree.
+SMOKE_CODE=$(git show "$REVISION:scripts/ship-smoke.py") || fail 'cannot snapshot smoke supervisor'
+# Retain the exact argument bytes supplied to each interpreter.
 printf '%s' "$BASH_EXECUTION_STRING" > "$RUN/ship-run.sh" &&
   printf '%s' "$RECEIPT_CODE" > "$RUN/ship-receipt.mjs" &&
   printf '%s' "$CLEANUP_CODE" > "$RUN/ship-clean.mjs" &&
+  printf '%s' "$SMOKE_CODE" > "$RUN/ship-smoke.py" &&
   git show "$REVISION:scripts/ship.sh" > "$RUN/ship.sh" &&
   printf '%s\n' "$REVISION" > "$RUN/revision" || fail 'cannot retain executed scripts'
-sha256sum "$RUN/ship.sh" "$RUN/ship-run.sh" "$RUN/ship-receipt.mjs" "$RUN/ship-clean.mjs" \
+sha256sum "$RUN/ship.sh" "$RUN/ship-run.sh" "$RUN/ship-receipt.mjs" "$RUN/ship-clean.mjs" "$RUN/ship-smoke.py" \
   > "$RUN/scripts.sha256" || fail 'cannot bind executed scripts'
-chmod a-w "$RUN/ship.sh" "$RUN/ship-run.sh" "$RUN/ship-receipt.mjs" "$RUN/ship-clean.mjs" ||
+chmod a-w "$RUN/ship.sh" "$RUN/ship-run.sh" "$RUN/ship-receipt.mjs" "$RUN/ship-clean.mjs" "$RUN/ship-smoke.py" ||
   fail 'cannot protect retained scripts'
 # Copied package fixtures resolve TypeScript from the repository root.
 timeout 300 pnpm install --frozen-lockfile || fail 'pnpm install --frozen-lockfile (root)'
 cd "$W/web" || fail 'no web/'
 timeout 1800 pnpm check || fail 'pnpm check'
 smoke_attempt() {
-  local ATTEMPT="$RUN/smoke-$1" CODE=0
+  local ATTEMPT="$RUN/smoke-$1" CODE
   mkdir "$ATTEMPT" || fail 'cannot create smoke evidence directory'
   printf 'Smoke attempt %s evidence: %s\n' "$1" "$ATTEMPT"
-  LKJSTR_SHOTS=1 LKJSTR_SMOKE_OUTPUT="$ATTEMPT" timeout 2400 pnpm smoke:real \
-    > "$ATTEMPT/stdout" 2> "$ATTEMPT/stderr" || CODE=$?
-  printf '%s\n' "$CODE" > "$ATTEMPT/status" || fail 'cannot retain smoke status'
+  CODE=$(LKJSTR_SHOTS=1 LKJSTR_SMOKE_OUTPUT="$ATTEMPT" \
+    python3 -I -c "$SMOKE_CODE" "$ATTEMPT" 2400 60 pnpm smoke:real) || fail 'cannot settle owned smoke processes'
+  (cd "$ATTEMPT" && find . -type f ! -path './evidence.sha256' -print0 | sort -z | xargs -0 sha256sum -- > evidence.sha256) ||
+    fail 'cannot bind smoke evidence'
+  printf '%s\n' "$CODE" > "$ATTEMPT/status.tmp" && mv "$ATTEMPT/status.tmp" "$ATTEMPT/status" ||
+    fail 'cannot retain smoke status'
   cat "$ATTEMPT/stdout" && cat "$ATTEMPT/stderr" >&2 || fail 'cannot read smoke logs'
   return "$CODE"
 }

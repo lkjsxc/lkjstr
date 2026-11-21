@@ -18,7 +18,8 @@ export function fixture(t, options = {}) {
   for (const path of [root, join(root, 'scripts'), join(root, 'web/scripts'), join(root, 'tmp'), join(root, '.test-bin')]) {
     mkdirSync(path, { recursive: true });
   }
-  for (const name of ['ship.sh', 'ship-clean.mjs', 'ship-receipt.mjs', 'ship-fixture.mjs', 'ship-fixture-change.mjs', 'ship-run.sh'].filter(name => existsSync(join(source, name)))) {
+  for (const name of ['ship.sh', 'ship-clean.mjs', 'ship-receipt.mjs', 'ship-fixture.mjs',
+    'ship-fixture-change.mjs', 'ship-run.sh', 'ship-smoke.py', 'ship-fixture-watchdog.mjs']) {
     copyFileSync(join(source, name), join(root, 'scripts', name));
   }
   for (const name of ['smoke-output.ts', 'smoke-real-results.mjs']) {
@@ -26,11 +27,18 @@ export function fixture(t, options = {}) {
     copyFileSync(join(source, '..', file), join(root, file));
   }
   if (options.mutableDriver) {
-    const path = join(root, 'scripts', existsSync(join(root, 'scripts/ship-run.sh')) ? 'ship-run.sh' : 'ship.sh');
+    const path = join(root, 'scripts/ship-run.sh');
     const script = readFileSync(path, 'utf8');
     const marker = "FIRST=$(deploy first) || fail 'host deployment did not finish; inspect its receipt and current release'\n";
     assert.ok(script.includes(marker));
     writeFileSync(path, script.replace(marker, `${marker}${'# fixture buffer boundary\n'.repeat(4096)}`));
+  }
+  if (options.watchdog) {
+    const path = join(root, 'scripts/ship-run.sh');
+    const source = readFileSync(path, 'utf8');
+    const deadline = '"$ATTEMPT" 2400 60 pnpm smoke:real';
+    assert.ok(source.includes(deadline));
+    writeFileSync(path, source.replace(deadline, '"$ATTEMPT" 1.5 0.75 pnpm smoke:real'));
   }
   writeFileSync(join(root, '.gitignore'), '/tmp/\n/target/\n/.test-bin/\n');
   writeFileSync(join(root, 'web/keep'), 'test build output is produced by the fixture');

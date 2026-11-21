@@ -1,7 +1,8 @@
+import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { appendFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { basename, join } from 'node:path';
-import { spawnSync } from 'node:child_process';
+import { basename, dirname, join } from 'node:path';
+import { spawn, spawnSync } from 'node:child_process';
 import { afterHash, beforeCopy, onDeploy } from './ship-fixture-change.mjs';
 
 const root = process.env.LKJSTR_SHIP_TEST_ROOT;
@@ -14,6 +15,21 @@ const index = '<!doctype html><title>deployment fixture</title>';
 const statePath = join(root, 'tmp/host-state.json');
 const state = () => existsSync(statePath) ? JSON.parse(readFileSync(statePath, 'utf8')) : { calls: 0, current: 'a'.repeat(32) };
 const save = value => writeFileSync(statePath, JSON.stringify(value));
+const watchdog = process.env.LKJSTR_SHIP_TEST_WATCHDOG;
+
+function assertWatchdogDrained(attempt) {
+  const read = name => readFileSync(join(attempt, name), 'utf8');
+  for (const role of ['pnpm', 'harness', 'detached']) {
+    const pid = read(`${role}.pid`);
+    assert.equal(existsSync(`/proc/${pid}`), false, `${role} must be reaped`);
+  }
+  assert.equal(read('harness.session'), read('pnpm.pid'));
+  assert.equal(read('detached.session'), read('detached.pid'));
+  assert.notEqual(read('harness.session'), read('detached.session'));
+  process.kill(Number(watchdog), 0);
+  assert.equal(existsSync(join(root, 'tmp/unrelated-term')), false);
+  assert.ok(existsSync(join(attempt, 'closed')), 'graceful diagnostics must finish');
+}
 
 if (name === 'credential-fixture') {
   const directory = process.env.GH_CONFIG_DIR || join(process.env.XDG_CONFIG_HOME || join(process.env.HOME, '.config'), 'gh');
@@ -46,6 +62,24 @@ if (name === 'credential-fixture') {
     console.log(`stdout ${attempt}`);
     console.error(`stderr ${attempt}`);
     if (mode === 'timeout') process.exit(124); // Simulate a timed-out build before the harness writes anything.
+    const output = process.env.LKJSTR_SMOKE_OUTPUT;
+    if (mode === 'watchdog') {
+      writeFileSync(join(output, 'pnpm.pid'), String(process.pid));
+      writeFileSync(join(output, 'watchdog-start'), String(process.hrtime.bigint()));
+      writeFileSync(join(output, 'engine-package.log'), 'fixture build completed before browser launch\n');
+      const script = join(root, 'scripts/ship-fixture-watchdog.mjs');
+      const harness = spawn(process.execPath, [script, 'harness', output], { stdio: 'inherit' });
+      await new Promise((resolve, reject) => { harness.once('exit', resolve); harness.once('error', reject); });
+      throw new Error('watchdog fixture ended before its deadline');
+    }
+    if (watchdog && attempt === 'smoke-2') {
+      const first = join(dirname(output), 'smoke-1');
+      assertWatchdogDrained(first);
+      assert.equal(readFileSync(join(first, 'status'), 'utf8'), '124\n');
+      const hashes = spawnSync('/usr/bin/sha256sum', ['-c', 'evidence.sha256'], { cwd: first, encoding: 'utf8' });
+      assert.equal(hashes.status, 0, hashes.stdout + hashes.stderr);
+      log({ command: 'watchdog-retry-readback' });
+    }
     const { createSmokeResults } = await import('../web/scripts/smoke-real-results.mjs');
     const results = createSmokeResults();
     const page = { locator: () => ({ innerText: async () => `failure DOM ${attempt}` }) };
@@ -116,6 +150,12 @@ if (name === 'credential-fixture') {
   const result = spawnSync('/bin/cp', args);
   process.exit(result.status ?? 1);
 } else if (name === 'sha256sum') {
+  if (watchdog && basename(process.cwd()) === 'smoke-1') {
+    assertWatchdogDrained(process.cwd());
+    assert.equal(existsSync('status'), false, 'status must follow evidence hashing');
+    const start = BigInt(readFileSync('watchdog-start', 'utf8'));
+    log({ command: 'watchdog-seal', elapsedMs: Number(process.hrtime.bigint() - start) / 1e6 });
+  }
   const result = spawnSync('/usr/bin/sha256sum', args, { input: args.length ? undefined : readFileSync(0) });
   if (result.status !== 0) process.exit(result.status ?? 1);
   afterHash(args, log);

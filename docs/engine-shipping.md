@@ -29,7 +29,8 @@ This stream uses only the owner-prescribed shipping entry point.
 
 ## Source and activation order
 
-Run from a clean worktree containing `origin/main`:
+Run from a clean worktree containing `origin/main` on Linux with Python 3 and
+`/proc` available.
 
 ```sh
 setsid nohup /home/coder/workspace/lkjstr-direction-20261116/ship.sh \
@@ -37,8 +38,8 @@ setsid nohup /home/coder/workspace/lkjstr-direction-20261116/ship.sh \
 ```
 
 The launcher pins a full Git revision and loads `ship-run.sh` from that Git
-object into Bash memory before gates run. The driver likewise loads its receipt
-and cleanup helpers from the same object, then executes their captured bytes.
+object into Bash memory before gates run. The driver likewise loads its receipt,
+cleanup and smoke helpers from that object, then executes their captured bytes.
 A later worktree edit cannot replace code already selected for execution.
 
 The shared ship lock precedes replacing `tmp/ship.out` and `tmp/ship.log`.
@@ -69,7 +70,19 @@ Internet path or an interactive browser session.
 Each attempt retains its revision, tarball, executed helper bytes and hashes,
 deployment/verification receipts and summary in `tmp/ship-<UTC>-<random>/`.
 The first smoke and its retry write to `smoke-1/` and `smoke-2/` via absolute `LKJSTR_SMOKE_OUTPUT` paths.
-Read the selected attempt's `status` and any terminal `smoke-real/report.json` directly.
+The smoke supervisor starts the command in its own session. At 2400 seconds
+it sends SIGTERM to that command group and preserves exit 124. It gives owned
+processes 60 seconds to settle, then kills and reaps survivors, including
+detached descendants. If any remain after five more seconds, shipping stops
+without terminal status or a retry. The driver writes `evidence.sha256` after
+all owned writers exit, then atomically publishes `status`.
+
+Read the wrapper result and `tmp/ship.out` with the exact run's `revision` and
+`scripts.sha256`. Select `smoke-1/` when its `status` is 0. A terminal nonzero
+status allows `smoke-2/`, which must itself have status 0 for admission. Verify
+the selected attempt's `evidence.sha256` from within that directory and read
+its `smoke-real/report.json` directly. Require every check in the pinned
+inventory to pass, with empty `errors` and `failures`.
 Each attempt keeps `stdout`, `stderr`, `engine-package.log`, progress and any DOM captures.
 The harness appends labels and stacks to `smoke-real-failures.jsonl` before capturing the DOM.
 Verified shipments send the owner line unless `LKJSTR_SHIP_NOTIFY=0`.
@@ -111,6 +124,13 @@ Current release d709e49012af410685572170253e927b; compatible rollback
 9528fe7103b7462387235d47ec579285. Exact gate/HTTPS receipts remain
 in tmp/ship-20261117T015825Z-386270/.
 
+`tmp/account-release-observed-ship-07e88178.json` binds the receipts, archive,
+smoke report and stamp after a queued attempt replaced the shared `ship.out`.
+Its hash is `89a404997f21484938e99ab3d5c5910082988f63f9c8c9b015f595884ebf9763`.
+The deployed WASM hash is
+`59e2121a2dfc9c5c2f1e10963edf65f0f18c4fed0d5f86e0f4a1869c727cc5`.
+This observation used the local receipts and their reported edge checks.
+
 ## Resource ownership
 
 Builds and native tests stay at four jobs/threads. Development/test debug
@@ -123,11 +143,14 @@ The cleanup helper performs no process scan, Cargo invocation or deletion.
 Any later maintenance must be separately coordinated with every target user.
 The ship command never removes another worktree or an active proof's package.
 
-## Local regression evidence (2026-11-17)
+## Local regression evidence
 
 `node --test scripts/ship.test.mjs` executes the actual shell against isolated
 Git repositories, owned archive copies and simulated commands. It makes no
 actual SSH, Desk, Cargo or browser calls and does not push the project.
+The watchdog fixture checks that a SIGTERM survivor can finish writing, that
+it and its detached child are reaped before hashing, and that an unrelated
+process receives no signal across both retry outcomes.
 
 At 00:19:06-00:19:12 UTC the original six safety cases failed as intended while
 eleven controls passed. They covered unchanged-successor baseline receipts,
@@ -168,33 +191,3 @@ SHA-256 `ecbe78e7409edae34437b06ba25bd9d59a0c81567aa5448fab5537c240876944`.
 The account runtime has separate completed [production proof](engine-availability-verification.md).
 Host graph/rollback/HTTPS tests remain separate; finite local proof does not
 certify live deployment. Retain actual receipts and compatible release IDs.
-
-
-## Observed compatible shipment (2026-11-17)
-
-Another prescribed-wrapper run shipped `07e88178` at 02:07:15 UTC. Its retained
-`tmp/ship-20261117T015825Z-386270/` summary and both deployment/verification
-receipts were read after the shared `ship.out` had been replaced by a queued
-attempt's interval refusal. That refusal does not undo the completed shipment.
-This stream did not initiate either attempt or run another host command.
-
-Both receipts match the retained 1602184-byte archive, SHA-256
-`eb633111cf2c00df656bf7bbbc396d695b00df51a61796d9a244214b91c311cb`,
-and its index hash
-`fa3286676dd34d61f91a2e5d060123b7a0ec3fee18a1cdf5184f3e8c0ac16468`.
-The retained real UI report has 548 successful checks and no reported errors.
-The local stamp names the same source revision and completion time.
-
-The first compatible release is `9528fe7103b7462387235d47ec579285`;
-the second receipt starts there and ends at the distinct current release
-`d709e49012af410685572170253e927b`. This establishes the schema-2 rollback
-pair. Future ordinary shipments do not need to repeat its baseline mode.
-The deployed WASM is
-`59e2121a2dfc9c5c2f1e10963edf65f0f18c4fed0d5f86e0f4f0a1869c727cc5`,
-not the newer protocol-13 availability marker tested by this stream.
-
-The observation record `tmp/account-release-observed-ship-07e88178.json` binds
-the exact local receipts, archive contents, smoke report and stamp. Its hash is
-`89a404997f21484938e99ab3d5c5910082988f63f9c8c9b015f595884ebf9763`.
-These checks did not independently query DNS/TLS or the current host release;
-the host receipts themselves report that external browser verification is false.

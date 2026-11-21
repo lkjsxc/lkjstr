@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { spawn } from 'node:child_process';
 import test from 'node:test';
 import './ship-safety-cases.mjs';
+import './ship-watchdog-cases.mjs';
 import { fixture, deploys, notices } from './ship-test-support.mjs';
 
 test('a rejected real Git push touches no host and reports no shipment', t => {
