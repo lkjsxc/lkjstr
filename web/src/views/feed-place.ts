@@ -194,8 +194,8 @@ export function createThreadSeat(
     tail.style.height = `${Math.max(0, Math.ceil(el.clientHeight - want - below))}px`;
     if (!seated) (seated = true), until || (until = performance.now() + LAND_MS);
     else if (until <= 0 || performance.now() > until) return;
-    const at = keeper.get();
-    if (above > 0 && !(at?.key === focus.key && Math.abs(at.off - want) < 1))
+    // Only a focus that is not where it should be is moved: setting the same place again would save it again.
+    if (above > 0 && Math.abs(top - el.getBoundingClientRect().top - want) >= 1)
       keeper.set({ key: focus.key, off: want });
   };
 }
