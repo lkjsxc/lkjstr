@@ -160,28 +160,41 @@ export function momentOf(
     if (!t?.offsetHeight) return;
     t.style.height = `${Math.max(0, Math.ceil(o.el.scrollTop + o.el.clientHeight - above(t)))}px`;
   };
-  const seat = (): void => {
-    if (seated || !answer?.key) return;
+  /** The row beside the line: the first below it, else the last above it. Holding it keeps the line still. */
+  const beside = (): HTMLElement | undefined => {
     const line = o.drawn.node('moment:');
-    if (!line?.isConnected) return;
+    const content = (n: Element | null): n is HTMLElement =>
+      n instanceof HTMLElement && !/^(day|moment):/.test(n.dataset.key ?? 'moment:');
+    let next = line?.nextElementSibling ?? null;
+    while (next && !content(next)) next = next.nextElementSibling;
+    let prev = line?.previousElementSibling ?? null;
+    while (prev && !content(prev)) prev = prev.previousElementSibling;
+    return (next ?? prev ?? undefined) as HTMLElement | undefined;
+  };
+  /** Once, on the first answer: the line's top a third down the tile (the time alone places it, so no key is
+   * awaited), with room under the list when it is still too short to scroll there. */
+  const seat = (): void => {
+    const line = o.drawn.node('moment:');
+    const row = beside();
+    if (seated || !answer || !line?.isConnected || !row?.dataset.key) return;
     seated = true;
     const third = Math.round(o.el.clientHeight / 3);
     const top = line.getBoundingClientRect().top;
     const want = o.el.scrollTop + top - o.el.getBoundingClientRect().top - third;
     const t = tail();
     if (t) t.style.height = `${Math.max(0, Math.ceil(want + o.el.clientHeight - above(t)))}px`;
-    const content = (n: Element | null): n is HTMLElement =>
-      n instanceof HTMLElement && !/^(day|moment):/.test(n.dataset.key ?? 'moment:');
-    let next: Element | null = line.nextElementSibling;
-    while (next && !content(next)) next = next.nextElementSibling;
-    let prev: Element | null = line.previousElementSibling;
-    while (prev && !content(prev)) prev = prev.previousElementSibling;
-    const row = (next ?? prev) as HTMLElement | null;
-    if (!row?.dataset.key) return;
     o.keeper.set({ key: row.dataset.key, off: third + row.getBoundingClientRect().top - top });
   };
+  // Until the reader moves, redraws hold the row beside the line, so notes arriving on either side of it (nearer
+  // newer ones land right above it) never push the moment off its third.
+  let landing = true;
+  const moved = (): void => void (landing = false);
+  for (const type of ['wheel', 'touchstart', 'pointerdown', 'keydown'] as const)
+    o.el.addEventListener(type, moved, { passive: true, once: true });
 
   return {
+    /** The row a redraw holds in place: beside the line while the moment is landing. */
+    hold: (): string | undefined => (landing && seated ? beside()?.dataset.key : undefined),
     /** The window around the time, as large as the sides have grown. */
     ask: (): void => o.request({ at }, ...sides),
     /** The author whose Home this is, once known: their face goes on the moment line. */
