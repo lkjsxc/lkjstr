@@ -56,7 +56,9 @@ pub use content_media::{
     ContentAttachment, ContentAttachmentKind, ContentUrlSpan, classify_url, content_attachments,
     content_url_spans, content_urls, embedded_media_attachments,
 };
-pub use content_mentions::{ContentProfileMention, content_profile_mentions};
+pub use content_mentions::{
+    ContentProfileMention, canonical_profile_replacements, content_profile_mentions,
+};
 pub use content_tags::{content_derived_tags, emoji_tags, mention_tags};
 pub use crypto::{
     CryptoError, SecretKeyBytes, generate_secret_key, parse_secret_key_hex, public_key_from_secret,

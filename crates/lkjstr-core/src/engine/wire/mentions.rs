@@ -23,18 +23,7 @@ pub(super) fn expand(text: &str, mentions: Vec<Mention>) -> String {
             Some((start, end, format!("nostr:{npub}")))
         })
         .collect::<Vec<_>>();
-    // Pasted bare npub/nprofile addresses also become canonical nostr mentions.
-    replacements.extend(
-        lkjstr_protocol::content_profile_mentions(text)
-            .into_iter()
-            .filter_map(|m| {
-                Some((
-                    m.start,
-                    m.end,
-                    format!("nostr:{}", lkjstr_protocol::encode_npub(&m.pubkey).ok()?),
-                ))
-            }),
-    );
+    replacements.extend(lkjstr_protocol::canonical_profile_replacements(text));
     replacements.sort_by_key(|r| (r.0, r.1));
     let mut out = String::new();
     let mut at = 0;

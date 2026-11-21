@@ -15,7 +15,9 @@ the complete signed event received by the relay with the disposable signer's
 event and match the Worker result to the relay OK by event ID. The witness
 checks exact content and exact p, e and q tag arrays. It repeats a selected
 recipient, overlaps a selected recipient with the target author, preserves
-inherited reply participants and checks that plain @ text adds no recipient.
+inherited reply participants and checks that plain @ text adds no recipient. A separate pasted-address draft
+checks preserved nprofile relay hints, unchanged URL and malformed text, and
+exact profile projection.
 A second Worker with new browser storage reads the same events from the relay
 and checks the projected mention identities. The real UI smoke covers the
 composer interaction and the rendered link.

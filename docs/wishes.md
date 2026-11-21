@@ -31,8 +31,9 @@ at startup and when the device account set changes; fetch priority is unchanged.
 
 `Draft.mentions` carries selected UTF-16 text ranges and their exact labels.
 The engine validates ranges and labels, expands them to canonical nostr npubs,
-and derives p tags through lkjstr-protocol. Pasted person addresses use that
-same parser. Edits crossing a selected name dissolve the range. The mock serves
+and derives p tags through lkjstr-protocol. Valid standalone pasted npub and
+nprofile addresses get a nostr prefix, preserving nprofile relay hints and
+leaving malformed text and ordinary URLs intact. Edits dissolve stale ranges. The mock serves
 the same sources and mention representation.
 
 `Author.profileId` identifies kind 0 so a failed picture can be tried again on

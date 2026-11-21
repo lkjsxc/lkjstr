@@ -108,7 +108,7 @@ async function start(browser) {
   return { send, receive, read, people };
 }
 
-function draftFor(route, recipient, target) {
+function draftFor(route, recipient, target, root) {
   const references = [recipient, recipient];
   if (route !== 'Post') references.push(target.pubkey);
   let text = '🌿';
@@ -128,7 +128,31 @@ function draftFor(route, recipient, target) {
     draft.quote = target.id;
     expected += `\nnostr:${bech32('note', target.id)}`;
   }
-  return { draft, expected, references };
+  const recipients = route === 'Post' ? [recipient]
+    : route === 'Quote' ? [target.pubkey, recipient] : [target.pubkey, root.pubkey, recipient];
+  const tags = {
+    p: recipients.map((key) => ['p', key]),
+    e: route === 'inline Reply' ? [['e', root.id, '', 'root'], ['e', target.id, '', 'reply']] : [],
+    q: route === 'Quote' ? [['q', target.id]] : [],
+  };
+  return { route, draft, expected, references, tags };
+}
+
+function pastedDraft(recipient, sender) {
+  const npub = bech32('npub', recipient);
+  const urlOnly = bech32('npub', sender);
+  const hint = Buffer.from(relay);
+  const nprofile = bech32('nprofile',
+    `0020${recipient}01${hint.length.toString(16).padStart(2, '0')}${hint.toString('hex')}`);
+  const untouched = `https://example.test/(${urlOnly}) ${urlOnly}/path ${npub}0`;
+  const text = `(${npub}), "${nprofile}". ${untouched}`;
+  return {
+    route: 'pasted profiles',
+    draft: { text },
+    expected: `(nostr:${npub}), "nostr:${nprofile}". ${untouched}`,
+    references: [recipient, recipient],
+    tags: { p: [['p', recipient, relay]], e: [], q: [] },
+  };
 }
 
 const signer = fixtureProcess('engine-fixtures', { stdio: ['pipe', 'pipe', 'inherit'] });
@@ -170,8 +194,10 @@ try {
   };
   console.log('ok bare mention follows and context load their profiles');
 
-  for (const route of ['Post', 'inline Reply', 'Quote']) {
-    const { draft, expected, references } = draftFor(route, recipient.pubkey, target);
+  const drafts = ['Post', 'inline Reply', 'Quote']
+    .map((route) => draftFor(route, recipient.pubkey, target, root));
+  drafts.push(pastedDraft(recipient.pubkey, note.pubkey));
+  for (const { route, draft, expected, references, tags } of drafts) {
     await writer.send({ t: 'act', req: route, action: {
       a: 'publish', as: note.pubkey, what: { k: 'note', draft },
     } });
@@ -190,14 +216,9 @@ try {
     assert.deepEqual(result.delivery.map(({ url, state }) => [url, state]), [[relay, 'ok']]);
     assert.equal(signed.content, expected);
     assert.equal(signed.kind, 1);
-    const tags = (key) => signed.tags.filter((tag) => tag[0] === key);
-    const keys = route === 'Post' ? [recipient.pubkey]
-      : route === 'Quote' ? [target.pubkey, recipient.pubkey]
-        : [target.pubkey, note.pubkey, recipient.pubkey];
-    assert.deepEqual(tags('p'), keys.map((key) => ['p', key]));
-    assert.deepEqual(tags('e'), route === 'inline Reply'
-      ? [['e', root.id, '', 'root'], ['e', target.id, '', 'reply']] : []);
-    assert.deepEqual(tags('q'), route === 'Quote' ? [['q', target.id]] : []);
+    for (const [key, expectedTags] of Object.entries(tags)) {
+      assert.deepEqual(signed.tags.filter((tag) => tag[0] === key), expectedTags);
+    }
   }
   const reader = await start(browser);
   for (const evidence of report.cases) {

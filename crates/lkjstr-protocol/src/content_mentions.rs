@@ -20,6 +20,44 @@ pub fn content_profile_mentions(content: &str) -> Vec<ContentProfileMention> {
         .collect()
 }
 
+/// Byte spans for standalone NIP-19 profile tokens that need canonical NIP-21 text.
+#[must_use]
+pub fn canonical_profile_replacements(content: &str) -> Vec<(usize, usize, String)> {
+    let mut offset = 0;
+    content
+        .split_inclusive(char::is_whitespace)
+        .filter_map(|token| {
+            let start_of_token = offset;
+            offset += token.len();
+            let opened = token.trim_start_matches(['(', '<', '\'', '"']);
+            let raw = opened.trim_end_matches(|ch: char| {
+                ch.is_whitespace()
+                    || matches!(
+                        ch,
+                        ')' | '>' | '\'' | '"' | '.' | ',' | ';' | ':' | '!' | '?'
+                    )
+            });
+            let entity = match raw.get(..6) {
+                Some(prefix) if prefix.eq_ignore_ascii_case("nostr:") => &raw[6..],
+                _ => raw,
+            };
+            if !["npub1", "nprofile1"].iter().any(|prefix| {
+                entity
+                    .get(..prefix.len())
+                    .is_some_and(|start| start.eq_ignore_ascii_case(prefix))
+            }) || !matches!(
+                decode_nip19(entity),
+                Some(NostrEntity::Npub(_) | NostrEntity::Nprofile(_))
+            ) {
+                return None;
+            }
+            let reference = format!("nostr:{}", entity.to_ascii_lowercase());
+            let start = start_of_token + token.len() - opened.len();
+            (raw != reference).then_some((start, start + raw.len(), reference))
+        })
+        .collect()
+}
+
 fn profile_mention(
     content: &str,
     span: crate::event_reference_scan::NostrEntitySpan,
