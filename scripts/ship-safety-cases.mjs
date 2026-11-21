@@ -30,6 +30,7 @@ for (const [retry, exit] of [['pass', 0], ['timeout', 1]]) {
     const first = JSON.parse(read(1, 'smoke-real/report.json'));
     assert.deepEqual(first.checks, { 'independent socket observation': 'FAIL', 'later check': 'ok' });
     assert.match(first.failures[0].stack, /Error: independent socket observation/);
+    assert.deepEqual(read(1, 'smoke-real-failures.jsonl').trim().split('\n').map(JSON.parse), first.failures);
     assert.equal(existsSync(join(f.root, 'tmp/smoke-real/report.json')), false);
     assert.equal(read(2, 'status'), retry === 'pass' ? '0\n' : '124\n');
     assert.equal(existsSync(join(run, 'smoke-2/smoke-real-observation-1.txt')), false);
@@ -37,6 +38,7 @@ for (const [retry, exit] of [['pass', 0], ['timeout', 1]]) {
       const second = JSON.parse(read(2, 'smoke-real/report.json'));
       assert.deepEqual(second.checks, { 'independent socket observation': 'ok', 'later check': 'ok' });
       assert.deepEqual(second.failures, []);
+      assert.equal(read(2, 'smoke-real-failures.jsonl'), '');
       assert.match(result.summary, /^SHIPPED /);
     } else {
       assert.equal(existsSync(join(run, 'smoke-2/smoke-real/report.json')), false);

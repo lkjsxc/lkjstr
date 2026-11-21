@@ -7,16 +7,26 @@ export function createSmokeResults() {
   const checks = {};
   const failures = [];
   const progress = smokePath('smoke-real-progress.log');
+  const failureLog = smokePath('smoke-real-failures.jsonl');
   const report = smokePath('smoke-real/report.json');
+  let lastError;
   mkdirSync(dirname(progress), { recursive: true });
   writeFileSync(progress, '');
+  writeFileSync(failureLog, '');
+
+  function recordFailure(name, error) {
+    const failure = { name, error: String(error), stack: error?.stack ?? null };
+    appendFileSync(failureLog, `${JSON.stringify(failure)}\n`);
+    failures.push(failure);
+    lastError = error;
+  }
 
   function record(name, ok) {
     checks[name] = ok ? 'ok' : 'FAIL';
     appendFileSync(progress, `${checks[name]} ${name}\n`);
     if (ok) return;
     const error = new Error(name);
-    failures.push({ name, error });
+    recordFailure(name, error);
     return error;
   }
 
@@ -29,21 +39,21 @@ export function createSmokeResults() {
     }
   }
 
-  const failureDetails = () =>
-    failures.map(({ name, error }) => ({ name, error: String(error), stack: error?.stack }));
   return {
     check(name, ok = true) {
       const error = record(name, ok);
       if (error) throw error;
     },
-    async observe(name, ok, page) {
-      const error = record(name, ok);
-      if (error) await captureDom(page, `smoke-real-observation-${failures.length}.txt`);
+    async observe(observations, page) {
+      const captures = [];
+      for (const [name, ok] of observations) {
+        if (record(name, ok)) captures.push(`smoke-real-observation-${failures.length}.txt`);
+      }
+      for (const file of captures) await captureDom(page, file);
     },
     async fail(error, page) {
       checks.failure = String(error);
-      const last = failures.at(-1);
-      if (!last || last.error !== error) failures.push({ name: 'failure', error });
+      if (!failures.length || lastError !== error) recordFailure('failure', error);
       await captureDom(page, 'smoke-real-dom.txt');
     },
     async writeReport(errors, fake) {
@@ -56,7 +66,7 @@ export function createSmokeResults() {
             errors,
             publications: fake.published.map((e) => ({ id: e.id, kind: e.kind })),
             searches: fake.searches,
-            failures: failureDetails(),
+            failures,
           },
           null,
           2,
@@ -65,7 +75,7 @@ export function createSmokeResults() {
     },
     finish(errors) {
       if (failures.length) {
-        console.error(JSON.stringify({ checks, errors, failures: failureDetails() }));
+        console.error(JSON.stringify({ checks, errors, failures }));
         process.exitCode = 1;
       } else console.log('ok smoke-real');
     },

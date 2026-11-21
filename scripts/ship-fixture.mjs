@@ -49,7 +49,7 @@ if (name === 'credential-fixture') {
     const { createSmokeResults } = await import('../web/scripts/smoke-real-results.mjs');
     const results = createSmokeResults();
     const page = { locator: () => ({ innerText: async () => `failure DOM ${attempt}` }) };
-    await results.observe('independent socket observation', mode === 'pass', page);
+    await results.observe([['independent socket observation', mode === 'pass']], page);
     results.check('later check');
     await results.writeReport([], { published: [], searches: [] });
     results.finish([]);

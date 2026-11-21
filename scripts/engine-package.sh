@@ -9,8 +9,10 @@ export XDG_CACHE_HOME="${XDG_CACHE_HOME:-$PWD/tmp/cache}"
 export XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$PWD/tmp/config}"
 export XDG_DATA_HOME="${XDG_DATA_HOME:-$PWD/tmp/data}"
 export TMPDIR="$PWD/tmp/temp"
-mkdir -p "$TMPDIR"
-sh scripts/engine-build.sh > tmp/engine-package.log 2>&1 || { tail -40 tmp/engine-package.log; exit 1; }
+log_dir="${LKJSTR_SMOKE_OUTPUT:-tmp}"
+log="$log_dir/engine-package.log"
+mkdir -p "$TMPDIR" "$log_dir"
+sh scripts/engine-build.sh > "$log" 2>&1 || { tail -40 "$log"; exit 1; }
 mkdir -p tmp/engine-dist
 cp tmp/engine-pkg/lkjstr_engine.js tmp/engine-pkg/lkjstr_engine_bg.wasm engine/worker.js engine/shared.js engine/transport.js tmp/engine-dist/
 wc -c tmp/engine-dist/*
