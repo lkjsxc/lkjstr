@@ -788,6 +788,8 @@ export type EngineConfig = {
   // engine-added 2026-11-15: 2
   /** Include the lkjstr client tag on authored events (default true). */
   readonly clientTag?: boolean;
+  /** Scope clientTag to this device account. Omit for the device default. */
+  readonly clientTagAccount?: Pubkey;
   // end engine-added
   /** Interface language, for the engine's language heuristics. */
   readonly language: string;
