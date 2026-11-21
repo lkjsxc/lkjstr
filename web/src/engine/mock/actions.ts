@@ -4,6 +4,7 @@ import { serverAddress } from '../../shared/address.ts';
 import { reactionLabel } from '../../shared/reactions.ts';
 import type { Action, Delivery, Draft, Failure, FromEngine, ToEngine } from '../protocol.ts';
 import { channelAct, channelTouched, chatter } from './channels.ts';
+import { HANDLERS } from './client-handlers.ts';
 import type { Core } from './engine.ts';
 import { FILLER } from './fixtures-notes.ts';
 import { byHandle, byPubkey, byRef, type Person, SELF } from './people.ts';
@@ -90,6 +91,10 @@ export function createActions(core: Core) {
       const found =
         a.route === 'p' ? byRef(a.ref) : a.route === 'n' && /^note1[0-9a-f]{58}$/.test(a.ref);
       return found ? done(req) : fail(req, 'rejected');
+    }
+    if (a.a === 'client.info') {
+      const info = Object.values(HANDLERS).find((x) => x.address === a.address)?.info;
+      return info ? done(req, { clientInfo: info }) : fail(req, 'not-found');
     }
     if (a.a === 'lists.retry') return retryLists(core, req, a.as);
     const me = core.me();

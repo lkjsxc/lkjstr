@@ -18,6 +18,7 @@ import { resetChecks } from './smoke-reset.ts';
 import { threadChecks } from './smoke-thread.ts';
 import { timeLabelChecks } from './smoke-time-label.ts';
 import { railSmoke } from './smoke-time-rail.ts';
+import { viaChecks } from './smoke-via.ts';
 import { wishes } from './smoke-wishes.mjs';
 import { seated, seatOf } from './thread-seat.ts';
 
@@ -470,6 +471,7 @@ async function run(browser: Browser): Promise<void> {
     fact,
   );
   await timeLabelChecks((path, given, size) => open(browser, path, given, size), fact);
+  await viaChecks((path, given, size) => open(browser, path, given, size), fact);
   await scrolling(still);
   await filtering(browser, still);
   await rooms(browser, still);

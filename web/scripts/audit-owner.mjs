@@ -174,10 +174,16 @@ export async function auditOwner({
       await fact(
         32,
         'client-tag-switch',
-        await settings.getByRole('checkbox', { name: 'via lkjstr', exact: true }).isChecked(),
+        await settings
+          .getByRole('checkbox', { name: 'Include lkjstr in my posts', exact: true })
+          .isChecked(),
       );
-      await settings.getByRole('checkbox', { name: 'via lkjstr', exact: true }).uncheck();
-      await settings.getByRole('checkbox', { name: 'via lkjstr', exact: true }).check();
+      await settings
+        .getByRole('checkbox', { name: 'Include lkjstr in my posts', exact: true })
+        .uncheck();
+      await settings
+        .getByRole('checkbox', { name: 'Include lkjstr in my posts', exact: true })
+        .check();
       if (real) {
         await settings.locator('.srow .avb').first().click();
         await view('profile').locator('.profile').waitFor();

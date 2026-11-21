@@ -306,7 +306,9 @@ export const NOTES: readonly NoteSpec[] = [
     by: 'devbot',
     ago: 200,
     text: 'nostr-tools 2.9.4 released\nhttps://github.com/example/nostr-tools/releases/tag/v2.9.4',
-    client: 'release-bot',
+    // Relay text: a format control, a bell and a name far past any sane length.
+    client:
+      'Totally\u202e Official\u0007   Release Client for Every Platform and Every Relay You Can Name',
   },
   {
     by: 'marco',

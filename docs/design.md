@@ -111,6 +111,10 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
 - Avatar circle (36px, a setting) in its own column; header line with name,
   NIP-05 with a tick when verified, and the time right-aligned. A face
   opens the profile wherever it is drawn, as the name does.
+- A note that names its client says so by its time: "via {name}" in `--faint`, 12px, on the same line, the first
+  thing in the header to give way and not drawn under 340px of tile ([interface-client.md](interface-client.md)).
+  The name is relay text, drawn as text and bounded. With a handler address it is a button: a press asks once and
+  shows the verified app's name and site, or that it could not be verified; nothing navigates by itself.
 - A person whose name has not arrived is shown by a short npub, never by
   hex. When the name comes only the header line and the face are drawn
   again, so text, folds and loaded pictures stay. Tab titles follow.

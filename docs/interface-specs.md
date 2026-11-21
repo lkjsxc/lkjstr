@@ -53,6 +53,10 @@ what the engine offers and no surface reaches yet.
 | C3 | Time jumps by mouse, touch and keyboard, and their loading | [interface-time.md](interface-time.md#c3-jumps-and-loading) | ready |
 | C4 | A note's time opens the author's Home at that moment (cache only) | [interface-moment.md](interface-moment.md#spec-c4-the-moment-tab-cache-only-the-existing-worker) | built |
 | C5 | The moment from relays in both directions | [interface-moment.md](interface-moment.md#spec-c5-both-directions-from-relays-needs-engine-r1-to-r6-ui-only-after-them) | older built; newer needs engine |
+| W1 | "via <client>" by a note's time | [interface-client.md](interface-client.md#w1-where-it-stands) | built |
+| W2 | Client names are relay text: drawn as text, bounded | [interface-client.md](interface-client.md#w2-text-from-relays) | built |
+| W3 | App information on a press | [interface-client.md](interface-client.md#w3-app-information) | built on the mock; engine in progress |
+| W4 | Include lkjstr in my posts (opt-out) | [interface-client.md](interface-client.md#w4-leaving-lkjstr-out-of-ones-posts) | built |
 | Q1 | Tabs state wants; the engine makes one plan | [read-plan.md](read-plan.md#q1-tabs-state-wants-the-engine-makes-one-plan) | ready |
 | Q2 | Ask where the answer is | [read-plan.md](read-plan.md#q2-ask-where-the-answer-is) | ready |
 | Q3 | Weights made from the past | [read-plan.md](read-plan.md#q3-weights-made-from-the-past) | ready |

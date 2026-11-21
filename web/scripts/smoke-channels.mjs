@@ -74,7 +74,7 @@ export async function channelScenarios({ page, launch, check, fake, shots, shot 
       reply.tags.some((t) => t[0] === 'e' && t[1] === message.id && t[3] === 'reply'),
   );
   await launch('Settings', 'settings');
-  await page.getByRole('checkbox', { name: 'via lkjstr', exact: true }).uncheck();
+  await page.getByRole('checkbox', { name: 'Include lkjstr in my posts', exact: true }).uncheck();
   await page.locator('.pane.cur .tab.active > .x').click();
   await page.locator(`.pane.cur .tab[data-view="${channelTab}"]`).click();
   const untagged = await post(`Channel without client tag ${Date.now()}`);
@@ -83,7 +83,7 @@ export async function channelScenarios({ page, launch, check, fake, shots, shot 
     untagged?.kind === 42 && !untagged.tags.some((t) => t[0] === 'client'),
   );
   await launch('Settings', 'settings');
-  await page.getByRole('checkbox', { name: 'via lkjstr', exact: true }).check();
+  await page.getByRole('checkbox', { name: 'Include lkjstr in my posts', exact: true }).check();
   await page.locator('.pane.cur .tab.active > .x').click();
   await launch('Stats', 'stats');
   await page.locator('.statsv .stab:visible tbody tr').first().waitFor();
