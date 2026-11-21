@@ -12,6 +12,7 @@ impl Engine {
         wants.extend(self.nearby_wants());
         wants.extend(self.discovery_wants());
         wants.extend(self.channel_action_wants());
+        wants.extend(self.client_info_wants());
         for (sub, v) in self.views.iter_mut().filter(|(_, v)| v.visible) {
             v.dirty |= v.time_window.is_some();
             if matches!(v.query.source, Source::Relays | Source::Diagnostics) {

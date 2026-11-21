@@ -59,6 +59,7 @@ impl Engine {
                 v.dirty = true;
             }
         }
+        self.settle_client_info(now);
         self.refill_history(now);
         self.zap_tick(now);
         for v in self.views.values_mut() {

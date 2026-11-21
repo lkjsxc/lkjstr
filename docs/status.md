@@ -124,10 +124,10 @@ Window sides cap at 800 rows; retainAbove caps at 6000. Returning to the newest 
 Older pages start two and a half pane heights from the end with a 60-row buffer. See [live-feed.md](live-feed.md). Time rails use retained cache.
 Generation snapshots reject query changes. Signed-out Global filters repeated authors, duplicate bursts and verified absent profiles.
 [Absolute windows](absolute-time-window.md) provide bounded relay coverage on both sides for Their Home.
-Notes display client tags, custom reactions, mentions, warnings and media. The engine supplies bare @ candidates from follows and the conversation.
+Notes project client names and valid NIP-89 handler coordinates. Explicit presses resolve verified app metadata; signing honors the account preference.
+Custom reactions, mentions, warnings and media remain in note rows. See [client attribution](client-attribution.md).
 Notes, reactions, names and bios use signed emoji tags. The picker preserves set coordinates in note and reaction tags. See [emoji-sets.md](emoji-sets.md).
 `Draft.longForm` publishes kind 30023. Article reading, profile editing and per-note reaction/repost detail await surfaces. Deletion checks authorship.
-
 ## Accounts, routing and publication
 Account writes compare durable revisions; strict boot and schema fencing preserve rows across Worker graphs. Protocol13 separately reports account-load
 failure, retains client accounts and uses existing feed error wording. [Completed production proof](engine-availability-verification.md).

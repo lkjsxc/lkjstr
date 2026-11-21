@@ -28,6 +28,7 @@ impl Session {
             dm_draft: None,
             dm_draft_revision: None,
             dm_delivery: None,
+            client_info: None,
             cancelled: None,
         }
     }

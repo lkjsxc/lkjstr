@@ -206,10 +206,7 @@ impl Engine {
         {
             e.created_at = e.created_at.max(previous.created_at.saturating_add(1));
         }
-        if self.client_tag && matches!(e.kind, 1 | 6 | 7 | 16 | 40 | 41 | 42 | 30023) {
-            e.tags.retain(|t| t.first().is_none_or(|k| k != "client"));
-            e.tags.push(vec!["client".into(), "lkjstr".into()]);
-        }
+        self.apply_client_tag(&mut e);
         if matches!(e.kind, 1 | 42 | 30023) {
             e.tags = lkjstr_protocol::content_derived_tags(&e.content, &[], &e.tags);
             if e.tags.len() > 1000 {

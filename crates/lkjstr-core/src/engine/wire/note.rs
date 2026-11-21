@@ -84,8 +84,11 @@ pub(super) fn note(row: &Row, store: &Store, account: Option<&str>) -> Value {
         if let Some(id) = lkjstr_protocol::channel_id(&event) {
             v["channel"] = json!({"id":id,"name":crate::engine::channels::metadata(store,&id).0["name"].as_str().unwrap_or("")});
         }
-        if let Some(client) = lkjstr_protocol::first_tag_value(&event, "client") {
-            v["client"] = json!(client);
+        if let Some((name, address)) = lkjstr_protocol::client_attribution(&event.tags) {
+            v["client"] = json!(name);
+            if let Some(address) = address {
+                v["clientAddress"] = json!(address.to_string());
+            }
         }
     }
     if let Some(cw) = &row.warning {

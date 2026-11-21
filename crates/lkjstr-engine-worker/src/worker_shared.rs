@@ -225,6 +225,7 @@ pub(super) fn detach(h: &mut Host, id: u64) {
     direct_messages::editors::detach(h, id);
     uploads::control::detach(h, id);
     let now = h.time();
+    h.engine.detach_client_info(id, now);
     if let Sink::Shared { clients, peers } = &mut h.scope {
         let inputs = clients.disconnect(id);
         if let Some(peer) = peers.remove(&id) {

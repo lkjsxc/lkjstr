@@ -186,6 +186,8 @@ pub enum Output {
         encrypted_key: Option<String>,
         #[serde(rename = "zapIntent", skip_serializing_if = "Option::is_none")]
         zap_intent: Option<crate::engine::zaps::InvoiceBatch>,
+        #[serde(rename = "clientInfo", skip_serializing_if = "Option::is_none")]
+        client_info: Option<crate::engine::client_info::Handler>,
         #[serde(rename = "dmDraft", skip_serializing_if = "Option::is_none")]
         dm_draft: Option<Box<crate::engine::dm::drafts::State>>,
         #[serde(rename = "dmDraftRevision", skip_serializing_if = "Option::is_none")]

@@ -41,9 +41,37 @@ impl Host {
             return;
         }
         if let W::Configure { config } = &input {
-            self.engine.client_tag = config.client_tag.unwrap_or(true);
+            if let Some(account) = &config.client_tag_account {
+                let preferences = &mut self.engine.client_tag_accounts;
+                preferences.retain(|key, _| {
+                    self.accounts
+                        .entries
+                        .iter()
+                        .any(|entry| entry.pubkey == *key)
+                });
+                if self
+                    .accounts
+                    .entries
+                    .iter()
+                    .any(|entry| entry.pubkey == *account)
+                {
+                    preferences.insert(account.clone(), config.client_tag.unwrap_or(true));
+                }
+            } else {
+                self.engine.client_tag = config.client_tag.unwrap_or(true);
+            }
         }
         match input {
+            W::Act {
+                req,
+                action: A::ClientInfo { address },
+            } => {
+                let now = self.time();
+                if let Some(answer) = self.engine.ask_client_info(id, req, &address, now) {
+                    self.scope.direct(id, &Session::client_info(answer));
+                }
+                return;
+            }
             W::Act {
                 req,
                 action: A::ServersCheck { server },

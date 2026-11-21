@@ -53,6 +53,28 @@ impl Session {
             dm_draft: None,
             dm_draft_revision: None,
             dm_delivery: None,
+            client_info: None,
+            cancelled: None,
+        }
+    }
+    pub fn client_info(answer: crate::engine::client_info::Answer) -> Output {
+        let Some(handler) = answer.handler else {
+            return Self::failure(answer.req, "not-found");
+        };
+        Output::Result {
+            req: answer.req,
+            ok: true,
+            error: None,
+            delivery: None,
+            id: None,
+            uploaded: None,
+            key: None,
+            encrypted_key: None,
+            zap_intent: None,
+            client_info: Some(handler),
+            dm_draft: None,
+            dm_draft_revision: None,
+            dm_delivery: None,
             cancelled: None,
         }
     }

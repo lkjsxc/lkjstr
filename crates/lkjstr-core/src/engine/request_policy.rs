@@ -44,6 +44,8 @@ impl Network {
                     (4, "prefetch")
                 } else if own {
                     (2, "own")
+                } else if member.starts_with("@client-info:") {
+                    (1, "visible")
                 } else if member.starts_with("~dm:") || member.starts_with("~dm-legacy:") {
                     (
                         1,

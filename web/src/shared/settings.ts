@@ -81,23 +81,46 @@ export function parseSettings(value: unknown): Settings {
 }
 
 /** The settings of this page, kept current with the other browser tabs. */
-export function createSettings(): Signal<Settings> & {
-  patch(p: Partial<Settings>): void;
-  dispose(): void;
-} {
-  const signal = createSignal(parseSettings(kv.get(SETTINGS_KEY)));
-  const off = kv.onChanged((key, value) => {
-    if (key === SETTINGS_KEY) signal.set(parseSettings(value));
+export function createSettings(initialAccount = '') {
+  let account = initialAccount;
+  const tagKey = () => `settings:clientTag:${account}`;
+  const read = (): Settings => {
+    const result = parseSettings(kv.get(SETTINGS_KEY));
+    const override = account && kv.get(tagKey());
+    if (typeof override === 'boolean') result.clientTag = override;
+    return result;
+  };
+  const signal = createSignal(read());
+  const off = kv.onChanged((key) => {
+    if (key === SETTINGS_KEY || (account && key === tagKey())) signal.set(read());
   });
   return {
     ...signal,
-    patch(p) {
-      const next = parseSettings({ ...signal.get(), ...p });
-      const diff = Object.entries(next).filter(([k, v]) => v !== DEFAULT_SETTINGS[k as SettingKey]);
-      kv.set(SETTINGS_KEY, Object.fromEntries(diff));
-      signal.set(next);
+    setAccount(next: string): void {
+      if (account === next) return;
+      account = next;
+      signal.set(read());
+    },
+    patch(p: Partial<Settings>): void {
+      const { clientTag, ...devicePatch } = p;
+      if (account && typeof clientTag === 'boolean') kv.set(tagKey(), clientTag);
+      const device = parseSettings({
+        ...parseSettings(kv.get(SETTINGS_KEY)),
+        ...devicePatch,
+        ...(!account && typeof clientTag === 'boolean' ? { clientTag } : {}),
+      });
+      const diff = Object.entries(device).filter(
+        ([k, v]) => v !== DEFAULT_SETTINGS[k as SettingKey],
+      );
+      if (!account || Object.keys(devicePatch).length)
+        kv.set(SETTINGS_KEY, Object.fromEntries(diff));
+      signal.set(read());
     },
     dispose: off,
+  } satisfies Signal<Settings> & {
+    setAccount(account: string): void;
+    patch(p: Partial<Settings>): void;
+    dispose(): void;
   };
 }
 export type SettingsStore = ReturnType<typeof createSettings>;

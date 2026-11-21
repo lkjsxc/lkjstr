@@ -25,6 +25,7 @@ Frontend (`web/`):
 Engine (`crates/`):
 
 - [media-uploads.md](media-uploads.md): destinations, failure/retry, bounds and proof.
+- [client-attribution.md](client-attribution.md) explains note tags, app information and opt-out.
 - [channels.md](channels.md): NIP-28 sources, actions, bounds and verification.
 - [zaps.md](zaps.md): provider-authorized receipts, unpaid invoice intents, lifetime and bounds.
 - [engine-zap-verification.md](engine-zap-verification.md): zap integration gates and runtime regressions.

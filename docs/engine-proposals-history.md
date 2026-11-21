@@ -83,3 +83,9 @@ success resolves the action; delivery updates continue while that result is disp
 the listener; detach releases its namespaced watches. Engine receipts retain the last 32 publications plus watched results, bounded by 32 clients.
 Wire delivery includes only attempted routes and retains relay refusal messages. Timeout means unknown; no protocol contract number change or new
 user-facing state is needed.
+
+## Protocol 6 interface boundary
+
+All existing protocol messages and fields retain their meanings. No visible
+surfaces are added without a specification. See [dm.md](dm.md), [keys.md](keys.md)
+and [interface-needs.md](interface-needs.md) for contracts and remaining design.
