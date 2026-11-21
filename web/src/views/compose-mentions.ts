@@ -14,6 +14,7 @@ import {
   quietLine,
 } from './compose-mention-menu.ts';
 import { plainName } from './parts.ts';
+import { personAddresses } from './person-address.ts';
 import type { ViewEnv } from './registry.ts';
 
 type State = { mentions?: Mention[]; replyTo?: string; quote?: string };
@@ -127,10 +128,11 @@ export function createMentions(
   };
   const scanPasted = (): void => {
     if (!env.visible.get()) return;
+    // The same standalone words the engine and a waiting draft treat as people; the engine validates each.
     const refs = new Set(
-      [...area.value.matchAll(/(?:nostr:)?(?:npub1|nprofile1)[a-z0-9]+/gi)]
+      personAddresses(area.value)
         .slice(0, 32)
-        .map((m) => m[0]),
+        .map((a) => a.bech32),
     );
     for (const [ref, item] of pasted)
       if (!refs.has(ref)) {
