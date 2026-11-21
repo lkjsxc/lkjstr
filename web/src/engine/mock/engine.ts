@@ -217,7 +217,11 @@ export function createMockEngine(
           const at = Math.max(0, found);
           s.live = msg.anchor === 'top' || found < 0;
           s.start = Math.max(0, at - (msg.retainAbove ? 6000 : msg.before));
-          s.end = Math.min(s.entries.length, at + msg.after);
+          const tail =
+            msg.anchor === 'top' && msg.headThrough
+              ? s.entries.findIndex((entry) => entry.key === msg.headThrough) + 1
+              : 0;
+          s.end = Math.min(s.entries.length, Math.max(at + msg.after, tail));
         }
         s.windowed = true;
         s.ops = [];

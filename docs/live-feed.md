@@ -12,7 +12,11 @@ scrolled reader or selected keyboard row holds the window. The Worker
 projects arrivals above that window's anchor and the interface draws them as
 they arrive. The keeper restores the same note and offset after drawing.
 Returning to the top by scrolling shows the new rows and resumes the head.
-Pressing the pill requests the head and releases any selection or anchor.
+Pressing the pill requests the head and releases the selection. Both paths
+tell the Worker which older row was already loaded. The head window grows
+with new arrivals, preserving that older boundary up to 6800 rows. Beyond
+the bound the Worker trims the far end. The loaded window and existing relay
+history cursor stay with the open tab.
 
 The pill counts projected rows above the reading position or keyboard
 selection, up to the last read head.
@@ -22,7 +26,11 @@ A held head reserves room for new rows within an 800-row window. If there
 are further arrivals above its bound, the pill shows the retained count
 with an overflow marker. Scrolling reaches the retained edge. Pressing the
 pill reloads the head, including the notes outside the old window.
-Historical paging still uses the existing retained history budget.
+Historical paging starts when the viewport is within two and a half pane
+heights of the loaded tail. It asks for a 60-row buffer; a tail is requested
+once until a new boundary arrives or the reader changes direction. The
+Worker can also start one speculative relay page when the projected window
+reaches within 60 cached rows of the end.
 
 The interface saves the reading anchor and last read head with the tab. A
 warm top snapshot stays intact until the Worker can reconcile it. Its first

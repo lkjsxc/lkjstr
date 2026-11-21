@@ -199,7 +199,7 @@ export function createEngine(transport: Transport): Engine {
           if (!subs.has(id) || (info.get()?.version ?? 0) < 9 || key === reading) return;
           transport.post({ t: 'reading', sub: id, key: (reading = key) });
         },
-        window: (anchor, before, after, liveAbove) =>
+        window: (anchor, before, after, liveAbove, headThrough) =>
           transport.post({
             t: 'window',
             sub: id,
@@ -207,6 +207,7 @@ export function createEngine(transport: Transport): Engine {
             before,
             after,
             ...(liveAbove ? { liveAbove: true } : {}),
+            ...(headThrough ? { headThrough } : {}),
             // Protocol 3 retains up to 6000 cached rows already read. An 800-row moving window otherwise
             // discards the beginning while paging down, making a return to the top fetch and jump.
             ...(anchor !== 'top' && before > 0 && !liveAbove && (info.get()?.version ?? 0) >= 3

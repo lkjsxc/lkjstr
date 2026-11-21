@@ -120,9 +120,9 @@ replacing a snapshot. Muted windows refill themselves; only visible rows request
 from a completed absence. Named-list queries and profile hydration include cached private members only when the query names the signed list owner;
 other readers keep public tags. The reproduced isolation fix is documented in [private-list-scope.md](private-list-scope.md).
 
-Windows retain keys and reading anchors. Ordinary sides cap at 800 rows; retainAbove caps at 6000. Held feeds fill a bounded window above the
-anchor as notes arrive. See [live-feed.md](live-feed.md). Time rails and ordinal seeks describe retained cache membership. Generation snapshots reject
-changed queries. Signed-out Global can filter repeated authors, duplicate bursts and absent profiles after successful untruncated metadata lookups.
+Window sides cap at 800 rows; retainAbove caps at 6000. Returning to the newest rows retains the loaded tail within the 6800-row bound.
+Older pages start two and a half pane heights from the end with a 60-row buffer. See [live-feed.md](live-feed.md). Time rails use retained cache.
+Generation snapshots reject changed queries. Signed-out Global can filter repeated authors, duplicate bursts and verified absent profiles.
 
 Notes display client tags, custom reactions, mentions, content warnings and image/video/audio metadata. Public notes, reactions, profile names and bios
 use their signed event's emoji tags. The picker passes known set coordinates into public note and reaction tags. See [emoji-sets.md](emoji-sets.md).

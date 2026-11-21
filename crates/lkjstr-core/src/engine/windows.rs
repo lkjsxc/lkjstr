@@ -6,6 +6,8 @@ use super::{
 #[path = "window_projection.rs"]
 pub(super) mod projection;
 
+pub(super) const HEAD_ROWS: usize = 6800;
+
 pub(super) struct Selection {
     pub raw: std::ops::Range<usize>,
     pub held: Vec<Option<super::global::Held>>,
@@ -140,6 +142,13 @@ fn plan(
     v: &super::View,
     events: &[crate::store::Event],
 ) -> (usize, usize) {
+    if let Some(tail) = &v.head_through {
+        let through = events
+            .iter()
+            .position(|event| super::rich::anchored(store, event, tail, &v.query))
+            .map_or(0, |at| at + 1);
+        return (0, through.max(v.after + 1).min(HEAD_ROWS));
+    }
     let at = v
         .anchor
         .as_ref()

@@ -914,6 +914,8 @@ export type ToEngine =
       // end engine-added
       /** Let incoming rows fill the explicit before budget, including grouped rows. */
       readonly liveAbove?: boolean;
+      /** A top window keeps this previously delivered tail while following arrivals. */
+      readonly headThrough?: RowKey;
     }
   | {
       readonly t: 'act';

@@ -72,6 +72,7 @@ pub struct View {
     query: Query,
     anchor: Option<String>,
     reading: Option<String>,
+    head_through: Option<String>,
     before: usize,
     after: usize,
     rows: Vec<Row>,

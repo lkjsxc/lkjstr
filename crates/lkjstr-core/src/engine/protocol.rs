@@ -1,5 +1,8 @@
 //! Structured-clone contract. Keep transport serialization at the host boundary.
 use super::rows::Row;
+#[path = "protocol_delivery.rs"]
+mod delivery;
+pub use delivery::Delivery;
 use lkjstr_protocol::{NostrEvent, UnsignedNostrEvent};
 use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -32,6 +35,11 @@ pub enum Input {
         sub: String,
         anchor: Option<String>,
         before: usize,
+        after: usize,
+    },
+    FollowHead {
+        sub: String,
+        through: String,
         after: usize,
     },
     Action {
@@ -239,10 +247,4 @@ pub enum Output {
 pub enum Patch {
     Upsert { index: usize, item: Box<Row> },
     Remove { id: String },
-}
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Delivery {
-    pub relay: String,
-    pub state: String,
-    pub message: Option<String>,
 }

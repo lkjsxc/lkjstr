@@ -147,17 +147,9 @@ impl Session {
             return out;
         }
         let header = pinned_header(&out).then(|| out[0].clone());
-        if let Some((anchor, before, after)) = self.windows.get(sub) {
-            let at = anchor
-                .as_ref()
-                .and_then(|key| out.iter().position(|r| r["key"].as_str() == Some(key)))
-                .unwrap_or(0);
-            let start = at.saturating_sub(*before);
-            let end = at.saturating_add(*after).min(out.len());
-            out = out[start.min(end)..end].to_vec();
-        } else {
-            out.truncate(50);
-        }
+        let (start, end) = self.source_range(sub, &out);
+        let end = end.min(out.len());
+        out = out[start.min(end)..end].to_vec();
         if let Some(header) = header
             && out.first().is_none_or(|row| row["key"] != header["key"])
         {

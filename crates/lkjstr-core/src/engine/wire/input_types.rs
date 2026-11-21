@@ -129,6 +129,8 @@ pub enum Input {
         retain_above: bool,
         #[serde(default, rename = "liveAbove")]
         live_above: bool,
+        #[serde(default, rename = "headThrough")]
+        head_through: Option<String>,
     },
     Act {
         req: String,

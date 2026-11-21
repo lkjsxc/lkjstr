@@ -30,7 +30,13 @@ export type Subscription = {
   readonly id: string;
   near(ids: readonly string[]): void;
   reading?(key: string | null): void;
-  window(anchor: Anchor, before: number, after: number, liveAbove?: boolean): void;
+  window(
+    anchor: Anchor,
+    before: number,
+    after: number,
+    liveAbove?: boolean,
+    headThrough?: string,
+  ): void;
   /** Whether its tab is in front (the engine may pause what is not). */
   visible(on: boolean): void;
   close(): void;

@@ -35,8 +35,24 @@ impl Engine {
                 let anchor = anchor.filter(|key| self.accepts_private_anchor(account, key));
                 if let Some(v) = self.views.get_mut(&sub) {
                     v.anchor = anchor;
+                    v.head_through = None;
                     v.before = before.min(6000);
                     v.after = after.min(800);
+                    self.advance_history(&sub);
+                    self.replan(now);
+                    self.render(&sub, true);
+                }
+            }
+            Input::FollowHead {
+                sub,
+                through,
+                after,
+            } => {
+                if let Some(v) = self.views.get_mut(&sub) {
+                    v.anchor = None;
+                    v.before = 0;
+                    v.after = after.min(windows::HEAD_ROWS - 1);
+                    v.head_through = Some(through);
                     self.advance_history(&sub);
                     self.replan(now);
                     self.render(&sub, true);

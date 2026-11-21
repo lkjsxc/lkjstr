@@ -14,7 +14,11 @@ function range(s: Sub, post: Post): void {
   const at = Math.max(0, found - prefix);
   const start = Math.max(0, at - (intent.retainAbove ? 6000 : intent.before));
   s.start = start === 0 ? 0 : prefix + start;
-  s.end = Math.min(s.entries.length, prefix + at + Math.max(intent.after, 1));
+  const tail =
+    s.live && intent.headThrough
+      ? s.entries.findIndex((entry) => entry.key === intent.headThrough) + 1
+      : 0;
+  s.end = Math.min(s.entries.length, Math.max(prefix + at + Math.max(intent.after, 1), tail));
   const count = s.live ? 0 : start;
   if (s.fresh === count) return;
   s.fresh = count;
@@ -38,6 +42,7 @@ export function searchWindow(s: Sub, msg: Window, now: number, post: Post): void
     before: msg.before,
     after: msg.after,
     retainAbove: msg.retainAbove ?? false,
+    headThrough: msg.anchor === 'top' ? msg.headThrough : undefined,
   };
   range(s, post);
 }

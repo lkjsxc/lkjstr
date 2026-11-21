@@ -91,6 +91,7 @@ impl Session {
                 self.private_states.remove(&sub);
                 self.cache_release(&sub);
                 self.searches.remove(&sub);
+                self.head_tails.remove(&sub);
                 self.queries.insert(sub.clone(), *query);
                 vec![p::Input::OpenVisible {
                     sub,
@@ -106,6 +107,7 @@ impl Session {
                 self.searches.remove(&sub);
                 self.delivered.remove(&sub);
                 self.windows.remove(&sub);
+                self.head_tails.remove(&sub);
                 self.preview_near.remove(&sub);
                 self.timelines.remove(&sub);
                 self.return_keys.remove(&sub);
@@ -118,54 +120,19 @@ impl Session {
                 after,
                 retain_above,
                 live_above,
-            } => {
-                if !self.queries.contains_key(&sub) {
-                    return Err((None, "unknown-subscription"));
-                }
-                let account = self.queries.get(&sub).and_then(|q| q.account.as_deref());
-                let anchor = match anchor {
-                    Anchor::Top(_) => None,
-                    Anchor::Key { key } => {
-                        self.search_header_anchor(&sub, &key).unwrap_or(Some(key))
-                    }
-                    Anchor::Month {
-                        month,
-                        offset,
-                        return_key,
-                    } => {
-                        let return_key = return_key.and_then(|key| {
-                            self.search_header_anchor(&sub, &key).unwrap_or(Some(key))
-                        });
-                        if let Some(key) =
-                            return_key.filter(|key| engine.accepts_private_anchor(account, key))
-                        {
-                            self.return_keys.insert(sub.clone(), key);
-                        }
-                        Some(
-                            self.timelines
-                                .get(&sub)
-                                .and_then(|i| i.key(month, offset))
-                                .ok_or((None, "timeline-unavailable"))?,
-                        )
-                    }
-                };
-                let anchor = anchor.filter(|key| engine.accepts_private_anchor(account, key));
-                let retain_above = retain_above && !live_above;
-                let mut before = if retain_above { 6000 } else { before.min(800) };
-                if self.queries.get(&sub).is_some_and(|q| {
-                    !live_above && (q.source == "notifications" || q.notifications == Some(true))
-                }) {
-                    before = self.notification_before(&sub, engine, anchor.as_deref(), before);
-                }
-                self.windows
-                    .insert(sub.clone(), (anchor.clone(), before, after.min(800)));
-                vec![p::Input::Window {
-                    sub,
+                head_through,
+            } => self.window(
+                sub,
+                window::Request {
                     anchor,
                     before,
-                    after: after.saturating_sub(1),
-                }]
-            }
+                    after,
+                    retain_above,
+                    live_above,
+                    head_through,
+                },
+                engine,
+            )?,
             Input::Signed { req, event, error } => vec![p::Input::Signed {
                 req,
                 event: event.and_then(|e| lkjstr_protocol::parse_nostr_event_json(&e, None).ok()),

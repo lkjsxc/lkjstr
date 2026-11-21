@@ -145,7 +145,10 @@ impl Engine {
                             .position(|e| super::rich::anchored(&self.store, e, id, &v.query))
                     })
                     .unwrap_or(0);
-                let needed = at.saturating_add(v.after).saturating_add(1).min(6000);
+                let needed = at
+                    .saturating_add(v.after)
+                    .saturating_add(1)
+                    .min(windows::HEAD_ROWS);
                 let filtered = selected.held.iter().any(Option::is_some)
                     && selected.held.iter().filter(|h| h.is_none()).count() < selected.quota;
                 (selected.raw.end == events.len() && (events.len() < needed || filtered))

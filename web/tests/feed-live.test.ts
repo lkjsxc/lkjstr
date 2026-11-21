@@ -106,7 +106,7 @@ it('holds a scrolled reader, counts what arrives, and shows it on the way back t
   expect(f.pill()?.textContent).toBe('3 new');
 
   await f.scroll(0);
-  expect(f.last()?.anchor).toBe('top');
+  expect(f.last()).toMatchObject({ anchor: 'top', headThrough: key(1) });
   f.rows([row(5), row(4), row(3), row(2), row(1)]);
   f.count(0);
   expect(f.drawn()).toEqual([key(5), key(4), key(3), key(2), key(1)]);
@@ -129,7 +129,7 @@ it('discloses overflow until a press reloads the head', async () => {
   await f.scroll(0);
   expect(f.last()?.anchor).toEqual({ key: key(2) });
   f.pill()?.click();
-  expect(f.last()?.anchor).toBe('top');
+  expect(f.last()).toMatchObject({ anchor: 'top', headThrough: key(1) });
   f.rows([row(6), row(5), row(4), row(3), row(2), row(1)]);
   f.count(0);
   expect(f.pill()?.hidden).toBe(true);
@@ -157,7 +157,10 @@ it('counts an arrival that peeks into view above a keyboard-held row', async () 
 
 it('pages up at the edge of an older window without jumping past intervening rows', async () => {
   const f = feed();
-  Object.defineProperty(f.el, 'scrollHeight', { value: 5000 });
+  Object.defineProperties(f.el, {
+    scrollHeight: { value: 5000 },
+    clientHeight: { value: 400 },
+  });
   f.rows([row(12), row(11)], true, false);
   await f.scroll(4600);
   expect(f.last()?.anchor).toEqual({ key: key(12) });

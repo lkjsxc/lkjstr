@@ -1,9 +1,10 @@
-//! At most one speculative older page per visible view, within forty rows of its end.
+//! At most one speculative older page per visible view, within one buffer of its end.
 use super::{
     Engine,
     protocol::{Query, Source},
 };
 use lkjstr_protocol::NostrFilter;
+const PREFETCH_BUFFER_ROWS: usize = 60;
 impl Engine {
     pub(super) fn nearby_wants(&self) -> Vec<(String, NostrFilter, Query)> {
         let mut wants = Vec::new();
@@ -37,7 +38,9 @@ impl Engine {
                 &events,
                 &self.private_lists,
             );
-            if events.is_empty() || selected.raw.end.saturating_add(40) < events.len() {
+            if events.is_empty()
+                || selected.raw.end.saturating_add(PREFETCH_BUFFER_ROWS) < events.len()
+            {
                 continue;
             }
             let mut older = head.clone();

@@ -75,17 +75,7 @@ impl Session {
     }
     pub(super) fn source_edges(&self, sub: &str, e: &Engine) -> (bool, bool) {
         let all = self.project_source(sub, e, false);
-        let (start, end) = self
-            .windows
-            .get(sub)
-            .map(|(anchor, before, after)| {
-                let at = anchor
-                    .as_ref()
-                    .and_then(|key| all.iter().position(|r| r["key"].as_str() == Some(key)))
-                    .unwrap_or(0);
-                (at.saturating_sub(*before), at.saturating_add(*after))
-            })
-            .unwrap_or((0, 50));
+        let (start, end) = self.source_range(sub, &all);
         (
             start <= usize::from(pinned_header(&all)),
             end >= all.len() && super::list_edges::settled(self.queries.get(sub), e),

@@ -33,6 +33,7 @@ mod sources;
 use super::thread;
 mod timeline;
 mod translate;
+mod window;
 use queries::{Anchor, Config, Query};
 use serde::{Deserialize, Serialize};
 mod input_types;
@@ -60,6 +61,8 @@ pub struct Session {
     return_keys: std::collections::BTreeMap<String, String>,
     timeline_visible: Option<std::collections::BTreeSet<String>>,
     pub(super) windows: std::collections::BTreeMap<String, (Option<String>, usize, usize)>,
+    // One delivered tail key per head-following subscription, cleared on navigation.
+    head_tails: std::collections::BTreeMap<String, String>,
     pub(super) delivered: std::collections::BTreeMap<String, Vec<serde_json::Value>>,
 }
 impl Session {

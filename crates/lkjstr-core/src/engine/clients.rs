@@ -102,6 +102,15 @@ impl Clients {
                 before,
                 after,
             },
+            Input::FollowHead {
+                sub,
+                through,
+                after,
+            } => Input::FollowHead {
+                sub: ns(sub),
+                through,
+                after,
+            },
             Input::Action {
                 req,
                 account,

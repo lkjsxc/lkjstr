@@ -21,6 +21,7 @@ impl Engine {
                 query,
                 anchor: None,
                 reading: None,
+                head_through: None,
                 before: 0,
                 after: 50,
                 rows: vec![],
