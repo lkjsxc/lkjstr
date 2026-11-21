@@ -2,7 +2,7 @@
 import { rememberPublicMedia } from '../shared/public-media.ts';
 import type { Transport } from './client-transport.ts';
 import { applyOps } from './ops.ts';
-import type { Anchor, FromEngine, ToEngine } from './protocol.ts';
+import type { Anchor, FromEngine } from './protocol.ts';
 import { rememberPublicCounts } from './public-snapshot-counts.ts';
 import {
   heldPublicReferences,
@@ -24,10 +24,11 @@ import {
   flushPublicView as flushView,
   holdPublicRows as heldRows,
   markPublicReplay,
+  preparePublicWindow,
+  tracksPublicWindow,
   type PublicView as View,
 } from './public-snapshot-view.ts';
 
-type WindowMessage = Extract<ToEngine, { t: 'window' }>;
 export function publicSnapshots(inner: Transport): Transport {
   const views = new Map<string, View>(); // Same 128-view bound as the Worker.
   let receive: (message: FromEngine) => void = () => {};
@@ -47,6 +48,7 @@ export function publicSnapshots(inner: Transport): Transport {
     timer ??= setTimeout(flush, 200);
   };
   const replay = (sub: string, view: View, anchor: Anchor): PublicSnapshot | undefined => {
+    if (view.windowScope) return;
     const snapshot = readPublicSnapshot(view.identity, anchor);
     if (!snapshot) return;
     rememberPublicMedia(snapshot.rows);
@@ -103,6 +105,7 @@ export function publicSnapshots(inner: Transport): Transport {
       receive(message);
       return;
     }
+    if (view && !tracksPublicWindow(view, message)) return receive(message);
     if (message.t === 'rows' && view) {
       view.received = true;
       discardUnsaveableRows(view.identity, message.rows);
@@ -234,41 +237,18 @@ export function publicSnapshots(inner: Transport): Transport {
             });
         });
       } else if (message.t === 'window') {
-        const view = views.get(message.sub);
+        const { sub } = message;
+        const view = views.get(sub);
         if (view) {
-          const anchor = message.anchor;
-          flushView(view);
-          view.intentTop = message.anchor === 'top';
-          view.liveAbove = message.liveAbove;
-          if (view.initial) {
-            view.initial = false;
-            const snapshot = view.received ? undefined : replay(message.sub, view, message.anchor);
-            if (snapshot) {
-              const pinned: WindowMessage = {
-                ...message,
-                anchor: message.liveAbove ? anchor : { key: snapshot.anchor },
-                before: message.liveAbove ? message.before : 0,
-                after: Math.max(message.after, snapshot.rows.length),
-              };
-              inner.post(pinned, transfer);
-              return;
-            }
-          } else if (
-            anchor === 'top' ||
-            'at' in anchor ||
-            ('key' in anchor && !view.held?.rows.some((row) => row.key === anchor.key))
-          ) {
-            view.held = undefined;
-            if (message.anchor === 'top') {
-              view.topAnchor = undefined;
-              view.rows = [];
-              view.counts.clear();
-            }
-          }
+          inner.post(
+            preparePublicWindow(view, message, (anchor) => replay(sub, view, anchor)),
+            transfer,
+          );
+          return;
         }
       } else if (message.t === 'reading') {
         const view = views.get(message.sub);
-        if (view) {
+        if (view && !view.windowScope) {
           view.reading = message.key ?? undefined;
           dirty(view);
         }

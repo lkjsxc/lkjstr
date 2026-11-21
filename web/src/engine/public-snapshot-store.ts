@@ -34,13 +34,28 @@ export const snapshotIdentity = (
   language: string,
   previews: boolean,
   visitorFilter = true,
-): string => JSON.stringify([language, previews, visitorFilter, canonical(query)]);
+): string =>
+  JSON.stringify([
+    language,
+    previews,
+    visitorFilter,
+    canonical(query),
+    // Earlier Their Home entries can hold Moment order without any row marker.
+    ...(query.source === 'their-home' ? ['ordinary'] : []),
+  ]);
+
+export const hasAbsoluteReadingTime = (row: Row): boolean =>
+  row.kind === 'note' && row.readingAt !== undefined;
 
 export function snapshotSafe(row: Row): boolean {
   if (row.kind === 'notification')
     return row.expiresAt === undefined && (!row.note || snapshotSafe(row.note));
   return (
-    row.kind !== 'note' || (!row.revealed && !row.hidden?.detail && row.expiresAt === undefined)
+    row.kind !== 'note' ||
+    (!hasAbsoluteReadingTime(row) &&
+      !row.revealed &&
+      !row.hidden?.detail &&
+      row.expiresAt === undefined)
   );
 }
 const keyFor = (identity: string, top: boolean): string =>
@@ -176,7 +191,7 @@ export function writePublicSnapshot(
   if (identity.length > 8192 || !snapshot.rows.length) return;
   const rows = snapshot.rows.slice(0, SNAPSHOT_ROWS);
   if (
-    !rows.every((row) => rowKinds.has(row.kind)) ||
+    !rows.every((row) => rowKinds.has(row.kind) && snapshotSafe(row)) ||
     !rows.some((row) => row.key === snapshot.anchor)
   )
     return;

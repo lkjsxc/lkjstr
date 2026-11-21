@@ -1,6 +1,6 @@
 // Retained public row state and reconciliation; no account or private database access.
 import { applyOps } from './ops.ts';
-import type { FromEngine, PublicCacheHoldRow, Row } from './protocol.ts';
+import type { Anchor, FromEngine, PublicCacheHoldRow, Row, ToEngine } from './protocol.ts';
 import {
   type DurableCounts,
   durablePublicRows,
@@ -10,6 +10,7 @@ import { capturePublicWindow, mergePublicRow } from './public-snapshot-model.ts'
 import type { PublicInvalidations } from './public-snapshot-reconcile.ts';
 import {
   forgetPublicSnapshot,
+  hasAbsoluteReadingTime,
   type PublicSnapshot,
   writePublicSnapshot,
 } from './public-snapshot-store.ts';
@@ -30,13 +31,78 @@ export type PublicView = {
   topAnchor?: string;
   received: boolean;
   dirty: boolean;
+  windowScope?: 'absolute' | 'returning';
   suspended?: boolean;
   completed?: boolean;
   invalidations?: PublicInvalidations;
   references?: readonly PublicCacheHoldRow[];
 };
+
+type WindowMessage = Extract<ToEngine, { t: 'window' }>;
+export function preparePublicWindow(
+  view: PublicView,
+  message: WindowMessage,
+  replay: (anchor: Anchor) => PublicSnapshot | undefined,
+): WindowMessage {
+  const { anchor } = message;
+  flushPublicView(view);
+  view.intentTop = anchor === 'top';
+  view.liveAbove = message.liveAbove;
+  const absolute = anchor !== 'top' && 'at' in anchor;
+  if (absolute || view.windowScope === 'absolute') {
+    // This query identity has only ordinary snapshots. Wait for new rows on the way back.
+    view.windowScope = absolute ? 'absolute' : 'returning';
+    view.initial = false;
+    view.held = undefined;
+    view.rows = [];
+    view.counts.clear();
+    view.reading = view.topAnchor = undefined;
+    view.completed = view.dirty = false;
+  } else if (view.initial) {
+    view.initial = false;
+    const snapshot = view.received ? undefined : replay(anchor);
+    if (snapshot)
+      return {
+        ...message,
+        anchor: message.liveAbove ? anchor : { key: snapshot.anchor },
+        before: message.liveAbove ? message.before : 0,
+        after: Math.max(message.after, snapshot.rows.length),
+      };
+  } else if (
+    anchor === 'top' ||
+    ('key' in anchor && !view.held?.rows.some((row) => row.key === anchor.key))
+  ) {
+    view.held = undefined;
+    if (anchor === 'top') {
+      view.topAnchor = undefined;
+      view.rows = [];
+      view.counts.clear();
+    }
+  }
+  return message;
+}
+
+export function tracksPublicWindow(view: PublicView, message: FromEngine): boolean {
+  if (view.windowScope === 'absolute') return false;
+  const absoluteRows =
+    (message.t === 'rows' && message.rows.some(hasAbsoluteReadingTime)) ||
+    (message.t === 'patch' &&
+      message.ops.some((op) => {
+        if (op.op === 'insert') return op.rows.some(hasAbsoluteReadingTime);
+        return op.op === 'update' && hasAbsoluteReadingTime(op.row);
+      }));
+  if (absoluteRows) {
+    // A delayed pivot batch can arrive after an empty window on the way back.
+    view.windowScope = 'returning';
+    view.completed = false;
+    return false;
+  }
+  if (message.t === 'rows') view.windowScope = undefined;
+  return view.windowScope === undefined;
+}
+
 export function flushPublicView(view: PublicView): void {
-  if (!view.dirty || view.allow !== true || view.held || view.suspended) return;
+  if (!view.dirty || view.allow !== true || view.held || view.suspended || view.windowScope) return;
   view.dirty = false;
   rememberPublicCounts(view.rows, view.counts);
   const capture = (reading?: string): PublicSnapshot | undefined => {
