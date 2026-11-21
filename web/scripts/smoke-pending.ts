@@ -101,15 +101,32 @@ export async function pendingChecks(open: Open, check: Check): Promise<void> {
     `${COMPOSE} .outbox`,
     { timeout: 8000 },
   );
+  const dated = page
+    .locator(`${HOME} [data-note]:not([data-send])`)
+    .filter({ hasText: 'The rare outlier, slow to sign and to deliver' });
+  await dated.waitFor();
+  check(
+    'pending: confirmed, the older outlier reads as an ordinary note',
+    (await dated.locator('time').innerText()) !== 'sending…',
+  );
+
+  // The status line follows the latest post. Observe the first OK before subsequent relay answers replace it.
+  await page.locator(`${COMPOSE} [role=status]`).evaluate((status) => {
+    const previous = status.querySelector<HTMLElement>('.csend')?.dataset.event;
+    const observer = new MutationObserver(() => {
+      const sent = status.querySelector<HTMLElement>(
+        '.csend[data-phase=sent][data-ok="1"][data-all="4"]',
+      );
+      if (!sent || sent.dataset.event === previous) return;
+      (status as HTMLElement).dataset.firstAcceptance = sent.dataset.event ?? '';
+      observer.disconnect();
+    });
+    observer.observe(status, { childList: true });
+  });
+  await post('A note with early relay acceptance');
+  await page.locator(`${COMPOSE} [role=status][data-first-acceptance]`).waitFor();
+  check('pending: Sent begins at one acceptance while slow relays still answer', true);
   const sent = page.locator(`${COMPOSE} .csend[data-phase=sent]`);
-  check(
-    'pending: Sent begins at one acceptance while slow relays still answer',
-    (await sent.getAttribute('data-ok')) === '1' && (await sent.getAttribute('data-all')) === '4',
-  );
-  check(
-    'pending: confirmed, the outlier reads as an ordinary note',
-    (await top(page))[0]?.time !== 'sending…',
-  );
 
   // A reload while a post is unsigned and the next is being typed: both are there, and Retry sends it.
   await post('Another outlier, closed before it was signed');
