@@ -14,14 +14,13 @@ afterEach(() => {
   document.body.replaceChildren();
   setLang('en');
 });
-it('restores hidden, warning, text, media and quote choices after patches and window eviction', () => {
+it('restores warning, text, media and quote choices after patches and window eviction', () => {
   const w = createWorld(Date.now());
   const source = w.notes[0];
   if (!source) throw new Error('fixture');
   const base = noteRow(w, source, { me: '' });
   let row: NoteRow = {
     ...base,
-    hidden: { reason: 'language' },
     cw: 'warning',
     media: [{ type: 'image', url: 'https://example.test/picture', sensitive: true }],
     quotes: [
@@ -45,7 +44,6 @@ it('restores hidden, warning, text, media and quote choices after patches and wi
   document.body.append(list);
   const rows = createRowList(list, env, false);
   rows.draw([row]);
-  list.querySelector<HTMLButtonElement>('.hid button')?.click();
   list.querySelector<HTMLButtonElement>('.cw')?.click();
   const text = list.querySelector<HTMLElement>('.content > .text');
   if (!text) throw new Error('text');
@@ -55,7 +53,6 @@ it('restores hidden, warning, text, media and quote choices after patches and wi
   list.querySelector<HTMLButtonElement>('.media .cw')?.click();
   list.querySelector<HTMLButtonElement>('.quote .cw')?.click();
   const assert = (): void => {
-    expect(list.querySelector('.hid')).toBeNull();
     expect(list.querySelector('.content > .text.open')).not.toBeNull();
     expect(list.querySelector('.media img')).not.toBeNull();
     expect(list.querySelector('.quote .qtext')?.textContent).toBe('quoted text');

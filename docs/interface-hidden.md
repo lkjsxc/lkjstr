@@ -21,7 +21,7 @@ and plain facts when it cannot. Content warnings stay ordinary rows. Index and r
 | `muted-word` | Has a word you muted. | yes |
 | `muted-hashtag` | Has a hashtag you muted. | yes |
 | `repeated-content` | Repeats a note already shown. | yes |
-| `author-limit` | One of many notes this person sent at once. | yes |
+| `author-limit` | One of many notes from this person in this list. | yes |
 | `machine-payload` | Looks like machine data, not a post. | yes |
 | `language` | In another language. | yes |
 | `deleted` | Deleted by its author. | never |
@@ -46,7 +46,6 @@ and plain facts when it cannot. Content warnings stay ordinary rows. Index and r
     `set.visitorFilter` ("Reading: While signed out, fold repeats and floods in Global"). Off, Global shows them as
     rows;
   - machine payload: only the fact, with no setting;
-  - language (a list's own reading filter): the reading language setting;
   - deleted: "Its author asked for it to be deleted. It cannot be shown." Nothing else;
   - expired: "Its author set it to expire. It cannot be shown." Nothing else.
 - Opening Why asks nothing of the engine. It reads what the row already carries.
@@ -54,7 +53,7 @@ and plain facts when it cannot. Content warnings stay ordinary rows. Index and r
 ## H3 Show and hide again
 
 - `Show` asks the engine to show this one note in this list (`note.reveal`). The engine puts the verified original in
-  the same slot. Above it, a quiet context line `hidden.shown` ("Shown, although {reason}.") with `Hide` puts the
+  the same slot. Above it, a quiet context line `hidden.shown` ("Shown. {reason}") with `Hide` puts the
   line back. Nothing else in the list changes, and the reading place holds.
 - A note the engine cannot show (deleted, no verified copy kept) has no `Show`, and Why says so as a fact.
 - The choice is remembered with the tab for that note. When the row comes back (scrolling, a reload), the interface
@@ -98,7 +97,7 @@ note, and `set.showSensitive` opens them all.
   per list; `invalid` counts invalid deliveries observed, `undelivered` has no count, `pruned` only from attributed
   retention evidence.
 - Reasons with a setting: the four mutes (`set.mute.*`), and repeated content and author limit through
-  `signedOutGlobalFilter` (the existing wire configuration, now a setting). `language` is the mock's legacy reason;
+  `signedOutGlobalFilter` (the existing wire configuration, now a setting). `language` is a reason only the mock still sends;
   the real Worker filters language as a query.
 
 ## Acceptance

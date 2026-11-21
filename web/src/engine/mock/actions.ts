@@ -6,6 +6,7 @@ import type { Action, Delivery, Draft, Failure, FromEngine, ToEngine } from '../
 import { channelAct, channelTouched, chatter } from './channels.ts';
 import type { Core } from './engine.ts';
 import { FILLER } from './fixtures-notes.ts';
+import { REVEALED } from './hidden.ts';
 import { byHandle, byPubkey, byRef, type Person, SELF } from './people.ts';
 import { retryLists } from './private-lists.ts';
 import { answers, isKnown, relayUrl } from './relays.ts';
@@ -90,6 +91,10 @@ export function createActions(core: Core) {
       const found =
         a.route === 'p' ? byRef(a.ref) : a.route === 'n' && /^note1[0-9a-f]{58}$/.test(a.ref);
       return found ? done(req) : fail(req, 'rejected');
+    }
+    if (a.a === 'note.reveal') {
+      REVEALED[a.reveal ? 'add' : 'delete'](a.key); // a mock note's key is its id
+      return (core.changed(a.key), done(req));
     }
     if (a.a === 'lists.retry') return retryLists(core, req, a.as);
     const me = core.me();

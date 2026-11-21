@@ -252,6 +252,13 @@ export function createEngine(transport: Transport): Engine {
             : { t: 'result', req: 'private-lock', ok: false, error: { code: 'internal' } },
         );
     },
+    async reveal(from, key, on) {
+      const subs = [...owners].filter(([, owner]) => owner.contains(from)).map(([id]) => id);
+      const results = await Promise.all(
+        subs.map((sub) => actions.act({ a: 'note.reveal', sub, key, reveal: on })),
+      );
+      return results.some((r) => r.ok);
+    },
     stats() {
       const req = `q${++serial}`;
       return new Promise((done) => {

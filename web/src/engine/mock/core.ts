@@ -1,6 +1,7 @@
 // Shared mock policy and bounded fixture subscriptions.
 import type { EngineConfig, FromEngine, PatchOp, Query } from '../protocol.ts';
 import { createAccounts } from './accounts.ts';
+import { unshownOf } from './hidden.ts';
 import { liveWindow, sendFresh } from './live-window.ts';
 import { privateListAccountSnapshot, privateListState } from './private-lists.ts';
 import { entry, matches, select } from './query.ts';
@@ -121,6 +122,7 @@ export function createCore(post: (msg: FromEngine) => void, now: () => number) {
             lastArrival: n.at,
             zapEvidence: MOCK_ZAP_EVIDENCE,
             ...privateListState(s.query),
+            ...unshownOf(s.query),
           },
         });
       }

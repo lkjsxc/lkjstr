@@ -42,6 +42,7 @@ const configure = (): void =>
   engine.configure({
     language,
     clientTag: settings.get().clientTag,
+    signedOutGlobalFilter: settings.get().visitorFilter,
     linkPreviews: settings.get().linkPreviews,
     heuristics: true,
     prefetch: true,
@@ -147,10 +148,12 @@ engine.accounts.subscribe(() => {
 
 let tagged = settings.get().clientTag;
 let previews = settings.get().linkPreviews;
+let folds = settings.get().visitorFilter;
 settings.subscribe((s) => {
   host.look(s);
   if (previews !== s.linkPreviews) (previews = s.linkPreviews), configure();
   if (s.clientTag !== tagged) (tagged = s.clientTag), configure();
+  if (s.visitorFilter !== folds) (folds = s.visitorFilter), configure();
   const next = resolveLang(s.language);
   if (next === language) return;
   // Another language: every label is drawn again.

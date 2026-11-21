@@ -327,6 +327,7 @@ export const NOTES: readonly NoteSpec[] = [
   {
     by: 'aoi',
     ago: 240,
+    hidden: 'muted-word',
     text: LONG_JA,
     reactions: [
       ['❤️', 26],
@@ -342,6 +343,7 @@ export const NOTES: readonly NoteSpec[] = [
   {
     by: 'lena',
     ago: 280,
+    hidden: 'deleted',
     text: 'New specimen sheet is printed.',
     media: [
       [1200, 1600, 12, 'A printed type specimen, black on cream'],
@@ -351,17 +353,20 @@ export const NOTES: readonly NoteSpec[] = [
   {
     by: 'taro',
     ago: 300,
+    hidden: 'muted-person',
     text: 'Rust の async で詰まったときは、だいたい Send が足りないか、ライフタイムを欲張っているかのどちらか。\n#rustlang',
     reactions: [['🦀', 9]],
   },
   {
     by: 'akane',
     ago: 330,
+    hidden: 'machine-payload',
     text: '訳していて一番むずかしいのは、原文が曖昧なとき。曖昧なまま訳すのか、解釈して訳すのか。',
   },
   {
     by: 'sakura',
     ago: 365,
+    hidden: 'expired',
     text: '柚子をたくさんいただいたので、柚子餅にします。',
     media: [[1600, 1067, 55, 'かごいっぱいの柚子']],
   },

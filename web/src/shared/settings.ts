@@ -19,6 +19,7 @@ export const DEFAULT_SETTINGS = {
   showRelayCount: false, // connected relays in the top bar
   linkPreviews: true,
   showSensitive: false, // content-warned notes open
+  visitorFilter: true, // signed out, Global folds repeats and floods (signedOutGlobalFilter)
   composeNew: false, // the composer key always opens a new tab instead of going to the open one
   dmWatch: true, // count-only private unread watch while this page is visible
   lockIdle: 0, // idle minutes; 0 leaves the session unlocked
@@ -49,6 +50,7 @@ export const SETTINGS_SCHEMA: readonly SettingField[] = [
   field('relativeTime', BOOL),
   field('showFilters', BOOL),
   field('showSensitive', BOOL),
+  field('visitorFilter', BOOL),
   field('linkPreviews', BOOL),
   field('uiScale', num(0.5, 2, 0.05)),
   field('tabScale', num(0.8, 2, 0.05)),

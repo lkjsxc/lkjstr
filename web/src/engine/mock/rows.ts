@@ -5,6 +5,7 @@ import type { Author, NoteRow, PersonRow, ProfileRow, Quote, Reaction } from '..
 import { banner } from './art.ts';
 import type { ProfileAct } from './fixtures-acts.ts';
 import { previewFixtures } from './fixtures-previews.ts';
+import { hiddenOf } from './hidden.ts';
 import { EMOJI, FOLLOWERS, type Person, SELF } from './people.ts';
 import type { MNote, World } from './world.ts';
 
@@ -93,7 +94,7 @@ export function noteRow(w: World, n: MNote, o: RowOpts): NoteRow {
       bookmarked: w.state.bookmarks.has(n.id),
       own: n.by.author.pubkey === o.me,
     },
-    hidden: n.hidden ? { reason: n.hidden } : undefined,
+    ...hiddenOf(n.id, n.hidden),
     thread: o.thread,
     client: n.client,
     pending: n.pending,
