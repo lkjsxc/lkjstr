@@ -16,7 +16,7 @@ before and after, loading in both directions, titled by the author and the time.
 - Title: `moment.title`, `{name} yyyy/mm/dd hh:mm` in local time (Japanese joins them with a middle dot). The tooltip
   holds the whole title; fixed tab width cuts it.
 - All honesty is on one moment line where the time falls: the author's face, the time, the follow list's own date (or
-  "not known yet") and "From this device only" while either side is cache-only. Each list end says its own state.
+  "not known yet") and "From this device only" while both sides are cache-only. Each list end says its own state.
 - The moment tab never mounts the time rail or the scrubber (their seeks would release the pivot). The scroll label
   (interface-time.md C1) works there, since it is a native time-ordered list.
 
@@ -66,8 +66,9 @@ before and after, loading in both directions, titled by the author and the time.
   stronger than a divider's `--line`. Padding 5px 12px, centred, tabular digits, and nothing new coloured. There
   are two groups:
   1. `face` 16px circle (press: profile) plus `dayOf(at) clockOf(at)` at 12.5px in `--accent`;
-  2. evidence at 12px in `--faint`: the follow-list part, then `moment.deviceOnly` while either side is
-     `cache-only`, joined by `list.dot`.
+  2. evidence at 12px in `--faint`: the follow-list part (`moment.follows`, "Latest follows: {time}": the list's
+     own date, never the follows at the moment), then `moment.deviceOnly` while both sides are `cache-only`,
+     joined by `list.dot`.
   At 420px of tile and wider, the groups share one line, joined by `list.dot`. Below 420px, group 2 wraps whole
   under group 1 with no dot, and the follow date there is date only. The line is `role="separator"`, and its
   accessible name is both groups' text.
@@ -124,8 +125,13 @@ unknown follows). The mock answers `latest-verified` for every author, dated one
 
 ## Spec: C5 Both directions from relays (needs engine R1 to R6; UI only after them)
 
-The UI change is small once the engine reports per-side states. The moment line drops `moment.deviceOnly` when
-neither side is `cache-only`. Each end shows its own state:
+Built so far (engine R1, older side): `loading` says `feed.loading` at the older end, `stalled` says `moment.stalled`
+(Retry waits for an engine contract for re-asking a stalled span), `partial` says nothing while that side grows, and
+`end` says `moment.olderNone` once the window's older rows also ran short. The newer side stays `cache-only`: the
+line then drops `moment.deviceOnly`, and the newer end says `moment.newerDevice` (or `moment.newerEnd` once this
+device ran out), so each end is labelled by its own coverage.
+
+The moment line carries `moment.deviceOnly` only while both sides are `cache-only`. Each end shows its own state:
 
 | Side state (additive) | Line at that end |
 | --- | --- |

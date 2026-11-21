@@ -90,10 +90,24 @@ export async function momentChecks(open: Open, fact: Check): Promise<void> {
     );
     fact(
       `${on}: it says the follow list's own date and that this is from this device only`,
-      Boolean(s?.text.includes('Follows as of') && s.text.includes('From this device only')),
+      Boolean(s?.text.includes('Latest follows') && s.text.includes('From this device only')),
       s?.text,
     );
     fact(`${on}: a moment tab has no filter row`, s?.bar === false);
+    // From here every window the page asks is traced (the engine's worker or the real transport's port).
+    await page.context().addInitScript(() => {
+      const seenWindows: unknown[] = [];
+      (globalThis as { __windows?: unknown[] }).__windows = seenWindows;
+      for (const proto of [Worker.prototype, MessagePort.prototype] as {
+        postMessage: (m: unknown, ...r: unknown[]) => void;
+      }[]) {
+        const post = proto.postMessage;
+        proto.postMessage = function (this: unknown, m: unknown, ...rest: unknown[]) {
+          if ((m as { t?: string })?.t === 'window') seenWindows.push(m);
+          return post.call(this, m, ...rest);
+        };
+      }
+    });
     await page.reload();
     await page.locator(`${view} .moment`).waitFor();
     await page.waitForTimeout(600);
@@ -102,6 +116,31 @@ export async function momentChecks(open: Open, fact: Check): Promise<void> {
       `${on}: after a reload the moment tab is where it was`,
       again !== null && s !== null && Math.abs(again.top - s.top) <= 1,
       { before: s?.top, after: again?.top },
+    );
+    // Scrolling to both ends grows the window by its time alone: no head, key or month window ever leaves the pivot.
+    for (const to of ['bottom', 'top', 'bottom'])
+      await page
+        .locator(view)
+        .evaluate((v, end) => void (v.scrollTop = end === 'top' ? 0 : v.scrollHeight), to),
+        await page.waitForTimeout(500);
+    const windows = await page.evaluate(
+      () => (globalThis as { __windows?: { sub: string; anchor: unknown }[] }).__windows ?? [],
+    );
+    const pivots = new Set(
+      windows
+        .filter((w) => typeof w.anchor === 'object' && w.anchor && 'at' in w.anchor)
+        .map((w) => w.sub),
+    );
+    const strays = windows.filter(
+      (w) => pivots.has(w.sub) && !(typeof w.anchor === 'object' && w.anchor && 'at' in w.anchor),
+    );
+    fact(
+      `${on}: scrolling to both ends keeps the time window, and the moment line stays`,
+      pivots.size > 0 &&
+        strays.length === 0 &&
+        windows.filter((w) => pivots.has(w.sub)).length > 1 &&
+        (await page.locator(`${view} .moment`).count()) === 1,
+      { asked: windows.filter((w) => pivots.has(w.sub)).length, strays },
     );
     // Back in Home: the text still opens the thread, and A on a chosen note opens its moment.
     await page.locator('.pane .tab[data-view="home"]').click();

@@ -19,13 +19,54 @@ const moment = () =>
     state: { at },
     save: vi.fn(),
     keeper: {} as Keeper,
-    drawn: {} as RowList,
+    drawn: { node: () => undefined } as unknown as RowList,
     request: vi.fn(),
     sync: vi.fn(),
   });
 const keys = (rows: readonly (Row | MomentPart)[]) => rows.map((r) => r.key).join(' ');
 
+const answer = (older: string) =>
+  ({
+    t: 'timeWindow',
+    sub: 's',
+    at,
+    key: 'b',
+    newer: 'cache-only',
+    older,
+    followList: { state: 'latest-verified', at: at + 1, id: 'k' },
+  }) as never;
+
 describe('a moment tab', () => {
+  it('labels each end by its own coverage, and the whole window only when both sides are local', () => {
+    const newer = Array.from({ length: 60 }, (_, i) => note(`n${i}`, at + 60 - i));
+    const draw = (older: string) => {
+      const m = moment();
+      m?.answer(answer(older));
+      return m?.plan([...newer, note('o', at - 1)]) ?? [];
+    };
+    const mixed = draw('loading');
+    expect((mixed[0] as MomentPart).end).toBe('newerDevice'); // newer: this device only, said at its own end
+    expect((mixed.find((r) => r.key === 'moment:') as MomentPart).device).toBe(false);
+    const local = draw('cache-only');
+    expect(local[0]?.key).toBe('n0'); // nothing at the newer end: the line says it for the whole window
+    expect((local.find((r) => r.key === 'moment:') as MomentPart).device).toBe(true);
+  });
+  it('says at its older end what relays did, and that this device ran out only when it did', () => {
+    const rows = [note('a', at + 1), note('b', at - 1)];
+    const last = (older: string, many = rows) => {
+      const m = moment();
+      m?.answer(answer(older));
+      const plan = m?.plan(many) ?? [];
+      return (plan.at(-1) as MomentPart).end ?? 'none drawn';
+    };
+    expect(last('loading')).toBe('loading');
+    expect(last('stalled')).toBe('stalled');
+    expect(last('partial')).toBe('none drawn');
+    expect(last('end')).toBe('none'); // 1 older row of 60 asked: relays and this device both ran out
+    expect(last('cache-only')).toBe('older');
+    const full = Array.from({ length: 60 }, (_, i) => note(`o${i}`, at - 1 - i));
+    expect(last('end', full)).toBe('none drawn'); // the window is full: more may follow in the cache
+  });
   it('is only a their-home tab opened on a time', () => {
     expect(momentOf('home', { state: { at } } as never)).toBeUndefined();
     expect(momentOf('their-home', { state: {} } as never)).toBeUndefined();

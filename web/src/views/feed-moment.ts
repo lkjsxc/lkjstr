@@ -25,7 +25,16 @@ export type MomentPart = {
   /** The follow list's own time; null while it is not known. */
   readonly follows?: number | null;
   readonly device?: boolean;
-  readonly end?: 'newer' | 'older' | 'bound' | 'unsupported';
+  readonly end?:
+    | 'newer'
+    | 'older'
+    | 'newerDevice'
+    | 'olderDevice'
+    | 'bound'
+    | 'unsupported'
+    | 'loading'
+    | 'stalled'
+    | 'none';
 };
 export type MomentState = { at?: number; sides?: readonly [number, number] };
 
@@ -35,6 +44,11 @@ const ENDS: Record<NonNullable<MomentPart['end']>, Key> = {
   older: 'moment.olderEnd',
   bound: 'moment.bound',
   unsupported: 'home.unsupported',
+  loading: 'feed.loading',
+  stalled: 'moment.stalled',
+  none: 'moment.olderNone',
+  newerDevice: 'moment.newerDevice',
+  olderDevice: 'moment.olderDevice',
 };
 
 /** The moment line, or the quiet line at one end. Never an anchor and passed over by the keyboard. */
@@ -97,13 +111,25 @@ export function momentOf(
     for (const r of rows) if (r.kind === 'note' && !r.hidden) rowTime(r) > at ? newer++ : older++;
     return [newer, older];
   };
-  /** What one end says, from that side alone (C4: every side is cache-only or unsupported). */
+  /** What one end says, from that side alone: relays still asked, stalled or done (the older side reads relays),
+   * or, for a side this device alone answers, whether its rows ran out before the window did. */
   const end = (side: 0 | 1, rows: readonly Row[]): MomentPart['end'] => {
     if (!answer || !answered || answer.followList?.state === 'unknown') return undefined;
-    if ((side ? answer.older : answer.newer) === 'unsupported')
-      return side ? undefined : 'unsupported';
+    const edge = side ? answer.older : answer.newer;
+    if (edge === 'unsupported') return side ? undefined : 'unsupported';
+    if (edge === 'loading' || edge === 'stalled') return edge;
     if (sides[side] >= LIMIT) return 'bound';
-    return counts(rows)[side] < answered[side] ? (side ? 'older' : 'newer') : undefined;
+    const short = counts(rows)[side] < answered[side];
+    if (edge === 'end') return short ? 'none' : undefined;
+    if (edge !== 'cache-only') return undefined;
+    if (short) return side ? 'older' : 'newer';
+    // A side this device alone answers, beside a side that reads relays, says so at its own end.
+    const other = side ? answer.newer : answer.older;
+    return other === 'cache-only' || other === 'unsupported'
+      ? undefined
+      : side
+        ? 'olderDevice'
+        : 'newerDevice';
   };
   /** Whether the far end of a side is more than two screens away, so trimming it moves nothing in view. */
   const far = (side: 0 | 1): boolean => {
@@ -148,7 +174,8 @@ export function momentOf(
         at,
         author,
         follows: answer?.followList?.state === 'latest-verified' ? answer.followList.at : null,
-        device: answer?.newer === 'cache-only' || answer?.older === 'cache-only',
+        // The whole window is this device's only while neither side reads relays; else each end says its own.
+        device: answer?.newer === 'cache-only' && answer?.older === 'cache-only',
       };
       const out: (Row | MomentPart)[] = [];
       const top = end(0, rows);
