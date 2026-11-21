@@ -176,7 +176,7 @@ export async function hiddenChecks(open: Open, fact: Check): Promise<void> {
     const folded = await cw.evaluate((n) => ({
       head: n.querySelectorAll('.nhead').length,
       acts: n.querySelectorAll('.acts').length,
-      face: n.querySelectorAll('.nrow > .av').length,
+      face: n.querySelectorAll('.nrow > .avb .av').length,
       body: n.querySelectorAll('.nmain .content, .nmain img').length,
     }));
     await capture(page, `${size.width}-en-warning`);
