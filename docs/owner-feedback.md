@@ -27,8 +27,9 @@ Newer lists replace usage without turning indexers into account write relays.
 
 ## Authorship
 
-The default client tag is ["client","lkjstr"] on notes, replies, quotes,
-reposts, reactions and long-form events. EngineConfig.clientTag=false omits it.
+The default client tag identifies the lkjstr handler on notes, replies, quotes,
+reposts, reactions, channel events and articles. The account setting omits it.
+See [client attribution](client-attribution.md) for the signed tag and opt-out.
 Draft.longForm carries an identifier and optional title for kind 30023. Tags are
 prepared in Rust before every signer and exact-event validation is unchanged.
 Auth events and account lists do not acquire a client tag.

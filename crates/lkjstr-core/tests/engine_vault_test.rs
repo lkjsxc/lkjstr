@@ -188,6 +188,7 @@ fn key_actions_results_and_owned_password_debug_are_redacted() {
         dm_draft: None,
         dm_draft_revision: None,
         dm_delivery: None,
+        client_info: None,
         cancelled: None,
         zap_intent: None,
     };

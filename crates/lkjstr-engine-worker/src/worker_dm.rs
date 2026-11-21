@@ -212,6 +212,7 @@ fn result(req: String, error: Option<&str>, id: Option<String>) -> W {
         dm_draft: None,
         dm_draft_revision: None,
         dm_delivery: None,
+        client_info: None,
         cancelled: None,
     }
 }

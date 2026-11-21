@@ -37,6 +37,7 @@ export async function conformance({page,send,wait,check,note,signer,lines,origin
   const ref = bech32('note', note.id);
   check('public note link is validated without an account parameter',(await act({a:'link.check',route:'n',ref})).ok);
   check('public note link is rejected on the profile path',(await act({a:'link.check',route:'p',ref})).error?.code==='rejected');
+  check('malformed app handler address is unresolvable while signed out',(await act({a:'client.info',address:'31990:bad:d'})).error?.code==='not-found');
   await authenticate(note.pubkey,'extension');
   check('private-list retry is account-scoped and additive',(await act({a:'lists.retry',as:note.pubkey})).ok);
   await send({t:'configure',config:{language:'en',heuristics:true,prefetch:false}});
@@ -77,7 +78,10 @@ export async function conformance({page,send,wait,check,note,signer,lines,origin
     check(`publish ${what.k} ${serial} replies`,(await act({a:'publish',as:note.pubkey,what},true)).ok);
     const signed=(await messages()).filter(m=>m.t==='sign').at(-1);
     if(what.draft?.longForm)check('long-form draft becomes kind 30023',JSON.parse(signed.event).kind===30023);
-    if(what.k!=='delete')check(`publish ${what.k} ${serial} carries client tag`,JSON.parse(signed.event).tags.some(t=>t[0]==='client'&&t[1]==='lkjstr'));
+    const clientTags=JSON.parse(signed.event).tags.filter(t=>t[0]==='client');
+    const expected=what.k==='delete'?[]:[['client','lkjstr',
+      '31990:160b7d028b99ef2530be8718d03cb0be6f9449fb74d5ae8d6f09a060c63048b1:lkjstr','wss://relay.ditto.pub/']];
+    check(`publish ${what.k} ${serial} has exact client tags`,JSON.stringify(clientTags)===JSON.stringify(expected));
   }
   const custom = {code:'Hi-cat',url:'https://media.engine.test/cat.png',address:`30030:${note.pubkey}:pack`};
   const token = `:${custom.code}:`;

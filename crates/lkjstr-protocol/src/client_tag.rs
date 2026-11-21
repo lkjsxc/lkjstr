@@ -1,3 +1,4 @@
+use lkjstr_nips::address::Coordinate;
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -48,6 +49,42 @@ pub fn parse_client_tag(tags: &[NostrTag]) -> Option<ClientTag> {
             };
             client_tag(&config).ok()
         })
+}
+
+/// Read a tag even when it has only a name, or its coordinate or relay is invalid.
+pub fn client_attribution(tags: &[NostrTag]) -> Option<(&str, Option<Coordinate>)> {
+    let tag = tags
+        .iter()
+        .find(|tag| tag.first().is_some_and(|key| key == "client"))?;
+    let name = tag.get(1)?.as_str();
+    if name.trim().is_empty() {
+        return None;
+    }
+    Some((
+        name,
+        tag.get(2).and_then(|value| client_handler_address(value)),
+    ))
+}
+
+/// Parse a bounded kind-31990 coordinate without changing the case or spacing of its d tag.
+pub fn client_handler_address(address: &str) -> Option<Coordinate> {
+    if address.len() > 512 || address.chars().any(char::is_control) {
+        return None;
+    }
+    let mut parts = address.splitn(3, ':');
+    if parts.next()? != "31990" {
+        return None;
+    }
+    let pubkey = parts.next()?.to_ascii_lowercase();
+    let identifier = parts.next()?;
+    if !is_pubkey(&pubkey) || identifier.trim().is_empty() {
+        return None;
+    }
+    Some(Coordinate {
+        kind: KIND_HANDLER_INFORMATION as u16,
+        pubkey,
+        identifier: identifier.to_owned(),
+    })
 }
 
 pub fn client_tag(config: &ClientTagConfig) -> Result<ClientTag, ClientTagError> {

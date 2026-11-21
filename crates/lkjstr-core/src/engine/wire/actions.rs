@@ -9,6 +9,8 @@ pub enum Action {
         #[serde(rename = "ref")]
         reference: String,
     },
+    #[serde(rename = "client.info")]
+    ClientInfo { address: String },
     #[serde(rename = "zap.invoice")]
     ZapInvoice {
         #[serde(rename = "as")]

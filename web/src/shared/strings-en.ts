@@ -81,6 +81,9 @@ export const en = {
   'note.show': 'Show',
   'note.more': 'Show more',
   'note.bot': 'bot',
+  'note.via': 'via {name}',
+  'note.viaLabel': 'Written with {name}',
+  'client.unverified': 'No verified app information',
   'note.sending': 'sending…',
   'nip05.ok': 'This name was checked and belongs to this key',
   'nip05.unchecked': 'This name has not been confirmed',
@@ -246,9 +249,9 @@ export const en = {
   'set.composeNew': 'Posting: Always open a new Post tab',
   'set.composeNew.d':
     'The Post key and the pen button always open a new tab. Switched off, they go to the Post tab that is open when there is one.',
-  'set.clientTag': 'Posting: via lkjstr',
+  'set.clientTag': 'Posting: Include lkjstr in my posts',
   'set.clientTag.d':
-    'Notes, reposts and reactions you publish carry a client tag saying they were sent with lkjstr.',
+    'What you publish (notes, replies, quotes, reposts, reactions, channel messages and articles) carries a public tag naming lkjstr. Off: none does.',
   'tabs.search': 'Search tabs',
   'settings.index': 'Groups of settings',
   'set.resetLayout': 'Layout: Reset this workspace',

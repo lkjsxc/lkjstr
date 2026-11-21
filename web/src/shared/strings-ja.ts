@@ -83,6 +83,9 @@ export const ja: Record<keyof typeof en, string> = {
   'note.show': '表示する',
   'note.more': '続きを読む',
   'note.bot': 'ボット',
+  'note.via': '{name}から',
+  'note.viaLabel': '{name}で書かれました',
+  'client.unverified': '確認できたアプリ情報はありません',
   'note.sending': '送信中…',
   'nip05.ok': 'この名前は確認済みで、この鍵のものです',
   'nip05.unchecked': 'この名前は確認できていません',
@@ -248,9 +251,9 @@ export const ja: Record<keyof typeof en, string> = {
   'set.composeNew': '投稿: いつも新しい投稿タブを開く',
   'set.composeNew.d':
     '投稿のキーやペンのボタンで、いつも新しいタブを開きます。切っているときは、開いている投稿タブがあればそこへ移ります。',
-  'set.clientTag': '投稿: via lkjstr',
+  'set.clientTag': '投稿: 投稿に lkjstr を含める',
   'set.clientTag.d':
-    '投稿、リポスト、リアクションに、lkjstr から送ったことを示すクライアントタグを付けます。',
+    '公開するもの（投稿・返信・引用・リポスト・リアクション・チャンネル・記事）に、lkjstr で書いたことを示す公開タグを付けます。オフにすると付けません。',
   'tabs.search': 'タブを検索',
   'settings.index': '設定のグループ',
   'set.resetLayout': 'レイアウト: このワークスペースを初期状態に戻す',

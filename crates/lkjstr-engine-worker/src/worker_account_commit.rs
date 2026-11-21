@@ -203,6 +203,7 @@ pub(in crate::worker) fn pump_accounts(host: &Rc<RefCell<Host>>) {
                                 dm_draft: None,
                                 dm_draft_revision: None,
                                 dm_delivery: None,
+                                client_info: None,
                                 cancelled: None,
                             },
                         );

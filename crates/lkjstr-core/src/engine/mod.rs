@@ -9,6 +9,8 @@ mod channel_actions;
 mod channel_create;
 mod channel_pending;
 pub mod channels;
+pub mod client_info;
+mod client_tag;
 pub mod clients;
 mod commands;
 pub mod discovery;
@@ -105,6 +107,9 @@ pub struct Engine {
     channel_creates: BTreeMap<String, channel_create::Creation>,
     channel_pending: BTreeMap<String, channel_pending::Pending>,
     pub client_tag: bool,
+    // One override per registered device account, at most 32.
+    pub client_tag_accounts: BTreeMap<String, bool>,
+    client_info: client_info::Lookups,
     pub discovery_paused: bool,
     pub discovery_accounts: Vec<String>,
     pub discovery_relays: Vec<String>,
@@ -152,6 +157,8 @@ impl Engine {
             channel_creates: BTreeMap::new(),
             channel_pending: BTreeMap::new(),
             client_tag: true,
+            client_tag_accounts: BTreeMap::new(),
+            client_info: Default::default(),
             discovery_paused: false,
             discovery_accounts: vec![],
             discovery_relays: vec![],

@@ -12,6 +12,7 @@ impl Engine {
         wants.extend(self.nearby_wants());
         wants.extend(self.discovery_wants());
         wants.extend(self.channel_action_wants());
+        wants.extend(self.client_info_wants());
         for (sub, v) in self.views.iter_mut().filter(|(_, v)| v.visible) {
             v.dirty |= v.time_window.is_some();
             if matches!(v.query.source, Source::Relays | Source::Diagnostics) {
@@ -139,8 +140,7 @@ fn requests(
     }
     let events = super::time_window::events(store, v, private);
     let selected = super::windows::selection(store, network, v, enabled, &events, private);
-    // Refill can cross the whole retained store. Hidden rows must not turn that
-    // scan into count streams or consume the reference collector's row budget.
+    // Keep hidden refills out of count streams and the reference collector's row budget.
     let visible: Vec<_> = events[selected.raw.clone()]
         .iter()
         .zip(&selected.held)

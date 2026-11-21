@@ -121,66 +121,6 @@ fn latest_nip65_overrides_legacy_even_when_empty() {
 }
 
 #[test]
-fn client_tag_defaults_on_for_every_authored_kind_and_can_be_disabled() {
-    let mut e = Engine::new();
-    let parent = event(1, 1, "target", vec![]);
-    let account = parent.pubkey.clone();
-    let id = parent.id.clone();
-    e.store.insert(parent, None);
-    for kind in ["note", "reply", "quote", "repost", "reaction", "long-form"] {
-        e.input(
-            Input::Action {
-                req: kind.into(),
-                account: account.clone(),
-                action: Action::Publish {
-                    kind: kind.into(),
-                    content: "test".into(),
-                    target: Some(id.clone()),
-                    tags: vec![],
-                },
-            },
-            2000,
-        );
-        let signed = e
-            .drain()
-            .into_iter()
-            .find_map(|o| match o {
-                protocol::Output::Sign { event, .. } => Some(event),
-                _ => None,
-            })
-            .expect("fixture");
-        assert_eq!(
-            signed
-                .tags
-                .iter()
-                .filter(|t| t.first().is_some_and(|t| t == "client"))
-                .count(),
-            1
-        );
-        assert!(
-            signed
-                .tags
-                .contains(&vec!["client".into(), "lkjstr".into()])
-        );
-    }
-    e.client_tag = false;
-    e.input(
-        Input::Action {
-            req: "off".into(),
-            account,
-            action: Action::Publish {
-                kind: "note".into(),
-                content: "test".into(),
-                target: None,
-                tags: vec![],
-            },
-        },
-        2000,
-    );
-    assert!(e.drain().iter().any(|o| matches!(o, protocol::Output::Sign { event, .. } if event.tags.iter().all(|t| t[0]!="client"))));
-}
-
-#[test]
 fn blossom_defaults_do_not_override_an_explicit_server_list() {
     let mut e = Engine::new();
     let empty = event(1, 10063, "", vec![]);

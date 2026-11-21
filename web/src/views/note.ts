@@ -13,9 +13,9 @@ import { mediaGrid } from './note-media.ts';
 import { quoteCard } from './note-quote.ts';
 import { compactBody, lookOf, threadClass, threadMark } from './note-thread.ts';
 import { deliveryMark, timeOf } from './note-time.ts';
+import { stamp } from './note-via.ts';
 import { displayName, faceButton, how, nameButton, nipMark, plainName, segments } from './parts.ts';
 import type { ViewEnv } from './registry.ts';
-import { momentTime } from './their-home.ts';
 
 /** Long text folds by whole lines; the button appears only when something is actually cut off. */
 function fold(text: HTMLElement): void {
@@ -43,7 +43,7 @@ function head(row: NoteRow, env: ViewEnv, dated: boolean): HTMLElement {
     nameButton(a, env),
     nipMark(a),
     a.bot ? h('span', { class: 'badge' }, t('note.bot')) : null,
-    momentTime(row, env, timeOf(row, env, dated)),
+    stamp(row, env, timeOf(row, env, dated)),
     // Where the tile is too narrow for a bookmark button, a set bookmark is this mark instead.
     h(
       'span',

@@ -2,7 +2,7 @@
 ## Purpose
 
 Additive protocol ledger under the 2026-11-16 owner delegation. See status.md and parity.md for current behavior and limits.
-Earlier context through protocol 5 is preserved in [engine-proposals-history.md](engine-proposals-history.md).
+Earlier context is preserved in [engine-proposals-history.md](engine-proposals-history.md).
 
 ## Protocol 6 engine additions (2026-11-16, owner authorized)
 
@@ -29,10 +29,6 @@ Earlier context through protocol 5 is preserved in [engine-proposals-history.md]
 - `Account.encrypted?` identifies ciphertext-backed local storage.
 - `Account.locked?` identifies an account requiring session unlock.
 
-All existing protocol messages and fields retain their meanings. No visible
-surfaces are added without a specification. See [dm.md](dm.md), [keys.md](keys.md)
-and [interface-needs.md](interface-needs.md) for contracts and remaining design.
-
 ## Protocol 7 lifetime additions (2026-11-16, owner authorized)
 
 - `ToEngine.dm.open.visible?` supplies initial private visibility atomically; omission keeps the existing visible default.
@@ -42,9 +38,7 @@ and [interface-needs.md](interface-needs.md) for contracts and remaining design.
 - `Engine.dm.open(query,receive,{visible?})` supplies the optional initial private visibility through the existing client API.
 - `ActWatch.uploadSignal?` connects the existing attachment removal/clear/dispose controls to upload cancellation.
 
-Private-list revocation adds no wire message: successful lock/remove commits
-clear unauthorized decrypted list policy and replace derived row caches before
-account/result output. Other authorized accounts and query/window intent remain.
+Private-list lock/remove commits clear unauthorized list policy and replace its row caches before account/result output.
 
 ## Protocol 8 interface additions (2026-11-16, owner authorized)
 
@@ -198,3 +192,9 @@ Mock-only `EngineConfig.mock.slow` signs one matching note late and delays its r
 - Optional `stats.signing` reports bounded `recent` and `slow` timings. See [signing-latency.md](signing-latency.md) for stages and retention.
 - Optional `window.headThrough` on a top window retains its delivered tail key while following new rows, up to 6800 rows.
 - Optional `NoteRow.unconfirmed` marks the signed-in author's settled note while a retained receipt still has zero accepted deliveries.
+
+## Client attribution
+- `NoteRow.clientAddress?` carries a valid kind-31990 coordinate next to the existing tag name in `client`.
+- `Action.client.info {address}` resolves one handler on explicit request, or returns `not-found`.
+- `FromEngine.result.clientInfo?` carries the verified handler name and optional HTTP(S) website.
+- `EngineConfig.clientTagAccount?` scopes `clientTag` to one device account. Omit it for the device fallback.

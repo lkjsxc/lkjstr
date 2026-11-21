@@ -99,6 +99,20 @@ img.emo:focus-visible, .uemo:focus-visible { outline: 2px solid var(--accent); o
 .nhead > .tmoment { flex: none; margin: -6px 0 -6px auto; padding: 6px 0 6px 4px; line-height: inherit; }
 .nhead > .tmoment > time { margin-left: 0; }
 @media (pointer: fine) { .nhead > .tmoment:hover > time { color: var(--fg); text-decoration: underline; text-underline-offset: 3px; } }
+/* "via <client>" (interface-client.md): quiet text just before the time; it gives way before the NIP-05 does, down to
+   a few letters ("via r..."), and under 340px of tile it is not drawn. */
+.nhead > .via { flex: 0 20 auto; min-width: min(4.5em, 22%); margin-left: auto; overflow: hidden; color: var(--faint); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.nhead > button.via { margin: -6px 0 -6px auto; padding: 6px 0; line-height: inherit; }
+@media (pointer: fine) { .nhead > button.via:hover { color: var(--fg); text-decoration: underline; text-underline-offset: 3px; } }
+.nhead > .via + .tmoment, .nhead > .via + time { margin-left: 0; }
+@container (max-width: 339px) {
+  .nhead > .via { display: none; }
+  .nhead > .via + .tmoment, .nhead > .via + time { margin-left: auto; }
+}
+/* App information: the handler's name, then its site or that it could not be verified. */
+.vinfo { gap: 2px; max-width: 280px; padding: 8px 10px; }
+.vinfo .vname { font-weight: 600; overflow-wrap: anywhere; }
+.vinfo .vsaid { color: var(--faint); font-size: 12.5px; }
 /* A moment tab: no filter row; the moment line is a day divider made stronger, the end lines are quiet. */
 .moment-tab > .fslot { display: none; }
 .moment { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 0 6px; padding: 5px 12px; border-top: 1px solid var(--sep); border-bottom: 1px solid var(--sep); background: var(--paper); font-variant-numeric: tabular-nums; text-align: center; }

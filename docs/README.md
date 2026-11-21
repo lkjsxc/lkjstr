@@ -25,6 +25,7 @@ Frontend (`web/`):
 Engine (`crates/`):
 
 - [media-uploads.md](media-uploads.md): destinations, failure/retry, bounds and proof.
+- [client-attribution.md](client-attribution.md) explains note tags, app information and opt-out.
 - [channels.md](channels.md): NIP-28 sources, actions, bounds and verification.
 - [zaps.md](zaps.md): provider-authorized receipts, unpaid invoice intents, lifetime and bounds.
 - [engine-zap-verification.md](engine-zap-verification.md): zap integration gates and runtime regressions.
@@ -111,6 +112,7 @@ Engine (`crates/`):
 - [interface-thread.md](interface-thread.md): the thread tab: focus, compact notes above, replies, reply field.
 - [interface-time.md](interface-time.md): travelling by time: the scroll label, the wide scrubber, jumps.
 - [interface-moment.md](interface-moment.md): a note's time opens the author's Home at that moment.
+- [interface-client.md](interface-client.md): "via <client>" by a note's time, app information, the opt-out.
 - [engine-acts.md](engine-acts.md): bounded act chains, ownership, profile selection and verification.
 - [read-plan.md](read-plan.md): one plan for everything the tabs want, with weights made from the past.
 

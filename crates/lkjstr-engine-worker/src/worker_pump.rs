@@ -9,6 +9,15 @@ pub(super) fn pump(host: &Rc<RefCell<Host>>) {
         let mut h = host.borrow_mut();
         (h.engine.network.drain_effects(), h.engine.drain())
     };
+    {
+        let mut h = host.borrow_mut();
+        for answer in h.engine.drain_client_info() {
+            h.scope.direct(
+                answer.client,
+                &lkjstr_core::engine::wire::Session::client_info(answer),
+            );
+        }
+    }
     let start = crate::measure::now();
     for o in outputs {
         host.borrow_mut().sign_trace.output(&o);

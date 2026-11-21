@@ -49,8 +49,9 @@ pub use bytes::{
     try_hex_to_bytes, utf8_to_bytes,
 };
 pub use client_tag::{
-    ClientTag, ClientTagConfig, ClientTagError, ClientTagPolicy, append_client_tag, client_tag,
-    client_tag_allowed_for_kind, client_tag_parts, parse_client_tag,
+    ClientTag, ClientTagConfig, ClientTagError, ClientTagPolicy, append_client_tag,
+    client_attribution, client_handler_address, client_tag, client_tag_allowed_for_kind,
+    client_tag_parts, parse_client_tag,
 };
 pub use content_media::{
     ContentAttachment, ContentAttachmentKind, ContentUrlSpan, classify_url, content_attachments,

@@ -32,6 +32,7 @@ fn backup_is_explicit_and_debug_never_discloses_secrets() {
         dm_draft: None,
         dm_draft_revision: None,
         dm_delivery: None,
+        client_info: None,
         cancelled: None,
     };
     let diagnostics = format!(

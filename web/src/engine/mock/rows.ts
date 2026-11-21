@@ -3,6 +3,7 @@
 import { groupReactions } from '../../shared/reactions.ts';
 import type { Author, NoteRow, PersonRow, ProfileRow, Quote, Reaction } from '../protocol.ts';
 import { banner } from './art.ts';
+import { HANDLERS } from './client-handlers.ts';
 import type { ProfileAct } from './fixtures-acts.ts';
 import { previewFixtures } from './fixtures-previews.ts';
 import { EMOJI, FOLLOWERS, type Person, SELF } from './people.ts';
@@ -96,6 +97,7 @@ export function noteRow(w: World, n: MNote, o: RowOpts): NoteRow {
     hidden: n.hidden ? { reason: n.hidden } : undefined,
     thread: o.thread,
     client: n.client,
+    clientAddress: n.client ? HANDLERS[n.client]?.address : undefined,
     pending: n.pending,
     unconfirmed: n.unconfirmed,
     channel: n.channel

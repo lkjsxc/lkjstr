@@ -32,7 +32,9 @@ import { createWmStore } from './wm/store.ts';
 
 watchPairs(window);
 migrateStorage();
-const settings = createSettings();
+const cached = kv.get('account');
+let settingsAccount = typeof cached === 'string' ? cached : '';
+const settings = createSettings(settingsAccount);
 let language = resolveLang(settings.get().language);
 setLang(language);
 document.documentElement.lang = language;
@@ -42,6 +44,7 @@ const configure = (): void =>
   engine.configure({
     language,
     clientTag: settings.get().clientTag,
+    clientTagAccount: settingsAccount || undefined,
     linkPreviews: settings.get().linkPreviews,
     heuristics: true,
     prefetch: true,
@@ -51,7 +54,6 @@ configure();
 engine.info.subscribe((i) => setServed(i?.version ?? 0));
 // The last account is remembered (its key, and its face and kind of signer) so the first frame already shows who
 // is reading and asks for the first lists as that person, before the engine has spoken.
-const cached = kv.get('account');
 if (typeof cached === 'string')
   engine.accounts.set({
     accounts: rememberedAccounts(cached).map((a) => ({ ...a, author: learnPerson(a.author) })),
@@ -67,6 +69,11 @@ engine.accounts.subscribe((a) => {
   else kv.remove('account');
   rememberAccounts(a.accounts);
   rememberFace(a.accounts.find((x) => x.author.pubkey === a.active));
+  const activeAccount = a.active ?? '';
+  if (settingsAccount !== activeAccount) {
+    settingsAccount = activeAccount;
+    settings.setAccount(activeAccount);
+  }
 });
 
 const host = createHost();
@@ -145,14 +152,21 @@ engine.accounts.subscribe(() => {
   arrive?.();
 });
 
+let taggedAccount = settingsAccount;
 let tagged = settings.get().clientTag;
 let previews = settings.get().linkPreviews;
 settings.subscribe((s) => {
   host.look(s);
-  if (previews !== s.linkPreviews) (previews = s.linkPreviews), configure();
-  if (s.clientTag !== tagged) (tagged = s.clientTag), configure();
   const next = resolveLang(s.language);
-  if (next === language) return;
+  const reconfigure =
+    previews !== s.linkPreviews || s.clientTag !== tagged || settingsAccount !== taggedAccount;
+  previews = s.linkPreviews;
+  tagged = s.clientTag;
+  taggedAccount = settingsAccount;
+  if (next === language) {
+    if (reconfigure) configure();
+    return;
+  }
   // Another language: every label is drawn again.
   language = next;
   setLang(next);
