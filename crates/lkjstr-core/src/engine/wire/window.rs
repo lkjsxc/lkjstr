@@ -80,12 +80,15 @@ impl Session {
             }
         };
         let anchor = anchor.filter(|key| engine.accepts_private_anchor(account, key));
-        let mut before = if request.retain_above && !request.live_above {
+        let retain_above = request.retain_above && !request.live_above;
+        let mut before = if retain_above {
             6000
         } else {
             request.before.min(800)
         };
-        if !request.live_above
+        // A retained grouped window still needs room to prepend new groups.
+        if !retain_above
+            && !request.live_above
             && (query.source == "notifications" || query.notifications == Some(true))
         {
             before = self.notification_before(&sub, engine, anchor.as_deref(), before);

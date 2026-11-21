@@ -2,6 +2,7 @@
 mod engine_review_support;
 use engine_review_support::{accept, event, output};
 use lkjstr_core::engine::{Engine, wire};
+use lkjstr_protocol::{EventTemplate, finalize_event, generate_secret_key};
 use serde_json::{Value, json};
 
 fn rows(messages: &[Value]) -> Vec<String> {
@@ -70,4 +71,71 @@ fn a_top_window_keeps_the_delivered_tail_and_grows_as_arrivals_prepend() {
     let current = rows(&output(&mut wire, &mut engine));
     assert_eq!(current[0], id);
     assert_eq!(&current[1..], previously_loaded);
+}
+
+#[test]
+fn a_paged_notification_feed_keeps_new_groups_above_its_loaded_tail() {
+    let mut engine = Engine::new();
+    let mut wire = wire::Session::default();
+    let owner = generate_secret_key();
+    let make_target = |created_at| {
+        finalize_event(
+            &EventTemplate {
+                pubkey: None,
+                created_at,
+                kind: 1,
+                content: "notification target".into(),
+                tags: vec![],
+            },
+            &owner,
+        )
+        .expect("signed target")
+    };
+    let account = make_target(1).pubkey;
+    let make_group = |at| {
+        let target = make_target(at - 1);
+        let reaction = event(
+            at,
+            7,
+            "+",
+            vec![
+                vec!["e".into(), target.id.clone()],
+                vec!["p".into(), account.clone()],
+            ],
+        );
+        (target, reaction)
+    };
+    for at in 10..13 {
+        let (target, reaction) = make_group(at);
+        engine.store.insert(target, None);
+        engine.store.insert(reaction, None);
+    }
+    accept(
+        &mut wire,
+        &mut engine,
+        json!({"t":"open","sub":"feed","query":{"source":"notifications","account":account}}),
+        0,
+    );
+    let loaded = rows(&output(&mut wire, &mut engine));
+    assert_eq!(loaded.len(), 3);
+    accept(
+        &mut wire,
+        &mut engine,
+        json!({"t":"window","sub":"feed","anchor":{"key":loaded[2]},"before":3,"after":60,"retainAbove":true}),
+        1,
+    );
+    assert_eq!(rows(&output(&mut wire, &mut engine)), loaded);
+    let (target, arrival) = make_group(14);
+    engine.store.insert(target, None);
+    engine.enqueue("cache".into(), arrival);
+    engine.tick(100);
+    let updates = output(&mut wire, &mut engine);
+    assert!(
+        updates.iter().any(|message| message["t"] == "patch"
+            && message["ops"].as_array().is_some_and(|ops| ops
+                .iter()
+                .any(|op| { op["op"] == "insert" && op["before"] == loaded[0] }))),
+        "{updates:?}"
+    );
+    assert!(updates.iter().all(|m| m["t"] != "fresh" || m["count"] == 0));
 }

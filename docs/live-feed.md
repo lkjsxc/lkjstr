@@ -22,6 +22,7 @@ The pill counts projected rows above the reading position or keyboard
 selection, up to the last read head.
 Headers, day separators and repeated delivery do not count. Grouped
 notification rows count once, using the same projection as the visible rows.
+A retained older notification window leaves room to prepend newly formed groups.
 A held head reserves room for new rows within an 800-row window. If there
 are further arrivals above its bound, the pill shows the retained count
 with an overflow marker. Scrolling reaches the retained edge. Pressing the
