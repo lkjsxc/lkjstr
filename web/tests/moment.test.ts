@@ -13,14 +13,14 @@ const note = (key: string, time: number, repost?: number) =>
     at: time,
     ...(repost && { repostedBy: { at: repost } }),
   }) as unknown as NoteRow;
-const moment = () =>
+const moment = (el = document.createElement('div'), request = vi.fn()) =>
   momentOf('their-home', {
-    el: document.createElement('div'),
+    el,
     state: { at },
     save: vi.fn(),
     keeper: {} as Keeper,
     drawn: { node: () => undefined } as unknown as RowList,
-    request: vi.fn(),
+    request,
     sync: vi.fn(),
   });
 const keys = (rows: readonly (Row | MomentPart)[]) => rows.map((r) => r.key).join(' ');
@@ -78,6 +78,37 @@ describe('a moment tab', () => {
     expect(last('cache-only')).toBe('older');
     const full = Array.from({ length: 60 }, (_, i) => note(`o${i}`, at - 1 - i));
     expect(last('end', full)).toBe('none drawn'); // the window is full: more may follow in the cache
+  });
+  it.each(['newer', 'older'] as const)('pages past a covered slot on the %s side', (side) => {
+    const newer = side === 'newer';
+    const el = document.createElement('div');
+    Object.defineProperties(el, {
+      scrollTop: { value: newer ? 0 : 2000 },
+      scrollHeight: { value: 2600 },
+      clientHeight: { value: 600 },
+    });
+    const request = vi.fn();
+    const m = moment(el, request);
+    m?.answer(answer('cache-only'));
+    const notes = Array.from({ length: 59 }, (_, i) =>
+      note(`note-${i}`, newer ? at + 59 - i : at - 1 - i),
+    );
+    const covered: NoteRow = {
+      ...note('covered', newer ? at + 60 : at),
+      hidden: { reason: 'muted-word', revealable: true },
+    };
+    const edge = `moment:${side}`;
+    expect(m?.plan(notes).map((row) => row.key)).toContain(edge);
+    m?.follow(notes);
+    expect(request).not.toHaveBeenCalled();
+
+    const full = [covered, ...notes];
+    const plan = m?.plan(full) ?? [];
+    expect.soft(plan.some((row) => row.key === edge)).toBe(false);
+    expect(plan).toContain(covered);
+    expect(plan.indexOf(covered) < plan.findIndex((row) => row.key === 'moment:')).toBe(newer);
+    m?.follow(full);
+    expect(request.mock.calls).toEqual([[{ at }, newer ? 120 : 60, newer ? 60 : 120]]);
   });
   it('is only a their-home tab opened on a time', () => {
     expect(momentOf('home', { state: { at } } as never)).toBeUndefined();

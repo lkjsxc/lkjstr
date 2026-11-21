@@ -84,12 +84,13 @@ before and after, loading in both directions, titled by the author and the time.
 ### The two ends (independent)
 
 Each side has its own state, and each line sits at its own end of the list in `.fstate` style, one quiet centred
-line. In C4 the Worker reports `cache-only` on both sides, and the UI derives the end of a side from the side alone:
+line. In C4 the Worker reports `cache-only` on both sides, and the UI derives the end of a side from the side alone.
+Covered notes count toward the window capacity because they keep their slots (see [hidden notes](interface-hidden.md)).
 
 | Side state (C4) | How it is known | Line at that end |
 | --- | --- | --- |
-| more | that side returned as many non-hidden rows as asked | none; growth continues |
-| device end | fewer non-hidden rows than asked on that side | `moment.newerEnd` / `moment.olderEnd` |
+| more | that side returned as many note slots as asked | none; growth continues |
+| device end | fewer note slots than asked on that side | `moment.newerEnd` / `moment.olderEnd` |
 | bound | that side holds 800 rows | `moment.bound` |
 | unsupported | `newer`/`older` is `unsupported` | `home.unsupported` once, no edge lines |
 

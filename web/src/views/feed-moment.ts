@@ -114,7 +114,8 @@ export function momentOf(
   const counts = (rows: readonly Row[]): [number, number] => {
     let newer = 0;
     let older = 0;
-    for (const r of rows) if (r.kind === 'note' && !r.hidden) rowTime(r) > at ? newer++ : older++;
+    // Covered notes use the same window slots as shown notes.
+    for (const r of rows) if (r.kind === 'note') rowTime(r) > at ? newer++ : older++;
     return [newer, older];
   };
   /** What one end says, from that side alone: relays still asked, stalled or done (the older side reads relays),
