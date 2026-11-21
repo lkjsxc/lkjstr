@@ -79,6 +79,7 @@ export const ja: Record<keyof typeof en, string> = {
   'quote.loading': '引用されたノートを探しています…',
   'quote.muted': 'ミュートした人のノートです。',
   'quote.deleted': '引用されたノートは削除されました。',
+  'quote.expired': '引用されたノートは期限が切れました。',
   'note.cw': '閲覧注意：{reason}',
   'note.show': '表示する',
   'note.more': '続きを読む',

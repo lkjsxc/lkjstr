@@ -77,6 +77,7 @@ export const en = {
   'quote.loading': 'Looking for the quoted note…',
   'quote.muted': 'A note by someone you muted.',
   'quote.deleted': 'The quoted note was deleted.',
+  'quote.expired': 'The quoted note has expired.',
   'note.cw': 'Content warning: {reason}',
   'note.show': 'Show',
   'note.more': 'Show more',

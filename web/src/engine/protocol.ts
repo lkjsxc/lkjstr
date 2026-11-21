@@ -198,8 +198,11 @@ export type Quote =
       readonly media: readonly Media[];
       readonly cw?: string;
     }
-  /** Not found (yet), deleted, or by a muted person: one quiet line, never the raw reference. */
-  | { readonly state: 'missing' | 'loading' | 'muted' | 'deleted' | 'error'; readonly id: string };
+  /** Not found (yet), deleted, expired (NIP-40), or by a muted person: one quiet line, never the raw reference. */
+  | {
+      readonly state: 'missing' | 'loading' | 'muted' | 'deleted' | 'expired' | 'error';
+      readonly id: string;
+    };
 
 export type Reaction = {
   /** A Unicode emoji, or `:code:` with `url`. */
@@ -301,6 +304,8 @@ export type NoteRow = {
   readonly hidden?: { readonly reason: string; readonly revealable?: boolean; readonly detail?: string };
   /** Shown by `note.reveal` although hidden for this reason. */
   readonly revealed?: { readonly reason: string };
+  /** The earliest NIP-40 expiry of this note or what it embeds; the transport never brings a held body back after it. */
+  readonly expiresAt?: Millis;
   /** `thread` source only. `depth` 0 for ancestors and the focus, 1+ for replies. `parent` (additive): the id of
    * the note this one answers, also when that note is not known; absent for the note a thread starts from. */
   readonly thread?: {
@@ -364,6 +369,8 @@ export type PersonRow = {
 export type NotificationRow = {
   readonly kind: 'notification';
   readonly key: RowKey;
+  /** The earliest NIP-40 expiry of what it embeds or targets. */
+  readonly expiresAt?: Millis;
   readonly type: NotificationType;
   /** Who did it: latest first. Several when the engine grouped the same action on the same note. */
   readonly actors: readonly Author[];
