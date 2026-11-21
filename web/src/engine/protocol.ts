@@ -301,7 +301,11 @@ export type NoteRow = {
   };
   /** Hidden for a reason (interface-hidden.md): the row keeps its slot with no body, counts or controls. `detail` is
    * the reader's own matching mute entry; `revealable` says whether `note.reveal` may show it. */
-  readonly hidden?: { readonly reason: string; readonly revealable?: boolean; readonly detail?: string };
+  readonly hidden?: {
+    readonly reason: string;
+    readonly revealable?: boolean;
+    readonly detail?: string;
+  };
   /** Shown by `note.reveal` although hidden for this reason. */
   readonly revealed?: { readonly reason: string };
   /** The earliest NIP-40 expiry of this note or what it embeds; the transport never brings a held body back after it. */
@@ -630,7 +634,12 @@ export type RelayEntry = { readonly url: string; readonly read: boolean; readonl
 export type Action =
   | { readonly a: 'link.check'; readonly route: 'n' | 'p' | 'a'; readonly ref: string }
   /** Shows (or hides again) one hidden note in one subscription, in its slot; idempotent. */
-  | { readonly a: 'note.reveal'; readonly sub: SubId; readonly key: RowKey; readonly reveal: boolean }
+  | {
+      readonly a: 'note.reveal';
+      readonly sub: SubId;
+      readonly key: RowKey;
+      readonly reveal: boolean;
+    }
   | { readonly a: 'zap.invoice'; readonly as: Pubkey; readonly intent: ZapInvoiceInput }
   | { readonly a: 'lists.retry'; readonly as: Pubkey }
   /** Register a mounted private editor before allowing input; closed leases cannot hold a lock. */
