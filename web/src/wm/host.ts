@@ -3,6 +3,8 @@
 import { h } from '../shared/h.ts';
 import type { Settings } from '../shared/settings.ts';
 
+const TAB_MIN_PX = 88; // the narrowest a fixed-width tab gets: a few characters and its close button
+
 export type Host = {
   readonly bar: HTMLElement;
   readonly root: HTMLElement;
@@ -27,6 +29,9 @@ export function createHost(): Host {
       st.setProperty('--scale', String(s.uiScale));
       st.setProperty('--tab-scale', String(s.tabScale));
       st.setProperty('--tab-w', s.tabWidth ? `${s.tabWidth}px` : 'auto');
+      // One width for every tab; on a phone a bar without room narrows them all alike, to TAB_MIN_PX, then scrolls.
+      st.setProperty('--tab-flex', s.tabWidth ? `0 1 ${s.tabWidth}px` : 'none');
+      st.setProperty('--tab-min', s.tabWidth ? `${Math.min(s.tabWidth, TAB_MIN_PX)}px` : 'auto');
       st.setProperty('--text', `${s.textSize}px`);
       st.setProperty('--avatar', `${s.avatarSize}px`);
       st.setProperty('--media-h', `${s.mediaHeight}px`);

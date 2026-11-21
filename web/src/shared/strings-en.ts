@@ -212,7 +212,8 @@ export const en = {
   'set.tabScale': 'Layout: Tab bar scale',
   'set.tabScale.d': 'Size of the tab bars on top of the UI scale. 1.00 is the same as the rest.',
   'set.tabWidth': 'Layout: Tab width',
-  'set.tabWidth.d': 'Width of a tab in px. 0 fits each tab to its title.',
+  'set.tabWidth.d':
+    'Width of every tab in px; on a phone a full bar narrows them all alike. 0 fits each tab to its title.',
   'set.closeClicks': 'Layout: Clicks to close a tab',
   'set.closeClicks.d':
     'Clicks on × that close a tab. 1 closes at once. A middle click always closes at once.',

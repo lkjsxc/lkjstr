@@ -51,7 +51,9 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
 - Tab bars are 1.2 times the interface scale by default. The active tab has
   an indigo underline; every tab shows its close button; middle click closes.
   A full bar scrolls with the wheel, fades toward the side that hides more
-  and keeps the tab in front in view. A fixed tab width is a setting.
+  and keeps the tab in front in view. Every tab has one width (136px before the tab scale, a setting; 0 fits each
+  to its title): a long title ends in an ellipsis and its tooltip is the whole title. On a phone a full bar narrows
+  every tab alike, to 88px, before it scrolls.
 - The tile that keys go to is marked; `Alt+Shift` chords move between tabs
   and tiles, reopen (the closed-tab list survives a reload) and open. `X`
   closes the tab in front. `O` opens tab search over the tile: open tabs,

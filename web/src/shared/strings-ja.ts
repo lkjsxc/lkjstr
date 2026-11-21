@@ -214,7 +214,8 @@ export const ja: Record<keyof typeof en, string> = {
   'set.tabScale': 'レイアウト: タブバーの倍率',
   'set.tabScale.d': '全体の倍率に重ねて、タブバーだけを拡大します。1.00 でほかと同じ大きさです。',
   'set.tabWidth': 'レイアウト: タブの幅',
-  'set.tabWidth.d': 'タブの幅（px）。0 にすると題名に合わせます。',
+  'set.tabWidth.d':
+    'すべてのタブの幅（px）。スマートフォンで入りきらないときは同じだけ狭めます。0 にすると題名に合わせます。',
   'set.closeClicks': 'レイアウト: タブを閉じるクリック数',
   'set.closeClicks.d':
     '× を何回押すとタブが閉じるか。1 ならすぐ閉じます。中クリックはいつでもすぐ閉じます。',
