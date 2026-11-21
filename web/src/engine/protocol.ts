@@ -34,7 +34,8 @@
 /** 12: finite storage inspection; no storage mutation. */
 /** 13: engine-authorized public rendering snapshots, independent of the protected event store. */
 /** 14: bounded act chains, profile act context and unresolved notification states. */
-export const PROTOCOL_VERSION = 14;
+/** 15: bounded absolute cache windows and current follow-list provenance. */
+export const PROTOCOL_VERSION = 15;
 
 /** Chosen by the interface, unique among its open subscriptions. */
 export type SubId = string;
@@ -137,6 +138,7 @@ export type Query = {
 export type Anchor =
   | 'top'
   | { readonly key: RowKey }
+  | { readonly at: Millis }
   | { readonly month: Millis; readonly offset: number; readonly returnKey?: RowKey };
 
 // ───────────────────────────────────────── view models ─────────────────────────────────────────
@@ -1132,6 +1134,18 @@ export type FromEngine =
       readonly rows: readonly Row[];
       readonly atTop: boolean;
       readonly atBottom: boolean;
+    }
+  /** Since 15. Seating and independent coverage for the requested absolute time. */
+  | {
+      readonly t: 'timeWindow';
+      readonly sub: SubId;
+      readonly at: Millis;
+      readonly key?: RowKey;
+      readonly newer: 'cache-only' | 'unsupported';
+      readonly older: 'cache-only' | 'unsupported';
+      readonly followList?:
+        | { readonly state: 'unknown' }
+        | { readonly state: 'latest-verified'; readonly at: Millis; readonly id: string };
     }
   /** Changes to the current window, batched (at most one message per 50–100 ms per subscription). */
   | { readonly t: 'patch'; readonly sub: SubId; readonly ops: readonly PatchOp[] }

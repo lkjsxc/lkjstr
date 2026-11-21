@@ -52,6 +52,7 @@ pub mod settings;
 pub mod storage_inspection;
 mod thread;
 mod tick;
+mod time_window;
 pub use tick::TickPhase;
 pub mod upload;
 pub mod upload_jobs;
@@ -72,6 +73,7 @@ use std::collections::{BTreeMap, VecDeque};
 pub struct View {
     query: Query,
     anchor: Option<String>,
+    time_window: Option<time_window::Pivot>,
     reading: Option<String>,
     head_through: Option<String>,
     before: usize,

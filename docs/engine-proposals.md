@@ -191,6 +191,7 @@ The bounded resolution and representative policy follow [interface-acts.md](inte
 
 Relay Stats add optional firstEventMs, requestUses and readTimeouts: verified first-event latency, session REQ envelopes and bounded read timeout score.
 Inactive routes without retained transport observations report null.
+- Protocol 15 adds absolute `Anchor.at` and `timeWindow` for [cache windows and edge coverage](absolute-time-window.md).
 Mock-only `EngineConfig.mock.slow` signs one matching note late and delays its relay answers (the pending-UI fixture); the real engine ignores `mock`.
 
 ## Public signing timing

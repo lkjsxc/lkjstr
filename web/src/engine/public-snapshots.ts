@@ -250,6 +250,7 @@ export function publicSnapshots(inner: Transport): Transport {
             }
           } else if (
             anchor === 'top' ||
+            'at' in anchor ||
             ('key' in anchor && !view.held?.rows.some((row) => row.key === anchor.key))
           ) {
             view.held = undefined;

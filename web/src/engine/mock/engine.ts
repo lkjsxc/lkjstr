@@ -17,6 +17,7 @@ import { createSignerAuthMock } from './signer-auth.ts';
 import { mockStats } from './stats.ts';
 import { createStorageMock } from './storage.ts';
 import type { Sub } from './subscription.ts';
+import { seekTime } from './time-window.ts';
 import { timeKey } from './timeline.ts';
 import { createZapMock, MOCK_ZAP_EVIDENCE } from './zaps.ts';
 
@@ -208,6 +209,12 @@ export function createMockEngine(
       else if (msg.t === 'window') {
         const s = subs.get(msg.sub);
         if (!s) return;
+        if (msg.anchor !== 'top' && 'at' in msg.anchor) {
+          seekTime(s, msg.anchor.at, msg.before, msg.after, post);
+          core.timelines();
+          return;
+        }
+        s.timeRange = undefined;
         if (s.query.source === 'search') searchWindow(s, msg, core.now(), post);
         else {
           const key = timeKey(s.entries, msg.anchor, core.now());

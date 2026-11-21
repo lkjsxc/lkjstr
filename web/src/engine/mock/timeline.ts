@@ -60,6 +60,7 @@ export function timeKey(
 ): string | undefined {
   if (anchor === 'top') return;
   if ('key' in anchor) return anchor.key;
+  if ('at' in anchor) return;
   const data = timeline({ source: 'global' }, entries, 0, entries.length, now);
   return data.positions.find((p) => p.month === anchor.month && p.offset === anchor.offset)?.key;
 }

@@ -90,6 +90,16 @@ pub enum Output {
         at: Option<u64>,
         cached: bool,
     },
+    TimeWindow {
+        sub: String,
+        at: u64,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        key: Option<String>,
+        newer: &'static str,
+        older: &'static str,
+        #[serde(rename = "followList", skip_serializing_if = "Option::is_none")]
+        follow_list: Option<crate::engine::protocol::FollowList>,
+    },
     Heartbeat,
     GetPublicKey {
         req: String,

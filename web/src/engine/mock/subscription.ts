@@ -15,5 +15,6 @@ export type Sub = {
   anchor?: string;
   returnKey?: string;
   searchRange?: { before: number; after: number; retainAbove: boolean; headThrough?: string };
+  timeRange?: { at: number; before: number; after: number };
   liveRange?: { before: number; after: number };
 };

@@ -36,6 +36,7 @@ impl Engine {
                 if let Some(v) = self.views.get_mut(&sub) {
                     v.anchor = anchor;
                     v.head_through = None;
+                    v.time_window = None;
                     v.before = before.min(6000);
                     v.after = after.min(800);
                     self.advance_history(&sub);
@@ -53,10 +54,19 @@ impl Engine {
                     v.before = 0;
                     v.after = after.min(windows::HEAD_ROWS - 1);
                     v.head_through = Some(through);
+                    v.time_window = None;
                     self.advance_history(&sub);
                     self.replan(now);
                     self.render(&sub, true);
                 }
+            }
+            Input::WindowAtTime {
+                sub,
+                at,
+                before,
+                after,
+            } => {
+                self.window_at_time(&sub, at, before, after, now);
             }
             Input::CacheRead { sub, ids } => self.cache_read(&sub, &ids, now),
             Input::Reading { sub, id } => {

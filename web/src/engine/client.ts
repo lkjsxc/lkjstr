@@ -124,6 +124,7 @@ export function createEngine(transport: Transport): Engine {
       if (!privateRows.has(msg.sub)) learnRows(msg.rows);
       subs.get(msg.sub)?.rows(msg.rows, msg.atTop, msg.atBottom);
     } else if (msg.t === 'timeline') subs.get(msg.sub)?.timeline?.(msg.timeline);
+    else if (msg.t === 'timeWindow') subs.get(msg.sub)?.timeWindow?.(msg);
     else if (msg.t === 'patch') {
       for (const op of privateRows.has(msg.sub) ? [] : msg.ops) {
         if (op.op === 'update') learnRows([op.row]);
@@ -210,7 +211,11 @@ export function createEngine(transport: Transport): Engine {
             ...(headThrough ? { headThrough } : {}),
             // Protocol 3 retains up to 6000 cached rows already read. An 800-row moving window otherwise
             // discards the beginning while paging down, making a return to the top fetch and jump.
-            ...(anchor !== 'top' && before > 0 && !liveAbove && (info.get()?.version ?? 0) >= 3
+            ...(anchor !== 'top' &&
+            !('at' in anchor) &&
+            before > 0 &&
+            !liveAbove &&
+            (info.get()?.version ?? 0) >= 3
               ? { retainAbove: true }
               : {}),
           }),

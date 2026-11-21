@@ -111,6 +111,17 @@ impl Clients {
                 through,
                 after,
             },
+            Input::WindowAtTime {
+                sub,
+                at,
+                before,
+                after,
+            } => Input::WindowAtTime {
+                sub: ns(sub),
+                at,
+                before,
+                after,
+            },
             Input::Action {
                 req,
                 account,
@@ -201,6 +212,7 @@ impl Clients {
             Output::Rows { sub, .. }
             | Output::Patch { sub, .. }
             | Output::Fresh { sub, .. }
+            | Output::TimeWindow { sub, .. }
             | Output::Status { sub, .. }
             | Output::Diagnostics { sub, .. } => Some(sub.as_str()),
             Output::Sign { req, .. }
@@ -226,6 +238,7 @@ impl Clients {
                 Output::Rows { sub, .. }
                 | Output::Patch { sub, .. }
                 | Output::Fresh { sub, .. }
+                | Output::TimeWindow { sub, .. }
                 | Output::Status { sub, .. }
                 | Output::Diagnostics { sub, .. } => *sub = local,
                 Output::Sign { req, .. }

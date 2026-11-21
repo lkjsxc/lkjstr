@@ -1,4 +1,3 @@
-// Headless protocol harness. All traffic is loopback or intercepted fake relays.
 import { createHash } from 'node:crypto';
 import { loadavg } from 'node:os';
 import { fixtureProcess } from './engine-fixture-process.mjs';
@@ -13,6 +12,7 @@ import { uploadReview } from './engine-upload-review.mjs';
 import { uploadCancel } from './engine-upload-cancel.mjs';
 import { privateRevocation } from './engine-private-revoke.mjs';
 import { timeRail } from './engine-time-rail.mjs';
+import { absoluteTimeWindow } from './engine-time-window.mjs';
 import { rich } from './engine-rich.mjs';
 import { createServer } from 'node:http';
 import { readFile, writeFile, readdir, mkdir } from 'node:fs/promises';
@@ -102,11 +102,11 @@ try {
   const lines=createInterface({input:signer.stdout})[Symbol.asyncIterator]();
   const data=JSON.parse((await lines.next()).value);
   page.on('close',()=>signer.stdin.end());
-  // Select fixture fields without assuming a fixed fixture key.
   const all=[];const walk=(v)=>{if(v&&typeof v==='object'){if(v.id&&v.sig&&v.kind!==undefined)all.push(v);else Object.values(v).forEach(walk);}};walk(data);
   const note=all.find((e)=>e.kind===1);if(!note)throw new Error('fixture has no note');
   all.forEach((e)=>fake.add(e));
   await send({t:'test.relays',relays:[origin.replace('http:','ws:')]});
+  await absoluteTimeWindow({page,send,wait,check,note,signer,lines,fake,origin});
   await send({t:'heartbeat'});
   await send({t:'preview',sub:'global',ids:[]});
   await wait(()=>window.messages.some(m=>m.t==='heartbeat'));

@@ -20,6 +20,7 @@ impl Engine {
             View {
                 query,
                 anchor: None,
+                time_window: None,
                 reading: None,
                 head_through: None,
                 before: 0,

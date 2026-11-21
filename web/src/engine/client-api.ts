@@ -24,6 +24,7 @@ export type SubHandlers = {
   patch(ops: readonly PatchOp[]): void;
   fresh?(count: number, ownHead: boolean): void;
   timeline?(timeline: Timeline): void;
+  timeWindow?(window: Extract<FromEngine, { t: 'timeWindow' }>): void;
   state?(state: SubState): void;
 };
 export type Subscription = {

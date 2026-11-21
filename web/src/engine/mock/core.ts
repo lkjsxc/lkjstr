@@ -8,6 +8,7 @@ import { relays } from './relays.ts';
 import { searchPrefix } from './search.ts';
 import { refreshSearch, resyncSearch } from './search-window.ts';
 import type { Sub } from './subscription.ts';
+import { timeWindow } from './time-window.ts';
 import { sendTimelines } from './timeline.ts';
 import { createWorld, type MNote } from './world.ts';
 import { MOCK_ZAP_EVIDENCE } from './zaps.ts';
@@ -69,10 +70,15 @@ export function createCore(post: (msg: FromEngine) => void, now: () => number) {
       post({ t: 'status', connected, wanted: used.length, offline: false });
     },
     changed(id: string): void {
-      for (const s of subs.values())
+      for (const s of subs.values()) {
+        if (s.timeRange) {
+          if (s.entries.some((entry) => entry.key === id)) timeWindow(s, post);
+          continue;
+        }
         s.entries.forEach((e, i) => {
           if (e.key === id && inWindow(s, i)) push(s, { op: 'update', row: e.row() });
         });
+      }
     },
     arrived(n: MNote): void {
       for (const s of subs.values()) {
@@ -100,7 +106,8 @@ export function createCore(post: (msg: FromEngine) => void, now: () => number) {
         s.entries.splice(at, 0, e);
         queueTimeline();
         if (!s.windowed) continue;
-        if (search) refreshSearch(s, post);
+        if (s.timeRange) timeWindow(s, post);
+        else if (search) refreshSearch(s, post);
         else if (s.liveRange) liveWindow(s, post);
         else if (s.live) s.end++, push(s, { op: 'insert', before: first, rows: [e.row()] });
         else s.start++, s.end++, s.fresh++, sendFresh(s, post);
@@ -133,6 +140,10 @@ export function createCore(post: (msg: FromEngine) => void, now: () => number) {
         s.entries = next;
         queueTimeline();
         if (!s.windowed) continue;
+        if (s.timeRange) {
+          timeWindow(s, post);
+          continue;
+        }
         if (s.liveRange) {
           liveWindow(s, post);
           continue;

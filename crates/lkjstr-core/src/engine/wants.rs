@@ -103,7 +103,7 @@ fn requests(
     if q.source == Source::People {
         return super::hydration::people(store, q, private);
     }
-    let mut result = vec![query::filter(store, q)];
+    let mut result = super::time_window::head(store, v);
     if q.source == Source::TheirHome {
         result.push(NostrFilter {
             kinds: Some(vec![3]),
@@ -135,7 +135,7 @@ fn requests(
             });
         }
     }
-    let events = super::list_events::events(store, q, private);
+    let events = super::time_window::events(store, v, private);
     let selected = super::windows::selection(store, network, v, enabled, &events, private);
     // Refill can cross the whole retained store. Hidden rows must not turn that
     // scan into count streams or consume the reference collector's row budget.

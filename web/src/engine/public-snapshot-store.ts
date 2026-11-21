@@ -70,7 +70,7 @@ function decode(raw: string | null): PublicSnapshot | undefined {
 }
 
 export function readPublicSnapshot(identity: string, anchor: Anchor): PublicSnapshot | undefined {
-  if (identity.length > 8192 || (typeof anchor === 'object' && 'month' in anchor)) return;
+  if (identity.length > 8192 || (typeof anchor === 'object' && !('key' in anchor))) return;
   try {
     const store = backend();
     const top = anchor === 'top';

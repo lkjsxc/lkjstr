@@ -1,5 +1,5 @@
 //! Translate window intents and keep projected edges consistent with their rows.
-use super::{Anchor, Session};
+use super::{Anchor, Query, Session};
 use crate::engine::{Engine, protocol::Input, windows::HEAD_ROWS};
 use serde_json::Value;
 
@@ -23,6 +23,22 @@ impl Session {
             .queries
             .get(&sub)
             .ok_or((None, "unknown-subscription"))?;
+        if let Anchor::Time { at } = request.anchor {
+            if Query::convert(query)
+                .as_ref()
+                .is_some_and(crate::engine::time_window::supported)
+            {
+                self.windows.remove(&sub);
+                self.return_keys.remove(&sub);
+                self.head_tails.remove(&sub);
+            }
+            return Ok(vec![Input::WindowAtTime {
+                sub,
+                at,
+                before: request.before,
+                after: request.after,
+            }]);
+        }
         let account = query.account.as_deref();
         let tail = request.head_through.filter(|key| {
             matches!(request.anchor, Anchor::Top(_))
@@ -58,6 +74,7 @@ impl Session {
         }
         let anchor = match request.anchor {
             Anchor::Top(_) => None,
+            Anchor::Time { .. } => unreachable!(),
             Anchor::Key { key } => self.search_header_anchor(&sub, &key).unwrap_or(Some(key)),
             Anchor::Month {
                 month,

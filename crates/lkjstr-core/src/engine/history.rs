@@ -3,20 +3,21 @@ use super::{Engine, View, network::Network, protocol::Source, query, windows};
 use crate::store::Store;
 
 fn paged(v: &View) -> bool {
-    matches!(
-        v.query.source,
-        Source::Thread
-            | Source::Followers
-            | Source::Channel
-            | Source::Global
-            | Source::Home
-            | Source::TheirHome
-            | Source::Profile
-            | Source::Search
-            | Source::Hashtag
-            | Source::Relay
-            | Source::Notifications
-    )
+    v.time_window.is_none()
+        && matches!(
+            v.query.source,
+            Source::Thread
+                | Source::Followers
+                | Source::Channel
+                | Source::Global
+                | Source::Home
+                | Source::TheirHome
+                | Source::Profile
+                | Source::Search
+                | Source::Hashtag
+                | Source::Relay
+                | Source::Notifications
+        )
 }
 pub(super) fn notification_filter(
     store: &Store,
@@ -32,6 +33,9 @@ pub(super) fn notification_filter(
     Some(query::filter(store, &news))
 }
 pub(super) fn exhausted(network: &Network, store: &Store, v: &View) -> bool {
+    if v.time_window.is_some() {
+        return false;
+    }
     query::signed_out(&v.query)
         || !paged(v)
         || (!network.verifying

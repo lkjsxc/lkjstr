@@ -51,6 +51,8 @@ pub struct Row {
     pub content: Vec<Segment>,
     pub reply: Option<Context>,
     pub reposts: Vec<Author>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub reposted_at: Option<u64>,
     pub warning: Option<String>,
     pub counts: Counts,
     pub reactions: Vec<Reaction>,

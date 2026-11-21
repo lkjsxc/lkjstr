@@ -98,16 +98,7 @@ pub(super) fn note(row: &Row, store: &Store, account: Option<&str>) -> Value {
         v["replyTo"] = json!({"id":parent.id,"author":author(&crate::engine::rows::author(store,&parent.pubkey)),"excerpt":parent.content.lines().next().unwrap_or("").chars().take(160).collect::<String>()});
     }
     if !row.reposts.is_empty() {
-        let at = store
-            .referencing(&row.id)
-            .iter()
-            .filter(|e| {
-                matches!(e.kind, 6 | 16)
-                    && crate::engine::acts::target(e).as_deref() == Some(&row.id)
-            })
-            .map(|e| e.created_at)
-            .max()
-            .unwrap_or(row.created_at);
+        let at = row.reposted_at.unwrap_or(row.created_at);
         v["repostedBy"] = json!({"actors":row.reposts.iter().take(3).map(author).collect::<Vec<_>>(),"others":row.reposts.len().saturating_sub(3),"at":at.saturating_mul(1000)});
     }
     v

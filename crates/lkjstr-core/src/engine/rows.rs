@@ -138,13 +138,12 @@ pub fn row_with_lists(
         r.count += 1;
         r.mine |= account == Some(e.pubkey.as_str());
     }
-    let mut reposts = store
-        .referencing(&event.id)
-        .into_iter()
-        .filter(|e| {
-            matches!(e.kind, 6 | 16) && super::acts::target(e).as_deref() == Some(&event.id)
+    let mut reposted_at = None;
+    let mut reposts = super::acts::reposts(store, &event.id)
+        .map(|repost| {
+            reposted_at = reposted_at.max(Some(repost.created_at));
+            author(store, &repost.pubkey)
         })
-        .map(|e| author(store, &e.pubkey))
         .collect::<Vec<_>>();
     reposts.sort_by(|a, b| a.pubkey.cmp(&b.pubkey));
     reposts.dedup_by(|a, b| a.pubkey == b.pubkey);
@@ -164,6 +163,7 @@ pub fn row_with_lists(
             id,
         }),
         reposts,
+        reposted_at,
         warning: content_warning_reason(event),
         counts: Counts {
             replies,

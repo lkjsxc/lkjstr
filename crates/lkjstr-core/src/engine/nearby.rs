@@ -9,16 +9,18 @@ impl Engine {
     pub(super) fn nearby_wants(&self) -> Vec<(String, NostrFilter, Query)> {
         let mut wants = Vec::new();
         for (sub, view) in self.views.iter().filter(|(_, view)| view.visible) {
-            if !matches!(
-                view.query.source,
-                Source::Home
-                    | Source::TheirHome
-                    | Source::Global
-                    | Source::Profile
-                    | Source::Hashtag
-                    | Source::Notifications
-                    | Source::Thread
-            ) {
+            if view.time_window.is_some()
+                || !matches!(
+                    view.query.source,
+                    Source::Home
+                        | Source::TheirHome
+                        | Source::Global
+                        | Source::Profile
+                        | Source::Hashtag
+                        | Source::Notifications
+                        | Source::Thread
+                )
+            {
                 continue;
             }
             let head = super::query::filter(&self.store, &view.query);

@@ -106,6 +106,13 @@ pub(super) fn representatives(store: &Store, events: Vec<Event>) -> Vec<Event> {
     out.sort_by(|a, b| (b.created_at, &b.id).cmp(&(a.created_at, &a.id)));
     out
 }
+pub(super) fn reposts(store: &Store, id: &str) -> impl Iterator<Item = Event> {
+    store
+        .referencing(id)
+        .into_iter()
+        .filter(move |event| matches!(event.kind, 6 | 16) && target(event).as_deref() == Some(id))
+}
+
 pub(super) fn matches_terminal(store: &Store, event: &NostrEvent, query: &Query) -> bool {
     let chain = resolve(store, event);
     let Some(note) = chain.note else {

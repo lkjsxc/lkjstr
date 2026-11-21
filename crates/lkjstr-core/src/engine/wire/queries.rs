@@ -34,6 +34,9 @@ pub enum Anchor {
     Key {
         key: String,
     },
+    Time {
+        at: u64,
+    },
     Month {
         month: u64,
         offset: usize,

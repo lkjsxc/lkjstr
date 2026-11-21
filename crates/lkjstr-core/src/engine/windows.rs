@@ -5,6 +5,9 @@ use super::{
 };
 #[path = "window_projection.rs"]
 pub(super) mod projection;
+#[path = "window_selection.rs"]
+mod selection;
+pub(super) use selection::{reason, selection};
 
 pub(super) const HEAD_ROWS: usize = 6800;
 
@@ -31,7 +34,7 @@ impl Engine {
             });
             return;
         }
-        let events = super::list_events::events(&self.store, &v.query, &self.private_lists);
+        let events = super::time_window::events(&self.store, v, &self.private_lists);
         let selected = selection(
             &self.store,
             &self.network,
@@ -41,8 +44,16 @@ impl Engine {
             &self.private_lists,
         );
         let (start, end) = (selected.raw.start, selected.raw.end);
-        let (fresh, own_head) = projection::fresh(&self.store, &v.query, &events[..start]);
+        let (fresh, own_head) = if v.time_window.is_some() {
+            (0, false)
+        } else {
+            projection::fresh(&self.store, &v.query, &events[..start])
+        };
         let window = &events[start..end];
+        let order = v
+            .time_window
+            .as_ref()
+            .map(|_| super::time_window::Order::new(&self.store, &v.query));
         let items: Vec<_> = window
             .iter()
             .zip(selected.held)
@@ -58,6 +69,9 @@ impl Engine {
                 r.hidden_reason =
                     query::hidden_with_lists(&self.store, &v.query, e, &self.private_lists)
                         .or(r.hidden_reason);
+                if let Some(order) = &order {
+                    order.project(&mut r);
+                }
                 r
             })
             .collect();
@@ -67,7 +81,7 @@ impl Engine {
             self.outgoing.push(Output::Rows {
                 sub: sub.into(),
                 items: items.clone(),
-                at_top: fresh == 0,
+                at_top: fresh == 0 && v.time_window.is_none(),
                 at_bottom,
             });
         } else {
@@ -124,6 +138,10 @@ impl Engine {
             count: fresh,
             own_head,
         });
+        if let Some(pivot) = &mut v.time_window {
+            let follow_list = super::time_window::follow_list(&self.store, &v.query);
+            pivot.report(sub, &items, follow_list, full, &mut self.outgoing);
+        }
         v.at_bottom = at_bottom;
         v.rows = items;
         if query::signed_out(&v.query) {
@@ -134,93 +152,5 @@ impl Engine {
                 answered_relays: 0,
             });
         }
-    }
-}
-
-fn plan(
-    store: &crate::store::Store,
-    v: &super::View,
-    events: &[crate::store::Event],
-) -> (usize, usize) {
-    if let Some(tail) = &v.head_through {
-        let through = events
-            .iter()
-            .position(|event| super::rich::anchored(store, event, tail, &v.query))
-            .map_or(0, |at| at + 1);
-        return (0, through.max(v.after + 1).min(HEAD_ROWS));
-    }
-    let at = v
-        .anchor
-        .as_ref()
-        .and_then(|id| {
-            events
-                .iter()
-                .position(|e| super::rich::anchored(store, e, id, &v.query))
-        })
-        .unwrap_or(0);
-    let mut start = at;
-    let mut above = 0;
-    while start > 0 && above < v.before {
-        start -= 1;
-        if !projection::unavailable(store, &v.query, &events[start]) {
-            above += 1;
-        }
-    }
-    // Keep adjacent invisible targets owned when the first note is anchored.
-    while start > 0 && projection::unavailable(store, &v.query, &events[start - 1]) {
-        start -= 1;
-    }
-    (start, above.saturating_add(v.after).saturating_add(1))
-}
-
-/// Refill from raw rows so every retained anchor can reach older cached notes.
-/// Hydration and history use this same raw span, including withheld authors.
-pub(super) fn selection(
-    store: &crate::store::Store,
-    network: &super::network::Network,
-    v: &super::View,
-    enabled: bool,
-    events: &[crate::store::Event],
-    private: &super::settings::PrivateLists,
-) -> Selection {
-    let (start, quota) = plan(store, v, events);
-    let held = if enabled && v.query.account.is_none() && v.query.source == Source::Global {
-        super::global::classify_window(
-            store,
-            &events[start..],
-            |p| network.profile_absent(p),
-            |e| projection::unavailable(store, &v.query, e),
-            quota,
-        )
-    } else {
-        let mut visible = 0;
-        events[start..]
-            .iter()
-            .scan((), |_, event| {
-                if visible >= quota {
-                    return None;
-                }
-                // Person membership is independent of contact-list payloads and note mutes.
-                let reason = if !super::acts::notification_visible(store, &v.query, event)
-                    || (v.query.source != Source::Followers
-                        && query::hidden_with_lists(store, &v.query, event, private).is_some())
-                {
-                    Some(super::global::Held::Filtered)
-                } else if projection::unavailable(store, &v.query, event) {
-                    Some(super::global::Held::UnavailableRepost)
-                } else {
-                    None
-                };
-                if reason.is_none() {
-                    visible += 1;
-                }
-                Some(reason)
-            })
-            .collect()
-    };
-    Selection {
-        raw: start..start + held.len(),
-        held,
-        quota,
     }
 }
