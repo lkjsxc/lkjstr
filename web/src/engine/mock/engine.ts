@@ -30,17 +30,18 @@ export type MockEngine = {
 export type Core = ReturnType<typeof createCore>;
 
 export function createMockEngine(
-  post: (msg: FromEngine) => void,
+  emit: (msg: FromEngine) => void,
   now = Date.now,
   boot: { accountError?: 'internal' } = {},
 ): MockEngine {
   let zapObserve: ((msg: FromEngine) => void) | undefined;
   let authObserve: ((msg: FromEngine) => void) | undefined;
-  const core: Core = createCore((msg) => {
+  const post = (msg: FromEngine): void => {
     zapObserve?.(msg);
     authObserve?.(msg);
-    post(projectHidden(msg, 'sub' in msg ? core.subs.get(msg.sub)?.revealed : undefined));
-  }, now);
+    emit(projectHidden(msg, 'sub' in msg ? core.subs.get(msg.sub)?.revealed : undefined));
+  };
+  const core: Core = createCore(post, now);
   const { world, subs, later } = core;
   const act = createActions(core);
   const authorization = createSignerAuthMock(post, now);

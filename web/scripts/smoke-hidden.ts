@@ -131,16 +131,35 @@ export async function hiddenChecks(open: Open, fact: Check): Promise<void> {
         Math.abs(now.top - was.top) <= 2,
       { was, now },
     );
+    const shownId = await shown.getAttribute('data-note');
+    const saved = await shown.evaluate((node) => {
+      const id = (node as HTMLElement).dataset.note;
+      const instance = (node as HTMLElement).dataset.instance;
+      const state = JSON.parse(localStorage.getItem(`lkjstr:view:${instance}`) ?? '{}');
+      return (
+        state.reader?.some(
+          ([key, value]: [string, { shown?: boolean }]) => key === id && value.shown === true,
+        ) === true
+      );
+    });
     await page.reload();
     await page.waitForSelector('.note');
-    const back = page.locator(`${list} .ctx.hshown`).first();
-    fact(`${on}: a reload keeps a shown note shown`, await reach(page, back));
+    const slot = page.locator(`${list} .note[data-key="${shownId}"]`);
+    if (!(await slot.count())) await reach(page, slot);
+    const back = slot.locator('.ctx.hshown');
+    const replayed = await back.waitFor({ timeout: 4500 }).then(
+      () => true,
+      () => false,
+    );
+    fact(`${on}: a reload keeps a shown note shown`, saved && replayed, {
+      saved,
+      replayed,
+      slot: await slot.count(),
+    });
+    if (!replayed) await slot.getByRole('button', { name: 'Show' }).click();
     await back.getByRole('button', { name: 'Hide' }).click();
     await lineOf(page, 'From someone you muted.').waitFor();
-    fact(
-      `${on}: Hide puts the line back`,
-      (await page.locator(`${list} .ctx.hshown`).count()) === 0,
-    );
+    fact(`${on}: Hide puts the line back`, (await back.count()) === 0);
     // The keys pass over the line as over a divider.
     await page.locator(list).evaluate((v) => (v.scrollTop = 0));
     let onLine = 0;
