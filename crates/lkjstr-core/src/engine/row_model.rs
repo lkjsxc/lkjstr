@@ -57,7 +57,7 @@ pub struct Row {
     pub counts: Counts,
     pub reactions: Vec<Reaction>,
     pub own: Own,
-    pub hidden_reason: Option<String>,
+    pub hidden_reason: Option<super::visibility::Reason>,
 }
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct Context {

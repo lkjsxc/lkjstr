@@ -41,9 +41,28 @@ export function showFeedState(
   if (key !== 'error.internal' && empty && signIn) status.replaceChildren(signIn);
   else if (key === 'feed.empty' && hasDraft) status.replaceChildren();
   else status.textContent = key ? t(key) : '';
+  status.append(...unshownLines(state));
   status.title = state?.lastArrival
     ? t('feed.lastArrival', { time: fullTime(state.lastArrival) })
     : '';
+}
+const UNSHOWN = ['invalid', 'pruned', 'undelivered', 'unavailable-repost'] as const;
+const COUNTED = new Set<string>(['invalid', 'unavailable-repost']);
+/** One quiet line per cause the engine reported for events that never became rows (interface-hidden.md H4): a number
+ * only when it is exact, and nothing for a cause that was not reported. */
+export function unshownLines(state: SubState | undefined): HTMLElement[] {
+  return UNSHOWN.flatMap((reason) => {
+    const u = state?.unshown?.find((x) => x.reason === reason);
+    if (!u || (u.exact && u.count === 0)) return [];
+    const some = COUNTED.has(reason) && !(u.exact && u.count !== undefined);
+    return [
+      h(
+        'div',
+        { class: 'unshown' },
+        t(`feed.unshown.${reason}${some ? 'Some' : ''}` as Key, { n: u.count ?? 0 }),
+      ),
+    ];
+  });
 }
 export function feedState(
   rows: readonly ListRow[],

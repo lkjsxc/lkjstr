@@ -29,6 +29,10 @@ impl PendingEvents {
     pub fn batch(&self) -> Vec<NostrEvent> {
         self.events.iter().take(BATCH).cloned().collect()
     }
+    pub(crate) fn discard_expired(&mut self, store: &crate::store::Store) {
+        self.events
+            .retain(|event| !store.verified_expired(&event.id));
+    }
     pub fn committed(&mut self, batch: &[NostrEvent]) {
         let ids: HashSet<_> = batch.iter().map(|event| &event.id).collect();
         self.events.retain(|event| {

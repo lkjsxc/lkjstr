@@ -9,7 +9,7 @@ use serde_json::{Value, json};
 use std::collections::BTreeSet;
 
 #[test]
-fn refilled_windows_request_counts_and_references_only_for_visible_notes() {
+fn windows_request_counts_and_references_only_for_uncovered_notes() {
     let mut e = Engine::new();
     let visible_ref = "a".repeat(64);
     let hidden_ref = "b".repeat(64);
@@ -37,6 +37,15 @@ fn refilled_windows_request_counts_and_references_only_for_visible_notes() {
             account: Some(owner),
             ..Default::default()
         },
+    );
+    e.input(
+        Input::Window {
+            sub: "feed".into(),
+            anchor: Some(visible.id.clone()),
+            before: 20,
+            after: 20,
+        },
+        1,
     );
     e.network.connected(RELAY, 1);
     let mut sent = Vec::new();
@@ -82,7 +91,7 @@ fn refilled_windows_request_counts_and_references_only_for_visible_notes() {
         .collect();
     assert!(
         ids.contains(visible_ref.as_str()),
-        "refill must hydrate the visible quote beyond 301 hidden rows"
+        "a window containing the visible note must hydrate its quote"
     );
     assert!(
         !ids.contains(hidden_ref.as_str()),

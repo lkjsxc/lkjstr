@@ -4,15 +4,31 @@
 // far more wire bandwidth than retaining that burst until verification runs.
 const MAX_VERIFY_QUEUE_BYTES: usize = 32 * 1024 * 1024;
 use super::*;
+
+pub(super) struct QueuedEvent {
+    pub(super) relay: String,
+    pub(super) event: NostrEvent,
+    pub(super) wire: Option<String>,
+    pub(super) sequence: u64,
+}
 impl Engine {
     pub fn enqueue(&mut self, relay: String, event: NostrEvent) {
-        if let Some(known) = self.store.get(&event.id)
-            && *known == event
-        {
+        let wire = self
+            .network
+            .delivery_wire
+            .take()
+            .filter(|(url, _)| url == &relay)
+            .map(|(_, wire)| wire);
+        let known = self.store.get(&event.id).filter(|known| **known == event);
+        if let Some(known) = &known {
             self.network
-                .observe_verified(&relay, &known, self.network.now);
+                .observe_verified(&relay, known, self.network.now);
         }
-        if self.store.get(&event.id).is_some() || self.queue.iter().any(|(_, e)| *e == event) {
+        if known.is_some() || self.queue.iter().any(|queued| queued.event == event) {
+            self.network.repeated_deliveries = self
+                .network
+                .repeated_deliveries
+                .saturating_add(u64::from(relay.starts_with("ws")));
             if let Some(r) = self.network.relays.get_mut(&relay) {
                 r.duplicates += 1;
             }
@@ -27,11 +43,18 @@ impl Engine {
             return;
         }
         self.queue_bytes += bytes;
+        self.delivery_sequence = self.delivery_sequence.saturating_add(1);
+        let entry = QueuedEvent {
+            relay,
+            event,
+            wire,
+            sequence: self.delivery_sequence,
+        };
         // Profiles requested for visible authors precede bulk note verification.
-        if event.kind == 0 {
-            self.queue.push_front((relay, event));
+        if entry.event.kind == 0 {
+            self.queue.push_front(entry);
         } else {
-            self.queue.push_back((relay, event));
+            self.queue.push_back(entry);
         }
         self.network.verifying = true;
         self.metrics.verify_queue_peak = self.metrics.verify_queue_peak.max(self.queue.len());

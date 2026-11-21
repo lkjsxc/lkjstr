@@ -11,6 +11,8 @@ export type Sub = {
   windowed: boolean;
   fresh: number;
   ops: PatchOp[];
+  /** At most 256 local choices, released with the subscription. */
+  revealed?: Set<string>;
   timeline?: string;
   anchor?: string;
   returnKey?: string;

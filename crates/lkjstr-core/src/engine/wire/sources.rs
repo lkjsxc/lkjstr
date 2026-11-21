@@ -50,20 +50,19 @@ impl Session {
             }).collect()).unwrap_or_default(),
             "relays"=>e.relay_rows(),
             "diagnostics"=>{
-                let facts=json!({"events":store.len(),"eventPayloadBytes":store.payload_bytes(),"verified":e.verified,"rejected":e.rejected,"dropped":e.dropped,"persistenceQueue":e.pending.len(),"timings":e.metrics,"relayStatistics":e.network.stats(),"protocol":PROTOCOL_VERSION});
+                let facts=json!({"events":store.len(),"eventPayloadBytes":store.payload_bytes(),"verified":e.verified,"rejected":e.rejected,"dropped":e.dropped,"persistenceQueue":e.pending.len(),"timings":e.metrics,"visibilityEvidence":e.visibility_diagnostics(),"relayStatistics":e.network.stats(),"protocol":PROTOCOL_VERSION});
                 facts.as_object().map(|m|m.iter().map(|(k,v)|json!({"kind":"info","key":k,"label":k,"value":v.to_string()})).collect()).unwrap_or_default()
             }
             "media-servers"=>q.account.as_deref().map(|a|e.upload_servers(a).into_iter().map(|url|e.server_row(&url)).collect()).unwrap_or_default(),
             "emoji"=>crate::engine::emoji::rows(store,q.account.as_deref()).into_iter().map(emoji).collect(),
             "notifications"=>super::notifications::notifications(q,e),
-            "profile" if converted.as_ref().is_some_and(crate::engine::acts::activity) => super::acts::profile(q,e),
-            "bookmarks"=>converted.as_ref().map(|q|crate::engine::list_events::events(store,q,&e.private_lists).iter().map(|event|super::note::note(&rows::row_with_lists(store,event,q.account.as_deref(),0,&e.private_lists),store,q.account.as_deref())).collect()).unwrap_or_default(),
+            "profile" if converted.as_ref().is_some_and(crate::engine::acts::activity) => super::acts::profile(self,sub,q,e),
+            "bookmarks"=>converted.as_ref().map(|q|crate::engine::list_events::events(store,q,&e.private_lists).iter().map(|event|self.project_event(sub,e,q,event,None)).collect()).unwrap_or_default(),
             "list"=>{
                 q.convert().map(|converted|query::events(store,&converted).into_iter().next().map(|event|crate::engine::settings::list_tags_for(&event,&e.private_lists,q.account.as_deref()).iter().filter(|t|t.first().is_some_and(|k|k=="p")).filter_map(|t|t.get(1)).filter(|p|lkjstr_protocol::is_pubkey(p)).map(|p|person(e,p,q.account.as_deref(), weights.person(p))).collect()).unwrap_or_default()).unwrap_or_default()
             }
             _ => converted.as_ref().map(|converted| {
                 query::events(store, converted).into_iter()
-                    .filter(|event| query::hidden_with_lists(store, converted, event, &e.private_lists).is_none())
                     .filter_map(|event| {
                         let position = match &thread {
                             Some(positions) => Some(*positions.get(&event.id)?),
@@ -71,8 +70,7 @@ impl Session {
                         };
                         let wrapper = event.kind == 6 || (q.source == "profile" && matches!(q.show.as_deref(), Some("reposts" | "reactions")));
                         let shown = if wrapper { crate::engine::acts::target(&event).and_then(|id| store.get(&id))? } else { event.clone() };
-                        let row = rows::row_with_lists(store, &shown, q.account.as_deref(), 0, &e.private_lists);
-                        let mut value = super::note::note(&row, store, q.account.as_deref());
+                        let mut value = self.project_event(sub, e, converted, &shown, None);
                         if wrapper && q.show.as_deref() == Some("reposts") {
                             value["repostedBy"] = json!({"actors":[super::note::author(&rows::author(store,&event.pubkey))],"others":0,"at":event.created_at.saturating_mul(1000)});
                         }
@@ -115,9 +113,10 @@ impl Session {
         for row in &mut out {
             super::quote_state::settle(row, e, q.account.as_deref());
             super::quote_state::unconfirmed(row, e, q.account.as_deref());
-            if row["id"]
-                .as_str()
-                .is_some_and(|id| e.network.pending_event(id))
+            if !row["hidden"].is_object()
+                && row["id"]
+                    .as_str()
+                    .is_some_and(|id| e.network.pending_event(id))
             {
                 row["pending"] = json!(true);
                 if row["id"]

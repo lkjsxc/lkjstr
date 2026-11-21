@@ -72,7 +72,10 @@ fn exact_verified_duplicates_advance_resume_without_usefulness_credit() {
         assert_eq!(duplicates, 1);
     }
     assert_eq!(e.network.relays[R].useful, 0);
-    assert_eq!(e.network.relays[R].duplicates, 4);
+    assert_eq!(e.network.relays[R].duplicates, 3);
+    e.tick(BASE_MS + 300);
+    assert_eq!(e.rejected, 1, "an altered copy is a verification rejection");
+    assert_eq!(e.store.get(&notes[2].id).as_deref(), Some(&notes[2]));
     println!(
         "verified-copy resume REQs=3 connections=1 verified_notes=3 duplicate_replay={duplicates} boundary_overlap_seconds=2"
     );

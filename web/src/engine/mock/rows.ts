@@ -6,6 +6,7 @@ import { banner } from './art.ts';
 import { HANDLERS } from './client-handlers.ts';
 import type { ProfileAct } from './fixtures-acts.ts';
 import { previewFixtures } from './fixtures-previews.ts';
+import { hiddenOf } from './hidden.ts';
 import { EMOJI, FOLLOWERS, type Person, SELF } from './people.ts';
 import type { MNote, World } from './world.ts';
 
@@ -25,7 +26,7 @@ export function reactionsOf(n: MNote): Reaction[] {
 function quoteOf(w: World, id: string): Quote {
   const q = w.byId.get(id);
   if (!q) return { state: 'missing', id };
-  if (w.isMuted(q)) return { state: 'muted', id };
+  if (q.hidden || w.isMuted(q)) return { state: 'muted', id };
   return {
     state: 'ok',
     id,
@@ -63,7 +64,7 @@ export function noteRow(w: World, n: MNote, o: RowOpts): NoteRow {
     media: n.media,
     quotes: n.quote ? [quoteOf(w, n.quote)] : [],
     replyTo:
-      parent && !o.thread
+      parent && !parent.hidden && !o.thread
         ? { id: parent.id, author: parent.by.author, excerpt: firstLine(parent.text) }
         : undefined,
     repostedBy:
@@ -94,7 +95,7 @@ export function noteRow(w: World, n: MNote, o: RowOpts): NoteRow {
       bookmarked: w.state.bookmarks.has(n.id),
       own: n.by.author.pubkey === o.me,
     },
-    hidden: n.hidden ? { reason: n.hidden } : undefined,
+    ...hiddenOf(n.hidden),
     thread: o.thread,
     client: n.client,
     clientAddress: n.client ? HANDLERS[n.client]?.address : undefined,

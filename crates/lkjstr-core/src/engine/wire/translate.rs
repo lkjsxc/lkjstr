@@ -91,7 +91,11 @@ impl Session {
                 self.private_states.remove(&sub);
                 self.cache_release(&sub);
                 self.searches.remove(&sub);
+                self.reveals.remove(&sub);
+                self.visibility_states.remove(&sub);
+                self.visibility_navigation.remove(&sub);
                 self.head_tails.remove(&sub);
+                self.delivered.remove(&sub);
                 self.queries.insert(sub.clone(), *query);
                 vec![p::Input::OpenVisible {
                     sub,
@@ -105,6 +109,9 @@ impl Session {
                 self.private_states.remove(&sub);
                 self.cache_release(&sub);
                 self.searches.remove(&sub);
+                self.reveals.remove(&sub);
+                self.visibility_states.remove(&sub);
+                self.visibility_navigation.remove(&sub);
                 self.delivered.remove(&sub);
                 self.windows.remove(&sub);
                 self.head_tails.remove(&sub);

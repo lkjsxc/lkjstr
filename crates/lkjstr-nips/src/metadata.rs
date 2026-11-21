@@ -72,7 +72,11 @@ pub(crate) fn decimal(value: &str) -> Result<u64> {
 }
 /// NIP-40 expiration timestamp. Ambiguous or malformed tags are errors.
 pub fn expiration(event: &UnsignedEvent) -> Result<Option<u64>> {
-    unique(&event.tags, "expiration")?.map(decimal).transpose()
+    expiration_tags(&event.tags)
+}
+/// Parse the same NIP-40 field from an already verified event model.
+pub fn expiration_tags(tags: &[Vec<String>]) -> Result<Option<u64>> {
+    unique(tags, "expiration")?.map(decimal).transpose()
 }
 /// Expired at or after the expiration timestamp. Clock is supplied by the host.
 pub fn is_expired(event: &UnsignedEvent, now: u64) -> Result<bool> {

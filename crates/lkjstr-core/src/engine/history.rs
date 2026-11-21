@@ -163,7 +163,12 @@ impl Engine {
                     .saturating_add(1)
                     .min(windows::HEAD_ROWS);
                 let filtered = selected.held.iter().any(Option::is_some)
-                    && selected.held.iter().filter(|h| h.is_none()).count() < selected.quota;
+                    && selected
+                        .held
+                        .iter()
+                        .filter(|h| super::global::has_slot(**h))
+                        .count()
+                        < selected.quota;
                 (selected.raw.end == events.len() && (events.len() < needed || filtered))
                     .then(|| sub.clone())
             })

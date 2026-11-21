@@ -191,7 +191,7 @@ fn side<'a>(
                 return None;
             }
             let reason = classify(event);
-            remaining -= usize::from(reason.is_none());
+            remaining -= usize::from(super::global::has_slot(reason));
             Some(reason)
         })
         .collect()

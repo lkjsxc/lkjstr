@@ -252,6 +252,16 @@ export function createEngine(transport: Transport): Engine {
             : { t: 'result', req: 'private-lock', ok: false, error: { code: 'internal' } },
         );
     },
+    async reveal(from, key, on) {
+      let scope: [string, HTMLElement] | undefined;
+      for (const [sub, owner] of owners) {
+        if (visible.has(sub) && owner.contains(from) && (!scope || scope[1].contains(owner)))
+          scope = [sub, owner];
+      }
+      return scope
+        ? (await actions.act({ a: 'note.reveal', sub: scope[0], key, reveal: on })).ok
+        : false;
+    },
     stats() {
       const req = `q${++serial}`;
       return new Promise((done) => {

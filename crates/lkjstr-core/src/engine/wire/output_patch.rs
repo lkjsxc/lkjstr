@@ -12,8 +12,9 @@ impl Session {
         engine: &Engine,
     ) -> Vec<Output> {
         let previous = self.delivered.remove(&sub).unwrap_or_default();
+        self.evidence_of_pruning(&sub, &previous, engine);
         // These sources own a separate projection and order. Translate it once.
-        let next = if self.projects_source(&sub) {
+        let mut next = if self.projects_source(&sub) {
             self.source_rows(&sub, engine)
         } else {
             let retained: BTreeMap<_, _> = previous
@@ -30,6 +31,7 @@ impl Session {
             }
             join_rows(order, &retained, &mut updated)
         };
+        super::visibility_terminal::retain_terminal(&previous, &mut next, engine, None, true);
         if super::list_edges::finite(
             self.queries
                 .get(&sub)

@@ -23,13 +23,18 @@ impl Network {
         on_acceptance: impl FnOnce(&str),
     ) -> Option<NostrEvent> {
         self.now = now;
+        self.delivery_wire = None;
         if text.len() > 1024 * 1024 {
+            self.invalid_frames = self.invalid_frames.saturating_add(1);
             return None;
         }
         if let Some(r) = self.relays.get_mut(relay) {
             r.bytes_in += text.len() as u64;
         }
-        let msg = lkjstr_protocol::parse_relay_message(text, None).ok()?;
+        let Ok(msg) = lkjstr_protocol::parse_relay_message(text, None) else {
+            self.invalid_frames = self.invalid_frames.saturating_add(1);
+            return None;
+        };
         if let Some(r) = self.relays.get_mut(relay) {
             r.last_rx = now;
         }
@@ -59,8 +64,10 @@ impl Network {
                     }
                 }
                 if accepted {
+                    self.delivery_wire = Some((relay.into(), subscription_id));
                     return Some(event);
                 }
+                self.unmatched_frames = self.unmatched_frames.saturating_add(1);
             }
             lkjstr_protocol::RelayMessage::Eose(subscription_id) => {
                 self.close_delivery_check(relay, &subscription_id);

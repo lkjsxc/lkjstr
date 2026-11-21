@@ -10,9 +10,13 @@ use crate::cache::{Record, Restored, VERIFY_SOURCE};
 pub use context_state::{ContextBatch, ContextEvidence, ReadContexts};
 
 impl Engine {
-    pub(super) fn insert_verified(&mut self, event: NostrEvent, relay: Option<&str>) {
+    pub(super) fn insert_verified(
+        &mut self,
+        event: NostrEvent,
+        relay: Option<&str>,
+    ) -> crate::store::Inserted {
         self.read_contexts.changed(&event);
-        self.store.insert(event, relay);
+        self.store.insert(event, relay)
     }
     pub fn restore_cache(&mut self, records: &[Record]) {
         let revision = self.store.revision();

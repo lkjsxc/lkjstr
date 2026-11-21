@@ -90,9 +90,21 @@ pub fn row_with_lists(
             Part::Emoji { code, url } => Segment::Emoji { code, url },
             Part::Quote { id, .. } => Segment::Quote {
                 row: if depth < 2 {
-                    store
-                        .get(&id)
-                        .map(|e| Box::new(row_with_lists(store, &e, account, depth + 1, private)))
+                    store.get(&id).map(|e| {
+                        let reason = super::visibility::reason(
+                            store,
+                            &super::protocol::Query {
+                                account: account.map(str::to_owned),
+                                ..Default::default()
+                            },
+                            &e,
+                            private,
+                        );
+                        Box::new(match reason {
+                            Some(reason) => super::visibility::covered_row(store, &e, reason),
+                            None => row_with_lists(store, &e, account, depth + 1, private),
+                        })
+                    })
                 } else {
                     None
                 },
@@ -172,10 +184,7 @@ pub fn row_with_lists(
             partial: false,
         },
         reactions: reactions.into_values().collect(),
-        hidden_reason: own.muted.then(|| "muted-person".into()).or_else(|| {
-            (event.kind == 1 && content::looks_like_noise(&event.content))
-                .then(|| "machine-payload".into())
-        }),
+        hidden_reason: None,
         own,
     }
 }

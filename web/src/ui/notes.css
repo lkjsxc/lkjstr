@@ -6,7 +6,12 @@
 .list > .sel { background: color-mix(in srgb, var(--wash) 60%, transparent); box-shadow: inset 3px 0 var(--accent); }
 .note.pending { opacity: 0.7; }
 .home-draft .acts { height: 28px; }
-.note.hid { padding: 6px 12px; font-size: 12.5px; }
+/* A hidden note's slot (docs/interface-hidden.md): one faint line, never a second row. Why and Show get 32px of touch
+   from padding that a negative margin takes back, so the line keeps its height. */
+.note.hid { padding: 6px 12px; color: var(--faint); font-size: 12.5px; line-height: 20px; }
+.hline { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 12px; }
+.note.hid .lnk, .ctx.hshown .lnk { flex: none; margin: -6px -4px; padding: 6px 4px; }
+.hwhy { padding: 2px 0 1px; color: var(--muted); }
 .nrow { display: grid; grid-template-columns: var(--avatar, 36px) minmax(0, 1fr); gap: 0 10px; }
 .avb { align-self: start; flex: none; padding: 0; border-radius: 50%; line-height: 0; }
 .avb:hover .av { filter: brightness(0.94); }
@@ -38,6 +43,8 @@
 .lnk { display: inline; padding: 0; color: var(--accent); text-align: left; }
 .lnk:hover { text-decoration: underline; }
 .fold { display: block; font-size: 13px; }
+/* Shown, a warning stays above its body as a quiet line with Hide. */
+.nmain > .cwline { margin: 2px 0 0; }
 .cw { display: flex; flex-wrap: wrap; gap: 4px 10px; width: 100%; margin: 4px 0; padding: 8px 10px; border: 1px dashed var(--sep); border-radius: 8px; color: var(--muted); font-size: 13px; text-align: left; }
 .media { display: grid; gap: 3px; position: relative; max-width: 560px; margin: 6px 0 4px; overflow: hidden; border-radius: 8px; }
 .media.n1 { display: block; }

@@ -72,6 +72,8 @@ export type Engine = {
   me(): Pubkey;
   open(query: Query, handlers: SubHandlers, owner?: HTMLElement): Subscription;
   act(action: Action, watch?: ActWatch): Promise<ActResult>;
+  /** Shows (or hides again) a hidden note in the subscription that owns `from` (interface-hidden.md H3). */
+  reveal?(from: Element, key: string, on: boolean): Promise<boolean>;
   /** What the engine measured about itself, now. Undefined: this engine did not answer (it keeps no statistics). */
   stats(): Promise<EngineStats | undefined>;
   configure(config: EngineConfig): void;

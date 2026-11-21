@@ -31,7 +31,7 @@ impl Engine {
         let queued = self
             .queue
             .iter()
-            .map(|(_, event)| event.id.clone())
+            .map(|queued| queued.event.id.clone())
             .collect();
         // Queued or already-asked relay atoms are never taken away by this gate.
         let network = self

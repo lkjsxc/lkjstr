@@ -59,6 +59,7 @@ mod time_window_relay;
 pub use tick::TickPhase;
 pub mod upload;
 pub mod upload_jobs;
+pub mod visibility;
 mod wants;
 pub mod weights;
 mod windows;
@@ -82,6 +83,8 @@ pub struct View {
     before: usize,
     after: usize,
     rows: Vec<Row>,
+    opened_after: u64,
+    invalid_deliveries: u64,
     visible: bool,
     dirty: bool,
     history: Option<lkjstr_protocol::NostrFilter>, // One per view; released on hide/close.
@@ -131,12 +134,13 @@ pub struct Engine {
     views: BTreeMap<String, View>,
     signing: BTreeMap<String, Signing>,
     outgoing: Vec<Output>,
-    queue: VecDeque<(String, NostrEvent)>,
+    queue: VecDeque<ingest::QueuedEvent>,
     queue_bytes: usize,
     last_flush: u64,
     pub verified: u64,
     pub rejected: u64,
     pub dropped: u64,
+    delivery_sequence: u64,
 }
 impl Default for Engine {
     fn default() -> Self {
@@ -185,6 +189,7 @@ impl Engine {
             verified: 0,
             rejected: 0,
             dropped: 0,
+            delivery_sequence: 0,
         }
     }
     pub fn drain(&mut self) -> Vec<Output> {

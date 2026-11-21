@@ -118,12 +118,6 @@ impl Session {
                 if !e.store.existed_at(&event.id, index.revision)
                     || query::signed_out(&q)
                     || !query::accepts(&e.store, &q, event, &filter, &authors)
-                    || query::hidden_with_lists(&e.store, &q, event, &e.private_lists).is_some_and(
-                        |reason| {
-                            matches!(q.source, Source::Profile | Source::Channel)
-                                || reason == "muted-person"
-                        },
-                    )
                 {
                     continue;
                 }

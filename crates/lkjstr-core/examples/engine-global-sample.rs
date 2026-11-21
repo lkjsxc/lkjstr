@@ -32,7 +32,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .filter_map(|n| store.get(&n.id))
         .collect();
     notes.sort_by(|a, b| (b.created_at, &b.id).cmp(&(a.created_at, &a.id)));
-    let held: Vec<_>=notes.iter().zip(classify(&store,&notes, |_|true)).filter_map(|(e,reason)|reason.map(|r|json!({
+    let held: Vec<_>=notes.iter().zip(classify(&notes)).filter_map(|(e,reason)|reason.map(|r|json!({
         "author":store.profile(&e.pubkey).and_then(|p|p.label().map(str::to_owned)).unwrap_or_else(||e.pubkey.chars().take(12).collect()),
         "id":e.id,"reason":format!("{r:?}"),"text":e.content.chars().take(60).collect::<String>()
     }))).collect();

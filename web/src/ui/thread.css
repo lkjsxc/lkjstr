@@ -65,3 +65,9 @@
 .tfold.th-above::before { display: none; }
 .tfold.th-step { padding-left: calc(var(--textx) + var(--step)); }
 .tfold.th-step::before { height: calc(50% - 1px); }
+/* A hidden note in a thread holds its room on the rail, its line where the text would start. */
+.view[data-kind="thread"] .note.hid { padding-left: var(--textx); }
+.view[data-kind="thread"] .note.hid.th-step { padding-left: calc(var(--textx) + var(--step)); }
+.note.hid.th-below::after { top: 0; }
+.note.hid.th-above::before { display: none; }
+.note.hid.th-step::before { height: 16px; }

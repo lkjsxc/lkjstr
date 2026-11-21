@@ -7,6 +7,7 @@ import { channelAct, channelTouched, chatter } from './channels.ts';
 import { HANDLERS } from './client-handlers.ts';
 import type { Core } from './engine.ts';
 import { FILLER } from './fixtures-notes.ts';
+import { revealMockNote } from './hidden.ts';
 import { byHandle, byPubkey, byRef, type Person, SELF } from './people.ts';
 import { retryLists } from './private-lists.ts';
 import { createDelivery } from './publication.ts';
@@ -78,6 +79,10 @@ export function createActions(core: Core) {
     if (a.a === 'client.info') {
       const info = Object.values(HANDLERS).find((x) => x.address === a.address)?.info;
       return info ? done(req, { clientInfo: info }) : fail(req, 'not-found');
+    }
+    if (a.a === 'note.reveal') {
+      if (!revealMockNote(core.subs.get(a.sub), a.key, a.reveal)) return fail(req, 'not-found');
+      return (core.changed(a.key), done(req));
     }
     if (a.a === 'lists.retry') return retryLists(core, req, a.as);
     const me = core.me();

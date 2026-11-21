@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Preserved proposal context before protocol 6. These passages describe their original
+Preserved proposal context and earlier protocol notes. Historical passages describe their original
 state, not current limitations. See [status.md](status.md) for current behavior.
 
 ## 1. Extension account discovery
@@ -89,3 +89,9 @@ user-facing state is needed.
 All existing protocol messages and fields retain their meanings. No visible
 surfaces are added without a specification. See [dm.md](dm.md), [keys.md](keys.md)
 and [interface-needs.md](interface-needs.md) for contracts and remaining design.
+
+## Protocol 7 private-list revocation
+
+Successful lock/remove commits clear unauthorized decrypted list policy and replace
+derived row caches before account/result output. Other authorized accounts and
+query/window intent remain.

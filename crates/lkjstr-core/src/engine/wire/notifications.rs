@@ -111,7 +111,7 @@ pub(super) fn notifications(q: &Query, e: &Engine) -> Vec<Value> {
             }
         }
         if let Some(id) = target {
-            super::acts::target(&mut row, e, &id);
+            super::acts::target(&mut row, e, &id, Some(account));
         }
         groups.push(row);
     }

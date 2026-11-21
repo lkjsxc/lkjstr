@@ -54,7 +54,7 @@ fn ids(e: &mut Engine) -> Vec<String> {
         .collect()
 }
 #[test]
-fn author_cap_refills_past_long_suppressed_runs_and_retained_anchors_progress() {
+fn author_cap_preserves_slots_and_covered_anchors_page_to_older_notes() {
     let mut e = Engine::new();
     for at in 100..500 {
         e.store.insert(note(at, &"a".repeat(64)), None);
@@ -62,22 +62,44 @@ fn author_cap_refills_past_long_suppressed_runs_and_retained_anchors_progress() 
     let oldest = note(99, &"b".repeat(64));
     e.store.insert(oldest.clone(), None);
     open(&mut e);
-    let first = ids(&mut e);
-    assert_eq!(first.len(), 4);
-    assert_eq!(first.last(), Some(&oldest.id));
-    e.input(
-        Input::Window {
-            sub: "feed".into(),
-            anchor: Some(first[2].clone()),
-            before: 0,
-            after: 50,
-        },
-        1,
+    let first = e
+        .drain()
+        .into_iter()
+        .find_map(|output| match output {
+            Output::Rows { items, .. } => Some(items),
+            _ => None,
+        })
+        .expect("rows");
+    assert_eq!(first.len(), 51);
+    assert_eq!(
+        first
+            .iter()
+            .skip(3)
+            .filter(|row| row.hidden_reason
+                == Some(lkjstr_core::engine::visibility::Reason::AuthorLimit))
+            .count(),
+        48
     );
-    assert_eq!(ids(&mut e).last(), Some(&oldest.id));
+    let mut last = first.last().expect("covered anchor").id.clone();
+    for tick in 1..=8 {
+        e.input(
+            Input::Window {
+                sub: "feed".into(),
+                anchor: Some(last),
+                before: 0,
+                after: 50,
+            },
+            tick,
+        );
+        last = ids(&mut e).last().expect("requested window").clone();
+        if last == oldest.id {
+            return;
+        }
+    }
+    assert_eq!(last, oldest.id);
 }
 #[test]
-fn wholly_withheld_window_refills_cache_and_fetches_history_without_a_row_anchor() {
+fn absent_profiles_keep_the_first_window_and_do_not_stop_relay_history() {
     let mut e = Engine::new();
     let relay = "wss://relay.test/";
     e.network.configure(vec![relay.into()], 0);
@@ -108,7 +130,27 @@ fn wholly_withheld_window_refills_cache_and_fetches_history_without_a_row_anchor
         },
         102,
     );
-    assert_eq!(ids(&mut e), vec![older.id]);
+    let first = e
+        .drain()
+        .into_iter()
+        .find_map(|output| match output {
+            Output::Rows { items, .. } => Some(items),
+            _ => None,
+        })
+        .expect("rows");
+    assert_eq!(first.len(), 51);
+    assert_eq!(first[0].author.pubkey, "a".repeat(64));
+    assert!(first[0].hidden_reason.is_none());
+    e.input(
+        Input::Window {
+            sub: "feed".into(),
+            anchor: Some(first[50].id.clone()),
+            before: 0,
+            after: 50,
+        },
+        103,
+    );
+    assert_eq!(ids(&mut e).last(), Some(&older.id));
 
     let mut e = Engine::new();
     e.network.configure(vec![relay.into()], 0);
@@ -149,89 +191,5 @@ fn wholly_withheld_window_refills_cache_and_fetches_history_without_a_row_anchor
     assert!(requests(&mut e.network).is_empty());
     assert!(e.network.profile_absent(&"a".repeat(64)));
 }
-#[test]
-fn profile_absence_requires_successful_untruncated_results_on_all_routes() {
-    let relay = "wss://relay.test/";
-    let author = "a".repeat(64);
-    for outcome in ["empty", "closed", "timeout", "truncated"] {
-        let mut n = Network::default();
-        n.configure(vec![relay.into()], 0);
-        n.relay_information(relay, r#"{"limitation":{"max_limit":1}}"#);
-        n.plan(
-            vec![(
-                "view".into(),
-                NostrFilter {
-                    kinds: Some(vec![0]),
-                    authors: Some(vec![author.clone(), "b".repeat(64)]),
-                    limit: Some(2),
-                    ..Default::default()
-                },
-                Query::default(),
-            )],
-            &lkjstr_core::store::Store::new(0),
-            0,
-        );
-        n.connected(relay, 0);
-        n.tick(75);
-        let frames = requests(&mut n);
-        let id = frames[0][1].clone();
-        assert!(!n.profile_absent(&author));
-        if outcome == "truncated" {
-            let mut profile = note(100, &author);
-            profile.kind = 0;
-            n.message(relay, &json!(["EVENT", id, profile]).to_string(), 76);
-        }
-        match outcome {
-            "closed" => {
-                n.message(
-                    relay,
-                    &json!(["CLOSED", id, "blocked: fixture"]).to_string(),
-                    77,
-                );
-            }
-            "timeout" => n.tick(15076),
-            _ => {
-                n.message(relay, &json!(["EOSE", id]).to_string(), 77);
-            }
-        }
-        assert!(n.profile_finished(&author, &[]), "{outcome}");
-        assert_eq!(n.profile_absent(&author), outcome == "empty", "{outcome}");
-        n.verifying = true;
-        assert!(!n.profile_absent(&author));
-    }
-}
-
-#[test]
-fn successful_primary_and_failed_fallback_cannot_prove_profile_absence() {
-    let routes = ["wss://primary.test/", "wss://fallback.test/"];
-    let author = "a".repeat(64);
-    let mut n = Network::default();
-    n.configure(routes.iter().map(|r| (*r).into()).collect(), 0);
-    n.plan(
-        vec![(
-            "view".into(),
-            NostrFilter {
-                kinds: Some(vec![0]),
-                authors: Some(vec![author.clone()]),
-                limit: Some(1),
-                ..Default::default()
-            },
-            Query::default(),
-        )],
-        &lkjstr_core::store::Store::new(0),
-        0,
-    );
-    n.connected(routes[0], 75);
-    let primary = requests(&mut n);
-    n.connected(routes[1], 75);
-    let fallback = requests(&mut n);
-    n.message(routes[0], &json!(["EOSE", primary[0][1]]).to_string(), 76);
-    assert!(!n.profile_absent(&author));
-    n.message(
-        routes[1],
-        &json!(["CLOSED", fallback[0][1], "blocked: fixture"]).to_string(),
-        77,
-    );
-    assert!(n.profile_finished(&author, &[]));
-    assert!(!n.profile_absent(&author));
-}
+#[path = "engine_review_polish_cases/profiles.rs"]
+mod profiles;

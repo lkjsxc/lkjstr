@@ -5,7 +5,6 @@ Additive protocol ledger under the 2026-11-16 owner delegation. See status.md an
 Earlier context is preserved in [engine-proposals-history.md](engine-proposals-history.md).
 
 ## Protocol 6 engine additions (2026-11-16, owner authorized)
-
 - `ToEngine.dm.open {sub,query:DmQuery}` adds an explicit private subscription.
 - `ToEngine.dm.close {sub}` releases a private subscription and its wants.
 - `ToEngine.dm.visible {sub,visible}` controls private work while preserving the displayed query anchor.
@@ -30,15 +29,12 @@ Earlier context is preserved in [engine-proposals-history.md](engine-proposals-h
 - `Account.locked?` identifies an account requiring session unlock.
 
 ## Protocol 7 lifetime additions (2026-11-16, owner authorized)
-
 - `ToEngine.dm.open.visible?` supplies initial private visibility atomically; omission keeps the existing visible default.
 - `ToEngine.upload.cancel {req}` cancels only that client's pending upload request and its authorization, HTTP and processing waits.
 - `FromEngine.result.cancelled?` confirms cancellation by its owning queue or Worker, with `ok:false` and no pending effect.
 - `FromEngine.sign.actionReq?` identifies the originating upload so cancelled authorization cannot start or consume a later signer request.
 - `Engine.dm.open(query,receive,{visible?})` supplies the optional initial private visibility through the existing client API.
 - `ActWatch.uploadSignal?` connects the existing attachment removal/clear/dispose controls to upload cancellation.
-
-Private-list lock/remove commits clear unauthorized list policy and replace its row caches before account/result output.
 
 ## Protocol 8 interface additions (2026-11-16, owner authorized)
 
@@ -70,7 +66,6 @@ Private-list lock/remove commits clear unauthorized list policy and replace its 
 
 The draft archive is local and encrypted for every signer kind, not account setup sync or a public list.
 Bounds, atomic removal, conflicts and the Worker-scoped unlock limit are in [dm-drafts.md](dm-drafts.md).
-
 ## Protocol 9 zap additions (2026-11-16, owner authorized)
 
 - `ToEngine.zap.quote {req,query:{target,amountMsat?}}` requests finite read-only provider/split evidence.
@@ -90,7 +85,6 @@ Bounds, atomic removal, conflicts and the Worker-scoped unlock limit are in [dm-
 - `Engine.zaps?` exposes finite quote/receipt helpers with explicit close/dispose ownership.
 - `ActWatch.zapSignal?` connects caller cancellation to invoice lifetime without an added control.
 - Protocol 9: `reading {sub,key}` carries one delivered reading anchor independently of retained-window bounds; null restores window-anchor fallback.
-
 ## Protocol 10 private list additions (2026-11-16, owner authorized)
 
 - Add `Query.privateLists?` for visible, account-scoped external list-read opt-in.
@@ -100,7 +94,6 @@ Bounds, atomic removal, conflicts and the Worker-scoped unlock limit are in [dm-
 - Add `SubState.privateLists?` with phase, pending/failed container counts and optional error.
 - Add `lists.retry {as}` to reset only this account's private-list refusal/capability failures.
 - Add `Account.privateLists?` to qualify unread policy, including unknown without admitted work.
-
 ## Protocol 11 signer authorization additions (2026-11-16, integration candidate)
 
 - `signer.auth {id,peer,method,url,expiresAt,account?,actionReq?}` exposes one verified, ephemeral challenge only to its initiating client.
@@ -108,7 +101,6 @@ Bounds, atomic removal, conflicts and the Worker-scoped unlock limit are in [dm-
 - `signer.auth.cancel {id,reason?:'unsupported'}` cancels only the originating client's exact opaque handle.
 - `Engine.signerAuth?` exposes an in-memory pending signal and explicit cancellation; it never opens, fetches or persists URLs.
 - Current method names, deadlines, recipient ownership and unsupported fallback paths are specified in [bunker-auth.md](bunker-auth.md).
-
 ## Protocol 12 storage inspection additions (2026-11-16, verified)
 
 - `storage.inspect {req}` requests one owner-scoped, finite observation; it does not mutate storage.
@@ -131,7 +123,6 @@ Bounds, atomic removal, conflicts and the Worker-scoped unlock limit are in [dm-
 
 Inspection bounds and verification limits are in [storage-inspection.md](storage-inspection.md).
 Merged gate and exact production evidence are in [engine-device-verification.md](engine-device-verification.md).
-
 ## Protocol 13 account availability (2026-11-17, owner authorized)
 
 - `FromEngine.ready.accountError? {code:"internal"}` marks failed account loading without inventing an Accounts snapshot or exposing storage details.
@@ -141,7 +132,6 @@ Merged gate and exact production evidence are in [engine-device-verification.md]
 
 Existing feed status nodes reuse `error.internal`; automatic Accounts availability
 and recovery still need a specification in [interface-needs.md](interface-needs.md).
-
 ## Protocol 13 public cache additions (2026-11-17, owner authorized)
 
 - `cache.policy {sub,allow}` authorizes only public projected rows for a bounded pre-Worker rendering cache.
@@ -198,3 +188,12 @@ Mock-only `EngineConfig.mock.slow` signs one matching note late and delays its r
 - `Action.client.info {address}` resolves one handler on explicit request, or returns `not-found`.
 - `FromEngine.result.clientInfo?` carries the verified handler name and optional HTTP(S) website.
 - `EngineConfig.clientTagAccount?` scopes `clientTag` to one device account. Omit it for the device fallback.
+
+## Note visibility
+- Existing `NoteRow.hidden` gains `revealable?` and a bounded optional matching mute entry `detail?`; the same row key carries a body-free slot.
+- `NoteRow.revealed?: {reason}` preserves the reason while displaying an explicitly revealed verified note.
+- `Action.note.reveal {sub,key,reveal}` is a local scoped Show/Hide operation on the currently delivered retained verified note.
+- `SubState.unshown?` lists typed bounded observations as `{reason,count?,exact}` independent of relay phase.
+- `EngineConfig.signedOutGlobalFilter?` exposes the visitor Global repeated-content and author-frequency policy, enabled by default.
+- `NoteRow.expiresAt?` and `NotificationRow.expiresAt?` name the earliest applicable expiry for content they carry and suppress snapshot replay.
+- `Quote.state` adds `expired` for a verified expiry, with no quoted body.

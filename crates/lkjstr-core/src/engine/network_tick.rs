@@ -60,7 +60,7 @@ impl Network {
             // Collect the initial visible page before freezing count buckets,
             // bounded by its first deadline even across backoff and retries.
             // Otherwise every verification slice creates another 200-event stream.
-            if counts_filter(&r.filter)
+            if (counts_filter(&r.filter) || r.filter.kinds.as_deref() == Some(&[5]))
                 && self.requests.values().any(|q| {
                     q.relay == r.relay
                         && q.priority <= 1
@@ -184,7 +184,7 @@ pub(super) fn filter_live(f: &NostrFilter) -> bool {
             ks.iter().any(|k| {
                 matches!(
                     k,
-                    1 | 4 | 6 | 7 | 41 | 42 | 1059 | 9735 | 10002 | 10005 | 10050 | 10063
+                    1 | 4 | 5 | 6 | 7 | 41 | 42 | 1059 | 9735 | 10002 | 10005 | 10050 | 10063
                 )
             })
         })
@@ -206,5 +206,5 @@ fn slot_sharing(r: &Request) -> bool {
         || r.filter
             .kinds
             .as_ref()
-            .is_some_and(|ks| ks.iter().any(|k| matches!(k, 40 | 41 | 42 | 10005)))
+            .is_some_and(|ks| ks.iter().any(|k| matches!(k, 5 | 40 | 41 | 42 | 10005)))
 }

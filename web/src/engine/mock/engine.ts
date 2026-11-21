@@ -9,6 +9,7 @@ import { createActions } from './actions.ts';
 import { createCore } from './core.ts';
 import { createPrivateMock } from './dm.ts';
 import { addThreads } from './fixtures-thread.ts';
+import { projectHidden, unshownOf } from './hidden.ts';
 import { liveWindow } from './live-window.ts';
 import { privateListState } from './private-lists.ts';
 import { select } from './query.ts';
@@ -29,17 +30,18 @@ export type MockEngine = {
 export type Core = ReturnType<typeof createCore>;
 
 export function createMockEngine(
-  post: (msg: FromEngine) => void,
+  emit: (msg: FromEngine) => void,
   now = Date.now,
   boot: { accountError?: 'internal' } = {},
 ): MockEngine {
   let zapObserve: ((msg: FromEngine) => void) | undefined;
   let authObserve: ((msg: FromEngine) => void) | undefined;
-  const core = createCore((msg) => {
+  const post = (msg: FromEngine): void => {
     zapObserve?.(msg);
     authObserve?.(msg);
-    post(msg);
-  }, now);
+    emit(projectHidden(msg, 'sub' in msg ? core.subs.get(msg.sub)?.revealed : undefined));
+  };
+  const core: Core = createCore(post, now);
   const { world, subs, later } = core;
   const act = createActions(core);
   const authorization = createSignerAuthMock(post, now);
@@ -185,6 +187,7 @@ export function createMockEngine(
             relaysAnswered: 0,
             zapEvidence: MOCK_ZAP_EVIDENCE,
             ...privateListState(s.query),
+            ...unshownOf(s.query),
           },
         });
         if (!done)
@@ -202,6 +205,7 @@ export function createMockEngine(
                   relaysAnswered: 5,
                   lastArrival: world.notes[0]?.at,
                   ...privateListState(s.query),
+                  ...unshownOf(s.query),
                 },
               }),
           );

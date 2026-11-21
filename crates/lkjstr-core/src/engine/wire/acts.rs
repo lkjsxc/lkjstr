@@ -53,14 +53,18 @@ fn lookup_state(engine: &Engine, id: &str) -> &'static str {
         "failed"
     }
 }
-pub(super) fn target(row: &mut Value, engine: &Engine, id: &str) {
+pub(super) fn target(row: &mut Value, engine: &Engine, id: &str, account: Option<&str>) {
     let chain = acts::from_target(&engine.store, id);
     let context = chain
         .first
         .as_ref()
         .and_then(|first| act_ref(engine, first));
     let trusted = chain.trusted(engine);
-    if let Some(note) = chain.note.as_ref().filter(|_| trusted) {
+    if let Some(note) = chain
+        .note
+        .as_ref()
+        .filter(|note| trusted && !super::visibility::nested_hidden(engine, account, note))
+    {
         let mut value = json!({"id":note.id,"excerpt":note.content.chars().take(160).collect::<String>(),
             "media":lkjstr_protocol::embedded_media_attachments(note).len()});
         if let Some(context) = context {
@@ -90,7 +94,7 @@ pub(super) fn target(row: &mut Value, engine: &Engine, id: &str) {
     }
 }
 /// EOSE/refusal can settle a chain without any newly admitted event.
-pub(super) fn settle(row: &mut Value, engine: &Engine) {
+pub(super) fn settle(row: &mut Value, engine: &Engine, account: Option<&str>) {
     if row["kind"] != "notification" {
         return;
     }
@@ -105,10 +109,15 @@ pub(super) fn settle(row: &mut Value, engine: &Engine) {
         }
     });
     if let Some(id) = id {
-        target(row, engine, &id);
+        target(row, engine, &id, account);
     }
 }
-pub(super) fn profile(query: &super::Query, engine: &Engine) -> Vec<Value> {
+pub(super) fn profile(
+    session: &super::Session,
+    sub: &str,
+    query: &super::Query,
+    engine: &Engine,
+) -> Vec<Value> {
     let Some(converted) = query.convert() else {
         return vec![];
     };
@@ -116,26 +125,20 @@ pub(super) fn profile(query: &super::Query, engine: &Engine) -> Vec<Value> {
         .into_iter()
         .filter(|event| {
             let chain = acts::resolve(&engine.store, event);
-            chain.trusted(engine)
-                && chain.note.as_ref().is_some_and(|note| {
-                    [event, note].iter().all(|event| {
-                        query::hidden_with_lists(
-                            &engine.store,
-                            &converted,
-                            event,
-                            &engine.private_lists,
-                        )
-                        .is_none()
-                    })
-                })
+            chain.trusted(engine) && chain.note.is_some()
         })
         .collect();
     acts::representatives(&engine.store, candidates).into_iter().filter_map(|event| {
         let chain = acts::resolve(&engine.store,&event);
         let note = chain.note.as_ref()?;
-        let model = rows::row_with_lists(&engine.store,note,query.account.as_deref(),0,&engine.private_lists);
-        let mut value = super::note::note(&model,&engine.store,query.account.as_deref());
+        let extra = crate::engine::visibility::reason(&engine.store, &converted, &event, &engine.private_lists);
+        let mut value = session.project_event(sub, engine, &converted, note, extra);
         value["at"] = json!(event.created_at.saturating_mul(1000));
+        if let Some(at) = engine.store.expires_at(&event.id) {
+            let at = at.saturating_mul(1000).min(value["expiresAt"].as_u64().unwrap_or(u64::MAX));
+            value["expiresAt"] = json!(at);
+        }
+        if value["hidden"].is_object() { return Some(value); }
         if let Some(own) = act_ref(engine,&event) { value["act"] = own; }
         if let Some(context) = chain.first.as_ref().and_then(|first| act_ref(engine,first)) {
             value["actOn"] = context;

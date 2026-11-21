@@ -198,8 +198,11 @@ export type Quote =
       readonly media: readonly Media[];
       readonly cw?: string;
     }
-  /** Not found (yet), deleted, or by a muted person: one quiet line, never the raw reference. */
-  | { readonly state: 'missing' | 'loading' | 'muted' | 'deleted' | 'error'; readonly id: string };
+  /** Not found (yet), deleted, expired (NIP-40), or by a muted person: one quiet line, never the raw reference. */
+  | {
+      readonly state: 'missing' | 'loading' | 'muted' | 'deleted' | 'expired' | 'error';
+      readonly id: string;
+    };
 
 export type Reaction = {
   /** A Unicode emoji, or `:code:` with `url`. */
@@ -296,8 +299,17 @@ export type NoteRow = {
     /** The reader wrote it (delete is offered). */
     readonly own: boolean;
   };
-  /** A heuristic hid this note; the interface shows one quiet line with the reason and a way to see it. */
-  readonly hidden?: { readonly reason: string };
+  /** Hidden for a reason (interface-hidden.md): the row keeps its slot with no body, counts or controls. `detail` is
+   * the reader's own matching mute entry; `revealable` says whether `note.reveal` may show it. */
+  readonly hidden?: {
+    readonly reason: string;
+    readonly revealable?: boolean;
+    readonly detail?: string;
+  };
+  /** Shown by `note.reveal` although hidden for this reason. */
+  readonly revealed?: { readonly reason: string };
+  /** The earliest NIP-40 expiry of this note or what it embeds; the transport never brings a held body back after it. */
+  readonly expiresAt?: Millis;
   /** `thread` source only. `depth` 0 for ancestors and the focus, 1+ for replies. `parent` (additive): the id of
    * the note this one answers, also when that note is not known; absent for the note a thread starts from. */
   readonly thread?: {
@@ -364,6 +376,8 @@ export type PersonRow = {
 export type NotificationRow = {
   readonly kind: 'notification';
   readonly key: RowKey;
+  /** The earliest NIP-40 expiry of what it embeds or targets. */
+  readonly expiresAt?: Millis;
   readonly type: NotificationType;
   /** Who did it: latest first. Several when the engine grouped the same action on the same note. */
   readonly actors: readonly Author[];
@@ -515,6 +529,12 @@ export type PatchOp =
 
 /** How a subscription is doing, for honest empty and loading states. */
 export type SubState = {
+  /** Events that never became a trustworthy row in this list, per cause; `count` only for observed, exact totals. */
+  readonly unshown?: readonly {
+    readonly reason: 'invalid' | 'pruned' | 'undelivered' | 'unavailable-repost';
+    readonly count?: number;
+    readonly exact: boolean;
+  }[];
   /** Receipt/read evidence is independent of the relay lifecycle below. */
   readonly zapEvidence?: ZapEvidence;
   readonly privateLists?: {
@@ -618,6 +638,13 @@ export type Action =
   | { readonly a: 'link.check'; readonly route: 'n' | 'p' | 'a'; readonly ref: string }
   /** A note's client handler, asked on a press: `clientInfo` when the newest 31990 of that author and d verifies. */
   | { readonly a: 'client.info'; readonly address: string }
+  /** Shows (or hides again) one hidden note in one subscription, in its slot; idempotent. */
+  | {
+      readonly a: 'note.reveal';
+      readonly sub: SubId;
+      readonly key: RowKey;
+      readonly reveal: boolean;
+    }
   | { readonly a: 'zap.invoice'; readonly as: Pubkey; readonly intent: ZapInvoiceInput }
   | { readonly a: 'lists.retry'; readonly as: Pubkey }
   /** Register a mounted private editor before allowing input; closed leases cannot hold a lock. */
@@ -791,6 +818,8 @@ export type EngineConfig = {
   readonly clientTag?: boolean;
   /** Scope clientTag to this device account. Omit for the device default. */
   readonly clientTagAccount?: Pubkey;
+  /** A visitor's Global folds repeated content and floods from one author (default true). */
+  readonly signedOutGlobalFilter?: boolean;
   // end engine-added
   /** Interface language, for the engine's language heuristics. */
   readonly language: string;

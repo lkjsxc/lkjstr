@@ -1,6 +1,6 @@
 //! Commit account changes before exposing them; serialize mutations across ports.
 use super::*;
-use lkjstr_core::engine::wire::{Output as W, Session, actions::Action as A};
+use lkjstr_core::engine::wire::{Output as W, Session, actions::Action as A, queries::Config};
 #[path = "worker_account_commit.rs"]
 mod commit;
 #[path = "worker_account_drafts.rs"]
@@ -8,6 +8,20 @@ mod draft_storage;
 #[path = "worker_account_mutation.rs"]
 mod mutation;
 pub(super) use commit::pump_accounts;
+pub(super) fn configure_client_tag(h: &mut Host, config: &Config) {
+    let enabled = config.client_tag.unwrap_or(true);
+    let Some(account) = &config.client_tag_account else {
+        h.engine.client_tag = enabled;
+        return;
+    };
+    let exists = |key: &str| h.accounts.entries.iter().any(|entry| entry.pubkey == key);
+    let preferences = &mut h.engine.client_tag_accounts;
+    preferences.retain(|key, _| exists(key));
+    if exists(account) {
+        preferences.insert(account.clone(), enabled);
+    }
+}
+
 pub(super) fn ready(h: &mut Host, id: u64, shared: bool) {
     private_lists::local_policy(h);
     h.scope.direct(id, &Session::ready(shared));

@@ -45,6 +45,7 @@ const configure = (): void =>
     language,
     clientTag: settings.get().clientTag,
     clientTagAccount: settingsAccount || undefined,
+    signedOutGlobalFilter: settings.get().visitorFilter,
     linkPreviews: settings.get().linkPreviews,
     heuristics: true,
     prefetch: true,
@@ -155,14 +156,19 @@ engine.accounts.subscribe(() => {
 let taggedAccount = settingsAccount;
 let tagged = settings.get().clientTag;
 let previews = settings.get().linkPreviews;
+let folds = settings.get().visitorFilter;
 settings.subscribe((s) => {
   host.look(s);
   const next = resolveLang(s.language);
   const reconfigure =
-    previews !== s.linkPreviews || s.clientTag !== tagged || settingsAccount !== taggedAccount;
+    previews !== s.linkPreviews ||
+    s.clientTag !== tagged ||
+    settingsAccount !== taggedAccount ||
+    folds !== s.visitorFilter;
   previews = s.linkPreviews;
   tagged = s.clientTag;
   taggedAccount = settingsAccount;
+  folds = s.visitorFilter;
   if (next === language) {
     if (reconfigure) configure();
     return;

@@ -9,6 +9,7 @@ import { patchActContext } from './act-context.ts';
 import { linkCards } from './link-cards.ts';
 import { actionRow, reactionChips } from './note-actions.ts';
 import { stableNoteWidths } from './note-fit-geometry.ts';
+import { hiddenRow, shownLine, warned } from './note-hidden.ts';
 import { mediaGrid } from './note-media.ts';
 import { quoteCard } from './note-quote.ts';
 import { compactBody, lookOf, threadClass, threadMark } from './note-thread.ts';
@@ -55,37 +56,7 @@ function head(row: NoteRow, env: ViewEnv, dated: boolean): HTMLElement {
 
 export function renderNote(row: NoteRow, env: ViewEnv, dated = false): HTMLElement {
   const state = readNoteState(env.instance, row.id);
-  if (row.hidden && !state.shown) {
-    const el = h(
-      'div',
-      { class: 'note hid muted' },
-      t(`hidden.${row.hidden.reason === 'language' ? 'language' : 'other'}`),
-      ' ',
-    );
-    el.append(
-      h(
-        'button',
-        {
-          class: 'lnk',
-          onclick: () => {
-            writeNoteState(env.instance, row.id, { shown: true });
-            const n = fresh({ ...row, hidden: undefined });
-            n.dataset.key = row.key;
-            el.className = 'note-shell revealed';
-            el.replaceChildren(n);
-            n.dispatchEvent(new CustomEvent('note-revealed', { bubbles: true }));
-          },
-        },
-        t('hidden.show'),
-      ),
-    );
-    const fresh = (r: NoteRow): HTMLElement => {
-      const n = renderNote(r, env, dated);
-      requestAnimationFrame(() => fitNote(n));
-      return n;
-    };
-    return el;
-  }
+  if (row.hidden) return hiddenRow(row, env);
   const openThread = (e: MouseEvent): void => {
     if (String(getSelection())) return; // selecting text is not a press
     env.open('thread', { id: row.id, title: plainName(row.author) }, how(e));
@@ -109,6 +80,8 @@ export function renderNote(row: NoteRow, env: ViewEnv, dated = false): HTMLEleme
   }
   const answers = threadMark(row, env);
   if (answers) context.push(answers);
+  const shown = shownLine(row, env, () => el);
+  if (shown) context.push(shown);
   if (row.replyTo && !row.thread)
     context.push(
       h(
@@ -156,22 +129,15 @@ export function renderNote(row: NoteRow, env: ViewEnv, dated = false): HTMLEleme
       env.settings.get().linkPreviews ? linkCards(row.previews) : null,
     );
   };
-  let body: HTMLElement;
-  if (covered) {
-    body = h(
-      'button',
-      { class: 'cw' },
-      t('note.cw', { reason: row.cw ?? '' }),
-      h('span', { class: 'lnk' }, t('note.show')),
-    );
-    body.addEventListener('click', (e) => {
-      e.stopPropagation();
-      writeNoteState(env.instance, row.id, { warning: true });
-      body.replaceWith(makeContent());
-      text.dispatchEvent(new CustomEvent('note-revealed', { bubbles: true }));
-      fold(text);
-    });
-  } else body = look?.compact ? compactBody(row, env) : makeContent();
+  const opened = (): void => {
+    text.dispatchEvent(new CustomEvent('note-revealed', { bubbles: true }));
+    fold(text);
+  };
+  const body = look?.compact
+    ? compactBody(row, env)
+    : row.cw !== undefined
+      ? warned(row, env, covered, makeContent, opened)
+      : makeContent();
   const el = h(
     'article',
     {
