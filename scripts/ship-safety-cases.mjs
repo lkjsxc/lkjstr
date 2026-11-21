@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
+import { spawn, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { spawn } from 'node:child_process';
 import test from 'node:test';
 import { fixture, deploys, notices } from './ship-test-support.mjs';
 
@@ -47,6 +47,27 @@ for (const [retry, exit] of [['pass', 0], ['timeout', 1]]) {
     }
   });
 }
+
+test('an ancestor ignoring SIGCHLD cannot turn failed smoke into a shipment', t => {
+  const f = fixture(t, { ignoreSigchld: true });
+  const published = f.git(['rev-parse', 'origin/main']);
+  const result = f.run('', { LKJSTR_SHIP_TEST_SMOKE: 'fail,fail' });
+  const run = retained(f);
+  assert.equal(result.status, 1, result.summary + result.log);
+  assert.equal(result.summary, 'NOT SHIPPED: pnpm smoke:real (twice)\n');
+  for (const slot of ['smoke-1', 'smoke-2']) {
+    const cwd = join(run, slot);
+    assert.equal(readFileSync(join(cwd, 'status'), 'utf8'), '1\n');
+    const report = JSON.parse(readFileSync(join(cwd, 'smoke-real/report.json'), 'utf8'));
+    assert.equal(report.checks['independent socket observation'], 'FAIL');
+    assert.match(report.failures[0].stack, /Error: independent socket observation/);
+    const hashes = spawnSync('sha256sum', ['-c', 'evidence.sha256'], { cwd, encoding: 'utf8' });
+    assert.equal(hashes.status, 0, hashes.stdout + hashes.stderr);
+  }
+  assert.equal(f.events().some(row => ['push', 'ssh', 'desk'].includes(row.command) || row.args?.includes('package')), false);
+  assert.equal(f.git(['--git-dir', f.origin, 'rev-parse', 'refs/heads/main']), published);
+  assert.equal(existsSync(join(f.state, 'lkjstr-last-ship')), false);
+});
 
 test('a baseline no-op cannot certify a distinct compatible rollback release', t => {
   const f = fixture(t);

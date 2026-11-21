@@ -42,6 +42,8 @@ def drain(children, grace):
 
 
 def run(attempt, deadline, grace, args):
+    # An inherited SIG_IGN auto-reaps children and hides their exit status.
+    signal.signal(signal.SIGCHLD, signal.SIG_DFL)
     # Playwright starts Chromium in another session. Adopt orphans from this
     # attempt even when they leave the command's initial process group.
     libc = ctypes.CDLL(None, use_errno=True)

@@ -128,8 +128,9 @@ in tmp/ship-20261117T015825Z-386270/.
 smoke report and stamp after a queued attempt replaced the shared `ship.out`.
 Its hash is `89a404997f21484938e99ab3d5c5910082988f63f9c8c9b015f595884ebf9763`.
 The deployed WASM hash is
-`59e2121a2dfc9c5c2f1e10963edf65f0f18c4fed0d5f86e0f4a1869c727cc5`.
-This observation used the local receipts and their reported edge checks.
+`59e2121a2dfc9c5c2f1e10963edf65f0f18c4fed0d5f86e0f4f0a1869c727cc5`.
+The host receipts report `external_dns_tls_browser_verified` as `false`.
+The local observation used the receipts' edge checks and recorded release IDs.
 
 ## Resource ownership
 
@@ -150,7 +151,8 @@ Git repositories, owned archive copies and simulated commands. It makes no
 actual SSH, Desk, Cargo or browser calls and does not push the project.
 The watchdog fixture checks that a SIGTERM survivor can finish writing, that
 it and its detached child are reaped before hashing, and that an unrelated
-process receives no signal across both retry outcomes.
+process receives no signal across both retry outcomes. The inherited SIGCHLD
+case checks that both failed child exits reach the wrapper before any push or deploy.
 
 At 00:19:06-00:19:12 UTC the original six safety cases failed as intended while
 eleven controls passed. They covered unchanged-successor baseline receipts,

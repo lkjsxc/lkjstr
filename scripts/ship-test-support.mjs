@@ -87,7 +87,10 @@ export function fixture(t, options = {}) {
     ? readFileSync(join(root, 'tmp/actions.jsonl'), 'utf8').trim().split('\n').filter(Boolean).map(JSON.parse) : [];
   const run = (mode = '', env = {}) => {
     const ship = ['bash', 'scripts/ship.sh', '保存した内容を安全に保ちます', ...(mode ? [mode] : [])];
-    const [command, ...args] = options.localLockBusy ? ['/usr/bin/flock', '--close', lock, ...ship] : ship;
+    const parent = options.ignoreSigchld ? ['python3', '-I', '-c',
+      'import os, signal, sys; signal.signal(signal.SIGCHLD, signal.SIG_IGN); os.execvp(sys.argv[1], sys.argv[1:])'] : [];
+    const launcher = options.localLockBusy ? ['/usr/bin/flock', '--close', lock, ...ship] : ship;
+    const [command, ...args] = [...parent, ...launcher];
     const result = spawnSync(command, args, {
       cwd: root, encoding: 'utf8', timeout: 30_000,
       env: { ...process.env, PATH: `${join(root, '.test-bin')}:${process.env.PATH}`,
