@@ -14,6 +14,7 @@ import { pendingChecks } from './smoke-pending.ts';
 import { replyChecks } from './smoke-reply.ts';
 import { resetChecks } from './smoke-reset.ts';
 import { threadChecks } from './smoke-thread.ts';
+import { timeLabelChecks } from './smoke-time-label.ts';
 import { railSmoke } from './smoke-time-rail.ts';
 import { wishes } from './smoke-wishes.mjs';
 import { seated, seatOf } from './thread-seat.ts';
@@ -455,6 +456,7 @@ async function run(browser: Browser): Promise<void> {
   await pendingChecks((given) => open(browser, '/', given), fact);
   await threadChecks((path, given, size) => open(browser, path, given, size), fact);
   await replyChecks((path, given, size) => open(browser, path, given, size), fact);
+  await timeLabelChecks((path, given, size) => open(browser, path, given, size), fact);
   await scrolling(still);
   await filtering(browser, still);
   await rooms(browser, still);
@@ -542,9 +544,9 @@ async function scrolling(still: Record<string, unknown>): Promise<void> {
     said,
   );
   await page.mouse.up();
-  await page.waitForTimeout(100);
+  await page.waitForTimeout(1150);
   fact(
-    'released, the label goes',
+    'released, the label goes a second after the last scroll',
     await page
       .locator(`${feed} .time-rail .scrub`)
       .evaluate((el) => (el as HTMLElement).hidden === true),

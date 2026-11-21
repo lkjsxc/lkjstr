@@ -171,6 +171,20 @@ try {
           await page.locator('.tsearch input').waitFor();
         });
         await scene('home', '/', async () => undefined);
+        // The scroll time label (interface-time.md C1): a wheel on Home (the rail) and on Notifications (native).
+        for (const [name, kind] of [
+          ['time-label', 'home'],
+          ['time-native', 'notifications'],
+        ] as const)
+          await scene(name, '/', async (page) => {
+            if (kind === 'notifications')
+              await page.keyboard.press('g'), await page.keyboard.press('n');
+            const feed = page.locator(`.view[data-kind="${kind}"]:visible`);
+            const box = await feed.boundingBox();
+            if (box) await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+            await page.mouse.wheel(0, 1600);
+            await feed.locator('.scrub:not([hidden])').waitFor({ timeout: 900 });
+          });
         await scene('profile', '/p/aoi', (page) =>
           page.waitForSelector('.profile').then(() => undefined),
         );

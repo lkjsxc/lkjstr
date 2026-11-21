@@ -159,11 +159,14 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
   a quiet one without crowding it out and empty time taking no room, dots
   where months begin, numbers where years begin, a 2px accent line across only the rightmost 16px for where you are; the current year uses normal text colour;
   pressed or dragged it goes to that time and says it, and leaves a tick to
-  come back by. The tile's own width decides the rail (56px with years from 520px, else 16px); a list the engine
-  refused last time on this device starts without the rail's room, so its notes never widen after a second. Other tile-width
-  layouts (Documentation stacks its tree above the page under 520px) from the first frame. Other views keep a 14px
-  scrollbar with a slim thumb that
-  widens under the pointer.
+  come back by. The tile's own width decides the rail (56px with years from 520px, else 16px) and other tile-width
+  layouts (Documentation stacks its tree above the page under 520px) from the first frame; a list the engine refused
+  last time on this device starts without the rail's room, so its notes never widen after a second. Other views keep
+  a 14px scrollbar with a slim thumb that widens under the pointer.
+- While the reader scrolls a list in time order (wheel, touch, keys, a dragged thumb or rail), a small label beside
+  the thumb (the rail's place line, or the native thumb) says `yyyy/mm/dd HH:mm` of the row at the top, kept 4px
+  inside the tile, and goes a second after the last scroll; a scroll the list makes itself shows nothing
+  ([interface-time.md](interface-time.md) C1).
 - Filters are saved with the tab. The filter row (like the notification
   toggles and the settings search) is the first row of the content: it
   scrolls away, never floats; shown by default, a setting. One query field

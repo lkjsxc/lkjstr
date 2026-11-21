@@ -1,22 +1,42 @@
-// While the scrollbar of a list is held, a small label beside the thumb says the time of the row at the top of
-// the tile, so a long list can be travelled by time. How much it says follows the span of what is loaded: the
-// time of day within one day, the date with the time across days, the date alone across months.
-
+// While the reader scrolls a list in time order, a small label beside the scrollbar's thumb says the date and time of
+// the row at the top of the tile, `yyyy/mm/dd HH:mm` (docs/interface-time.md C1). A list on the time rail says it at
+// the rail's place line (time-rail.ts); this one stands beside a native scrollbar, or beside the rail's reserved room
+// while the rail has nothing to draw.
 import { clockOf, dayOf } from '../shared/format.ts';
 import { h } from '../shared/h.ts';
 import type { ListRow } from './feed-draw.ts';
+import { scrollIntent } from './scroll-intent.ts';
 
-const DAY = 86_400_000;
-const IDLE_MS = 1500; // a held thumb that does not move for this long lets the label go
-
-/** When a row happened (0: a row without a time, such as a profile's header). */
+/** When a row happened (0: a row without a time, such as a profile's header). A repost reads as the repost's time. */
 export const rowTime = (row: ListRow | undefined): number =>
   row?.kind === 'note' ? (row.repostedBy?.at ?? row.at) : row?.kind === 'notification' ? row.at : 0;
-/** The label for `at` in a list that spans `from` to `to`. Pure, tested. */
-export function scrubText(at: number, from: number, to: number): string {
-  const span = Math.abs(to - from);
-  if (span > 90 * DAY) return dayOf(at);
-  return dayOf(from) === dayOf(to) ? clockOf(at) : `${dayOf(at)} ${clockOf(at)}`;
+/** The label for `at`: always the whole local date and time, whatever the list spans. Pure, tested. */
+export const timeText = (at: number): string => `${dayOf(at)} ${clockOf(at)}`;
+
+/** The centre for a label at `y` (px from the tile's top), kept 4px inside a tile `view` tall. */
+export const centred = (label: HTMLElement, y: number, view: number): number =>
+  Math.min(view - label.offsetHeight / 2 - 4, Math.max(label.offsetHeight / 2 + 4, y));
+
+/** The time of the first row with a time at or below the top of the tile (rows are in order: found by halving). */
+export function topTime(
+  el: HTMLElement,
+  list: HTMLElement,
+  row: (key: string) => ListRow | undefined,
+): number {
+  const top = el.getBoundingClientRect().top;
+  const kids = list.children;
+  let lo = 0;
+  let hi = kids.length;
+  while (lo < hi) {
+    const mid = (lo + hi) >> 1;
+    if ((kids[mid] as Element).getBoundingClientRect().bottom > top + 1) hi = mid;
+    else lo = mid + 1;
+  }
+  for (let i = lo; i < kids.length; i++) {
+    const at = rowTime(row((kids[i] as HTMLElement).dataset.key ?? ''));
+    if (at) return at;
+  }
+  return 0;
 }
 
 export function mountScrub(o: {
@@ -26,72 +46,31 @@ export function mountScrub(o: {
   readonly list: HTMLElement;
   readonly row: (key: string) => ListRow | undefined;
 }): () => void {
-  const { el, list } = o;
+  const { el, pin, list } = o;
   const label = h('div', { class: 'scrub', hidden: true, 'aria-hidden': 'true' });
-  o.pin.append(label);
-  let held = false;
-  let idle: ReturnType<typeof setTimeout> | undefined;
-  const times = (): number[] =>
-    [...list.children]
-      .map((c) => rowTime(o.row((c as HTMLElement).dataset.key ?? '')))
-      .filter((at) => at > 0);
-  /** The first row with a time at or below the top of the tile (rows are in order: found by halving). */
-  const first = (): number => {
-    const top = el.getBoundingClientRect().top;
-    const kids = list.children;
-    let lo = 0;
-    let hi = kids.length;
-    while (lo < hi) {
-      const mid = (lo + hi) >> 1;
-      if ((kids[mid] as Element).getBoundingClientRect().bottom > top + 1) hi = mid;
-      else lo = mid + 1;
-    }
-    for (let i = lo; i < kids.length; i++) {
-      const at = rowTime(o.row((kids[i] as HTMLElement).dataset.key ?? ''));
-      if (at) return at;
-    }
-    return 0;
-  };
-  const show = (): void => {
-    const at = first();
-    const all = times();
-    if (!at || !all.length) return void (label.hidden = true);
-    label.textContent = scrubText(at, all[0] ?? at, all[all.length - 1] ?? at);
-    label.hidden = false;
-    const room = el.scrollHeight - el.clientHeight;
-    const span = el.clientHeight - label.offsetHeight - 8;
-    label.style.top = `${4 + (room > 0 ? (el.scrollTop / room) * span : 0)}px`;
-  };
-  const end = (): void => {
-    held = false;
-    clearTimeout(idle);
-    label.hidden = true;
-  };
-  const down = (e: MouseEvent): void => {
-    // A press on the scroller itself, to the right of its content: the scrollbar.
-    if (e.target !== el || e.button !== 0 || e.offsetX < el.clientWidth) return;
-    held = true;
-    show();
-  };
+  pin.append(label);
+  const intent = scrollIntent(el, () => void (label.hidden = true));
+  // A shown rail says the time at its own place line.
+  const rail = (): boolean =>
+    el.querySelector(':scope > .time-pin > .time-rail:not([hidden])') !== null;
   const scroll = (): void => {
-    if (!held) return;
-    show();
-    clearTimeout(idle);
-    idle = setTimeout(end, IDLE_MS);
+    if (rail() || !intent.telling()) return void (label.hidden = true);
+    const at = topTime(el, list, o.row);
+    if (!at) return void (label.hidden = true);
+    label.textContent = timeText(at);
+    label.hidden = false;
+    // Centred on the native thumb, as the browser draws it: at least 24px, in proportion to what is shown.
+    const view = el.clientHeight;
+    const room = el.scrollHeight - view;
+    const thumb = Math.max(24, (view * view) / Math.max(1, el.scrollHeight));
+    const centre = room > 0 ? (el.scrollTop / room) * (view - thumb) + thumb / 2 : view / 2;
+    const y = centred(label, centre, view) - label.offsetHeight / 2;
+    label.style.top = `${y - (pin.getBoundingClientRect().top - el.getBoundingClientRect().top)}px`;
   };
-  const move = (e: MouseEvent): void => void (held && e.buttons === 0 && end());
-  el.addEventListener('mousedown', down);
   el.addEventListener('scroll', scroll, { passive: true });
-  window.addEventListener('mouseup', end, true);
-  window.addEventListener('mousemove', move, true);
-  window.addEventListener('blur', end);
   return () => {
-    end();
+    intent.dispose();
     label.remove();
-    el.removeEventListener('mousedown', down);
     el.removeEventListener('scroll', scroll);
-    window.removeEventListener('mouseup', end, true);
-    window.removeEventListener('mousemove', move, true);
-    window.removeEventListener('blur', end);
   };
 }

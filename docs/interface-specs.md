@@ -48,7 +48,7 @@ what the engine offers and no surface reaches yet.
 | T2 | Thread: the notes above, compact, and the room of a missing one | [interface-thread.md](interface-thread.md#t2-the-notes-above) | built |
 | T3 | Thread: replies as a conversation, long branches folded | [interface-thread.md](interface-thread.md#t3-replies) | built |
 | T4 | Thread: the reply field under the focus | [interface-thread.md](interface-thread.md#t4-the-reply-field) | built |
-| C1 | Time label beside the thumb while a timeline scrolls | [interface-time.md](interface-time.md#c1-the-scroll-label) | ready |
+| C1 | Time label beside the thumb while a timeline scrolls | [interface-time.md](interface-time.md#c1-the-scroll-label) | built |
 | C2 | Wide scrubber: local year, month and day marks, hover | [interface-time.md](interface-time.md#c2-the-wide-scrubber) | ready |
 | C3 | Time jumps by mouse, touch and keyboard, and their loading | [interface-time.md](interface-time.md#c3-jumps-and-loading) | ready |
 | Q1 | Tabs state wants; the engine makes one plan | [read-plan.md](read-plan.md#q1-tabs-state-wants-the-engine-makes-one-plan) | ready |

@@ -1,6 +1,6 @@
 import { execFileSync } from 'node:child_process';
 import { describe, expect, it } from 'vitest';
-import { scrubText } from '../src/views/feed-scrub.ts';
+import { timeText } from '../src/views/feed-scrub.ts';
 import { filterActive, filterNarrows, filterQuery } from '../src/views/filter-bar.ts';
 
 describe('the filter of a feed', () => {
@@ -59,11 +59,12 @@ describe('the filter of a feed', () => {
   });
 });
 
-describe('the time beside a held scrollbar', () => {
-  it('says as much as the span of the list needs', () => {
+describe('the time beside the scrollbar', () => {
+  it('always says the whole local date and time, whatever the list spans', () => {
     const at = new Date(2026, 10, 15, 9, 5).getTime();
-    expect(scrubText(at, at + 3_600_000, at - 3_600_000)).toBe('09:05');
-    expect(scrubText(at, at + 3_600_000, at - 3 * 86_400_000)).toBe('2026/11/15 09:05');
-    expect(scrubText(at, at, at - 200 * 86_400_000)).toBe('2026/11/15');
+    expect(timeText(at)).toBe('2026/11/15 09:05');
+    expect(timeText(new Date(2026, 0, 3, 23, 59).getTime())).toMatch(
+      /^\d{4}\/\d{2}\/\d{2} \d{2}:\d{2}$/,
+    );
   });
 });

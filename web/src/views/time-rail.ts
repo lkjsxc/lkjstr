@@ -4,8 +4,9 @@ import { h } from '../shared/h.ts';
 import { typing } from '../shared/keys.ts';
 import { popoverOpen } from '../wm/menus.ts';
 import type { Keeper, Place } from './feed-place.ts';
-import { rowTime, scrubText } from './feed-scrub.ts';
+import { centred, rowTime, timeText } from './feed-scrub.ts';
 import { railGuess, railSaid } from './rail-guess.ts';
+import { scrollIntent } from './scroll-intent.ts';
 import { noteToPlace, placeToNote, type TimePlace, timeMarks, timeScale } from './time-scale.ts';
 export function mountTimeRail(o: {
   candidate: boolean;
@@ -28,6 +29,7 @@ export function mountTimeRail(o: {
   rail.append(marks, line, tick, label);
   const pin = h('div', { class: 'time-pin' }, rail);
   el.prepend(pin);
+  const intent = scrollIntent(el, () => void (held || (label.hidden = true)));
   // The view's tab kind (set before mounting) keys what the engine last said, so the first frame has the final width.
   const kind = el.dataset.kind ?? '';
   const guess = (): boolean => o.candidate && o.version() >= 5 && railGuess(kind);
@@ -95,7 +97,7 @@ export function mountTimeRail(o: {
     const key = data?.positions.find((r) => r.month === p.month && r.offset === p.offset)?.key;
     const row = o.rows().find((r) => r.key === key);
     label.hidden = !row;
-    if (row) label.textContent = scrubText(rowTime(row), data?.newest ?? 0, data?.oldest ?? 0);
+    if (row) label.textContent = timeText(rowTime(row));
   };
   const paint = (): void => {
     frame = 0;
@@ -146,6 +148,13 @@ export function mountTimeRail(o: {
     for (const number of marks.querySelectorAll('.time-year'))
       number.classList.toggle('current', number.textContent === year);
     line.style.top = `${8 + (p ? noteToPlace(bands, p) : 0)}px`;
+    // While the reader scrolls, the time at the place line (interface-time.md C1); a held rail says its target.
+    if (!held && intent.telling()) {
+      const at = rowTime(first());
+      label.hidden = !at;
+      label.textContent = timeText(at);
+      label.style.top = `${centred(label, Number.parseFloat(line.style.top), el.clientHeight)}px`;
+    }
     tick.hidden = !back;
     if (back) tick.style.top = `${8 + noteToPlace(bands, back.time)}px`;
   };
@@ -183,13 +192,14 @@ export function mountTimeRail(o: {
     seekTimer ??= setTimeout(flush, 80);
   };
   const end = (): void => {
+    const was = held;
     if (held) flush();
     held = false;
     under = undefined;
     pointer = undefined;
     origin = undefined;
     rail.classList.remove('held');
-    label.hidden = true;
+    label.hidden = !(was && intent.telling()); // a released rail tells where it went, then goes
   };
   const down = (e: PointerEvent): void => {
     if (e.button !== 0) return;
@@ -278,6 +288,7 @@ export function mountTimeRail(o: {
       end();
       cancelAnimationFrame(frame);
       watch.disconnect();
+      intent.dispose();
       pin.remove();
       el.classList.remove('has-time-rail');
       el.removeEventListener('scroll', sync);
