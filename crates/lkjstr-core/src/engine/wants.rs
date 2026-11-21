@@ -140,8 +140,7 @@ fn requests(
     }
     let events = super::time_window::events(store, v, private);
     let selected = super::windows::selection(store, network, v, enabled, &events, private);
-    // Refill can cross the whole retained store. Hidden rows must not turn that
-    // scan into count streams or consume the reference collector's row budget.
+    // Keep hidden refills out of count streams and the reference collector's row budget.
     let visible: Vec<_> = events[selected.raw.clone()]
         .iter()
         .zip(&selected.held)

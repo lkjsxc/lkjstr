@@ -245,7 +245,6 @@ pub(super) fn detach(h: &mut Host, id: u64) {
     direct_messages::sync(h);
     h.discovery.retain(|(client, _), _| *client != id);
 }
-
 #[path = "worker_broker.rs"]
 mod broker;
 pub use broker::start_port_host;
