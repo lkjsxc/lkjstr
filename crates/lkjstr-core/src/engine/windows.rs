@@ -55,10 +55,10 @@ impl Engine {
             .iter()
             .filter(|reason| **reason == Some(super::global::Held::UnavailableRepost))
             .count();
-        let order = v
-            .time_window
-            .as_ref()
-            .map(|_| super::time_window::Order::new(&self.store, &v.query));
+        let order = (v.time_window.is_some()
+            || (v.query.source == Source::Profile
+                && v.query.filters.show.as_deref() == Some("all")))
+        .then(|| super::time_window::Order::new(&self.store, &v.query));
         let items: Vec<_> = window
             .iter()
             .zip(selected.held)

@@ -115,6 +115,12 @@ impl Session {
         for row in &mut out {
             super::quote_state::settle(row, e, q.account.as_deref());
             super::quote_state::unconfirmed(row, e, q.account.as_deref());
+            // Profile rows are rebuilt here, including revealed notes and patches.
+            if q.source == "profile" && q.show.as_deref() == Some("all") {
+                if let Some(fields) = row.as_object_mut() {
+                    fields.remove("repostedBy");
+                }
+            }
             if !row["hidden"].is_object()
                 && row["id"]
                     .as_str()

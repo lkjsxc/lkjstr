@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import type { NoteRow, Query } from '../src/engine/protocol.ts';
 import { readPublicSnapshot, snapshotIdentity } from '../src/engine/public-snapshot-store.ts';
+import { rowTime } from '../src/views/feed-scrub.ts';
 import { harness, note } from './public-snapshots-support.ts';
 
 const profile = 'b'.repeat(64);
@@ -79,4 +80,38 @@ it('does not persist scoped generic faces into ordinary top windows', async () =
   cold.open(all);
   await vi.advanceTimersByTimeAsync(0);
   expect(seen(cold)).toEqual([]);
+});
+
+it('captures and replays authored All rows after live attribution is removed', async () => {
+  const original: NoteRow = { ...note('d'.repeat(64)), at: 10_000 };
+  const selfRepost: NoteRow = { ...note('e'.repeat(64)), eventKind: 6, at: 30_000 };
+  const first = client();
+  first.open(all);
+  cache(first);
+  first.rows([
+    selfRepost,
+    { ...original, repostedBy: { actors: [original.author], others: 0, at: 40_000 } },
+  ]);
+  await vi.advanceTimersByTimeAsync(201);
+  first.transport.close();
+
+  const refreshed = client();
+  refreshed.open(all);
+  await vi.advanceTimersByTimeAsync(0);
+  cache(refreshed);
+  refreshed.rows([selfRepost, original]);
+  await vi.advanceTimersByTimeAsync(201);
+  refreshed.transport.close();
+
+  const expected = [selfRepost, original];
+  expect(readPublicSnapshot(at(all), 'top')?.rows).toEqual(expected);
+  const cold = client();
+  cold.open(all);
+  await vi.advanceTimersByTimeAsync(0);
+  expect(seen(cold).map((frame) => frame.rows)).toEqual([expected]);
+  expect(expected.map(rowTime)).toEqual([30_000, 10_000]);
+  for (const row of expected) {
+    expect(row.repostedBy).toBeUndefined();
+    expect(row.readingAt).toBeUndefined();
+  }
 });
