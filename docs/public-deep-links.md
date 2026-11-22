@@ -22,4 +22,3 @@ Public kinds not assigned a dedicated display face use N2's bounded generic face
 Copy Link uses the engine-encoded naddr for normal/parameterized replaceable kinds (including empty `d`),
 and nevent with kind and author otherwise. Copy ID preserves its previous note representation.
 Unknown, malformed, private and ephemeral pointers retain rejection and availability behavior.
-S4's N2/N7 code is private pending verified real-browser and visual acceptance, not a deployed guarantee.
