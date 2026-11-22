@@ -27,6 +27,7 @@ export function mountProfileKinds(o: {
   save(): void;
   reopen(): void;
 }): {
+  remember(): void;
   seat(header: HTMLElement | undefined, row: Row | undefined): void;
   query(): Partial<Query>;
   dispose(): void;
@@ -98,6 +99,7 @@ export function mountProfileKinds(o: {
     o.reopen();
   });
   return {
+    remember,
     seat(header, row) {
       if (!on || !header || row?.kind !== 'profile') return void bar.remove();
       if (bar.parentElement !== header) {

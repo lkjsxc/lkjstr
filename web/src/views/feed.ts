@@ -94,6 +94,7 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
   const sync = (): void => {
     const settle = keeper.hold(keys.held() ?? moment?.hold());
     drafts?.draw(rows);
+    if (kinds && 'remember' in kinds && typeof kinds.remember === 'function') kinds.remember();
     drawn.draw((shown = thread?.plan(rows, sstate) ?? moment?.plan(rows) ?? rows));
     kinds?.seat(rows[0] && drawn.node(rows[0].key), rows[0]);
     showState();

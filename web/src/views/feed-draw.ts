@@ -104,6 +104,9 @@ export function createRowList(
         if (now && row.kind === 'notification')
           now.body = JSON.stringify({ ...row, unread: undefined });
       }
+      // Prune stale rows first so the ordering pass never moves retained rows around a removed cursor.
+      const wanted = new Set<Node>(want);
+      for (const child of [...list.childNodes]) if (!wanted.has(child)) child.remove();
       let cursor = list.firstChild;
       for (const node of want) {
         if (node === cursor) cursor = cursor.nextSibling;

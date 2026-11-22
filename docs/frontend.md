@@ -39,12 +39,12 @@ Seams worth knowing inside `src/views/`:
 
 - `feed.ts` is every list of rows (home, global, hashtag, search, bookmarks,
   thread, profile, people, notifications). It decides which window of rows to
-  ask for. `feed-draw.ts` turns rows into nodes, `feed-place.ts` keeps the
+  ask for. `feed-draw.ts` keeps unchanged rows mounted while replacing stale rows; `feed-place.ts` keeps the
   reading position as an anchor row plus offset, `feed-keys.ts` is the
   keyboard, `feed-bar.ts` and `filter-bar.ts` are the filter row,
   `feed-scrub.ts` the time beside the thumb while the reader scrolls, `feed-moment.ts` a moment tab, `profile-kinds.ts` the
-  kinds of a profile. `docs.ts` is the Documentation tab, one page with its contents first (its parts include the
-  shortcuts and the release facts of `pages.ts`); `wm/tab-search.ts` finds
+  profile kinds and records pending scroll before redraw. `docs.ts` is one Documentation page with contents first,
+  shortcuts and release facts from `pages.ts`. `wm/tab-search.ts` finds
   a tab. `media.ts` is a picture tab: `zoom.ts` its map-like gestures, `zoom-handle.ts` the percentage handle.
 - `thread.ts` is a thread tab's own part of `feed.ts`: `thread-plan.ts` arranges its rows (compact notes above,
   folds, the room of a missing note, grouped replies), `thread-parts.ts` draws what is not a note, the reply
