@@ -60,9 +60,7 @@ pub fn filter(store: &Store, q: &Query) -> NostrFilter {
             if let Some(address) = super::thread::address(&target) {
                 return super::thread::address_filter(address);
             }
-            let mut kinds = feed_kinds(Feed::ThreadReplies);
-            kinds.push(1111);
-            f.kinds = Some(kinds);
+            f.kinds = Some(feed_kinds(Feed::ThreadReplies));
             f.tags.insert("e".into(), vec![target]);
         }
         Source::Notifications => {
