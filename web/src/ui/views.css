@@ -96,7 +96,7 @@
   .acts { margin-left: -5px; }
   .rchip { height: 34px; padding: 0 11px; border-radius: 17px; }
   .chips { gap: 6px; }
-  .strip > .icon { flex: none; width: 40px; height: 32px; }
+  .strip > .icon { flex: none; width: calc(41px / (var(--scale, 1) * var(--tab-scale, 1))); height: 32px; } /* 40px or more as drawn, the bar being zoomed */
   .cbar .icon, .mbar .icon { width: 40px; height: 40px; }
   .mbar { height: 44px; }
   .mscale { height: 40px; }

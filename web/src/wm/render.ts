@@ -52,27 +52,32 @@ function renderNode(node: LayoutNode, ctx: RenderCtx, out: Rendered, upright = f
     : renderSplit(node, ctx, out);
 }
 
-/** Between "…" and "+": maximize and collapse, or the one that undoes either. None for a lone tile. */
+/** Between "…" and "+" in every state, so the four never move: maximize, then collapse. The one that is on is indigo
+ * and undoes itself; the other still acts from there (a collapsed tile maximizes at once). None for a lone tile. */
 function zoomButtons(p: PaneNode, ctx: RenderCtx, lone: boolean): HTMLElement[] {
-  const button = (name: IconName, title: string, zoom?: Zoom, disabled = false): HTMLElement =>
+  if (lone) return [];
+  const button = (name: IconName, title: string, on: boolean, zoom?: Zoom, disabled = false) =>
     h(
       'button',
       {
-        class: p.zoom ? 'icon zoom on' : 'icon zoom',
+        class: on ? 'icon zoom on' : 'icon zoom',
         title,
         'aria-label': title,
+        'aria-pressed': on,
         disabled,
         onclick: () => ctx.onZoom(p, zoom),
       },
       icon(name),
     );
-  if (p.zoom === 'max')
-    return [button('unfill', t('pane.unfill', { key: keyCaps('tileRestore')[0] ?? '' }))];
-  if (p.zoom === 'min') return [button('unfold', t('pane.unfold'))];
-  if (lone) return [];
+  const max = p.zoom === 'max';
+  const min = p.zoom === 'min';
   return [
-    button('fill', t('pane.fill', { key: keyCaps('tileFill')[0] ?? '' }), 'max'),
-    button('fold', t('pane.fold'), 'min', !ctx.canFold(p)),
+    max
+      ? button('unfill', t('pane.unfill', { key: keyCaps('tileRestore')[0] ?? '' }), true)
+      : button('fill', t('pane.fill', { key: keyCaps('tileFill')[0] ?? '' }), false, 'max'),
+    min
+      ? button('unfold', t('pane.unfold'), true)
+      : button('fold', t('pane.fold'), false, 'min', !ctx.canFold(p)),
   ];
 }
 
@@ -113,11 +118,16 @@ function renderPane(
     '+',
   );
   const zoom = zoomButtons(p, ctx, lone);
-  // Folded, the strip is the unfold button and the tab titles; a press on it anywhere else opens the tile too.
-  const bar = strip(folded ? [zoom, p.tabs.map(tab)] : [menu, zoom, add, p.tabs.map(tab)]);
+  // The four buttons stand first in every state and never scroll; folded, a press anywhere else on the bar that is not
+  // a tab opens the tile too.
+  const bar = strip([menu, ...zoom, add], p.tabs.map(tab));
   if (folded) {
     bar.title = t('pane.unfold');
-    bar.addEventListener('click', (e) => void (e.target === bar && ctx.onZoom(p)));
+    const row = bar.querySelector('.tabrow');
+    bar.addEventListener(
+      'click',
+      (e) => void ((e.target === bar || e.target === row) && ctx.onZoom(p)),
+    );
   }
   const cls = `pane${folded ? ' min' : ''}${upright ? ' upright' : ''}${p.zoom === 'max' ? ' max' : ''}`;
   const el = h('div', { class: cls, 'data-pane': p.id }, bar);

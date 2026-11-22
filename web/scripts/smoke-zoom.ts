@@ -1,6 +1,7 @@
-// Maximize and collapse (docs/design.md, the frame): the two icons between "…" and "+", what each state draws, that
-// both are saved through a reload, that Escape and the keys leave and move a maximized tile, that a collapsed tile
-// keeps its tab's state, opens on a press or a dropped tab, and that a lone tile offers neither.
+// Maximize and collapse (docs/design.md, the frame): the two icons between "…" and "+", which keep their place in
+// every state, what each state draws, that both are saved through a reload, that Escape and the keys leave and move
+// a maximized tile, that a collapsed tile keeps its tab's state, opens on a press or a dropped tab and maximizes at
+// once, and that a lone tile offers neither.
 import type { Page } from 'playwright-core';
 
 type Check = (name: string, ok: boolean, detail?: unknown) => void;
@@ -44,6 +45,15 @@ const near = (a?: Box, b?: Box): boolean =>
   !!b &&
   ['x', 'y', 'width', 'height'].every((k) => Math.abs(a[k as 'x'] - b[k as 'x']) <= 1);
 const settle = (page: Page): Promise<void> => page.waitForTimeout(600); // a layout is written 400ms after a change
+/** A tile bar's buttons: each title and its place from the bar's left edge. */
+const buttons = (page: Page, id: string): Promise<[string, number][]> =>
+  page.locator(`.pane[data-pane="${id}"] > .strip > button`).evaluateAll((els) => {
+    const left = els[0]?.parentElement?.getBoundingClientRect().left ?? 0;
+    return els.map((e) => [
+      e.getAttribute('title') ?? '',
+      Math.round(e.getBoundingClientRect().left - left),
+    ]);
+  });
 
 export async function zoomChecks(open: Open, check: Check): Promise<void> {
   const page = await open({ 'layout:main': FIXTURE });
@@ -60,6 +70,7 @@ export async function zoomChecks(open: Open, check: Check): Promise<void> {
       titles[3] === 'New tab',
     titles,
   );
+  const open4 = await buttons(page, 'a');
   await bar('a').getByTitle('Tile menu', { exact: true }).click();
   const items = await page.locator('.menu button').allInnerTexts();
   check('the tile menu offers no reset', !items.some((x) => /reset/i.test(x)), items);
@@ -80,8 +91,13 @@ export async function zoomChecks(open: Open, check: Check): Promise<void> {
   );
   const unfill = bar('a').locator('.zoom.on');
   check(
-    'and its one icon, indigo, shows all tiles again',
-    (await unfill.count()) === 1 && (await unfill.getAttribute('title')) === 'Show all tiles (Esc)',
+    'maximized, the same four buttons stand where they stood; maximize, indigo, shows all tiles again',
+    (await unfill.count()) === 1 &&
+      (await unfill.getAttribute('title')) === 'Show all tiles (Esc)' &&
+      JSON.stringify((await buttons(page, 'a')).map(([, x]) => x)) ===
+        JSON.stringify(open4.map(([, x]) => x)) &&
+      (await buttons(page, 'a'))[2]?.[0] === 'Collapse tile',
+    [open4, await buttons(page, 'a')],
   );
   await settle(page);
   await page.reload();
@@ -155,6 +171,28 @@ export async function zoomChecks(open: Open, check: Check): Promise<void> {
     (await page.locator('.pane[data-pane="b"]:not(.min) .tab[data-view="global"]').count()) === 1,
     await boxes(page),
   );
+  // Collapsed, the bar keeps the four buttons where they were, and maximize acts from there at once.
+  const openD = await buttons(page, 'd');
+  await bar('d').getByTitle('Collapse tile', { exact: true }).click();
+  const foldD = await buttons(page, 'd');
+  check(
+    'collapsed, the same four buttons stand where they stood, collapse indigo',
+    JSON.stringify(foldD.map(([, x]) => x)) === JSON.stringify(openD.map(([, x]) => x)) &&
+      foldD.map(([title]) => title).join('|') ===
+        'Tile menu|Maximize tile (Alt+Shift+F)|Expand tile|New tab' &&
+      (await bar('d').locator('.zoom.on').getAttribute('title')) === 'Expand tile',
+    [openD, foldD],
+  );
+  await bar('d')
+    .getByTitle(/^Maximize tile/)
+    .click();
+  check(
+    'a collapsed tile maximizes at once, with what it held',
+    Object.keys(await boxes(page)).join() === 'd' &&
+      (await composer.inputValue()) === 'kept while hidden',
+    await boxes(page),
+  );
+  await page.keyboard.press('Escape');
   await page.context().close();
 
   const phone = await open({}, { width: 390, height: 844 });

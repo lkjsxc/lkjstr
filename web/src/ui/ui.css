@@ -96,10 +96,14 @@ lkjstr-spaces button.on { background: var(--fg); color: var(--bg); }
 .split.col > .handle:not(.still) { cursor: row-resize; }
 .split > .handle:not(.still):hover, .split > .handle.active { background: var(--accent); }
 .pane { flex: 1; display: flex; flex-direction: column; min-width: 0; min-height: 0; }
-/* More tabs than fit: the tabs fade out toward a side that hides more (classes set by wm/strip.ts). */
-.strip { display: flex; align-items: center; gap: 2px; flex: 0 0 32px; padding: 0 4px; overflow-x: auto; scrollbar-width: none; background: var(--paper); border-bottom: 1px solid var(--line); pointer-events: auto; --fl: #000; --fr: #000; mask-image: linear-gradient(to right, var(--fl), #000 48px, #000 calc(100% - 48px), var(--fr)); }
-.strip.more-l { --fl: transparent; }
-.strip.more-r { --fr: transparent; }
+/* A tile's bar: its four buttons stay put; only the row of tabs beside them scrolls, and fades out toward a side that
+   hides more (classes set by wm/strip.ts). */
+.strip { display: flex; align-items: center; gap: 2px; flex: 0 0 32px; min-width: 0; padding: 0 4px; overflow: hidden; background: var(--paper); border-bottom: 1px solid var(--line); pointer-events: auto; }
+.strip > .icon { flex: none; }
+.tabrow { display: flex; align-items: center; gap: 2px; flex: 1 1 0; align-self: stretch; min-width: 0; overflow-x: auto; scrollbar-width: none; --fl: #000; --fr: #000; mask-image: linear-gradient(to right, var(--fl), #000 48px, #000 calc(100% - 48px), var(--fr)); }
+.tabrow::-webkit-scrollbar { display: none; }
+.tabrow.more-l { --fl: transparent; }
+.tabrow.more-r { --fr: transparent; }
 [hidden] { display: none !important; }
 button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
 .icon { width: 24px; height: 24px; border-radius: 4px; color: var(--muted); }
@@ -119,7 +123,8 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .split.row > .cell > .pane :is(.i-fold, .i-unfold) { transform: rotate(90deg); }
 .cell.min, .pane.upright { flex: none !important; }
 .pane.min > .strip { cursor: pointer; }
-.pane.upright > .strip { flex: 1 1 0; box-sizing: border-box; width: 32px; padding: 4px 0; writing-mode: vertical-rl; overflow: hidden auto; border-bottom: 0; mask-image: none; }
+.pane.upright > .strip { flex: 1 1 0; box-sizing: border-box; width: 32px; padding: 4px 0; writing-mode: vertical-rl; border-bottom: 0; }
+.pane.upright .tabrow { overflow: hidden auto; mask-image: none; }
 .pane.upright .tab { width: 24px; min-width: 0; height: var(--tab-w, auto); padding: 10px 0 2px; }
 .pane.upright .tab.active { box-shadow: inset -2px 0 var(--accent); }
 @media (pointer: coarse) { .pane.upright > .strip > .icon { width: 32px; height: 40px; } }

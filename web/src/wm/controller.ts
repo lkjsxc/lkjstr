@@ -159,7 +159,8 @@ export function createWmController(
     canFold: (p: L.PaneNode) => L.canFold(root, p.id),
     onAdd(p: L.PaneNode) {
       const tab = p.tabs.find((x) => kindOf(x) === NEW_TAB) ?? own.fresh(NEW_TAB, used());
-      set(p.tabs.includes(tab) ? L.activate(root, tab) : L.addView(root, p.id, tab, 'center'));
+      // A New tab already there is brought to the front, which opens a collapsed tile as adding one does.
+      set(p.tabs.includes(tab) ? L.front(root, tab) : L.addView(root, p.id, tab, 'center'));
       own.focus(tab);
     },
     onHandleDown(s: L.SplitNode, index: number, e: PointerEvent, cells: HTMLElement[]) {

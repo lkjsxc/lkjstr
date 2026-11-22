@@ -226,8 +226,15 @@ async function run(browser: Browser): Promise<void> {
   for (let i = 0; i < 3; i++) await page.locator(`.note .name`).first().click();
   const inBar = await page.evaluate(() => {
     const tab = document.querySelector('.pane.cur .tab.active')?.getBoundingClientRect();
-    const bar = document.querySelector('.pane.cur .strip')?.getBoundingClientRect();
-    return Boolean(tab && bar && tab.left >= bar.left && tab.right <= bar.right);
+    const bar = document.querySelector('.pane.cur .tabrow')?.getBoundingClientRect();
+    // A row narrower than one tab (the tile's four buttons stay) shows the start of its title.
+    const whole = tab && bar && tab.width <= bar.width;
+    return Boolean(
+      tab &&
+        bar &&
+        tab.left >= bar.left - 0.5 &&
+        (whole ? tab.right <= bar.right + 0.5 : tab.left <= bar.left + 0.5),
+    );
   });
   fact('the tab in front is in view in a full bar', inBar);
   for (let i = 0; i < 3; i++) await page.keyboard.press('Alt+Shift+W');
@@ -267,18 +274,29 @@ async function run(browser: Browser): Promise<void> {
   await page.locator(`${home} .note[data-probe] .a-heart.on`).waitFor();
   fact('a reaction keeps the drawn note', (await count(page, `${home} .note[data-probe]`)) === 1);
 
-  // Overflowing strip: many tabs, wheel scrolls sideways, the edge says more exist.
+  // Overflowing strip: many tabs, wheel scrolls them sideways, the edge says more exist, and the tile's four
+  // buttons stay where they were (owner, 2026-11-22).
   for (let i = 0; i < 9; i++)
     await page.locator(`${home} .note .name`).nth(i).click(),
       await page.locator('.tab[data-view="home"]').click();
-  const strip = page.locator('.pane').first().locator('.strip');
+  const strip = page.locator('.pane').first().locator('.tabrow');
+  const pinned = (): Promise<number[]> =>
+    page
+      .locator('.pane >> nth=0 >> .strip > button')
+      .evaluateAll((els) => els.map((e) => Math.round(e.getBoundingClientRect().left)));
+  const still4 = await pinned();
   fact('strip says more to the right', await strip.evaluate((e) => e.classList.contains('more-r')));
-  const s = await center(page, '.pane >> nth=0 >> .strip');
+  const s = await center(page, '.pane >> nth=0 >> .tabrow');
   await page.mouse.move(s.x, s.y);
   await page.mouse.wheel(0, 400);
   await page.waitForTimeout(100);
   fact('wheel scrolls the strip', (await strip.evaluate((e) => e.scrollLeft)) > 100);
   fact('strip says more to the left', await strip.evaluate((e) => e.classList.contains('more-l')));
+  fact(
+    'the four buttons stay put while the tabs scroll',
+    still4.length === 4 && JSON.stringify(await pinned()) === JSON.stringify(still4),
+    [still4, await pinned()],
+  );
 
   // Dragging a tab to the right edge of another tile splits it; resizing moves the border.
   const from = await center(page, '.tab[data-view="global"]');

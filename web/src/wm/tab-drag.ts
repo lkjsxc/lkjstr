@@ -58,7 +58,7 @@ export function startTabDrag(e: PointerEvent, tab: HTMLElement, label: string, o
   const tabRects = new Map(
     [...o.panes].map(([id, el]) => [
       id,
-      [...el.querySelectorAll('.strip > .tab')].map((t) => t.getBoundingClientRect()),
+      [...el.querySelectorAll('.tabrow > .tab')].map((t) => t.getBoundingClientRect()),
     ]),
   );
   let dragging = false;

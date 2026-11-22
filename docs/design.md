@@ -60,17 +60,18 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
   hides more.
 - Tab bars are 1.2 times the interface scale by default. The active tab has
   an indigo underline; every tab shows its close button; middle click closes.
-  A full bar scrolls with the wheel, fades toward the side that hides more
-  and keeps the tab in front in view. Every tab has one width (136px before the tab scale, a setting; 0 fits each
+  A full bar scrolls its tabs with the wheel or a finger, fades them toward the side that hides more
+  and keeps the tab in front in view; the tile's four buttons never scroll (owner, 2026-11-22). Every tab has one width (136px before the tab scale, a setting; 0 fits each
   to its title): a long title ends in an ellipsis and its tooltip is the whole title. On a phone a full bar narrows
   every tab alike, to 88px, before it scrolls.
 - A tile's bar starts with "…" (its menu: the tab's own items, split, reopen, close tile), then two quiet icons,
-  maximize and collapse, then "+". Maximized, the tile fills the workspace alone; the others keep their tabs and
-  state behind it, and its one icon (indigo while on), Escape or `Alt+Shift+F` shows them again. Collapsed, the tile
-  is its bar alone and its siblings take its room: in a column a bar of tab titles, in a row an upright strip whose
-  titles read downwards (the fold arrows turn with it); where the strip is short, its indigo unfold icon comes first.
-  Its icon, a press on the strip or a tab, or a tab dropped or opened into it opens it again. A lone tile has neither
-  icon; the last open tile of a split cannot collapse. A handle beside a collapsed tile moves the nearest open tiles,
+  maximize and collapse, then "+": the same four, in the same places, whether the tile is open, maximized or collapsed
+  (owner, 2026-11-22). The icon of the state the tile is in is indigo and undoes it; the other acts from there.
+  Maximized, the tile fills the workspace alone; the others keep their tabs and state behind it, and its indigo
+  icon, Escape or `Alt+Shift+F` shows them again. Collapsed, the tile is its bar alone and its siblings take its room:
+  in a column a bar of tab titles, in a row an upright strip whose titles read downwards (the fold arrows turn with
+  it). Its indigo icon, a press on the bar or a tab, or a tab dropped or opened into it opens it again, and maximize
+  fills the workspace with it at once. A lone tile has neither icon; the last open tile of a split cannot collapse. A handle beside a collapsed tile moves the nearest open tiles,
   and the collapsed one keeps its share for when it opens. While a tile is maximized, a tab brought forward in
   another (tab search, tile keys, a reopen) maximizes that tile instead, and a split shows every tile again. Both
   states are layout: saved, shared by browser tabs on the workspace, kept through a reload, cleared by a reset.

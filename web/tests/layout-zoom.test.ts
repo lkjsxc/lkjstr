@@ -75,6 +75,16 @@ describe('collapse', () => {
     expect(zooms(root)).toEqual(['', '', '']);
     expect((root as L.SplitNode).sizes.map((z) => Math.round(z * 100))).toEqual([42, 30, 28]);
   });
+  it('a collapsed tile maximizes at once, and a maximized one collapses at once (owner, 2026-11-22)', () => {
+    let root: L.LayoutNode = three();
+    const b = tile(root, 'b').id;
+    root = L.zoomPane(root, b, 'min');
+    root = L.zoomPane(root, b, 'max');
+    expect(zooms(root)).toEqual(['', 'max', '']);
+    root = L.zoomPane(root, b, 'min');
+    expect(zooms(root)).toEqual(['', 'min', '']);
+    expect(L.filled(root)).toBeUndefined();
+  });
   it('the last open tile of a split cannot fold', () => {
     let root: L.LayoutNode = three();
     root = L.zoomPane(root, tile(root, 'a1').id, 'min');
