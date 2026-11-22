@@ -297,7 +297,6 @@ export const en = {
   'set.clientTag.d':
     'What you publish (notes, replies, quotes, reposts, reactions, channel messages and articles) carries a public tag naming lkjstr. Off: none does.',
   'tabs.search': 'Search tabs',
-  'settings.index': 'Groups of settings',
   'set.resetLayout': 'Layout: Reset this workspace',
   'set.resetLayout.d':
     'Put this workspace back to how it started. Tabs it closes can be reopened, and Undo puts it back as it was.',

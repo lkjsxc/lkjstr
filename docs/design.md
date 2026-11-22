@@ -248,9 +248,9 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
 ## Settings, Relays, Stats, Documentation
 - Settings is ytenrich's settings page in a tab: one searchable list,
   "Group: Name" titles, a description, numbers where a number is meant, a
-  mark and a reset on changed entries. Under the search, the group names in
-  one quiet line go to their group (the relay list is one press away).
-  Settings opens at its top unless it was opened for one entry.
+  mark and a reset on changed entries. The list starts right under the
+  search: no index of groups. Settings opens at its top unless it was opened
+  for one entry (the relay list, from the Relays tab).
 - Relays shows state and changes nothing: one flat list, the reader's own
   first, with state, latency, event counts and why each is there. The list
   is edited in Settings only (the tile menu leads to that entry, and to

@@ -300,7 +300,6 @@ export const ja: Record<keyof typeof en, string> = {
   'set.clientTag.d':
     '公開するもの（投稿・返信・引用・リポスト・リアクション・チャンネル・記事）に、lkjstr で書いたことを示す公開タグを付けます。オフにすると付けません。',
   'tabs.search': 'タブを検索',
-  'settings.index': '設定のグループ',
   'set.resetLayout': 'レイアウト: このワークスペースを初期状態に戻す',
   'set.resetLayout.d':
     'このワークスペースを最初の配置に戻します。閉じたタブは開き直せて、「元に戻す」で元の配置に戻せます。',

@@ -707,7 +707,7 @@ async function filtering(browser: Browser, still: Record<string, unknown>): Prom
 }
 
 /** The layout of a device that holds nothing yet, for a reader and a visitor; a saved arrangement kept until it is
- * reset; a reset that loses no draft and can be undone; Settings one press from the relay list. */
+ * reset; a reset that loses no draft and can be undone. */
 async function defaults(browser: Browser, still: Record<string, unknown>): Promise<void> {
   const tiles = (page: Page): Promise<string[]> =>
     page
@@ -836,25 +836,6 @@ async function defaults(browser: Browser, still: Record<string, unknown>): Promi
     'the draft waits in the closed tabs',
     (await p.locator('.pane:has(.tab.active[data-view^="compose~"]) textarea').inputValue()) ===
       'kept through a reset',
-  );
-  // Settings, beside Accounts: its index brings the relay list up with one press, keyboard included.
-  await p.locator('.tab[data-view="settings"]').click();
-  await set.locator('.sindex button', { hasText: 'Relays' }).focus();
-  await p.keyboard.press('Enter');
-  await p.waitForTimeout(500);
-  const at = await set.evaluate((el) => {
-    const head = document.activeElement as HTMLElement;
-    return [
-      head.matches('h3.sgroup') ? head.textContent : '',
-      Math.round(head.getBoundingClientRect().top - el.getBoundingClientRect().top),
-    ];
-  });
-  fact(
-    'Settings index goes to Relays',
-    at[0] === 'Relays' &&
-      Number(at[1]) < 40 &&
-      (await set.locator('[data-entry="set.relayList"]').isVisible()),
-    at,
   );
   await p.context().close();
 }

@@ -48,28 +48,11 @@ export function mountSettings(el: HTMLElement, env: ViewEnv): () => void {
     ...lists.entries,
     actionEntry('set.resetLayouts', () => env.resetLayouts(true)),
   ];
-  const groups = [...new Set(entries.map((e) => e.group))].map((name) => {
-    const head = h('h3', { class: 'sgroup', tabindex: -1 }, name);
-    // The index: a press brings the group's heading to the top and gives it the keyboard (Relays, from anywhere).
-    const go = (): void => {
-      const show = (): void => head.scrollIntoView({ block: 'start' });
-      show();
-      head.focus({ preventScroll: true });
-      clearTimeout(seat);
-      seat = setTimeout(show, 300); // once more when the rows above it have arrived
-    };
-    return {
-      name,
-      head,
-      jump: h('button', { onclick: go }, name),
-      entries: entries.filter((e) => e.group === name),
-    };
-  });
-  const index = h(
-    'nav',
-    { class: 'sindex', 'aria-label': t('settings.index') },
-    groups.map((g) => g.jump),
-  );
+  const groups = [...new Set(entries.map((e) => e.group))].map((name) => ({
+    name,
+    head: h('h3', { class: 'sgroup' }, name),
+    entries: entries.filter((e) => e.group === name),
+  }));
   let changed = new Set<Entry>(); // bound: the entries of this view
   let seat: ReturnType<typeof setTimeout> | undefined;
 
@@ -91,7 +74,7 @@ export function mountSettings(el: HTMLElement, env: ViewEnv): () => void {
       e.node.hidden = !hit;
       if (hit) shown++;
     }
-    for (const g of groups) g.jump.hidden = g.head.hidden = g.entries.every((e) => e.node.hidden);
+    for (const g of groups) g.head.hidden = g.entries.every((e) => e.node.hidden);
     count.textContent =
       shown === available.length
         ? t('settings.count', { n: shown })
@@ -124,7 +107,6 @@ export function mountSettings(el: HTMLElement, env: ViewEnv): () => void {
   el.classList.add('pad');
   el.replaceChildren(
     h('div', { class: 'ssearch' }, search, h('div', { class: 'scount' }, count, modified)),
-    index,
     ...groups.flatMap((g) => [g.head, ...g.entries.map((e) => e.node)]),
   );
   const drafts = keepPublicDrafts(el, env.instance);

@@ -166,10 +166,6 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .scount button, .sreset { padding: 0; font-size: 12px; color: var(--accent); }
 .scount button:hover, .sreset:hover { text-decoration: underline; }
 .sgroup { margin: 16px 0 4px; font-size: 16px; font-weight: 600; }
-/* The groups as one quiet line of places to go; it scrolls away with the search. */
-.sindex { display: flex; flex-wrap: wrap; gap: 2px 14px; padding: 0 0 4px; font-size: 12.5px; }
-.sindex button { padding: 2px 0; color: var(--muted); }
-.sindex button:hover, .sindex button:focus-visible { color: var(--accent); text-decoration: underline; }
 .sgroup, .sitem { scroll-margin-top: 8px; }
 .sitem { display: flex; flex-direction: column; align-items: flex-start; gap: 5px; padding: 10px 10px 12px 12px; border-left: 2px solid transparent; }
 .sitem:hover, .sitem:focus-within { background: var(--hover); }
