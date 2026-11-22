@@ -84,6 +84,18 @@ it('sends one seek at a time, at most every 80ms, and ends on the last target', 
   expect(x.seeker.s.pending).toBeUndefined();
 });
 
+it('keeps a target dragged to after the waiting one: the last place wins', () => {
+  const x = harness([1]);
+  x.seeker.go(at(40)); // out
+  x.seeker.go(at(50)); // waits
+  x.seeker.queue(at(90)); // the drag moved on before the answer
+  x.answer(40);
+  vi.advanceTimersByTime(80);
+  expect(x.seeks.at(-1)?.anchor).toEqual({ month, offset: 90, returnKey: 'n1' });
+  x.answer(90);
+  expect(x.scrolled.at(-1)).toBe('n90');
+});
+
 it('never scrolls back to an earlier target that was answered late', () => {
   const x = harness([1, 2]);
   x.seeker.go(at(40)); // out

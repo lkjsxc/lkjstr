@@ -46,6 +46,8 @@ const main = [
   'held rail says the pointer time',
   'drag to oldest year changes the top row year',
   'return tick restores the row and disappears',
+  'rail labels keep 14px; with days, months read mm/dd',
+  '] goes to an older day and Backspace comes back',
   'signing in brings the ordinary layout',
   'note opens as thread',
   'profile opens',

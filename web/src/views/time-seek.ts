@@ -98,7 +98,8 @@ export function createSeeker(o: {
       }
       if (s.inflight && applied) {
         s.inflight = false;
-        if (s.waiting) queue(s.waiting, sent + SEEK_MS - performance.now());
+        // A target the drag queued since is newer than the one that waited: it goes instead.
+        if (s.waiting) queue(queued ?? s.waiting, sent + SEEK_MS - performance.now());
         s.waiting = undefined;
       }
     },
