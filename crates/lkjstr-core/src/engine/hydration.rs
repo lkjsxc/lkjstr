@@ -101,113 +101,11 @@ pub(super) fn authors(
     out
 }
 
+#[path = "hydration_profiles.rs"]
+mod profiles;
 impl Engine {
     pub(super) fn profile_wants(&self, now: u64) -> Vec<(String, NostrFilter, Query)> {
-        // 128 visible views x 6000 authors; requests chunk at 120 per relay.
-        let mut batches: BTreeMap<String, BTreeMap<String, BTreeSet<String>>> = BTreeMap::new();
-        let reads: Vec<_> = self
-            .network
-            .relay_order
-            .iter()
-            .filter(|u| self.network.known.get(*u).is_none_or(|r| r.read))
-            .cloned()
-            .collect();
-        for (sub, view) in self.views.iter().filter(|(_, v)| v.visible) {
-            let weights = super::weights::Weights::new(
-                &self.store,
-                &self.private_lists,
-                view.query.account.as_deref(),
-            );
-            let mut people: Vec<_> = authors(
-                &self.store,
-                view,
-                &self.network,
-                self.signed_out_global_filter,
-                &self.private_lists,
-            )
-            .into_iter()
-            .filter(|(author, _)| {
-                matches!(
-                    view.query.source,
-                    Source::Following | Source::Followers | Source::List
-                ) || weights.person(author) > 0
-            })
-            .collect();
-            people.sort_by_key(|(author, _)| {
-                (std::cmp::Reverse(weights.person(author)), author.clone())
-            });
-            people.truncate(6000);
-            for (author, seen) in people {
-                if self.network.metadata_fresh(&self.store, &author, 0, now) {
-                    continue;
-                }
-                let delivered: Vec<_> = seen
-                    .into_iter()
-                    .filter(|u| {
-                        reads.contains(u)
-                            || (self.network.read_outboxes.contains(u)
-                                && self.network.known.get(u).is_none_or(|r| r.read)
-                                && self.network.relays.get(u).is_some_and(|r| r.online))
-                    })
-                    .take(1)
-                    .collect();
-                let first = if delivered.is_empty() {
-                    reads.iter().take(1).cloned().collect()
-                } else {
-                    delivered
-                };
-                let routes = if self.network.profile_finished(&author, &first) {
-                    reads
-                        .iter()
-                        .take(2)
-                        .cloned()
-                        .chain(first.iter().cloned())
-                        .collect()
-                } else {
-                    first
-                };
-                for relay in routes {
-                    batches
-                        .entry(relay)
-                        .or_default()
-                        .entry(author.clone())
-                        .or_default()
-                        .insert(if self.store.profile(&author).is_some() {
-                            format!("~prefetch:{sub}")
-                        } else {
-                            sub.clone()
-                        });
-                }
-            }
-        }
-        let mut wants = Vec::new();
-        for (relay, people) in batches {
-            let people: Vec<_> = people.into_iter().collect();
-            for chunk in people.chunks(120) {
-                let filter = NostrFilter {
-                    authors: Some(chunk.iter().map(|(a, _)| a.clone()).collect()),
-                    kinds: Some(vec![0]),
-                    limit: Some(chunk.len() as u64),
-                    ..Default::default()
-                };
-                let members: BTreeSet<_> = chunk
-                    .iter()
-                    .flat_map(|(_, subs)| subs.iter().cloned())
-                    .collect();
-                for sub in members {
-                    wants.push((
-                        sub,
-                        filter.clone(),
-                        Query {
-                            source: Source::Relay,
-                            target: Some(relay.clone()),
-                            ..Default::default()
-                        },
-                    ));
-                }
-            }
-        }
-        wants
+        profiles::wants(self, now)
     }
 }
 
