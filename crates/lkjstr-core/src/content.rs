@@ -154,6 +154,16 @@ pub fn looks_like_noise(content: &str) -> bool {
     if json_like && serde_json::from_str::<serde_json::Value>(text).is_ok() {
         return true;
     }
+    // Links, media and nostr references are content people post (an image
+    // alone is a long URL with no spaces), so only the remaining text counts.
+    let residue: String = segments(text, &[])
+        .into_iter()
+        .filter_map(|segment| match segment {
+            Segment::Text(text) => Some(text),
+            _ => None,
+        })
+        .collect();
+    let text = residue.trim();
     if text.len() < 120 || text.contains(char::is_whitespace) {
         return false;
     }

@@ -53,6 +53,35 @@ fn noise_detection_targets_encoded_blobs_only() {
 }
 
 #[test]
+fn image_links_and_references_alone_are_posts_not_noise() {
+    let hash = "a1b2c3d4e5f60718293a4b5c6d7e8f90".repeat(4);
+    let image = format!("https://image.example.net/{hash}/{hash}.jpg?w=1920&sig={hash}");
+    let quote = format!(
+        "nostr:{}",
+        lkjstr_protocol::encode_nevent(&lkjstr_protocol::EventPointer {
+            id: "ab".repeat(32),
+            relays: Some(vec!["wss://relay.example.com".into(); 2]),
+            author: Some("cd".repeat(32)),
+            kind: Some(1),
+        })
+        .unwrap()
+    );
+    for post in [
+        image.clone(),
+        format!("{image}{image}"),
+        format!("{image}\n"),
+        quote,
+    ] {
+        assert!(post.len() >= 120);
+        assert!(!lkjstr_core::content::looks_like_noise(&post), "{post}");
+    }
+    let blob = "QUJD".repeat(60);
+    assert!(lkjstr_core::content::looks_like_noise(&format!(
+        "{blob}https://example.com/a.png"
+    )));
+}
+
+#[test]
 fn large_plain_and_failed_markup_spans_render_in_linear_time() {
     let start = std::time::Instant::now();
     for text in [
