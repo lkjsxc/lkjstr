@@ -107,7 +107,7 @@ async function visitorChecks({ page, browser, base, relayUrl, errors, shots, sho
     (await page.locator(`${accounts} input`).getAttribute('type')) === 'password' &&
       (await page.locator(`${accounts} [data-f="create"]`).isVisible()),
   );
-  // The same surface on a phone, dark, in Japanese: the bar fits on one line and nothing is clipped.
+  // On a phone the workspace chips scroll while the brand and sign-in control stay in view.
   const phone = await visit({
     viewport: { width: 390, height: 844 },
     locale: 'ja-JP',
@@ -117,21 +117,38 @@ async function visitorChecks({ page, browser, base, relayUrl, errors, shots, sho
   await phone.locator('.acct.out').click();
   await phone.locator('.view[data-kind="account"] [data-f="extension"]').waitFor();
   const bar = await phone.evaluate(() => {
-    const chips = [...document.querySelectorAll('lkjstr-spaces button')];
-    const strip = document.querySelector('lkjstr-spaces').getBoundingClientRect();
+    const spaces = document.querySelector('lkjstr-spaces');
+    const account = document.querySelector('.acct.out').getBoundingClientRect();
     return {
-      chips: chips.filter((c) => {
-        const b = c.getBoundingClientRect();
-        return b.left >= strip.left - 1 && b.right <= strip.right + 1;
-      }).length,
-      faded: document.querySelector('lkjstr-spaces').className,
-      signIn: document.querySelector('.acct.out').getBoundingClientRect().height,
+      chips: spaces.querySelectorAll('button').length,
+      canScroll: spaces.scrollWidth > spaces.clientWidth,
+      fadesAtStart: spaces.classList.contains('more-r'),
+      brand: document.querySelector('.bar > .brand').getBoundingClientRect().width,
+      signIn: account.height,
+      signInInside: account.left >= 0 && account.right <= innerWidth,
       wide: document.documentElement.scrollWidth - innerWidth,
     };
   });
+  const atEnd = await phone.locator('lkjstr-spaces').evaluate((spaces) => {
+    spaces.scrollLeft = spaces.scrollWidth;
+    spaces.dispatchEvent(new Event('scroll'));
+    return (
+      spaces.scrollLeft > 0 &&
+      spaces.classList.contains('more-l') &&
+      !spaces.classList.contains('more-r')
+    );
+  });
   check(
-    'phone top bar: nine workspaces whole, Sign in on one line',
-    bar.chips === 9 && !bar.faded.includes('more') && bar.signIn < 30 && bar.wide <= 0,
+    'phone top bar: nine workspaces scroll and Sign in fits on one line',
+    bar.chips === 9 &&
+      bar.canScroll &&
+      bar.fadesAtStart &&
+      atEnd &&
+      bar.brand > 30 &&
+      bar.signIn > 0 &&
+      bar.signIn < 30 &&
+      bar.signInInside &&
+      bar.wide <= 0,
   );
   if (shots) {
     await phone.waitForTimeout(300);
