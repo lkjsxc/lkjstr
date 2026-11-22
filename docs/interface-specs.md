@@ -65,7 +65,7 @@ what the engine offers and no surface reaches yet.
 | Q6 | Lists are kept, not asked again at every start | [read-plan.md](read-plan.md#q6-lists-are-kept-not-asked-again-at-every-start) | ready |
 | Q7 | A wider set to start from | [read-plan.md](read-plan.md#q7-a-wider-set-to-start-from) | ready |
 | N1 | One kind table instead of the kind allow-lists (engine) | [interface-view.md](interface-view.md#n1-one-kind-table-engine-no-surface) | built |
-| E7 | Two emoji under one shortcode both appear and work | [interface-emoji.md](interface-emoji.md#e7-two-emoji-under-one-shortcode) | ready |
+| E7 | Two emoji under one shortcode both appear and work | [interface-emoji.md](interface-emoji.md#e7-two-emoji-under-one-shortcode) | built |
 | E6 | Custom emoji and the Unicode table ready before the picker opens | [interface-emoji.md](interface-emoji.md#e6-ready-before-the-picker-opens) | ready |
 | N2 | The generic face; every kind opens; profile Articles, Lists, All | [interface-view.md](interface-view.md#n2-the-generic-face-and-every-kind-opens) | ready |
 | N3 | Embedded events and chains, lazy, with depth and cycle limits | [interface-view.md](interface-view.md#n3-embedded-events-and-chains) | ready |

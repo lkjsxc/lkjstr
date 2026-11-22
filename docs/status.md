@@ -3,10 +3,10 @@
 ## Purpose
 
 Current limits: [parity.md](parity.md), [engine-performance.md](engine-performance.md). [Public deep links](public-deep-links.md) work signed out.
-Claude owns the interface. Account-safe and A1/A2 (972ef776) are live. Private S2/E7 is built and reviewed; [checks](emoji-sets.md).
+Claude owns the interface. Account-safe and A1/A2 (972ef776) are live. S2/E7 supports matching shortcodes from different sources; [checks](emoji-sets.md).
 [Q1](engine-q1-progress.md) passes matched public scoring; Worker and ship gates remain. Q2-Q5 remain.
 
-## Kind capabilities (private implementation, 2026-11-22)
+## Kind capabilities (2026-11-22)
 
 N1 centralizes kind policy and public ID/address access. Rows and quotes carry their kind; existing feeds and counts stay unchanged.
 Private and ephemeral events stay out. Other kinds have no actions; richer faces and tabs remain in [interface-view.md](interface-view.md).

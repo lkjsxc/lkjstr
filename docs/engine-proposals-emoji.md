@@ -1,13 +1,14 @@
-# Private S2 emoji protocol additions
+# Protocol 16 additions
 
 ## Purpose
 
-Record the exact emoji fields added by the private collision increment.
+Record the kind and emoji fields added together in protocol 16. See
+[emoji-sets.md](emoji-sets.md) for the collision checks.
 
-Protocol 16 on the independent S2 branch, based on protocol 15. Integration
-selects the final exact protocol number. Source and layout review are complete;
-scoped validation is recorded in [emoji-sets.md](emoji-sets.md).
-The existing reaction action and base reaction row shapes are unchanged.
+- `NoteRow.eventKind?`: public kind other than notes (1) and channel messages (42).
+- `Quote` in state `ok` carries the same optional `eventKind`. Public snapshots retain it.
+
+## Emoji identity and provenance
 
 - `EmojiRow.source`: required owner-list or exact set coordinate; independent of provenance.
 - `EmojiRow.key`: opaque identity includes source, code and SHA-256 of the exact picture URL.
