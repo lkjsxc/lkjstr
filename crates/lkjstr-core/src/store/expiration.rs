@@ -3,7 +3,7 @@ use super::{MAX_DELETED, Store};
 use lkjstr_protocol::NostrEvent;
 
 pub(super) fn deadline(event: &NostrEvent) -> lkjstr_nips::Result<Option<u64>> {
-    if matches!(event.kind, 1 | 6 | 7 | 16 | 42 | 30023) {
+    if crate::kinds::policy(event.kind).expires {
         return lkjstr_nips::metadata::expiration_tags(&event.tags);
     }
     Ok(None)

@@ -6,6 +6,11 @@ Current limits: [parity.md](parity.md), [engine-performance.md](engine-performan
 Claude owns the interface. Account-safe and A1/A2 (972ef776) are live;
 [Q1](engine-q1-progress.md) passes matched public scoring; Worker and ship gates remain. Q2-Q5 remain.
 
+## Kind capabilities (private implementation, 2026-11-22)
+
+N1 centralizes kind policy and public ID/address access. Rows and quotes carry their kind; existing feeds and counts stay unchanged.
+Private and ephemeral events stay out. Other kinds have no actions; richer faces and tabs remain in [interface-view.md](interface-view.md).
+
 ## Specified keys and messages (2026-11-16)
 
 Protocol 8 implements Claude's K1-K4, M1-M6 and D1 specifications with the existing paired strings and design tokens. Conversation lists, older
@@ -193,8 +198,3 @@ The [ninth hour](engine-performance-ninth.md) and [coverage audit](engine-perfor
 The owner's 2026-11-16 delegation authorizes rebased pushes and the prescribed ship script. Tests use fresh ports and fixture data, clean their
 processes and never publish to public relays or touch a saved owner account. The public hour uses REQ/CLOSE only. Docker and unrelated host services
 remain untouched.
-
-## One product
-
-web/ is the only interface; lkjstr-engine-worker owns browser effects. The root workspace is virtual; there is no Leptos/Trunk app. Deep technical
-history remains in engine-package.md, owner-feedback.md, cover.md and verification.md.

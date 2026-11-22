@@ -2,7 +2,7 @@
 // text the thread, on the time the author's Home then, on a quoted card the quoted note: the same everywhere.
 import type { NoteRow } from '../engine/protocol.ts';
 import { type Child, h } from '../shared/h.ts';
-import { t } from '../shared/i18n.ts';
+import { hasKey, t } from '../shared/i18n.ts';
 import { icon } from '../shared/icons.ts';
 import { readNoteState, writeNoteState } from '../shared/note-state.ts';
 import { patchActContext } from './act-context.ts';
@@ -61,7 +61,17 @@ export function renderNote(row: NoteRow, env: ViewEnv, dated = false): HTMLEleme
     if (String(getSelection())) return; // selecting text is not a press
     env.open('thread', { id: row.id, title: plainName(row.author) }, how(e));
   };
-  const context: Child[] = [];
+  const kindKey = `kind.${row.eventKind}`;
+  const context: Child[] =
+    row.eventKind === undefined
+      ? []
+      : [
+          h(
+            'div',
+            { class: 'ctx' },
+            t(hasKey(kindKey) ? kindKey : 'kind.other', { n: row.eventKind }),
+          ),
+        ];
   // In a thread what a note answers is in view, and a repost says nothing about the conversation.
   if (row.repostedBy && !(row.act && row.actOn) && !row.thread) {
     const { actors, others } = row.repostedBy;
@@ -163,7 +173,11 @@ export function renderNote(row: NoteRow, env: ViewEnv, dated = false): HTMLEleme
         { class: 'nmain' },
         head(row, env, dated),
         body,
-        look?.compact ? actionRow(row, env, false) : [actionRow(row, env), reactionChips(row, env)],
+        row.eventKind !== undefined
+          ? null
+          : look?.compact
+            ? actionRow(row, env, false)
+            : [actionRow(row, env), reactionChips(row, env)],
       ),
     ),
   );
@@ -220,6 +234,7 @@ export function patchNote(el: HTMLElement, row: NoteRow, env: ViewEnv, dated = f
     drawnBy.set(el, JSON.stringify(row.author));
     el.querySelector(':scope > .nrow > .avb')?.replaceWith(faceButton(row.author, env));
   }
+  if (row.eventKind !== undefined) return;
   // The button that was pressed is drawn again: the keyboard stays on its successor.
   const held = document.activeElement?.closest('.acts, .chips')?.parentElement === main;
   const mark = held ? heldMark(document.activeElement) : '';

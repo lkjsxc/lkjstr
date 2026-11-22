@@ -2,11 +2,6 @@
 use super::*;
 use crate::cache::Restored;
 
-fn public_kind(kind: u64) -> bool {
-    // Matches the committed public-reference cache policy. Private archives,
-    // message wrappers and signer RPC events are never read through this API.
-    matches!(kind, 0 | 1 | 5 | 6 | 7 | 16 | 40 | 41 | 42 | 9735 | 30023)
-}
 fn admissible(record: &Record) -> bool {
     if record.raw.len() > 1024 * 1024 {
         return false;
@@ -18,9 +13,9 @@ fn admissible(record: &Record) -> bool {
         Restored::Verified(event) | Restored::Verify(event) => event,
     };
     record.id == event.id
-        && public_kind(event.kind)
+        && crate::kinds::policy(event.kind).public_reference
         && lkjstr_protocol::verified_nested_repost(&event)
-            .is_none_or(|nested| public_kind(nested.kind))
+            .is_none_or(|nested| crate::kinds::policy(nested.kind).public_reference)
 }
 fn bounded(result: &LocalReadResult) -> bool {
     result.completed.len() <= BATCH_IDS

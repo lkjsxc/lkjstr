@@ -69,22 +69,24 @@ fn multiple_views_coalesce_and_the_final_owner_releases_the_job() {
 }
 #[test]
 fn verified_disk_body_is_admitted_before_a_second_network_read() {
-    let event = signed(1, "verified");
-    let mut engine = Engine::new();
-    engine.set_local_reads_enabled(true, 0);
-    open(&mut engine, "thread", &event.id, 0);
-    let job = engine.drain_local_reads(0).pop().expect("disk job");
-    let record = Record::verified(&event).expect("verified record");
-    assert!(engine.finish_local_read(
-        job.job,
-        Ok(LocalReadResult {
-            completed: vec![event.id.clone()],
-            records: vec![record],
-        }),
-        10
-    ));
-    assert!(engine.store.get(&event.id).is_some());
-    assert!(engine.drain_local_reads(11).is_empty());
+    for kind in [1, 30311] {
+        let event = signed(kind, "verified");
+        let mut engine = Engine::new();
+        engine.set_local_reads_enabled(true, 0);
+        open(&mut engine, "thread", &event.id, 0);
+        let job = engine.drain_local_reads(0).pop().expect("disk job");
+        let record = Record::verified(&event).expect("verified record");
+        assert!(engine.finish_local_read(
+            job.job,
+            Ok(LocalReadResult {
+                completed: vec![event.id.clone()],
+                records: vec![record],
+            }),
+            10
+        ));
+        assert!(engine.store.get(&event.id).is_some());
+        assert!(engine.drain_local_reads(11).is_empty());
+    }
 }
 #[test]
 fn partial_disk_result_retries_only_its_unfinished_suffix() {
@@ -126,7 +128,8 @@ fn failed_disk_job_releases_network_fallback_without_a_false_empty_result() {
 }
 #[test]
 fn malformed_rows_and_disallowed_private_kinds_are_not_admitted() {
-    for event in [signed(1, "incorrect claimed id"), signed(4, "private")] {
+    for event in [1, 4, 13, 14, 1059, 20000, 24133, 29999].map(|kind| signed(kind, "local fixture"))
+    {
         let mut engine = Engine::new();
         engine.set_local_reads_enabled(true, 0);
         open(&mut engine, "thread", &event.id, 0);

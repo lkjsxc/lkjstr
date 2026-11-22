@@ -11,12 +11,14 @@ impl Store {
             .filter_map(|(_, id)| self.events.get(id))
             .filter(|event| {
                 event.kind == u64::from(coordinate.kind)
-                    && event
-                        .tags
-                        .iter()
-                        .find(|tag| tag.first().is_some_and(|key| key == "d"))
-                        .and_then(|tag| tag.get(1))
-                        == Some(&coordinate.identifier)
+                    && (coordinate.kind < 30000
+                        || event
+                            .tags
+                            .iter()
+                            .find(|tag| tag.first().is_some_and(|key| key == "d"))
+                            .and_then(|tag| tag.get(1))
+                            .map_or("", String::as_str)
+                            == coordinate.identifier)
             })
             .min_by(|a, b| compare_events_desc(a, b))
             .cloned()

@@ -105,7 +105,7 @@ fn nested_quotes_reply_headers_and_repost_actors_share_one_author_batch() {
     let quoted = event(1, "quoted", vec![]);
     let parent = event(1, "parent", vec![]);
     let root = event(
-        BASE_MS + 1,
+        1,
         "visible",
         vec![
             vec!["q".into(), quoted.id.clone()],

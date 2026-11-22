@@ -62,12 +62,30 @@ pub(super) fn matches_extra(e: &NostrEvent, q: &Query) -> bool {
         && f.types.as_ref().is_some_and(|types| {
             !types.iter().any(|t| match t.as_str() {
                 "all" => true,
-                "replies" => matches!(e.kind, 1 | 42) && reply_parent(e).is_some(),
-                "mentions" => matches!(e.kind, 1 | 42),
-                "reposts" => matches!(e.kind, 6 | 16),
-                "reactions" => e.kind == 7,
-                "zaps" => e.kind == 9735,
+                "replies" => crate::kinds::policy(e.kind).reply && reply_parent(e).is_some(),
+                "mentions" => crate::kinds::policy(e.kind).reply,
+                "reposts" => {
+                    crate::kinds::policy(e.kind).act == Some(crate::kinds::ActKind::Repost)
+                }
+                "reactions" => {
+                    crate::kinds::policy(e.kind).act == Some(crate::kinds::ActKind::Reaction)
+                }
+                "zaps" => crate::kinds::policy(e.kind).act == Some(crate::kinds::ActKind::Zap),
                 _ => false,
             })
         }))
+}
+
+/// These views have no event source until an account is selected.
+pub(super) fn signed_out(q: &Query) -> bool {
+    q.account.is_none()
+        && matches!(
+            q.source,
+            Source::Home
+                | Source::Notifications
+                | Source::Bookmarks
+                | Source::Mutes
+                | Source::Emoji
+                | Source::MediaServers
+        )
 }

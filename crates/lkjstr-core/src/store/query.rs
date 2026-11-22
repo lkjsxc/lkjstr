@@ -6,6 +6,7 @@ use lkjstr_protocol::parse_relay_list_suggestions;
 use lkjstr_protocol::{follow_entries_from_event, reply_parent, reply_root};
 
 use super::{Event, Store};
+use crate::kinds::{ActKind, policy};
 
 /// A feed query. Empty `authors` means any author.
 #[derive(Debug, Clone, Default)]
@@ -71,12 +72,18 @@ impl Store {
     pub fn reactions(&self, id: &str) -> Vec<Event> {
         self.referencing(id)
             .into_iter()
-            .filter(|e| e.kind == 7 && is_action_target(e, id))
+            .filter(|e| policy(e.kind).act == Some(ActKind::Reaction) && is_action_target(e, id))
             .collect()
     }
 
     /// Every stored note in the conversation around `focus`, oldest first.
     pub fn thread(&self, root: &str) -> Vec<Event> {
+        if self
+            .get(root)
+            .is_some_and(|event| !policy(event.kind).openable)
+        {
+            return Vec::new();
+        }
         let mut seen = HashSet::new();
         let mut queue = VecDeque::from([root.to_owned()]);
         let mut out = Vec::new();
@@ -84,14 +91,19 @@ impl Store {
             if !seen.insert(id.clone()) {
                 continue;
             }
-            if let Some(event) = self
-                .get(&id)
-                .filter(|event| matches!(event.kind, 1 | 42) || (id == root && event.kind == 30023))
-            {
+            if let Some(event) = self.get(&id).filter(|event| {
+                policy(event.kind).reply || (id == root && policy(event.kind).openable)
+            }) {
                 queue.extend(
                     [
-                        reply_parent(&event),
-                        (event.kind != 42).then(|| reply_root(&event)).flatten(),
+                        policy(event.kind)
+                            .thread_parent
+                            .then(|| reply_parent(&event))
+                            .flatten(),
+                        policy(event.kind)
+                            .thread_root
+                            .then(|| reply_root(&event))
+                            .flatten(),
                     ]
                     .into_iter()
                     .flatten(),
@@ -101,7 +113,7 @@ impl Store {
             for child in self.by_tag_e.get(&id).into_iter().flatten() {
                 if self
                     .get(child)
-                    .is_some_and(|event| matches!(event.kind, 1 | 42) && is_reply_to(&event, &id))
+                    .is_some_and(|event| policy(event.kind).reply && is_reply_to(&event, &id))
                 {
                     queue.push_back(child.clone());
                 }
@@ -144,7 +156,7 @@ impl Store {
             .rev()
             .filter_map(|(_, id)| self.events.get(id))
             .filter(|event| {
-                matches!(event.kind, 1 | 42) && event.content.to_lowercase().contains(&needle)
+                policy(event.kind).reply && event.content.to_lowercase().contains(&needle)
             })
             .take(limit)
             .cloned()
@@ -187,9 +199,17 @@ impl Store {
         let mut out = (0, 0, 0);
         for event in self.by_tag_e.get(id).into_iter().flatten() {
             match self.events.get(event) {
-                Some(e) if matches!(e.kind, 1 | 42) && is_reply_to(e, id) => out.0 += 1,
-                Some(e) if matches!(e.kind, 6 | 16) && is_action_target(e, id) => out.1 += 1,
-                Some(e) if e.kind == 7 && is_action_target(e, id) => out.2 += 1,
+                Some(e) if policy(e.kind).reply && is_reply_to(e, id) => out.0 += 1,
+                Some(e)
+                    if policy(e.kind).act == Some(ActKind::Repost) && is_action_target(e, id) =>
+                {
+                    out.1 += 1
+                }
+                Some(e)
+                    if policy(e.kind).act == Some(ActKind::Reaction) && is_action_target(e, id) =>
+                {
+                    out.2 += 1
+                }
                 _ => {}
             }
         }
@@ -199,7 +219,7 @@ impl Store {
 
 fn is_reply_to(event: &lkjstr_protocol::NostrEvent, id: &str) -> bool {
     reply_parent(event).as_deref() == Some(id)
-        || (event.kind != 42 && reply_root(event).as_deref() == Some(id))
+        || (policy(event.kind).thread_root && reply_root(event).as_deref() == Some(id))
 }
 
 fn is_action_target(event: &lkjstr_protocol::NostrEvent, id: &str) -> bool {

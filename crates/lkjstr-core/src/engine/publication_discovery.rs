@@ -7,7 +7,7 @@ use super::{
 };
 use lkjstr_protocol::{NostrEvent, NostrFilter};
 pub(super) fn recipients(event: &NostrEvent) -> Vec<String> {
-    if !matches!(event.kind, 1 | 6 | 7 | 16 | 42 | 30023) {
+    if !crate::kinds::policy(event.kind).publication_recipients {
         return vec![];
     }
     event

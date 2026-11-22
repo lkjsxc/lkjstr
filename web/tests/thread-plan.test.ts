@@ -105,3 +105,8 @@ describe('a thread as drawn', () => {
     ]);
   });
 });
+
+it.each([0, 7, 30311])('keeps kind %i readable without the kind-1 reply field', (eventKind) => {
+  const focus = { ...note('f', 'focus'), eventKind };
+  expect(keys(plan([focus]))).toEqual(['f']);
+});

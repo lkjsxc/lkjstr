@@ -1,11 +1,14 @@
 //! Source selection and relay filters share one policy.
 use super::protocol::{Query, Source};
-use super::query_predicates::matches_extra;
-use crate::store::{Event, Query as StoreQuery, Store};
+pub(super) use super::query_predicates::{matches_extra, signed_out};
+use crate::{
+    kinds::{Feed, feed_kinds, policy},
+    store::{Event, Query as StoreQuery, Store},
+};
 use lkjstr_protocol::{NostrFilter, tags::tag_values};
 pub fn filter(store: &Store, q: &Query) -> NostrFilter {
     let mut f = NostrFilter {
-        kinds: Some(vec![1, 6]),
+        kinds: Some(feed_kinds(Feed::Timeline)),
         limit: Some(200),
         authors: super::rich::authors(store, q),
         since: q.filters.since,
@@ -15,18 +18,18 @@ pub fn filter(store: &Store, q: &Query) -> NostrFilter {
     let target = q.target.clone().unwrap_or_default();
     match q.source {
         Source::Channels => {
-            f.kinds = Some(vec![40]);
+            f.kinds = Some(feed_kinds(Feed::Channels));
             f.since = None;
             f.until = None;
             f.authors = None;
             f.ids = q.target.clone().map(|id| vec![id]);
         }
         Source::Channel => {
-            f.kinds = Some(vec![42]);
+            f.kinds = Some(feed_kinds(Feed::Channel));
             f.tags.insert("e".into(), vec![target]);
         }
         Source::People => {
-            f.kinds = Some(vec![0]);
+            f.kinds = Some(feed_kinds(Feed::People));
             f.limit = Some(32);
         }
         Source::TheirHome => {
@@ -44,20 +47,20 @@ pub fn filter(store: &Store, q: &Query) -> NostrFilter {
         Source::Profile => {
             f.authors = Some(vec![target]);
             f.kinds = Some(match q.filters.show.as_deref() {
-                Some("reposts") => vec![6, 16],
-                Some("reactions") => vec![7],
-                _ => vec![1],
+                Some("reposts") => feed_kinds(Feed::ProfileReposts),
+                Some("reactions") => feed_kinds(Feed::ProfileReactions),
+                _ => feed_kinds(Feed::ProfilePosts),
             });
         }
         Source::Thread => {
             if let Some(address) = super::thread::address(&target) {
                 return super::thread::address_filter(address);
             }
-            f.kinds = Some(vec![1, 42]);
+            f.kinds = Some(feed_kinds(Feed::ThreadReplies));
             f.tags.insert("e".into(), vec![target]);
         }
         Source::Notifications => {
-            f.kinds = Some(vec![1, 42, 6, 16, 7, 9735]);
+            f.kinds = Some(feed_kinds(Feed::Notifications));
             f.tags
                 .insert("p".into(), q.account.clone().into_iter().collect());
         }
@@ -74,21 +77,21 @@ pub fn filter(store: &Store, q: &Query) -> NostrFilter {
             f.tags.insert("t".into(), vec![target.to_lowercase()]);
         }
         Source::Followers => {
-            f.kinds = Some(vec![3]);
+            f.kinds = Some(feed_kinds(Feed::Followers));
             f.tags.insert("p".into(), vec![target]);
         }
         Source::Following => {
-            f.kinds = Some(vec![0, 3]);
+            f.kinds = Some(feed_kinds(Feed::Following));
             f.authors = Some(vec![target]);
         }
         Source::Bookmarks | Source::Mutes | Source::List | Source::MediaServers | Source::Emoji => {
-            f.kinds = Some(vec![match q.source {
-                Source::Bookmarks => 10003,
-                Source::Mutes => 10000,
-                Source::MediaServers => 10063,
-                Source::Emoji => 10030,
-                _ => 30000,
-            }]);
+            f.kinds = Some(feed_kinds(match q.source {
+                Source::Bookmarks => Feed::Bookmarks,
+                Source::Mutes => Feed::Mutes,
+                Source::MediaServers => Feed::MediaServers,
+                Source::Emoji => Feed::Emoji,
+                _ => Feed::List,
+            }));
             f.authors = Some(q.account.clone().into_iter().collect());
             if q.source == Source::List
                 && let Ok(address) = lkjstr_nips::address::Coordinate::parse(&target)
@@ -101,19 +104,6 @@ pub fn filter(store: &Store, q: &Query) -> NostrFilter {
         _ => {}
     }
     f
-}
-/// These views have no event source until an account is selected.
-pub(super) fn signed_out(q: &Query) -> bool {
-    q.account.is_none()
-        && matches!(
-            q.source,
-            Source::Home
-                | Source::Notifications
-                | Source::Bookmarks
-                | Source::Mutes
-                | Source::Emoji
-                | Source::MediaServers
-        )
 }
 pub fn events(store: &Store, q: &Query) -> Vec<Event> {
     select(store, q, true)
@@ -216,7 +206,7 @@ pub(super) fn select(store: &Store, q: &Query, collapse_acts: bool) -> Vec<Event
                 Some(e)
             }
         })
-        .filter(|e| seen.insert(e.id.clone()))
+        .filter(|e| policy(e.kind).openable && seen.insert(e.id.clone()))
         .collect()
 }
 pub(super) use super::query_hidden::matches_note;
@@ -230,7 +220,9 @@ pub(super) fn accepts(
     f: &NostrFilter,
     authors: &Option<Vec<String>>,
 ) -> bool {
-    (q.source != Source::Channel || lkjstr_protocol::channel_id(e).as_ref() == q.target.as_ref())
+    policy(e.kind).openable
+        && (q.source != Source::Channel
+            || lkjstr_protocol::channel_id(e).as_ref() == q.target.as_ref())
         && authors.as_ref().is_none_or(|a| a.contains(&e.pubkey))
         && (q.source == Source::Bookmarks || lkjstr_protocol::matches_filter(e, f))
         && if q.source == Source::Profile

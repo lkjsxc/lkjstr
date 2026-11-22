@@ -26,7 +26,7 @@ impl Engine {
         }
         match self.build(&account, action.clone(), now / 1000) {
             Ok(event) => {
-                if matches!(event.kind, 3 | 10000 | 10003 | 10005)
+                if crate::kinds::policy(event.kind).serialized_write
                     && self
                         .signing
                         .values()
@@ -201,13 +201,13 @@ impl Engine {
             }
             Action::Upload { .. } => return Err("upload-not-implemented"),
         }
-        if matches!(e.kind, 0 | 3 | 10000..=19999)
+        if crate::kinds::policy(e.kind).monotonic_write
             && let Some(previous) = self.store.replaceable(account, e.kind)
         {
             e.created_at = e.created_at.max(previous.created_at.saturating_add(1));
         }
         self.apply_client_tag(&mut e);
-        if matches!(e.kind, 1 | 42 | 30023) {
+        if crate::kinds::policy(e.kind).derived_tags {
             e.tags = lkjstr_protocol::content_derived_tags(&e.content, &[], &e.tags);
             if e.tags.len() > 1000 {
                 return Err("event-too-large");

@@ -2,7 +2,7 @@ import { afterEach, expect, it } from 'vitest';
 import { noteRow } from '../src/engine/mock/rows.ts';
 import { createWorld } from '../src/engine/mock/world.ts';
 import type { NoteRow } from '../src/engine/protocol.ts';
-import { setLang } from '../src/shared/i18n.ts';
+import { setLang, t } from '../src/shared/i18n.ts';
 import { createSettings } from '../src/shared/settings.ts';
 import { createSignal } from '../src/shared/signal.ts';
 import { createRowList } from '../src/views/feed-draw.ts';
@@ -86,3 +86,43 @@ it('restores warning, text, media and quote choices after patches and window evi
   rows.draw([row]);
   assert();
 });
+
+it.each([7, 30311])(
+  'draws kind %i with its body and context but no publishing controls after updates',
+  (eventKind) => {
+    const w = createWorld(Date.now());
+    const source = w.notes[0];
+    if (!source) throw new Error('fixture');
+    const base = noteRow(w, source, { me: '' });
+    const env = {
+      instance: 'kind-fallback',
+      settings: createSettings(),
+      engine: { accounts: createSignal({ accounts: [] }) },
+    } as unknown as ViewEnv;
+    const list = document.createElement('div');
+    document.body.append(list);
+    const rows = createRowList(list, env, false);
+    rows.draw([base]);
+    expect(list.querySelector('.acts')).not.toBeNull();
+    let row: NoteRow = { ...base, eventKind, segments: [{ k: 'text', text: 'public event body' }] };
+    const assert = (): void => {
+      expect(list.querySelector('.content > .text')?.textContent).toBe('public event body');
+      const label = eventKind === 7 ? t('kind.7') : t('kind.other', { n: eventKind });
+      expect(list.querySelector(':scope > .note > .ctx')?.textContent).toBe(label);
+      expect(list.querySelector('.acts, .chips')).toBeNull();
+    };
+    rows.draw([row]);
+    assert();
+    row = {
+      ...row,
+      counts: { ...row.counts, replies: 8 },
+      author: { ...row.author, name: 'Known now' },
+    };
+    rows.draw([row]);
+    assert();
+    setLang('ja');
+    rows.clear();
+    rows.draw([row]);
+    assert();
+  },
+);

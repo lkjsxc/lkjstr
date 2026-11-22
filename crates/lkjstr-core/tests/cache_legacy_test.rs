@@ -35,14 +35,18 @@ fn an_old_profile_outside_the_newest_slice_can_be_verified_and_checkpointed() ->
     Ok(())
 }
 #[test]
-fn tampered_or_unsupported_records_never_gain_a_public_receipt() {
+fn tampered_or_private_records_never_gain_a_public_receipt() {
     let key = generate_secret_key();
     let note = target(&key, 1);
     let mut damaged = legacy(&note);
     damaged.raw = damaged.raw.replace("read before", "changed body");
     assert!(validate_public_reference(&damaged).is_none());
     assert!(validate_metadata(&legacy(&note)).is_none());
-    for kind in [4, 13, 14, 59, 1059, 24133] {
+    for kind in [59, 30311] {
+        let raw = event(&key, kind, 1, "public generic event", vec![]);
+        assert!(validate_public_reference(&legacy(&raw)).is_some());
+    }
+    for kind in [4, 13, 14, 1059, 20000, 24133, 29999] {
         let raw = event(&key, kind, 1, "private or RPC", vec![]);
         assert!(validate_public_reference(&legacy(&raw)).is_none());
     }

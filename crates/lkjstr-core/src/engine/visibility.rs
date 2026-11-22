@@ -147,7 +147,8 @@ pub(super) fn deletion_filter(
         } else {
             Some(event.clone())
         };
-        let Some(event) = event.filter(|event| matches!(event.kind, 1 | 42 | 30023)) else {
+        let Some(event) = event.filter(|event| crate::kinds::policy(event.kind).deletion_context)
+        else {
             continue;
         };
         targets.insert(event.id.clone());

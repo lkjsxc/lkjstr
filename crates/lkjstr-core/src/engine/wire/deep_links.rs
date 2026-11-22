@@ -7,9 +7,16 @@ impl Session {
             ("n", Some(NostrEntity::Note(_))) => true,
             ("n", Some(NostrEntity::Nevent(pointer))) => pointer
                 .kind
-                .is_none_or(|kind| matches!(kind, 1 | 42 | 30023)),
+                .is_none_or(|kind| crate::kinds::policy(kind).openable),
             ("p", Some(NostrEntity::Npub(_) | NostrEntity::Nprofile(_))) => true,
-            ("a", Some(NostrEntity::Naddr(pointer))) => pointer.kind == 30023,
+            ("a", Some(NostrEntity::Naddr(pointer))) => {
+                crate::kinds::policy(pointer.kind).openable
+                    && lkjstr_nips::address::Coordinate::parse(&format!(
+                        "{}:{}:{}",
+                        pointer.kind, pointer.pubkey, pointer.identifier
+                    ))
+                    .is_ok()
+            }
             _ => false,
         };
         if !valid {

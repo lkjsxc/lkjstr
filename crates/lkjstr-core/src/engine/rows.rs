@@ -58,15 +58,14 @@ pub fn row_with_lists(
     depth: usize,
     private: &super::settings::PrivateLists,
 ) -> Row {
-    let mut parts = if event.kind == 6 {
+    let repost = crate::kinds::policy(event.kind).act == Some(crate::kinds::ActKind::Repost);
+    let mut parts = if repost {
         Vec::new()
     } else {
         content::segments(&event.content, &event_emoji(event))
     };
     super::row_media::attachments(event, &mut parts);
-    if event.kind == 6
-        && let Some(id) = super::acts::target(event)
-    {
+    if repost && let Some(id) = super::acts::target(event) {
         parts.push(Part::Quote { id, relays: vec![] });
     }
     for id in lkjstr_protocol::tags::tag_values(event, "q") {
@@ -90,21 +89,24 @@ pub fn row_with_lists(
             Part::Emoji { code, url } => Segment::Emoji { code, url },
             Part::Quote { id, .. } => Segment::Quote {
                 row: if depth < 2 {
-                    store.get(&id).map(|e| {
-                        let reason = super::visibility::reason(
-                            store,
-                            &super::protocol::Query {
-                                account: account.map(str::to_owned),
-                                ..Default::default()
-                            },
-                            &e,
-                            private,
-                        );
-                        Box::new(match reason {
-                            Some(reason) => super::visibility::covered_row(store, &e, reason),
-                            None => row_with_lists(store, &e, account, depth + 1, private),
+                    store
+                        .get(&id)
+                        .filter(|e| crate::kinds::policy(e.kind).openable)
+                        .map(|e| {
+                            let reason = super::visibility::reason(
+                                store,
+                                &super::protocol::Query {
+                                    account: account.map(str::to_owned),
+                                    ..Default::default()
+                                },
+                                &e,
+                                private,
+                            );
+                            Box::new(match reason {
+                                Some(reason) => super::visibility::covered_row(store, &e, reason),
+                                None => row_with_lists(store, &e, account, depth + 1, private),
+                            })
                         })
-                    })
                 } else {
                     None
                 },
@@ -170,10 +172,19 @@ pub fn row_with_lists(
         created_at: event.created_at,
         kind: event.kind,
         content,
-        reply: reply_parent(event).map(|id| Context {
-            author: store.get(&id).map(|e| author(store, &e.pubkey)),
-            id,
-        }),
+        reply: crate::kinds::policy(event.kind)
+            .thread_parent
+            .then(|| reply_parent(event))
+            .flatten()
+            .filter(|id| {
+                store
+                    .get(id)
+                    .is_none_or(|e| crate::kinds::policy(e.kind).openable)
+            })
+            .map(|id| Context {
+                author: store.get(&id).map(|e| author(store, &e.pubkey)),
+                id,
+            }),
         reposts,
         reposted_at,
         window_reading_at: None,

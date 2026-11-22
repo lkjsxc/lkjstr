@@ -26,7 +26,13 @@ pub(super) fn settle(row: &mut Value, e: &Engine, account: Option<&str>) {
             let Some(id) = quote["id"].as_str() else {
                 continue;
             };
-            let state = if e.store.verified_deleted(id) {
+            let state = if e
+                .store
+                .get(id)
+                .is_some_and(|event| !crate::kinds::policy(event.kind).openable)
+            {
+                "missing"
+            } else if e.store.verified_deleted(id) {
                 "deleted"
             } else if e.store.verified_expired(id) {
                 "expired"

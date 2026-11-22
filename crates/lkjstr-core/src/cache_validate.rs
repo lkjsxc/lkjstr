@@ -1,9 +1,9 @@
 //! Legacy cache rows gain receipts only after their original signature checks.
 use super::{Record, Restored};
-use lkjstr_protocol::{VerificationResult, verify_event};
+use lkjstr_protocol::{NostrEvent, VerificationResult, verify_event};
 const MAX_ROW_BYTES: usize = 1024 * 1024;
 
-fn checked(record: &Record, eligible: impl Fn(u64) -> bool) -> Option<Record> {
+fn checked(record: &Record, eligible: impl Fn(u64) -> bool) -> Option<(Record, NostrEvent)> {
     if record.raw.len() > MAX_ROW_BYTES {
         return None;
     }
@@ -17,17 +17,22 @@ fn checked(record: &Record, eligible: impl Fn(u64) -> bool) -> Option<Record> {
     {
         return None;
     }
-    Record::verified(&event).ok()
+    Some((Record::verified(&event).ok()?, event))
 }
 pub fn validate_metadata(record: &Record) -> Option<Record> {
     checked(record, |kind| {
         kind == 5 || lkjstr_protocol::is_replaceable_kind(kind)
     })
+    .map(|(record, _)| record)
 }
 pub fn validate_public_reference(record: &Record) -> Option<Record> {
     // Message wrappers and signer RPC records cannot be admitted by a public
     // pre-unlock snapshot hint, even when an event ID is known to the frontend.
-    checked(record, |kind| {
-        matches!(kind, 0 | 1 | 5 | 6 | 7 | 16 | 40 | 41 | 42 | 9735 | 30023)
-    })
+    let (checked, event) = checked(record, |kind| {
+        let policy = crate::kinds::policy(kind);
+        policy.retained && policy.public_reference
+    })?;
+    lkjstr_protocol::verified_nested_repost(&event)
+        .is_none_or(|nested| crate::kinds::policy(nested.kind).public_reference)
+        .then_some(checked)
 }

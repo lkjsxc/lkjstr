@@ -31,6 +31,7 @@ function quoteOf(w: World, id: string): Quote {
   if (q.hidden || w.isMuted(q)) return { state: 'muted', id };
   return {
     state: 'ok',
+    eventKind: q.eventKind,
     id,
     author: q.by.author,
     at: q.at,
@@ -55,6 +56,7 @@ export function noteRow(w: World, n: MNote, o: RowOpts): NoteRow {
   return {
     previews: w.linkPreviews ? previewFixtures(n.segments) : undefined,
     kind: 'note',
+    eventKind: n.eventKind,
     key: n.id,
     id: n.id,
     bech32: `note1${n.id.slice(0, 58)}`,

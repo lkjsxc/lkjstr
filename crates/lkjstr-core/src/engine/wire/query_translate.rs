@@ -113,10 +113,24 @@ fn resolve_reference(raw: &str, source: p::Source) -> Option<(String, Vec<String
             pointer.relays.filter(|_| source == p::Source::Profile),
         ),
         NostrEntity::Note(id) => (id, None),
-        NostrEntity::Nevent(pointer) => (pointer.id, pointer.relays),
-        NostrEntity::Naddr(pointer) => {
-            if source == p::Source::Thread && pointer.kind != 30023 {
+        NostrEntity::Nevent(pointer) => {
+            if source == p::Source::Thread
+                && pointer
+                    .kind
+                    .is_some_and(|kind| !crate::kinds::policy(kind).openable)
+            {
                 return None;
+            }
+            (pointer.id, pointer.relays)
+        }
+        NostrEntity::Naddr(pointer) => {
+            if source == p::Source::Thread {
+                let address = format!("{}:{}:{}", pointer.kind, pointer.pubkey, pointer.identifier);
+                if !crate::kinds::policy(pointer.kind).openable
+                    || lkjstr_nips::address::Coordinate::parse(&address).is_err()
+                {
+                    return None;
+                }
             }
             (
                 format!("{}:{}:{}", pointer.kind, pointer.pubkey, pointer.identifier),

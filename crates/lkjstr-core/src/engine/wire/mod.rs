@@ -45,7 +45,7 @@ mod input_types;
 mod output_types;
 pub use input_types::Input;
 pub use output_types::{AccountError, CryptContext, Failure, Output};
-pub const PROTOCOL_VERSION: u32 = 15;
+pub const PROTOCOL_VERSION: u32 = 16;
 /// Adapter state is per transport client; the engine remains independent of pixels.
 #[derive(Default)]
 pub struct Session {

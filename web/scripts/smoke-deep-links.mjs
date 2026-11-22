@@ -153,8 +153,8 @@ export async function deepLinkChecks({
   for (const [label, path] of [
     ['invalid checksum', `/n/${badChecksum}`],
     ['wrong entity', `/p/${note}`],
-    ['unsupported address kind', `/a/${articlePointer(pubkey, identifier, 30030)}`],
-    ['unsupported event kind', `/n/${nevent(id, 7)}`],
+    ['ephemeral address kind', `/a/${articlePointer(pubkey, identifier, 24133)}`],
+    ['private event kind', `/n/${nevent(id, 4)}`],
     ['extra segment', `/n/${note}/extra`],
     ['unknown path', `/x/${npub}`],
   ]) {

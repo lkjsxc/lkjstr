@@ -4,6 +4,9 @@
 Additive protocol ledger under the 2026-11-16 owner delegation. See status.md and parity.md for current behavior and limits.
 Earlier context is preserved in [engine-proposals-history.md](engine-proposals-history.md).
 
+- Protocol 16: `NoteRow.eventKind?: number` identifies public kinds other than notes (1) and channel messages (42).
+- Protocol 16: `Quote` in state `ok` carries `eventKind?: number`. Public snapshots retain it with unchanged scoped-window policy.
+
 ## Protocol 6 engine additions (2026-11-16, owner authorized)
 - `ToEngine.dm.open {sub,query:DmQuery}` adds an explicit private subscription.
 - `ToEngine.dm.close {sub}` releases a private subscription and its wants.

@@ -65,9 +65,6 @@ struct Checkpoint {
     generation: u64,
     contexts: Vec<Context>,
 }
-fn contributor(kind: u64) -> bool {
-    matches!(kind, 1 | 5 | 6 | 7 | 16 | 42 | 9735 | 30023)
-}
 impl Context {
     /// Only an actual reader/near-delivered ID may call this. Store is verified.
     /// Capture the complete retained reply graph: grandchildren can affect counts.
@@ -122,7 +119,7 @@ impl Context {
         target: &str,
     ) -> Option<BTreeMap<String, crate::store::Event>> {
         let note = store.get(target)?;
-        if !matches!(note.kind, 1 | 6 | 16 | 42 | 30023) {
+        if !crate::kinds::policy(note.kind).context_target {
             return None;
         }
         let mut events = BTreeMap::from([(note.id.clone(), note.clone())]);
@@ -131,7 +128,7 @@ impl Context {
             .into_iter()
             .chain(store.referencing(target))
         {
-            if event.kind != 5 && contributor(event.kind) {
+            if event.kind != 5 && crate::kinds::policy(event.kind).context_contributor {
                 events.insert(event.id.clone(), event);
             }
         }

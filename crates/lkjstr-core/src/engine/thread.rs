@@ -1,4 +1,7 @@
-use crate::store::{Event, Store};
+use crate::{
+    kinds::policy,
+    store::{Event, Store},
+};
 use lkjstr_nips::address::Coordinate;
 use lkjstr_protocol::{NostrEvent, NostrFilter, is_event_id, reply_parent, reply_root};
 use std::collections::{HashMap, VecDeque};
@@ -6,7 +9,7 @@ use std::collections::{HashMap, VecDeque};
 pub(super) fn address(target: &str) -> Option<Coordinate> {
     Coordinate::parse(target)
         .ok()
-        .filter(|address| address.kind == 30023)
+        .filter(|address| policy(address.kind.into()).openable)
 }
 
 pub(super) fn address_filter(address: Coordinate) -> NostrFilter {
@@ -16,13 +19,18 @@ pub(super) fn address_filter(address: Coordinate) -> NostrFilter {
         limit: Some(1),
         ..Default::default()
     };
-    filter.tags.insert("d".into(), vec![address.identifier]);
+    if address.kind >= 30000 {
+        filter.tags.insert("d".into(), vec![address.identifier]);
+    }
     filter
 }
 
 pub(super) fn focus(store: &Store, target: &str) -> Option<String> {
     if is_event_id(target) {
-        return Some(target.to_owned());
+        return store
+            .get(target)
+            .is_none_or(|event| policy(event.kind).openable)
+            .then(|| target.to_owned());
     }
     store
         .addressed(&address(target)?)
@@ -45,7 +53,17 @@ pub(super) fn extra_filter(store: &Store, query: &super::Query) -> Option<NostrF
 
 /// The note an event answers in a thread: its reply parent, else (outside channels) its root.
 pub(crate) fn parent(event: &NostrEvent) -> Option<String> {
-    reply_parent(event).or_else(|| (event.kind != 42).then(|| reply_root(event)).flatten())
+    policy(event.kind)
+        .thread_parent
+        .then(|| {
+            reply_parent(event).or_else(|| {
+                policy(event.kind)
+                    .thread_root
+                    .then(|| reply_root(event))
+                    .flatten()
+            })
+        })
+        .flatten()
 }
 
 /// Temporary indexes bounded by the retained event store. Build before
@@ -75,7 +93,7 @@ fn classify(events: &[Event], focus: &str) -> (Positions, Vec<String>) {
         current = by_id.get(id.as_str()).copied();
         // A root tag can still identify a cached ancestor across a cache gap.
         if current.is_none()
-            && event.kind != 42
+            && policy(event.kind).thread_root
             && let Some(root) = reply_root(event)
             && !positions.contains_key(&root)
         {

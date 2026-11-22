@@ -1,12 +1,15 @@
 //! Bounded act chains. Each resolution retains at most four events; representatives
 //! retain at most one entry per event in the already bounded source slice.
 use super::protocol::{Query, Source};
-use crate::store::{Event, Store};
+use crate::{
+    kinds::{ActKind, policy},
+    store::{Event, Store},
+};
 use lkjstr_protocol::NostrEvent;
 use std::collections::{BTreeMap, BTreeSet};
 
 pub(super) fn is_act(kind: u64) -> bool {
-    matches!(kind, 6 | 7 | 16 | 9735)
+    policy(kind).act.is_some()
 }
 pub(super) fn target(event: &NostrEvent) -> Option<String> {
     event
@@ -31,15 +34,16 @@ pub(super) struct Chain {
 }
 impl Chain {
     pub fn rank(&self) -> u8 {
-        match self.first.as_ref().map(|event| event.kind) {
-            Some(6 | 7 | 16) => 2,
-            Some(9735) => 1,
+        match self.first.as_ref().and_then(|event| policy(event.kind).act) {
+            Some(ActKind::Repost | ActKind::Reaction) => 2,
+            Some(ActKind::Zap) => 1,
             _ => 0,
         }
     }
     pub fn trusted(&self, engine: &super::Engine) -> bool {
         self.links.iter().all(|event| {
-            event.kind != 9735 || engine.zaps.receipts.get(&engine.store, &event.id).is_some()
+            policy(event.kind).act != Some(ActKind::Zap)
+                || engine.zaps.receipts.get(&engine.store, &event.id).is_some()
         })
     }
 }
@@ -61,8 +65,8 @@ pub(super) fn from_target(store: &Store, id: &str) -> Chain {
             out.first = Some(event.clone());
         }
         if !is_act(event.kind) {
-            // These are the public note kinds the existing renderer can draw.
-            if matches!(event.kind, 1 | 42) {
+            // Keep activity grouping limited to its existing terminal-note semantics.
+            if policy(event.kind).act_terminal {
                 out.note = Some(event);
             }
             return out;
@@ -107,10 +111,9 @@ pub(super) fn representatives(store: &Store, events: Vec<Event>) -> Vec<Event> {
     out
 }
 pub(super) fn reposts(store: &Store, id: &str) -> impl Iterator<Item = Event> {
-    store
-        .referencing(id)
-        .into_iter()
-        .filter(move |event| matches!(event.kind, 6 | 16) && target(event).as_deref() == Some(id))
+    store.referencing(id).into_iter().filter(move |event| {
+        policy(event.kind).act == Some(ActKind::Repost) && target(event).as_deref() == Some(id)
+    })
 }
 
 pub(super) fn matches_terminal(store: &Store, event: &NostrEvent, query: &Query) -> bool {

@@ -35,7 +35,7 @@
 /** 13: engine-authorized public rendering snapshots, independent of the protected event store. */
 /** 14: bounded act chains, profile act context and unresolved notification states. */
 /** 15: bounded absolute cache windows and current follow-list provenance. */
-export const PROTOCOL_VERSION = 15;
+export const PROTOCOL_VERSION = 16;
 
 /** Chosen by the interface, unique among its open subscriptions. */
 export type SubId = string;
@@ -191,6 +191,8 @@ export type Media = {
 export type Quote =
   | {
       readonly state: 'ok';
+      /** The event kind, absent for notes and channel messages. */
+      readonly eventKind?: number;
       readonly id: string;
       readonly author: Author;
       readonly at: Millis;
@@ -264,6 +266,8 @@ export type ActRef = {
   readonly emoji?: { readonly emoji: string; readonly url?: string };
 };
 export type NoteRow = {
+  /** The event kind, absent for notes (1) and channel messages (42). */
+  readonly eventKind?: number;
   /** Profile Reactions/Reposts only: the selected person's act, which also supplies this row's time. */
   readonly act?: ActRef;
   /** The immediately targeted act; only the terminal note is rendered as the row. */

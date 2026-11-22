@@ -216,3 +216,6 @@ impl Engine {
         self.channel_outputs(result)
     }
 }
+
+#[cfg(test)]
+mod kind_effects_test;

@@ -36,7 +36,7 @@ emoji under one shortcode both usable. This file holds N1 to N7. The emoji parts
 - An unlisted kind gets the generic entry: kept, cached as context, openable by id and by address, and listed in no
   feed. Delete the old lists in the same change; leave no fallback path.
 - Additive: `NoteRow.eventKind?: number` (absent for 1 and 42), and `eventKind?: number` on `Quote` `ok`. Until N2
-  lands, a row of another kind is drawn as a note with the `kind.other` context line.
+  lands, use the known `kind.<n>` or `kind.other` context and note body, without actions or a reply field; quotes stay as drawn.
 - Nothing a reader sees changes: feeds, counts and threads stay the same. Native tests show this for each former
   list, and that a kind-30311 event opens by id and by address.
 

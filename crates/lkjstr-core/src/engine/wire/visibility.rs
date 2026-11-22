@@ -22,7 +22,8 @@ pub(super) fn nested_hidden(engine: &Engine, account: Option<&str>, event: &Nost
         account: account.map(str::to_owned),
         ..Default::default()
     };
-    visibility::reason(&engine.store, &query, event, &engine.private_lists).is_some()
+    !crate::kinds::policy(event.kind).openable
+        || visibility::reason(&engine.store, &query, event, &engine.private_lists).is_some()
 }
 
 fn reason(row: &Value, field: &str) -> Option<Reason> {

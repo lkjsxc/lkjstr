@@ -57,19 +57,21 @@ impl Session {
             "emoji"=>crate::engine::emoji::rows(store,q.account.as_deref()).into_iter().map(emoji).collect(),
             "notifications"=>super::notifications::notifications(q,e),
             "profile" if converted.as_ref().is_some_and(crate::engine::acts::activity) => super::acts::profile(self,sub,q,e),
-            "bookmarks"=>converted.as_ref().map(|q|crate::engine::list_events::events(store,q,&e.private_lists).iter().map(|event|self.project_event(sub,e,q,event,None)).collect()).unwrap_or_default(),
+            "bookmarks"=>converted.as_ref().map(|q|crate::engine::list_events::events(store,q,&e.private_lists).iter().filter(|event|crate::kinds::policy(event.kind).openable).map(|event|self.project_event(sub,e,q,event,None)).collect()).unwrap_or_default(),
             "list"=>{
                 q.convert().map(|converted|query::events(store,&converted).into_iter().next().map(|event|crate::engine::settings::list_tags_for(&event,&e.private_lists,q.account.as_deref()).iter().filter(|t|t.first().is_some_and(|k|k=="p")).filter_map(|t|t.get(1)).filter(|p|lkjstr_protocol::is_pubkey(p)).map(|p|person(e,p,q.account.as_deref(), weights.person(p))).collect()).unwrap_or_default()).unwrap_or_default()
             }
             _ => converted.as_ref().map(|converted| {
                 query::events(store, converted).into_iter()
+                    .filter(|event| crate::kinds::policy(event.kind).openable)
                     .filter_map(|event| {
                         let position = match &thread {
                             Some(positions) => Some(*positions.get(&event.id)?),
                             None => None,
                         };
-                        let wrapper = event.kind == 6 || (q.source == "profile" && matches!(q.show.as_deref(), Some("reposts" | "reactions")));
+                        let wrapper = q.source != "thread" && (event.kind == 6 || (q.source == "profile" && matches!(q.show.as_deref(), Some("reposts" | "reactions"))));
                         let shown = if wrapper { crate::engine::acts::target(&event).and_then(|id| store.get(&id))? } else { event.clone() };
+                        if !crate::kinds::policy(shown.kind).openable { return None; }
                         let mut value = self.project_event(sub, e, converted, &shown, None);
                         if wrapper && q.show.as_deref() == Some("reposts") {
                             value["repostedBy"] = json!({"actors":[super::note::author(&rows::author(store,&event.pubkey))],"others":0,"at":event.created_at.saturating_mul(1000)});

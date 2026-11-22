@@ -28,7 +28,13 @@ impl Context {
             let Ok(Restored::Verified(event)) = row.restore() else {
                 return Err("unverified read context record");
             };
-            if !contributor(event.kind) || events.insert(event.id.clone(), event).is_some() {
+            let policy = crate::kinds::policy(event.kind);
+            let eligible = if event.id == self.target {
+                policy.context_target
+            } else {
+                policy.context_contributor
+            };
+            if !eligible || events.insert(event.id.clone(), event).is_some() {
                 return Err("invalid read context membership");
             }
         }

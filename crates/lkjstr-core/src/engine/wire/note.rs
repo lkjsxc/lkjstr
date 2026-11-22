@@ -32,6 +32,11 @@ pub fn author(a: &Author) -> Value {
     }
     value
 }
+fn event_kind(value: &mut Value, kind: u64) {
+    if crate::kinds::policy(kind).face != crate::kinds::Face::Note {
+        value["eventKind"] = json!(kind);
+    }
+}
 fn parts(row: &Row) -> (Vec<Value>, Vec<Value>, Vec<Value>) {
     let mut segments = Vec::new();
     let mut media = Vec::new();
@@ -73,11 +78,15 @@ fn parts(row: &Row) -> (Vec<Value>, Vec<Value>, Vec<Value>) {
             }
             Segment::Quote { id, row } => {
                 let quote = match row.as_deref() {
+                    Some(row) if !crate::kinds::policy(row.kind).openable => {
+                        json!({"state":"missing","id":id})
+                    }
                     Some(row) if row.hidden_reason.is_some() => json!({"state":"muted","id":id}),
                     Some(row) => {
                         let (segments, media, _) = parts(row);
                         let mut quote = json!({"state":"ok","id":id,"author":author(&row.author),
                             "at":row.created_at.saturating_mul(1000),"segments":segments,"media":media});
+                        event_kind(&mut quote, row.kind);
                         if let Some(warning) = &row.warning {
                             quote["cw"] = json!(warning);
                         }
@@ -93,10 +102,9 @@ fn parts(row: &Row) -> (Vec<Value>, Vec<Value>, Vec<Value>) {
 }
 pub(super) fn note(row: &Row, store: &Store, account: Option<&str>) -> Value {
     if let Some(reason) = row.hidden_reason {
-        return covered(
-            json!({"key":row.id,"id":row.id,"author":author(&row.author),"at":row.created_at.saturating_mul(1000)}),
-            reason,
-        );
+        let mut identity = json!({"key":row.id,"id":row.id,"author":author(&row.author),"at":row.created_at.saturating_mul(1000)});
+        event_kind(&mut identity, row.kind);
+        return covered(identity, reason);
     }
     let (segments, media, quotes) = parts(row);
     let mut v = json!({"kind":"note","key":row.id,"id":row.id,"bech32":lkjstr_protocol::encode_note(&row.id).unwrap_or_else(|_|row.id.clone()),
@@ -104,6 +112,7 @@ pub(super) fn note(row: &Row, store: &Store, account: Option<&str>) -> Value {
         "counts":super::counts::note(row,store),
         "reactions":row.reactions.iter().map(|r|{let mut v=json!({"emoji":r.content,"count":r.count,"mine":r.mine});if let Some(url)=&r.url{v["url"]=json!(url);}v}).collect::<Vec<_>>(),
         "mine":{"reposted":row.own.reposted,"bookmarked":row.own.bookmarked,"own":Some(row.author.pubkey.as_str())==account}});
+    event_kind(&mut v, row.kind);
     if let Some(event) = store.get(&row.id) {
         if let Some(id) = lkjstr_protocol::channel_id(&event) {
             v["channel"] = json!({"id":id,"name":crate::engine::channels::metadata(store,&id).0["name"].as_str().unwrap_or("")});
@@ -121,7 +130,12 @@ pub(super) fn note(row: &Row, store: &Store, account: Option<&str>) -> Value {
     if let Some(at) = store.expires_at(&row.id) {
         v["expiresAt"] = json!(at.saturating_mul(1000));
     }
-    if let Some(parent) = row.reply.as_ref().and_then(|p| store.get(&p.id)) {
+    if let Some(parent) = row
+        .reply
+        .as_ref()
+        .and_then(|p| store.get(&p.id))
+        .filter(|event| crate::kinds::policy(event.kind).openable)
+    {
         let excerpt = excerpt_content(&parent)
             .and_then(|text| text.lines().next())
             .unwrap_or_default()
@@ -137,8 +151,7 @@ pub(super) fn note(row: &Row, store: &Store, account: Option<&str>) -> Value {
     v
 }
 
-/// The existing note fields keep the row protocol compatible. Zero/empty fields
-/// are reserved slots for the old shape, with no actionable or body data.
+/// Covered rows retain their identity with no actionable or body data.
 pub(super) fn covered(mut identity: Value, reason: crate::engine::visibility::Reason) -> Value {
     let pubkey = &identity["author"]["pubkey"];
     let minimal_author =
@@ -149,7 +162,7 @@ pub(super) fn covered(mut identity: Value, reason: crate::engine::visibility::Re
         "counts":{"replies":0,"reposts":0,"reactions":0,"zaps":0,"partial":false},
         "mine":{"reposted":false,"bookmarked":false,"own":false},
         "hidden":{"reason":reason,"revealable":reason.revealable()}});
-    for field in ["thread", "readingAt"] {
+    for field in ["thread", "readingAt", "eventKind"] {
         if let Some(old) = identity.get_mut(field) {
             value[field] = old.take();
         }

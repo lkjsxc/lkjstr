@@ -1,4 +1,3 @@
-// The state of the mock world: notes, who reposted and reacted, the reader's follows, bookmarks and mutes.
 import type { Media, MuteTarget, Segment } from '../protocol.ts';
 import { avatar, hueColor, photo } from './art.ts';
 import type { MChannel } from './channels.ts';
@@ -9,6 +8,7 @@ import { byHandle, EMOJI, FOLLOWING, PEOPLE, type Person } from './people.ts';
 import { initialRelays } from './relays.ts';
 export type React = { count: number; mine: boolean };
 export type MNote = {
+  eventKind?: number;
   readonly id: string;
   readonly by: Person;
   readonly at: number;

@@ -16,7 +16,7 @@ impl Engine {
             .get(&event.pubkey)
             .copied()
             .unwrap_or(self.client_tag);
-        if enabled && matches!(event.kind, 1 | 6 | 7 | 16 | 40 | 41 | 42 | 30023) {
+        if enabled && crate::kinds::policy(event.kind).client_tag {
             event.tags.push(
                 ["client", "lkjstr", ADDRESS, RELAY]
                     .map(String::from)
