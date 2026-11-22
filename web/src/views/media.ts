@@ -1,7 +1,8 @@
 // The pictures and video of one note, as a new tab right after the one being read, in the same tile (owner,
-// 2026-11-22). A picture can be zoomed and panned; arrows go to the next and the previous; Escape closes the tab,
-// which brings back the tab it came from where it was, and gives the keyboard back to the picture. A video
-// or a sound has the browser's controls and the player's keys (`player.ts`).
+// 2026-11-22). A picture is zoomed and moved like a map (zoom.ts), its percentage a handle (zoom-handle.ts); arrows
+// go to the next and the previous; Escape closes the tab, which brings back the tab it came from where it was, and
+// gives the keyboard back to the picture. A video or a sound has the browser's controls and the player's keys
+// (`player.ts`).
 import type { Media } from '../engine/protocol.ts';
 import { h, replaceChildren } from '../shared/h.ts';
 import { t } from '../shared/i18n.ts';
@@ -12,6 +13,11 @@ import { copy } from './parts.ts';
 import { createPlayer, type Player } from './player.ts';
 import type { ViewEnv } from './registry.ts';
 import { type Zoom, type ZoomPosition, zoomable } from './zoom.ts';
+import { zoomHandle } from './zoom-handle.ts';
+
+/** A scale as the handle says it: whole percent, and tenths under 10%. */
+const percent = (s: number): string =>
+  `${s < 0.1 ? (Math.round(s * 1000) / 10).toFixed(1) : Math.round(s * 100)}%`;
 
 export type MediaState = {
   media?: readonly Media[];
@@ -43,7 +49,7 @@ export function mountMedia(el: HTMLElement, env: ViewEnv): () => void {
     title: t('media.zoom'),
     'aria-label': t('media.zoom'),
   });
-  scale.addEventListener('click', () => zoom?.toggle());
+  const offHandle = zoomHandle(scale, () => zoom);
   const original = h(
     'a',
     {
@@ -92,19 +98,20 @@ export function mountMedia(el: HTMLElement, env: ViewEnv): () => void {
     if (m.type === 'image') {
       const img = h('img', { src: m.url, alt: m.alt ?? '', draggable: false, decoding: 'async' });
       replaceChildren(stage, img);
+      const at = index; // the picture's own place, also when it is left for another
       zoom = zoomable(
         stage,
         img,
         m,
         {
-          scale: (s) => void (scale.textContent = `${Math.round(s * 100)}%`),
+          scale: (s) => void (scale.textContent = percent(s)),
           flick: (dir) => go(index + dir),
           changed: (position) => {
-            state.zoom = { ...state.zoom, [index]: position };
+            state.zoom = { ...state.zoom, [at]: position };
             saveViewState(env.instance, state);
           },
         },
-        state.zoom?.[index],
+        state.zoom?.[at],
       );
     } else {
       player = createPlayer(m, {
@@ -171,6 +178,7 @@ export function mountMedia(el: HTMLElement, env: ViewEnv): () => void {
   const off = env.visible.subscribe(front);
   return () => {
     off();
+    offHandle();
     zoom?.dispose();
     player?.dispose();
     el.removeEventListener('keydown', key, true);

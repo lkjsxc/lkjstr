@@ -319,7 +319,7 @@ export const en = {
   'media.view': 'View media',
   'media.prev': 'Previous',
   'media.next': 'Next',
-  'media.zoom': 'Fit or actual size',
+  'media.zoom': 'Slide to zoom; press to fit or go closer',
   'media.original': 'Open original',
   'media.copy': 'Copy link',
   'media.gone': 'Nothing to show.',

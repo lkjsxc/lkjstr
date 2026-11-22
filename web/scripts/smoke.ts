@@ -11,6 +11,7 @@ import { KEYS } from '../src/shared/keys.ts';
 import { browserTmp } from './browser-tmp.ts';
 import { hiddenChecks } from './smoke-hidden.ts';
 import { mentionChecks } from './smoke-mentions.ts';
+import { mobileChecks } from './smoke-mobile.ts';
 import { momentChecks } from './smoke-moment.ts';
 import { notesChecks } from './smoke-notes.ts';
 import { pendingChecks } from './smoke-pending.ts';
@@ -484,6 +485,7 @@ async function run(browser: Browser): Promise<void> {
   await defaults(browser, still);
   await resetChecks((given) => open(browser, '/', { ...still, ...given }), fact);
   await zoomChecks((given, size) => open(browser, '/', { ...still, ...given }, size), fact);
+  await mobileChecks((given, size, touch) => open(browser, '/', given, size, 'en-US', touch), fact);
   await pendingChecks((given) => open(browser, '/', given), fact);
   await threadChecks((path, given, size) => open(browser, path, given, size), fact);
   await momentChecks((path, given, size) => open(browser, path, given, size), fact);

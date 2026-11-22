@@ -160,8 +160,14 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
   Cards fold with long text. Covered notes fetch nothing until opened. Link
   previews are on by default, off with data saver, and disclose the service.
 - A press on a picture opens the note's pictures as a new tab right after the one being read, in the same tile;
-  Escape or the tab's × closes it and brings that tab back where it was. A zoomed picture is dragged by hand; the
-  wheel zooms about the pointer.
+  Escape or the tab's × closes it and brings that tab back where it was. A picture handles like a map (owner,
+  2026-11-22): a finger or the mouse drags it and a release carries it on, slowing down; two fingers pinch about
+  where they are while they move it; the wheel zooms about the pointer; a double tap or double click goes closer, or
+  back to the whole picture, about that point (a single click does nothing). Jumps in scale slide in 220ms. The
+  percentage in its bar is a handle, a pill with a grip: held and slid right or up it zooms twice as close per 100px
+  about the middle, left or down away, without an end (slid again, it goes on), so one finger zooms; a press fits or
+  goes closer. The scale runs from a 32px picture to 256 times its size; let go within 5% of the fit, it fits.
+  From four screen pixels per picture pixel the pixels show as they are.
 - A picture's box has its final size before the file loads, tinted `--hold`
   (the note's dimensions, otherwise 3:2); a picture of unknown size keeps the
   box's height when it arrives, so nothing below moves. A file that cannot

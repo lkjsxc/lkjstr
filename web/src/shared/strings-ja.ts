@@ -322,7 +322,7 @@ export const ja: Record<keyof typeof en, string> = {
   'media.view': 'メディアを見る',
   'media.prev': '前へ',
   'media.next': '次へ',
-  'media.zoom': '全体表示と原寸を切り替える',
+  'media.zoom': 'スライドで拡大・縮小、押すと全体表示か拡大',
   'media.original': '元のファイルを開く',
   'media.copy': 'リンクをコピー',
   'media.gone': '表示するものがありません。',

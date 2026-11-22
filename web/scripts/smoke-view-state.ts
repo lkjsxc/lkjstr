@@ -35,6 +35,7 @@ export async function prepareViewChecks(page: Page, check: Check): Promise<() =>
     () => (document.querySelector('.mstage img') as HTMLImageElement)?.naturalWidth > 0,
   );
   await front('media').locator('.mscale').click();
+  await page.waitForTimeout(500); // the scale slides there, and is kept a moment after it stops
   const scale = await front('media').locator('.mscale').innerText();
   const mediaTab = await page.locator('.pane.cur .tab.active').getAttribute('data-view');
   await go('Global');

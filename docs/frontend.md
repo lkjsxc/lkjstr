@@ -45,7 +45,7 @@ Seams worth knowing inside `src/views/`:
   `feed-scrub.ts` the time beside the thumb while the reader scrolls, `feed-moment.ts` a moment tab, `profile-kinds.ts` the
   kinds of a profile. `docs.ts` is the Documentation tab, one page with its contents first (its parts include the
   shortcuts and the release facts of `pages.ts`); `wm/tab-search.ts` finds
-  a tab.
+  a tab. `media.ts` is a picture tab: `zoom.ts` its map-like gestures, `zoom-handle.ts` the percentage handle.
 - `thread.ts` is a thread tab's own part of `feed.ts`: `thread-plan.ts` arranges its rows (compact notes above,
   folds, the room of a missing note, grouped replies), `thread-parts.ts` draws what is not a note, the reply
   field is the composer under `:say`, and `note-thread.ts` is what a note in a thread draws differently.
