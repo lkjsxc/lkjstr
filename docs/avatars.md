@@ -89,5 +89,29 @@ can cause a later fetch. Structural metadata, MIME and actual Blob-size checks r
 Native tests cover routing, stable batching, role/read opt-outs, actual-byte LRU plans, owner limits and cancellation.
 Focused page and transport tests cover shared object URLs, stale replies, visibility, fallback and bounded replay.
 Original-source and mutation controls prove the routing, LRU, queued-body and retiring-permit assertions can fail.
-Real production-Worker cache/lifetime checks and matched 24 Mbps candidate measurements are pending.
-No public-host CORS census was run; a synthetic mix cannot establish population coverage or real-world savings.
+Production-Worker controls cover concurrent IDB writers, both cache caps, cancellation, real bitmap closure,
+actual Blob delivery through both transports, page disposal and full-process cache reuse. A separate real quota
+denial/restoration control observes usable ephemeral Blobs and write backoff. Failed fixture attempts remain recorded.
+The controls do not establish indefinite leak freedom, physical database limits, or storage recovery after backoff expiry.
+
+## Measured limits and follow-up
+
+A fixed local 24 Mbps / 80 ms RTT corpus compared shipped be29d25f with candidate 9f9032df at 390px and DPR 3.
+Matching visible cohorts are Home 6, Notifications 8 and Thread 7, with one selected run per view/state.
+Both pins show names with every warm row (42/42 observations). Candidate cold navigation-to-first-name is
+3690 ms, 3111 ms and 2423 ms respectively; the one-second cold target remains unmet.
+Two Home avatars and one Thread avatar are unobserved at the fixed cold endpoint. Later completion does not
+convert those censored measurements into successes.
+
+The CORS-readable no-store Thread image needs no original GET after restart, versus one before.
+The non-CORS no-store Home/Notifications image is fetched once on a same-process return and twice after restart
+(failed CORS plus plain image), versus zero and one previously.
+Whole-Home originals fall from 49 to 8 cold-initiated GETs and from 21 to 2 after restart as offscreen work is avoided.
+These counts do not erase the visible fallback repeat cost. Server body sizes are not TLS bytes or client receipt.
+No public-host CORS census was run; the assumed mix cannot establish population coverage or general latency savings.
+
+The engine resource-instrumentation owner retains the cold-path follow-up: measure navigation-to-row/name separately
+from row-to-name and preserve missing outcomes. This Home engine is ready at 1573 ms; shell install also fetches
+the WASM already loaded by the Worker. Cache hits and byte reductions therefore do not establish earlier visible
+content. Separate startup, hydration, derived-cache lookup, failed CORS, original fallback and reacquisition costs
+in the resource-decision evidence before changing policy.
