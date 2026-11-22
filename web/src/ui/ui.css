@@ -22,13 +22,6 @@ body { color: var(--fg); font: 13.5px / 1.45 system-ui, -apple-system, "Segoe UI
 .acct .ro { position: absolute; right: -3px; bottom: -3px; width: 8px; height: 8px; border: 2px solid var(--paper); border-radius: 50%; background: var(--danger); }
 .acct .ro.locked { width: 12px; height: 12px; border: 0; border-radius: 0; background: var(--paper); color: var(--faint); }
 .acct .locked .i { width: 12px; height: 12px; }
-/* A phone: the nine chips and the account both fit, so the name gives its place. */
-@media (max-width: 480px) {
-  .bar { gap: 4px; padding: 0 6px; }
-  .bar > .brand { display: none; }
-  lkjstr-spaces { margin: 0 2px 0 0; gap: 1px; }
-  lkjstr-spaces button { flex-basis: 28px; width: 28px; }
-}
 .relays { font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .stage { position: relative; flex: 1; min-height: 0; }
 .i { width: 16px; height: 16px; flex: none; }
@@ -43,6 +36,14 @@ lkjstr-spaces.tiny { visibility: hidden; }
 lkjstr-spaces button { flex: 0 0 28px; width: 28px; padding: 0; border-radius: 6px; color: var(--faint); font-weight: 500; font-variant-numeric: tabular-nums; }
 lkjstr-spaces button:hover { background: var(--hover); color: var(--fg); }
 lkjstr-spaces button.on { background: var(--fg); color: var(--bg); }
+/* A phone: the name stays and the search, Post and account stay at the right; the chips narrow and their row gives
+   up the room, scrolling sideways with a fade toward a side that hides more (ytenrich's masthead). */
+@media (max-width: 480px) {
+  .bar { gap: 4px; padding: 0 6px; }
+  .bar > .brand { padding: 0 4px; }
+  lkjstr-spaces { margin: 0 2px; gap: 1px; }
+  lkjstr-spaces button { flex-basis: 26px; width: 26px; }
+}
 /* A view is its own scroller; the WM restores where it was after a re-render. */
 .view { box-sizing: border-box; height: 100%; overflow: hidden auto; overflow-anchor: none; overscroll-behavior: contain; scrollbar-color: var(--sep) transparent; }
 /* A tile's scrollbar: 14px to catch with a mouse, drawn as a slim thumb that widens under the pointer. */
@@ -201,4 +202,9 @@ input[type="number"] { width: 70px; }
 .ncard .badge { margin: 4px 0 0; }
 
 .tworkspace { margin-left: auto; color: var(--faint); font-variant-numeric: tabular-nums; }
-@media (max-width: 480px) { .bar { gap: 3px; padding: 0 4px; } .bar > .grow { flex: 0; } lkjstr-spaces { margin: 0; gap: 0; } }
+/* iOS zooms the page into a field whose text is under 16px when it takes the keyboard. On a touch screen every field
+   is 16px or more, so nothing zooms by itself; zooming by hand stays the reader's. */
+@media (pointer: coarse) {
+  :where(input, textarea, select, [contenteditable]):not([type="checkbox"], [type="radio"], [type="range"]) { font-size: max(16px, 1em) !important; }
+  .ctext { font-size: max(16px, var(--text, 15px)) !important; }
+}

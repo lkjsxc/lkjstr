@@ -43,6 +43,8 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
 ## Type
 - One system sans stack with the Japanese families named. No web fonts.
 - Interface 13.5px / 1.45. Note text 15px / 1.6 (a setting); the focused note of a thread is 1.5px larger. Headers and context lines 12.5 to 13.5px.
+- On a touch screen every field (input, text area, select) is 16px or more, so iOS never zooms the page into one when it
+  takes the keyboard (owner, 2026-11-22). Zooming by hand stays the reader's: the viewport never forbids it.
 - Names are 600; everything else regular. Numbers that change are tabular.
 - Note text uses `line-break: strict`. Interface sentences break by phrase in Japanese (`word-break: auto-phrase`), never inside a word.
 
@@ -53,7 +55,9 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
   device; read-only has a mark) and a menu of the reader's own: their row,
   which opens their profile, the other accounts, and Accounts. Signed out
   it is one filled button, "Sign in", and there is no new-note button.
-- At phone width the name gives its place: nine chips and the account fit.
+- At phone width (owner, 2026-11-22, as ytenrich's masthead) the name stays and tab search, Post and the account stay at
+  the right; the chips narrow to 26px and their row gives up the room, scrolling sideways with a fade at a side that
+  hides more.
 - Tab bars are 1.2 times the interface scale by default. The active tab has
   an indigo underline; every tab shows its close button; middle click closes.
   A full bar scrolls with the wheel, fades toward the side that hides more
