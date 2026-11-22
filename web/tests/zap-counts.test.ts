@@ -20,7 +20,9 @@ it('only unresolved zap totals reuse the existing lower-bound suffix', () => {
       ...base,
       counts: { ...base.counts, replies: 3, partial: false, zaps: 21, ...counts },
     };
-    return actionRow(row, env);
+    const actions = actionRow(row, env);
+    if (!actions) throw new Error('ordinary note actions must remain available');
+    return actions;
   };
   for (const lang of ['en', 'ja'] as const) {
     setLang(lang);

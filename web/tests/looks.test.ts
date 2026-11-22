@@ -78,13 +78,13 @@ it('prints reactions once, with a suffix only on the number that reports a lower
     reactions: [{ emoji: '+', count: 3, mine: false }],
     counts: { ...row().counts, reactions: 3, partial: false },
   };
-  expect(actionRow(note, env()).querySelector('.a-heart > span')?.textContent).toBe('');
+  expect(actionRow(note, env())?.querySelector('.a-heart > span')?.textContent).toBe('');
   expect(reactionChips(note, env())?.textContent).toBe('❤️3');
   expect(
     reactionChips({ ...note, counts: { ...note.counts, partial: true } }, env())?.textContent,
   ).toBe('❤️3+');
   expect(
-    actionRow({ ...note, reactions: [] }, env()).querySelector('.a-heart > span')?.textContent,
+    actionRow({ ...note, reactions: [] }, env())?.querySelector('.a-heart > span')?.textContent,
   ).toBe('3');
 });
 
