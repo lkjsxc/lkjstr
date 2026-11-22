@@ -64,6 +64,15 @@ what the engine offers and no surface reaches yet.
 | Q5 | A scorecard that is climbed | [read-plan.md](read-plan.md#q5-a-scorecard-that-is-climbed) | ready |
 | Q6 | Lists are kept, not asked again at every start | [read-plan.md](read-plan.md#q6-lists-are-kept-not-asked-again-at-every-start) | ready |
 | Q7 | A wider set to start from | [read-plan.md](read-plan.md#q7-a-wider-set-to-start-from) | ready |
+| N1 | One kind table instead of the kind allow-lists (engine) | [interface-view.md](interface-view.md#n1-one-kind-table-engine-no-surface) | ready |
+| E7 | Two emoji under one shortcode both appear and work | [interface-emoji.md](interface-emoji.md#e7-two-emoji-under-one-shortcode) | ready |
+| E6 | Custom emoji and the Unicode table ready before the picker opens | [interface-emoji.md](interface-emoji.md#e6-ready-before-the-picker-opens) | ready |
+| N2 | The generic face; every kind opens; profile Articles, Lists, All | [interface-view.md](interface-view.md#n2-the-generic-face-and-every-kind-opens) | ready |
+| N3 | Embedded events and chains, lazy, with depth and cycle limits | [interface-view.md](interface-view.md#n3-embedded-events-and-chains) | ready |
+| N4 | Acts are posts: act focus, Who reacted, reacting to an act | [interface-view.md](interface-view.md#n4-acts-are-posts) | ready |
+| N5 | Lists (NIP-51) as lists of openable items | [interface-view.md](interface-view.md#n5-lists) | ready |
+| N6 | Articles: the card and the reading view | [interface-view.md](interface-view.md#n6-articles) | ready |
+| N7 | Deep links and Copy link for every kind | [interface-view.md](interface-view.md#n7-deep-links-and-copying-for-every-kind) | ready |
 
 C1 to C3 are the owner's item 5 of 2026-11-21. C1 needs no engine change and lands alone; C2 and C3 draw local
 day marks once the engine answers `days`, and until then fall back to today's marks without inventing a day.
@@ -73,6 +82,10 @@ Q1 to Q5 are the owner's direction of 2026-11-17 and replace S1, which is withdr
 draws does not matter; what matters is that the engine plans every tab's wants together, from weights made of the
 past, and asks the relays as well as it possibly can. They are engine work without a surface. Q1 is taken first,
 with the cache and first-paint work; A1 and A2 are small and are not delayed by Q2 to Q5.
+N1 to N7, E6 and E7 are the owner's #3597 of 2026-11-22: view almost anything, react to a reaction, preloaded
+emoji with both of two same-code emoji usable. N1 comes first and changes nothing visible; E7 and E6 do not depend on
+it and may run beside it. N2 needs N1; N3 needs N2; N4 needs N3; N5 and N6 need N3; N7 lands with N2. Pictures:
+`/home/coder/workspace/lkjstr-review/N-20261122-*.png`.
 Q6 and Q7 are the owner's words of 2026-11-17 02:42 UTC: relay lists and the other slow lists are kept on the
 device instead of being asked again at every start, and the default relays become three wider measured sets. Q6
 lands with Q1 or straight after it; Q7 ships with the next ship that has room.
@@ -102,6 +115,6 @@ and press-to-top behavior. Other arrivals keep the usual count label.
 
 ## Not specified yet
 
-Do not build these; they are the next batches, in this order: actor lists for reactions, reposts and zap receipts; a
+Do not build these; they are the next batches, in this order: a
 placeholder row for a bookmark whose note is unavailable; pins; a per-person relay-list view. Group subjects, private
 files, message reactions and deletion wait for the engine.

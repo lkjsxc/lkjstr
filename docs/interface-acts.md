@@ -65,7 +65,7 @@ act. Additive: `NoteRow.actOn?: ActRef`, the act the person acted on (its actor 
 
 Scenes: `profile-reactions-chain` (one ordinary reaction row, one reaction to a reaction, one reaction to a repost).
 
-## Not in this batch
+## Next
 
-Reacting to or reposting an act from these lines, and showing who reacted to the reader's own reaction as a list.
-They follow the actor lists of the next batch.
+Reacting to an act, opening an act by itself and the list of who reacted are N4 in
+[interface-view.md](interface-view.md#n4-acts-are-posts).

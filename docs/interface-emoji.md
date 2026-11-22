@@ -117,6 +117,51 @@ The owner asked for it on 2026-11-21 (overnight goal 1, mail 2188); Layout A of 
 - Not built: browsing and adding sets seen on other people's notes. It needs an engine action that edits the
   reader's kind-10030 list; none exists ([emoji-sets.md](emoji-sets.md)), so the help line points elsewhere.
 
+## E6 Ready before the picker opens
+
+The owner asked on 2026-11-22 (#3597) for the picker to open at once with every picture present, on the 24 Mbps
+line as well, and the hover enlargement kept.
+- Kept ahead: the reader's custom emoji (the kind-10030 list and the 30030 sets it names, rows and pictures) and the
+  Unicode table. A signed-out visitor gets the table only.
+- When: at idle, once the front tab has drawn its first rows and the engine is ready, or three seconds after load
+  if that comes later. Never while a send waits for its first relay answer, and never in a hidden page. With data
+  saver on, only the rows and the table are kept, not the pictures.
+- At that point the engine's `emoji` source is opened, not only by the picker, and it stays open for the page's
+  life. A newer list or set replaces the rows, as it does today.
+- Pictures are fetched in the picker's order: frequently used, then the reader's own list, then the sets. Four
+  load at a time, each once per page, at most 400 (the row bound), and each is decoded and held for the page's life.
+  One that fails is tried once more when the picker opens, then shows its code (E1).
+- Across reloads, the offline shell keeps pictures whose server allows reading (CORS) in a cache of their own:
+  at most 600 pictures and 16 MB, least recently used out first. Other pictures are left to the browser's HTTP
+  cache. Never store an opaque response: each one is charged as if it were several megabytes against the quota.
+- The picker draws the kept pictures in its first frame. The 72px strip (E2) and the popover (E3) use the same
+  picture. Preloading shows no words.
+- Check, on the 80 ms / 24 Mbps fixture: a warm page opens the picker with no picture request, and every custom cell
+  is complete in the first frame. A cold page does the same once preloading has run. First readable Home is no
+  later than without preloading, measured as a matched pair.
+
+## E7 Two emoji under one shortcode
+
+- An emoji is its source, shortcode and picture URL together. The source is the reader's own list or one set, by
+  address. The same code from two sources, or with two pictures, makes two emoji, and both appear and both work.
+- In the picker, each sub-group shows all of its emoji: none is hidden because another source has the same code. A
+  search for `:code` lists every emoji with that code, once per picture, keeping the first source. The strip (E2)
+  and the popover (E3) show the set's title, or `emoji.mine`, under the code, so two cells that look alike can be
+  told apart. In a search with a collision, each of those cells also carries its set's title in its accessible
+  name.
+- A reaction carries the chosen emoji's own code, URL and set address, with an unchanged shape. When a draft
+  already uses a code with another picture, the next pick under that code goes in as `:code_2:` (then `_3`), with an
+  `emoji` tag of its own, so the note shows both pictures. Private drafts work the same way.
+- Incoming notes, names and reactions are drawn only from their own `emoji` tags, never from the reader's emoji.
+  Reaction chips are one per code and picture. Two chips with one code stand side by side, each with its own count
+  and its own removal. Their popover names the set when the tag carries an address the device knows, and otherwise
+  says `emoji.from` with the picture's host.
+- Engine ([emoji-sets.md](emoji-sets.md)): one row per source, code and URL, keyed
+  `emoji:<source>:<code>:<url hash>`. Direct entries no longer hide set entries, and the first set no longer hides
+  later ones. The 400-row bound counts these rows.
+
+Scenes: `emoji-collision` (two `:pien:` from two sets, the strip on the second), `emoji-collision-chips`.
+
 ## Scenes
 
 `pnpm shots -- --scenes=emoji-preview,emoji-search,emoji-tones,emoji-peek,emoji-peek-keys,emoji-reaction` and the

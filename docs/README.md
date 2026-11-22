@@ -109,7 +109,8 @@ Engine (`crates/`):
 - [interface-keys.md](interface-keys.md): password-protected keys: sign-in, lock, backup, protection.
 - [interface-dm.md](interface-dm.md): private messages: list, conversation, writing, inbox relays.
 - [interface-acts.md](interface-acts.md): reactions and reposts of reactions and reposts.
-- [interface-emoji.md](interface-emoji.md): the emoji picker, its preview and the emoji popover.
+- [interface-emoji.md](interface-emoji.md): the emoji picker, its preview, the popover, preloading, shared codes.
+- [interface-view.md](interface-view.md): every kind opens: generic, list and article faces, chains, acts as posts.
 - [interface-thread.md](interface-thread.md): the thread tab: focus, compact notes above, replies, reply field.
 - [interface-time.md](interface-time.md): travelling by time: the scroll label, the wide scrubber, jumps.
 - [interface-moment.md](interface-moment.md): a note's time opens the author's Home at that moment.
