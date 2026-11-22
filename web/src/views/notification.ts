@@ -28,10 +28,11 @@ function targetLine(row: NotificationRow, env: ViewEnv): HTMLElement | null {
       'button',
       {
         class: target.act ? 'excerpt muted act-target' : 'excerpt muted clip',
+        title: excerpt || null,
         onclick: (e) => env.open('thread', { id: target.id }, how(e as MouseEvent)),
       },
       target.act ? actChip(target.act) : null,
-      target.act ? h('span', { class: 'clip' }, excerpt) : excerpt,
+      target.act ? h('span', { class: 'clip', title: excerpt || null }, excerpt) : excerpt,
     );
   }
   const pending = row.pendingAct;
@@ -46,7 +47,7 @@ function targetLine(row: NotificationRow, env: ViewEnv): HTMLElement | null {
     'div',
     { class: 'excerpt muted act-target' },
     actChip(pending.act, true),
-    h('span', { class: 'clip' }, t(key)),
+    h('span', { class: 'clip', title: t(key) }, t(key)),
   );
 }
 
@@ -98,7 +99,7 @@ export function renderNotification(row: NotificationRow, env: ViewEnv): HTMLElem
       ),
       h(
         'div',
-        null,
+        { class: 'nwho' },
         names,
         rest ? t(rest === 1 ? 'ctx.other' : 'ctx.others', { n: rest }) : '',
         t(headline(row), { sats: row.sats ?? 0 }),

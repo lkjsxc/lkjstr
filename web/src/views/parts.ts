@@ -105,7 +105,12 @@ export const plainName = (a: Author): string =>
 
 /** A person's name as a button that opens their profile. */
 export function nameButton(a: Author, env: ViewEnv, cls = 'name'): HTMLElement {
-  const el = h('button', { class: cls, title: a.nip05 ?? a.npub }, displayName(a));
+  // The whole name first (a long one is cut), then who it is.
+  const el = h(
+    'button',
+    { class: cls, dir: 'auto', title: `${plainName(a)}\n${a.nip05 ?? a.npub}` },
+    displayName(a),
+  );
   const go = (e: MouseEvent): void => {
     e.stopPropagation();
     env.open('profile', { pubkey: a.pubkey, title: plainName(a) }, how(e));
@@ -202,7 +207,7 @@ export const nipMark = (a: Author): HTMLElement | null =>
         'span',
         {
           class: a.verified ? 'nip ok' : 'nip',
-          title: a.verified ? t('nip05.ok') : t('nip05.unchecked'),
+          title: `${a.nip05}\n${a.verified ? t('nip05.ok') : t('nip05.unchecked')}`,
         },
         a.verified ? icon('check') : null,
         a.nip05,

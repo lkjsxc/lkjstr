@@ -47,7 +47,7 @@ export function linkCards(cards: readonly LinkPreview[] | undefined): HTMLElemen
           href: card.source,
           target: '_blank',
           rel: 'noopener noreferrer',
-          title,
+          title: `${card.siteName || url.host}\n${title}`,
           'aria-label': title,
           onclick: (e) => e.stopPropagation(),
         },

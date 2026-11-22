@@ -73,9 +73,11 @@ export function stamp(row: NoteRow, env: ViewEnv, shownTime: Child): Child[] {
   const text = t('note.via', { name: shown });
   // The engine sends an address only when it is a well-formed kind-31990 coordinate.
   const address = row.clientAddress ?? '';
+  // The tooltip is what the line says, whole; the accessible name says what it means.
+  const whole = t('note.via', { name });
   const via = address
-    ? h('button', { class: 'via', title: label, 'aria-label': label }, text)
-    : h('span', { class: 'via', title: label, 'aria-label': label }, text);
+    ? h('button', { class: 'via', title: whole, 'aria-label': label }, text)
+    : h('span', { class: 'via', title: whole, 'aria-label': label }, text);
   if (address)
     via.addEventListener('click', (e) => (e.stopPropagation(), appInfo(env, via, name, address)));
   return [via, time];

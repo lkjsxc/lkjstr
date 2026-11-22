@@ -36,7 +36,13 @@
 .ctx { display: flex; align-items: center; gap: 6px; min-width: 0; margin: 0 0 3px calc(var(--avatar, 36px) - 6px); color: var(--faint); font-size: 12.5px; line-height: 1.4; }
 .ctx > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ctx .i { width: 13px; height: 13px; }
-.ctx .name { display: inline; overflow: visible; color: var(--muted); }
+/* A name in a context line is cut on its own, so what happened ("and 3 others reposted") stays in view. */
+.ctx .name { max-width: min(60%, 14em); color: var(--muted); vertical-align: bottom; }
+/* Who reposted: each of two names is cut at a share of the tile (not of the line, which would be circular). */
+.ctx > .rwho { flex: 0 1 auto; }
+.ctx > .rwho > .name { max-width: min(14em, 24cqi); }
+.ctx > .rwho > .name:only-of-type { max-width: min(28em, 48cqi); }
+.ctx > .rdid { flex: none; margin-left: -6px; white-space: pre; }
 .text { white-space: pre-wrap; }
 .content > .text { max-height: calc(var(--fold, 12) * 1lh); overflow: hidden; }
 .content > .text.open { max-height: none; }

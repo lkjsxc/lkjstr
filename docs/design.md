@@ -16,6 +16,12 @@ launcher, workspaces and settings page, with lkjstr's own colours. When in doubt
 - A redraw never undoes the reader: what was unfolded, shown, chosen or sorted stays so, with the tab, across a reload.
 - Shadows only under what floats: menus, pickers, tab search, toasts.
 - A field that has the keyboard is never rewritten or replaced by a redraw; half-typed text stays as typed.
+- Relay text has no length limit; rows do. Where a shortened name, address or label still reads (note headers,
+  context lines, notifications, account and channel rows, tabs, chips, cards, tab search), it is one line cut with
+  an ellipsis, each name on its own so the verb beside it stays, and the whole text is its tooltip. Where the whole
+  matters (a profile, its About, note text) it wraps, anywhere if it must. Names are isolated from the text around
+  them, so a right-to-left one keeps its order. Nothing pushes a time, an action or a close button out of view; the
+  mock's `stress` world and `scripts/smoke-stress.ts` hold this at 1440 and 390.
 
 ## Colour
 Two colours carry meaning and nothing else is coloured: indigo (`--accent`) is action and selection, vermilion (`--seal`) is news (unread, the new-notes

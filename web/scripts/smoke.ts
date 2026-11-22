@@ -16,6 +16,7 @@ import { notesChecks } from './smoke-notes.ts';
 import { pendingChecks } from './smoke-pending.ts';
 import { replyChecks } from './smoke-reply.ts';
 import { resetChecks } from './smoke-reset.ts';
+import { stressChecks } from './smoke-stress.ts';
 import { threadChecks } from './smoke-thread.ts';
 import { timeLabelChecks } from './smoke-time-label.ts';
 import { railSmoke } from './smoke-time-rail.ts';
@@ -468,6 +469,7 @@ async function run(browser: Browser): Promise<void> {
   await pendingChecks((given) => open(browser, '/', given), fact);
   await threadChecks((path, given, size) => open(browser, path, given, size), fact);
   await momentChecks((path, given, size) => open(browser, path, given, size), fact);
+  await stressChecks((given, size) => open(browser, '/', given, size), fact);
   await replyChecks((path, given, size) => open(browser, path, given, size), fact);
   await mentionChecks(
     (path, given, size, touch) => open(browser, path, given, size, 'en-US', touch),

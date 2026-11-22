@@ -101,7 +101,7 @@ export function renderProfile(row: ProfileRow, env: ViewEnv): HTMLElement {
     h(
       'h1',
       { class: 'pname' },
-      displayName(a),
+      h('bdi', null, displayName(a)),
       a.bot ? h('span', { class: 'badge' }, t('note.bot')) : null,
     ),
     a.nip05
@@ -115,7 +115,11 @@ export function renderProfile(row: ProfileRow, env: ViewEnv): HTMLElement {
     a.npub
       ? h(
           'button',
-          { class: 'npub', title: t('profile.copyNpub'), onclick: () => void copy(env, a.npub) },
+          {
+            class: 'npub',
+            title: `${a.npub}\n${t('profile.copyNpub')}`,
+            onclick: () => void copy(env, a.npub),
+          },
           a.npub,
         )
       : null,

@@ -122,7 +122,7 @@ export function createGrid(hooks: Hooks) {
                 'data-cat': catOf(s),
                 'aria-label': s.label || null,
               },
-              s.label ? h('div', { class: 'ehd' }, s.label) : null,
+              s.label ? h('div', { class: 'ehd', title: s.label }, s.label) : null,
               s.items.length ? boxes[sections.indexOf(s)] : h('p', { class: 'enote' }, s.note),
             ),
           )

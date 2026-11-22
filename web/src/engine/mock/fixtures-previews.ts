@@ -1,6 +1,7 @@
 // Local test double only. No public requests or embed HTML.
 import type { LinkPreview, Segment } from '../protocol.ts';
 import { photo } from './art.ts';
+import { LONG_TITLE, LONG_WORD } from './fixtures-stress.ts';
 export function previewFixtures(segments: readonly Segment[]): LinkPreview[] {
   return segments
     .filter((s): s is Extract<Segment, { k: 'link' }> => s.k === 'link')
@@ -13,16 +14,18 @@ export function previewFixtures(segments: readonly Segment[]): LinkPreview[] {
         url,
         siteName: u.host,
         kind,
-        title:
-          kind === 'post'
+        title: u.pathname.startsWith('/stress/')
+          ? LONG_TITLE
+          : kind === 'post'
             ? 'Aoi (@aoi)'
             : kind === 'link'
               ? u.pathname
               : u.pathname.includes('japanese')
                 ? '街の図書館で過ごす静かな午後'
                 : 'A quieter place to read the news',
-        description:
-          kind === 'post'
+        description: u.pathname.startsWith('/stress/')
+          ? LONG_WORD
+          : kind === 'post'
             ? 'A small note about making room for reading.'
             : 'Notes, places and the people who keep them open.',
         imageUrl: u.pathname.includes('picture') ? photo(480, 352, 160) : undefined,

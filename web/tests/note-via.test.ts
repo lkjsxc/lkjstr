@@ -28,6 +28,7 @@ describe('via <client>', () => {
     const long = via(row('L'.repeat(100)));
     expect(long?.textContent?.length).toBeLessThanOrEqual(4 + 48);
     expect(long?.getAttribute('aria-label')).toBe(`Written with ${'L'.repeat(100)}`);
+    expect(long?.getAttribute('title')).toBe(`via ${'L'.repeat(100)}`); // what the line says, whole
   });
   it('is absent without a tag, plain text without a handler, a button with a well-formed one', () => {
     expect(via(row())).toBeUndefined();

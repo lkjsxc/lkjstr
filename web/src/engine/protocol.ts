@@ -863,6 +863,8 @@ export type EngineConfig = {
     readonly slow?: { readonly when: string; readonly sign?: number; readonly relays?: number };
     /** A long thread and one whose first note answers a missing note (the thread scenes). */
     readonly threads?: boolean;
+    /** Relay text far past any sane length: names, addresses, words, labels (`mock/fixtures-stress.ts`). */
+    readonly stress?: boolean;
   };
 };
 

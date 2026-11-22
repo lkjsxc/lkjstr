@@ -47,10 +47,13 @@ export function accountRow(a: AccountRow, env: ViewEnv, c: Controls): HTMLElemen
     h(
       'span',
       { class: 'awho' },
-      h('b', { class: 'clip' }, displayName(author)),
+      h('b', { class: 'clip', dir: 'auto', title: plainName(author) }, displayName(author)),
       h(
         'span',
-        { class: 'muted clip' },
+        {
+          class: 'muted clip',
+          title: `${t(signerLabel(env.engine, a.account))}${unnamed(author) ? '' : ` ${shortNpub(author)}`}`,
+        },
         h(
           'span',
           { class: signer === 'none' ? 'badge warn' : 'asigner' },

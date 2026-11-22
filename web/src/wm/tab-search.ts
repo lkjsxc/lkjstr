@@ -121,9 +121,9 @@ export function openTabSearch(layer: HTMLElement, api: TabFinder): void {
                 tabindex: -1,
                 onclick: () => pick(hit),
               },
-              h('span', { class: 'clip' }, hit.title),
+              h('span', { class: 'clip', title: hit.title }, hit.title),
               hit.workspace ? h('span', { class: 'tworkspace' }, String(hit.workspace)) : null,
-              hit.hint ? h('span', { class: 'muted clip' }, hit.hint) : null,
+              hit.hint ? h('span', { class: 'muted clip', title: hit.hint }, hit.hint) : null,
             ),
           )
         : h('div', { class: 'empty' }, t('launcher.none')),

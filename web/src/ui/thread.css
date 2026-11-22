@@ -44,7 +44,7 @@
 @container (max-width: 340px) { .view[data-kind="thread"] .nhead .tclock { display: none; } }
 
 /* Rows that are not notes. */
-.tpart { display: grid; grid-template-columns: var(--avatar, 36px) minmax(0, 1fr); gap: 0 10px; width: 100%; padding: 9px 12px 8px; border-bottom: 1px solid transparent; text-align: left; }
+.tpart { display: grid; grid-template-columns: var(--avatar, 36px) minmax(0, 1fr); gap: 0 10px; box-sizing: border-box; width: 100%; padding: 9px 12px 8px; border-bottom: 1px solid transparent; text-align: left; }
 .tface { width: var(--avatar, 36px); height: var(--avatar, 36px); border-radius: 50%; background: var(--hold); }
 .tlines { display: grid; grid-template-rows: 19px 21px 21px; align-items: center; }
 /* The room of a note above: its header, two lines and its action row (29px), with a note's bottom padding. */

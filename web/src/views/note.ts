@@ -79,18 +79,16 @@ export function renderNote(row: NoteRow, env: ViewEnv, dated = false): HTMLEleme
       i ? t('list.sep') : '',
       nameButton(a, env, 'name quiet'),
     ]);
+    const more = others ? t(others === 1 ? 'ctx.other' : 'ctx.others', { n: others }) : '';
+    const said = `${actors.map(plainName).join(t('list.sep'))}${more}${t('ctx.reposted')}`;
     context.push(
       h(
         'div',
         { class: 'ctx' },
         icon('repost'),
-        h(
-          'span',
-          null,
-          names,
-          others ? t(others === 1 ? 'ctx.other' : 'ctx.others', { n: others }) : '',
-          t('ctx.reposted'),
-        ),
+        // The names give way, each cut on its own; what they did stays whole.
+        h('span', { class: 'rwho', title: said }, names),
+        h('span', { class: 'rdid' }, `${more}${t('ctx.reposted')}`),
       ),
     );
   }
@@ -106,7 +104,7 @@ export function renderNote(row: NoteRow, env: ViewEnv, dated = false): HTMLEleme
         icon('reply'),
         h(
           'span',
-          { class: 'clip' },
+          { class: 'clip', title: `${plainName(row.replyTo.author)} ${row.replyTo.excerpt}` },
           nameButton(row.replyTo.author, env, 'name quiet'),
           ' ',
           row.replyTo.excerpt,
@@ -125,7 +123,11 @@ export function renderNote(row: NoteRow, env: ViewEnv, dated = false): HTMLEleme
       h(
         'div',
         { class: 'ctx chan' },
-        h('button', { class: 'clip', onclick: go }, `# ${name || t('view.channel')}`),
+        h(
+          'button',
+          { class: 'clip', title: `# ${name || t('view.channel')}`, onclick: go },
+          `# ${name || t('view.channel')}`,
+        ),
       ),
     );
   }

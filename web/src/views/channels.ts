@@ -29,6 +29,9 @@ export function mountChannels(el: HTMLElement, env: ViewEnv): () => void {
   const render = (c: Line): HTMLElement => {
     if (c.kind === 'rule') return h('div', { class: 'day' }, t('channels.others'));
     const style = { relative: env.settings.get().relativeTime, lang: getLang() };
+    const line = c.last
+      ? [plainName(c.last.author), c.last.excerpt].filter(Boolean).join(': ')
+      : c.about;
     const row = h(
       'div',
       { class: c.unread ? 'chan unread' : 'chan', tabindex: 0, role: 'link', 'data-f': 'open' },
@@ -36,12 +39,8 @@ export function mountChannels(el: HTMLElement, env: ViewEnv): () => void {
       h(
         'div',
         { class: 'pmain' },
-        h('div', { class: 'name clip' }, channelName(c)),
-        h(
-          'div',
-          { class: 'muted clip' },
-          c.last ? [plainName(c.last.author), c.last.excerpt].filter(Boolean).join(': ') : c.about,
-        ),
+        h('div', { class: 'name clip', title: channelName(c) }, channelName(c)),
+        h('div', { class: 'muted clip', title: line || null }, line),
       ),
       c.joined
         ? h(

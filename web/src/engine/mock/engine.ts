@@ -8,6 +8,7 @@ import { failedAccountInput } from './account-failure.ts';
 import { createActions } from './actions.ts';
 import { createCore } from './core.ts';
 import { createPrivateMock } from './dm.ts';
+import { addStress } from './fixtures-stress.ts';
 import { addThreads } from './fixtures-thread.ts';
 import { projectHidden, unshownOf } from './hidden.ts';
 import { liveWindow } from './live-window.ts';
@@ -143,6 +144,7 @@ export function createMockEngine(
         core.clientTag = config.clientTag !== false;
         core.slow = config.mock?.slow;
         if (config.mock?.threads) addThreads(world);
+        if (config.mock?.stress) addStress(world);
         if (!started && config.mock?.accounts === 'none') core.who.clear();
         if (started) live();
         else start();

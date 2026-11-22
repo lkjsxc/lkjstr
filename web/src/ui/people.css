@@ -6,7 +6,8 @@
 .pbtns { display: flex; align-items: center; flex-wrap: wrap; justify-content: flex-end; gap: 6px; padding-bottom: 4px; font-size: 13.5px; }
 .pname { margin: 6px 0 0; font-size: 19px; font-weight: 650; line-height: 1.3; }
 .pname .badge { margin-left: 6px; vertical-align: 3px; }
-.profile > .nip { display: flex; }
+/* A profile says its address whole, broken where it must be. */
+.profile > .nip { display: flex; overflow: visible; white-space: normal; }
 .npub { display: block; max-width: 100%; padding: 0; overflow: hidden; color: var(--muted); font: 12px / 1.6 ui-monospace, "SF Mono", "Cascadia Mono", "Noto Sans Mono", monospace; text-align: left; text-decoration: underline; text-decoration-color: var(--sep); text-overflow: ellipsis; text-underline-offset: 3px; white-space: nowrap; }
 .npub:hover { color: var(--fg); text-decoration-color: currentColor; }
 .about { margin: 8px 0 6px; white-space: pre-wrap; }
@@ -28,7 +29,8 @@ button.stat:hover { text-decoration: underline; }
 .nmark .emo { height: 18px; }
 .nmark.k-zap { color: var(--seal); }
 .nfaces { display: flex; align-items: center; gap: 3px; margin-bottom: 3px; }
-.notif .name { display: inline; overflow: visible; white-space: normal; }
+/* Who did it, in a sentence: each name is cut on its own line's room at most, so the verb stays readable. */
+.nwho .name { max-width: min(100%, 12em); vertical-align: bottom; }
 .excerpt { display: block; max-width: 100%; margin-top: 2px; padding: 0; font-size: 12.5px; text-align: left; }
 .excerpt:hover { color: var(--fg); }
 
