@@ -192,6 +192,8 @@ export async function deepLinkChecks({
           await page.locator(`${noteRow(liveSession.id)} .generic-face`).waitFor();
           assert.equal(await page.locator(`${noteRow(oldSession.id)}`).count(), 0);
         }
+        if (label === 'public act ID')
+          assert.equal(await visible.locator('.acts, .chips').count(), 0);
         if (label === 'naddr') {
           for (const e of [older, otherId, otherAuthorArticle])
             assert.equal(await page.locator(noteRow(e.id)).count(), 0);
@@ -235,4 +237,11 @@ export async function deepLinkChecks({
     assert.equal(await page.locator(toast).count(), 0);
   });
   check('unavailable address opens a thread with the existing empty state');
+  await visit(`/n/${nevent('f'.repeat(64), 30311)}`, async (page) => {
+    const thread = page.locator('.view[data-kind="thread"]:visible');
+    await thread.getByText('Nothing here.', { exact: true }).waitFor();
+    assert.equal(await thread.locator('[data-note]').count(), 0);
+    assert.equal(await page.locator(toast).count(), 0);
+  });
+  check('unavailable generic event ID opens a thread with the existing empty state');
 }
