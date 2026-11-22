@@ -2,11 +2,10 @@
 
 use std::collections::{HashSet, VecDeque};
 
-use lkjstr_protocol::parse_relay_list_suggestions;
-use lkjstr_protocol::{follow_entries_from_event, reply_parent, reply_root};
-
 use super::{Event, Store};
 use crate::kinds::{ActKind, policy};
+use lkjstr_protocol::parse_relay_list_suggestions;
+use lkjstr_protocol::{follow_entries_from_event, reply_parent, reply_root};
 
 /// A feed query. Empty `authors` means any author.
 #[derive(Debug, Clone, Default)]
