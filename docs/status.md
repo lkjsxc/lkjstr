@@ -8,8 +8,8 @@ Claude owns the interface. Account-safe and A1/A2 (972ef776) are live. S2/E7 sup
 ## Kind capabilities (2026-11-22)
 
 N1 centralizes kind policy and public ID/address access. Rows and quotes carry their kind; existing feeds and counts stay unchanged.
-Private S4 [N2/N7](interface-view.md) adds generic/list faces and profile Articles/Lists/All; private/ephemeral events stay out. Act actions await S6. Lists requests use finite central kinds before the relay cap and retain local validation; release evidence is separate.
-Profile All uses each authored event's time without repost wrappers on initial, live, patched and revealed rows, with or without date filters.
+Private S4 [N2/N7](interface-view.md) adds generic/list faces and profile Articles/Lists/All; private/ephemeral events stay out. Act actions await S6.
+Lists use finite central kinds before caps and local validation. All uses authored time without repost context, including date filters, patches and reveals.
 
 ## Specified keys and messages (2026-11-16)
 
