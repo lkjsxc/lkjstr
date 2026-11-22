@@ -5,7 +5,7 @@ import { fullTime } from '../shared/format.ts';
 import { h } from '../shared/h.ts';
 import { t } from '../shared/i18n.ts';
 import { ability, failureText } from './can.ts';
-import { draftButtons, draftMedia, draftText } from './draft-row.ts';
+import { draftBody, draftButtons } from './draft-row.ts';
 import { faceButton, nameButton, nipMark } from './parts.ts';
 import type { ViewEnv } from './registry.ts';
 import { type Asking, waitKey } from './send-state.ts';
@@ -90,7 +90,7 @@ function renderDraft(entry: HomeDraft, env: ViewEnv): HTMLElement {
             failure ? '' : t((!signed && waiting && waitKey(asks)) || 'note.sending'),
           ),
         ),
-        h('div', { class: 'content' }, draftText(draft, env), draftMedia(draft)),
+        h('div', { class: 'content' }, draftBody(draft, env)),
         // The room of the action row the signed note will have, so that nothing below moves when it arrives.
         failure ? null : h('div', { class: 'acts', 'aria-hidden': 'true' }),
         failure

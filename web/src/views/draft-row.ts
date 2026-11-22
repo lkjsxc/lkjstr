@@ -40,6 +40,17 @@ export function draftMedia(draft: Draft): HTMLElement[] {
   );
 }
 
+/** A waiting draft in a list: its text and media, or with a content warning the cover its note will have (unless
+ * the reader opens warnings anyway), which a press opens. */
+export function draftBody(draft: Draft, env: ViewEnv): HTMLElement[] {
+  const body = (): HTMLElement[] => [draftText(draft, env), ...draftMedia(draft)];
+  if (draft.cw === undefined || env.settings.get().showSensitive) return body();
+  const said = t('note.cw', { reason: draft.cw });
+  const cover = h('button', { class: 'cw' }, said, h('span', { class: 'lnk' }, t('note.show')));
+  cover.addEventListener('click', (e) => (e.stopPropagation(), cover.replaceWith(...body())));
+  return [cover];
+}
+
 export function draftButtons(
   busy: boolean,
   retry: () => void,

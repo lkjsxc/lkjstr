@@ -68,7 +68,8 @@ Seams worth knowing inside `src/views/`:
   Unicode table is made at build time by `scripts/emoji-table.ts` and fetched by `shared/emoji-table.ts`.
 - `wm/presets.ts` has two layout families: `main` for an account and `guest`
   for a visitor; `main.ts` shows the one that fits who is signed in.
-- `wm/controller.ts` owns one workspace; `wm/closed.ts` is its stored list of
+- `wm/controller.ts` owns one workspace; `wm/open-tab.ts` decides where an opened tab goes (a quote: the Post
+  tab), `wm/pane-menu.ts` what a tile menu offers; `wm/closed.ts` is its stored list of
   closed tabs (read before every change, so browser tabs share it; entries
   have ids), `wm/choices.ts` what the New tab page offers (Documentation
   once; its pages by typed name), `wm/reset.ts` the reset that sends the tabs

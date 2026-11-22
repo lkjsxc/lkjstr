@@ -8,7 +8,8 @@ import { kv } from '../shared/storage.ts';
 import { loadViewState, saveViewState } from '../shared/view-state.ts';
 import { openMenu } from '../wm/menus.ts';
 import { ability, abilityText, denied, failureText } from './can.ts';
-import { contextLine, type Ref } from './compose-context.ts';
+import { contextLine, type Quoted, quotedCard, type Ref } from './compose-context.ts';
+import { createWarning } from './compose-cw.ts';
 import { createComposeMedia } from './compose-media-state.ts';
 import { createMentions } from './compose-mentions.ts';
 import { type ChannelDraft, createChannelOutbox } from './compose-outbox.ts';
@@ -25,7 +26,9 @@ type State = {
   replyTo?: string;
   replyOf?: Ref;
   quote?: string;
-  quoteOf?: Ref;
+  quoteOf?: Quoted;
+  /** Content warning: its reason ('' for none); absent when off. */
+  cw?: string;
   title?: string;
   /** Custom emoji put into the text with the picker. */
   emoji?: Emoji[];
@@ -99,20 +102,19 @@ export function mountCompose(
     t(state.replyTo ? 'compose.reply' : 'compose.post'),
   );
   const head = h('div');
-  const drawHead = (): void =>
-    replaceChildren(
-      head,
-      contextLine(
-        'compose.replyingTo',
-        state.replyOf,
-        () => ((state.replyTo = state.replyOf = undefined), save(), drawHead()),
-      ),
-      contextLine(
-        'compose.quoting',
-        state.quoteOf,
-        () => ((state.quote = state.quoteOf = undefined), save(), drawHead()),
-      ),
-    );
+  const quoted = h('div');
+  const unquote = (): void => {
+    state.quote = state.quoteOf = undefined;
+    save();
+    drawHead();
+    ready();
+  };
+  const drawHead = (): void => {
+    const unreply = () => ((state.replyTo = state.replyOf = undefined), save(), drawHead());
+    replaceChildren(head, contextLine('compose.replyingTo', state.replyOf, unreply));
+    replaceChildren(quoted, state.quote ? quotedCard(state.quoteOf, env, unquote) : null);
+  };
+  const warning = createWarning(state, save, () => area.focus({ preventScroll: true }));
   const ready = (): void => {
     const can = ability(env.engine);
     const busy = media.busy();
@@ -142,6 +144,7 @@ export function mountCompose(
                 mentions: state.mentions,
                 replyTo: state.replyTo,
                 quote: state.quote,
+                cw: state.cw,
                 channel,
                 emoji: state.emoji,
               })
@@ -162,6 +165,8 @@ export function mountCompose(
       text: draft.text,
       replyTo: draft.replyTo,
       quote: draft.quote,
+      quoteOf: draft.quote && draft.quote === state.quote ? state.quoteOf : undefined,
+      cw: draft.cw,
       emoji: [...(draft.emoji ?? [])],
       mentions: [...(draft.mentions ?? [])],
       media: [...(draft.media ?? [])],
@@ -174,6 +179,7 @@ export function mountCompose(
     area.value = draft.text;
     mentions.reset();
     media.restore(draft.media ?? []);
+    warning.set(state.cw);
     save();
     drawHead();
     ready();
@@ -205,6 +211,7 @@ export function mountCompose(
       channel,
       replyTo: state.replyTo,
       quote: state.quote,
+      cw: state.cw,
       media: media.uploaded(),
       emoji: (state.emoji ?? []).filter((e) => text.includes(`:${e.code}:`)),
     };
@@ -215,6 +222,7 @@ export function mountCompose(
       mentions.reset();
       state.replyTo = state.replyOf = state.quote = state.quoteOf = state.emoji = undefined;
       state.replyTo = reply?.id;
+      warning.set(undefined);
       save();
       media.clear();
       drawHead();
@@ -242,14 +250,17 @@ export function mountCompose(
   el.classList.add('compose');
   el.replaceChildren(
     head,
+    warning.field,
     mentions.el,
     mentions.preview,
     thumbs,
+    quoted,
     h(
       'div',
       { class: 'cbar' },
       who.el,
       h('span', { class: 'grow' }),
+      warning.button,
       emoji,
       attach,
       file,

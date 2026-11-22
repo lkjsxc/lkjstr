@@ -10,6 +10,7 @@ import { type IconName, icon } from '../shared/icons.ts';
 import { groupReactions } from '../shared/reactions.ts';
 import { type MenuItem, openMenu } from '../wm/menus.ts';
 import { ability, abilityText, able } from './can.ts';
+import type { Quoted } from './compose-context.ts';
 import { openEmojiPicker } from './emoji-picker.ts';
 import { type HeldWhat, hold, unhold } from './held.ts';
 import { copy, emojiImg, nameText, plainName, toast, unicodeEmoji } from './parts.ts';
@@ -125,7 +126,14 @@ export function actionRow(row: NoteRow, env: ViewEnv, chips = true): HTMLElement
   };
   const likes = groupReactions(row.reactions).find((r) => r.emoji === DEFAULT_REACTION && !r.url);
   const mine = likes?.mine ? likes : undefined;
-  const quote = { quote: row.id, quoteOf: { name: plainName(row.author), text: excerpt(row) } };
+  const quoteOf: Quoted = {
+    author: row.author,
+    at: row.at,
+    text: fullText(row).slice(0, 400),
+    media: row.media.length,
+    ...(row.cw === undefined ? {} : { cw: row.cw }),
+  };
+  const quote = { quote: row.id, quoteOf };
   const publish = (what: Extract<Action, { a: 'publish' }>['what']) => () =>
     void act(env, (as) => ({ a: 'publish', as, what }));
   // A narrow tile folds the bookmark (unless it is set) and then the zap into the "…" menu: the row hides them by
@@ -251,4 +259,3 @@ const fullText = (row: NoteRow): string =>
                 : s.text,
     )
     .join('');
-export const excerpt = (row: NoteRow): string => (fullText(row).split('\n')[0] ?? '').slice(0, 100);

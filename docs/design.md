@@ -209,9 +209,17 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
 
 ## Writing and acting
 - The composer is the Post tab: text at note size, who is posting (a button
-  that switches accounts), emoji, media, Post. A primary button that cannot
+  that switches accounts), content warning, emoji, media, Post. A primary button that cannot
   act yet is neutral. Sending and failed drafts stay below the field; failed Edit swaps keep both drafts.
   Reopened tabs restore drafts; fresh tabs start empty. Hidden composers release mention lookups.
+- Quote (the repost menu) writes in the Post tab, never over what is being read: an open Post tab holding nothing
+  takes the quote, a Post tab with a draft keeps it and a new Post tab opens next to it, and with no Post tab a new
+  one opens in the neighbouring tile (right after the read tab when there is one tile). The keyboard goes into the
+  field. The quoted note is a card under the field and the media, in the quoted-note surface: face, name, time, its
+  first four lines (or its warning) and a media count, × in its corner to drop it. A quote needs no text to post.
+- The content warning is a button in the composer's bar, indigo while on; on, a one-line reason (optional) stands
+  over the text, dashed like the cover readers will see. The note goes out with it, and while it sends Home shows
+  the same cover. Every composer has it: Post, a thread's field, a channel.
 - @ in any composer (Post, the field under a thread's focus, Quote, a channel) opens one person picker at the caret, or
   above it when there is more room there. A bare @ offers the answered note's author, its thread's people, then follows;
   a name, NIP-05 address or npub narrows or finds one. Arrows with Enter or Tab, or a tap, choose; Escape closes. No match

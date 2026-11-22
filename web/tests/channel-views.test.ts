@@ -128,7 +128,7 @@ it.each([undefined, 'room'])(
     let off = mountCompose(x.el, x.env, channel);
     const file = new File(['image'], 'image.png', { type: 'image/png' });
     Object.defineProperty(file, 'arrayBuffer', { value: async () => new ArrayBuffer(0) });
-    const input = x.el.querySelector('input')!;
+    const input = x.el.querySelector<HTMLInputElement>('input[type="file"]')!;
     Object.defineProperty(input, 'files', { value: [file] });
     input.dispatchEvent(new Event('change'));
     await vi.waitFor(() => expect(x.el.querySelector('.thumb.done')).not.toBeNull());

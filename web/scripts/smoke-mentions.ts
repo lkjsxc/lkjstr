@@ -181,6 +181,14 @@ export async function mentionChecks(open: Open, fact: Check): Promise<void> {
     else await item.click();
     const field = page.locator(`${COMPOSE} textarea`).first();
     await field.waitFor();
+    // The open Post tab takes the quote, as a card under the field; on a desktop Home stays in view beside it.
+    fact(
+      `${on} Quote: the Post tab shows the quoted note as a card`,
+      (await page.locator(`${COMPOSE} .cquote .qhead .name`).count()) === 1 &&
+        (await page.locator('.tab[data-view^="compose"]').count()) === 1 &&
+        (touch || (await page.locator(HOME).count()) === 1),
+      await page.locator('.tab').evaluateAll((t) => t.map((x) => x.getAttribute('data-view'))),
+    );
     const quoting = `quote mention ${on}`;
     await field.fill(quoting);
     await choose(page, fact, `${on} Quote`, field, touch);

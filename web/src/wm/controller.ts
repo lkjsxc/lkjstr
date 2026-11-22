@@ -6,6 +6,7 @@ import { type Choice, NEW_TAB } from './launcher.ts';
 import * as L from './layout.ts';
 import { parseLayout } from './layout-parse.ts';
 import { openMenu } from './menus.ts';
+import { createOpener } from './open-tab.ts';
 import { type BaseEnv, createOwnViews } from './own-views.ts';
 import { paneMenu } from './pane-menu.ts';
 import { FAMILY, presetOf } from './presets.ts';
@@ -47,7 +48,6 @@ export function createWmController(
   let rendered: Rendered | undefined;
   let disposed = false;
   let touched = ''; // the pane last pressed, focused or opened into
-  const back = new Map<string, { view: string; el?: HTMLElement }>(); // bound: one per such open tab
 
   const closed = createClosed(`${family}${at.index}`);
   const retire = (view: string): ClosedTab | undefined => {
@@ -86,8 +86,7 @@ export function createWmController(
     const p = L.paneOfView(root, view);
     const i = p?.tabs.indexOf(view) ?? -1;
     const beside = p && p.active === view ? (p.tabs[i + 1] ?? p.tabs[i - 1]) : undefined;
-    const from = back.get(view);
-    back.delete(view);
+    const from = opener.back(view);
     retire(view);
     const prior = from && p?.tabs.includes(from.view) && p.active === view ? from.view : beside;
     const next = L.removeView(root, view);
@@ -98,25 +97,8 @@ export function createWmController(
   };
   const openFrom =
     (from: string) =>
-    (kind: string, state?: object, opts: OpenOpts = {}): void => {
-      const p =
-        L.paneOfView(root, from) ?? L.panes(root).find((x) => x.id === touched) ?? L.panes(root)[0];
-      if (!p || !viewOf(kind)) return;
-      const tab = own.fresh(kind, used(), state);
-      touched = p.id;
-      if (opts.split) return set(L.addView(root, p.id, tab, 'right'));
-      const at = p.tabs.includes(from) ? p.tabs.indexOf(from) + 1 : p.tabs.length;
-      const all = L.panes(root);
-      const i = all.findIndex((x) => x.id === p.id);
-      // Beside: in the neighbouring tile, unless one tile fills the workspace (then it is the only one in view).
-      const q = opts.beside && !L.filled(root) ? (all[i + 1] ?? all[i - 1]) : undefined;
-      if (opts.beside) back.set(tab, { view: (q ?? p).active, el: opts.from });
-      if (q) touched = q.id;
-      const next = q
-        ? L.moveView(root, tab, q.id, 'center', q.tabs.length)
-        : L.moveView(root, tab, p.id, 'center', at);
-      set(opts.background ? L.activate(next, p.active) : L.front(next, tab));
-    };
+    (kind: string, state?: object, opts?: OpenOpts): void =>
+      opener.from(from)(kind, state, opts);
 
   const launcher = (tab: string) => ({
     ...CHOICES,
@@ -135,6 +117,14 @@ export function createWmController(
     openFrom,
     close,
   );
+  const opener = createOpener({
+    root: () => root,
+    touched: () => touched,
+    touch: (id) => void (touched = id),
+    set,
+    show,
+    own,
+  });
 
   const resets = createResets(
     { root: () => root, set, own, closed, live: () => !disposed },

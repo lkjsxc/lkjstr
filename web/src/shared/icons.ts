@@ -48,6 +48,8 @@ const PATHS = {
   unfill: ['M9 4v5H4', 'M20 9h-5V4', 'M15 20v-5h5', 'M4 15h5v5'],
   fold: ['M8 4l4 4 4-4', 'M8 20l4-4 4 4', 'M5 12h14'],
   unfold: ['M8 7l4-4 4 4', 'M8 17l4 4 4-4', 'M5 12h14'],
+  /** A content warning. */
+  warn: ['M12 4l9 16H3z', 'M12 10v4', 'M12 17h.01'],
 } as const;
 export type IconName = keyof typeof PATHS;
 

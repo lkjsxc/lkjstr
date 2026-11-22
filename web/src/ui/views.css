@@ -47,6 +47,13 @@
 .cbar .icon:disabled { opacity: 0.4; cursor: default; }
 .fstate > .btn { margin-top: 4px; }
 .cbar .icon { display: grid; place-items: center; width: 28px; height: 28px; flex: none; }
+/* The quoted note under the field (compose-context.ts); the warning's reason over the text, dashed like the cover. */
+.cquote { flex: none; margin: 0; cursor: default; }
+.cquote .qtext { -webkit-line-clamp: 4; }
+.cquote .qhead > .x { flex: none; }
+.ccw { box-sizing: border-box; flex: none; width: 100%; height: 32px; padding: 0 10px; border: 1px dashed var(--sep); border-radius: 8px; background: none; color: var(--fg); font: inherit; font-size: 13px; }
+.ccw:focus { outline: 0; border-color: var(--accent); }
+.cbar .icon.on { color: var(--accent); }
 .thumbs { display: flex; flex-wrap: wrap; gap: 6px; }
 .thumbs:empty { display: none; }
 .thumb { position: relative; display: flex; flex-direction: column; gap: 3px; width: 112px; padding: 4px; border: 1px solid var(--line); border-radius: 6px; font-size: 11.5px; }

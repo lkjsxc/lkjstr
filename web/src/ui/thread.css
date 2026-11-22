@@ -32,7 +32,7 @@
 .tsay .ctext:focus { border-color: var(--accent); }
 .tsay .cbar { padding-top: 2px; border-top: 0; }
 /* Until first used the field stands alone; its bar then stays, so leaving the field never moves what is below. */
-.tsay:not(.used):has(.ctext:placeholder-shown):not(:has(.thumbs > *)) .cbar { display: none; }
+.tsay:not(.used):has(.ctext:placeholder-shown):not(:has(.thumbs > *)):not(:has(.ccw:not([hidden]))) .cbar { display: none; }
 /* A sent reply shows its progress on its own row in the thread: under the field only a failure stays, with Retry,
    Edit and discard, so the conversation below never moves while a reply is on its way. */
 .tsay > .cresult > :not(.error), .tsay .cdraft:not(:has(> .error)) { display: none; }
