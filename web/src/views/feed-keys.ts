@@ -3,7 +3,7 @@
 // It is only drawn once the keyboard is used, and a key that would act on a selection nobody can see shows it
 // first instead of acting.
 import type { NoteRow } from '../engine/protocol.ts';
-import { type KeyId, pressed, typing } from '../shared/keys.ts';
+import { covered, type KeyId, pressed, typing } from '../shared/keys.ts';
 import { popoverOpen } from '../wm/menus.ts';
 import type { ListRow } from './feed-draw.ts';
 import { plainName } from './parts.ts';
@@ -98,7 +98,7 @@ export function mountFeedKeys(o: {
   };
 
   const key = (e: KeyboardEvent): void => {
-    if (e.defaultPrevented || typing(e) || popoverOpen()) return;
+    if (e.defaultPrevented || typing(e) || popoverOpen() || covered(el)) return;
     if (!env.visible.get() || !el.closest('.pane.cur')) return;
     const on = (id: KeyId): boolean => pressed(e, id);
     if (on('next') || on('prev')) return (e.preventDefault(), step(on('next') ? 1 : -1));
@@ -121,16 +121,15 @@ export function mountFeedKeys(o: {
     if (!node || !shown) return step(1); // nothing visibly selected: the first press only shows what would be acted on
     const row = o.row(cursor);
     const note = noteOf(row);
-    const from = { beside: true, from: el };
     if (which === 'thread') {
       // A fold or a compact note above a thread's focus opens in place, as a press does.
       if (node.hasAttribute('data-press') || node.classList.contains('th-compact')) node.click();
       else if (note && note.thread?.role !== 'focus')
-        env.open('thread', { id: note.id, title: plainName(note.author) }, from);
+        env.open('thread', { id: note.id, title: plainName(note.author) });
       else if (row?.kind === 'person')
-        env.open('profile', { pubkey: row.author.pubkey, title: plainName(row.author) }, from);
+        env.open('profile', { pubkey: row.author.pubkey, title: plainName(row.author) });
       else if (row?.kind === 'notification' && row.target)
-        env.open('thread', { id: row.target.id }, from);
+        env.open('thread', { id: row.target.id });
       return;
     }
     if (which === 'profile') {

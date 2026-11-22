@@ -85,15 +85,17 @@ export function createWmController(
   const close = (view: string): void => {
     const p = L.paneOfView(root, view);
     const i = p?.tabs.indexOf(view) ?? -1;
-    const beside = p && p.active === view ? (p.tabs[i + 1] ?? p.tabs[i - 1]) : undefined;
-    const from = opener.back(view);
+    const from = opener.origin(view);
+    const front = p?.active === view;
+    const prior =
+      front && from && p.tabs.includes(from)
+        ? from
+        : front
+          ? (p.tabs[i + 1] ?? p.tabs[i - 1])
+          : undefined;
     retire(view);
-    const prior = from && p?.tabs.includes(from.view) && p.active === view ? from.view : beside;
     const next = L.removeView(root, view);
     set(next && prior ? L.activate(next, prior) : next);
-    if (!from?.el?.isConnected) return;
-    from.el.focus({ preventScroll: true });
-    mark(from.el.closest('.pane')?.getAttribute('data-pane') ?? touched);
   };
   const openFrom =
     (from: string) =>
@@ -185,6 +187,8 @@ export function createWmController(
     for (const [view, body] of rendered.bodies) {
       const el = own.el(view);
       if (el) body.append(el);
+      const cover = own.cover(view);
+      if (cover) body.append(cover);
     }
     own.sync(used());
     mark(touched);

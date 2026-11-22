@@ -21,10 +21,14 @@ type Mounted = {
   visible: Signal<boolean>;
   top: number;
   menu?: () => readonly MenuItem[];
+  /** What lies over the tab (a picture being looked at), put back over it on every render. */
+  cover?: { readonly el: HTMLElement; off(): void };
 };
 export type OwnViews = {
   /** Element of a tab (mounted on first use). */
   el(tab: string): HTMLElement | undefined;
+  /** What lies over a mounted tab, to be drawn after its element. */
+  cover(tab: string): HTMLElement | undefined;
   title(tab: string): string;
   /** What the tab adds to its tile's menu. */
   menu(tab: string): readonly MenuItem[];
@@ -50,7 +54,7 @@ export type OwnViews = {
 };
 export type BaseEnv = Omit<
   ViewEnv,
-  'instance' | 'setTitle' | 'open' | 'visible' | 'close' | 'menu'
+  'instance' | 'setTitle' | 'open' | 'visible' | 'close' | 'menu' | 'cover'
 >;
 
 export function createOwnViews(
@@ -103,8 +107,20 @@ export function createOwnViews(
             open: open(tab),
             close: () => close(tab),
             menu: (items) => void (made.menu = items),
+            cover: (cover, dispose) => {
+              made.cover?.off();
+              const off = (): void => {
+                if (made.cover?.el !== cover) return;
+                made.cover = undefined;
+                cover.remove();
+                dispose();
+              };
+              made.cover = { el: cover, off };
+              el.after(cover); // over the tab when it is on the page; a render puts it back
+              return off;
+            },
           });
-          if (dispose) made.dispose = dispose;
+          made.dispose = () => (made.cover?.off(), dispose?.());
           m = made;
         }
         const scroll =
@@ -169,6 +185,7 @@ export function createOwnViews(
       }
       return m.el;
     },
+    cover: (tab) => mounts.get(tab)?.cover?.el,
     title(tab) {
       if (kindOf(tab) === NEW_TAB) return t('tab.new');
       const def = viewOf(tab);

@@ -162,7 +162,11 @@ export async function reviewSettings({
   return other;
 }
 
-export async function recordSocketWindow({ trace, liveMainSockets, learnedRelays }, probe, settlePolls = 200) {
+export async function recordSocketWindow(
+  { trace, liveMainSockets, learnedRelays },
+  probe,
+  settlePolls = 200,
+) {
   trace.activate(liveMainSockets());
   let complete = false;
   let receipt;

@@ -1,7 +1,7 @@
 // The pictures of a note. Every box has its final shape before anything loads (the size from the note's imeta
 // when it gave one, a fixed ratio otherwise) and a quiet tint of its own in both themes, so a late image fills its
-// place and never moves what is being read. A press opens the media tab beside the note; the address is still a
-// real link, so a middle click opens the file itself.
+// place and never moves what is being read. A press lays the pictures over the tile being read (views/media.ts);
+// the address is still a real link, so a middle click opens the file itself.
 import type { Media } from '../engine/protocol.ts';
 import { hostOf } from '../shared/address.ts';
 import { h } from '../shared/h.ts';
@@ -9,6 +9,7 @@ import { t } from '../shared/i18n.ts';
 import { icon } from '../shared/icons.ts';
 import { readNoteState, writeNoteState } from '../shared/note-state.ts';
 import { learnMediaSize, mediaSize } from '../shared/public-media.ts';
+import { openMedia } from './media.ts';
 import { keepNoteAudio } from './note-audio.ts';
 import type { ViewEnv } from './registry.ts';
 
@@ -30,7 +31,6 @@ function settle(box: HTMLElement, img: HTMLImageElement): void {
 export function mediaGrid(
   media: readonly Media[],
   env: ViewEnv,
-  title: string,
   noteId?: string,
 ): HTMLElement | null {
   if (!media.length) return null;
@@ -85,7 +85,7 @@ export function mediaGrid(
       e.stopPropagation();
       if (e.ctrlKey || e.metaKey) return; // the browser's own "open in a new tab"
       e.preventDefault();
-      env.open('media', { media, index, title }, { beside: true, split: e.shiftKey, from: box });
+      openMedia(env, box, media, index);
     });
     // A file that cannot be had leaves its box in place, saying where it would have come from.
     const gone = (el: HTMLElement) => (): void => {

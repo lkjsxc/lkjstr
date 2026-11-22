@@ -176,7 +176,7 @@ async function run(browser: Browser): Promise<void> {
       els.map((e) => [e.getAttribute('data-view'), e.classList.contains('active')]),
     );
   fact(
-    'note opens beside its tab, focused, same tile',
+    'note opens right after its tab, focused, same tile',
     before === (await count(page, '.pane')) &&
       tabs[0]?.[0] === 'home' &&
       String(tabs[1]?.[0]).startsWith('thread') &&
@@ -1008,15 +1008,22 @@ async function keyboard(browser: Browser, still: Record<string, unknown>): Promi
   await page.keyboard.press('k');
   fact('after a menu, j and k go on from the same note', (await key()) === second);
 
-  // Enter: the thread in the neighbouring tile; Escape drops the selection there, then closes it and comes back.
+  // Enter: the thread right after the feed, in its tile; Escape drops the selection there, then closes it and comes
+  // back to the feed.
   const tabs = await count(page, '.tab');
+  const panes = await count(page, '.pane');
   await page.keyboard.press('Enter');
   await page.waitForSelector('.pane.cur .view[data-kind="thread"] .note');
+  const order = await page
+    .locator('.pane.cur .tab')
+    .evaluateAll((els) => els.map((e) => e.getAttribute('data-view') ?? ''));
+  const at = order.findIndex((v) => v.startsWith('thread'));
   fact(
-    'Enter opens the thread in the neighbouring tile',
+    'Enter opens the thread right after the feed, in its tile',
     (await count(page, '.tab')) === tabs + 1 &&
-      (await count(page, `.pane.cur ${FEED}`)) === 0 &&
-      (await key()) === second,
+      (await count(page, '.pane')) === panes &&
+      order[at - 1] === 'home',
+    order,
   );
   await page.keyboard.press('j');
   fact('the keys follow into the thread', (await count(page, '.pane.cur .list > .sel')) === 1);
@@ -1212,32 +1219,61 @@ async function reading(browser: Browser, still: Record<string, unknown>): Promis
     times.slice(0, 3),
   );
 
-  // A picture opens as a tab in the neighbouring tile; Escape closes it and the keyboard is back on the picture.
+  // A picture lies over its own tile: no tab, no tile; Escape closes it, the keyboard is back on the picture and the
+  // list has not moved (owner, 2026-11-22: nothing opens in another tile).
   const panes = await count(page, '.pane');
+  const tabCount = await count(page, '.tab');
   const box = page.locator(`${feed} .mbox`).first();
   await box.scrollIntoViewIfNeeded();
   const top = await page.locator(feed).evaluate((e) => e.scrollTop);
   await box.click();
-  await page.locator('.mstage img').waitFor();
+  await page.locator('.cover.mview .mstage img').waitFor();
+  const over = await page.evaluate((sel) => {
+    const cover = document.querySelector('.cover.mview');
+    const list = document.querySelector(sel);
+    const a = cover?.getBoundingClientRect();
+    const b = list?.closest('.body')?.getBoundingClientRect();
+    return Boolean(
+      a &&
+        b &&
+        cover?.parentElement === list?.parentElement &&
+        a.top === b.top &&
+        a.height === b.height,
+    );
+  }, feed);
   fact(
-    'media opens beside, as a tab, with the keyboard',
+    'a picture lies over its own tile, as no tab, with the keyboard',
     (await count(page, '.pane')) === panes &&
+      (await count(page, '.tab')) === tabCount &&
       (await count(page, '.layer > *')) === 0 &&
-      (await count(page, `${home} .tab[data-view^="media"]`)) === 0 &&
-      (await count(page, '.tab.active[data-view^="media"]')) === 1 &&
-      (await page.evaluate(() => document.activeElement?.matches('.mview') === true)),
+      over &&
+      (await page.evaluate(() => document.activeElement?.matches('.cover.mview') === true)),
   );
+  if (shot) await page.screenshot({ path: shot.replace(/\.png$/, '-media-1440.png') });
   const scale = (): Promise<string> => page.locator('.mscale').innerText();
   const fitted = await scale();
   const stage = await center(page, '.mstage');
   await page.mouse.move(stage.x, stage.y);
   await page.mouse.wheel(0, -400);
   fact('the wheel zooms', (await scale()) !== fitted, [fitted, await scale()]);
+  const j = await page.locator(feed).evaluate((e) => e.scrollTop);
+  await page.keyboard.press('j');
+  fact(
+    'the list under the picture takes no keys',
+    (await page.locator(feed).evaluate((e) => e.scrollTop)) === j,
+  );
   await page.keyboard.press('Escape');
   fact(
-    'Escape closes the media tab and returns to the picture',
-    (await count(page, '.tab[data-view^="media"]')) === 0 &&
+    'Escape closes the picture and returns to it, the list where it was',
+    (await count(page, '.cover')) === 0 &&
       (await page.evaluate(() => document.activeElement?.matches('.mbox') === true)) &&
+      (await page.locator(feed).evaluate((e) => e.scrollTop)) === top,
+  );
+  await box.click();
+  await page.locator('.cover .mclose').click();
+  fact(
+    '× closes it too',
+    (await count(page, '.cover')) === 0 &&
       (await page.locator(feed).evaluate((e) => e.scrollTop)) === top,
   );
 
@@ -1552,7 +1588,7 @@ async function reading(browser: Browser, still: Record<string, unknown>): Promis
   );
   await page.context().close();
 
-  // A phone: one tile, so the media tab opens in it; a finger gets 40px.
+  // A phone: the picture lies over the one tile; a finger gets 40px.
   const ctx = await isolatedContext(browser, {
     viewport: { width: 390, height: 844 },
     hasTouch: true,
@@ -1572,20 +1608,25 @@ async function reading(browser: Browser, still: Record<string, unknown>): Promis
           .filter((r) => r.width > 0 && (r.width < 40 || r.height < 32)).length,
     );
   fact('touch targets are finger sized', small === 0, small);
+  const phoneTabs = await count(phone, '.tab');
   await phone.locator('.mbox').first().tap();
-  await phone.locator('.mstage img').waitFor();
+  await phone.locator('.cover .mstage img').waitFor();
   const bar = await phone.locator('.mbar a.icon').boundingBox();
+  const close = await phone.locator('.mbar .mclose').boundingBox();
   fact(
-    'phone: media is a tab in the one tile',
+    'phone: a picture lies over the one tile',
     (await count(phone, '.pane')) === 1 &&
+      (await count(phone, '.tab')) === phoneTabs &&
+      (close?.height ?? 0) >= 40 &&
       (bar?.height ?? 0) >= 40 &&
       (await phone.evaluate(() => document.documentElement.scrollWidth <= innerWidth)),
   );
   if (shot) await phone.screenshot({ path: shot.replace(/\.png$/, '-media-390.png') });
-  await phone.locator('.tab.active .x').tap();
+  await phone.locator('.mbar .mclose').tap();
   fact(
-    'phone: closing returns to the feed',
-    (await count(phone, '.tab.active[data-view="home"]')) === 1,
+    'phone: × returns to the feed',
+    (await count(phone, '.cover')) === 0 &&
+      (await count(phone, '.tab.active[data-view="home"]')) === 1,
   );
   await ctx.close();
 }
@@ -1652,21 +1693,13 @@ async function pages(browser: Browser, still: Record<string, unknown>): Promise<
     redrawn?.paused === true && Math.abs(redrawn.at - kept) < 0.1,
     redrawn,
   );
-  await page.reload();
-  await page.locator('.mstage video').waitFor();
-  await page.waitForFunction(
-    () => (document.querySelector<HTMLVideoElement>('.mstage video')?.readyState ?? 0) >= 1,
-  );
-  await page.waitForTimeout(300);
-  const restored = await video();
-  fact(
-    'a reload continues from there, silent until asked, the volume choice kept',
-    restored?.paused === true && Math.abs(restored.at - kept) < 0.6 && restored.muted,
-    { restored, kept },
-  );
   await page.keyboard.press('PageUp');
   fact('PageUp goes to the picture before the video', (await count(page, '.mstage img')) === 1);
   await page.keyboard.press('Escape');
+  // The viewer is a moment over the list, not a tab: a reload is back on the list with nothing over it.
+  await page.reload();
+  await page.locator(`${feed} .mbox:has(video)`).first().waitFor();
+  fact('a reload is back on the list, nothing over it', (await count(page, '.cover')) === 0);
 
   // Relays shows state and edits nothing; the list is edited in Settings, one press away.
   const menu = async (label: string): Promise<void> => {

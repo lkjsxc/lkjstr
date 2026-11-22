@@ -59,17 +59,17 @@ it('a quote goes to the open Post tab when it holds nothing, the read tile stayi
   expect(tiles(x.root())).toEqual(['home*', 'compose*']);
 });
 
-it('a Post tab with a draft keeps it: the quote opens a new Post tab next to it', () => {
-  const x = opener(row(['home'], ['compose', 'account']), { compose: { text: 'mine' } });
+it('a Post tab with a draft keeps it: the quote opens a new Post tab right after the read tab', () => {
+  const x = opener(row(['home', 'global'], ['compose', 'account']), { compose: { text: 'mine' } });
   x.o.from('home')('compose', QUOTE);
   expect(Object.keys(x.revived)).toEqual([]);
-  expect(tiles(x.root())).toEqual(['home*', 'compose compose~2* account']);
+  expect(tiles(x.root())).toEqual(['home compose~2* global', 'compose* account']);
 });
 
-it('with no Post tab the quote opens in the neighbouring tile, or right after the read tab when alone', () => {
+it('with no Post tab the quote opens right after the read tab, never in another tile', () => {
   const two = opener(row(['home'], ['notifications']));
   two.o.from('home')('compose', QUOTE);
-  expect(tiles(two.root())).toEqual(['home*', 'notifications compose~2*']);
+  expect(tiles(two.root())).toEqual(['home compose~2*', 'notifications*']);
   const one = opener(L.pane(['home', 'global']));
   one.o.from('home')('compose', QUOTE);
   expect(tiles(one.root())).toEqual(['home compose~2* global']);
@@ -79,6 +79,8 @@ it('other tabs still open right after the one they came from', () => {
   const x = opener(row(['home', 'global'], ['compose']));
   x.o.from('home')('thread', { id: 'a' });
   expect(tiles(x.root())).toEqual(['home thread~2* global', 'compose*']);
+  expect(x.o.origin('thread~2')).toBe('home'); // closing it brings Home back, asked once
+  expect(x.o.origin('thread~2')).toBeUndefined();
 });
 
 it('the composer shows the quoted note as a card that × takes off', () => {

@@ -12,7 +12,6 @@ import { mountCompose } from './compose.ts';
 import { mountDocs } from './docs.ts';
 import { mountFeed } from './feed.ts';
 import { gated } from './gated.ts';
-import { mountMedia } from './media.ts';
 import { mountMessage } from './message.ts';
 import { mountMessages } from './messages.ts';
 import { mountRelays } from './relays.ts';
@@ -22,10 +21,6 @@ import { mountStats } from './stats.ts';
 export type OpenOpts = {
   readonly split?: boolean;
   readonly background?: boolean;
-  /** In the neighbouring tile (the same one when it is the only tile), so what was being read stays in view. */
-  readonly beside?: boolean;
-  /** What gets the keyboard back when the opened tab closes. */
-  readonly from?: HTMLElement;
 };
 export type ViewEnv = {
   readonly engine: Engine;
@@ -38,10 +33,13 @@ export type ViewEnv = {
   readonly setTitle: (title: string) => void;
   /** Whether the tab is in front (its element is on screen). */
   readonly visible: Pick<Signal<boolean>, 'get' | 'subscribe'>;
-  /** Opens another tab in the same tile, right after this one, and focuses it (`split`: in a new tile beside it). */
+  /** Opens another tab in the same tile, right after this one, and focuses it (`split`: in a new tile split off to its right; nothing else ever goes to another tile). */
   readonly open: (kind: string, state?: object, opts?: OpenOpts) => void;
   /** Closes this tab. */
   readonly close: () => void;
+  /** Lays `el` over this tab, in its own tile, until the returned function takes it off or the tab closes; `dispose`
+   * runs either way. One at a time: a second cover replaces the first. What is under it is left exactly as it was. */
+  readonly cover: (el: HTMLElement, dispose: () => void) => () => void;
   /** What this tab adds to its tile's "…" menu, asked each time the menu opens. */
   readonly menu: (items: () => readonly MenuItem[]) => void;
   /** Puts this workspace back to its default arrangement, with Undo (`every`: all saved layouts, without). */
@@ -116,13 +114,6 @@ export const VIEWS: readonly ViewDef[] = [
   {
     ...feed('channel', false),
     mount: gated(CHANNELS_SINCE, 'channel.unsupported', (el, env) => mountFeed(el, env, 'channel')),
-  },
-  {
-    id: 'media',
-    title: 'view.media',
-    hint: 'view.media.hint',
-    launch: false,
-    mount: mountMedia,
   },
   {
     id: 'compose',

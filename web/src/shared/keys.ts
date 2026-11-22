@@ -105,6 +105,10 @@ const hit = (e: KeyboardEvent, combo: string): boolean =>
 /** Whether the key goes into a field: nothing but the field's own keys may act on it. */
 export const typing = (e: Event): boolean =>
   Boolean((e.target as Element | null)?.closest?.('input, textarea, select, [contenteditable]'));
+/** A cover lies over the tab whose element is `view` (a picture being looked at, `views/media.ts`): the tab's own
+ * keys wait until it closes. */
+export const covered = (view: Element): boolean =>
+  view.nextElementSibling?.classList.contains('cover') === true;
 /** Text is being composed (Japanese input): the key belongs to the input method. Safari reports the key that ends
  * a composition as an ordinary press, but with code 229. */
 const composing = (e: KeyboardEvent): boolean => e.isComposing || e.keyCode === 229;

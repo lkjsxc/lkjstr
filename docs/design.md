@@ -76,6 +76,7 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
 - Menus close on outside press, Escape, scroll and after choosing. No close
   buttons on menus. Shortcuts are a page of Documentation, in the platform's names.
 - Opening a note or a person opens a tab in the same tile, right after the current one, in front. Shift-click splits, middle click opens behind.
+  Nothing opens in another tile by itself (owner, 2026-11-22).
 - Incoming note, profile and address paths open a Thread or Profile tab, then
   return the address bar to `/`. An invalid path keeps the workspace as it was
   and shows one toast.
@@ -142,7 +143,9 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
   One accessible link opens a browser tab with noopener; no players or frames.
   Cards fold with long text. Covered notes fetch nothing until opened. Link
   previews are on by default, off with data saver, and disclose the service.
-- A zoomed picture is dragged by hand; the wheel zooms about the pointer.
+- A press on a picture lays the note's pictures over its own tile, with the bar under them (previous, count, next,
+  alt text, scale, original, copy link, ×); Escape or × closes it and the list under it has not moved. A zoomed
+  picture is dragged by hand; the wheel zooms about the pointer.
 - A picture's box has its final size before the file loads, tinted `--hold`
   (the note's dimensions, otherwise 3:2); a picture of unknown size keeps the
   box's height when it arrives, so nothing below moves. A file that cannot
@@ -213,8 +216,7 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
   act yet is neutral. Sending and failed drafts stay below the field; failed Edit swaps keep both drafts.
   Reopened tabs restore drafts; fresh tabs start empty. Hidden composers release mention lookups.
 - Quote (the repost menu) writes in the Post tab, never over what is being read: an open Post tab holding nothing
-  takes the quote, a Post tab with a draft keeps it and a new Post tab opens next to it, and with no Post tab a new
-  one opens in the neighbouring tile (right after the read tab when there is one tile). The keyboard goes into the
+  takes the quote; otherwise a new Post tab opens right after the read tab, in its tile. The keyboard goes into the
   field. The quoted note is a card under the field and the media, in the quoted-note surface: face, name, time, its
   first four lines (or its warning) and a media count, × in its corner to drop it. A quote needs no text to post.
 - The content warning is a button in the composer's bar, indigo while on; on, a one-line reason (optional) stands

@@ -136,7 +136,7 @@ test('each real mode selects its own required checks', () => {
     assert.equal(quick.includes(needsScreenshot[0]), shots);
     assert.equal(full.includes(needsScreenshot[1]), shots);
     assert.equal(quick.includes(needsScreenshot[1]), false);
-    assert.ok(full.includes('view state: media zoom survives remount and reload'));
+    assert.ok(full.includes('view state: media opens over its tile and returns focus'));
     assert.ok(full.includes('upload extension hang retries the retained file'));
     assert.ok(!quick.includes('upload extension hang retries the retained file'));
     assert.ok(quick.includes('no upload page errors'));

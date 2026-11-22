@@ -223,9 +223,7 @@ try {
           await sendingShots(scene);
         await scene('media', '/', async (page) => {
           await page.locator('.mbox:not(.audio)').first().click();
-          await page.waitForSelector(
-            '.view[data-kind="media"] img, .view[data-kind="media"] video',
-          );
+          await page.waitForSelector('.cover.mview img, .cover.mview video');
         });
         await scene('settings', '/', launch(lang === 'ja' ? '設定' : 'Settings', 'settings'));
         await scene('relays', '/', launch(lang === 'ja' ? 'リレー' : 'Relays', 'relays'));

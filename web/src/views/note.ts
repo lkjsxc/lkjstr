@@ -140,7 +140,7 @@ export function renderNote(row: NoteRow, env: ViewEnv, dated = false): HTMLEleme
       'div',
       { class: 'content' },
       row.segments.length ? text : null,
-      mediaGrid(row.media, env, plainName(row.author), row.id),
+      mediaGrid(row.media, env, row.id),
       row.quotes.map((q) => quoteCard(q, env, row.id)),
       env.settings.get().linkPreviews ? linkCards(row.previews) : null,
     );

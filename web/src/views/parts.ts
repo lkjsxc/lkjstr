@@ -9,7 +9,7 @@ import { inlineEmoji } from './emoji-load.ts';
 import { UNDO_MS } from './held.ts';
 import type { ViewEnv } from './registry.ts';
 
-/** Shift-click opens in a new tile beside; a middle click opens behind. */
+/** Shift-click splits a new tile off to the right; a middle click opens behind. */
 export const how = (e: MouseEvent): { split?: boolean; background?: boolean } => ({
   split: e.shiftKey,
   background: e.button === 1,
