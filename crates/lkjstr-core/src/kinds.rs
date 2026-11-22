@@ -62,6 +62,11 @@ impl KindPolicy {
         self.feeds & feed as u16 != 0
     }
 }
+/// Finite public list vocabulary shared by projection and relay discovery.
+pub const PUBLIC_LIST_KINDS: &[u64] = &[
+    3, 10000, 10001, 10002, 10003, 10015, 10030, 30000, 30002, 30003, 30004, 30005, 30015, 30030,
+    39089,
+];
 /// Defaults describe a public generic focus, without feed or contributor authority.
 pub const fn policy(kind: u64) -> KindPolicy {
     let mut p = KindPolicy {
@@ -118,7 +123,6 @@ pub const fn policy(kind: u64) -> KindPolicy {
             };
         }
         3 => {
-            p.face = Face::List;
             p.expires = false;
             p.serialized_write = true;
             p.monotonic_write = true;
@@ -159,10 +163,6 @@ pub const fn policy(kind: u64) -> KindPolicy {
             // Existing account/list metadata does not acquire wall-clock expiry.
             p.expires = false;
             p.monotonic_write = true;
-            p.face = match kind {
-                10000..=10003 | 10015 | 10030 => Face::List,
-                _ => Face::Generic,
-            };
             p.serialized_write = matches!(kind, 10000 | 10003 | 10005);
             p.feeds = match kind {
                 10000 => Feed::Mutes as u16,
@@ -182,14 +182,17 @@ pub const fn policy(kind: u64) -> KindPolicy {
             p.client_tag = true;
             p.derived_tags = true;
         }
-        30000 | 30002..=30005 | 30015 | 30030 | 39089 => {
+        30000 => p.feeds = Feed::List as u16,
+        _ => {}
+    }
+    let mut index = 0;
+    while index < PUBLIC_LIST_KINDS.len() {
+        if kind == PUBLIC_LIST_KINDS[index] {
             p.face = Face::List;
             p.expires = false;
-            if kind == 30000 {
-                p.feeds = Feed::List as u16;
-            }
+            break;
         }
-        _ => {}
+        index += 1;
     }
     p
 }

@@ -131,7 +131,10 @@ pub(super) fn note(row: &Row, store: &Store, account: Option<&str>) -> Value {
         if let Some((route, reference)) = super::generic_face::copy_reference(&event) {
             v["copyLink"] = json!(format!("/{route}/{reference}"));
         }
-        if crate::kinds::policy(event.kind).face == crate::kinds::Face::Generic {
+        if matches!(
+            crate::kinds::policy(event.kind).face,
+            crate::kinds::Face::Generic | crate::kinds::Face::List
+        ) {
             v["face"] = super::generic_face::face(&event, store);
         }
         if let Some(id) = lkjstr_protocol::channel_id(&event) {

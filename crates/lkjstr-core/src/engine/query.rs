@@ -1,7 +1,7 @@
 use super::protocol::{Query, Source};
 pub(super) use super::query_predicates::{matches_extra, signed_out};
 use crate::{
-    kinds::{Feed, feed_kinds, policy},
+    kinds::{Feed, PUBLIC_LIST_KINDS, feed_kinds, policy},
     store::{Event, Query as StoreQuery, Store},
 };
 use lkjstr_protocol::{NostrFilter, tags::tag_values};
@@ -49,10 +49,11 @@ pub fn filter(store: &Store, q: &Query) -> NostrFilter {
                 Some("reposts") => feed_kinds(Feed::ProfileReposts),
                 Some("reactions") => feed_kinds(Feed::ProfileReactions),
                 Some("articles") => vec![30023],
-                Some("lists") | Some("all") => vec![],
+                Some("lists") => PUBLIC_LIST_KINDS.to_vec(),
+                Some("all") => vec![],
                 _ => feed_kinds(Feed::ProfilePosts),
             });
-            if matches!(q.filters.show.as_deref(), Some("lists" | "all")) {
+            if q.filters.show.as_deref() == Some("all") {
                 f.kinds = None;
             }
         }
