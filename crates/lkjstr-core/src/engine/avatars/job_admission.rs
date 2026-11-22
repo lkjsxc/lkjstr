@@ -9,12 +9,12 @@ impl Book {
                 result,
             }]
         };
-        if owner.request.is_empty() || owner.request.len() > MAX_REQUEST_BYTES {
+        if owner.request.is_empty()
+            || owner.request.len() > MAX_REQUEST_BYTES
+            || key.len() > super::super::MAX_URL_BYTES
+        {
             return respond(ResultKind::Rejected);
         }
-        let Some(host) = host(key) else {
-            return respond(ResultKind::Rejected);
-        };
         if let Some(id) = self.owners.get(&owner) {
             return if self.jobs[id].key == key {
                 Vec::new()
@@ -22,6 +22,12 @@ impl Book {
                 respond(ResultKind::Rejected)
             };
         }
+        if crate::store::Profile::is_inline_image(key) {
+            return respond(ResultKind::Fallback { uniform: false });
+        }
+        let Some(host) = host(key) else {
+            return respond(ResultKind::Rejected);
+        };
         self.negatives.retain(|_, value| value.until > now);
         if let Some(negative) = self.negatives.get(key) {
             return respond(negative.failure.result());

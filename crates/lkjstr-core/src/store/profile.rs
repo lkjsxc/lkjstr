@@ -60,15 +60,7 @@ impl Profile {
         };
         let image = |names: &[&str]| {
             let value = field(names);
-            if [
-                "data:image/png;base64,",
-                "data:image/jpeg;base64,",
-                "data:image/webp;base64,",
-                "data:image/svg+xml,",
-            ]
-            .iter()
-            .any(|prefix| value.starts_with(prefix))
-            {
+            if Self::is_inline_image(&value) {
                 value
             } else {
                 url(names)
@@ -84,6 +76,18 @@ impl Profile {
             lud16: field(&["lud16"]),
             website: url(&["website"]),
         }
+    }
+
+    /// Inline formats accepted as profile pictures; these use the browser's original-image route.
+    pub(crate) fn is_inline_image(value: &str) -> bool {
+        [
+            "data:image/png;base64,",
+            "data:image/jpeg;base64,",
+            "data:image/webp;base64,",
+            "data:image/svg+xml,",
+        ]
+        .iter()
+        .any(|prefix| value.starts_with(prefix))
     }
 
     /// Best human label, if the profile has one.

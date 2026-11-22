@@ -36,6 +36,8 @@ The existing circle dimensions and letter disc remain. A custom 72-pixel list fa
 The 76-pixel profile-header role uses the original image in ordinary motion and the still path under reduced motion.
 
 Successful derivation makes a still. Original-image fallbacks may animate in ordinary motion.
+Accepted inline PNG, JPEG, WebP and SVG profile pictures keep that original route within the message-byte bound;
+they create no Worker lookup, fetch, codec, storage job or negative entry. Other non-HTTPS inputs are rejected.
 Under reduced motion, a non-uniform fallback is drawn once into a face-sized canvas without pixel readback,
 encoding, storage or a second fetch. Failed images keep the letter disc. A known uniform still keeps that disc
 under reduced motion without requesting the original image or drawing a canvas.
