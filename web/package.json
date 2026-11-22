@@ -14,7 +14,8 @@
     "test": "vitest run",
     "fix": "biome check --write .",
     "build:real": "cd .. && sh scripts/engine-package.sh && cd web && node scripts/build.ts --engine=../tmp/engine-dist",
-    "smoke:real": "pnpm build:real && cd .. && PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_BUILD_JOBS=4 RUST_TEST_THREADS=4 CARGO_HOME=\"${CARGO_HOME:-$PWD/tmp/cargo-home}\" XDG_CACHE_HOME=\"${XDG_CACHE_HOME:-$PWD/tmp/cache}\" TMPDIR=\"${LKJSTR_ENGINE_TMPDIR:-${TMPDIR:-$PWD/tmp/temp}}\" node web/scripts/smoke-real.mjs",
+    "smoke:real": "pnpm build:real && LKJSTR_SMOKE_DIST=\"$PWD/../dist\" pnpm smoke:served",
+    "smoke:served": "cd .. && PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_BUILD_JOBS=4 RUST_TEST_THREADS=4 CARGO_HOME=\"${CARGO_HOME:-$PWD/tmp/cargo-home}\" XDG_CACHE_HOME=\"${XDG_CACHE_HOME:-$PWD/tmp/cache}\" TMPDIR=\"${LKJSTR_ENGINE_TMPDIR:-${TMPDIR:-$PWD/tmp/temp}}\" node web/scripts/smoke-real.mjs",
     "smoke:offline": "node scripts/smoke-offline.mjs",
     "smoke:public-cache": "node scripts/smoke-public-cache.mjs"
   },

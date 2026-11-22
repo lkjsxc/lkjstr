@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
@@ -19,7 +19,7 @@ export function fixture(t, options = {}) {
     mkdirSync(path, { recursive: true });
   }
   for (const name of ['ship.sh', 'ship-clean.mjs', 'ship-receipt.mjs', 'ship-fixture.mjs',
-    'ship-fixture-change.mjs', 'ship-run.sh', 'ship-smoke.py', 'ship-fixture-watchdog.mjs']) {
+    'ship-fixture-change.mjs', 'ship-run.sh', 'ship-smoke.py', 'ship-archive.py', 'ship-fixture-watchdog.mjs']) {
     copyFileSync(join(source, name), join(root, 'scripts', name));
   }
   for (const name of ['smoke-output.ts', 'smoke-real-results.mjs']) {
@@ -36,11 +36,11 @@ export function fixture(t, options = {}) {
   if (options.watchdog) {
     const path = join(root, 'scripts/ship-run.sh');
     const source = readFileSync(path, 'utf8');
-    const deadline = '"$ATTEMPT" 2400 60 pnpm smoke:real';
+    const deadline = '"$ATTEMPT" 2400 60 pnpm smoke:served';
     assert.ok(source.includes(deadline));
-    writeFileSync(path, source.replace(deadline, '"$ATTEMPT" 1.5 0.75 pnpm smoke:real'));
+    writeFileSync(path, source.replace(deadline, '"$ATTEMPT" 1.5 0.75 pnpm smoke:served'));
   }
-  writeFileSync(join(root, '.gitignore'), '/tmp/\n/target/\n/.test-bin/\n');
+  writeFileSync(join(root, '.gitignore'), '/dist/\n/tmp/\n/target/\n/.test-bin/\n');
   writeFileSync(join(root, 'web/keep'), 'test build output is produced by the fixture');
   writeFileSync(join(root, 'tracked.txt'), 'before');
   const git = args => {
@@ -103,3 +103,9 @@ export function fixture(t, options = {}) {
 }
 export const deploys = events => events.filter(row => row.command === 'ssh' && row.action.includes('ops/lkjstr.py deploy'));
 export const notices = events => events.filter(row => row.command === 'desk');
+
+export const retained = f => {
+  const names = readdirSync(join(f.root, 'tmp')).filter(name => /^ship-\d/.test(name));
+  assert.equal(names.length, 1);
+  return join(f.root, 'tmp', names[0]);
+};

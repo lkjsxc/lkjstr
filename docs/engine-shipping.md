@@ -39,7 +39,7 @@ setsid nohup /home/coder/workspace/lkjstr-direction-20261116/ship.sh \
 
 The launcher pins a full Git revision and loads `ship-run.sh` from that Git
 object into Bash memory before gates run. The driver likewise loads its receipt,
-cleanup and smoke helpers from that object, then executes their captured bytes.
+cleanup, archive and smoke helpers from that object, then executes their captured bytes.
 A later worktree edit cannot replace code already selected for execution.
 
 The shared ship lock precedes replacing `tmp/ship.out` and `tmp/ship.log`.
@@ -48,12 +48,13 @@ A dry-run push checks authentication before the expensive gates. Explicit
 otherwise an existing home-directory gh login is selected. No credential is
 copied, printed or stored in shipment evidence. The driver installs root
 dependencies from the frozen lockfile for the copied package fixtures.
-The web gates use preinstalled web dependencies.
-The archive is copied to the unique run directory and made read-only before
-the final HEAD/clean assertion. All later hashes and uploads use that retained
-copy. The push names the pinned revision explicitly; a subsequent fetch must
-confirm exact main before any host operation. Authentication, source changes
-and a competing main update fail before activation.
+After checking the web code with preinstalled dependencies, the driver builds and packages once. It retains a read-only
+copy and extracts regular files and directories to `served/`. Unsafe paths,
+duplicates and other member types fail extraction. Both smoke attempts serve
+this tree. Before smoke, after each drained attempt and before push, the driver
+verifies the archive and manifest digests and checks the tree against the manifest.
+A mismatch stops the shipment. The push names the pinned revision after a final
+HEAD/clean assertion. A fetch must confirm exact main before any host operation.
 
 Host transfer is digest checked. Only explicit lock-contention exit 75 is
 retried. A transport error may have occurred after activation and is never
@@ -67,8 +68,9 @@ it does not independently bind an archive hash or current release ID.
 The reported HTTPS checks cover the origin's own edge path, not an external
 Internet path or an interactive browser session.
 
-Each attempt retains its revision, tarball, executed helper bytes and hashes,
-deployment/verification receipts and summary in `tmp/ship-<UTC>-<random>/`.
+The run keeps its revision, retained archive, `archive.sha256`, `served/`,
+`served-manifest.json` (directory paths and file digests), `engine-package.log`,
+executed helper bytes and hashes, receipts and summary in `tmp/ship-<UTC>-<random>/`.
 The first smoke and its retry write to `smoke-1/` and `smoke-2/` via absolute `LKJSTR_SMOKE_OUTPUT` paths.
 The smoke supervisor starts the command in its own session. At 2400 seconds
 it sends SIGTERM to that command group and preserves exit 124. It gives owned
@@ -79,11 +81,11 @@ all owned writers exit, then atomically publishes `status`.
 
 Read the wrapper result and `tmp/ship.out` with the exact run's `revision` and
 `scripts.sha256`. Select `smoke-1/` when its `status` is 0. A terminal nonzero
-status allows `smoke-2/`, which must itself have status 0 for admission. Verify
-the selected attempt's `evidence.sha256` from within that directory and read
-its `smoke-real/report.json` directly. Require every check in the pinned
-inventory to pass, with empty `errors` and `failures`.
-Each attempt keeps `stdout`, `stderr`, `engine-package.log`, progress and any DOM captures.
+status allows `smoke-2/` when the archive binding passes. It must have status 0
+for admission. Verify the selected attempt's `evidence.sha256` from within that
+directory and read its `smoke-real/report.json`. Require every check in the
+pinned inventory to pass, with empty `errors` and `failures`.
+Each attempt keeps `stdout`, `stderr`, progress and any DOM captures.
 The harness appends labels and stacks to `smoke-real-failures.jsonl` before capturing the DOM.
 Verified shipments send the owner line unless `LKJSTR_SHIP_NOTIFY=0`.
 `SHIPPED ...; desk note failed` records a successful release with a notification failure.
@@ -153,7 +155,9 @@ actual SSH, Desk, Cargo or browser calls and does not push the project.
 The watchdog fixture checks that a SIGTERM survivor can finish writing, that
 it and its detached child are reaped before hashing, and that an unrelated
 process receives no signal across both retry outcomes. The inherited SIGCHLD
-case checks that both failed child exits reach the wrapper before any push or deploy.
+case checks that both failed child exits reach the wrapper before push or deploy.
+Archive fixtures check one transferred build across retries, nonregular member
+refusal, and detection of served tree or manifest changes.
 
 At 00:19:06-00:19:12 UTC the original six safety cases failed as intended while
 eleven controls passed. They covered unchanged-successor baseline receipts,

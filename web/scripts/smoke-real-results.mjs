@@ -3,8 +3,8 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
 import { smokePath } from './smoke-output.ts';
 
-export function createSmokeResults() {
-  const checks = {};
+export function createSmokeResults(inventory) {
+  const checks = Object.create(null);
   const failures = [];
   const progress = smokePath('smoke-real-progress.log');
   const failureLog = smokePath('smoke-real-failures.jsonl');
@@ -22,6 +22,7 @@ export function createSmokeResults() {
   }
 
   function record(name, ok) {
+    inventory?.record(name);
     checks[name] = ok ? 'ok' : 'FAIL';
     appendFileSync(progress, `${checks[name]} ${name}\n`);
     if (ok) return;
@@ -55,6 +56,9 @@ export function createSmokeResults() {
       checks.failure = String(error);
       if (!failures.length || lastError !== error) recordFailure('failure', error);
       await captureDom(page, 'smoke-real-dom.txt');
+    },
+    complete() {
+      if (!failures.length) inventory.requireComplete();
     },
     async writeReport(errors, fake) {
       await mkdir(dirname(report), { recursive: true });

@@ -8,8 +8,11 @@ import { fakeBunker } from '../../scripts/browser-bunker.mjs';
 import { fakeMediaSet } from '../../scripts/browser-media.mjs';
 import { fakeRelay } from '../../scripts/browser-relay.mjs';
 import { browserTmp } from './browser-tmp.ts';
+import { createSocketTrace } from './smoke-socket-trace.mjs';
 
 export async function createRealFixture() {
+  const dist = process.env.LKJSTR_SMOKE_DIST;
+  if (!dist) throw new Error('LKJSTR_SMOKE_DIST must name the files to serve');
   const root = new URL('../../', import.meta.url).pathname;
   process.chdir(root);
   process.env.TMPDIR = browserTmp(process.env.TMPDIR ?? `${root}tmp/temp`);
@@ -42,40 +45,7 @@ export async function createRealFixture() {
   let signing = Promise.resolve();
   const relay = createServer();
   const ws = new bundle.wsServer({ server: relay });
-  const activePaths = new Map(); // all isolated test contexts share the loopback server
-  const mainSockets = new Set(); // tagged browser context that actually owns the two app tabs
-  const mainPathsSeen = new Set();
-  const socketProbe = { active: false, seen: new Set(), live: new Map(), peak: new Map() };
-  ws.on('connection', (socket, req) => {
-    if (req.url === '/bunker' || req.url === '/bunker-secret')
-      return bunker.route(socket, req.url === '/bunker-secret');
-    activePaths.set(socket, req.url);
-    if (
-      req.headers.cookie?.split(';').some((value) => value.trim() === 'lkjstr_smoke_context=main')
-    ) {
-      mainSockets.add(socket);
-      mainPathsSeen.add(req.url);
-      if (socketProbe.active && req.url !== '/reader') {
-        socketProbe.seen.add(req.url);
-        const live = (socketProbe.live.get(req.url) ?? 0) + 1;
-        socketProbe.live.set(req.url, live);
-        socketProbe.peak.set(req.url, Math.max(live, socketProbe.peak.get(req.url) ?? 0));
-      }
-    }
-    socket.on('close', () => {
-      activePaths.delete(socket);
-      if (socketProbe.active && mainSockets.has(socket) && req.url !== '/reader')
-        socketProbe.live.set(req.url, Math.max(0, (socketProbe.live.get(req.url) ?? 0) - 1));
-      mainSockets.delete(socket);
-    });
-    const fixtureRelay =
-      req.url === '/deep-links' ? deepLinkFake : req.url === '/reader' ? readerFake : fake;
-    fixtureRelay.route({
-      send: (text) => socket.send(text),
-      onMessage: (fn) => socket.on('message', fn),
-      onClose: (fn) => socket.on('close', fn),
-    });
-  });
+  const socketSharing = attachSmokeRelay(ws, { fake, readerFake, deepLinkFake, bunker });
   await new Promise((done) => relay.listen(0, '127.0.0.1', done));
   const relayUrl = `ws://127.0.0.1:${relay.address().port}`;
   signer.stdin.write(
@@ -86,6 +56,7 @@ export async function createRealFixture() {
     process.execPath,
     [
       'web/scripts/serve.ts',
+      `--dist=${dist}`,
       '--port=0',
       '--test-previews',
       `--test-relay=${relayUrl}`,
@@ -117,12 +88,52 @@ export async function createRealFixture() {
     deepLinkFake,
     bunker,
     media,
-    activePaths,
-    mainSockets,
-    mainPathsSeen,
-    socketProbe,
+    socketSharing,
     relayUrl,
     server,
     close,
+  };
+}
+
+export function attachSmokeRelay(ws, { fake, readerFake, deepLinkFake, bunker }) {
+  const trace = createSocketTrace();
+  const activePaths = new Map(); // all isolated test contexts share the loopback server
+  const mainSockets = new Set(); // tagged context, excluding readers and signer routes
+  const mainPathsSeen = new Set();
+  ws.on('connection', (socket, req) => {
+    if (req.url === '/bunker' || req.url === '/bunker-secret')
+      return bunker.route(socket, req.url === '/bunker-secret');
+    activePaths.set(socket, req.url);
+    const main = req.headers.cookie
+      ?.split(';')
+      .some((value) => value.trim() === 'lkjstr_smoke_context=main');
+    const inTrace = main && req.url !== '/reader';
+    if (main) mainPathsSeen.add(req.url);
+    if (inTrace) {
+      mainSockets.add(socket);
+      trace.open(socket, req);
+      socket.on('message', (raw, binary) => trace.frame(socket, raw, binary));
+    }
+    socket.on('close', () => {
+      activePaths.delete(socket);
+      if (inTrace) {
+        mainSockets.delete(socket);
+        trace.close(socket);
+      }
+    });
+    const fixtureRelay =
+      req.url === '/deep-links' ? deepLinkFake : req.url === '/reader' ? readerFake : fake;
+    fixtureRelay.route({
+      send: (text) => socket.send(text),
+      onMessage: (fn) => socket.on('message', fn),
+      onClose: (fn) => socket.on('close', fn),
+    });
+  });
+  return {
+    activePaths,
+    mainPathsSeen,
+    trace,
+    liveMainSockets: () => [...mainSockets],
+    learnedRelays: () => mainPathsSeen.has('/owner') && !trace.unexpectedPath(),
   };
 }

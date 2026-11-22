@@ -162,9 +162,13 @@ rejected in every HTML file. Errors name the file.
 
 `pnpm shots` takes `--only=<width>-<theme>-<lang>` and `--scenes=home,thread`.
 `LKJSTR_CHROME=<path>` picks the browser for `smoke` and `shots`.
-
-Finish a change with `pnpm check`, `pnpm build` and `pnpm smoke`, and run
-`pnpm smoke` after anything that touches the DOM, the WM or the keyboard.
+Finish a change with `pnpm check`, `pnpm build` and `pnpm smoke`.
+Real smoke and quick upload smoke require each check in the selected inventory exactly once.
+`LKJSTR_SHOTS=1` selects the inventory with screenshot checks.
+The two-tab smoke requires at most one settled main socket per fixture path, a search needle REQ
+on a main socket and a complete bounded trace. It writes `smoke-real-sockets.json`
+in the attempt after the probe, including on refusal. Peak, overlap, receive interleave
+and wire ID succession are diagnostic. Ownership attribution needs a causal witness. `pnpm check` covers these rules without a browser.
 
 ## Rules `pnpm check` enforces
 

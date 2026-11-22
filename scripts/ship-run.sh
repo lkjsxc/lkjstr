@@ -39,43 +39,66 @@ RUN=$(mktemp -d "$W/tmp/ship-$(date -u +%Y%m%dT%H%M%SZ)-XXXXXX") || fail 'cannot
 RECEIPT_CODE=$(git show "$REVISION:scripts/ship-receipt.mjs") || fail 'cannot snapshot receipt validator'
 CLEANUP_CODE=$(git show "$REVISION:scripts/ship-clean.mjs") || fail 'cannot snapshot cleanup policy'
 SMOKE_CODE=$(git show "$REVISION:scripts/ship-smoke.py") || fail 'cannot snapshot smoke supervisor'
+ARCHIVE_CODE=$(git show "$REVISION:scripts/ship-archive.py") || fail 'cannot snapshot archive validator'
 # Retain the exact argument bytes supplied to each interpreter.
 printf '%s' "$BASH_EXECUTION_STRING" > "$RUN/ship-run.sh" &&
   printf '%s' "$RECEIPT_CODE" > "$RUN/ship-receipt.mjs" &&
   printf '%s' "$CLEANUP_CODE" > "$RUN/ship-clean.mjs" &&
   printf '%s' "$SMOKE_CODE" > "$RUN/ship-smoke.py" &&
+  printf '%s' "$ARCHIVE_CODE" > "$RUN/ship-archive.py" &&
   git show "$REVISION:scripts/ship.sh" > "$RUN/ship.sh" &&
   printf '%s\n' "$REVISION" > "$RUN/revision" || fail 'cannot retain executed scripts'
-sha256sum "$RUN/ship.sh" "$RUN/ship-run.sh" "$RUN/ship-receipt.mjs" "$RUN/ship-clean.mjs" "$RUN/ship-smoke.py" \
+sha256sum "$RUN/ship.sh" "$RUN/ship-run.sh" "$RUN/ship-receipt.mjs" "$RUN/ship-clean.mjs" "$RUN/ship-smoke.py" "$RUN/ship-archive.py" \
   > "$RUN/scripts.sha256" || fail 'cannot bind executed scripts'
-chmod a-w "$RUN/ship.sh" "$RUN/ship-run.sh" "$RUN/ship-receipt.mjs" "$RUN/ship-clean.mjs" "$RUN/ship-smoke.py" ||
+chmod a-w "$RUN/ship.sh" "$RUN/ship-run.sh" "$RUN/ship-receipt.mjs" "$RUN/ship-clean.mjs" "$RUN/ship-smoke.py" "$RUN/ship-archive.py" ||
   fail 'cannot protect retained scripts'
 # Copied package fixtures resolve TypeScript from the repository root.
 timeout 300 pnpm install --frozen-lockfile || fail 'pnpm install --frozen-lockfile (root)'
 cd "$W/web" || fail 'no web/'
 timeout 1800 pnpm check || fail 'pnpm check'
+# Build and package once: the smoke serves files extracted from this archive, and the host receives its bytes.
+LKJSTR_SMOKE_OUTPUT="$RUN" timeout 1200 pnpm build:real && pnpm package || fail 'build:real or package'
+cd "$W" || fail 'no worktree after build'
+T="$RUN/lkjstr-dist.tar.gz"
+cp "$W/tmp/lkjstr-dist.tar.gz" "$T" && chmod a-w "$T" || fail 'cannot retain the exact archive'
+[[ "$(git rev-parse HEAD)" = "$REVISION" ]] && clean || fail 'source changed during verification'
+D="$RUN/served"
+M="$RUN/served-manifest.json"
+digest() { sha256sum < "$1" | cut -d' ' -f1; }
+verify_served() {
+  [[ "$1" = "$SERVED" && "$(digest "$M")" = "$MANIFEST_HASH" ]] &&
+    python3 -I -c "$ARCHIVE_CODE" inventory "$D" | cmp -s - "$M" ||
+    fail 'smoked files differ from the shipped archive'
+}
+# The pre-smoke digest reads stdin; the final archive hash below stays after the last source check.
+SERVED=$(digest "$T") && printf '%s  lkjstr-dist.tar.gz\n' "$SERVED" > "$RUN/archive.sha256" ||
+  fail 'cannot bind the exact archive'
+python3 -I -c "$ARCHIVE_CODE" extract "$T" "$D" > "$M" && chmod a-w "$M" &&
+  MANIFEST_HASH=$(digest "$M") ||
+  fail 'cannot extract the exact archive'
+verify_served "$(digest "$T")"
+cd "$W/web" || fail 'no web/'
 smoke_attempt() {
   local ATTEMPT="$RUN/smoke-$1" CODE
   mkdir "$ATTEMPT" || fail 'cannot create smoke evidence directory'
   printf 'Smoke attempt %s evidence: %s\n' "$1" "$ATTEMPT"
-  CODE=$(LKJSTR_SHOTS=1 LKJSTR_SMOKE_OUTPUT="$ATTEMPT" \
-    python3 -I -c "$SMOKE_CODE" "$ATTEMPT" 2400 60 pnpm smoke:real) || fail 'cannot settle owned smoke processes'
+  CODE=$(LKJSTR_SHOTS=1 LKJSTR_SMOKE_OUTPUT="$ATTEMPT" LKJSTR_SMOKE_DIST="$D" \
+    python3 -I -c "$SMOKE_CODE" "$ATTEMPT" 2400 60 pnpm smoke:served) || fail 'cannot settle owned smoke processes'
   (cd "$ATTEMPT" && find . -type f ! -path './evidence.sha256' -print0 | sort -z | xargs -0 sha256sum -- > evidence.sha256) ||
     fail 'cannot bind smoke evidence'
   printf '%s\n' "$CODE" > "$ATTEMPT/status.tmp" && mv "$ATTEMPT/status.tmp" "$ATTEMPT/status" ||
     fail 'cannot retain smoke status'
   cat "$ATTEMPT/stdout" && cat "$ATTEMPT/stderr" >&2 || fail 'cannot read smoke logs'
+  verify_served "$(digest "$T")"
   return "$CODE"
 }
-smoke_attempt 1 || smoke_attempt 2 || fail 'pnpm smoke:real (twice)'
-timeout 1200 pnpm build:real && pnpm package || fail 'build:real or package'
-cd "$W" || fail 'no worktree after build'
-T="$RUN/lkjstr-dist.tar.gz"
-cp "$W/tmp/lkjstr-dist.tar.gz" "$T" && chmod a-w "$T" || fail 'cannot retain the exact archive'
+smoke_attempt 1 || smoke_attempt 2 || fail 'pnpm smoke:served (twice)'
+cd "$W" || fail 'no worktree after smoke'
 [[ "$(git rev-parse HEAD)" = "$REVISION" ]] && clean || fail 'source changed during verification'
 H=$(sha256sum "$T" | cut -d' ' -f1) || fail 'no package digest'
 I=$(tar xzOf "$T" ./index.html | sha256sum | cut -d' ' -f1) || fail 'no packaged index'
 [[ "$H" =~ ^[a-f0-9]{64}$ && "$I" =~ ^[a-f0-9]{64}$ ]] || fail 'invalid package digest'
+verify_served "$H"
 # Authentication or a concurrent main update must fail before any live change.
 git push -q origin "$REVISION:refs/heads/main" || fail 'cannot push the tested commit; live is unchanged'
 git fetch -q origin main || fail 'cannot confirm main; live is unchanged'

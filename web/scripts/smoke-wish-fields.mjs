@@ -48,14 +48,13 @@ export async function wishFields({ page, width, real, relayUrl, events, fact }) 
       '2 settings search',
       arrival,
     );
-    await slowly(
-      page,
-      page.locator('[data-entry="set.relayList"]').getByLabel('Relay address', { exact: true }),
-      real ? `${relayUrl}/wish` : 'wss://relay.test',
-      fact,
-      '2 relay address',
-      arrival,
-    );
+    const relay = page.locator('[data-entry="set.relayList"]').getByLabel('Relay address', {
+      exact: true,
+    });
+    const relayDraft = real ? 'ws://127.0.0.1:12345/wish' : 'wss://relay.test';
+    await slowly(page, relay, relayDraft, fact, '2 relay address', arrival);
+    // Blurring saves the address. Keep the actual edit on the owned fixture relay.
+    if (real) await relay.fill(`${relayUrl}/wish`);
     await page.getByLabel('Search settings', { exact: true }).fill('server');
     await slowly(
       page,

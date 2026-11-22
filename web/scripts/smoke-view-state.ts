@@ -16,19 +16,23 @@ export async function prepareViewChecks(page: Page, check: Check): Promise<() =>
   const profileTab = await page.locator('.pane.cur .tab.active').getAttribute('data-view');
   await go('Global');
   const picture = global.locator('.media a.mbox:has(img)').first();
-  let mediaTab: string | null = null;
-  let scale = '';
-  if (await picture.count()) {
-    await picture.click();
-    await front('media').locator('.mstage img').waitFor();
+  const mediaTimeout = 15_000;
+  const waitForImage = async () => {
+    await front('media').locator('.mstage img').waitFor({ timeout: mediaTimeout });
     await page.waitForFunction(
       () => (document.querySelector('.mstage img') as HTMLImageElement)?.naturalWidth > 0,
+      undefined,
+      { timeout: mediaTimeout },
     );
-    await front('media').locator('.mscale').click();
-    scale = await front('media').locator('.mscale').innerText();
-    mediaTab = await page.locator('.pane.cur .tab.active').getAttribute('data-view');
-    await go('Global');
-  }
+  };
+  await picture.waitFor({ state: 'visible', timeout: mediaTimeout });
+  await picture.click();
+  await waitForImage();
+  const zoom = front('media').locator('.mscale');
+  await zoom.click();
+  const scale = await zoom.innerText();
+  const mediaTab = await page.locator('.pane.cur .tab.active').getAttribute('data-view');
+  await go('Global');
   await go('Documentation');
   await front('docs').getByText('Privacy policy', { exact: true }).click();
   const reset = await front('docs').evaluate(async (el) => {
@@ -80,20 +84,14 @@ export async function prepareViewChecks(page: Page, check: Check): Promise<() =>
         .getByRole('tab', { name: 'Replies', exact: true })
         .getAttribute('aria-selected')) === 'true',
     );
-    if (mediaTab) {
-      await show(mediaTab);
-      await page.waitForFunction(
-        () => (document.querySelector('.mstage img') as HTMLImageElement)?.naturalWidth > 0,
-      );
-      await page.waitForFunction(
-        (expected) => document.querySelector('.mview .mscale')?.textContent === expected,
-        scale,
-      );
-      check(
-        'view state: media zoom survives remount and reload',
-        (await front('media').locator('.mscale').innerText()) === scale,
-      );
-    }
+    await show(mediaTab);
+    await waitForImage();
+    await page.waitForFunction(
+      (expected) => document.querySelector('.mview .mscale')?.textContent === expected,
+      scale,
+      { timeout: mediaTimeout },
+    );
+    check('view state: media zoom survives remount and reload', (await zoom.innerText()) === scale);
     await show(docsTab);
     check(
       'view state: Docs page and tree choice survive reload',

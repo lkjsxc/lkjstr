@@ -1,11 +1,14 @@
-// Serves ../dist the way the production host does: the same Content-Security-Policy, the page for every path
-// without a dot, 404 for a missing file. node scripts/serve.ts [--port=8417]
+// Serves the build with the production CSP, fallback page and missing-file behavior.
+// node scripts/serve.ts [--dist=DIR] [--port=8417]
 import { existsSync, readFileSync, statSync } from 'node:fs';
 import { createServer } from 'node:http';
-import { extname, join, normalize } from 'node:path';
+import { extname, join, normalize, resolve } from 'node:path';
 import { toneUrl } from '../src/engine/mock/fixtures-media.ts';
 
-const dist = join(new URL('..', import.meta.url).pathname, '..', 'dist');
+const dist = resolve(
+  process.argv.find((a) => a.startsWith('--dist='))?.slice(7) ??
+    join(new URL('..', import.meta.url).pathname, '..', 'dist'),
+);
 const port = Number(process.argv.find((a) => a.startsWith('--port='))?.slice(7) ?? 8417);
 const TYPES: Record<string, string> = {
   '.html': 'text/html; charset=utf-8',

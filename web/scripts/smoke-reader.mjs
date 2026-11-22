@@ -116,34 +116,3 @@ export async function realReaderChecks({
     await ctx.close();
   }
 }
-
-export async function visitorRelayChecks({ page, relayUrl, check, launch }) {
-  await launch('Settings', 'settings');
-  const relayField = page
-    .locator('[data-entry="set.relayList"]')
-    .getByLabel('Relay address', { exact: true });
-  await relayField.fill(`${relayUrl}/visitor`);
-  await relayField.press('Enter');
-  await page.waitForTimeout(500);
-  check(
-    'signed-out relay edit is saved',
-    await page.evaluate(
-      (url) =>
-        JSON.parse(localStorage.getItem('lkjstr:relays:') ?? '[]').some(
-          (r) => r.url.replace(/\/$/, '') === url,
-        ),
-      `${relayUrl}/visitor`,
-    ),
-  );
-  await page.reload();
-  await page
-    .locator('[data-entry="set.relayList"]')
-    .getByLabel('Relay address', { exact: true })
-    .waitFor();
-  // The form mounts before the engine returns its persisted relay rows.
-  const visitorRelay = page.locator(
-    `[data-entry="set.relayList"] .rhost[title^="${relayUrl}/visitor"]`,
-  );
-  await visitorRelay.waitFor();
-  check('signed-out relay edit survives reload', (await visitorRelay.count()) === 1);
-}

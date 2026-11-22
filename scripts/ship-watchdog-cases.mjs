@@ -31,7 +31,7 @@ for (const [retry, status] of [['pass', 0], ['fail', 1]]) {
       assert.equal(read(run, 'revision').trim(), f.git(['rev-parse', 'HEAD']).trim());
       assert.equal(read(first, 'status'), '124\n');
       assert.equal(read(second, 'status'), `${status}\n`);
-      assert.equal(read(first, 'engine-package.log'), 'fixture build completed before browser launch\n');
+      assert.equal(read(run, 'engine-package.log'), 'build 1\n');
       assert.match(read(first, 'stdout'), /^stdout smoke-1$/m);
       assert.match(read(first, 'stderr'), /^stderr smoke-1$/m);
       const earlyAndLate = read(first, 'smoke-real-failures.jsonl').trim().split('\n').map(JSON.parse);
@@ -45,7 +45,7 @@ for (const [retry, status] of [['pass', 0], ['fail', 1]]) {
         assert.equal(hashes.status, 0, hashes.stdout + hashes.stderr);
       }
       const events = f.events();
-      assert.equal(events.filter(row => row.args?.[0] === 'smoke:real').length, 2);
+      assert.equal(events.filter(row => row.args?.[0] === 'smoke:served').length, 2);
       const seal = events.findIndex(row => row.command === 'watchdog-seal');
       const readback = events.findIndex(row => row.command === 'watchdog-retry-readback');
       assert.ok(seal >= 0 && readback > seal, result.log);
@@ -65,7 +65,7 @@ for (const [retry, status] of [['pass', 0], ['fail', 1]]) {
       } else {
         assert.equal(selected, undefined);
         assert.equal(deploys(events).length, 0);
-        assert.match(result.summary, /NOT SHIPPED: pnpm smoke:real \(twice\)/);
+        assert.match(result.summary, /NOT SHIPPED: pnpm smoke:served \(twice\)/);
       }
     } finally {
       bystander.kill('SIGKILL');

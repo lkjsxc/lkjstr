@@ -1,17 +1,12 @@
 import assert from 'node:assert/strict';
 import { spawn, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import test from 'node:test';
-import { fixture, deploys, notices } from './ship-test-support.mjs';
+import { fixture, deploys, notices, retained } from './ship-test-support.mjs';
 
 const digest = path => createHash('sha256').update(readFileSync(path)).digest('hex');
-const retained = f => {
-  const names = readdirSync(join(f.root, 'tmp')).filter(name => /^ship-\d/.test(name));
-  assert.equal(names.length, 1);
-  return join(f.root, 'tmp', names[0]);
-};
 
 for (const [retry, exit] of [['pass', 0], ['timeout', 1]]) {
   test(`failed smoke evidence survives a ${retry} retry`, t => {
@@ -42,8 +37,8 @@ for (const [retry, exit] of [['pass', 0], ['timeout', 1]]) {
       assert.match(result.summary, /^SHIPPED /);
     } else {
       assert.equal(existsSync(join(run, 'smoke-2/smoke-real/report.json')), false);
-      assert.match(result.summary, /NOT SHIPPED: pnpm smoke:real \(twice\)/);
-      assert.equal(f.events().some(row => row.args?.includes('package') || ['push', 'ssh'].includes(row.command)), false);
+      assert.match(result.summary, /NOT SHIPPED: pnpm smoke:served \(twice\)/);
+      assert.equal(f.events().some(row => ['push', 'ssh', 'desk'].includes(row.command)), false);
     }
   });
 }
@@ -54,7 +49,7 @@ test('an ancestor ignoring SIGCHLD cannot turn failed smoke into a shipment', t 
   const result = f.run('', { LKJSTR_SHIP_TEST_SMOKE: 'fail,fail' });
   const run = retained(f);
   assert.equal(result.status, 1, result.summary + result.log);
-  assert.equal(result.summary, 'NOT SHIPPED: pnpm smoke:real (twice)\n');
+  assert.equal(result.summary, 'NOT SHIPPED: pnpm smoke:served (twice)\n');
   for (const slot of ['smoke-1', 'smoke-2']) {
     const cwd = join(run, slot);
     assert.equal(readFileSync(join(cwd, 'status'), 'utf8'), '1\n');
@@ -64,7 +59,7 @@ test('an ancestor ignoring SIGCHLD cannot turn failed smoke into a shipment', t 
     const hashes = spawnSync('sha256sum', ['-c', 'evidence.sha256'], { cwd, encoding: 'utf8' });
     assert.equal(hashes.status, 0, hashes.stdout + hashes.stderr);
   }
-  assert.equal(f.events().some(row => ['push', 'ssh', 'desk'].includes(row.command) || row.args?.includes('package')), false);
+  assert.equal(f.events().some(row => ['push', 'ssh', 'desk'].includes(row.command)), false);
   assert.equal(f.git(['--git-dir', f.origin, 'rev-parse', 'refs/heads/main']), published);
   assert.equal(existsSync(join(f.state, 'lkjstr-last-ship')), false);
 });
@@ -177,7 +172,7 @@ test('a distinct revision can ship immediately after a successful ship and rerun
 
   const events = f.events().slice(count);
   assert.deepEqual(events.filter(row => row.command === 'pnpm').map(row => row.args), [
-    ['install', '--frozen-lockfile'], ['check'], ['smoke:real'], ['build:real'], ['package'],
+    ['install', '--frozen-lockfile'], ['check'], ['build:real'], ['package'], ['smoke:served'],
   ]);
   assert.equal(events.filter(row => row.command === 'transfer').length, 1);
   assert.equal(deploys(events).length, 1);

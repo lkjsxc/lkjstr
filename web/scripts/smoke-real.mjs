@@ -5,10 +5,12 @@ import { chromium } from 'playwright-core';
 import { auditFixtures } from './audit-fixtures.mjs';
 import { auditOwner } from './audit-owner.mjs';
 import { channelScenarios } from './smoke-channels.mjs';
+import { createCheckInventory } from './smoke-check-inventory.mjs';
 import { deepLinkChecks } from './smoke-deep-links.mjs';
 import { emojiRealChecks, seedEmoji } from './smoke-emoji-real.mjs';
 import { smokePath } from './smoke-output.ts';
 import { realReaderChecks } from './smoke-reader.mjs';
+import { realSmokeChecks } from './smoke-real-checks.mjs';
 import { finishAccounts, reviewSettings, seedRailArchive } from './smoke-real-finish.mjs';
 import { createRealFixture } from './smoke-real-fixture.mjs';
 import { createSmokeResults } from './smoke-real-results.mjs';
@@ -21,7 +23,9 @@ import { uploadScenarios } from './smoke-uploads.mjs';
 import { accounts, installExtension, npub, visitorChecks } from './smoke-visitors.mjs';
 
 const errors = [];
-const { check, observe, fail, writeReport, finish } = createSmokeResults();
+const shots = process.env.LKJSTR_SHOTS === '1';
+const inventory = createCheckInventory(realSmokeChecks(shots));
+const { check, observe, fail, complete, writeReport, finish } = createSmokeResults(inventory);
 const {
   fixture,
   fixtureSign,
@@ -30,10 +34,7 @@ const {
   deepLinkFake,
   bunker,
   media,
-  activePaths,
-  mainSockets,
-  mainPathsSeen,
-  socketProbe,
+  socketSharing,
   relayUrl,
   server,
   close,
@@ -58,7 +59,6 @@ try {
   );
   await ctx.exposeFunction('fixtureSign', fixtureSign);
   await installExtension(ctx, relayUrl, fixture.note.pubkey, errors);
-  const shots = process.env.LKJSTR_SHOTS === '1';
   const shot = (p, name) => p.screenshot({ path: smokePath(`screens/${name}`) });
   const { actor, addWish } = await runRealWishes({
     browser,
@@ -258,10 +258,7 @@ try {
     ctx,
     base,
     fake,
-    activePaths,
-    mainSockets,
-    mainPathsSeen,
-    socketProbe,
+    socketSharing,
     check,
     observe,
     launch,
@@ -280,6 +277,7 @@ try {
     onReader: (reader) => (page = reader),
   });
   check('no page errors', errors.length === 0);
+  complete();
 } catch (error) {
   await fail(error, page);
 } finally {

@@ -10,8 +10,13 @@ import { fakeBunker } from '../../scripts/browser-bunker.mjs';
 import { fakeMediaSet } from '../../scripts/browser-media.mjs';
 import { fakeRelay } from '../../scripts/browser-relay.mjs';
 import { browserTmp } from './browser-tmp.ts';
+import { createCheckInventory } from './smoke-check-inventory.mjs';
+import { uploadSmokeChecks } from './smoke-upload-checks.mjs';
 import { uploadScenarios } from './smoke-uploads.mjs';
 
+const quick = true;
+const shots = process.env.LKJSTR_SHOTS === '1';
+const inventory = createCheckInventory(uploadSmokeChecks({ quick, shots }));
 const root = new URL('../../', import.meta.url).pathname;
 process.chdir(root);
 for (const [key, path] of Object.entries({
@@ -67,8 +72,7 @@ const server = spawn(
   ],
   { stdio: ['ignore', 'pipe', 'pipe'] },
 );
-const errors = [],
-  checks = [];
+const errors = [];
 let browser;
 try {
   const base = await new Promise((done, fail) => {
@@ -83,11 +87,11 @@ try {
   });
   const check = (name, ok = true) => {
     if (!ok) throw new Error(name);
-    checks.push(name);
+    inventory.record(name);
     appendFileSync('tmp/smoke-uploads-progress.log', `ok ${name}\n`);
   };
   await uploadScenarios({
-    quick: true,
+    quick,
     browser,
     base,
     relayUrl,
@@ -100,7 +104,7 @@ try {
     media,
   });
   check('no upload page errors', errors.length === 0);
-  console.log(`ok smoke-uploads (${checks.length})`);
+  console.log(`ok smoke-uploads (${inventory.requireComplete()})`);
 } finally {
   await browser?.close();
   server.kill();

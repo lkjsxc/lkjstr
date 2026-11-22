@@ -3,6 +3,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { spawn } from 'node:child_process';
 import test from 'node:test';
+import './ship-archive-cases.mjs';
 import './ship-safety-cases.mjs';
 import './ship-watchdog-cases.mjs';
 import { fixture, deploys, notices } from './ship-test-support.mjs';

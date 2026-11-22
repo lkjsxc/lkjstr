@@ -1,4 +1,7 @@
 // Shared-account removal and visitor persistence at the end of the real smoke.
+import { writeFile } from 'node:fs/promises';
+import { setTimeout } from 'node:timers/promises';
+import { smokePath } from './smoke-output.ts';
 import { accounts } from './smoke-visitors.mjs';
 export async function finishAccounts({ page, other, relayUrl, check, launch }) {
   // Signed out again: the visitor's layout returns, here and in the other tab, and stays after a reload.
@@ -85,10 +88,7 @@ export async function reviewSettings({
   ctx,
   base,
   fake,
-  activePaths,
-  mainSockets,
-  mainPathsSeen,
-  socketProbe,
+  socketSharing,
   check,
   observe,
   launch,
@@ -129,14 +129,59 @@ export async function reviewSettings({
   // A cold second tab may paint wholly from the local store and correctly
   // close every idle socket. Start an active-probe and force a genuinely
   // missing search, so socket sharing is checked while there is wire demand.
-  socketProbe.active = true;
-  for (const [socket, path] of activePaths) {
-    if (!mainSockets.has(socket) || path === '/reader') continue;
-    socketProbe.seen.add(path);
-    const live = (socketProbe.live.get(path) ?? 0) + 1;
-    socketProbe.live.set(path, live);
-    socketProbe.peak.set(path, live);
+  const { activePaths, mainPathsSeen, trace } = socketSharing;
+  const { result: other, receipt } = await recordSocketWindow(socketSharing, () =>
+    probeSharing({ page, ctx, base, fake, trace, check, launch }),
+  );
+  const { learnedRelays } = receipt;
+  const shared = receipt.ok;
+  if (!shared || !learnedRelays) {
+    const { sockets: _sockets, ...summary } = receipt;
+    console.error(
+      'shared-socket-diagnostic',
+      JSON.stringify({
+        fakeSockets: fake.connections(),
+        active: [...activePaths.values()],
+        context: [...mainPathsSeen],
+        ...summary,
+      }),
+    );
   }
+  // Both tabs are ready for the workspace reset even when these observations fail.
+  await observe(
+    [
+      ['two app tabs share one socket per relay', shared],
+      ['learned owner relays survive reload and another tab bootstrap', learnedRelays],
+    ],
+    page,
+  );
+  await page.locator('lkjstr-spaces button', { hasText: /^1$/ }).click();
+  await page.waitForFunction(
+    () => JSON.parse(localStorage.getItem('lkjstr:layout:main:spaces'))?.active === 1,
+  );
+  return other;
+}
+
+export async function recordSocketWindow({ trace, liveMainSockets, learnedRelays }, probe, settlePolls = 200) {
+  trace.activate(liveMainSockets());
+  let complete = false;
+  let receipt;
+  let result;
+  try {
+    result = await probe();
+    trace.startSettling();
+    for (let n = 0; n < settlePolls && !trace.settled(); n++) await setTimeout(25);
+    complete = true;
+  } finally {
+    trace.seal(liveMainSockets(), complete);
+    receipt = { ...trace.judge(), learnedRelays: learnedRelays() };
+    await writeFile(smokePath('smoke-real-sockets.json'), `${JSON.stringify(receipt, null, 2)}\n`);
+  }
+  return { result, receipt };
+}
+
+async function probeSharing({ page, ctx, base, fake, trace, check, launch }) {
+  trace.secondTab();
   const other = await ctx.newPage();
   await other.goto(base);
   // Same-workspace edits deliberately synchronize. Wait for that round trip
@@ -155,6 +200,7 @@ export async function reviewSettings({
   await page.locator('lkjstr-spaces button.on', { hasText: /^2$/ }).waitFor();
   await launch('Search', 'search');
   const needle = `sharing-probe-${Date.now()}`;
+  trace.setNeedle(needle);
   await page.locator('.view[data-kind="search"] input').first().fill(needle);
   await page.locator('.view[data-kind="search"] input').first().press('Enter');
   for (let n = 0; n < 200 && !fake.searches.includes(needle); n++) await page.waitForTimeout(25);
@@ -164,35 +210,6 @@ export async function reviewSettings({
     (await page.locator('.view[data-kind="search"]:visible input').first().isVisible()) &&
       (await otherGlobal.isVisible()) &&
       (await other.locator('lkjstr-spaces button.on', { hasText: /^1$/ }).isVisible()),
-  );
-  const shared =
-    socketProbe.seen.size > 0 && [...socketProbe.peak.values()].every((peak) => peak === 1);
-  const learnedRelays =
-    mainPathsSeen.has('/owner') &&
-    [...socketProbe.seen].every((path) => path === '/owner' || path === '/');
-  if (!shared || !learnedRelays) {
-    console.error(
-      'shared-socket-diagnostic',
-      JSON.stringify({
-        fakeSockets: fake.connections(),
-        active: [...activePaths.values()],
-        context: [...mainPathsSeen],
-        probe: [...socketProbe.seen],
-        peaks: [...socketProbe.peak],
-      }),
-    );
-  }
-  // Both tabs are ready for the workspace reset even when these observations fail.
-  await observe(
-    [
-      ['two app tabs share one socket per relay', shared],
-      ['learned owner relays survive reload and another tab bootstrap', learnedRelays],
-    ],
-    page,
-  );
-  await page.locator('lkjstr-spaces button', { hasText: /^1$/ }).click();
-  await page.waitForFunction(
-    () => JSON.parse(localStorage.getItem('lkjstr:layout:main:spaces'))?.active === 1,
   );
   return other;
 }

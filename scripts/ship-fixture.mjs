@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { appendFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { appendFileSync, chmodSync, existsSync, linkSync, mkdirSync, readFileSync,
+  rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join } from 'node:path';
 import { spawn, spawnSync } from 'node:child_process';
 import { afterHash, beforeCopy, onDeploy } from './ship-fixture-change.mjs';
@@ -55,18 +56,54 @@ if (name === 'credential-fixture') {
 } else if (name === 'pnpm') {
   log({ command: name, args, cwd: process.cwd() });
   if (process.env.LKJSTR_SHIP_TEST_SOURCE_CHANGE) writeFileSync(join(root, 'tracked.txt'), 'changed during build');
-  if (args[0] === 'smoke:real' && process.env.LKJSTR_SHIP_TEST_SMOKE) {
+  // Like build:real, replace dist/ with a numbered build; smoke:real also builds before it serves dist/.
+  const build = () => {
+    const counter = join(root, 'tmp/build-count');
+    const count = Number(existsSync(counter) ? readFileSync(counter, 'utf8') : 0) + 1;
+    writeFileSync(counter, String(count));
+    rmSync(join(root, 'dist'), { recursive: true, force: true });
+    mkdirSync(join(root, 'dist/assets'), { recursive: true });
+    writeFileSync(join(root, 'dist/index.html'), index);
+    writeFileSync(join(root, 'dist/build.txt'), `build ${count}\n`);
+    writeFileSync(join(root, 'dist/assets/stamp.txt'), `asset ${count}\n`);
+    if (process.env.LKJSTR_SMOKE_OUTPUT) writeFileSync(join(process.env.LKJSTR_SMOKE_OUTPUT, 'engine-package.log'), `build ${count}\n`);
+  };
+  if (args[0] === 'build:real' || args[0] === 'smoke:real') build();
+  if (args[0] === 'smoke:real' || args[0] === 'smoke:served') {
+    const served = args[0] === 'smoke:real' ? join(root, 'dist') : process.env.LKJSTR_SMOKE_DIST;
+    if (!served) throw new Error('smoke:served requires LKJSTR_SMOKE_DIST');
+    log({ command: 'served', build: readFileSync(join(served, 'build.txt'), 'utf8') });
+    if (process.env.LKJSTR_SHIP_TEST_SERVED_WRITE) {
+      chmodSync(join(served, 'build.txt'), 0o644);
+      writeFileSync(join(served, 'build.txt'), 'changed by the smoke\n');
+    }
+    if (process.env.LKJSTR_SHIP_TEST_SERVED_LINK) {
+      symlinkSync(join(root, 'dist/build.txt'), join(served, 'extra.txt'));
+    }
+    if (process.env.LKJSTR_SHIP_TEST_REWRITE_MANIFEST) {
+      const manifest = join(dirname(served), 'served-manifest.json');
+      chmodSync(manifest, 0o644);
+      const changed = JSON.parse(readFileSync(manifest, 'utf8'));
+      changed['build.txt'] = digest(readFileSync(join(served, 'build.txt')));
+      writeFileSync(manifest, JSON.stringify(changed, null, 2) + '\n');
+    }
+    if (process.env.LKJSTR_SHIP_TEST_RETAINED_WRITE) {
+      const archive = join(dirname(served), 'lkjstr-dist.tar.gz');
+      chmodSync(archive, 0o644);
+      appendFileSync(archive, Buffer.alloc(512));
+    }
+  }
+  if (args[0].startsWith('smoke:') && process.env.LKJSTR_SHIP_TEST_SMOKE) {
     const attempt = basename(process.env.LKJSTR_SMOKE_OUTPUT);
     if (process.env.LKJSTR_SHOTS !== '1') throw new Error('smoke capture flag is missing');
     const mode = process.env.LKJSTR_SHIP_TEST_SMOKE.split(',')[Number(attempt.at(-1)) - 1];
     console.log(`stdout ${attempt}`);
     console.error(`stderr ${attempt}`);
-    if (mode === 'timeout') process.exit(124); // Simulate a timed-out build before the harness writes anything.
+    if (mode === 'timeout') process.exit(124); // Simulate a timeout before the harness writes anything.
     const output = process.env.LKJSTR_SMOKE_OUTPUT;
     if (mode === 'watchdog') {
       writeFileSync(join(output, 'pnpm.pid'), String(process.pid));
       writeFileSync(join(output, 'watchdog-start'), String(process.hrtime.bigint()));
-      writeFileSync(join(output, 'engine-package.log'), 'fixture build completed before browser launch\n');
       const script = join(root, 'scripts/ship-fixture-watchdog.mjs');
       const harness = spawn(process.execPath, [script, 'harness', output], { stdio: 'inherit' });
       await new Promise((resolve, reject) => { harness.once('exit', resolve); harness.once('error', reject); });
@@ -89,11 +126,14 @@ if (name === 'credential-fixture') {
     results.finish([]);
   }
   if (args[0] === 'package') {
-    const source = join(root, 'tmp/dist');
-    mkdirSync(source, { recursive: true });
     mkdirSync(join(root, 'target/debug'), { recursive: true });
-    writeFileSync(join(source, 'index.html'), index);
-    const tar = spawnSync('tar', ['-czf', join(root, 'tmp/lkjstr-dist.tar.gz'), '-C', source, '.']);
+    const dist = join(root, 'dist');
+    const extra = join(dist, 'extra.txt');
+    const type = process.env.LKJSTR_SHIP_TEST_ARCHIVE_MEMBER;
+    if (type === 'symlink') symlinkSync('build.txt', extra);
+    if (type === 'hardlink') linkSync(join(dist, 'build.txt'), extra);
+    if (type === 'fifo') assert.equal(spawnSync('mkfifo', [extra]).status, 0);
+    const tar = spawnSync('tar', ['-czf', join(root, 'tmp/lkjstr-dist.tar.gz'), '-C', dist, '.']);
     process.exit(tar.status ?? 1);
   }
 } else if (name === 'ssh') {

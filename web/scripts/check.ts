@@ -42,6 +42,8 @@ run('tsc', 'node_modules/.bin/tsc -p .');
 run('biome', 'node_modules/.bin/biome check .');
 run('vitest', 'node_modules/.bin/vitest run --maxWorkers=4');
 run('package-engine', 'node --test scripts/package-engine.test.mjs');
+run('smoke inventory', 'node --test scripts/smoke-check-inventory.test.mjs');
+run('smoke socket trace', 'node --test scripts/smoke-socket-trace.test.mjs');
 
 if (problems.length) {
   console.log(problems.join('\n'));
