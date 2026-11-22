@@ -69,6 +69,7 @@ test('failed second baseline is incomplete, leaves the safe first copy, and can 
   const state = JSON.parse(readFileSync(join(f.root, 'tmp/host-state.json'), 'utf8'));
   assert.equal(state.current, '1'.padStart(32, '0'));
   assert.equal(existsSync(join(f.state, 'lkjstr-last-ship')), false);
+  assert.equal(existsSync(join(f.state, 'lkjstr-nostr', 'presence.sqlite3')), false);
   const retry = f.run('--establish-rollback-baseline');
   assert.equal(retry.status, 0, retry.log);
   assert.equal(notices(f.events()).length, 1);
@@ -96,6 +97,7 @@ test('a mismatched served index cannot produce a ship note or a successful recor
   const result = f.run('', { LKJSTR_SHIP_TEST_WRONG_INDEX: '1' });
   assert.equal(result.status, 1);
   assert.match(result.summary, /live verification failed/);
+  assert.equal(existsSync(join(f.state, 'lkjstr-nostr', 'presence.sqlite3')), false);
   assert.equal(notices(f.events()).length, 0);
   assert.equal(existsSync(join(f.state, 'lkjstr-last-ship')), false);
 });

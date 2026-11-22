@@ -37,20 +37,24 @@ git push --dry-run -q origin "$REVISION:refs/heads/main" ||
   fail 'cannot authenticate the tested-source push; live is unchanged'
 RUN=$(mktemp -d "$W/tmp/ship-$(date -u +%Y%m%dT%H%M%SZ)-XXXXXX") || fail 'cannot retain ship evidence'
 RECEIPT_CODE=$(git show "$REVISION:scripts/ship-receipt.mjs") || fail 'cannot snapshot receipt validator'
+ENQUEUE_CODE=$(git show "$REVISION:scripts/nostr-enqueue.mjs") || fail 'cannot snapshot Nostr enqueue'
 CLEANUP_CODE=$(git show "$REVISION:scripts/ship-clean.mjs") || fail 'cannot snapshot cleanup policy'
 SMOKE_CODE=$(git show "$REVISION:scripts/ship-smoke.py") || fail 'cannot snapshot smoke supervisor'
 ARCHIVE_CODE=$(git show "$REVISION:scripts/ship-archive.py") || fail 'cannot snapshot archive validator'
 # Retain the exact argument bytes supplied to each interpreter.
 printf '%s' "$BASH_EXECUTION_STRING" > "$RUN/ship-run.sh" &&
   printf '%s' "$RECEIPT_CODE" > "$RUN/ship-receipt.mjs" &&
+  printf '%s' "$ENQUEUE_CODE" > "$RUN/nostr-enqueue.mjs" &&
   printf '%s' "$CLEANUP_CODE" > "$RUN/ship-clean.mjs" &&
   printf '%s' "$SMOKE_CODE" > "$RUN/ship-smoke.py" &&
   printf '%s' "$ARCHIVE_CODE" > "$RUN/ship-archive.py" &&
   git show "$REVISION:scripts/ship.sh" > "$RUN/ship.sh" &&
   printf '%s\n' "$REVISION" > "$RUN/revision" || fail 'cannot retain executed scripts'
 sha256sum "$RUN/ship.sh" "$RUN/ship-run.sh" "$RUN/ship-receipt.mjs" "$RUN/ship-clean.mjs" "$RUN/ship-smoke.py" "$RUN/ship-archive.py" \
+  "$RUN/nostr-enqueue.mjs" \
   > "$RUN/scripts.sha256" || fail 'cannot bind executed scripts'
-chmod a-w "$RUN/ship.sh" "$RUN/ship-run.sh" "$RUN/ship-receipt.mjs" "$RUN/ship-clean.mjs" "$RUN/ship-smoke.py" "$RUN/ship-archive.py" ||
+chmod a-w "$RUN/ship.sh" "$RUN/ship-run.sh" "$RUN/ship-receipt.mjs" "$RUN/ship-clean.mjs" "$RUN/ship-smoke.py" "$RUN/ship-archive.py" \
+  "$RUN/nostr-enqueue.mjs" ||
   fail 'cannot protect retained scripts'
 # Copied package fixtures resolve TypeScript from the repository root.
 timeout 300 pnpm install --frozen-lockfile || fail 'pnpm install --frozen-lockfile (root)'
@@ -138,16 +142,25 @@ if [[ "$MODE" = --establish-rollback-baseline ]]; then
   CURRENT=$(deploy baseline "$FIRST") || fail 'the first safe release is verified; compatible rollback baseline is incomplete'
   verify baseline || fail 'the first safe release is verified; compatible rollback baseline verification is incomplete'
 fi
+VERIFIED_AT=$(date +%s) || end "SHIPPED $C sha256=$H current=$CURRENT; cannot timestamp receipt" 1
+QUEUE_ERROR=
+if printf 'revision=%s\narchive=%s\nindex=%s\ncurrent=%s\nfirst=%s\nmode=%s\nverified_at=%s\n' \
+    "$REVISION" "$H" "$I" "$CURRENT" "$FIRST" "$MODE" "$VERIFIED_AT" > "$RUN/summary.tmp" &&
+    mv "$RUN/summary.tmp" "$RUN/summary"; then
+  node --input-type=module --eval "$ENQUEUE_CODE" ship-nostr-enqueue "$STATE/lkjstr-nostr" "$RUN" ||
+    QUEUE_ERROR="; Nostr enqueue failed (recover from $RUN)"
+else
+  QUEUE_ERROR="; ship evidence summary write failed ($RUN)"
+fi
 LAST="$STATE/lkjstr-last-ship"
-printf '%s %s\n' "$(date +%s)" "$REVISION" > "$LAST.$$" && mv "$LAST.$$" "$LAST" ||
-  end "SHIPPED $C sha256=$H current=$CURRENT; last-ship record failed" 1
-printf 'revision=%s\narchive=%s\nindex=%s\ncurrent=%s\nfirst=%s\nmode=%s\n' \
-  "$REVISION" "$H" "$I" "$CURRENT" "$FIRST" "$MODE" > "$RUN/summary"
+printf '%s %s\n' "$VERIFIED_AT" "$REVISION" > "$LAST.$$" && mv "$LAST.$$" "$LAST" ||
+  end "SHIPPED $C sha256=$H current=$CURRENT; last-ship record failed$QUEUE_ERROR" 1
 node --input-type=module --eval "$CLEANUP_CODE" ship-clean "$W" ||
   printf '%s\n' 'Debug cleanup deferred: cleanup policy could not finish.'
 if [[ "$NOTIFY" == 0 ]]; then
   printf '%s\n' 'Owner notification deferred for the release summary.'
 elif ! desk note "lkjstr を更新: $NOTE https://lkjstr.lkjsxc.com" --from chatgpt-lkjstr; then
-  end "SHIPPED $C sha256=$H current=$CURRENT; desk note failed" 1
+  end "SHIPPED $C sha256=$H current=$CURRENT; desk note failed$QUEUE_ERROR" 1
 fi
+[[ -z "$QUEUE_ERROR" ]] || end "SHIPPED $C sha256=$H current=$CURRENT baseline=$FIRST$QUEUE_ERROR" 1
 end "SHIPPED $C sha256=$H current=$CURRENT baseline=$FIRST" 0

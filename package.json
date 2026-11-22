@@ -27,7 +27,8 @@
     "read:scope": "node scripts/read-score-scope.mjs",
     "acts:check": "node scripts/engine-acts-harness.mjs",
     "bench:signing": "node scripts/signing-latency-probe.mjs",
-    "test:harnesses": "mkdir -p tmp && node --test scripts/cache-repeat-test.mjs scripts/cache-repeat-private-test.mjs scripts/engine-acts-test.mjs scripts/race-test.mjs scripts/read-score-test.mjs scripts/read-score-losses-test.mjs scripts/read-score-requests-test.mjs scripts/read-score-scope-test.mjs"
+    "test:harnesses": "mkdir -p tmp && node --test scripts/cache-repeat-test.mjs scripts/cache-repeat-private-test.mjs scripts/engine-acts-test.mjs scripts/race-test.mjs scripts/read-score-test.mjs scripts/read-score-losses-test.mjs scripts/read-score-requests-test.mjs scripts/read-score-scope-test.mjs",
+    "test:nostr-ops": "node --test --test-concurrency=2 scripts/ship.test.mjs scripts/nostr/*.test.mjs"
   },
   "devDependencies": {
     "playwright-core": "1.65.0",
@@ -35,5 +36,10 @@
   },
   "engines": {
     "node": ">=24.0.0"
+  },
+  "dependencies": {
+    "@noble/curves": "2.2.0",
+    "@scure/base": "2.2.0",
+    "ws": "8.23.0"
   }
 }

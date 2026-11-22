@@ -18,7 +18,7 @@ export function fixture(t, options = {}) {
   for (const path of [root, join(root, 'scripts'), join(root, 'web/scripts'), join(root, 'tmp'), join(root, '.test-bin')]) {
     mkdirSync(path, { recursive: true });
   }
-  for (const name of ['ship.sh', 'ship-clean.mjs', 'ship-receipt.mjs', 'ship-fixture.mjs',
+  for (const name of ['ship.sh', 'nostr-enqueue.mjs', 'ship-clean.mjs', 'ship-receipt.mjs', 'ship-fixture.mjs',
     'ship-fixture-change.mjs', 'ship-run.sh', 'ship-smoke.py', 'ship-archive.py', 'ship-fixture-watchdog.mjs']) {
     copyFileSync(join(source, name), join(root, 'scripts', name));
   }

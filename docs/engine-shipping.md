@@ -87,8 +87,8 @@ directory and read its `smoke-real/report.json`. Require every check in the
 pinned inventory to pass, with empty `errors` and `failures`.
 Each attempt keeps `stdout`, `stderr`, progress and any DOM captures.
 The harness appends labels and stacks to `smoke-real-failures.jsonl` before capturing the DOM.
-Verified shipments send the owner line unless `LKJSTR_SHIP_NOTIFY=0`.
-`SHIPPED ...; desk note failed` records a successful release with a notification failure.
+Verified shipments enqueue [Nostr release evidence](nostr-operations.md) whatever `LKJSTR_SHIP_NOTIFY` is.
+They send the owner line unless it is zero; `SHIPPED ...; desk note failed` records a successful release whose notification failed.
 
 After deployment and verification succeed, the driver records the completion
 time and full source revision in `lkjstr-last-ship`. Once the shared lock is
