@@ -242,9 +242,11 @@ export function patchNote(el: HTMLElement, row: NoteRow, env: ViewEnv, dated = f
   main.querySelector(':scope > .chips')?.remove();
   const compact = el.classList.contains('th-compact');
   const acts = actionRow(row, env, !compact);
-  main.querySelector(':scope > .acts')?.replaceWith(acts);
+  const old = main.querySelector(':scope > .acts');
+  if (acts) old?.replaceWith(acts);
+  else old?.remove();
   const chips = compact ? null : reactionChips(row, env);
-  if (chips) acts.after(chips);
+  if (chips && acts) acts.after(chips);
   if (mark) main.querySelector<HTMLElement>(mark)?.focus({ preventScroll: true });
 }
 

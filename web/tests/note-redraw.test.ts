@@ -2,7 +2,7 @@ import { afterEach, expect, it } from 'vitest';
 import { noteRow } from '../src/engine/mock/rows.ts';
 import { createWorld } from '../src/engine/mock/world.ts';
 import type { NoteRow } from '../src/engine/protocol.ts';
-import { setLang, t } from '../src/shared/i18n.ts';
+import { hasKey, setLang, t } from '../src/shared/i18n.ts';
 import { createSettings } from '../src/shared/settings.ts';
 import { createSignal } from '../src/shared/signal.ts';
 import { createRowList } from '../src/views/feed-draw.ts';
@@ -87,8 +87,8 @@ it('restores warning, text, media and quote choices after patches and window evi
   assert();
 });
 
-it.each([7, 30311])(
-  'draws kind %i with its body, context, actions and disabled reply after updates',
+it.each([6, 7, 16, 9735, 30311])(
+  'keeps kind %i body and context while act controls stay absent across updates',
   (eventKind) => {
     const w = createWorld(Date.now());
     const source = w.notes[0];
@@ -107,11 +107,14 @@ it.each([7, 30311])(
     let row: NoteRow = { ...base, eventKind, segments: [{ k: 'text', text: 'public event body' }] };
     const assert = (): void => {
       expect(list.querySelector('.content > .text')?.textContent).toBe('public event body');
-      const label = eventKind === 7 ? t('kind.7') : t('kind.other', { n: eventKind });
+      const key = `kind.${eventKind}`;
+      const label = hasKey(key) ? t(key) : t('kind.other', { n: eventKind });
       expect(list.querySelector(':scope > .note > .ctx')?.textContent).toBe(label);
-      expect(list.querySelector('.acts')).not.toBeNull();
+      const act = [6, 7, 16, 9735].includes(eventKind);
+      expect(list.querySelector('.acts') === null).toBe(act);
       expect(list.querySelector('button.act.a-reply')).toBeNull();
-      expect(list.querySelector('.a-reply')).not.toBeNull();
+      expect(list.querySelector('.a-reply') === null).toBe(act);
+      if (act) expect(list.querySelector('.chips')).toBeNull();
     };
     rows.draw([row]);
     assert();

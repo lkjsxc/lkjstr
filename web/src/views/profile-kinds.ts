@@ -73,8 +73,10 @@ export function mountProfileKinds(o: {
   return {
     seat(header, row) {
       if (!on || !header || row?.kind !== 'profile') return void bar.remove();
-      if (bar.parentElement !== header) header.append(bar);
-      requestAnimationFrame(keepSelectedVisible);
+      if (bar.parentElement !== header) {
+        header.append(bar);
+        requestAnimationFrame(keepSelectedVisible);
+      }
     },
     query: () => (on ? { show: kindOf(o.state.show) } : {}),
     dispose: off,

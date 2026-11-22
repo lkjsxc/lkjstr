@@ -76,8 +76,12 @@ function react(
   }));
 }
 
+// Act faces and their exact publication targets remain held until S6.
+const readOnlyAct = (row: NoteRow): boolean =>
+  row.eventKind !== undefined && [6, 7, 16, 9735].includes(row.eventKind);
+
 export function reactionChips(row: NoteRow, env: ViewEnv): HTMLElement | null {
-  if (!row.reactions.length) return null;
+  if (readOnlyAct(row) || !row.reactions.length) return null;
   return h(
     'div',
     { class: 'chips' },
@@ -104,7 +108,8 @@ export function reactionChips(row: NoteRow, env: ViewEnv): HTMLElement | null {
 
 /** `chips`: whether reaction chips are drawn under the row; without them (a compact note above a thread's focus) the
  * heart carries the total. */
-export function actionRow(row: NoteRow, env: ViewEnv, chips = true): HTMLElement {
+export function actionRow(row: NoteRow, env: ViewEnv, chips = true): HTMLElement | null {
+  if (readOnlyAct(row)) return null;
   const lang = getLang();
   const n = (v: number): string => (v ? countText(v, row.counts.partial, lang) : '');
   // Signed out or read-only: what would publish is drawn off and says why; the counts stay readable.
