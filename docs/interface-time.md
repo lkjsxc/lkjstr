@@ -61,21 +61,23 @@ A tile of 520px or more keeps today's 56px rail. Its marks now come in three lev
 
 | Boundary | Label | Dot |
 | --- | --- | --- |
-| Local year start | `yyyy` | 3px |
-| Local month start | `mm`, or `mm/01` when any day label is placed | 3px |
-| Local day start | `dd` | 2px |
+| Local year | `yyyy` | 3px |
+| Local month | `mm`, or `mm/dd` (the day it stands at) when any day label is placed | 3px |
+| Local day | `dd` | 2px |
 
 - **Placement.** Use the existing greedy rule, extended. Place the oldest year label first, then the years newest
   first, then months newest first, then days newest first. A label keeps 14px between centres from every label
-  already placed. Then dots go on in the same order, each keeping 2px from every placed mark. Labels and dots stay
-  inside the rail as they do today. A boundary sits at its newest note: with newest first, a label marks where its
-  period begins as the reader scrolls down.
-- **Which boundaries.** With `days` (engine addition below), boundaries are local: years and months come from the
-  days that are the 1st of a month or of January. Without `days`, the marks are today's UTC month marks, and month
-  and day labels are not drawn.
+  already placed. Then dots go on in the same order, each keeping 2px from every placed dot (labels have their own
+  column). Labels and dots stay inside the rail as they do today. A boundary sits at its newest note: with newest
+  first, a label marks where its period begins as the reader scrolls down, and hangs below that line.
+- **A year's newest month** is named one line (14px) under the year, so the top of a year reads `2026`, then
+  `11/22`, then the days. (Built 2026-11-22: drawn at the same line, the year label hid that month from the reader.)
+- **Which boundaries.** With `days` (engine addition below), boundaries are local: a year or a month begins at its
+  newest occupied local day, which need not be the 1st. `mm/dd` keeps a month apart from a day in the one column.
+  Without `days`, the marks are today's UTC month marks, and only years are named.
 - **Hover (fine pointer, any rail width).** A 1px `--sep` line crosses the rail at the pointer, and the label
-  stands at the pointer: the full time if that note is loaded, otherwise `yyyy/mm/dd` from `days`, otherwise
-  nothing. Leaving the rail removes both.
+  stands at the pointer: the full time if the note a press there would reach is loaded, otherwise `yyyy/mm/dd` from
+  `days`, otherwise nothing. Leaving the rail removes both. The line stays with a held mouse.
 - **Narrow rail (under 520px).** Unchanged: years over the content on hover or hold, dots at month starts (local
   when `days` is known), a 28px touch area, the C1 label.
 
@@ -84,12 +86,14 @@ A tile of 520px or more keeps today's 56px rail. Its marks now come in three lev
 Mouse, pen and touch share one path: pointer events on the rail, with capture.
 
 - **Press.** It jumps to the note under the pointer. A press within 6px of a placed label's centre snaps to that
-  boundary's newest note. A loaded target scrolls at once. Any other target uses the existing window seek with the
-  same 60 rows on each side, which loads around the target. Either way one return tick is left at the place the
-  press started, and a press on the tick returns to the exact row and offset.
-- **Drag.** The label follows the pointer. Seeks run at most once per 80ms, and only the latest waits; a target
-  that arrives late never pulls the list back to an earlier one. While a press is held the bands and marks stay
-  frozen, so a Timeline answer that arrives mid-drag is applied only on release.
+  boundary's newest note (so does a drag, and the hover label says the same target). A loaded target scrolls at once.
+  Any other target uses the existing window seek with the same 60 rows on each side, which loads around the target.
+  Either way one return tick is left at the place the press started, and a press on the tick returns to the exact row
+  and offset.
+- **Drag.** The label follows the pointer. Seeks run at most once per 80ms and one at a time: while one is out, only
+  the latest target waits, and it is sent once the answer is drawn. So a target that arrives late never pulls the list
+  back to an earlier one. While a press is held the bands and marks stay frozen, so a Timeline answer that arrives
+  mid-drag is applied only on release.
 - **Label while held or loading.** If the target note is loaded, the label shows the full time. Otherwise it shows
   `yyyy/mm/dd` from `days`, never blank and never an invented minute. If the target is still not shown 500ms after
   the last seek, a thin space and an ellipsis (U+2009 U+2026) are appended. When the window arrives the label shows the real
@@ -127,11 +131,13 @@ seek input are unchanged: the UI never sends a day, only the existing `{ month, 
   any target `{ month, o }` lies in the entry with `offset <= o < offset + count`.
 - Local means the Worker's own `Date`, which has the page's zone. A 23-hour or 25-hour DST day is one day. A day
   whose midnight is skipped starts at its first existing instant. `zone` is the Worker's
-  `Intl.DateTimeFormat().resolvedOptions().timeZone`, read again at the start of every count rebuild. When it
-  changes, days are rebuilt; that answer does not have to come quickly.
+  `Intl.DateTimeFormat().resolvedOptions().timeZone`, read at most once a second. When it changes, or the local
+  day of now does, the counts are rebuilt; that answer does not have to come quickly. The core has no zone data: the
+  Worker supplies a `Calendar` (UTC in native code and tests).
 - The UI compares `zone` with its own zone on load and when the page becomes visible. If they differ, it ignores
   `days` (C2 and C3 fall back as if absent) until an answer arrives with a matching zone. A wrong day is never drawn.
-- Future timestamps join today's local day, matching the month rule. Epoch zero is the local day it falls on.
+- Future timestamps join today's local day, matching the month rule. Epoch zero is the local day it falls on (a day
+  start before the epoch is sent as 0).
 - Bound: `days` is left out when the query has more than 400 occupied local days. At that span day marks cannot be
   drawn, and the C2 and C3 fallbacks apply. At most 400 + months entries per query.
 - The mock engine answers `days` and `zone` for its fixtures, including one local day that crosses a UTC month.
@@ -149,11 +155,11 @@ Each check runs on mock fixtures, plus the real-engine smoke where it already co
    tab, new notes at the head, media growing under the keeper, and opening or moving a tab never show it.
 3. Position. The label's centre is within 1px of the place line's centre, or of the native thumb's. It stays
    inside the tile, and its box keeps the same width while only digits change.
-4. Marks. At 1440, Home with ten days across a month start shows `dd` labels and `11/01`. No two labels are under
-   14px apart, and the oldest year is present. At 390 there are no day labels. With 401 occupied days there are no
-   `days`, and the marks are today's.
-5. Local boundaries. In JST, notes on both sides of local New Year put the `2027` label at the first local
-   2027/01/01 note. A note at 2026-12-31T16:00Z sits below that label, inside the UTC December band.
+4. Marks. At 1440, ten days across a month start read `2026`, `11/05`, `04` ... `01`, `10/31`, `30` ... No two labels
+   are under 14px apart, and the oldest year is present. At 390 there are no day labels. With 401 occupied days there
+   are no `days`, and the marks are today's.
+5. Local boundaries. In JST, notes on both sides of local New Year put the `2027` label at the newest local 2027
+   note. A note at 2026-12-31T16:00Z sits below that label, inside the UTC December band.
 6. DST. In `America/New_York`, a fixture across 2026-11-01 has one day mark per local day and labels in local
    time. A zone mismatch drops day marks without drawing a wrong one.
 7. Press and return. A press on a day label puts that day's newest note at the top. The tick returns to the exact
@@ -166,8 +172,9 @@ Each check runs on mock fixtures, plus the real-engine smoke where it already co
     nothing while typing, with a popover open, or at the ends. The live node speaks once per jump.
 11. Touch at 390 light. A drag on the rail moves the list, with the label at least 24px left of the rail. A tap
     leaves the tick, and a swipe on the notes shows the label.
-12. Bounds. Paint stays one frame callback. Mark planning for 400 days plus 120 months stays under 1ms in the
-    browser bench. The label reads no layout beyond the existing top-row search.
+12. Bounds. Paint stays one frame callback. Mark planning for 400 days plus 120 months stays under 1ms (0.18ms in
+    Chrome's engine on 2026-11-22), and runs only when the map changes, not on every scroll. The label reads no layout beyond
+    the existing top-row search.
 
-On landing, design.md's time-rail sentences take C1 to C3 in short form. time-rail.md records the days index,
-and this file's rows in interface-specs.md become `built`.
+Built 2026-11-22: unit tests `time-marks`, `time-days`, `time-seek` and `time-rail`, native
+`engine_timeline_days_test`, and the shared rail smoke (labels, `]` and Backspace).

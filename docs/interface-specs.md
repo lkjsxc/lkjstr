@@ -49,8 +49,8 @@ what the engine offers and no surface reaches yet.
 | T3 | Thread: replies as a conversation, long branches folded | [interface-thread.md](interface-thread.md#t3-replies) | built |
 | T4 | Thread: the reply field under the focus | [interface-thread.md](interface-thread.md#t4-the-reply-field) | built |
 | C1 | Time label beside the thumb while a timeline scrolls | [interface-time.md](interface-time.md#c1-the-scroll-label) | built |
-| C2 | Wide scrubber: local year, month and day marks, hover | [interface-time.md](interface-time.md#c2-the-wide-scrubber) | ready |
-| C3 | Time jumps by mouse, touch and keyboard, and their loading | [interface-time.md](interface-time.md#c3-jumps-and-loading) | ready |
+| C2 | Wide scrubber: local year, month and day marks, hover | [interface-time.md](interface-time.md#c2-the-wide-scrubber) | built |
+| C3 | Time jumps by mouse, touch and keyboard, and their loading | [interface-time.md](interface-time.md#c3-jumps-and-loading) | built |
 | C4 | A note's time opens the author's Home at that moment (cache only) | [interface-moment.md](interface-moment.md#spec-c4-the-moment-tab-cache-only-the-existing-worker) | built |
 | C5 | The moment from relays in both directions | [interface-moment.md](interface-moment.md#spec-c5-both-directions-from-relays-needs-engine-r1-to-r6-ui-only-after-them) | older built; newer needs engine |
 | W1 | "via <client>" by a note's time | [interface-client.md](interface-client.md#w1-where-it-stands) | built |
@@ -74,8 +74,9 @@ what the engine offers and no surface reaches yet.
 | N6 | Articles: the card and the reading view | [interface-view.md](interface-view.md#n6-articles) | ready |
 | N7 | Deep links and Copy link for every kind | [interface-view.md](interface-view.md#n7-deep-links-and-copying-for-every-kind) | ready |
 
-C1 to C3 are the owner's item 5 of 2026-11-21. C1 needs no engine change and lands alone; C2 and C3 draw local
-day marks once the engine answers `days`, and until then fall back to today's marks without inventing a day.
+C1 to C3 are the owner's item 5 of 2026-11-21, built: C2 and C3 draw local day marks from the engine's `days` and
+fall back to UTC months without inventing a day. They reach only lists the engine gives the rail (interface-time.md,
+Reach); a Home with resolved reposts still scrolls natively, and that engine slice is the next step.
 Keys come first because a locked account changes what the Messages tab says. A1 and A2 are the owner's request of
 2026-11-17 and are the next interface work: build them before anything under "Not specified yet".
 Q1 to Q5 are the owner's direction of 2026-11-17 and replace S1, which is withdrawn: the moment at which each tab

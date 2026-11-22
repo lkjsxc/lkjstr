@@ -12,8 +12,8 @@ No relay counts are estimated and no public traffic is used in verification.
 min(4px, H/(2M)) plus its share of the remaining height, weighted by sqrt(n).
 Within that interval, notes occupy equal ordinal slots, newest first. Empty
 months have no interval. Future timestamps join the current UTC month;
-epoch zero remains January 1970. Numbers win over dots, newer marks win over
-older marks, and the oldest year number is reserved before other marks.
+epoch zero remains January 1970. Marks are planned in `time-marks.ts`: the
+oldest year label first, then years, months and days newest first, then dots.
 
 `time-rail.ts` uses this map for marks, pointer targets, the place line and
 the return tick. The engine supplies positions for the current window.
@@ -35,6 +35,15 @@ area. No animation is used. The rail is aria-hidden and the original list
 remains the keyboard scroller. A nonoverflowing list hides the rail; one
 occupied month shows only the place line. Unexhausted relay history fades
 the lower marks. Scrolling to the local end keeps the existing history path.
+
+## Local days
+
+The same scan also builds `days` (`wire/timeline_days.rs`): one part per local day per UTC month,
+newest first, from the page's own calendar (the Worker's `Date`; UTC natively). A changed zone or
+local date rebuilds the index. Past 400 occupied days the answer has no days. The interface uses
+them only in its own zone: `time-marks.ts` plans labels and dots, `time-days.ts` finds a place's
+day and the `[` `]` steps, `time-seek.ts` keeps one seek out at a time, `time-input.ts` reads the
+pointer and keys. Narrow rails name only years.
 
 ## Engine and bounds
 

@@ -182,10 +182,10 @@ export function createWorld(now: number) {
   };
   for (const [i, s] of specs.entries()) add(make(s, idOf(i + 1), base - s.ago * MIN));
   collisionChips(notes[0]?.reactions);
-  // Older notes, generated: about three days of them.
+  // Older notes, generated: four weeks of them, so the time rail has days across a month start.
   for (let i = 0; i < 420; i++) {
     const [by, text] = FILLER[(i * 7) % FILLER.length] ?? ['aoi', ''];
-    const at = base - (800 + i * 11 + ((i * 37) % 9)) * MIN;
+    const at = base - (800 + i * 96 + ((i * 37) % 9)) * MIN;
     const n = add(make({ by, ago: 0, text }, idOf(1000 + i), at));
     if (i % 3 === 0) n.reactions.set('❤️', { count: 1 + (i % 12), mine: false });
     if (i % 17 === 0) n.media.push(media([1600, 900, (i * 23) % 360], false));

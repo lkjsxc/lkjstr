@@ -182,10 +182,14 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
 - A list keeps what was read (up to 800 rows): nothing vanishes above and
   the scrollbar keeps its span. A list in time order has a time rail
   instead: it spans every note known for the list, a busy month longer than
-  a quiet one without crowding it out and empty time taking no room, dots
-  where months begin, numbers where years begin, a 2px accent line across only the rightmost 16px for where you are; the current year uses normal text colour;
-  pressed or dragged it goes to that time and says it, and leaves a tick to
-  come back by. The tile's own width decides the rail (56px with years from 520px, else 16px) and other tile-width
+  a quiet one without crowding it out and empty time taking no room, a 2px accent line across only the rightmost
+  16px for where you are. On a tile of 520px or more one right-aligned column names local years, months and days
+  where each begins (a year's newest month one line under it, a month as `mm/dd` once days are named), with dots
+  beside them; the current year uses normal text colour. A fine pointer draws a `--sep` line and the time under it.
+  Pressed or dragged it goes to that time (near a label, to that period's newest note), says the day while it loads,
+  and leaves a tick to come back by; `[` and `]` step a day, Backspace returns
+  ([interface-time.md](interface-time.md) C2, C3). The tile's own width decides the rail (56px from 520px, else 16px
+  with years shown on hover) and other tile-width
   layouts (Documentation puts its tree under the page below 520px) from the first frame; a list the engine refused
   last time on this device starts without the rail's room, so its notes never widen after a second. Other views keep
   a 14px scrollbar with a slim thumb that widens under the pointer.

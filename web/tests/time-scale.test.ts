@@ -1,11 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  monthOf,
-  noteToPlace,
-  placeToNote,
-  timeMarks,
-  timeScale,
-} from '../src/views/time-scale.ts';
+import { monthOf, noteToPlace, placeToNote, timeScale } from '../src/views/time-scale.ts';
 
 const months = (counts: number[]) =>
   counts.map((count, i) => ({ at: Date.UTC(2026, 10 - i, 1), count }));
@@ -39,30 +33,5 @@ describe('compressive month map', () => {
     expect(timeScale([], 100)).toEqual([]);
     expect(monthOf(0)).toBe(0);
     expect(monthOf(Date.UTC(2099, 0), Date.UTC(2026, 10, 15))).toBe(Date.UTC(2026, 10));
-  });
-});
-describe('marks', () => {
-  it('keeps the oldest number and gives numbers priority over dots', () => {
-    const b = timeScale(months(Array.from({ length: 40 }, () => 1)), 70);
-    const marks = timeMarks(b, 70);
-    expect(marks.some((m) => m.year === 2023)).toBe(true);
-    for (let i = 1; i < marks.length; i++) {
-      const a = marks[i - 1]!;
-      const c = marks[i]!;
-      expect(c.y - a.y).toBeGreaterThanOrEqual((a.year ? 6 : 1.5) + (c.year ? 6 : 1.5) + 2);
-    }
-  });
-  it('keeps the newer number when ordinary numbers collide', () => {
-    const b = [
-      { at: Date.UTC(2026, 0), count: 1, y: 0, h: 5 },
-      { at: Date.UTC(2025, 0), count: 1, y: 5, h: 40 },
-      { at: 0, count: 1, y: 45, h: 15 },
-    ];
-    expect(
-      timeMarks(b, 60)
-        .filter((m) => m.year)
-        .map((m) => m.year),
-    ).toEqual([2026, 1970]);
-    expect(timeMarks(timeScale(months([4]), 100), 100)).toEqual([]);
   });
 });

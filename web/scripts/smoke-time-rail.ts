@@ -67,6 +67,60 @@ export async function railSmoke(
     { feed, key: origin.key },
   );
   check('return tick restores the row and disappears', (await top()).key === origin.key);
+  // C2: labels keep 14px; once days are named, months read mm/dd. C3: ] and [ step a day, Backspace comes back.
+  const marks = await rail.evaluate((el) =>
+    [...el.querySelectorAll<HTMLElement>('.time-label')].map((l) => ({
+      y: l.getBoundingClientRect().top + l.getBoundingClientRect().height / 2,
+      level: l.className,
+      text: l.textContent ?? '',
+    })),
+  );
+  const sorted = marks.map((m) => m.y).sort((a, b) => a - b);
+  const dated = marks.some((m) => m.level.includes('time-day'));
+  check(
+    'rail labels keep 14px; with days, months read mm/dd',
+    sorted.every((y, i) => i === 0 || y - sorted[i - 1]! >= 13.5) &&
+      (!dated ||
+        marks
+          .filter((m) => m.level.includes('time-month'))
+          .every((m) => /^\d\d\/\d\d$/.test(m.text))),
+  );
+  const day = () =>
+    page.locator(feed).evaluate((el) => {
+      const n = [...el.querySelectorAll('.list > .note')].find(
+        (n) => n.getBoundingClientRect().bottom > el.getBoundingClientRect().top + 1,
+      );
+      return n?.querySelector('time')?.getAttribute('title')?.slice(0, 10) ?? '';
+    });
+  if (dated) {
+    await page.locator(feed).focus();
+    const today = await day();
+    await page.keyboard.press(']');
+    await page.waitForFunction(
+      ({ feed, today }) => {
+        const el = document.querySelector(feed)!;
+        const n = [...el.querySelectorAll('.list > .note')].find(
+          (n) => n.getBoundingClientRect().bottom > el.getBoundingClientRect().top + 1,
+        );
+        const at = n?.querySelector('time')?.getAttribute('title')?.slice(0, 10) ?? today;
+        return at !== today && el.querySelector('.time-return:not([hidden])') !== null;
+      },
+      { feed, today },
+    );
+    const older = await day();
+    await page.keyboard.press('Backspace');
+    await page.waitForFunction(
+      ({ feed, key }) => {
+        const el = document.querySelector(feed)!;
+        const n = [...el.querySelectorAll<HTMLElement>('.list > .note')].find(
+          (n) => n.getBoundingClientRect().bottom > el.getBoundingClientRect().top + 1,
+        );
+        return n?.dataset.key === key;
+      },
+      { feed, key: origin.key },
+    );
+    check('] goes to an older day and Backspace comes back', older < today);
+  }
   if (shots) {
     await mkdir(smokePath('screens'), { recursive: true });
     const themeBefore = await page.evaluate(() => document.documentElement.dataset.theme);

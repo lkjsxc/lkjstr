@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import type { Row } from '../src/engine/protocol.ts';
+import type { Row, Timeline } from '../src/engine/protocol.ts';
+import { localZone } from '../src/shared/format.ts';
 import type { Keeper } from '../src/views/feed-place.ts';
 import { mountTimeRail } from '../src/views/time-rail.ts';
 import { openPopover, popoverOpen } from '../src/wm/menus.ts';
@@ -17,7 +18,7 @@ afterEach(() => {
   vi.useRealTimers();
   vi.unstubAllGlobals();
 });
-function setup() {
+function setup(extra: Partial<Timeline> = {}) {
   const el = document.createElement('div');
   const list = document.createElement('div');
   const tail = document.createElement('div');
@@ -61,14 +62,15 @@ function setup() {
     newest: month,
     oldest: month,
     older: false,
+    ...extra,
   });
   vi.advanceTimersByTime(16);
   const track = el.querySelector<HTMLElement>('.time-rail')!;
   track.setPointerCapture = vi.fn();
   const tick = el.querySelector<HTMLElement>('.time-return')!;
-  const pointer = (target: HTMLElement, type: string, y: number) => {
+  const pointer = (target: HTMLElement, type: string, y: number, pointerType = 'mouse') => {
     target.dispatchEvent(
-      new PointerEvent(type, { bubbles: true, button: 0, pointerId: 1, clientY: y }),
+      new PointerEvent(type, { bubbles: true, button: 0, pointerId: 1, clientY: y, pointerType }),
     );
     vi.advanceTimersByTime(100);
   };
@@ -78,7 +80,7 @@ function setup() {
     vi.advanceTimersByTime(16);
     return e;
   };
-  return { el, track, tick, pointer, key, set, seek };
+  return { el, rail, track, tick, pointer, key, set, seek };
 }
 
 it.each(['click', 'drag'])(
@@ -172,4 +174,77 @@ it('starts at the width the engine last gave the same kind of tab', () => {
   search.say(true);
   search.dispose();
   expect(reserved(open('search').el)).toBe(true);
+});
+
+// Three local days, one note each, in the page's zone; and a fourth, older, whose notes are not loaded.
+const day = (i: number) => ({
+  at: month - i * 86_400_000,
+  month,
+  offset: i,
+  count: i === 3 ? 97 : 1,
+});
+const dated = {
+  months: [{ at: month, count: 100 }],
+  days: [0, 1, 2, 3].map(day),
+  zone: localZone(),
+};
+
+it('steps a day with ] and [, returns with Backspace, and says each landing once', () => {
+  const x = setup(dated);
+  const live = x.el.querySelector<HTMLElement>('[aria-live]')!;
+  expect(x.key(']').defaultPrevented).toBe(true);
+  expect(x.set.mock.lastCall?.[0]).toEqual({ key: 'n2', off: 0 });
+  expect(live.textContent).toMatch(/^\d{4}\/\d{2}\/\d{2} \d{2}:\d{2}$/);
+  expect(x.key('[').defaultPrevented).toBe(true);
+  expect(x.set.mock.lastCall?.[0]).toEqual({ key: 'n1', off: 0 });
+  expect(x.key('Backspace').defaultPrevented).toBe(true);
+  expect(x.set.mock.lastCall?.[0]).toEqual({ key: 'n2', off: -12 }); // exactly where the last jump started
+  expect(x.key('Backspace').defaultPrevented).toBe(false); // no tick left
+  x.key('['), x.key('[');
+  expect(x.set.mock.lastCall?.[0]).toEqual({ key: 'n0', off: 0 });
+  expect(x.key('[').defaultPrevented).toBe(false); // the newest day: nothing newer
+  const field = document.createElement('input');
+  x.el.append(field);
+  const typed = new KeyboardEvent('keydown', { key: ']', bubbles: true, cancelable: true });
+  field.dispatchEvent(typed);
+  expect(typed.defaultPrevented).toBe(false);
+});
+
+it('says the day of a target still loading, then admits it after 500ms', () => {
+  const x = setup(dated);
+  const label = x.el.querySelector<HTMLElement>('.time-rail .scrub')!;
+  x.pointer(x.track, 'pointerdown', 190);
+  x.pointer(x.track, 'pointerup', 190);
+  expect(x.seek).toHaveBeenCalledTimes(1);
+  expect(label.hidden).toBe(false);
+  expect(label.textContent).toMatch(/^\d{4}\/\d{2}\/\d{2}$/); // never an unknown minute
+  vi.advanceTimersByTime(500);
+  expect(label.textContent).toMatch(/^\d{4}\/\d{2}\/\d{2}\u2009\u2026$/);
+});
+
+it('draws a hover line and label for a fine pointer, and keeps marks still while held', () => {
+  const x = setup(dated);
+  const line = x.el.querySelector<HTMLElement>('.time-hover')!;
+  const label = x.el.querySelector<HTMLElement>('.time-rail .scrub')!;
+  x.pointer(x.track, 'pointermove', 20);
+  expect(line.hidden).toBe(false);
+  expect(label.textContent).toMatch(/^\d{4}\/\d{2}\/\d{2} \d{2}:\d{2}$/);
+  x.track.dispatchEvent(new PointerEvent('pointerleave'));
+  vi.advanceTimersByTime(16);
+  expect(line.hidden).toBe(true);
+  expect(label.hidden).toBe(true);
+  const marks = x.el.querySelector<HTMLElement>('.time-marks')!;
+  x.pointer(x.track, 'pointerdown', 20);
+  const before = marks.innerHTML;
+  const old = Date.UTC(2020, 0);
+  x.rail.timeline({
+    ...{ positions: [], supported: true, newest: month, oldest: old, older: false },
+    months: [...dated.months, { at: old, count: 9 }],
+    days: [...dated.days, { at: old, month: old, offset: 0, count: 9 }],
+    zone: dated.zone,
+  });
+  vi.advanceTimersByTime(16);
+  expect(marks.innerHTML).toBe(before);
+  x.pointer(x.track, 'pointerup', 20);
+  expect(marks.innerHTML).not.toBe(before);
 });

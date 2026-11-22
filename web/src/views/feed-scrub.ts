@@ -21,12 +21,12 @@ export const timeText = (at: number): string => `${dayOf(at)} ${clockOf(at)}`;
 export const centred = (label: HTMLElement, y: number, view: number): number =>
   Math.min(view - label.offsetHeight / 2 - 4, Math.max(label.offsetHeight / 2 + 4, y));
 
-/** The time of the first row with a time at or below the top of the tile (rows are in order: found by halving). */
-export function topTime(
+/** The first row with a time at or below the top of the tile (rows are in order: found by halving). */
+export function topRow(
   el: HTMLElement,
   list: HTMLElement,
   row: (key: string) => ListRow | undefined,
-): number {
+): ListRow | undefined {
   const top = el.getBoundingClientRect().top;
   const kids = list.children;
   let lo = 0;
@@ -37,10 +37,9 @@ export function topTime(
     else lo = mid + 1;
   }
   for (let i = lo; i < kids.length; i++) {
-    const at = rowTime(row((kids[i] as HTMLElement).dataset.key ?? ''));
-    if (at) return at;
+    const found = row((kids[i] as HTMLElement).dataset.key ?? '');
+    if (rowTime(found)) return found;
   }
-  return 0;
 }
 
 export function mountScrub(o: {
@@ -59,7 +58,7 @@ export function mountScrub(o: {
     el.querySelector(':scope > .time-pin > .time-rail:not([hidden])') !== null;
   const scroll = (): void => {
     if (rail() || !intent.telling()) return void (label.hidden = true);
-    const at = topTime(el, list, o.row);
+    const at = rowTime(topRow(el, list, o.row));
     if (!at) return void (label.hidden = true);
     label.textContent = timeText(at);
     label.hidden = false;

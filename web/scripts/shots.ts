@@ -192,6 +192,21 @@ try {
             await page.mouse.wheel(0, 1600);
             await feed.locator('.scrub:not([hidden])').waitFor({ timeout: 900 });
           });
+        // The wide scrubber (C2, C3): day, month and year marks with the hover line, and a drag held over the years.
+        for (const name of ['time-days', 'time-held'] as const)
+          await scene(name, '/', async (page) => {
+            const rail = page.locator('.view[data-kind="home"]:visible .time-rail').first();
+            await rail.waitFor();
+            const box = await rail.boundingBox();
+            if (!box) return;
+            await page.mouse.move(box.x + box.width - 8, box.y + box.height * 0.08);
+            if (name === 'time-held') {
+              await page.mouse.down();
+              await page.mouse.move(box.x + box.width - 8, box.y + box.height * 0.6, { steps: 6 });
+              await page.waitForTimeout(650); // long enough for a target still loading to say so
+            }
+            await rail.locator('.scrub:not([hidden])').waitFor({ timeout: 900 });
+          });
         await scene('profile', '/p/aoi', (page) =>
           page.waitForSelector('.profile').then(() => undefined),
         );
