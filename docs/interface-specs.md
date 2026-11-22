@@ -21,6 +21,9 @@ what the engine offers and no surface reaches yet.
   does not take it) and named in the desk note. The rules that come out of it are folded into design.md.
 - The sheets of K1 to D1 were removed with `tmp/` before they were judged. Make that one sheet again
   (`K1-<yyyymmdd>.jpg`, the scenes of the keys and messages items, same form) with the A items.
+- An item is marked `ready` only after its look was drawn once on a fixture, even roughly. C2 put month marks at
+  the 1st (`mm/01`), against its own newest-note rule, and its year label hid the newest month: both showed only
+  when built (2026-11-22).
 - Order: top to bottom. An item is small enough to land alone.
 
 ## Items
