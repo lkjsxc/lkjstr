@@ -31,6 +31,7 @@ pub(super) fn requests(
     }
     if q.source == Source::Thread {
         result.extend(engine::thread::extra_filter(store, q));
+        result.extend(engine::thread::comment_filters(store, q));
     }
     if let Some(account) = &q.account {
         let kinds: Vec<_> = [0, 3, 10000, 10003, 10002, 10030, 10063]

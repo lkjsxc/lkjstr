@@ -164,3 +164,16 @@ img.emo:focus-visible, .uemo:focus-visible { outline: 2px solid var(--accent); o
 .act-context > .act-phrase { display: flex; flex: 0 1 auto; overflow: visible; }
 .act-phrase > span { flex: none; white-space: pre; }
 .act-context .name { display: block; flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* N2 public generic details use the existing note measure and action rhythm. */
+.generic-face { min-width: 0; }
+.generic-alt { margin-bottom: 6px; }
+.generic-data { color: var(--muted); font: 12px/1.55 ui-monospace, monospace; white-space: pre-wrap; overflow-wrap: anywhere; max-height: 4.65em; overflow: hidden; }
+.generic-data.open { max-height: none; }
+.generic-disclosure { display: flex; gap: 4px; margin-top: 7px; font-size: 12px; }
+.generic-tags { margin: 4px 0 7px; font-size: 12px; }
+.generic-tags[hidden] { display: none; }
+.generic-tag { display: grid; grid-template-columns: minmax(60px, 95px) minmax(0, 1fr); gap: 8px; align-items: baseline; padding: 3px 0; border-bottom: 1px solid var(--line); }
+.generic-name { color: var(--faint); }
+.generic-value { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; }
+.generic-value.expanded { overflow: visible; white-space: pre-wrap; overflow-wrap: anywhere; }
+.generic-raw { font: 12px ui-monospace, monospace; }

@@ -69,7 +69,7 @@ impl Session {
                             Some(positions) => Some(*positions.get(&event.id)?),
                             None => None,
                         };
-                        let wrapper = q.source != "thread" && (event.kind == 6 || (q.source == "profile" && matches!(q.show.as_deref(), Some("reposts" | "reactions"))));
+                        let wrapper = !(q.source == "profile" && q.show.as_deref() == Some("all")) && q.source != "thread" && (event.kind == 6 || (q.source == "profile" && matches!(q.show.as_deref(), Some("reposts" | "reactions"))));
                         let shown = if wrapper { crate::engine::acts::target(&event).and_then(|id| store.get(&id))? } else { event.clone() };
                         if !crate::kinds::policy(shown.kind).openable { return None; }
                         let mut value = self.project_event(sub, e, converted, &shown, None);
@@ -79,7 +79,7 @@ impl Session {
                         if let Some((role, depth)) = position {
                             value["thread"] = json!({"role":role,"depth":depth});
                             // The answered note's id, also when it is not stored (the interface holds its room).
-                            if let Some(parent) = crate::engine::thread::parent(&shown) {
+                            if let Some(parent) = crate::engine::thread::parent(store, &shown) {
                                 value["thread"]["parent"] = json!(parent);
                             }
                         }

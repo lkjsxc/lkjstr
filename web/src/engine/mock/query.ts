@@ -31,6 +31,17 @@ const named = (p: Person, typed: string): boolean => {
 /** A profile's list by kind. Who reacted to what is not part of the mock world: the reader's own reactions are
  * real, another person's are a fixed made-up slice. */
 function ofProfile(w: World, q: Query, n: MNote, who: string | undefined, me: string): boolean {
+  if (q.show === 'articles') return n.by.author.pubkey === who && n.eventKind === 30023;
+  if (q.show === 'lists')
+    return (
+      n.by.author.pubkey === who &&
+      [
+        3, 10000, 10001, 10002, 10003, 10015, 10030, 30000, 30002, 30003, 30004, 30005, 30015,
+        30030, 39089,
+      ].includes(n.eventKind ?? 1)
+    );
+  if (q.show === 'all') return n.by.author.pubkey === who;
+  if (n.eventKind !== undefined) return false;
   if (profileAct(w, q, n)) return true;
   const pk = n.by.author.pubkey;
   if (q.show === 'reposts') return n.reposts.some((r) => r.by.author.pubkey === who);
@@ -49,6 +60,7 @@ export function matches(w: World, q: Query, n: MNote, me: string): boolean {
   const pk = n.by.author.pubkey;
   // A channel message (kind 42) is no note of the timelines: it shows in its channel, and among bookmarks.
   if (Boolean(n.channel) !== (q.source === 'channel') && q.source !== 'bookmarks') return false;
+  if (n.eventKind !== undefined && q.source !== 'profile' && q.source !== 'bookmarks') return false;
   if (w.isMuted(n) && q.source !== 'profile') return false;
   if (q.authors?.length && !q.authors.includes(pk)) return false;
   const at = profileAct(w, q, n)?.at ?? n.at;
@@ -207,11 +219,18 @@ export function select(w: World, q: Query, me: string): Entry[] {
   }
   const opts: RowOpts = { me, reposts: q.reposts };
   const time = (n: MNote): number =>
-    profileAct(w, q, n)?.at ?? (q.reposts === false ? n.at : (n.reposts[0]?.at ?? n.at));
+    q.source === 'profile' && q.show === 'all'
+      ? n.at
+      : (profileAct(w, q, n)?.at ?? (q.reposts === false ? n.at : (n.reposts[0]?.at ?? n.at)));
   const kept = w.notes
     .filter((n) => matches(w, q, n, me))
     .sort((a, b) => time(b) - time(a) || b.id.localeCompare(a.id));
-  const notes = kept.map((n) => entry(w, n, { ...opts, activity: profileAct(w, q, n) }));
+  const notes = kept.map((n) =>
+    entry(w, n, {
+      ...opts,
+      activity: q.source === 'profile' && q.show === 'all' ? undefined : profileAct(w, q, n),
+    }),
+  );
   if (
     q.notifications &&
     me &&

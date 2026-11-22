@@ -103,11 +103,8 @@ impl Engine {
                             e.tags.push(vec!["p".into(), parent.pubkey.clone()]);
                         }
                         "repost" => {
-                            e.kind = if parent.kind == 42 { 16 } else { 6 };
+                            e.kind = lkjstr_protocol::repost_kind(&parent);
                             e.tags.extend(lkjstr_protocol::repost_tags(&parent));
-                            if parent.kind == 42 {
-                                e.tags.push(vec!["k".into(), "42".into()]);
-                            }
                             e.content =
                                 serde_json::to_string(&*parent).map_err(|_| "serialization")?;
                         }

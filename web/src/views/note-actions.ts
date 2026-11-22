@@ -181,11 +181,13 @@ export function actionRow(row: NoteRow, env: ViewEnv, chips = true): HTMLElement
     { class: 'acts' },
     // Wherever Reply is pressed, the reply is written in the note's thread, in the field under it (a channel
     // message's reply stays in its channel); a thread answers its own focus itself.
-    button('reply', 'act.reply', n(row.counts.replies), false, () =>
-      env.reply?.(row)
-        ? undefined
-        : env.open('thread', { id: row.id, title: plainName(row.author), reply: true }),
-    ),
+    row.eventKind !== undefined && row.eventKind !== 30023
+      ? h('span', { class: 'act a-reply', 'aria-hidden': 'true' })
+      : button('reply', 'act.reply', n(row.counts.replies), false, () =>
+          env.reply?.(row)
+            ? undefined
+            : env.open('thread', { id: row.id, title: plainName(row.author), reply: true }),
+        ),
     button('repost', 'act.repost', n(row.counts.reposts), row.mine.reposted, (el) =>
       openMenu(env.layer, el, [
         row.mine.reposted
@@ -221,7 +223,7 @@ export function actionRow(row: NoteRow, env: ViewEnv, chips = true): HTMLElement
       { label: t('menu.copyText'), run: () => void copy(env, fullText(row)) },
       {
         label: t('menu.copyLink'),
-        run: () => void copy(env, `${location.origin}/n/${row.bech32}`),
+        run: () => void copy(env, `${location.origin}${row.copyLink ?? `/n/${row.bech32}`}`),
       },
       { label: t('menu.copyId'), run: () => void copy(env, row.bech32) },
       {

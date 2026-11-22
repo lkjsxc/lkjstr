@@ -18,6 +18,8 @@ kinds stay outside this public path. A valid link with no retrievable event
 uses the existing tab availability state. Reloading `/` restores the opened
 tab through the workspace store.
 
-Until the generic face lands, another kind uses the note body and its kind
-context without an action row or reply field. The dedicated any-kind browser
-scene and `/n/` address alias remain with N2/N7 in [interface-view.md](interface-view.md).
+Public kinds not assigned a dedicated display face use N2's bounded generic face, with typed tag details.
+Copy Link uses the engine-encoded naddr for normal/parameterized replaceable kinds (including empty `d`),
+and nevent with kind and author otherwise. Copy ID preserves its previous note representation.
+Unknown, malformed, private and ephemeral pointers retain rejection and availability behavior.
+S4's N2/N7 code is private pending verified real-browser and visual acceptance, not a deployed guarantee.

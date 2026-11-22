@@ -128,6 +128,12 @@ pub(super) fn note(row: &Row, store: &Store, account: Option<&str>) -> Value {
         "mine":{"reposted":row.own.reposted,"bookmarked":row.own.bookmarked,"own":Some(row.author.pubkey.as_str())==account}});
     event_kind(&mut v, row.kind);
     if let Some(event) = store.get(&row.id) {
+        if let Some((route, reference)) = super::generic_face::copy_reference(&event) {
+            v["copyLink"] = json!(format!("/{route}/{reference}"));
+        }
+        if crate::kinds::policy(event.kind).face == crate::kinds::Face::Generic {
+            v["face"] = super::generic_face::face(&event, store);
+        }
         if let Some(id) = lkjstr_protocol::channel_id(&event) {
             v["channel"] = json!({"id":id,"name":crate::engine::channels::metadata(store,&id).0["name"].as_str().unwrap_or("")});
         }

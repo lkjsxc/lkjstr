@@ -9,6 +9,7 @@ export type NoteState = {
   quotes?: string[];
   replies?: number;
   chips?: boolean;
+  genericDetails?: boolean;
 };
 type Saved = { reader: [string, NoteState][] };
 export const NOTE_STATE_LIMIT = 3000; // per tab, oldest changed note dropped

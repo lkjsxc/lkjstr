@@ -1,5 +1,6 @@
 use super::protocol::{Query, Source};
-use lkjstr_protocol::{NostrEvent, reply_parent};
+use crate::{kinds::policy, store::Store};
+use lkjstr_protocol::{NostrEvent, NostrFilter, reply_parent};
 pub(super) fn matches_extra(e: &NostrEvent, q: &Query) -> bool {
     let f = &q.filters;
     if f.since.is_some_and(|s| e.created_at < s)
@@ -88,4 +89,33 @@ pub(super) fn signed_out(q: &Query) -> bool {
                 | Source::Emoji
                 | Source::MediaServers
         )
+}
+
+pub(super) fn accepts(
+    store: &Store,
+    q: &Query,
+    e: &lkjstr_protocol::NostrEvent,
+    f: &NostrFilter,
+    authors: &Option<Vec<String>>,
+) -> bool {
+    policy(e.kind).openable
+        && (q.source != Source::Channel
+            || lkjstr_protocol::channel_id(e).as_ref() == q.target.as_ref())
+        && authors.as_ref().is_none_or(|a| a.contains(&e.pubkey))
+        && (q.source == Source::Bookmarks || lkjstr_protocol::matches_filter(e, f))
+        && (q.source != Source::Profile
+            || q.filters.show.as_deref() != Some("lists")
+            || crate::kinds::is_public_list(e.kind))
+        && if q.source == Source::Profile
+            && matches!(q.filters.show.as_deref(), Some("reposts" | "reactions"))
+        {
+            super::acts::matches_terminal(store, e, q)
+        } else if e.kind == 6 && q.source != Source::Notifications {
+            q.filters.reposts != Some(false)
+                && super::acts::target(e)
+                    .and_then(|id| store.get(&id))
+                    .is_none_or(|target| super::query_hidden::matches_note(store, q, &target))
+        } else {
+            matches_extra(e, q)
+        }
 }

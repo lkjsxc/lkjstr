@@ -88,7 +88,7 @@ it('restores warning, text, media and quote choices after patches and window evi
 });
 
 it.each([7, 30311])(
-  'draws kind %i with its body and context but no publishing controls after updates',
+  'draws kind %i with its body, context, actions and disabled reply after updates',
   (eventKind) => {
     const w = createWorld(Date.now());
     const source = w.notes[0];
@@ -109,7 +109,9 @@ it.each([7, 30311])(
       expect(list.querySelector('.content > .text')?.textContent).toBe('public event body');
       const label = eventKind === 7 ? t('kind.7') : t('kind.other', { n: eventKind });
       expect(list.querySelector(':scope > .note > .ctx')?.textContent).toBe(label);
-      expect(list.querySelector('.acts, .chips')).toBeNull();
+      expect(list.querySelector('.acts')).not.toBeNull();
+      expect(list.querySelector('button.act.a-reply')).toBeNull();
+      expect(list.querySelector('.a-reply')).not.toBeNull();
     };
     rows.draw([row]);
     assert();

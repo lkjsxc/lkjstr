@@ -202,3 +202,8 @@ pub fn feed_kinds(feed: Feed) -> Vec<u64> {
     .filter(|kind| policy(*kind).lists(feed))
     .collect()
 }
+
+/// The published list faces share one selection policy for a profile.
+pub fn is_public_list(kind: u64) -> bool {
+    policy(kind).face == Face::List
+}

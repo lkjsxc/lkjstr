@@ -51,8 +51,52 @@ pub(super) fn extra_filter(store: &Store, query: &super::Query) -> Option<NostrF
     })
 }
 
+/// Bounded NIP-22 root and address scopes in addition to NIP-10's `#e` read.
+/// Each filter has one tag namespace; NIP-01 filters cannot OR `#E` and `#A`.
+pub(super) fn comment_filters(store: &Store, query: &super::Query) -> Vec<NostrFilter> {
+    let Some(target) = query.target.as_deref() else {
+        return Vec::new();
+    };
+    let id = focus(store, target);
+    let root = id
+        .as_deref()
+        .and_then(|id| store.get(id))
+        .and_then(|event| crate::comments::root(store, &event))
+        .or_else(|| id.clone());
+    let mut filters = Vec::new();
+    if let Some(root) = root {
+        let mut filter = NostrFilter {
+            kinds: Some(vec![1111]),
+            limit: Some(200),
+            ..Default::default()
+        };
+        filter.tags.insert("E".into(), vec![root]);
+        filters.push(filter);
+    }
+    let address = address(target)
+        .map(|coordinate| coordinate.to_string())
+        .or_else(|| {
+            id.as_deref()
+                .and_then(|id| store.get(id))
+                .and_then(|event| crate::comments::address(&event))
+        });
+    if let Some(address) = address {
+        let mut filter = NostrFilter {
+            kinds: Some(vec![1111]),
+            limit: Some(200),
+            ..Default::default()
+        };
+        filter.tags.insert("A".into(), vec![address]);
+        filters.push(filter);
+    }
+    filters
+}
+
 /// The note an event answers in a thread: its reply parent, else (outside channels) its root.
-pub(crate) fn parent(event: &NostrEvent) -> Option<String> {
+pub(crate) fn parent(store: &Store, event: &NostrEvent) -> Option<String> {
+    if event.kind == 1111 {
+        return crate::comments::parent(store, event);
+    }
     policy(event.kind)
         .thread_parent
         .then(|| {
@@ -70,21 +114,23 @@ pub(crate) fn parent(event: &NostrEvent) -> Option<String> {
 /// filtering/windowing so hidden parents still contribute to reply depth.
 type Positions = HashMap<String, (&'static str, usize)>;
 pub(super) fn positions(store: &Store, focus: &str) -> Positions {
-    classify(&store.thread(focus), focus).0
+    classify(store, &store.thread(focus), focus).0
 }
-fn classify(events: &[Event], focus: &str) -> (Positions, Vec<String>) {
+fn classify(store: &Store, events: &[Event], focus: &str) -> (Positions, Vec<String>) {
     let mut ancestors = Vec::new();
     let by_id: HashMap<_, _> = events.iter().map(|e| (e.id.as_str(), e)).collect();
     let mut children: HashMap<String, Vec<&str>> = HashMap::new();
     for event in events {
-        if let Some(id) = parent(event) {
+        if let Some(id) = parent(store, event) {
             children.entry(id).or_default().push(&event.id);
         }
     }
     let mut positions = HashMap::from([(focus.to_owned(), ("focus", 0))]);
     let mut current = by_id.get(focus).copied();
     while let Some(event) = current {
-        let Some(id) = parent(event) else { break };
+        let Some(id) = parent(store, event) else {
+            break;
+        };
         if positions.contains_key(&id) {
             break;
         }
@@ -118,7 +164,7 @@ fn classify(events: &[Event], focus: &str) -> (Positions, Vec<String>) {
 /// ID ties. Replies retain the store's timestamp/ID order and existing depths.
 pub(super) fn ordered(store: &Store, focus: &str) -> Vec<Event> {
     let events = store.thread(focus);
-    let (positions, ancestors) = classify(&events, focus);
+    let (positions, ancestors) = classify(store, &events, focus);
     let by_id: HashMap<_, _> = events
         .iter()
         .map(|event| (event.id.as_str(), event))

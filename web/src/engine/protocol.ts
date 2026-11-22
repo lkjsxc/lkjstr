@@ -35,7 +35,7 @@
 /** 13: engine-authorized public rendering snapshots, independent of the protected event store. */
 /** 14: bounded act chains, profile act context and unresolved notification states. */
 /** 15: bounded absolute cache windows and current follow-list provenance. */
-export const PROTOCOL_VERSION = 16;
+export const PROTOCOL_VERSION = 17;
 
 /** Chosen by the interface, unique among its open subscriptions. */
 export type SubId = string;
@@ -130,7 +130,15 @@ export type Query = {
   /** `profile`: which of the person's events follow the header. `posts`: their notes that answer nobody;
    * `replies`: their replies; `reposts`: the notes they reposted (as repost rows); `reactions`: the notes they
    * reacted to, newest reaction first; `media`: their notes with a picture or a video. Absent: notes and replies. */
-  readonly show?: 'posts' | 'replies' | 'reposts' | 'reactions' | 'media';
+  readonly show?:
+    | 'posts'
+    | 'replies'
+    | 'reposts'
+    | 'reactions'
+    | 'media'
+    | 'articles'
+    | 'lists'
+    | 'all';
 };
 
 /** Where a window sits. `top` follows the head of the list: new rows are inserted as they arrive. A key holds
@@ -278,7 +286,37 @@ export type ActRef = {
     readonly set?: string;
   };
 };
+export type GenericRef =
+  | { readonly type: 'event'; readonly id: string; readonly kind?: number }
+  | { readonly type: 'address'; readonly kind: number; readonly author: string; readonly d: string }
+  | { readonly type: 'person'; readonly pubkey: string }
+  | { readonly type: 'topic'; readonly tag: string }
+  | { readonly type: 'link' | 'relay'; readonly url: string };
+export type GenericTagLine = {
+  readonly name: string;
+  readonly text: string;
+  readonly meaning?:
+    | 'event'
+    | 'person'
+    | 'topic'
+    | 'link'
+    | 'relay'
+    | 'id'
+    | 'title'
+    | 'image'
+    | 'summary';
+  readonly ref?: GenericRef;
+};
+export type GenericFace = {
+  readonly type: 'generic';
+  readonly alt?: string;
+  readonly form: 'text' | 'data' | 'empty';
+  readonly tags: readonly GenericTagLine[];
+  readonly moreTags: number;
+};
 export type NoteRow = {
+  readonly face?: GenericFace;
+  readonly copyLink?: string;
   /** The event kind, absent for notes (1) and channel messages (42). */
   readonly eventKind?: number;
   /** Profile Reactions/Reposts only: the selected person's act, which also supplies this row's time. */

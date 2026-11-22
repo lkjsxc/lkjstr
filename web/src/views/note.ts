@@ -9,6 +9,7 @@ import { patchActContext } from './act-context.ts';
 import { linkCards } from './link-cards.ts';
 import { actionRow, reactionChips } from './note-actions.ts';
 import { stableNoteWidths } from './note-fit-geometry.ts';
+import { genericBody } from './note-generic.ts';
 import { hiddenRow, shownLine, warned } from './note-hidden.ts';
 import { mediaGrid } from './note-media.ts';
 import { quoteCard } from './note-quote.ts';
@@ -149,13 +150,16 @@ export function renderNote(row: NoteRow, env: ViewEnv, dated = false): HTMLEleme
   };
   const warningChanged = (open: boolean): void => {
     el.dispatchEvent(new CustomEvent('note-warning-changed', { bubbles: true }));
-    if (open) fold(text);
+    if (open && row.face?.type === 'generic') fitNote(el);
+    else if (open) fold(text);
   };
+  const makeBody = (): HTMLElement =>
+    row.face?.type === 'generic' ? genericBody(row, env) : makeContent();
   const body = look?.compact
     ? compactBody(row, env)
     : row.cw !== undefined
-      ? warned(row, env, covered, makeContent, warningChanged)
-      : makeContent();
+      ? warned(row, env, covered, makeBody, warningChanged)
+      : makeBody();
   const el = h(
     'article',
     {
@@ -175,11 +179,7 @@ export function renderNote(row: NoteRow, env: ViewEnv, dated = false): HTMLEleme
         { class: 'nmain' },
         head(row, env, dated),
         body,
-        row.eventKind !== undefined
-          ? null
-          : look?.compact
-            ? actionRow(row, env, false)
-            : [actionRow(row, env), reactionChips(row, env)],
+        look?.compact ? actionRow(row, env, false) : [actionRow(row, env), reactionChips(row, env)],
       ),
     ),
   );
@@ -236,7 +236,6 @@ export function patchNote(el: HTMLElement, row: NoteRow, env: ViewEnv, dated = f
     drawnBy.set(el, JSON.stringify(row.author));
     el.querySelector(':scope > .nrow > .avb')?.replaceWith(faceButton(row.author, env));
   }
-  if (row.eventKind !== undefined) return;
   // The button that was pressed is drawn again: the keyboard stays on its successor.
   const held = document.activeElement?.closest('.acts, .chips')?.parentElement === main;
   const mark = held ? heldMark(document.activeElement) : '';

@@ -4,6 +4,7 @@ request orchestration, relay scoring and timelines. No browser APIs here."]
 pub mod actions;
 pub mod cache;
 pub mod calendar;
+mod comments;
 pub mod content;
 pub mod kinds;
 pub mod layout;

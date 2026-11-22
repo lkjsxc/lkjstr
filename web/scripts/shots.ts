@@ -12,6 +12,7 @@ import { dmShots } from './shots-dm.ts';
 import { emojiShots } from './shots-emoji.ts';
 import { emojiCollisionShots } from './shots-emoji-collision.ts';
 import { emojiCustomShots } from './shots-emoji-custom.ts';
+import { genericShots } from './shots-generic.ts';
 import { keysShots } from './shots-keys.ts';
 import { looksShots } from './shots-looks.ts';
 import { quoteShots } from './shots-quote.ts';
@@ -137,6 +138,7 @@ try {
               if (await page.evaluate(() => document.documentElement.scrollWidth > innerWidth))
                 throw new Error('horizontal overflow');
             });
+        await genericShots(scene);
         await looksShots(scene, lang === 'ja' ? '統計' : 'Stats');
         await emojiShots(scene);
         await emojiCustomShots(scene);

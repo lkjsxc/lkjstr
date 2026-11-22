@@ -88,7 +88,8 @@ export function planThread(
   }
   const replies = notes.filter((n) => n.thread?.role === 'reply');
   const out: Drawn[] = [...above];
-  if (focus.eventKind === undefined) out.push(part({ key: 'th:say', part: 'say' }));
+  if (focus.eventKind === undefined || focus.eventKind === 30023)
+    out.push(part({ key: 'th:say', part: 'say' }));
   if (!replies.length && o.asking) {
     out.push(part({ key: 'th:wait:1', part: 'skeleton', of: 'reply' }));
     out.push(part({ key: 'th:wait:2', part: 'skeleton', of: 'reply' }));

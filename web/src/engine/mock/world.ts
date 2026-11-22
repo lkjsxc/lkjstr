@@ -1,15 +1,17 @@
-import type { Media, MuteTarget, Segment } from '../protocol.ts';
+import type { GenericFace, Media, MuteTarget, Segment } from '../protocol.ts';
 import { avatar, hueColor, photo } from './art.ts';
 import type { MChannel } from './channels.ts';
 import { CHANNEL_FILLER, CHANNEL_NOTES, CHANNELS } from './fixtures-channels.ts';
+import { addGenericFixtures } from './fixtures-generic.ts';
 import { toneUrl, VIDEO, VIDEO_URL } from './fixtures-media.ts';
 import { FILLER, type MediaSpec, NOTES, type NoteSpec } from './fixtures-notes.ts';
 import { byHandle, EMOJI, FOLLOWING, PEOPLE, type Person } from './people.ts';
 import { collisionChips, initialReactions, type React } from './reactions.ts';
 import { initialRelays } from './relays.ts';
-
 export type MNote = {
   eventKind?: number;
+  face?: GenericFace;
+  copyLink?: string;
   readonly id: string;
   readonly by: Person;
   readonly at: number;
@@ -32,7 +34,6 @@ export type MNote = {
   /** A channel message (kind 42): the channel's id. */
   readonly channel?: string;
 };
-
 const MIN = 60_000;
 /** A made-up event id: 64 hex characters from a small generator seeded by `n` (distinct for distinct `n`). */
 export const idOf = (n: number): string => {
@@ -225,8 +226,8 @@ export function createWorld(now: number) {
       author: { ...historical.by.author, name: 'AlexandriaRose', nip05: undefined },
     },
   });
+  addGenericFixtures(base, MIN, idOf, make, add);
   notes.sort((a, b) => b.at - a.at);
-  // Fixture counts have no observed relay truncation.
 
   const state = {
     notificationSeen: base - 60 * MIN,
@@ -272,7 +273,6 @@ export function createWorld(now: number) {
     state,
     repliesTo: (id: string): MNote[] =>
       notes.filter((n) => n.re === id).sort((a, b) => a.at - b.at),
-    /** A note that arrives now (live arrivals, or the reader's own post). */
     arrive(by: Person, text: string, at: number, extra: Partial<MNote> = {}): MNote {
       const n: MNote = {
         ...make({ by: by.handle, ago: 0, text }, idOf(5000 + serial++), at),

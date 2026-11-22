@@ -1,9 +1,12 @@
 # Engine proposals
 ## Purpose
-
 Additive protocol ledger under the 2026-11-16 owner delegation. See status.md and parity.md for current behavior and limits.
-See [protocol 16](engine-proposals-emoji.md) for new fields and [history](engine-proposals-history.md) for earlier changes.
-
+See [protocol 16](engine-proposals-emoji.md) and [history](engine-proposals-history.md).
+- Protocol 17 (S4): `NoteRow.face?` provides bounded public `{type:'generic', alt?, form, tags, moreTags}`; typed
+  `GenericTagLine.ref?` carries event/address/person/topic/link/relay identities. Only policy-authorized public rows project
+  it.
+- Protocol 17 (S4): `NoteRow.copyLink?` carries the canonical path `/n/nevent` (kind/author) or `/a/naddr` (exact address); `bech32` and Copy ID are unchanged.
+- Protocol 17 (S4): `Query.show` adds profile `articles`, `lists`, `all`; signed-in and signed-out public snapshot boundaries and source filters remain.
 ## Protocol 6 engine additions (2026-11-16, owner authorized)
 - `ToEngine.dm.open {sub,query:DmQuery}` adds an explicit private subscription.
 - `ToEngine.dm.close {sub}` releases a private subscription and its wants.
@@ -27,7 +30,6 @@ See [protocol 16](engine-proposals-emoji.md) for new fields and [history](engine
 - `Result.encryptedKey?` carries only the explicitly requested encrypted backup.
 - `Account.encrypted?` identifies ciphertext-backed local storage.
 - `Account.locked?` identifies an account requiring session unlock.
-
 ## Protocol 7 lifetime additions (2026-11-16, owner authorized)
 - `ToEngine.dm.open.visible?` supplies initial private visibility atomically; omission keeps the existing visible default.
 - `ToEngine.upload.cancel {req}` cancels only that client's pending upload request and its authorization, HTTP and processing waits.
@@ -35,9 +37,7 @@ See [protocol 16](engine-proposals-emoji.md) for new fields and [history](engine
 - `FromEngine.sign.actionReq?` identifies the originating upload so cancelled authorization cannot start or consume a later signer request.
 - `Engine.dm.open(query,receive,{visible?})` supplies the optional initial private visibility through the existing client API.
 - `ActWatch.uploadSignal?` connects the existing attachment removal/clear/dispose controls to upload cancellation.
-
 ## Protocol 8 interface additions (2026-11-16, owner authorized)
-
 - `Account.inbox?` exposes the verified kind-10050 list; absent means unknown, and an empty array means no usable advertised inbox.
 - `DmQuery.participants?` asks the engine to canonicalize a new conversation including the account, without frontend event hashing.
 - `DmQuery.unreadOnly?` asks for counts without conversation previews, message bodies or people; the frame gates this on protocol 8.

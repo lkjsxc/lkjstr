@@ -1,5 +1,4 @@
 # Status
-
 ## Purpose
 
 Current limits: [parity.md](parity.md), [engine-performance.md](engine-performance.md). [Public deep links](public-deep-links.md) work signed out.
@@ -9,7 +8,8 @@ Claude owns the interface. Account-safe and A1/A2 (972ef776) are live. S2/E7 sup
 ## Kind capabilities (2026-11-22)
 
 N1 centralizes kind policy and public ID/address access. Rows and quotes carry their kind; existing feeds and counts stay unchanged.
-Private and ephemeral events stay out. Other kinds have no actions; richer faces and tabs remain in [interface-view.md](interface-view.md).
+Private and ephemeral events stay out. S4 N2/N7 builds a bounded generic face, canonical links and profile
+Articles/Lists/All, pending its independent visual/real gates.
 
 ## Specified keys and messages (2026-11-16)
 

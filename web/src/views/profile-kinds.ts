@@ -7,7 +7,16 @@ import { t } from '../shared/i18n.ts';
 import { rich } from './can.ts';
 import type { ViewEnv } from './registry.ts';
 
-export const PROFILE_KINDS = ['posts', 'replies', 'reposts', 'reactions', 'media'] as const;
+export const PROFILE_KINDS = [
+  'posts',
+  'replies',
+  'reposts',
+  'reactions',
+  'media',
+  'articles',
+  'lists',
+  'all',
+] as const;
 export type ProfileKind = (typeof PROFILE_KINDS)[number];
 const kindOf = (show: string | undefined): ProfileKind =>
   PROFILE_KINDS.find((k) => k === show) ?? 'posts';

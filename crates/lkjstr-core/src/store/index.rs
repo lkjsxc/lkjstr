@@ -29,6 +29,14 @@ impl Store {
                 list.push(event.id.clone());
             }
         }
+        if event.kind == 1111 {
+            for address in tag_values(&event, "a") {
+                let list = self.by_comment_address.entry(address).or_default();
+                if !list.contains(&event.id) {
+                    list.push(event.id.clone());
+                }
+            }
+        }
         self.events.insert(event.id.clone(), event);
     }
 
@@ -79,6 +87,16 @@ impl Store {
                 list.retain(|item| item != id);
                 if list.is_empty() {
                     self.by_tag_e.remove(&target);
+                }
+            }
+        }
+        if event.kind == 1111 {
+            for address in tag_values(&event, "a") {
+                if let Some(list) = self.by_comment_address.get_mut(&address) {
+                    list.retain(|comment| comment != id);
+                    if list.is_empty() {
+                        self.by_comment_address.remove(&address);
+                    }
                 }
             }
         }

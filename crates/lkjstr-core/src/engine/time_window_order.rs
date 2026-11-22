@@ -29,6 +29,11 @@ impl<'a> Order<'a> {
     }
 
     pub(super) fn at(&self, event: &Event) -> u64 {
+        if self.query.source == crate::engine::protocol::Source::Profile
+            && self.query.filters.show.as_deref() == Some("all")
+        {
+            return event.created_at;
+        }
         self.reposts(&event.id)
             .map(|repost| repost.created_at)
             .max()
@@ -36,6 +41,14 @@ impl<'a> Order<'a> {
     }
 
     pub(in crate::engine) fn project(&self, row: &mut rows::Row) {
+        if self.query.source == crate::engine::protocol::Source::Profile
+            && self.query.filters.show.as_deref() == Some("all")
+        {
+            row.reposted_at = None;
+            row.reposts.clear();
+            row.window_reading_at = Some(row.created_at);
+            return;
+        }
         row.reposted_at = None;
         row.reposts = self
             .reposts(&row.id)

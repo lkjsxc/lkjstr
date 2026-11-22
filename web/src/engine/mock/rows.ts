@@ -59,6 +59,8 @@ export function noteRow(w: World, n: MNote, o: RowOpts): NoteRow {
     previews: w.linkPreviews ? previewFixtures(n.segments) : undefined,
     kind: 'note',
     eventKind: n.eventKind,
+    face: n.face,
+    copyLink: n.copyLink,
     key: n.id,
     id: n.id,
     bech32: `note1${n.id.slice(0, 58)}`,

@@ -43,6 +43,31 @@ export async function deepLinkChecks({
   const latest = await article(1700000001, 'Latest article revision', identifier);
   const otherId = await article(1700000002, 'Other identifier', 'other');
   const otherAuthorArticle = await article(1700000003, 'Other author', identifier, otherAuthor);
+  const genericId = 'deep-link:session';
+  const session = (created_at, content) =>
+    sign({
+      kind: 30311,
+      pubkey,
+      created_at,
+      content,
+      tags: [
+        ['d', genericId],
+        ['alt', 'Public session'],
+        ['t', 'nostr'],
+      ],
+    });
+  const oldSession = await session(1700000000, 'Previous session edition');
+  const liveSession = await session(1700000001, 'Current public session edition');
+  const publicAct = await sign({
+    kind: 7,
+    pubkey,
+    created_at: 1700000003,
+    content: '+',
+    tags: [
+      ['e', id],
+      ['k', '1'],
+    ],
+  });
   const channel = await sign({
     kind: 40,
     pubkey,
@@ -57,7 +82,18 @@ export async function deepLinkChecks({
     content: 'Deep link fixture message',
     tags: [['e', channel.id, relayUrl, 'root']],
   });
-  for (const event of [older, latest, otherId, otherAuthorArticle, channel, message]) add(event);
+  for (const event of [
+    older,
+    latest,
+    otherId,
+    otherAuthorArticle,
+    channel,
+    message,
+    oldSession,
+    liveSession,
+    publicAct,
+  ])
+    add(event);
 
   const note = bech32('note', id);
   const nevent = (id, kind) =>
@@ -118,6 +154,19 @@ export async function deepLinkChecks({
     ['nprofile', `/p/${nprofile}`, 'profile', profile],
     ['naddr', `/a/${naddr}`, 'thread', noteRow(latest.id)],
     ['article ID', `/n/${nevent(latest.id, 30023)}`, 'thread', noteRow(latest.id)],
+    [
+      'generic public event ID',
+      `/n/${nevent(liveSession.id, 30311)}`,
+      'thread',
+      noteRow(liveSession.id),
+    ],
+    [
+      'generic public naddr',
+      `/a/${articlePointer(pubkey, genericId, 30311)}`,
+      'thread',
+      noteRow(liveSession.id),
+    ],
+    ['public act ID', `/n/${nevent(publicAct.id, 7)}`, 'thread', noteRow(publicAct.id)],
   ]) {
     await visit(
       path,
@@ -139,6 +188,10 @@ export async function deepLinkChecks({
           tabs,
           'reload restores exactly one opened tab',
         );
+        if (label === 'generic public event ID' || label === 'generic public naddr') {
+          await page.locator(`${noteRow(liveSession.id)} .generic-face`).waitFor();
+          assert.equal(await page.locator(`${noteRow(oldSession.id)}`).count(), 0);
+        }
         if (label === 'naddr') {
           for (const e of [older, otherId, otherAuthorArticle])
             assert.equal(await page.locator(noteRow(e.id)).count(), 0);

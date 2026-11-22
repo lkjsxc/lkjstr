@@ -91,11 +91,15 @@ impl Store {
             if !seen.insert(id.clone()) {
                 continue;
             }
-            if let Some(event) = self.get(&id).filter(|event| {
-                policy(event.kind).reply || (id == root && policy(event.kind).openable)
-            }) {
+            if let Some(event) = self.get(&id).filter(|event| policy(event.kind).openable) {
                 queue.extend(
                     [
+                        (event.kind == 1111)
+                            .then(|| crate::comments::parent(self, &event))
+                            .flatten(),
+                        (event.kind == 1111)
+                            .then(|| crate::comments::root(self, &event))
+                            .flatten(),
                         policy(event.kind)
                             .thread_parent
                             .then(|| reply_parent(&event))
@@ -111,11 +115,25 @@ impl Store {
                 out.push(event);
             }
             for child in self.by_tag_e.get(&id).into_iter().flatten() {
-                if self
-                    .get(child)
-                    .is_some_and(|event| policy(event.kind).reply && is_reply_to(&event, &id))
-                {
+                if self.get(child).is_some_and(|event| {
+                    policy(event.kind).reply && is_reply_to(&event, &id)
+                        || event.kind == 1111
+                            && crate::comments::parent(self, &event).as_deref() == Some(id.as_str())
+                }) {
                     queue.push_back(child.clone());
+                }
+            }
+            // Address-scoped NIP-22 comments are indexed by the exact coordinate.
+            if let Some(address) = self
+                .get(&id)
+                .and_then(|event| crate::comments::address(&event))
+            {
+                for child in self.by_comment_address.get(&address).into_iter().flatten() {
+                    if self.get(child).is_some_and(|event| {
+                        crate::comments::parent(self, &event).as_deref() == Some(id.as_str())
+                    }) {
+                        queue.push_back(child.clone());
+                    }
                 }
             }
         }

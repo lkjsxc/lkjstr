@@ -107,10 +107,13 @@ pub(super) fn publish(what: P, engine: &Engine, account: &str) -> Result<p::Acti
             let mut ids = if matches!(of.as_deref(), Some("reaction" | "repost")) {
                 let kind = if of.as_deref() == Some("reaction") {
                     7
-                } else if engine.store.get(&id).is_some_and(|e| e.kind == 42) {
-                    16
                 } else {
-                    6
+                    engine
+                        .store
+                        .get(&id)
+                        .as_deref()
+                        .map(lkjstr_protocol::repost_kind)
+                        .unwrap_or(6)
                 };
                 engine
                     .store

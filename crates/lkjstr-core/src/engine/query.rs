@@ -1,4 +1,3 @@
-//! Source selection and relay filters share one policy.
 use super::protocol::{Query, Source};
 pub(super) use super::query_predicates::{matches_extra, signed_out};
 use crate::{
@@ -49,14 +48,21 @@ pub fn filter(store: &Store, q: &Query) -> NostrFilter {
             f.kinds = Some(match q.filters.show.as_deref() {
                 Some("reposts") => feed_kinds(Feed::ProfileReposts),
                 Some("reactions") => feed_kinds(Feed::ProfileReactions),
+                Some("articles") => vec![30023],
+                Some("lists") | Some("all") => vec![],
                 _ => feed_kinds(Feed::ProfilePosts),
             });
+            if matches!(q.filters.show.as_deref(), Some("lists" | "all")) {
+                f.kinds = None;
+            }
         }
         Source::Thread => {
             if let Some(address) = super::thread::address(&target) {
                 return super::thread::address_filter(address);
             }
-            f.kinds = Some(feed_kinds(Feed::ThreadReplies));
+            let mut kinds = feed_kinds(Feed::ThreadReplies);
+            kinds.push(1111);
+            f.kinds = Some(kinds);
             f.tags.insert("e".into(), vec![target]);
         }
         Source::Notifications => {
@@ -108,7 +114,6 @@ pub fn filter(store: &Store, q: &Query) -> NostrFilter {
 pub fn events(store: &Store, q: &Query) -> Vec<Event> {
     select(store, q, true)
 }
-/// The final activity projection validates receipt links before choosing its representative.
 pub(super) fn select(store: &Store, q: &Query, collapse_acts: bool) -> Vec<Event> {
     if signed_out(q) {
         return vec![];
@@ -172,10 +177,15 @@ pub(super) fn select(store: &Store, q: &Query, collapse_acts: bool) -> Vec<Event
         events.extend(self::events(store, &news));
         events.sort_by(|a, b| (b.created_at, &b.id).cmp(&(a.created_at, &a.id)));
     }
+    if q.source == Source::Profile && q.filters.show.as_deref() == Some("all") {
+        return events
+            .into_iter()
+            .filter(|e| policy(e.kind).openable)
+            .collect();
+    }
     if collapse_acts && super::acts::activity(q) {
         return super::acts::representatives(store, events);
     }
-    // Several repost wrappers become one stable target row.
     let mut seen = std::collections::HashSet::new();
     events
         .into_iter()
@@ -212,29 +222,4 @@ pub(super) fn select(store: &Store, q: &Query, collapse_acts: bool) -> Vec<Event
 pub(super) use super::query_hidden::matches_note;
 pub use super::query_hidden::{hidden, hidden_with_lists};
 
-/// Shared membership predicate for ordinary windows and the incremental time index.
-pub(super) fn accepts(
-    store: &Store,
-    q: &Query,
-    e: &lkjstr_protocol::NostrEvent,
-    f: &NostrFilter,
-    authors: &Option<Vec<String>>,
-) -> bool {
-    policy(e.kind).openable
-        && (q.source != Source::Channel
-            || lkjstr_protocol::channel_id(e).as_ref() == q.target.as_ref())
-        && authors.as_ref().is_none_or(|a| a.contains(&e.pubkey))
-        && (q.source == Source::Bookmarks || lkjstr_protocol::matches_filter(e, f))
-        && if q.source == Source::Profile
-            && matches!(q.filters.show.as_deref(), Some("reposts" | "reactions"))
-        {
-            super::acts::matches_terminal(store, e, q)
-        } else if e.kind == 6 && q.source != Source::Notifications {
-            q.filters.reposts != Some(false)
-                && super::acts::target(e)
-                    .and_then(|id| store.get(&id))
-                    .is_none_or(|target| matches_note(store, q, &target))
-        } else {
-            matches_extra(e, q)
-        }
-}
+pub(super) use super::query_predicates::accepts;

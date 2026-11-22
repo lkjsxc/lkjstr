@@ -56,7 +56,7 @@ export function mountThread(o: {
   };
   o.el.addEventListener('thread-open', opened);
   const reply = (row: NoteRow): boolean => {
-    if (row.eventKind !== undefined) return true;
+    if (row.eventKind !== undefined && row.eventKind !== 30023) return true;
     if (row.id === focus?.id) toField();
     else env.open('thread', { id: row.id, title: plainName(row.author), reply: true });
     return true;
@@ -85,7 +85,7 @@ export function mountThread(o: {
       clearTimeout(timer);
       if (soonest < Number.POSITIVE_INFINITY) timer = setTimeout(o.redraw, soonest + 50);
       focus = rows.find((r): r is NoteRow => r.kind === 'note' && r.thread?.role === 'focus');
-      if (focus && focus.eventKind === undefined) {
+      if (focus && (focus.eventKind === undefined || focus.eventKind === 30023)) {
         const name = plainName(focus.author);
         closeSay ??= mountCompose(say, { ...env, instance: `${env.instance}:say` }, undefined, {
           id: focus.id,
