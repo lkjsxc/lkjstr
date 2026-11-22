@@ -1129,6 +1129,17 @@ export type Timeline = {
   }[];
   readonly supported: boolean;
   readonly older: boolean;
+  /** Local days of the engine's zone, newest first: one part per local day per UTC month, so a day that crosses a
+   * UTC month has two parts with the same `at`, the newer first. `offset` is the ordinal of the part's newest note
+   * in `month`, `count` its notes. Absent past 400 occupied days (docs/interface-time.md). */
+  readonly days?: readonly {
+    readonly at: Millis;
+    readonly month: Millis;
+    readonly offset: number;
+    readonly count: number;
+  }[];
+  /** The IANA zone `days` are in; the interface ignores them unless it is the page's own. */
+  readonly zone?: string;
 };
 export type FromEngine =
   | PublicCacheReconcile

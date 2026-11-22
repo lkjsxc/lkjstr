@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Record the kind and emoji fields added together in protocol 16. See
+Record the fields added in protocol 16: kinds and emoji, then the time rail's local days. See
 [emoji-sets.md](emoji-sets.md) for the collision checks.
 
 - `NoteRow.eventKind?`: public kind other than notes (1) and channel messages (42).
@@ -30,3 +30,8 @@ pictures never consult the reader's list. No new network work or E6 preloading
 is introduced. Public snapshots retain these additive public view fields;
 private draft storage retains code and picture only on the encrypted private path. Snapshots without
 the required emoji source are discarded; other public snapshots retain their identity.
+
+## Time rail days
+
+- `Timeline.days?: {at,month,offset,count}[]` and `Timeline.zone?` give the Worker's local day parts newest first, left
+  out past 400 occupied days ([interface-time.md](interface-time.md#engine-addition-additive-one-line-in-engine-proposalsmd)).

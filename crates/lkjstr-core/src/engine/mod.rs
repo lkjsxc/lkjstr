@@ -128,6 +128,8 @@ pub struct Engine {
     pub read_contexts: cache::ReadContexts,
     /// False when persisted history extends beyond the hydrated store: no partial time rail.
     pub cached_history_complete: bool,
+    /// The page's local days for the time rail; UTC until the Worker sets the browser's own.
+    pub calendar: Box<dyn crate::calendar::Calendar>,
     pub signed_out_global_filter: bool,
     pub pending: crate::persistence::PendingEvents,
     pub network: Network,
@@ -190,6 +192,7 @@ impl Engine {
             rejected: 0,
             dropped: 0,
             delivery_sequence: 0,
+            calendar: Box::new(crate::calendar::Utc),
         }
     }
     pub fn drain(&mut self) -> Vec<Output> {

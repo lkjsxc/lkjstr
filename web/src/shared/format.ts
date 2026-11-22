@@ -4,6 +4,13 @@ import type { Lang } from './i18n.ts';
 
 const pad = (n: number): string => String(n).padStart(2, '0');
 
+/** Start of the local day holding `ms` (`new Date(y, m, d)`: a skipped midnight is the first instant after it). */
+export function localDay(ms: number): number {
+  const d = new Date(ms);
+  return Math.max(0, new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime());
+}
+/** The page's IANA zone: the engine's local days count only when they are in it. */
+export const localZone = (): string => Intl.DateTimeFormat().resolvedOptions().timeZone;
 /** Local calendar day, `yyyy/mm/dd`. */
 export function dayOf(ms: number): string {
   const d = new Date(ms);

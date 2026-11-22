@@ -24,6 +24,8 @@ use account_boot::load;
 mod account_failure;
 #[path = "worker_account_store.rs"]
 mod account_store;
+#[path = "worker_calendar.rs"]
+mod calendar;
 #[path = "worker_defaults.rs"]
 mod defaults;
 use defaults::initial_engine;

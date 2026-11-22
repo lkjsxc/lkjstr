@@ -1,6 +1,8 @@
 //! Incremental cache-only time index. One 256-event slice per client tick, round robin across
 //! at most 128 subscriptions. Current/prior key maps and the ordinal lookup each
-//! retain at most one store-capacity snapshot; close releases all three.
+//! retain at most one store-capacity snapshot; close releases all three. Local days
+//! (timeline_days.rs) come from the same scan.
+use super::timeline_days::Days;
 use super::{Output, Session};
 use crate::engine::{Engine, protocol::Source, query};
 use serde_json::{Value, json};
@@ -20,6 +22,7 @@ pub(super) struct Index {
     last: Option<Value>,
     newest: Option<u64>,
     oldest: u64,
+    days: Days,
 }
 impl Index {
     pub(super) fn key(&self, month: u64, offset: usize) -> Option<String> {
@@ -86,10 +89,12 @@ impl Session {
         };
         let revision = e.store.revision();
         let month = month_start(now / 1000);
+        let (zone, today) = (e.calendar.zone(), e.calendar.day_start(now));
         let index = self.timelines.entry(sub.clone()).or_default();
         if (index.done && index.revision != revision)
             || e.store.snapshot_revision() > index.revision
             || index.month != month
+            || index.days.stale(&zone, today)
             || (index.supported && !eligible(&q, e))
         {
             let last = index.last.take();
@@ -105,6 +110,7 @@ impl Session {
                 started: now,
                 supported: eligible(&q, e),
                 last,
+                days: Days::new(zone, today),
                 ..Default::default()
             };
             index.done = !index.supported;
@@ -142,7 +148,9 @@ impl Session {
                 let at = month_start(event.created_at.min(now / 1000));
                 let keys = index.keys.entry(at).or_default();
                 index.positions.insert(event.id.clone(), (at, keys.len()));
+                let offset = keys.len();
                 keys.push(event.id.clone());
+                index.days.count(&*e.calendar, time.min(now), at, offset);
             }
             if batch.len() < 256 {
                 index.done = true;
@@ -183,6 +191,9 @@ impl Session {
         let mut value = json!({"newest":index.newest.unwrap_or(0),"oldest":index.oldest,"supported":index.supported,"months":if index.supported {months} else {vec![]},"positions":positions,"older":older});
         if let Some((Some(key), _, _)) = self.windows.get(sub) {
             value["anchor"] = json!(key);
+        }
+        if index.supported {
+            index.days.fields(&mut value);
         }
         if index.last.as_ref() == Some(&value) {
             return vec![];
