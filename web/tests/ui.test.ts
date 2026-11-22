@@ -43,9 +43,9 @@ describe('layout', () => {
     expect(shape(homePreset(1440))).toEqual(three);
     expect(shape(homePreset(1200))).toEqual(three);
     expect(shape(homePreset(1024))).toEqual({ row: ['home|their-home~lkjsxc', RIGHT] });
-    expect(shape(homePreset(390))).toBe(
-      'home|their-home~lkjsxc|docs|notifications|compose|account|settings',
-    );
+    expect(shape(homePreset(390))).toEqual({
+      col: ['home~news|their-home~lkjsxc|docs|account|settings', 'compose'],
+    });
     expect(shape(presetOf(5))).toBe('new');
     const known = new Set(VIEWS.map((v) => v.id));
     expect(L.views(homePreset(1440)).filter((v) => !known.has(kindOf(v)))).toEqual([]);

@@ -91,10 +91,12 @@ export function filterQuery(f: Filter, rich = true): Partial<Query> {
   if (rich && f.news) out.notifications = true;
   return out;
 }
+/** Whether the filter leaves anything out. Notifications flowing in add to a timeline and narrow nothing: a Home that
+ * shows them (the phone's, from the start) is not drawn as filtered, and Clear keeps them. */
 export const filterActive = (f: Filter): boolean =>
   f.replies === false ||
   f.reposts === false ||
-  Boolean(f.media || f.start || f.end || f.news || f.people?.length);
+  Boolean(f.media || f.start || f.end || f.people?.length);
 /** Whether the feed is changed at all: then the row is in view whether it was asked for or not. */
 export const filterNarrows = (f: Filter): boolean => filterActive(f) || Boolean(f.text?.trim());
 

@@ -6,12 +6,13 @@ import { setLang } from '../src/shared/i18n.ts';
 import { adoptDefault, migrateStorage } from '../src/shared/migrate.ts';
 import { kv } from '../src/shared/storage.ts';
 import { DOC_PAGES } from '../src/views/docs.ts';
+import { filterQuery } from '../src/views/filter-bar.ts';
 import { setServed } from '../src/views/registry.ts';
 import { CHOICES } from '../src/wm/choices.ts';
 import { parseClosed } from '../src/wm/closed.ts';
 import * as L from '../src/wm/layout.ts';
 import { parseLayout } from '../src/wm/layout-parse.ts';
-import { homePreset, LKJSXC, LKJSXC_HOME, startState } from '../src/wm/presets.ts';
+import { homePreset, LKJSXC, LKJSXC_HOME, PHONE_HOME, startState } from '../src/wm/presets.ts';
 import { tabHits } from '../src/wm/tab-search.ts';
 
 afterEach(() => {
@@ -61,10 +62,15 @@ describe('the default arrangement', () => {
         expect(tile.tabs.slice(0, 2), `${width} ${family}`).toEqual(['docs', 'notifications']);
         expect(tile.active, `${width} ${family}`).toBe('docs');
       }
-      // One tile on a phone: a visitor starts on Documentation, a reader on Home.
-      expect((homePreset(390, family) as L.PaneNode).active).toBe(
-        family === 'guest' ? 'docs' : 'home',
-      );
+      // A phone (owner, 2026-11-22): one tile over Post, collapsed to its bar at the bottom, and no Notifications
+      // tab, since they flow into the reader's Home. A visitor starts on Documentation, a reader on Home.
+      const phone = homePreset(390, family) as L.SplitNode;
+      const [top, post] = L.panes(phone);
+      expect(phone.dir).toBe('col');
+      expect(top?.active).toBe(family === 'guest' ? 'docs' : PHONE_HOME);
+      expect(post).toMatchObject({ tabs: ['compose'], zoom: 'min' });
+      expect(L.views(phone)).not.toContain('notifications');
+      expect(parseLayout(JSON.parse(JSON.stringify(phone)))).toEqual(phone);
     }
     // A Docs tab with nothing stored opens on its first page, which says what lkjstr is.
     expect(DOC_PAGES[0]?.id).toBe('what');
@@ -74,8 +80,8 @@ describe('the default arrangement', () => {
       for (const width of [1440, 1024, 390]) {
         const root = homePreset(width, family);
         expect(L.views(root), `${width} ${family}`).not.toContain('global');
-        expect(L.paneOfView(root, 'home')?.tabs.slice(0, 2), `${width} ${family}`).toEqual([
-          'home',
+        expect(L.panes(root)[0]?.tabs.slice(0, 2), `${width} ${family}`).toEqual([
+          width < 760 && family === 'main' ? PHONE_HOME : 'home',
           LKJSXC_HOME,
         ]);
       }
@@ -85,6 +91,9 @@ describe('the default arrangement', () => {
     expect(LKJSXC).toMatch(/^[0-9a-f]{64}$/);
     expect(startState(LKJSXC_HOME)).toEqual({ pubkey: LKJSXC, title: "lkjsxc's Home" });
     expect(startState('their-home')).toBeUndefined();
+    // The phone's Home starts with notifications flowing in, which is its filter's own option.
+    expect(startState(PHONE_HOME)).toEqual({ filter: { news: true } });
+    expect(filterQuery({ news: true })).toEqual({ notifications: true });
   });
 });
 

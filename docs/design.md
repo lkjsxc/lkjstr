@@ -95,7 +95,10 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
 - The default layout, also what a reset gives: Home at the left (lkjsxc's Home behind it: the people the maker of
   lkjstr follows, in Global's old place), in the middle Documentation open at what lkjstr is, in front of
   Notifications, and at the right Post over Accounts and Settings in equal halves; widths 40/30/30. Under 1200px
-  the middle tile joins the lower right one; under 760px one tile. Views respond to their tile (container queries).
+  the middle tile joins the lower right one. Under 760px at first open (a phone; owner, 2026-11-22) one tile holds
+  the rest over Post collapsed to its bar at the bottom (60/40 once opened), and there is no Notifications tab: the
+  reader's Home starts with notifications flowing in (its filter's Notifications: Show; that narrows nothing, so
+  it neither marks the filter as set nor goes with Clear). Views respond to their tile (container queries).
 - A saved arrangement is the reader's until they reset it (Settings: Layout); one never rearranged takes up a
   new default once.
   Reset closes the tabs the default lacks the ordinary way, so what they held

@@ -16,21 +16,37 @@ export const LKJSXC = '040abd2000fac6d8e996693064edb89d58e132dfe553d295e36dff829
 /** The default's tab of lkjsxc's Home: the notes of the people lkjsxc follows. An id of its own, so a reset gives it
  * back even beside a Their Home the reader opened for someone else. */
 export const LKJSXC_HOME = 'their-home~lkjsxc';
+/** The reader's Home in the phone default. A phone has no Notifications tab, so notifications flow into this Home from
+ * the start (its filter's "Notifications: Show"; owner, 2026-11-22). An id of its own, so a reset gives it back so. */
+export const PHONE_HOME = 'home~news';
 /** What a tab of a default layout holds before anything is stored for it (own-views.ts puts it there). */
-export const startState = (tab: string): { pubkey: string; title: string } | undefined =>
-  tab === LKJSXC_HOME ? { pubkey: LKJSXC, title: t('home.theirs', { name: 'lkjsxc' }) } : undefined;
+export const startState = (tab: string): Record<string, unknown> | undefined =>
+  tab === LKJSXC_HOME
+    ? { pubkey: LKJSXC, title: t('home.theirs', { name: 'lkjsxc' }) }
+    : tab === PHONE_HOME
+      ? { filter: { news: true } }
+      : undefined;
 
 /** Workspace 1, for a visitor and a reader alike: at the left Home with lkjsxc's Home behind it; in the middle
  * Documentation, open at what lkjstr is, in front of Notifications, so that is read first; at the right the composer
  * over Accounts and Settings, in equal halves. A visitor, whose Home is empty, starts on lkjsxc's. Under 1200px the
- * middle tile joins the lower right one; under 760px everything is one tile, where a visitor starts on
- * Documentation and a reader on Home. */
+ * middle tile joins the lower right one. Under 760px (owner, 2026-11-22) one tile holds the rest, over the composer
+ * collapsed to its bar at the bottom; there is no Notifications tab, since they flow into the reader's Home, and a
+ * visitor starts on Documentation, a reader on Home. */
 export function homePreset(width = globalThis.innerWidth || 1440, family = FAMILY): LayoutNode {
   const guest = family === GUEST;
   const read = pane(['home', LKJSXC_HOME], guest ? LKJSXC_HOME : 'home');
   const news = ['docs', 'notifications'];
   const own = ['account', 'settings'];
-  if (width < 760) return pane([...read.tabs, ...news, 'compose', ...own], guest ? 'docs' : 'home');
+  if (width < 760) {
+    const home = guest ? 'home' : PHONE_HOME;
+    const post: LayoutNode = { ...pane(['compose']), zoom: 'min' };
+    return split(
+      'col',
+      [pane([home, LKJSXC_HOME, 'docs', ...own], guest ? 'docs' : home), post],
+      [0.6, 0.4],
+    );
+  }
   if (width < 1200)
     return split(
       'row',

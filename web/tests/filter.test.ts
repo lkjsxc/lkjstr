@@ -56,6 +56,9 @@ describe('the filter of a feed', () => {
     expect(filterNarrows({ text: 'x' })).toBe(true);
     expect(filterNarrows({ shown: true, open: true, text: ' ' })).toBe(false);
     expect(filterActive({ people: ['aoi'] })).toBe(true);
+    // Notifications flowing in leave nothing out.
+    expect(filterActive({ news: true })).toBe(false);
+    expect(filterNarrows({ news: true })).toBe(false);
   });
 });
 

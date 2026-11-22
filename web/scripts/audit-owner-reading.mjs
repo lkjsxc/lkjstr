@@ -58,7 +58,12 @@ export async function auditReading({ page, find, fact, view, peopleToken, messag
       .getByRole('button', { name: 'Show', exact: true })
       .getAttribute('aria-pressed')) === 'true',
   );
-  await global.locator('.rclear').click();
+  // Notifications flowing in narrow nothing, so Clear does not take them back: the row's own Hide does.
+  await global
+    .locator('.rpanel .prow')
+    .last()
+    .getByRole('button', { name: 'Hide', exact: true })
+    .click();
   await global.locator('.note').first().waitFor();
   const first = global.locator('.note').first();
   const actions = await first

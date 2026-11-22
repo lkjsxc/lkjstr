@@ -71,12 +71,14 @@ export function createOwnViews(
     titles.delete(tab);
     return !state || restoreViewState(instance(tab), state);
   };
-  /** A default's tab that names what it shows (lkjsxc's Home) holds it before it is first drawn or listed. */
+  /** A default's tab that starts with something of its own (lkjsxc's Home, the phone's Home with notifications)
+   * holds it before it is first drawn or listed; what the reader changed since stays as they left it. */
   const seed = (tab: string): void => {
     const start = startState(tab);
     if (!start) return;
-    const held = loadViewState<{ pubkey?: string }>(instance(tab));
-    if (!held.pubkey) saveViewState(instance(tab), { ...held, ...start });
+    const held = loadViewState<Record<string, unknown>>(instance(tab));
+    if (Object.keys(start).some((key) => held[key] === undefined))
+      saveViewState(instance(tab), { ...start, ...held });
   };
   const unmount = (tab: string): void => {
     mounts.get(tab)?.dispose(); // a view writes what it still held (its reading position) as it goes

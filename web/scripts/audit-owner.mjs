@@ -100,7 +100,8 @@ export async function auditOwner({
       await fact(
         6,
         'visitor-layout',
-        (returning || (await page.locator('.pane').count()) === (width === 390 ? 1 : 4)) &&
+        // A phone: one tile over Post collapsed at the bottom (owner, 2026-11-22).
+        (returning || (await page.locator('.pane').count()) === (width === 390 ? 2 : 4)) &&
           (await page.locator('.tab').first().getAttribute('data-view')) !== 'write',
       );
       await find('Accounts', 'account');
@@ -175,13 +176,19 @@ export async function auditOwner({
       const settings = view('settings');
       await settings.getByLabel('Tab width', { exact: true }).fill('125');
       await settings.getByLabel('Tab width', { exact: true }).press('Tab');
-      const sizes = await page
-        .locator('.tab')
-        .evaluateAll((es) => es.map((e) => e.getBoundingClientRect().width));
+      // One width for every tab of a bar; on a phone a full bar narrows its own tabs alike.
+      const bars = await page
+        .locator('.tabrow')
+        .evaluateAll((rows) =>
+          rows.map((row) =>
+            [...row.querySelectorAll('.tab')].map((e) => e.getBoundingClientRect().width),
+          ),
+        );
       await fact(
         21,
         'fixed-width',
-        sizes.every((w) => w > 0 && Math.abs(w - sizes[0]) < 2),
+        bars.every((sizes) => sizes.every((w) => w > 0 && Math.abs(w - sizes[0]) < 2)) &&
+          bars.some((sizes) => sizes.length > 1),
       );
       await fact(
         32,

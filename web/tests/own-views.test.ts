@@ -3,7 +3,7 @@ import { setLang } from '../src/shared/i18n.ts';
 import { createSignal } from '../src/shared/signal.ts';
 import { loadViewState, saveViewState } from '../src/shared/view-state.ts';
 import { type BaseEnv, createOwnViews, type OwnViews } from '../src/wm/own-views.ts';
-import { LKJSXC, LKJSXC_HOME } from '../src/wm/presets.ts';
+import { LKJSXC, LKJSXC_HOME, PHONE_HOME } from '../src/wm/presets.ts';
 
 let own: OwnViews;
 let resize: () => void;
@@ -130,4 +130,14 @@ it("names and fills the default's tab of lkjsxc's Home before it is drawn, and n
     title: 'kept',
     scroll: { self: 9 },
   });
+});
+
+it("starts the phone default's Home with notifications flowing in, and keeps a filter the reader changed", () => {
+  setup({});
+  expect(own.title(PHONE_HOME)).toBe('Home');
+  expect(loadViewState(`test:${PHONE_HOME}`)).toEqual({ filter: { news: true } });
+  own.drop(PHONE_HOME);
+  saveViewState(`test:${PHONE_HOME}`, { filter: {} }); // the reader turned them off
+  own.title(PHONE_HOME);
+  expect(loadViewState(`test:${PHONE_HOME}`)).toEqual({ filter: {} });
 });

@@ -693,7 +693,11 @@ async function filtering(browser: Browser, still: Record<string, unknown>): Prom
     'notifications flow into the timeline when asked',
     (await count(page, `${feed} .list > .notif`)) > 0,
   );
-  await page.locator(`${feed} .rclear`).click();
+  fact(
+    'notifications flowing in narrow nothing: the row offers no Clear for them',
+    await page.locator(`${feed} .rclear`).isHidden(),
+  );
+  await page.locator(`${feed} .prow`).last().locator('.chip').last().click();
   await settle();
   fact('and leave again', (await count(page, `${feed} .list > .notif`)) === 0);
 
@@ -1604,7 +1608,7 @@ async function reading(browser: Browser, still: Record<string, unknown>): Promis
   );
   await page.context().close();
 
-  // A phone: the picture is a new tab in the one tile; a finger gets 40px.
+  // A phone: the picture is a new tab in the reading tile; a finger gets 40px.
   const ctx = await isolatedContext(browser, {
     viewport: { width: 390, height: 844 },
     hasTouch: true,
@@ -1629,19 +1633,20 @@ async function reading(browser: Browser, still: Record<string, unknown>): Promis
   await phone.locator('.view.mview .mstage img').waitFor();
   const bar = await phone.locator('.mbar a.icon').boundingBox();
   fact(
-    'phone: a picture is a new tab in the one tile',
-    (await count(phone, '.pane')) === 1 &&
+    'phone: a picture is a new tab in the reading tile, over the collapsed Post',
+    (await count(phone, '.pane')) === 2 &&
+      (await count(phone, '.pane:not(.min) .tab.active[data-view^="media"]')) === 1 &&
       (await count(phone, '.tab')) === phoneTabs + 1 &&
       (await count(phone, '.tab.active[data-view^="media"]')) === 1 &&
       (bar?.height ?? 0) >= 40 &&
       (await phone.evaluate(() => document.documentElement.scrollWidth <= innerWidth)),
   );
   if (shot) await phone.screenshot({ path: shot.replace(/\.png$/, '-media-390.png') });
-  await phone.locator('.tab.active .x').tap();
+  await phone.locator('.tab.active[data-view^="media"] .x').tap();
   fact(
     'phone: closing returns to the feed',
     (await count(phone, '.tab[data-view^="media"]')) === 0 &&
-      (await count(phone, '.tab.active[data-view="home"]')) === 1,
+      (await count(phone, '.tab.active[data-view="home~news"]')) === 1,
   );
   await ctx.close();
 }

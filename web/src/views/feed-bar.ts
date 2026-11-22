@@ -168,7 +168,7 @@ export function mountFeedBar(o: {
     else el.focus({ preventScroll: true });
   };
   const clear = (): void => {
-    state.filter = {};
+    state.filter = state.filter?.news ? { news: true } : {};
     applied = JSON.stringify(filterQuery(filter(), rich(env.engine)));
     drafts.clear();
     slot.replaceChildren();
