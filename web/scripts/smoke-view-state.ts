@@ -16,23 +16,28 @@ export async function prepareViewChecks(page: Page, check: Check): Promise<() =>
   const profileTab = await page.locator('.pane.cur .tab.active').getAttribute('data-view');
   await go('Global');
   const picture = global.locator('.media a.mbox:has(img)').first();
-  const activeTab = page.locator('.pane.cur .tab.active');
-  const tabs = page.locator('.tab');
-  const cover = page.locator('.pane.cur .cover.mview');
+  const tabsHere = () =>
+    page
+      .locator('.pane.cur .tab')
+      .evaluateAll((els) => els.map((e) => e.getAttribute('data-view') ?? ''));
   await picture.waitFor({ state: 'visible', timeout: 15_000 });
-  const sourceTab = await activeTab.getAttribute('data-view');
-  const tabCount = await tabs.count();
+  const source = (await page.locator('.pane.cur .tab.active').getAttribute('data-view')) ?? '';
+  const before = await tabsHere();
   await picture.click();
-  await cover.locator('.mstage img').waitFor({ timeout: 15_000 });
-  const sameTab = (await activeTab.getAttribute('data-view')) === sourceTab;
-  const noNewTab = (await tabs.count()) === tabCount;
-  await cover.locator('.mclose').click();
-  await cover.waitFor({ state: 'detached' });
-  const pictureFocused = await picture.evaluate((el) => document.activeElement === el);
+  await front('media').locator('.mstage img').waitFor({ timeout: 15_000 });
+  const after = await tabsHere();
   check(
-    'view state: media opens over its tile and returns focus',
-    sameTab && noNewTab && pictureFocused,
+    'view state: a picture opens as a new tab right after its own, in the same tile',
+    after.length === before.length + 1 &&
+      after[after.indexOf(source) + 1]?.startsWith('media') === true,
   );
+  await page.waitForFunction(
+    () => (document.querySelector('.mstage img') as HTMLImageElement)?.naturalWidth > 0,
+  );
+  await front('media').locator('.mscale').click();
+  const scale = await front('media').locator('.mscale').innerText();
+  const mediaTab = await page.locator('.pane.cur .tab.active').getAttribute('data-view');
+  await go('Global');
   await go('Documentation');
   await front('docs').getByText('Privacy policy', { exact: true }).click();
   const reset = await front('docs').evaluate(async (el) => {
@@ -83,6 +88,18 @@ export async function prepareViewChecks(page: Page, check: Check): Promise<() =>
       (await front('profile')
         .getByRole('tab', { name: 'Replies', exact: true })
         .getAttribute('aria-selected')) === 'true',
+    );
+    await show(mediaTab);
+    await page.waitForFunction(
+      () => (document.querySelector('.mstage img') as HTMLImageElement)?.naturalWidth > 0,
+    );
+    await page.waitForFunction(
+      (expected) => document.querySelector('.mview .mscale')?.textContent === expected,
+      scale,
+    );
+    check(
+      'view state: media zoom survives remount and reload',
+      (await front('media').locator('.mscale').innerText()) === scale,
     );
     await show(docsTab);
     check(

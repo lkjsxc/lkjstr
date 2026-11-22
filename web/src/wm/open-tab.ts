@@ -17,9 +17,10 @@ export type OpenParts = {
 };
 export type Opener = {
   from(from: string): (kind: string, state?: object, opts?: OpenOpts) => void;
-  /** The tab `tab` was opened from; asked once, as it closes. */
-  origin(tab: string): string | undefined;
+  /** The tab `tab` was opened from, and what gets the keyboard back; asked once, as it closes. */
+  origin(tab: string): Origin | undefined;
 };
+type Origin = { readonly view: string; readonly el?: HTMLElement };
 
 /** A Post tab holding nothing that a quote would disturb: no text, media, answer or quote. */
 const blank = (s: Record<string, unknown>): boolean =>
@@ -29,7 +30,7 @@ const blank = (s: Record<string, unknown>): boolean =>
   !s.replyTo;
 
 export function createOpener(p: OpenParts): Opener {
-  const origins = new Map<string, string>(); // bound: one per open tab opened from another
+  const origins = new Map<string, Origin>(); // bound: one per open tab opened from another
   const open = (from: string, kind: string, state?: object, opts: OpenOpts = {}): void => {
     const root = p.root();
     const panes = L.panes(root);
@@ -40,7 +41,7 @@ export function createOpener(p: OpenParts): Opener {
     if (opts.split) return p.set(L.addView(root, t.id, tab, 'right'));
     const at = t.tabs.includes(from) ? t.tabs.indexOf(from) + 1 : t.tabs.length;
     const next = L.moveView(root, tab, t.id, 'center', at);
-    origins.set(tab, from);
+    origins.set(tab, { view: from, el: opts.from });
     p.set(opts.background ? L.activate(next, t.active) : L.front(next, tab));
   };
   const quote = (from: string, state: object, opts: OpenOpts): void => {

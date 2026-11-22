@@ -82,7 +82,8 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
 - Menus close on outside press, Escape, scroll and after choosing. No close
   buttons on menus. Shortcuts are a page of Documentation, in the platform's names.
 - Opening a note or a person opens a tab in the same tile, right after the current one, in front. Shift-click splits, middle click opens behind.
-  Nothing opens in another tile by itself (owner, 2026-11-22).
+  Nothing opens in another tile by itself, and nothing takes the place of the tab being read: closing an opened
+  tab brings back the one it came from (owner, 2026-11-22).
 - Incoming note, profile and address paths open a Thread or Profile tab, then
   return the address bar to `/`. An invalid path keeps the workspace as it was
   and shows one toast.
@@ -150,9 +151,9 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
   One accessible link opens a browser tab with noopener; no players or frames.
   Cards fold with long text. Covered notes fetch nothing until opened. Link
   previews are on by default, off with data saver, and disclose the service.
-- A press on a picture lays the note's pictures over its own tile, with the bar under them (previous, count, next,
-  alt text, scale, original, copy link, ×); Escape or × closes it and the list under it has not moved. A zoomed
-  picture is dragged by hand; the wheel zooms about the pointer.
+- A press on a picture opens the note's pictures as a new tab right after the one being read, in the same tile;
+  Escape or the tab's × closes it and brings that tab back where it was. A zoomed picture is dragged by hand; the
+  wheel zooms about the pointer.
 - A picture's box has its final size before the file loads, tinted `--hold`
   (the note's dimensions, otherwise 3:2); a picture of unknown size keeps the
   box's height when it arrives, so nothing below moves. A file that cannot

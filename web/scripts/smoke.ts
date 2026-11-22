@@ -1229,35 +1229,27 @@ async function reading(browser: Browser, still: Record<string, unknown>): Promis
     times.slice(0, 3),
   );
 
-  // A picture lies over its own tile: no tab, no tile; Escape closes it, the keyboard is back on the picture and the
-  // list has not moved (owner, 2026-11-22: nothing opens in another tile).
+  // A picture opens as a new tab right after Home, in Home's tile (owner, 2026-11-22); Escape closes it, Home comes
+  // back where it was, and the keyboard is back on the picture.
   const panes = await count(page, '.pane');
   const tabCount = await count(page, '.tab');
   const box = page.locator(`${feed} .mbox`).first();
   await box.scrollIntoViewIfNeeded();
   const top = await page.locator(feed).evaluate((e) => e.scrollTop);
   await box.click();
-  await page.locator('.cover.mview .mstage img').waitFor();
-  const over = await page.evaluate((sel) => {
-    const cover = document.querySelector('.cover.mview');
-    const list = document.querySelector(sel);
-    const a = cover?.getBoundingClientRect();
-    const b = list?.closest('.body')?.getBoundingClientRect();
-    return Boolean(
-      a &&
-        b &&
-        cover?.parentElement === list?.parentElement &&
-        a.top === b.top &&
-        a.height === b.height,
-    );
-  }, feed);
+  await page.locator('.view.mview .mstage img').waitFor();
+  const tabsNow = await page
+    .locator('.pane:has(.tab[data-view="home"]) .tab')
+    .evaluateAll((els) => els.map((e) => e.getAttribute('data-view') ?? ''));
   fact(
-    'a picture lies over its own tile, as no tab, with the keyboard',
+    'a picture opens as a new tab right after Home, in its tile, with the keyboard',
     (await count(page, '.pane')) === panes &&
-      (await count(page, '.tab')) === tabCount &&
+      (await count(page, '.tab')) === tabCount + 1 &&
       (await count(page, '.layer > *')) === 0 &&
-      over &&
-      (await page.evaluate(() => document.activeElement?.matches('.cover.mview') === true)),
+      tabsNow[tabsNow.indexOf('home') + 1]?.startsWith('media') === true &&
+      (await count(page, '.tab.active[data-view^="media"]')) === 1 &&
+      (await page.evaluate(() => document.activeElement?.matches('.mview') === true)),
+    tabsNow,
   );
   if (shot) await page.screenshot({ path: shot.replace(/\.png$/, '-media-1440.png') });
   const scale = (): Promise<string> => page.locator('.mscale').innerText();
@@ -1266,24 +1258,20 @@ async function reading(browser: Browser, still: Record<string, unknown>): Promis
   await page.mouse.move(stage.x, stage.y);
   await page.mouse.wheel(0, -400);
   fact('the wheel zooms', (await scale()) !== fitted, [fitted, await scale()]);
-  const j = await page.locator(feed).evaluate((e) => e.scrollTop);
-  await page.keyboard.press('j');
-  fact(
-    'the list under the picture takes no keys',
-    (await page.locator(feed).evaluate((e) => e.scrollTop)) === j,
-  );
   await page.keyboard.press('Escape');
   fact(
-    'Escape closes the picture and returns to it, the list where it was',
-    (await count(page, '.cover')) === 0 &&
+    'Escape closes the picture tab: Home is back where it was, the keyboard on the picture',
+    (await count(page, '.tab[data-view^="media"]')) === 0 &&
+      (await count(page, '.tab.active[data-view="home"]')) === 1 &&
       (await page.evaluate(() => document.activeElement?.matches('.mbox') === true)) &&
       (await page.locator(feed).evaluate((e) => e.scrollTop)) === top,
   );
   await box.click();
-  await page.locator('.cover .mclose').click();
+  await page.locator('.tab.active[data-view^="media"] .x').click();
   fact(
-    '× closes it too',
-    (await count(page, '.cover')) === 0 &&
+    'its × does the same',
+    (await count(page, '.tab[data-view^="media"]')) === 0 &&
+      (await count(page, '.tab.active[data-view="home"]')) === 1 &&
       (await page.locator(feed).evaluate((e) => e.scrollTop)) === top,
   );
 
@@ -1598,7 +1586,7 @@ async function reading(browser: Browser, still: Record<string, unknown>): Promis
   );
   await page.context().close();
 
-  // A phone: the picture lies over the one tile; a finger gets 40px.
+  // A phone: the picture is a new tab in the one tile; a finger gets 40px.
   const ctx = await isolatedContext(browser, {
     viewport: { width: 390, height: 844 },
     hasTouch: true,
@@ -1620,22 +1608,21 @@ async function reading(browser: Browser, still: Record<string, unknown>): Promis
   fact('touch targets are finger sized', small === 0, small);
   const phoneTabs = await count(phone, '.tab');
   await phone.locator('.mbox').first().tap();
-  await phone.locator('.cover .mstage img').waitFor();
+  await phone.locator('.view.mview .mstage img').waitFor();
   const bar = await phone.locator('.mbar a.icon').boundingBox();
-  const close = await phone.locator('.mbar .mclose').boundingBox();
   fact(
-    'phone: a picture lies over the one tile',
+    'phone: a picture is a new tab in the one tile',
     (await count(phone, '.pane')) === 1 &&
-      (await count(phone, '.tab')) === phoneTabs &&
-      (close?.height ?? 0) >= 40 &&
+      (await count(phone, '.tab')) === phoneTabs + 1 &&
+      (await count(phone, '.tab.active[data-view^="media"]')) === 1 &&
       (bar?.height ?? 0) >= 40 &&
       (await phone.evaluate(() => document.documentElement.scrollWidth <= innerWidth)),
   );
   if (shot) await phone.screenshot({ path: shot.replace(/\.png$/, '-media-390.png') });
-  await phone.locator('.mbar .mclose').tap();
+  await phone.locator('.tab.active .x').tap();
   fact(
-    'phone: × returns to the feed',
-    (await count(phone, '.cover')) === 0 &&
+    'phone: closing returns to the feed',
+    (await count(phone, '.tab[data-view^="media"]')) === 0 &&
       (await count(phone, '.tab.active[data-view="home"]')) === 1,
   );
   await ctx.close();
@@ -1703,13 +1690,21 @@ async function pages(browser: Browser, still: Record<string, unknown>): Promise<
     redrawn?.paused === true && Math.abs(redrawn.at - kept) < 0.1,
     redrawn,
   );
+  await page.reload();
+  await page.locator('.mstage video').waitFor();
+  await page.waitForFunction(
+    () => (document.querySelector<HTMLVideoElement>('.mstage video')?.readyState ?? 0) >= 1,
+  );
+  await page.waitForTimeout(300);
+  const restored = await video();
+  fact(
+    'a reload continues from there, silent until asked, the volume choice kept',
+    restored?.paused === true && Math.abs(restored.at - kept) < 0.6 && restored.muted,
+    { restored, kept },
+  );
   await page.keyboard.press('PageUp');
   fact('PageUp goes to the picture before the video', (await count(page, '.mstage img')) === 1);
   await page.keyboard.press('Escape');
-  // The viewer is a moment over the list, not a tab: a reload is back on the list with nothing over it.
-  await page.reload();
-  await page.locator(`${feed} .mbox:has(video)`).first().waitFor();
-  fact('a reload is back on the list, nothing over it', (await count(page, '.cover')) === 0);
 
   // Relays shows state and edits nothing; the list is edited in Settings, one press away.
   const menu = async (label: string): Promise<void> => {

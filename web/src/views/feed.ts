@@ -2,7 +2,6 @@ import type { Subscription } from '../engine/client.ts';
 import { applyOps } from '../engine/ops.ts';
 import type { Anchor, Query, Row, SubState } from '../engine/protocol.ts';
 import { h } from '../shared/h.ts';
-import { covered } from '../shared/keys.ts';
 import { loadViewState, saveViewState } from '../shared/view-state.ts';
 import { ability } from './can.ts';
 import { mountChannelDesk } from './channel-desk.ts';
@@ -234,7 +233,7 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
     tail,
     keeper,
     rows: () => rows,
-    active: () => env.visible.get() && Boolean(el.closest('.pane.cur')) && !covered(el),
+    active: () => env.visible.get() && Boolean(el.closest('.pane.cur')),
     seek: (anchor) => {
       keys.clear();
       mode = 'page';

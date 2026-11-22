@@ -12,6 +12,7 @@ import { mountCompose } from './compose.ts';
 import { mountDocs } from './docs.ts';
 import { mountFeed } from './feed.ts';
 import { gated } from './gated.ts';
+import { mountMedia } from './media.ts';
 import { mountMessage } from './message.ts';
 import { mountMessages } from './messages.ts';
 import { mountRelays } from './relays.ts';
@@ -21,6 +22,8 @@ import { mountStats } from './stats.ts';
 export type OpenOpts = {
   readonly split?: boolean;
   readonly background?: boolean;
+  /** What gets the keyboard back when the opened tab closes. */
+  readonly from?: HTMLElement;
 };
 export type ViewEnv = {
   readonly engine: Engine;
@@ -37,9 +40,6 @@ export type ViewEnv = {
   readonly open: (kind: string, state?: object, opts?: OpenOpts) => void;
   /** Closes this tab. */
   readonly close: () => void;
-  /** Lays `el` over this tab, in its own tile, until the returned function takes it off or the tab closes; `dispose`
-   * runs either way. One at a time: a second cover replaces the first. What is under it is left exactly as it was. */
-  readonly cover: (el: HTMLElement, dispose: () => void) => () => void;
   /** What this tab adds to its tile's "…" menu, asked each time the menu opens. */
   readonly menu: (items: () => readonly MenuItem[]) => void;
   /** Puts this workspace back to its default arrangement, with Undo (`every`: all saved layouts, without). */
@@ -114,6 +114,13 @@ export const VIEWS: readonly ViewDef[] = [
   {
     ...feed('channel', false),
     mount: gated(CHANNELS_SINCE, 'channel.unsupported', (el, env) => mountFeed(el, env, 'channel')),
+  },
+  {
+    id: 'media',
+    title: 'view.media',
+    hint: 'view.media.hint',
+    launch: false,
+    mount: mountMedia,
   },
   {
     id: 'compose',

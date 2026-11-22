@@ -79,7 +79,7 @@ it('other tabs still open right after the one they came from', () => {
   const x = opener(row(['home', 'global'], ['compose']));
   x.o.from('home')('thread', { id: 'a' });
   expect(tiles(x.root())).toEqual(['home thread~2* global', 'compose*']);
-  expect(x.o.origin('thread~2')).toBe('home'); // closing it brings Home back, asked once
+  expect(x.o.origin('thread~2')).toEqual({ view: 'home' }); // closing it brings Home back, asked once
   expect(x.o.origin('thread~2')).toBeUndefined();
 });
 

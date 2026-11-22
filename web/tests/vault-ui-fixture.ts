@@ -58,7 +58,6 @@ export function vaultEnv(extra: Partial<Account> = {}, version = 6) {
     close,
     setTitle() {},
     menu() {},
-    cover: () => () => undefined,
     resetLayouts() {},
   };
   return {

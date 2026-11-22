@@ -87,15 +87,13 @@ export function createWmController(
     const i = p?.tabs.indexOf(view) ?? -1;
     const from = opener.origin(view);
     const front = p?.active === view;
-    const prior =
-      front && from && p.tabs.includes(from)
-        ? from
-        : front
-          ? (p.tabs[i + 1] ?? p.tabs[i - 1])
-          : undefined;
+    // Closing a tab still in front brings back the one it was opened from, as it was.
+    const back = front && from && p.tabs.includes(from.view);
+    const prior = back ? from.view : front ? (p.tabs[i + 1] ?? p.tabs[i - 1]) : undefined;
     retire(view);
     const next = L.removeView(root, view);
     set(next && prior ? L.activate(next, prior) : next);
+    if (back && from.el?.isConnected) from.el.focus({ preventScroll: true });
   };
   const openFrom =
     (from: string) =>
@@ -187,8 +185,6 @@ export function createWmController(
     for (const [view, body] of rendered.bodies) {
       const el = own.el(view);
       if (el) body.append(el);
-      const cover = own.cover(view);
-      if (cover) body.append(cover);
     }
     own.sync(used());
     mark(touched);

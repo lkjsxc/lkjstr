@@ -74,11 +74,7 @@
 .menu button { display: flex; align-items: center; }
 .menu kbd { margin-left: auto; padding-left: 18px; color: var(--faint); font: inherit; font-size: 12px; }
 /* The media tab: the picture fills the stage and is moved with a transform, so nothing reflows while zooming. */
-/* Pictures lie over the tile that was being read (views/media.ts); the list under them is never moved. */
-.cover { position: absolute; inset: 0; z-index: 7; }
-.mview { display: flex; flex-direction: column; overflow: hidden; background: var(--paper); outline: none; }
-.mclose { font-size: 20px; line-height: 1; color: var(--muted); }
-.mclose:hover { color: var(--fg); }
+.view.mview { display: flex; flex-direction: column; overflow: hidden; background: var(--paper); }
 .mstage { position: relative; flex: 1; min-height: 0; overflow: hidden; user-select: none; }
 .mstage.k-image { cursor: zoom-in; touch-action: none; }
 .mstage.pan { cursor: grab; }
