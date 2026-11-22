@@ -5,7 +5,7 @@ impl Host {
         if self.stopped {
             return;
         }
-        if storage::input(self, id, &input) {
+        if avatars::input(self, id, &input) || storage::input(self, id, &input) {
             return;
         }
         if matches!(&input, W::Detach | W::Heartbeat) {

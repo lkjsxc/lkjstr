@@ -77,54 +77,10 @@ pub struct SharedWorkerHandle {
 #[wasm_bindgen]
 pub fn start_shared() -> Result<SharedWorkerHandle, JsValue> {
     let scope = js_sys::global().dyn_into::<web_sys::SharedWorkerGlobalScope>()?;
-    let host = Rc::new(RefCell::new(Host {
-        engine: initial_engine(),
-        account_revision: 0,
-        bootstrap_relays: vec![],
-        relay_owner: None,
-        upload_tasks: vec![],
-        upload_control: Default::default(),
-        upload_inflight: 0,
-        relay_auth_jobs: Default::default(),
-        dm: Default::default(),
-        zaps: Default::default(),
-        private_lists: Default::default(),
-        public_cache: Default::default(),
-        storage: Default::default(),
-        bunker: Default::default(),
-        server_checks: vec![],
-        auth_next: 0,
-        upload_auth: BTreeMap::new(),
-        accounts: Default::default(),
-        account_tasks: vec![],
-        account_busy: false,
-        account_store: Default::default(),
-        discovery: BTreeMap::new(),
-        loaded: false,
-        startup: vec![],
-        sign_trace: Default::default(),
-        status: None,
-        sessions: BTreeMap::new(),
-        scope: Sink::Shared {
-            clients: Clients::default(),
-            peers: BTreeMap::new(),
-        },
-        sockets: BTreeMap::new(),
-        schedule: scheduler::Schedule::default(),
-        db: None,
-        next_persist: 0,
-        flushing: false,
-        retention_due: true,
-        publication_persisted: 0,
-        note_outbox: Default::default(),
-        quality_persisted: 0,
-        stopped: false,
-        clock_offset: 0,
-        preview_probed: false,
-        preview_busy: false,
-        identity_inflight: 0,
-        identity_attempts: BTreeMap::new(),
-    }));
+    let host = Rc::new(RefCell::new(Host::new(Sink::Shared {
+        clients: Clients::default(),
+        peers: BTreeMap::new(),
+    })));
     let weak = Rc::downgrade(&host);
     let connect = Closure::new(move |event: web_sys::MessageEvent| {
         if let Some(host) = weak.upgrade() {
@@ -197,6 +153,8 @@ fn attach(host: &Rc<RefCell<Host>>, port: web_sys::MessagePort) {
     }
     account_boot::ready(&mut host.borrow_mut(), id, true);
 }
+#[path = "worker_avatar_sink.rs"]
+mod avatar_sink;
 #[path = "worker_shared_handle.rs"]
 mod handle;
 fn send(target: &JsValue, out: &WireOutput) {
@@ -223,6 +181,7 @@ pub(super) fn expire(host: &Rc<RefCell<Host>>) {
 pub(super) fn detach(h: &mut Host, id: u64) {
     account_store::detach(h, id);
     storage::detach(h, id);
+    avatars::detach(h, id);
     zaps::detach(h, id);
     direct_messages::editors::detach(h, id);
     uploads::control::detach(h, id);

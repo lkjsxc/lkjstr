@@ -8,6 +8,7 @@ function shape(node) {
   if (ts.isParenthesizedTypeNode(node) || ts.isTypeOperatorNode(node)) return shape(node.type);
   if (ts.isTypeReferenceNode(node)) {
     if (node.typeName.getText(file) === 'ArrayBuffer') return { buffer: true };
+    if (node.typeName.getText(file) === 'Blob') return { blob: true };
     const target = aliases.get(node.typeName.getText(file));
     if (!target) throw new Error(`unhandled type ${node.getText(file)}`);
     return shape(target);
@@ -46,6 +47,7 @@ function valid(s, v) {
   if (s.tuple) return Array.isArray(v) && v.length === s.tuple.length
     && s.tuple.every((part, index) => valid(part, v[index]));
   if (s.buffer) return v instanceof ArrayBuffer;
+  if (s.blob) return v instanceof Blob;
   if (s.object) return v !== null && typeof v === 'object' && Object.entries(s.object).every(([k, t]) => (t.optional && v[k] === undefined) || valid(t.shape, v[k]));
   return false;
 }

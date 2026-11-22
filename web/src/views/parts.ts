@@ -1,12 +1,13 @@
 // Small pieces every view draws people and text with.
-import { loadAvatar } from '../engine/avatar-cache.ts';
 import type { Author, Emoji, Segment } from '../engine/protocol.ts';
 import { emojiRuns } from '../shared/emoji-text.ts';
 import { type Child, h } from '../shared/h.ts';
 import { t } from '../shared/i18n.ts';
 import { icon } from '../shared/icons.ts';
 import { loadImage } from '../shared/media-source.ts';
-import { knownPerson, onPerson } from '../shared/people.ts';
+import { knownPerson } from '../shared/people.ts';
+import { avatar, updateAvatar, type FaceOptions } from './avatars.ts';
+export { avatar } from './avatars.ts';
 import { inlineEmoji } from './emoji-load.ts';
 import { UNDO_MS } from './held.ts';
 import { nameState } from './name-arrival.ts';
@@ -29,63 +30,6 @@ export const shortNpub = (a: Author): string => brief(a.npub || a.pubkey);
 export const nameText = (name: string): string =>
   RAW.test(name.trim()) ? brief(name.trim()) : name;
 const nameOf = (a: Author): string => (unnamed(a) ? shortNpub(a) : a.name);
-
-/** A circle: the picture, or a flat colour from the pubkey with the first letter of the name. */
-type FaceOptions = { cachePublic?: boolean; lazy?: boolean };
-const faceState = new WeakMap<
-  HTMLElement,
-  {
-    letter: HTMLElement;
-    options: FaceOptions;
-    picture?: string;
-    image?: HTMLImageElement;
-  }
->();
-function drawFace(el: HTMLElement, a: Author): void {
-  const state = faceState.get(el);
-  if (!state) return;
-  const initial = unnamed(a) ? '' : ([...a.name.replace(/:[a-z0-9_]+:/g, '').trim()][0] ?? '');
-  if (state.letter.textContent !== initial) state.letter.textContent = initial;
-  if (state.picture === a.picture) return;
-  state.picture = a.picture;
-  state.image?.remove();
-  state.image = undefined;
-  if (!a.picture) return;
-  const img = h('img', {
-    alt: '',
-    width: 36,
-    height: 36,
-    loading: state.options.lazy && a.picture.startsWith('https:') ? 'lazy' : 'eager',
-    fetchpriority: 'high',
-    decoding: 'async',
-    draggable: 'false',
-    referrerpolicy: 'no-referrer',
-  });
-  el.append(img);
-  loadAvatar(img, a.picture, !!(state.options.cachePublic && a.profileId));
-  state.image = img;
-}
-onPerson((author) => {
-  const selector = `[data-face="${CSS.escape(author.pubkey)}"]`;
-  for (const el of document.querySelectorAll<HTMLElement>(selector)) drawFace(el, author);
-});
-export function avatar(a: Author, cls = 'av', options: FaceOptions = {}): HTMLElement {
-  const hue = Number.parseInt(a.pubkey.slice(0, 4), 16) % 360;
-  const letter = h('span', { class: 'faceletter' });
-  const el = h(
-    'span',
-    {
-      class: cls,
-      style: `background:hsl(${hue} 35% 55%)`,
-      'aria-hidden': 'true',
-      'data-face': a.pubkey,
-    },
-    letter,
-  );
-  faceState.set(el, { letter, options });
-  drawFace(el, knownPerson(a.pubkey) ?? a);
-  return el;
-}
 
 /** Profile and editor share the banner's quiet background when its picture is unavailable. */
 export function showBanner(el: HTMLElement, url: string | undefined): void {
@@ -200,7 +144,7 @@ export function noteFace(
     button.title = name;
     button.setAttribute('aria-label', name);
   }
-  drawFace(face, knownPerson(a.pubkey) ?? a);
+  updateAvatar(face, knownPerson(a.pubkey) ?? a);
   return button;
 }
 

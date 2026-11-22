@@ -17,6 +17,15 @@ pub enum Input {
     },
     #[serde(rename = "note.wake")]
     NoteWake,
+    #[serde(rename = "avatar.want")]
+    AvatarWant {
+        req: String,
+        url: String,
+    },
+    #[serde(rename = "avatar.close")]
+    AvatarClose {
+        req: String,
+    },
     #[serde(rename = "cache.hold")]
     CacheHold {
         sub: String,

@@ -39,6 +39,11 @@ export async function conformance({page,send,wait,check,note,signer,lines,origin
     }
     return result(req);
   }
+  await send({t:'avatar.want',req:'avatar-invalid',url:'http://avatar.invalid/one.png'});
+  await wait(()=>window.messages.some(m=>m.t==='avatar'&&m.req==='avatar-invalid'));
+  const rejectedAvatar=(await messages()).find(m=>m.t==='avatar'&&m.req==='avatar-invalid');
+  check('non-HTTPS avatar requests are rejected without a Blob',rejectedAvatar.result.status==='rejected'&&!rejectedAvatar.blob);
+  await send({t:'avatar.close',req:'avatar-invalid'});
   const ref = bech32('note', note.id);
   check('public note link is validated without an account parameter',(await act({a:'link.check',route:'n',ref})).ok);
   check('public note link is rejected on the profile path',(await act({a:'link.check',route:'p',ref})).error?.code==='rejected');

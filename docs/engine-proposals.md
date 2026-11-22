@@ -194,3 +194,10 @@ Mock-only `EngineConfig.mock`: `slow` signs a note late and delays its answers, 
 - `note.wake` wakes queued notes when the page returns or the browser comes online.
 
 - P2: `signed` and `publicKey` accept `error: 'cancelled'`; the action returns the same failure code without publication.
+
+## Avatar lease additions (2026-11-22)
+
+- `ToEngine.avatar.want {req,url}` requests a finite exact-URL image owned by the originating client.
+- `ToEngine.avatar.close {req}` releases that client's pending request; hide/detach releases the client.
+- `FromEngine.avatar {req,result,blob?,image?}` returns ready/fallback/deferred/rejected; ready uses an actual structured-cloned Blob.
+- `Engine.avatars` owns live page leases, visibility and disposal. Bounds and persistence: [avatars.md](avatars.md).

@@ -1,8 +1,10 @@
 // One page's subscriptions, actions and private writer leases behind the real or mock Worker.
-import { learnPerson, learnRows, onPerson } from '../shared/people.ts';
+import { learnPerson, learnRows } from '../shared/people.ts';
 import { createSignal } from '../shared/signal.ts';
+import { watchAccountPeople } from './client-account-people.ts';
 import { createActionRequests } from './client-actions.ts';
 import type { AccountState, Accounts, Engine, SubHandlers } from './client-api.ts';
+import { createAvatarClient } from './client-avatars.ts';
 import { createDeliveryWatches } from './client-delivery.ts';
 import { createDmClient } from './client-dm.ts';
 import { createExtensionClient } from './client-extension.ts';
@@ -26,7 +28,9 @@ export function createEngine(transport: Transport): Engine {
   const zaps = createZapClient(transport);
   const storage = createStorageClient(transport);
   const noteOutbox = createNoteOutbox(transport);
-  storage.visible(document.visibilityState !== 'hidden');
+  const avatars = createAvatarClient(transport);
+  for (const resource of [storage, avatars])
+    resource.visible(document.visibilityState !== 'hidden');
   const lists = createPrivateListClient(dm.access, (message) => transport.post(message));
   const subs = new Map<string, SubHandlers>(); // bound: open subscriptions (one per mounted list)
   const privateRows = new Set<string>(); // Bound by owned subscriptions; excludes private-derived author hints.
@@ -78,7 +82,8 @@ export function createEngine(transport: Transport): Engine {
     idleTimer = setTimeout(() => ((idle = true), hint()), IDLE_MS);
   };
   const resumed = (): void => {
-    storage.visible(document.visibilityState !== 'hidden');
+    for (const resource of [storage, avatars])
+      resource.visible(document.visibilityState !== 'hidden');
     if (document.visibilityState !== 'hidden') dm.flushers.resume(info.get()?.version ?? 0);
     else lists.hidden();
     hint();
@@ -90,24 +95,11 @@ export function createEngine(transport: Transport): Engine {
   window.addEventListener('pointerdown', active, { passive: true, capture: true });
   window.addEventListener('keydown', active, { passive: true, capture: true });
   active();
-  const offPeople = onPerson((author) => {
-    const value = accounts.get();
-    if (
-      !value.accounts.some(
-        (a) =>
-          a.author.pubkey === author.pubkey && JSON.stringify(a.author) !== JSON.stringify(author),
-      )
-    )
-      return;
-    accounts.set({
-      ...value,
-      accounts: value.accounts.map((a) =>
-        a.author.pubkey === author.pubkey ? { ...a, author } : a,
-      ),
-    });
-  });
+
+  const offPeople = watchAccountPeople(accounts);
   transport.listen((msg) => {
     if (
+      avatars.receive(msg) ||
       noteOutbox.receive(msg) ||
       storage.receive(msg) ||
       signerAuth.receive(msg) ||
@@ -172,6 +164,7 @@ export function createEngine(transport: Transport): Engine {
     dm,
     signerAuth,
     storage,
+    avatars,
     zaps,
     noteOutbox,
     accounts,
@@ -285,7 +278,7 @@ export function createEngine(transport: Transport): Engine {
       clearTimeout(idleTimer);
       offPeople();
       privateRows.clear();
-      for (const client of [storage, noteOutbox]) client.dispose();
+      for (const client of [avatars, storage, noteOutbox]) client.dispose();
       signerAuth.dispose();
       lists.dispose();
       extension.reset();

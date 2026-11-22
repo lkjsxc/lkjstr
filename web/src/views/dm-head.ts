@@ -55,6 +55,9 @@ export function createDmHead(env: ViewEnv, account: string, peers: readonly stri
       },
     ]),
   );
+  const offVisible = env.visible.subscribe((on) => {
+    if (!on) closePicker?.();
+  });
   return {
     el,
     update(next: ReadonlyMap<string, Author>): void {
@@ -79,6 +82,7 @@ export function createDmHead(env: ViewEnv, account: string, peers: readonly stri
       env.setTitle(dmNames(peers, people));
     },
     dispose(): void {
+      offVisible();
       closePicker?.();
       el.replaceChildren();
       people = new Map();

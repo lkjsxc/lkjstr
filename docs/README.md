@@ -25,6 +25,7 @@ Frontend (`web/`):
 
 Engine (`crates/`):
 
+- [avatars.md](avatars.md): visible-author hydration, avatar image ownership, derived storage and bounds.
 - [media-uploads.md](media-uploads.md): destinations, failure/retry, bounds and proof.
 - [client-attribution.md](client-attribution.md) explains note tags, app information and opt-out.
 - [channels.md](channels.md): NIP-28 sources, actions, bounds and verification.

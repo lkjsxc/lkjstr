@@ -18,6 +18,7 @@ import { createSettings } from './shared/settings.ts';
 import { kv } from './shared/storage.ts';
 import { createTopBar } from './ui/topbar.ts';
 import { backupPending } from './views/account-key.ts';
+import { createAvatarOwner } from './views/avatar-owner.ts';
 import { installEmojiPeek } from './views/emoji-peek.ts';
 import { toast } from './views/parts.ts';
 import { setServed } from './views/registry.ts';
@@ -78,6 +79,12 @@ engine.accounts.subscribe((a) => {
 });
 
 const host = createHost();
+const faces = createAvatarOwner(host.app, engine.avatars);
+const disposeHost = host.dispose;
+host.dispose = () => {
+  faces.dispose();
+  disposeHost();
+};
 host.look(settings.get());
 const store = createWmStore();
 let ctl: Wm | undefined;

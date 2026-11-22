@@ -9,7 +9,7 @@ How the single browser product is divided between rendering and engine work.
 | Part | Role | Browser APIs |
 | --- | --- | --- |
 | web/ | TypeScript rendering and window manager | DOM, engine transport |
-| lkjstr-engine-worker | Worker host and browser effects | sockets, IndexedDB, timers, HTTP |
+| lkjstr-engine-worker | Worker host and browser effects | sockets, IndexedDB, timers, HTTP, bitmap/canvas |
 | lkjstr-core | store, planning, windows, policy and row projection | none |
 | lkjstr-protocol | events, signing, NIP-19, filters and messages | none |
 | lkjstr-host preview binary | optional public-page metadata, no Nostr state | native HTTP only |
@@ -27,7 +27,8 @@ the existing transport contract does not need to change with the crate name.
 2. wire::Session converts frontend queries to pure Engine inputs and projects
    finished rows back into the same wire protocol.
 3. Visible views produce shared relay filters. Author hydration batches profiles
-   and prioritizes the relays that delivered visible notes and their context.
+   and prioritizes the relays that delivered visible notes and their context. Missing profiles also use known
+   verified author write routes without bypassing ordinary coalescing or cancelling configured requests.
 4. Network emits owned connect/send/disconnect effects. Worker socket callbacks
    parse frames through the protocol layer and enqueue events for verification.
 5. Engine::tick verifies at most 32 events per slice, updates the bounded store,
@@ -41,6 +42,9 @@ the existing transport contract does not need to change with the crate name.
    A returning page probes its Worker and gives it time to answer before replacing the connection.
    An expired client's keyed reading window reopens with that window as its first snapshot.
 7. The main thread renders finished rows without parsing events or opening relays.
+
+Finite avatar messages run alongside rows. The core owns exact-URL scheduling and LRU plans; Worker effects fetch,
+derive and persist images. The page owns live display leases and object URLs. See [avatars.md](avatars.md).
 
 ## Relay decisions
 
@@ -86,6 +90,10 @@ Windows accept 800 rows on either side; retainAbove caps retained history at 600
 Visitor Global classifies a bounded slice of at most 6000 events. Signed-in feeds bypass its repeat and author limits.
 See [hidden-note-visibility.md](hidden-note-visibility.md) for covered slots, expiry and missing-row evidence.
 Secret keys remain inside Rust and storage except for the explicit backup action. Diagnostics contain no secret keys.
+
+A separate disposable avatar database atomically retains at most 20 MiB of actual Blob payloads and 4096 entries.
+Four raw-payload credits, two fetches per requested hostname and one codec operation bound derivation; cancelling
+an uncancellable codec keeps its permit until real settlement. These limits are not browser RSS or HTTP-cache caps.
 
 ## Verification and hosting
 

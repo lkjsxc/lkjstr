@@ -2,6 +2,7 @@
 pub mod account_storage;
 pub mod accounts;
 mod acts;
+pub mod avatars;
 pub mod bench;
 pub mod bunker;
 pub mod cache;

@@ -19,7 +19,9 @@ impl Session {
                 self.preview_near(sub, ids);
                 selected
             }
-            Input::StorageInspect { .. }
+            Input::AvatarWant { .. }
+            | Input::AvatarClose { .. }
+            | Input::StorageInspect { .. }
             | Input::StorageClose { .. }
             | Input::SignerAuthCancel { .. }
             | Input::ZapQuote { .. }

@@ -7,6 +7,7 @@ import { keepPageInPlace } from './page-viewport.ts';
 const TAB_MIN_PX = 88; // the narrowest a fixed-width tab gets: a few characters and its close button
 
 export type Host = {
+  readonly app: HTMLElement;
   readonly bar: HTMLElement;
   readonly root: HTMLElement;
   readonly layer: HTMLElement;
@@ -23,6 +24,7 @@ export function createHost(): Host {
   document.body.append(app);
   const offPage = keepPageInPlace();
   return {
+    app,
     bar,
     root,
     layer,

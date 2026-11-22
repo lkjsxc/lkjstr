@@ -125,12 +125,18 @@ test('the real app asset boundary rejects a harness package before emitting hash
       wasm([...required, 'workerhandle_hold_public_sign']),
     );
     writeFileSync(join(input, 'lkjstr_engine.js'), bindings);
-    for (const file of ['worker.js', 'shared.js', 'transport.js'])
+    for (const file of ['worker.js', 'shared.js', 'transport.js', 'transport-avatars.js'])
       writeFileSync(join(input, file), 'export {};');
     assert.throws(() => engineAssets(input, output), /test-only engine exports/);
     assert.deepEqual(readdirSync(output), []);
     writeFileSync(join(input, 'lkjstr_engine_bg.wasm'), wasm());
+    writeFileSync(join(input, 'transport-avatars.js'), 'export const avatarTransport = 1;');
+    writeFileSync(join(input, 'transport.js'), "export { avatarTransport } from './transport-avatars.js';");
     const published = engineAssets(input, output);
+    const adapter = readFileSync(join(output, published.engine), 'utf8');
+    assert.ok(adapter.includes('avatarTransport'));
+    assert.ok(!readdirSync(output).some((file) => file.startsWith('engine-avatars-')));
+    assert.ok(!adapter.includes('./transport-avatars.js'));
     assert.deepEqual(readFileSync(join(output, published.wasm)), Buffer.from(wasm()));
   } finally {
     rmSync(root, { recursive: true, force: true });

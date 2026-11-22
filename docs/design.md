@@ -144,7 +144,11 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
 ## A note
 - Avatar circle (36px, a setting) in its own column; header line with name,
   NIP-05 with a tick when verified, and the time right-aligned. A face
-  opens the profile wherever it is drawn, as the name does.
+  opens the profile wherever it is drawn, as the name does. Small, list and channel faces use one centred
+  square still of at most 160px, without enlarging smaller sources. The letter disc holds while loading or on failure.
+  Original-image fallbacks may animate in ordinary motion. Under reduced motion a fallback is drawn once into a
+  face-sized canvas without pixel readback or storage; a known uniform still keeps the letter with no original request.
+  [Avatar ownership and limits](avatars.md) keep offscreen and hidden faces from retaining work.
 - A note that names its client says so by its time: "via {name}" in `--faint`, 12px, on the same line, the first
   thing in the header to give way and not drawn under 340px of tile ([interface-client.md](interface-client.md)).
   The name is relay text, drawn as text and bounded. With a handler address it is a button: a press asks once and
@@ -214,7 +218,8 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
   looked for, or not found, holds the room of the note it would be; skeletons hold the focus and first replies.
 - A profile's header (banner, bio, counts, "Follows you") scrolls away with
   the notes. The npub copies on click. A count is shown once it is known;
-  until then the label stands alone and still opens the list.
+  until then the label stands alone and still opens the list. The 76px profile-header face uses the original
+  image in ordinary motion and the still path under reduced motion; a custom 72px list face uses the 160px still.
 - Profile pins use the ordinary note face and a quiet Pinned context line in a separate section below the kind
   tabs. Its thin separator and bounded Previous/Next links add no colour or floating control. It scrolls with
   the header; chronology and its rail keep their own positions ([P3](interface-profile.md#p3-pinned-notes)).

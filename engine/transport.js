@@ -1,5 +1,6 @@
 // Frontend Transport interface. No relay, event parsing or secret handling here.
 const HEARTBEAT_INTERVAL_MS = 20_000, HEARTBEAT_TIMEOUT_MS = 60_000;
+import { createAvatarReads } from './transport-avatars.js';
 const publicSigningActions = new Set([
   'publish', 'follow', 'mute', 'bookmark', 'profile.save', 'relays.save',
   'servers.save', 'channel.join', 'channel.save',
@@ -21,6 +22,7 @@ export function workerTransport(options = {}) {
   const startup=[]; // at most 64 actions before the first ready
   const pending = new Set(); // bounded by engine's action limit
   const send = (msg, transfer=[]) => port?.postMessage(msg,transfer);
+  const avatars = createAvatarReads(send, (message) => receive(message));
   const replay = () => {
     // Read the actual document too: a frozen page may retain its last visible hint.
     const hidden = document.visibilityState === 'hidden' || hint?.hint.pageHidden;
@@ -28,6 +30,7 @@ export function workerTransport(options = {}) {
     if (restoredHint) send(restoredHint);
     if (config) send(config);
     if (relays) send(relays);
+    avatars.replay(hidden);
     for (const state of subs.values()) {
       const visible = !hidden && (hint ? hint.hint.visibleSubs.includes(state.open.sub) : state.open.visible ?? true);
       const open = !visible || state.open.query.privateLists ? { ...state.open, visible } : state.open;
@@ -82,6 +85,7 @@ export function workerTransport(options = {}) {
     }
     if (msg.t === 'result') pending.delete(msg.req);
     if (msg.t === 'zap.quote' && msg.quote.phase !== 'loading' || msg.t === 'zap.receipts' && msg.page.phase !== 'loading') zapReads.delete(msg.req);
+    avatars.receive(msg);
     receive(msg);
   };
   let channel, peers, attachLocal, restartLeader, greet;
@@ -214,7 +218,7 @@ export function workerTransport(options = {}) {
     channel?.close();
     worker?.terminate?.();
     release?.();
-    privateSubs.clear(); subs.clear(); pending.clear(); zapReads.clear(); startup.length=0;
+    privateSubs.clear(); subs.clear(); pending.clear(); zapReads.clear(); avatars.close(); startup.length=0;
   };
   // A retained history page still owns its editor: expiry may orphan it, never certify it clean.
   const pagehide = (event) => { if (!event.persisted) close(); };
@@ -223,7 +227,7 @@ export function workerTransport(options = {}) {
   addEventListener('pageshow', pageshow);
   return {
     post(msg, transfer=[]) {
-      if (closed) return;
+      if (closed || avatars.post(msg)) return;
       if (msg.t === 'zap.close' && zapReads.delete(msg.req)) { if (readsReady) send(msg); return; }
       if (msg.t === 'zap.quote' || msg.t === 'zap.receipts') {
         if (zapReads.has(msg.req) || pending.has(msg.req)) return;

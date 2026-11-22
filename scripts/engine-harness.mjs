@@ -36,7 +36,7 @@ const server = createServer(async (req, res) => {
   if (path === '/worker.js' || path === '/archive-worker.js') return res.writeHead(200, {'content-type':'text/javascript'}).end(workerBoot(path, origin));
   if(path.startsWith('/transport/')) {
     const name=path.slice('/transport/'.length);
-    const base=['worker.js','shared.js','transport.js'].includes(name)?resolve('engine'):root;
+    const base=['worker.js','shared.js','transport.js','transport-avatars.js'].includes(name)?resolve('engine'):root;
     if(name.includes('/'))return res.writeHead(403).end();
     try {const data=await readFile(join(base,name));return res.writeHead(200,{'content-type':name.endsWith('.wasm')?'application/wasm':'text/javascript'}).end(data);}catch{return res.writeHead(404).end();}
   }

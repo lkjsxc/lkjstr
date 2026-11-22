@@ -12,8 +12,8 @@ rules are in [design.md](design.md); what the static host must do is in
 TypeScript with no framework, built the way ytenrich is: `h()` for DOM,
 small signals, `create*` factories instead of classes, one stylesheet set,
 esbuild for bundling. The main thread draws and nothing else: it never parses
-an event, opens a socket or touches the event store. Everything that is not
-pixels belongs to the engine, which runs in a Worker.
+an event, opens a socket or touches the event store. Everything beyond drawing belongs to the engine, which runs in a Worker;
+it also derives and stores avatar stills.
 
 The default development worker is the mock engine (`src/engine/mock/`), which is also the
 test double. The Rust/WASM engine replaces it at build time with
@@ -25,7 +25,7 @@ test double. The Rust/WASM engine replaces it at build time with
 | --- | --- |
 | `src/main.ts`, `src/boot.ts` | Start: theme and scale before first paint, engine, window manager, incoming public links |
 | `src/engine/protocol.ts` | The contract with the engine. Owned by the frontend; the engine mirrors it |
-| `src/engine/client.ts` | Subscriptions, actions as promises, hints, NIP-07 signing requests |
+| `src/engine/client.ts`, `client-avatars.ts` | Subscriptions, actions, hints, signing bridge and live avatar leases |
 | `src/engine/mock/` | Mock engine and fixtures (Japanese and English notes, media, threads, slow and failing relays) |
 | `src/wm/` | Window manager adapted from ytenrich: layout tree, controller, strips, tab drag, resize, menus, launcher, workspaces, store |
 | `src/views/` | One file per kind of tab or piece of one; `registry.ts` lists the kinds |
@@ -36,6 +36,11 @@ test double. The Rust/WASM engine replaces it at build time with
 | `tests/` | vitest: layout, words, keys, formats, undo, the mock engine |
 
 Seams worth knowing inside `src/views/`:
+
+- `avatars.ts` makes inert face models; `avatar-owner.ts` owns connected faces under `host.app`, including overlays.
+  `avatar-visible.ts` checks current geometry; `avatar-draw.ts` draws stills/fallbacks. Detached candidates acquire
+  nothing; hidden/offscreen/disposed faces release. Same-URL replacements share ownership; the last owner revokes
+  its object URL. Worker cache policy and exact bounds are in [avatars.md](avatars.md).
 
 - `feed.ts` is every list of rows (home, global, hashtag, search, bookmarks,
   thread, profile, people, notifications). It decides which window of rows to

@@ -14,5 +14,5 @@ log="$log_dir/engine-package.log"
 mkdir -p "$TMPDIR" "$log_dir"
 sh scripts/engine-build.sh > "$log" 2>&1 || { tail -40 "$log"; exit 1; }
 mkdir -p tmp/engine-dist
-cp tmp/engine-pkg/lkjstr_engine.js tmp/engine-pkg/lkjstr_engine_bg.wasm engine/worker.js engine/shared.js engine/transport.js tmp/engine-dist/
+cp tmp/engine-pkg/lkjstr_engine.js tmp/engine-pkg/lkjstr_engine_bg.wasm engine/worker.js engine/shared.js engine/transport.js engine/transport-avatars.js tmp/engine-dist/
 wc -c tmp/engine-dist/*

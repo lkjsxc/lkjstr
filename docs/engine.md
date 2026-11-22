@@ -3,7 +3,7 @@
 ## Purpose
 
 Rust/WASM owns relay traffic, verification, storage, finished view models and
-protocol actions. The TypeScript frontend owns pixels and the NIP-07 bridge.
+protocol actions and derived avatar images. The TypeScript frontend owns drawing and the NIP-07 bridge.
 The only interface is web/; crates/lkjstr-engine-worker is the Worker host.
 
 ## Build and entry
@@ -29,14 +29,17 @@ key-based patches, signer JSON strings and correlated action results.
 `serde-wasm-bindgen` converts structured-clone values directly, without a JSON
 round trip for each row. Unknown messages are ignored as the contract requires.
 Internal scheduler types remain separate from the transport contract.
-The Worker reports protocol 2. account.key exports a held local secret as nsec
+Finite `avatar.want`/`avatar.close` requests return client-targeted `avatar` results, with actual structured-cloned
+Blobs outside rows and snapshots. Outcomes, scheduling and ownership are specified in [avatars.md](avatars.md).
+The Worker reports protocol 16. account.key exports a held local secret as nsec
 only on explicit request; external/read-only signers return unsupported.
 Account input/output Debug implementations redact payloads. Private account
 storage is separate from public diagnostics and telemetry.
 
 `open` delivers cached rows and registers wants. `window` holds an anchor with
 bounded surrounding rows; top windows follow arrivals. Patches batch every
-75 ms. Hydration follows the current bounded window. Advancing its cached tail
+75 ms. Hydration follows the current bounded window and adds verified author write routes for missing profiles,
+while preserving configured requests, role/read opt-outs and the automatic 50 ms coalescing window. Advancing its cached tail
 requests one older inclusive `until` page alongside the live head; only short
 EOSE pages from every selected relay establish the remote end. Full pages with
 nonadvancing tied timestamps remain unknown. `close` and visibility hints
@@ -58,7 +61,8 @@ transport are implemented. Unsupported variants are listed in status.md.
 Shared clients namespace sub/action/sign IDs internally. Each has its own wire
 session; results and signer requests return only to the originating port.
 Visibility is the union of visible wants across clients. Hiding one tab does
-not close another tab's requests. Explicit close/hints release work.
+not close another tab's requests. Explicit close/hints release work. Pending avatar owners share exact-URL jobs;
+retiring uncancellable effects retain their permits until settlement. The page revokes its last live object URL.
 
 Clients send heartbeat every 20 seconds. After 180 seconds without contact the
 host releases that client's wants and sends reconnect. Explicit detach releases
@@ -92,7 +96,7 @@ There are no implicit product bootstrap destinations.
 
 ## Persistence
 
-Worker-safe IndexedDB uses `lkjstr-wasm`, schema 1: events have
+Worker-safe IndexedDB uses `lkjstr-wasm`, schema 2: events have
 `{id, created_at, raw}` with a created_at index. Raw holds a compact
 tuple; previous JSON objects still read. kv holds private account state and values.
 Writes resolve on transaction commit and retry from a bounded 20000-event
@@ -105,6 +109,9 @@ in rows, diagnostics or fixture output.
 Successful live writes prune the oldest physical rows beyond 20000. Account
 mutations commit before installing state. The cold-start browser benchmark
 seeds 100000 signed physical rows; engine-performance.md reports its timings.
+
+The separate disposable `lkjstr-avatar-v1` database stores derivatives, metadata and atomic LRU accounting.
+Its caps are 20 MiB of actual Blob payloads and 4096 entries, independent of account and event storage.
 
 ## Harness
 

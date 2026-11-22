@@ -1,6 +1,7 @@
 // Public client contracts; existing importers may continue importing them from client.ts.
 
 import type { Signal } from '../shared/signal.ts';
+import type { AvatarClient } from './client-avatars.ts';
 import type { createDmClient } from './client-dm.ts';
 import type { createSignerAuthClient } from './client-signer-auth.ts';
 import type { createStorageClient } from './client-storage.ts';
@@ -63,6 +64,7 @@ export type AccountState =
   | { readonly phase: 'failed'; readonly error: { readonly code: 'internal' } };
 export type Engine = {
   readonly noteOutbox?: ReturnType<typeof import('./client-note-outbox.ts').createNoteOutbox>;
+  readonly avatars: AvatarClient;
   readonly posting?: Pick<Signal<boolean>, 'get' | 'subscribe'>;
   readonly dm?: ReturnType<typeof createDmClient>;
   readonly zaps?: ReturnType<typeof createZapClient>;

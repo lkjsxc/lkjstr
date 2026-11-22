@@ -5,11 +5,12 @@ import { learnPerson } from '../src/shared/people.ts';
 import { loadViewState, saveViewState } from '../src/shared/view-state.ts';
 import { mountCompose } from '../src/views/compose.ts';
 import { mountFeedBar } from '../src/views/feed-bar.ts';
-import { avatar } from '../src/views/parts.ts';
 import { openTabSearch } from '../src/wm/tab-search.ts';
+import { avatarFixture, resetAvatarFixtures, settleAvatars } from './avatar-support.ts';
 import { person, setup } from './wishes-support.ts';
 
 afterEach(() => {
+  resetAvatarFixtures();
   vi.unstubAllGlobals();
   document.body.replaceChildren();
   localStorage.clear();
@@ -172,8 +173,8 @@ it('keeps the draft in its field when durable storage fails', () => {
   off();
 });
 
-it('updates a remembered face without retrying the same failed picture', async () => {
-  vi.stubGlobal('IntersectionObserver', undefined);
+it('keeps a remembered face while metadata hydrates and requests a changed picture URL', async () => {
+  const x = avatarFixture();
   const a = {
     ...person,
     pubkey: 'b'.repeat(64),
@@ -181,8 +182,9 @@ it('updates a remembered face without retrying the same failed picture', async (
     profileId: 'old',
   };
   learnPerson(a);
-  const face = avatar(a);
-  document.body.append(face);
+  const face = x.face(a);
+  await settleAvatars();
+  x.reply(x.wants()[0]!.req, { status: 'fallback', uniform: false });
   const image = face.querySelector('img')!;
   await vi.waitFor(() => expect(image.getAttribute('src')).toBe(a.picture));
   learnPerson({ ...a, name: a.pubkey, picture: undefined, profileId: undefined });
@@ -192,14 +194,14 @@ it('updates a remembered face without retrying the same failed picture', async (
   expect(image.getAttribute('src')).toBeNull();
   expect(image.style.visibility).toBe('hidden');
   learnPerson({ ...a, profileId: 'new', name: 'Bea' });
-  expect(document.querySelector('[data-face]')).toBe(face);
   expect(face.textContent).toBe('B');
-  expect(face.querySelector('img')).toBe(image);
-  await Promise.resolve();
-  expect(image.getAttribute('src')).toBeNull();
-  const next = 'https://example.test/b.png';
-  learnPerson({ ...a, profileId: 'next', name: 'Bea', picture: next });
-  await vi.waitFor(() => expect(face.querySelector('img')?.getAttribute('src')).toBe(next));
+  expect(x.wants()).toHaveLength(1);
+  const picture = 'https://example.test/b.png';
+  learnPerson({ ...a, profileId: 'third', name: 'Bea', picture });
+  x.reply(x.wants().at(-1)!.req, { status: 'fallback', uniform: false });
+  expect(document.querySelector('[data-face]')).toBe(face);
+  expect(face.querySelector('img')).not.toBe(image);
+  expect(face.querySelector('img')?.src).toBe(picture);
 });
 
 it('clears an earlier delivery result when a new post starts', async () => {

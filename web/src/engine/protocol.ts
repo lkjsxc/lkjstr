@@ -3,9 +3,9 @@
 // mirrors it with serde (`t`, `k`, `a`, `op` and `kind` are the tags; field names are camelCase) and proposes
 // changes in docs/engine-proposals.md.
 //
-// Division of work: the engine owns everything that is not pixels (relay connections, request planning, the event
-// store, signature checks, parsing, heuristics, ranking, publishing, uploads, keys). The interface never parses an
-// event and never opens a socket: a row arrives as a finished view model and is drawn as it is.
+// Division of work: the engine owns relay connections, request planning, the event store, signature checks,
+// parsing, heuristics, ranking, publishing, uploads, keys and avatar derivation/cache policy. The interface owns
+// drawing and live face leases; it never parses an event or opens a socket. Rows arrive as finished view models.
 //
 // Transport: `worker.postMessage(ToEngine)` and `worker.onmessage = (FromEngine)`. The engine posts `ready` once
 // after it has loaded; the interface sends `configure` and `hint` first and may send anything else before `ready`
@@ -987,10 +987,32 @@ export type PublicCacheReconcile = {
   readonly removedQuoteIds: readonly string[];
 };
 
+// Finite avatar.want/close requests own exact URLs. Ready carries a structured-cloned Blob, never a row/snapshot field.
+// retained:false is usable without persistence; fallback uses the original/letter rule, deferred retries, rejected stops.
+export type AvatarOutput = {
+  readonly t: 'avatar';
+  readonly req: string;
+  readonly result:
+    | { readonly status: 'ready'; readonly retained: boolean }
+    | { readonly status: 'fallback'; readonly uniform: boolean }
+    | { readonly status: 'deferred'; readonly retryMs: number }
+    | { readonly status: 'rejected' };
+  readonly blob?: Blob;
+  readonly image?: {
+    readonly edge: number;
+    readonly sourceWidth: number;
+    readonly sourceHeight: number;
+    readonly bytes: number;
+    readonly mime: string;
+  };
+};
+
 export type ToEngine =
   | { readonly t: 'note.outbox'; readonly keys: readonly string[] }
   | { readonly t: 'note.discard'; readonly key: string }
   | { readonly t: 'note.wake' }
+  | { readonly t: 'avatar.want'; readonly req: string; readonly url: string }
+  | { readonly t: 'avatar.close'; readonly req: string }
   | { readonly t: 'cache.hold'; readonly sub: SubId; readonly rows: readonly PublicCacheHoldRow[] }
   | { readonly t: 'storage.inspect'; readonly req: ReqId }
   | { readonly t: 'storage.close'; readonly req: ReqId }
@@ -1263,6 +1285,7 @@ export type FromEngine =
       readonly keys: readonly string[];
       readonly statuses: readonly NoteOutboxStatus[];
     }
+  | AvatarOutput
   | PublicCacheReconcile
   | {
       readonly t: 'cache.policy';

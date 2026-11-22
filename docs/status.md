@@ -4,6 +4,8 @@
 Claude owns the interface. Account-safe and A1/A2 (972ef776) are live. [Emoji sets](emoji-sets.md) support shared shortcodes across sources.
 [Q1](engine-q1-progress.md) passed public scoring. Worker, ship and Q2-Q5 remain. [Stage 1 orchestration](orchestration-optimizer.md) adds weighted retention.
 
+[Avatars](avatars.md) use bounded Worker derivation and persistence; visible-profile write routing has native tests.
+
 ## Pinned notes (2026-11-27)
 
 Protocol 18 adds [public pins](pinned-notes.md), live profile/account list reads, missing-note hydration and

@@ -7,6 +7,7 @@ pub(super) fn stop(h: &mut Host) {
     h.scope.close();
     account_store::stop(h);
     storage::stop(h);
+    avatars::stop(h);
     bunker::sync(h);
     zaps::stop(h);
     direct_messages::sync(h);

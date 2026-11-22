@@ -96,6 +96,11 @@ export function createMockEngine(
     signerFixtures,
     handle(msg) {
       if (stopped || storage.handle(msg)) return;
+      if (msg.t === 'avatar.want') {
+        post({ t: 'avatar', req: msg.req, result: { status: 'fallback', uniform: false } });
+        return;
+      }
+      if (msg.t === 'avatar.close') return;
       if (boot.accountError) {
         if (msg.t === 'detach') return dispose();
         start();

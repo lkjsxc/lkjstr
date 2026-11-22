@@ -106,6 +106,7 @@ pub(super) fn pump(host: &Rc<RefCell<Host>>) {
     }
     let cache_start = crate::measure::now();
     storage::pump(host);
+    avatars::pump(host);
     public_cache::pump(host);
     note_outbox::persist(host);
     persist(host);
