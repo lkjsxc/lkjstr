@@ -1,54 +1,17 @@
 import assert from 'node:assert/strict';
-import { readFileSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
 import test from 'node:test';
-import { openState, sha256 } from '../nostr-enqueue.mjs';
-import { ORIGIN, RELAYS } from './event.mjs';
-import { inspect, publish, ready, recordExisting } from './outbox.mjs';
-import { legacyReceipt } from './legacy-receipt.mjs';
-import { packet, stage } from './review.mjs';
-import { frame, loopback, releaseFixture, signed, stateFixture } from './test-fixture.mjs';
+import { openState } from '../nostr-enqueue.mjs';
+import { inspect, publish, ready } from './outbox.mjs';
+import { frame, loopback, releaseFixture, signed, sourceFixture, stateFixture } from './test-fixture.mjs';
 
 const revision = '29a62363a6ea449354b9a4036913e64fcfd57b47';
-const base = '7b07411a0f9090c416987d8adbf8f537d6165606';
 const timestamp = 1795240000;
-
-function approval(directory, draft, changes = {}) {
-  const draftPath = join(directory, 'draft.json');
-  const reviewPath = join(directory, 'review.json');
-  writeFileSync(draftPath, JSON.stringify(draft));
-  const digest = sha256(readFileSync(draftPath));
-  writeFileSync(reviewPath, JSON.stringify({ reviewer: 'claude', verdict: 'approved',
-    draft_sha256: digest, nip89: 'unchanged', evidence: 'fixture review', ...changes }));
-  return [draftPath, reviewPath];
-}
-
-test('review binds exact source, original draft bytes and a single batched membership', t => {
-  const { db, directory } = stateFixture(t);
-  releaseFixture(db, revision, timestamp);
-  releaseFixture(db, base, timestamp - 10);
-  assert.equal(packet(db, revision, [base]).nip89.changed, false);
-  const draft = { release: revision, batch: [base], source: 'neon',
-    en: 'Tested an example.', ja: '例を確認しました。', evidence: 'fixture writer' };
-  assert.throws(() => stage(db, ...approval(directory, draft, { draft_sha256: '0'.repeat(64) })), /exact draft/);
-  assert.throws(() => stage(db, ...approval(directory, { ...draft, en: 'See https://example.org' })), /prose/);
-  assert.throws(() => stage(db, ...approval(directory, { ...draft, en: 'See lkjstr.com' })), /prose/);
-  assert.throws(() => stage(db, ...approval(directory, { ...draft, release: base, batch: [revision] })), /ancestors/);
-  const files = approval(directory, draft);
-  assert.equal(stage(db, ...files).alreadyStaged, false);
-  assert.equal(stage(db, ...files).alreadyStaged, true);
-  const info = inspect(db, base);
-  assert.equal(info.announcement.revision, revision);
-  assert.equal(info.announcement.content, `Tested an example.\n\n例を確認しました。\n\n${ORIGIN}`);
-  assert.deepEqual(JSON.parse(info.announcement.approval.draft), draft);
-  const independent = { ...draft, release: base, batch: [], source: 'claude' };
-  assert.throws(() => stage(db, ...approval(directory, independent)), /another release/);
-});
 
 test('an ambiguous send reuses exactly one signature across DB reopen and retains exact relay proof', async t => {
   const { db, directory } = stateFixture(t);
   releaseFixture(db, revision, timestamp);
   db.prepare('INSERT INTO announcements (revision, approval, content) VALUES (?, ?, ?)').run(revision, '{}', 'test');
+  db.prepare('INSERT INTO announcement_members VALUES (?, ?)').run(revision, revision);
   const sent = [];
   let readbackEnabled = false;
   const relay = await loopback(t, (socket, [type, target]) => {
@@ -91,12 +54,16 @@ test('an ambiguous send reuses exactly one signature across DB reopen and retain
   assert.equal(sent.length, 2);
 });
 
-test('concurrent release candidates share the durable rolling ceiling and reset after a day', async t => {
+test('every approved note starts its send at once, with no rolling ceiling', async t => {
   const { db } = stateFixture(t);
-  const revisions = ['1', '2', '3'].map(char => char.repeat(40));
+  const { commit, git } = sourceFixture(t);
+  const revisions = ['one', 'two', 'three'].map(subject => commit(subject));
   for (const rev of revisions) {
     releaseFixture(db, rev, timestamp);
-    db.prepare('INSERT INTO announcements (revision, approval, content) VALUES (?, ?, ?)').run(rev, '{}', 'same text');
+    db.prepare('INSERT INTO announcements (revision, approval, content, approved_at) VALUES (?, ?, ?, ?)')
+      .run(rev, '{}', 'same text', timestamp);
+    db.prepare('INSERT INTO announcement_members VALUES (?, ?)').run(rev, rev);
+    db.prepare('INSERT INTO coverage VALUES (?, NULL)').run(rev);
   }
   let now = timestamp;
   const sent = [];
@@ -109,34 +76,15 @@ test('concurrent release candidates share the durable rolling ceiling and reset 
   };
   const options = { relays: ['fixture'], read, send, clock: () => now };
   const results = await Promise.all(revisions.map(rev => publish(db, rev, signed, options)));
-  assert.equal(sent.length, 2);
-  assert.equal(new Set(sent.map(event => event.id)).size, 2);
-  const throttled = results.findIndex(result => result.status === 'daily-cap');
-  assert.notEqual(throttled, -1);
-  const selection = ready(db, now);
-  assert.equal(selection.usedInRollingDay, 2);
-  assert.equal(selection.nextNewSlotAt, now + 86401);
-  assert.equal(selection.approved.find(row => row.revision === revisions[throttled]).status, 'daily-cap');
-  now += 86401;
-  const next = await publish(db, revisions[throttled], () => assert.fail('signed twice'), options);
-  assert.equal(next.id, results[throttled].id);
-  assert.equal(sent.length, 3);
-  await assert.rejects(recordExisting(db, revisions[0], signed(ORIGIN, revisions[0], now), options), /original signed app/);
-});
-
-test('the earlier publisher receipt must name the supplied event and distinct known relays', t => {
-  const { directory } = stateFixture(t);
-  const receipt = join(directory, 'previous-proof.json');
-  const event = { id: 'f'.repeat(64) };
-  const observation = { kind: 1, id: event.id, relay: RELAYS[0],
-    acknowledgment: 'accepted', readback: 'exact-event' };
-  writeFileSync(receipt, JSON.stringify([observation]));
-  const proof = legacyReceipt(receipt, event);
-  assert.equal(proof.evidence.sha256, sha256(readFileSync(receipt)));
-  assert.deepEqual(proof.readbacks, [{ relay: RELAYS[0], status: 'exact-event' }]);
-  for (const rows of [[observation, observation],
-    [{ ...observation, id: '0'.repeat(64) }], [{ ...observation, readback: 'timeout' }]]) {
-    writeFileSync(receipt, JSON.stringify(rows));
-    assert.throws(() => legacyReceipt(receipt, event), /exact readback/);
-  }
+  assert.deepEqual(results.map(result => result.status), ['unconfirmed', 'unconfirmed', 'unconfirmed']);
+  assert.equal(new Set(sent.map(event => event.id)).size, 3);
+  now += 600;
+  const state = ready(db, { git, now });
+  assert.deepEqual(Object.keys(state), ['next', 'awaitingReview', 'approved']);
+  assert.deepEqual(state.approved.map(row => row.status), ['ready', 'ready', 'ready']);
+  const retry = await publish(db, revisions[2], () => assert.fail('signed twice'), options);
+  assert.equal(retry.id, results[2].id);
+  assert.equal(sent.length, 4);
+  assert.deepEqual(sent[3], sent.find(event => event.id === retry.id));
+  assert.deepEqual(inspect(db, revisions[2]).attempts.map(row => row.status), ['unconfirmed', 'unconfirmed']);
 });

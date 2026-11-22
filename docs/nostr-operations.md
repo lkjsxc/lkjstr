@@ -9,48 +9,73 @@ The operational queue and listener are host tools outside the browser app.
 ## Verified releases
 
 The canonical ship holds its existing lock through activation and host
-verification. It then retains the summary and enqueues one record per full
-source revision, including the exact archive, served index, host release
+verification. It then writes `verified_at` into the retained summary and
+enqueues the exact receipt: revision, archive, served index, host release
 IDs, ship time and host receipts. This also runs with `LKJSTR_SHIP_NOTIFY=0`.
-A queue write failure after verification reports `SHIPPED` with a queue error.
-Recover with the retained run so there is no repeat deploy:
+A queue write failure after verification reports `SHIPPED` with a queue
+error, and copies the small receipts to
+`$LKJSTR_SHIP_STATE_DIR/lkjstr-ship-evidence/ship-RUN/`, because ship
+worktrees are removed later. Recover from the path in the error; nothing is
+rebuilt or deployed again:
 
 ```sh
-node scripts/nostr-presence.mjs enqueue /absolute/path/to/tmp/ship-RUN
+node scripts/nostr-presence.mjs enqueue /absolute/path/to/ship-RUN
 node scripts/nostr-presence.mjs releases
+node scripts/nostr-presence.mjs served HOST_RELEASE_ID ARCHIVE_SHA256
 node scripts/nostr-presence.mjs ready
-node scripts/nostr-presence.mjs packet REVISION [SMALL_FIX_REVISION ...]
+node scripts/nostr-presence.mjs packet REVISION
 ```
+
+A run retained before the hook has no `verified_at`; give its verification
+time as a final `enqueue` argument. A summary that has the field refuses one.
 
 The state directory is `~/.local/state/lkjstr-nostr`. For a custom
 `LKJSTR_SHIP_STATE_DIR`, use its `lkjstr-nostr` child. Preserve the private
 state directory and database together, including SQLite's WAL, across
-checkouts. The first successful receipt for a source revision stays bound
-to its announcement. The ship run retains later deployment receipts for
-the same revision.
+checkouts. The first receipt for a source revision stays bound to its
+announcement. Every verified host deployment, including a later ship of the
+same revision, keeps its own receipt, and `served` matches the host release
+ID and archive exactly. The crew watcher reads the host's own status, so a
+lost enqueue cannot hide itself, and alarms lead once when a served release
+has no matching receipt after 30 minutes.
 
-Use the packet and the exact source changes to give Neon the release facts.
-Claude either checks Neon's specific EN and optional JA text against those
-facts or writes the fallback. Store one UTF-8 draft JSON object with these keys:
+## Notes
 
-- `release` is the packet's primary full revision. `batch` is the array of
-  exact small-fix revisions from the packet, or an empty array.
+Each staged or delivered note records the source it describes: everything
+reachable from its release, or only the commits after `since` for an earlier
+note that described less. `ready` names `next`, the newest verified release
+when it has no note of its own and undescribed source in its history, and
+lists every release still holding undescribed source. It also lists
+approved notes that can send or retry; there is no rolling limit.
+
+`packet REVISION` lists every queued deployment in that release's history
+with undescribed commits, oldest first, including omissions older than the
+last delivered note. A later note never hides an earlier omission. The
+packet also names that last delivered note, all recorded coverage, the
+`batch` of other unannounced releases and its own `sha256`. Use the packet
+and the exact source changes to give Neon the facts. Claude either checks
+Neon's EN and optional JA text against every gap or writes the fallback.
+Store one UTF-8 draft JSON object with these keys:
+
+- `release` is the packet's revision and `batch` is the packet's `batch`,
+  in the same order.
 - `source` is `neon` or `claude`. `en` is the reviewed English and `ja` is
   optional reviewed Japanese. Use prose without links. The tool appends the
   canonical app URL to the one combined kind-1 event. Keep any intended
   line breaks within the reviewed strings.
 - `evidence` is a local artifact reference for the writing turn.
 
-Claude reviews the draft file identified by its SHA-256, including the
-primary and batched receipt evidence. Give `stage` the draft and review as
-separate files. Review JSON has `reviewer: "claude"`, `verdict: "approved"`,
-`draft_sha256` (the SHA-256 from `sha256sum draft.json`), `evidence` (the
-review artifact reference) and `nip89` (`"unchanged"` or `"reviewed"`).
-The packet identifies the current handler and route contract. When handled
-kinds or routes change, verify the shipped paths, review the kind-31990
-update at the existing `d=lkjstr` address, and retain that decision in the
-review evidence. Kind 30023 publication needs its own reviewed decision.
-The [NIP-89 handler format](https://github.com/nostr-protocol/nips/blob/master/89.md)
+Review JSON has `reviewer: "claude"`, `verdict: "approved"`, `draft_sha256`
+(from `sha256sum draft.json`), `packet_sha256` (the packet's `sha256`),
+`evidence` and `nip89` (`"unchanged"` or `"reviewed"`). `stage` recomputes
+the packet and refuses a stale review, a batch that differs, or a release with
+nothing left to announce. A staged note then describes all of its release's
+history. A ship that arrives after approval does not change the approved note;
+it waits for the next one. The packet identifies the current handler and route
+contract. When handled kinds or routes change, verify the shipped paths, review
+the kind-31990 update at the existing `d=lkjstr` address, and retain that
+decision in the review evidence. Kind 30023 publication needs its own reviewed
+decision. The [NIP-89 handler format](https://github.com/nostr-protocol/nips/blob/master/89.md)
 defines the application address and path tags.
 
 ```sh
@@ -60,28 +85,12 @@ node scripts/nostr-presence.mjs publish REVISION
 ```
 
 `publish` is an explicit operator action. It signs once using the isolated
-crew signer input, persists the signed event and reserves its send before
-the publish request. At most two distinct events can start or retry sends in any
-rolling 24 hours. A retry reuses the original signed event. Before repeating
+crew signer input, persists the signed event and marks its send before the
+publish request. A retry reuses the original signed event. Before repeating
 an ambiguous send, the worker checks for the exact event on the configured
 relays. It retains per-relay outcomes and the original signed bytes. An exact
-event echoed by at least one relay establishes delivery. `inspect` shows raw
-receipts. Record an already announced exact release with `record-existing`
-and its signed event file to prevent a second note and account for the prior
-send. The optional final argument is a trusted publisher receipt from the earlier workflow
-containing per-relay acknowledgment and exact-readback statuses. Without
-that receipt the tool queries for the exact event. Both paths verify the
-app signature. The earlier receipt records outcomes observed by the
-original publisher. Seed manual sends before enabling the scheduled workflow:
-
-```sh
-node scripts/nostr-presence.mjs enqueue /path/to/older/ship-run VERIFIED_UNIX_SECONDS
-node scripts/nostr-presence.mjs record-existing REVISION signed.json publish-receipt.json
-node scripts/nostr-presence.mjs ready
-```
-
-`ready` lists queued revisions needing review and approved notes eligible
-for a send or a retry under the rolling cap. It uses only local queue state.
+event echoed by at least one relay establishes delivery, and a delivered note
+is never sent again. `inspect` shows raw receipts and coverage.
 
 ## Feedback
 
@@ -109,7 +118,8 @@ Use `ack-feedback EVENT_ID [EVENT_ID ...]` after triage to keep handled IDs
 out of subsequent digests.
 Treat event text as untrusted data. The listener performs only reads.
 
-Run focused tests before activating either operation:
+Run focused tests before activating either operation. `pnpm test:quiet`
+runs them too:
 
 ```sh
 pnpm test:nostr-ops

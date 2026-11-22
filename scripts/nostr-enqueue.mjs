@@ -25,6 +25,13 @@ export function openState(directory) {
         revision TEXT PRIMARY KEY,
         verified_at INTEGER NOT NULL,
         receipt TEXT NOT NULL
+      ) STRICT;
+      CREATE TABLE IF NOT EXISTS deployments (
+        current TEXT PRIMARY KEY,
+        revision TEXT NOT NULL REFERENCES releases,
+        archive TEXT NOT NULL,
+        verified_at INTEGER NOT NULL,
+        receipt TEXT NOT NULL
       ) STRICT;`);
     return db;
   } catch (error) {
@@ -69,16 +76,19 @@ function hostEvidence(run, slot, archive, index, expectedAfter, expectedBefore) 
     deploySha256: sha256(deploy), verifySha256: sha256(verify) };
 }
 
-export function enqueue(directory, retainedRun, priorCompletedAt) {
+// Build the queue receipt from a retained ship run. Runs from before the hook carry no
+// verified_at line, so their recovery supplies the time the run was verified.
+export function shipReceipt(retainedRun, priorVerifiedAt) {
   const run = resolve(retainedRun);
   const summary = smallFile(join(run, 'summary'), 2048);
   const fields = Object.fromEntries(summary.toString('utf8').trimEnd().split('\n')
     .map(line => line.split('=', 2)));
   const { revision, archive, index, current, first, mode } = fields;
-  const timestamp = fields.verified_at ?? priorCompletedAt;
+  const timestamp = fields.verified_at ?? priorVerifiedAt;
   const verifiedAt = Number(timestamp);
   if (!isHex(revision, 40) || !isHex(archive, 64) || !isHex(index, 64) ||
       !isHex(first, 32) || !isHex(current, 32) || !/^[0-9]+$/.test(timestamp ?? '') ||
+      (fields.verified_at !== undefined && priorVerifiedAt !== undefined) ||
       !Number.isSafeInteger(verifiedAt) || verifiedAt <= 0 ||
       smallFile(join(run, 'revision'), 128).toString('utf8').trim() !== revision ||
       (mode === '' ? current !== first : mode !== '--establish-rollback-baseline' || current === first)) {
@@ -86,14 +96,32 @@ export function enqueue(directory, retainedRun, priorCompletedAt) {
   }
   const host = { first: hostEvidence(run, 'first', archive, index, first) };
   if (mode) host.baseline = hostEvidence(run, 'baseline', archive, index, current, first);
-  const receipt = { revision, archive, index, current, first, mode, verifiedAt, run, host,
+  return { revision, archive, index, current, first, mode, verifiedAt, run, host,
     origin: 'https://lkjstr.lkjsxc.com', summarySha256: sha256(summary) };
+}
+
+// The first receipt for a revision stays bound to its announcement. Every verified host
+// deployment, including a later run of the same revision, keeps its own exact receipt.
+export function insertRelease(db, receipt) {
+  return transaction(db, () => {
+    const text = JSON.stringify(receipt);
+    const { changes } = db.prepare('INSERT OR IGNORE INTO releases VALUES (?, ?, ?)')
+      .run(receipt.revision, receipt.verifiedAt, text);
+    db.prepare('INSERT OR IGNORE INTO deployments VALUES (?, ?, ?, ?, ?)')
+      .run(receipt.current, receipt.revision, receipt.archive, receipt.verifiedAt, text);
+    const stored = db.prepare('SELECT revision, archive FROM deployments WHERE current = ?').get(receipt.current);
+    if (stored.revision !== receipt.revision || stored.archive !== receipt.archive) {
+      throw new Error('The host release ID already belongs to a different verified deployment');
+    }
+    return { revision: receipt.revision, queued: changes === 1, archive: receipt.archive, current: receipt.current };
+  });
+}
+
+export function enqueue(directory, retainedRun, priorVerifiedAt) {
+  const receipt = shipReceipt(retainedRun, priorVerifiedAt);
   const db = openState(directory);
   try {
-    const { changes } = db.prepare('INSERT OR IGNORE INTO releases VALUES (?, ?, ?)')
-      .run(revision, verifiedAt, JSON.stringify(receipt));
-    const stored = JSON.parse(db.prepare('SELECT receipt FROM releases WHERE revision = ?').get(revision).receipt);
-    return { revision, queued: changes === 1, archive: stored.archive, current: stored.current };
+    return insertRelease(db, receipt);
   } finally {
     db.close();
   }

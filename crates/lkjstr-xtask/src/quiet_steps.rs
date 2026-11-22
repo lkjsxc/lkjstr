@@ -47,10 +47,16 @@ pub fn rust_steps() -> Vec<Step> {
 
 pub fn test_steps() -> Vec<Step> {
     let mut steps = rust_steps();
+    // Node expands the quoted glob itself, so the Nostr queue tests need no shell.
     steps.push(step(
-        "ship wrapper tests",
+        "ship wrapper and Nostr queue tests",
         OsString::from("node"),
-        &["--test", "scripts/ship.test.mjs"],
+        &[
+            "--test",
+            "--test-concurrency=2",
+            "scripts/ship.test.mjs",
+            "scripts/nostr/*.test.mjs",
+        ],
     ));
     steps
 }

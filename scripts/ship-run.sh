@@ -144,13 +144,19 @@ if [[ "$MODE" = --establish-rollback-baseline ]]; then
 fi
 VERIFIED_AT=$(date +%s) || end "SHIPPED $C sha256=$H current=$CURRENT; cannot timestamp receipt" 1
 QUEUE_ERROR=
-if printf 'revision=%s\narchive=%s\nindex=%s\ncurrent=%s\nfirst=%s\nmode=%s\nverified_at=%s\n' \
-    "$REVISION" "$H" "$I" "$CURRENT" "$FIRST" "$MODE" "$VERIFIED_AT" > "$RUN/summary.tmp" &&
-    mv "$RUN/summary.tmp" "$RUN/summary"; then
-  node --input-type=module --eval "$ENQUEUE_CODE" ship-nostr-enqueue "$STATE/lkjstr-nostr" "$RUN" ||
-    QUEUE_ERROR="; Nostr enqueue failed (recover from $RUN)"
-else
+if ! printf 'revision=%s\narchive=%s\nindex=%s\ncurrent=%s\nfirst=%s\nmode=%s\nverified_at=%s\n' \
+    "$REVISION" "$H" "$I" "$CURRENT" "$FIRST" "$MODE" "$VERIFIED_AT" > "$RUN/summary.tmp" ||
+    ! mv "$RUN/summary.tmp" "$RUN/summary"; then
   QUEUE_ERROR="; ship evidence summary write failed ($RUN)"
+elif ! node --input-type=module --eval "$ENQUEUE_CODE" ship-nostr-enqueue "$STATE/lkjstr-nostr" "$RUN"; then
+  # Worktrees are removed after a ship; keep the small receipts needed for recovery outside them.
+  KEEP="$STATE/lkjstr-ship-evidence/${RUN##*/}"
+  if mkdir -p -m 700 "$KEEP" && cp -p "$RUN/revision" "$RUN/summary" "$RUN/scripts.sha256" \
+      "$RUN/nostr-enqueue.mjs" "$RUN"/deploy-*.json "$RUN"/verify-*.json "$KEEP/"; then
+    QUEUE_ERROR="; Nostr enqueue failed (recover from $KEEP)"
+  else
+    QUEUE_ERROR="; Nostr enqueue failed (recover from $RUN)"
+  fi
 fi
 LAST="$STATE/lkjstr-last-ship"
 printf '%s %s\n' "$VERIFIED_AT" "$REVISION" > "$LAST.$$" && mv "$LAST.$$" "$LAST" ||

@@ -181,6 +181,14 @@ if (name === 'credential-fixture') {
     if (result.status !== 0) process.exit(result.status ?? 1);
     process.stdout.write(result.stdout);
   }
+} else if (name === 'cp' && args[0] === '-p') {
+  // The driver keeps a failed enqueue's small receipts in the private state spool.
+  const spool = join(process.env.LKJSTR_SHIP_STATE_DIR ?? '', 'lkjstr-ship-evidence') + '/';
+  if (!args.at(-1).startsWith(spool) || args.slice(1, -1).some(path => !path.startsWith(join(root, 'tmp/ship-')))) {
+    throw new Error('unexpected fixture evidence copy');
+  }
+  const result = spawnSync('/bin/cp', args);
+  process.exit(result.status ?? 1);
 } else if (name === 'cp') {
   if (args.length !== 2 || args[0] !== join(root, 'tmp/lkjstr-dist.tar.gz') ||
       !args[1].startsWith(join(root, 'tmp/ship-')) || !args[1].endsWith('/lkjstr-dist.tar.gz')) {
