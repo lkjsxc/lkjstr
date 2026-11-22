@@ -44,6 +44,10 @@ export function createGrid(hooks: Hooks) {
   let current = 0;
   let frame = 0;
   let hovered = false;
+  /** Picture cells by section, code and picture: a redraw moves the ones it still holds rather than making them anew,
+   * so a set arriving never blanks a picture already drawn or asks for it again. Bound: one drawing's cells. */
+  let pictures = new Map<string, HTMLElement[]>();
+  let kept = pictures;
 
   const label = (it: Item): string =>
     it.glyph
@@ -51,28 +55,34 @@ export function createGrid(hooks: Hooks) {
       : it.sourceLabel
         ? `${it.picked.emoji}, ${it.sourceLabel}`
         : it.picked.emoji;
-  const cell = (it: Item, i: number): HTMLElement =>
-    h(
-      'button',
-      {
-        class: 'ecell',
-        'data-i': i,
-        'data-emoji-url': it.picked.url ?? null,
-        tabindex: i === current ? 0 : -1,
-        'aria-label': label(it),
-      },
-      it.picked.url
-        ? emojiPicture(it.picked.emoji, it.picked.url, 'eimg')
-        : it.glyph
-          ? toned(it.glyph, hooks.tone())
-          : it.picked.emoji,
-    );
+  const cell = (it: Item, i: number, section: string): HTMLElement => {
+    const url = it.picked.url;
+    const key = url ? JSON.stringify([section, it.picked.emoji, url]) : '';
+    const old = key ? kept.get(key)?.shift() : undefined;
+    const c =
+      old ??
+      h(
+        'button',
+        { class: 'ecell' },
+        url
+          ? emojiPicture(it.picked.emoji, url, 'eimg')
+          : it.glyph
+            ? toned(it.glyph, hooks.tone())
+            : it.picked.emoji,
+      );
+    if (url) c.dataset.emojiUrl = url;
+    c.dataset.i = String(i);
+    c.tabIndex = i === current ? 0 : -1;
+    c.setAttribute('aria-label', label(it));
+    if (key) pictures.set(key, [...(pictures.get(key) ?? []), c]);
+    return c;
+  };
   const fill = (s: number): void => {
     const box = boxes[s];
     const sec = sections[s];
     if (!box || !sec || box.childElementCount) return;
     const at = starts[s] ?? 0;
-    box.append(...sec.items.map((it, j) => cell(it, at + j)));
+    box.append(...sec.items.map((it, j) => cell(it, at + j, sec.id)));
   };
   const drawTo = (s: number): void => {
     while (drawn <= s && drawn < sections.length) fill(drawn++);
@@ -101,6 +111,8 @@ export function createGrid(hooks: Hooks) {
       : undefined;
     const focused = el.contains(document.activeElement);
     cancelAnimationFrame(frame);
+    kept = pictures;
+    pictures = new Map();
     shown = next.filter((s) => s.items.length || s.note);
     sections = shown.filter((s) => s.items.length);
     items = sections.flatMap((s) => s.items);

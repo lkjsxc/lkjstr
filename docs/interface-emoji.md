@@ -54,7 +54,8 @@ pinned emojibase-data package into one hashed JSON file, fetched when the picker
 keeps it) and kept for the page's life; nothing is fetched for a reader who never opens the picker nor comes to an emoji in text. Until it
 arrives, or if it cannot be had, the common reactions of `shared/emoji-data.ts` are offered. The reader's custom
 emoji come from the engine's `emoji` source, which the open picker keeps visible; the last ones seen are drawn at
-once on the next opening. Pictures load lazily, keep their cell, and a picture that fails shows its code in small type.
+once on the next opening. Pictures load lazily and keep their cell, also when sets or the table arrive (the grid moves
+a drawn picture rather than drawing it again), and a picture that fails shows its code in small type.
 
 Picks: a Unicode pick is the glyph in the chosen tone. A custom pick puts `:code:` in the text and its tag
 (`code`, `url`, and `address` when known) on the note draft or the reaction; a private draft keeps code and
