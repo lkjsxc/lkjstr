@@ -711,6 +711,7 @@ export const en = {
   'stats.none': 'This engine keeps no statistics.',
   'view.docs': 'Documentation',
   'view.docs.hint': 'Guides, shortcuts, privacy and terms',
+  'docs.contents': 'Contents',
   'docs.g.about': 'About lkjstr',
   'docs.g.use': 'Using it',
   'docs.g.legal': 'Legal',

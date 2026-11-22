@@ -743,22 +743,22 @@ async function defaults(browser: Browser, still: Record<string, unknown>): Promi
             .join(' '),
         ),
       );
-  /** The middle tile opens on what lkjstr is, its first lines in view, and the tab is named after that page. */
+  /** The middle tile opens on the contents, then what lkjstr is, its first lines in view. */
   const firstRead = async (page: Page, who: string): Promise<void> => {
     const docs = page.locator('.view[data-kind="docs"]:visible');
-    const page1 = docs.locator('.dpage > p').first();
+    const page1 = docs.locator('.dpart[data-page="what"] .dbody > p').first();
     await page1.waitFor();
     const top = await page1.evaluate((p) => {
       const tile = p.closest('.view') as HTMLElement;
       return Math.round(p.getBoundingClientRect().top - tile.getBoundingClientRect().top);
     });
     fact(
-      `${who} first reads what lkjstr is`,
-      (await docs.locator('.ditem.on').innerText()) === 'What lkjstr is' &&
+      `${who} first reads the contents, then what lkjstr is`,
+      (await docs.locator('.dpage > :first-child').getAttribute('class')) === 'dtoc' &&
         (await page.locator('.tab.active[data-view="docs"]').getAttribute('title')) ===
-          'What lkjstr is' &&
+          'Documentation' &&
         (await page1.innerText()).startsWith('lkjstr is a Nostr client') &&
-        top < 400,
+        top < 420,
       top,
     );
   };
@@ -1846,35 +1846,67 @@ async function pages(browser: Browser, still: Record<string, unknown>): Promise<
   );
   await page.locator('.tab.active[data-view^="settings"] > .x').click();
 
-  // Docs: a tree about lkjstr; the shortcuts, the version facts and the policy are pages of it, each an ordinary tab.
+  // Docs: one page, its contents first; every part ends with a way back to them; the address bar never changes.
   await menu('Documentation');
   const sv = '.pane.cur .view[data-kind="docs"]';
-  await page.locator(`${sv} .dtree`).waitFor();
+  await page.locator(`${sv} .dtoc`).waitFor();
   const tree = await page
-    .locator(`${sv} .dtree`)
+    .locator(`${sv} .dtoc`)
     .evaluate((nav) =>
-      [...nav.querySelectorAll('details')].map(
+      [...nav.querySelectorAll('.dgroup')].map(
         (d) =>
-          `${d.querySelector('summary')?.textContent}: ${[...d.querySelectorAll('.ditem')].map((b) => b.textContent).join(', ')}`,
+          `${d.querySelector('h3')?.textContent}: ${[...d.querySelectorAll('.ditem')].map((b) => b.textContent).join(', ')}`,
       ),
     );
   fact(
-    'docs: a tree of groups and pages',
+    'docs: the contents come first, in groups',
     tree.join(' | ') ===
-      'About lkjstr: What lkjstr is, Version and licence | Using it: Keys and safety, Private messages, Relays, Filters, Shortcuts | Legal: Privacy policy, Terms',
+      'About lkjstr: What lkjstr is, Version and licence | Using it: Keys and safety, Private messages, Relays, Filters, Shortcuts | Legal: Privacy policy, Terms' &&
+      (await page.locator(`${sv} .dpage > :first-child`).getAttribute('class')) === 'dtoc',
     tree,
   );
   fact(
-    'docs: opens on what lkjstr is, and the tab is named after the page',
-    (await page.locator(`${sv} .ditem.on`).innerText()) === 'What lkjstr is' &&
-      (await page.locator('.pane.cur .tab.active > span').innerText()) === 'What lkjstr is' &&
+    'docs: one page holds every part, each ending with ↑ Contents, in a tab named Documentation',
+    (await count(page, `${sv} .dpart`)) === 9 &&
+      (await count(page, `${sv} .dpart > .dback`)) === 9 &&
+      (await page.locator(`${sv} .dpart .dback`).first().innerText()) === '↑ Contents' &&
+      (await page.locator('.pane.cur .tab.active > span').innerText()) === 'Documentation' &&
       (await page.locator(`${sv} .dpage`).innerText()).includes('runs entirely in this browser'),
   );
+  const address = page.url();
+  /** How far below the top of the tab a part's heading stands, once a slide has ended. */
+  const seatOfPart = async (id: string): Promise<number> => {
+    await page.waitForFunction(
+      ([view, id]) => {
+        const el = document.querySelector<HTMLElement>(view);
+        const head = el?.querySelector(`.dpart[data-page="${id}"] .dhead`);
+        const at =
+          head && el ? head.getBoundingClientRect().top - el.getBoundingClientRect().top : 1e9;
+        return (
+          Math.abs(at - 8) < 2 || (el && el.scrollTop >= el.scrollHeight - el.clientHeight - 1)
+        );
+      },
+      [sv, id] as const,
+    );
+    return page
+      .locator(`${sv} .dpart[data-page="${id}"] .dhead`)
+      .evaluate(
+        (h) =>
+          h.getBoundingClientRect().top -
+          (h.closest('.view') as Element).getBoundingClientRect().top,
+      );
+  };
   await page.locator(`${sv} .ditem`, { hasText: 'Shortcuts' }).click();
-  const caps = await page.locator(`${sv} kbd`).allInnerTexts();
+  const seat = await seatOfPart('shortcuts');
+  fact(
+    'docs: a contents entry slides to its part, and the address bar stays as it was',
+    Math.abs(seat - 8) < 2 && page.url() === address && !page.url().includes('#'),
+    [seat, page.url()],
+  );
+  const caps = await page.locator(`${sv} .keys kbd`).allInnerTexts();
   fact(
     'shortcuts: the key table, as this device names the keys',
-    (await count(page, `${sv} dt`)) === Object.keys(KEYS).length &&
+    (await count(page, `${sv} .keys dt`)) === Object.keys(KEYS).length &&
       caps.includes('/') &&
       caps.includes('X') &&
       caps.includes('O') &&
@@ -1883,8 +1915,7 @@ async function pages(browser: Browser, still: Record<string, unknown>): Promise<
       caps.includes('Space'),
     caps,
   );
-  await page.locator(`${sv} .ditem`, { hasText: 'Version and licence' }).click();
-  const about = await page.locator(`${sv} .dpage`).innerText();
+  const about = await page.locator(`${sv} .dpart[data-page="about"]`).innerText();
   fact(
     'about: version, engine, source, licence',
     /lkjstr \d+\.\d+\.\d+/.test(about) &&
@@ -1893,23 +1924,35 @@ async function pages(browser: Browser, still: Record<string, unknown>): Promise<
       about.includes('Apache License 2.0'),
     about,
   );
-  await page.locator(`${sv} .ditem`, { hasText: 'Privacy policy' }).click();
   fact(
-    'the privacy policy and the terms are pages of the tree',
-    (await page.locator(`${sv} .dpage`).innerText()).includes('no tracking cookies') &&
-      (await page.locator('.pane.cur .tab.active > span').innerText()) === 'Privacy policy',
+    'the privacy policy and the terms are parts of the page',
+    (await page.locator(`${sv} .dpart[data-page="privacy"]`).innerText()).includes(
+      'no tracking cookies',
+    ) && (await count(page, `${sv} .dpart[data-page="terms"]`)) === 1,
   );
-  await page.locator(`${sv} .dgroup summary`).first().click();
+  await page.locator(`${sv} .dpart[data-page="shortcuts"] .dback`).click();
+  await page.waitForFunction((view) => document.querySelector(view)?.scrollTop === 0, sv);
   fact(
-    'a group of the tree closes',
-    !(await page.locator(`${sv} .ditem`, { hasText: 'What lkjstr is' }).isVisible()),
+    '↑ Contents goes back to the contents, on the entry of that part',
+    (await page.evaluate(() => document.activeElement?.getAttribute('data-page'))) ===
+      'shortcuts' &&
+      (await page.locator(`${sv} .ditem.on`).innerText()) === 'Shortcuts' &&
+      page.url() === address,
   );
   fact('no heading repeats a tab title', (await count(page, `${sv} h1, ${rv} h1`)) === 0);
   await page.keyboard.press('o');
   await page.keyboard.type('terms');
   await page.keyboard.press('Enter');
-  await page.locator('.pane.cur .tab.active > span', { hasText: 'Terms' }).waitFor();
-  fact('tab search goes to a docs page by its name', true);
+  await page.locator(`${sv} .dpart[data-page="terms"]`).waitFor();
+  const terms = await seatOfPart('terms');
+  const tall = await page.locator(sv).evaluate((el) => el.clientHeight);
+  fact(
+    'tab search opens Documentation at a part by its name',
+    terms >= 0 &&
+      terms < tall - 40 &&
+      (await page.locator('.pane.cur .tab.active > span').innerText()) === 'Documentation',
+    [terms, tall],
+  );
 
   // Settings: the lists, each removal undoable.
   await menu('Settings');

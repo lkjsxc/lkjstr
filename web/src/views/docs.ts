@@ -1,6 +1,7 @@
-// The Docs tab: lkjstr explained as a small tree. Groups open and close; a page is shown beside the tree (above
-// it in a narrow tile, so the tab starts with what it says) and names the tab. What lkjstr is, keys and safety, relays, filters, the shortcuts (the
-// key table itself), the privacy policy, the terms, and the version facts all live here as pages of one tab kind.
+// The Docs tab: all of lkjstr's documentation on one page (owner, 2026-11-22). Its contents come first; an entry slides
+// to its part inside the tab, and every part ends with a way back to the contents; the address bar never changes.
+// What lkjstr is, keys and safety, relays, filters, the shortcuts (the key table itself), the privacy policy, the
+// terms and the version facts are its parts. A part is still found by its name (tab search), and opens the tab there.
 import { h } from '../shared/h.ts';
 import { both, type Key, t } from '../shared/i18n.ts';
 import type { Disposer } from '../shared/signal.ts';
@@ -77,57 +78,98 @@ export function prose(source: string): HTMLElement[] {
 }
 
 export function mountDocs(el: HTMLElement, env: ViewEnv): () => void {
-  const state = loadViewState<{ page?: string; shut?: string[]; title?: string }>(env.instance);
-  const page = h('article', { class: 'dpage' });
-  const tree = h('nav', { class: 'dtree' });
-  let dispose: Disposer | undefined;
-  const current = (): Page => DOC_PAGES.find((p) => p.id === state.page) ?? (DOC_PAGES[0] as Page);
-  const show = (): void => {
-    const p = current();
-    dispose?.();
-    dispose = undefined;
-    page.replaceChildren();
-    page.className = 'dpage';
-    if (p.mount) dispose = p.mount(page, env);
-    else page.append(...(p.body?.(env) ?? []).flatMap((key) => prose(t(key))));
-    for (const b of tree.querySelectorAll<HTMLElement>('.ditem'))
-      b.classList.toggle('on', b.dataset.page === p.id);
-    state.title = t(p.title);
-    saveViewState(env.instance, state);
-    env.setTitle(state.title);
+  // `page`: a part to go to once, when the tab is first drawn (a page found by its name); then forgotten.
+  const state = loadViewState<{ page?: string; title?: string }>(env.instance);
+  const disposers: Disposer[] = [];
+  const motion = (): ScrollBehavior =>
+    matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
+  /** Scrolls the tab, and the tab alone (the address bar never changes), to bring `target` to its top. */
+  const reach = (target: HTMLElement, behavior: ScrollBehavior): void => {
+    const top = target.getBoundingClientRect().top - el.getBoundingClientRect().top;
+    el.scrollTo({ top: Math.max(0, el.scrollTop + top - 8), behavior });
   };
-  const go = (id: string): void => {
-    if (id === current().id) return;
-    state.page = id;
-    saveViewState(env.instance, state);
-    show();
-    el.scrollTop = 0;
+  const entry = (id: string): HTMLElement | null => toc.querySelector(`.ditem[data-page="${id}"]`);
+  const part = (id: string): HTMLElement | null => el.querySelector(`.dpart[data-page="${id}"]`);
+  /** The entry of the part last gone to or come back from is marked, so the reader sees where they were. */
+  const mark = (id: string): void => {
+    for (const b of toc.querySelectorAll<HTMLElement>('.ditem'))
+      b.classList.toggle('on', b.dataset.page === id);
   };
-  tree.replaceChildren(
-    ...DOC_TREE.map((g) => {
-      const group = h(
-        'details',
-        { class: 'dgroup', open: !state.shut?.includes(g.title) },
-        h('summary', null, t(g.title)),
-        g.pages.map((p) =>
-          h('button', { class: 'ditem', 'data-page': p.id, onclick: () => go(p.id) }, t(p.title)),
+  const go = (id: string, behavior = motion()): void => {
+    const target = part(id);
+    if (!target) return;
+    const head = target.querySelector<HTMLElement>('.dhead') ?? target;
+    mark(id);
+    reach(head, behavior);
+    head.focus({ preventScroll: true });
+  };
+  /** Back to the contents, which open the page, on the entry of the part the reader comes from. */
+  const back = (id: string): void => {
+    mark(id);
+    el.scrollTo({ top: 0, behavior: motion() });
+    entry(id)?.focus({ preventScroll: true });
+  };
+  const toc = h(
+    'nav',
+    { class: 'dtoc', 'aria-label': t('docs.contents') },
+    h('h2', { class: 'dtitle' }, t('docs.contents')),
+    h(
+      'div',
+      { class: 'dgroups' },
+      DOC_TREE.map((g) =>
+        h(
+          'div',
+          { class: 'dgroup' },
+          h('h3', null, t(g.title)),
+          g.pages.map((p) =>
+            h('button', { class: 'ditem', 'data-page': p.id, onclick: () => go(p.id) }, t(p.title)),
+          ),
         ),
-      );
-      group.addEventListener('toggle', () => {
-        const shut = new Set(state.shut ?? []);
-        if (group.open !== shut.has(g.title)) return; // drawn as it was kept: nothing to save
-        if (group.open) shut.delete(g.title);
-        else shut.add(g.title);
-        state.shut = [...shut];
-        saveViewState(env.instance, state);
-      });
-      return group;
-    }),
+      ),
+    ),
   );
+  const body = (p: Page): HTMLElement => {
+    const box = h('div', { class: 'dbody' });
+    if (p.mount) disposers.push(p.mount(box, env));
+    else box.append(...(p.body?.(env) ?? []).flatMap((key) => prose(t(key))));
+    return box;
+  };
+  const parts = DOC_PAGES.map((p) =>
+    h(
+      'section',
+      { class: 'dpart', 'data-page': p.id },
+      h('h2', { class: 'dhead', tabIndex: -1 }, t(p.title)),
+      body(p),
+      h('button', { class: 'dback', onclick: () => back(p.id) }, `↑ ${t('docs.contents')}`),
+    ),
+  );
+  // What the filters part says depends on what the engine serves.
+  const filters = parts.find((x) => x.dataset.page === 'filters');
+  const redraw = (): void => {
+    const p = DOC_PAGES.find((x) => x.id === 'filters');
+    filters?.querySelector('.dbody')?.replaceWith(body(p as Page));
+  };
   el.classList.add('docs');
   el.tabIndex = -1;
-  el.replaceChildren(page, tree);
-  show();
-  const off = env.engine.info.subscribe(() => void (current().id === 'filters' && show()));
-  return () => (off(), dispose?.());
+  el.replaceChildren(h('article', { class: 'dpage' }, toc, ...parts));
+  // One page, one name: Documentation.
+  delete state.title;
+  saveViewState(env.instance, state);
+  env.setTitle(t('view.docs'));
+  // The part asked for is gone to once the tab has its size, before a stored reading place is put back.
+  const pending = state.page && state.page !== DOC_PAGES[0]?.id ? state.page : undefined;
+  const sized = new ResizeObserver(() => {
+    if (!el.clientHeight) return;
+    sized.disconnect();
+    if (pending) go(pending, 'auto');
+    delete state.page;
+    saveViewState(env.instance, state);
+  });
+  sized.observe(el);
+  const off = env.engine.info.subscribe(redraw);
+  return () => {
+    off();
+    sized.disconnect();
+    for (const dispose of disposers) dispose();
+  };
 }

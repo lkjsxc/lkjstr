@@ -39,28 +39,32 @@ export async function prepareViewChecks(page: Page, check: Check): Promise<() =>
   const mediaTab = await page.locator('.pane.cur .tab.active').getAttribute('data-view');
   await go('Global');
   await go('Documentation');
-  await front('docs').getByText('Privacy policy', { exact: true }).click();
-  const reset = await front('docs').evaluate(async (el) => {
-    // A short tile keeps both pages scrollable, so clamping cannot hide a failed reset.
+  // A short tile keeps the page scrollable both ways, so neither a clamp nor an observer can hide a move undone.
+  const moved = await front('docs').evaluate(async (el) => {
     const height = el.style.height;
     el.style.height = '240px';
-    el.querySelector<HTMLButtonElement>('[data-page="shortcuts"]')!.click();
     const frame = () => new Promise<void>((done) => requestAnimationFrame(() => done()));
-    await frame();
-    el.scrollTop = 180;
-    await frame();
-    await frame(); // Let the real scroll event save the previous page's offset.
-    const before = el.scrollTop;
-    el.querySelector<HTMLButtonElement>('[data-page="privacy"]')!.click();
-    await frame();
-    await frame(); // Mutation and resize observers must not undo go()'s reset.
-    const after = el.scrollTop;
-    const scrollable = el.scrollHeight > el.clientHeight;
+    const seat = (id: string): number =>
+      (el.querySelector(`.dpart[data-page="${id}"] .dhead`) as HTMLElement).getBoundingClientRect()
+        .top - el.getBoundingClientRect().top;
+    const go = async (id: string): Promise<number> => {
+      el.querySelector<HTMLButtonElement>(`.dtoc [data-page="${id}"]`)!.click();
+      for (let i = 0; i < 90 && Math.abs(seat(id) - 8) > 1; i++) await frame();
+      await frame();
+      await frame(); // Mutation and resize observers must not undo the move.
+      return seat(id);
+    };
+    const first = await go('shortcuts');
+    const second = await go('privacy');
     el.style.height = height;
-    return before >= 100 && after === 0 && scrollable;
+    return Math.abs(first - 8) <= 1 && Math.abs(second - 8) <= 1;
   });
-  check('view state: selecting another Docs page resets to the top', reset);
-  await front('docs').locator('.dgroup').first().locator('summary').click();
+  check('view state: a Docs contents entry moves to its part, and nothing moves it back', moved);
+  await front('docs').evaluate(async (el) => {
+    el.scrollTop = 900;
+    await new Promise((done) => setTimeout(done, 100)); // the real scroll event saves the place
+  });
+  const docsTop = await front('docs').evaluate((el) => el.scrollTop);
   const docsTab = await page.locator('.pane.cur .tab.active').getAttribute('data-view');
   await go('Stats');
   await front('stats').locator('.stab tbody tr').first().waitFor();
@@ -102,14 +106,11 @@ export async function prepareViewChecks(page: Page, check: Check): Promise<() =>
       (await front('media').locator('.mscale').innerText()) === scale,
     );
     await show(docsTab);
-    check(
-      'view state: Docs page and tree choice survive reload',
-      (await front('docs').locator('.ditem.on').innerText()) === 'Privacy policy' &&
-        !(await front('docs')
-          .locator('.dgroup')
-          .first()
-          .evaluate((e) => (e as HTMLDetailsElement).open)),
+    await page.waitForFunction(
+      (top) => document.querySelector('.pane.cur .view[data-kind="docs"]')?.scrollTop === top,
+      docsTop,
     );
+    check('view state: the place read in Docs survives reload', docsTop > 0);
     await show(statsTab);
     await front('stats').locator('.stab tbody tr').first().waitFor();
     check(

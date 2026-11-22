@@ -199,7 +199,7 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
   and leaves a tick to come back by; `[` and `]` step a day, Backspace returns
   ([interface-time.md](interface-time.md) C2, C3). The tile's own width decides the rail (56px from 520px, else 16px
   with years shown on hover) and other tile-width
-  layouts (Documentation puts its tree under the page below 520px) from the first frame; a list the engine refused
+  layouts (link-card pictures, the folded action row) from the first frame; a list the engine refused
   last time on this device starts without the rail's room, so its notes never widen after a second. Other views keep
   a 14px scrollbar with a slim thumb that widens under the pointer.
 - While the reader scrolls a list in time order (wheel, touch, keys, a dragged thumb or rail), a small label beside
@@ -282,11 +282,12 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
   Route words, followed-author coverage and weights are sortable columns. Never-connected traffic and all-zero compound cells show one dash; nonzero publication counts show even before a connection. Heads and cells name every compound part in localized tooltips.
   Narrow tiles show Relay, Received and Answer; tapping a row unfolds the other labelled values, one row at a time, retained per tab. Relay names elide inside the host and keep the tail. No horizontal scrolling.
   A second table shows request purposes, weights, counts and completion marks; narrow tiles show Purpose and Relay, with the request id and other values in retained unfolded lines.
-- Documentation is one tab with a tree of groups and pages: what lkjstr is, release
-  and licence, keys and safety, relays, filters, shortcuts, the privacy
-  policy, the terms. The tree stands beside the page, or under it in a narrow
-  tile, so the tab starts with what it says. A page names its tab and is found by name in tab search.
-  Selecting another page opens it at the top; restoring a tab keeps its position.
+- Documentation is one tab and one page (owner, 2026-11-22): its contents come first, groups side by side where
+  there is room, then every part in order: what lkjstr is, release and licence, keys and safety, messages, relays,
+  filters, shortcuts, the privacy policy, the terms. An entry slides the tab to its part (at once with reduced
+  motion); each part ends with a small "↑ Contents" that slides back to the contents, on that part's entry, marked.
+  The address bar never changes (no fragment). A part is found by its name in tab search and opens a Documentation
+  tab there; restoring a tab keeps its position.
 ## Language, and checking the look
 Every visible string comes from the two tables in `web/src/shared/`. Japanese is written as Japanese, with no space before particles after a
 name. Searching views works in both languages. `pnpm shots` in `web/` writes every scene at 1440, 1024 and 390, in both themes and languages, to

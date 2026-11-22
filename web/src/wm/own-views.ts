@@ -154,7 +154,7 @@ export function createOwnViews(
           const selector =
             target === el
               ? 'self'
-              : target.matches('.dtree, .dpage, .stab-wrap, .sbox, textarea')
+              : target.matches('.stab-wrap, .sbox, textarea')
                 ? target.matches('textarea')
                   ? 'textarea'
                   : target.matches('.sbox')

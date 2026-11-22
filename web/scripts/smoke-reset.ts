@@ -57,7 +57,7 @@ const pressUndo = async (page: Page): Promise<void> => {
 };
 const settle = (page: Page): Promise<void> => page.waitForTimeout(600); // the layout is written 400ms after a change
 /** The default is drawn: its middle tile opens on Documentation, which has no notes to wait for. */
-const DRAWN = '.view[data-kind="docs"] .dpage > p';
+const DRAWN = '.view[data-kind="docs"] .dpart .dbody > p';
 
 export async function resetChecks(open: Open, check: Check): Promise<void> {
   // 1. A Post tab opened after the reset takes the free id compose~2; Undo must not bring the old one over it.

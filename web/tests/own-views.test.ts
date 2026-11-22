@@ -44,7 +44,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-it('restores Docs on mount, but mutations and resizes do not undo a page reset before scroll fires', async () => {
+it('restores Docs on mount, but mutations and resizes do not undo a move to a part before scroll fires', async () => {
   const el = setup({ self: { top: 300, left: 0 } });
   dimensions(el);
   resize();
@@ -59,21 +59,32 @@ it('restores Docs on mount, but mutations and resizes do not undo a page reset b
   el.scrollTop = 450;
   el.dispatchEvent(new Event('scroll'));
   expect(loadViewState('test:docs')).toMatchObject({ scroll: { self: { top: 450 } } });
-  el.querySelector<HTMLButtonElement>('[data-page="keys"]')!.click();
-  expect(el.scrollTop).toBe(0);
+  // A contents entry moves the tab to its part (here 1000px further down), inside the tab alone (slid, unless the
+  // reader asked for less motion, as here).
+  vi.stubGlobal('matchMedia', () => ({ matches: true }));
+  const part = el.querySelector<HTMLElement>('.dpart[data-page="keys"]')!;
+  const head = part.querySelector<HTMLElement>('.dhead')!;
+  vi.spyOn(head, 'getBoundingClientRect').mockReturnValue(new DOMRect(0, 1000, 200, 30));
+  el.querySelector<HTMLButtonElement>('.dtoc [data-page="keys"]')!.click();
+  expect(el.scrollTop).toBe(1442);
+  expect(el.querySelector('.ditem.on')?.getAttribute('data-page')).toBe('keys');
   // Mutation observers run before the browser's queued scroll event.
   await new Promise((done) => setTimeout(done, 0));
-  expect(el.scrollTop).toBe(0);
+  expect(el.scrollTop).toBe(1442);
   resize();
-  expect(el.scrollTop).toBe(0);
+  expect(el.scrollTop).toBe(1442);
   el.dispatchEvent(new Event('scroll'));
-  expect(loadViewState('test:docs')).toMatchObject({ scroll: { self: { top: 0 } } });
+  expect(loadViewState('test:docs')).toMatchObject({ scroll: { self: { top: 1442 } } });
   own.stash();
   el.remove();
   document.body.append(el);
   own.sync(new Set(['docs']));
   resize();
+  expect(el.scrollTop).toBe(1442);
+  // Its "↑ Contents" goes back to the contents, to the entry of that part.
+  part.querySelector<HTMLButtonElement>('.dback')!.click();
   expect(el.scrollTop).toBe(0);
+  expect(document.activeElement?.getAttribute('data-page')).toBe('keys');
 });
 
 it('waits for delayed scrollers, restores replacement nodes and then respects their own scroll changes', async () => {

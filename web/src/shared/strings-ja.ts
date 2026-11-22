@@ -719,6 +719,7 @@ export const ja: Record<keyof typeof en, string> = {
   'stats.none': 'このエンジンは統計を持っていません。',
   'view.docs': 'ドキュメント',
   'view.docs.hint': '使い方、ショートカット、プライバシー、規約',
+  'docs.contents': '目次',
   'docs.g.about': 'lkjstr について',
   'docs.g.use': '使い方',
   'docs.g.legal': '規約',

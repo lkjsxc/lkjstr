@@ -110,26 +110,33 @@
 @media (pointer: coarse) {
   .aadd .addrow input, .aadd .btn, .abtns .btn, .krow .btn, .kfield { height: 40px; }
 }
-/* Docs: a tree beside the page it shows; under 520px of tile the page comes first and the tree follows it. */
-.view.docs { display: grid; grid-template-columns: 200px minmax(0, 1fr); align-items: start; }
-.view.docs > .dtree { grid-area: 1 / 1; }
-.view.docs > .dpage { grid-area: 1 / 2; }
+/* Docs: one page, its contents first (groups side by side where there is room), then every part, each ending with a
+   quiet way back to the contents. A heading the keyboard lands on is not outlined: the page moved to it. */
 .view.docs:focus { outline: none; }
-.dtree { position: sticky; top: 0; display: flex; flex-direction: column; gap: 6px; padding: 10px 6px 10px 8px; user-select: none; }
-.dgroup > summary { padding: 3px 6px; border-radius: 4px; color: var(--muted); font-size: 12.5px; font-weight: 600; cursor: pointer; }
-.dgroup > summary:hover { color: var(--fg); }
-.ditem { display: block; margin-left: 13px; padding: 4px 8px; width: calc(100% - 13px); border-left: 1px solid var(--line); border-radius: 0 4px 4px 0; color: var(--muted); text-align: left; }
-.ditem:hover { background: var(--hover); color: var(--fg); }
+.dpage { box-sizing: border-box; max-width: 660px; padding: 12px 18px 40px 14px; word-break: auto-phrase; }
+.dtoc { padding: 0 0 14px; border-bottom: 1px solid var(--line); }
+.dtitle { margin: 0 0 8px; font-size: 18px; font-weight: 600; }
+.dgroups { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 6px 18px; }
+.dgroup > h3 { margin: 0; padding: 3px 0; color: var(--muted); font-size: 12.5px; font-weight: 600; }
+.ditem { display: block; width: 100%; padding: 4px 8px; border-left: 1px solid var(--line); border-radius: 0 4px 4px 0; color: var(--accent); text-align: left; }
+.ditem:hover { background: var(--hover); }
 .ditem.on { border-left-color: var(--accent); background: var(--wash); color: var(--fg); font-weight: 600; }
-.dpage { box-sizing: border-box; max-width: 660px; padding: 10px 18px 28px 12px; word-break: auto-phrase; }
-.dpage > p { margin: 0 0 10px; line-height: 1.7; white-space: pre-line; }
-.dpage > ul { margin: 0 0 10px; padding-left: 20px; line-height: 1.7; }
-.dpage > .sgroup:first-child { margin-top: 0; }
-.dpage > .sgroup { font-size: 14.5px; }
+.dpart { padding: 22px 0 6px; border-bottom: 1px solid var(--line); }
+.dpart:last-child { border-bottom: 0; }
+.dhead { margin: 0 0 10px; font-size: 18px; font-weight: 600; }
+.dhead:focus { outline: none; }
+.dbody > p { margin: 0 0 10px; line-height: 1.7; white-space: pre-line; }
+.dbody > ul { margin: 0 0 10px; padding-left: 20px; line-height: 1.7; }
+.dbody > .sgroup { font-size: 14.5px; }
+.dbody > .sgroup:first-child { margin-top: 0; }
+.dback { display: inline-block; margin: 6px 0 10px; padding: 4px 0; color: var(--accent); font-size: 12.5px; }
+.dback:hover { text-decoration: underline; }
 @container (max-width: 520px) {
-  .view.docs { display: block; }
-  .dtree { position: static; padding: 10px 8px 16px; border-top: 1px solid var(--line); }
-  .dpage { padding: 10px 12px 24px; }
+  .dpage { padding: 10px 12px 32px; }
+}
+@media (pointer: coarse) {
+  .ditem { min-height: 40px; }
+  .dback { min-height: 40px; padding: 0 2px; }
 }
 
 /* Protected-key boxes reuse the backup spacing, controls and existing surface tokens. */
