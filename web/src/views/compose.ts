@@ -1,5 +1,6 @@
 // The composer saves typed drafts and retains failed posts and channel messages for retry.
 import type { Delivery, Draft, Emoji, Failure, Mention, Uploaded } from '../engine/protocol.ts';
+import { insertDraftEmoji, usedDraftEmoji } from '../shared/emoji-draft.ts';
 import { h, replaceChildren } from '../shared/h.ts';
 import { t } from '../shared/i18n.ts';
 import { icon } from '../shared/icons.ts';
@@ -14,7 +15,7 @@ import { createComposeMedia } from './compose-media-state.ts';
 import { createMentions } from './compose-mentions.ts';
 import { type ChannelDraft, createChannelOutbox } from './compose-outbox.ts';
 import { createWho } from './compose-who.ts';
-import { emojiTag, openEmojiPicker } from './emoji-picker.ts';
+import { openEmojiPicker } from './emoji-picker.ts';
 import { homeDraftForEdit } from './home-drafts.ts';
 import type { ViewEnv } from './registry.ts';
 import { sendLine } from './send-state.ts';
@@ -31,7 +32,7 @@ type State = {
   cw?: string;
   title?: string;
   /** Custom emoji put into the text with the picker. */
-  emoji?: Emoji[];
+  emoji?: readonly Emoji[];
   media?: Uploaded[];
   mentions?: Mention[];
 };
@@ -91,9 +92,9 @@ export function mountCompose(
   );
   emoji.addEventListener('click', () =>
     openEmojiPicker(env, emoji, (p) => {
-      const tag = emojiTag(p);
-      if (tag) state.emoji = [...(state.emoji ?? []).filter((e) => e.code !== tag.code), tag];
-      insert(p.emoji);
+      const picked = insertDraftEmoji(usedDraftEmoji(state.emoji, area.value), p);
+      state.emoji = picked.emoji;
+      insert(picked.text);
     }),
   );
   const post = h(

@@ -5,8 +5,9 @@ import { CHANNEL_FILLER, CHANNEL_NOTES, CHANNELS } from './fixtures-channels.ts'
 import { toneUrl, VIDEO, VIDEO_URL } from './fixtures-media.ts';
 import { FILLER, type MediaSpec, NOTES, type NoteSpec } from './fixtures-notes.ts';
 import { byHandle, EMOJI, FOLLOWING, PEOPLE, type Person } from './people.ts';
+import { collisionChips, initialReactions, type React } from './reactions.ts';
 import { initialRelays } from './relays.ts';
-export type React = { count: number; mine: boolean };
+
 export type MNote = {
   eventKind?: number;
   readonly id: string;
@@ -167,9 +168,7 @@ export function createWorld(now: number) {
     quote: s.quote ? tags.get(s.quote) : undefined,
     cw: s.cw,
     reposts: (s.reposts ?? []).map((h, k) => ({ by: byHandle(h), at: at + (9 - k) * 20_000 })),
-    reactions: new Map(
-      (s.reactions ?? []).map(([e, count, mine]) => [e, { count, mine: mine === true }]),
-    ),
+    reactions: initialReactions(s.reactions ?? []),
     zaps: s.zaps ?? 0,
     partial: false,
     mineReposted: false,
@@ -182,6 +181,7 @@ export function createWorld(now: number) {
     return n;
   };
   for (const [i, s] of specs.entries()) add(make(s, idOf(i + 1), base - s.ago * MIN));
+  collisionChips(notes[0]?.reactions);
   // Older notes, generated: about three days of them.
   for (let i = 0; i < 420; i++) {
     const [by, text] = FILLER[(i * 7) % FILLER.length] ?? ['aoi', ''];

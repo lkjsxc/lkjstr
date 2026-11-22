@@ -19,10 +19,8 @@ import type { Item } from './emoji-preview.ts';
 
 /** The category of every custom sub-group: one tab in the row of categories. */
 export const CUSTOM = 'custom';
-/** A custom sub-group's stable key: the reader's own list (kind 10030), or a set (kind 30030) by its address, by its
- * title only when the engine knows no address. Two sets with one title stay apart. */
-const groupOf = (r: EmojiRow): string =>
-  r.set === '' ? 'mine' : `set:${r.address ?? `~${r.set}`}`;
+/** Membership source is independent of the title and of an image tag's provenance. */
+const groupOf = (r: EmojiRow): string => r.source;
 
 /** What each Unicode category shows in the row of categories. */
 export const CAT_ICONS = ['😀', '👋', '🐱', '🍙', '🚃', '⚽', '💡', '❤️', '🏁'];
@@ -66,6 +64,23 @@ const customWords = (it: Item): string => {
 };
 const glyphItem = (g: Glyph): Item => ({ picked: { emoji: g.emoji }, glyph: g });
 
+function collisionLabels(items: readonly Item[]): Item[] {
+  const label = (item: Item): string =>
+    item.picked.source?.startsWith('10030:') ? t('emoji.mine') : (item.set ?? '');
+  return items.map((item) => {
+    const peers = items.filter(
+      (other) => other !== item && !!other.picked.url && other.picked.emoji === item.picked.emoji,
+    );
+    if (!item.picked.url || !peers.length) return item;
+    let caption = label(item);
+    if (peers.some((other) => label(other) === caption)) {
+      const identifier = item.picked.source?.split(':').slice(2).join(':');
+      if (identifier) caption += ` · ${identifier}`;
+    }
+    return { ...item, sourceLabel: caption, set: caption };
+  });
+}
+
 export function emojiSections(
   custom: readonly EmojiRow[],
   table: readonly Glyph[] | undefined,
@@ -78,22 +93,39 @@ export function emojiSections(
   const mine: Item[] = [];
   const sets = new Map<string, { id: string; cat: string; label: string; items: Item[] }>();
   for (const r of custom) {
+    const own = r.source.startsWith('10030:');
+    const set = own ? '' : r.set || undefined;
     const it: Item = {
-      picked: { emoji: `:${r.code}:`, url: r.url, ...(r.address ? { address: r.address } : {}) },
-      set: r.set,
+      picked: {
+        emoji: `:${r.code}:`,
+        url: r.url,
+        source: r.source,
+        set,
+        ...(r.address ? { address: r.address } : {}),
+      },
+      set,
     };
     mine.push(it);
     const id = groupOf(r);
     const known = sets.get(id);
     if (known) known.items.push(it);
-    else sets.set(id, { id, cat: CUSTOM, label: r.set || t('emoji.mine'), items: [it] });
+    else sets.set(id, { id, cat: CUSTOM, label: own ? t('emoji.mine') : r.set, items: [it] });
   }
   const words = typedWords(typed);
   if (words.length) {
+    const first = new Map<string, Item>();
+    const searchWords = new Map<Item, string>();
+    for (const item of mine) {
+      const key = JSON.stringify([item.picked.emoji, item.picked.url]);
+      const chosen = first.get(key) ?? item;
+      first.set(key, chosen);
+      searchWords.set(chosen, `${searchWords.get(chosen) ?? ''} ${customWords(item)}`);
+    }
+    const distinct = [...first.values()];
     const found = rank(
-      [...mine, ...(table ?? COMMON).map(glyphItem)],
+      [...distinct, ...(table ?? COMMON).map(glyphItem)],
       words,
-      (it) => it.glyph?.words ?? customWords(it),
+      (it) => it.glyph?.words ?? searchWords.get(it) ?? customWords(it),
       (it) =>
         it.glyph ? glyphBonus(it.glyph, words) : customBonus(it.picked.emoji.slice(1, -1), words),
     );
@@ -105,7 +137,7 @@ export function emojiSections(
         ? [{ picked: { emoji: typed } }]
         : [];
     if (!mine.length) return [{ id: 'found', label: '', items: [...raw, ...found] }];
-    const matches = found.filter((it) => !it.glyph);
+    const matches = collisionLabels(found.filter((it) => !it.glyph));
     const groups: Section[] = [
       { id: 'found:custom', cat: CUSTOM, label: t('emoji.custom'), items: matches },
       {
@@ -122,12 +154,19 @@ export function emojiSections(
     {
       id: 'used',
       label: t('emoji.frequent'),
-      items: used.map((p): Item => {
-        if (!p.url) return { picked: p, glyph: by?.get(bare(p.emoji)) };
-        return (
-          mine.find((m) => m.picked.emoji === p.emoji && m.picked.url === p.url) ?? { picked: p }
-        );
-      }),
+      items: collisionLabels(
+        used.map((p): Item => {
+          if (!p.url) return { picked: p, glyph: by?.get(bare(p.emoji)) };
+          return (
+            mine.find(
+              (m) =>
+                m.picked.emoji === p.emoji &&
+                m.picked.url === p.url &&
+                m.picked.source === p.source,
+            ) ?? { picked: p, set: p.set }
+          );
+        }),
+      ),
     },
     ...(sets.size
       ? sets.values()

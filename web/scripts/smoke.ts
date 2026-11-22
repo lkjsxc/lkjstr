@@ -1316,7 +1316,7 @@ async function reading(browser: Browser, still: Record<string, unknown>): Promis
     customTab.keyed === 'custom' &&
       customTab.lit === 'custom' &&
       customTab.top &&
-      /^mine,set:30030:\w+:kotoba,set:30030:\w+:kurashi$/.test(customTab.groups.join()),
+      /^10030:\w+:,30030:\w+:kotoba,30030:\w+:kurashi$/.test(customTab.groups.join()),
     customTab,
   );
   const typedCode = async (code: string) => {

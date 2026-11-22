@@ -10,6 +10,7 @@ import { createAccountFailureShots } from './shots-account-failure.ts';
 import { actsShots } from './shots-acts.ts';
 import { dmShots } from './shots-dm.ts';
 import { emojiShots } from './shots-emoji.ts';
+import { emojiCollisionShots } from './shots-emoji-collision.ts';
 import { emojiCustomShots } from './shots-emoji-custom.ts';
 import { keysShots } from './shots-keys.ts';
 import { looksShots } from './shots-looks.ts';
@@ -139,6 +140,7 @@ try {
         await looksShots(scene, lang === 'ja' ? '統計' : 'Stats');
         await emojiShots(scene);
         await emojiCustomShots(scene);
+        await emojiCollisionShots(scene);
         await keysShots(scene, launch(lang === 'ja' ? 'アカウント' : 'Accounts', 'account'), lang);
         await dmShots(scene, launch(lang === 'ja' ? '設定' : 'Settings', 'settings'), lang);
         await accountFailureShots.run(scene, lang, tag);

@@ -74,18 +74,27 @@ export const unicodeEmoji = (text: string, focusable = false): Child[] =>
 /** Text with `:code:` replaced by the custom emoji it names, and its Unicode emoji marked. */
 export function withEmoji(text: string, emoji: readonly Emoji[] = []): Child[] {
   if (!emoji.length) return unicodeEmoji(text);
-  const by = new Map(emoji.map((e) => [e.code, e.url]));
+  const by = new Map(emoji.map((e) => [e.code, e]));
   return text.split(/(:[A-Za-z0-9_-]+:)/g).flatMap((part) => {
-    const url = part.startsWith(':') ? by.get(part.slice(1, -1)) : undefined;
-    return url ? [emojiImg(part, url)] : unicodeEmoji(part);
+    const own = part.startsWith(':') ? by.get(part.slice(1, -1)) : undefined;
+    return own ? [emojiImg(part, own.url, false, own)] : unicodeEmoji(part);
   });
 }
 /** A custom emoji in text (emoji-load.ts): a box of the line's height that does not change while in view, a picture
  * loaded ahead of the reader, and its `:code:` when the picture cannot be had. What it is shows in a popover
  * (emoji-peek.ts), so it has no tooltip of its own. `focusable`: it stands alone (not inside a button or link), so
  * the keyboard can reach it and its popover. */
-export const emojiImg = (code: string, url: string, focusable = false): HTMLElement =>
-  inlineEmoji(code, url, focusable);
+export function emojiImg(
+  code: string,
+  url: string,
+  focusable = false,
+  provenance?: Pick<Emoji, 'address' | 'set'>,
+): HTMLElement {
+  const image = inlineEmoji(code, url, focusable);
+  if (provenance?.address) image.dataset.emojiAddress = provenance.address;
+  if (provenance?.set) image.dataset.emojiSet = provenance.set;
+  return image;
+}
 
 export const displayName = (a: Author): Child[] => withEmoji(nameOf(a), a.emoji);
 /** The name as plain text (tab titles, tooltips). */
@@ -124,7 +133,7 @@ export function faceButton(a: Author, env: ViewEnv, cls = 'av'): HTMLElement {
 export function segments(list: readonly Segment[], env: ViewEnv, inside = false): Child[] {
   return list.map((s) => {
     if (s.k === 'text') return unicodeEmoji(s.text, !inside);
-    if (s.k === 'emoji') return emojiImg(`:${s.code}:`, s.url, !inside);
+    if (s.k === 'emoji') return emojiImg(`:${s.code}:`, s.url, !inside, s);
     if (s.k === 'link')
       return h(
         'a',

@@ -8,6 +8,7 @@ mod channels;
 mod counts;
 mod deep_links;
 mod delivery;
+mod emoji;
 mod feedback;
 mod list_edges;
 mod mentions;

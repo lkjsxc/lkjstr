@@ -88,11 +88,7 @@ pub(super) fn notifications(q: &Query, e: &Engine) -> Vec<Value> {
             );
         }
         if event.kind == 7 {
-            let mut emoji = json!({"emoji":crate::reactions::label(&event.content)});
-            if let Some(url) = crate::reactions::image_url(&event) {
-                emoji["url"] = json!(url);
-            }
-            row["emoji"] = emoji;
+            row["emoji"] = super::emoji::reaction(&e.store, &event);
         }
         if event.kind == 9735 {
             let Some(zap) = e.zaps.receipts.get(&e.store, &event.id) else {

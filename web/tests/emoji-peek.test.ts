@@ -63,6 +63,29 @@ beforeAll(() => {
 });
 afterAll(() => vi.useRealTimers());
 
+describe('incoming custom emoji provenance', () => {
+  it('shows the exact known set label, and otherwise the picture host', () => {
+    setLang('en');
+    for (const set of ['Known set', undefined]) {
+      const image = document.createElement('img');
+      image.className = 'emo';
+      image.alt = ':pien:';
+      image.src = 'https://pictures.test/pien.png';
+      if (set) {
+        image.dataset.emojiAddress = '30030:' + 'a'.repeat(64) + ':set';
+        image.dataset.emojiSet = set;
+      }
+      document.body.append(image);
+      point(image);
+      vi.advanceTimersByTime(300);
+      expect(peek()?.querySelector('.ename')?.textContent).toBe(':pien:');
+      expect(peek()?.querySelector('.ecode')?.textContent).toBe(set ?? 'from pictures.test');
+      document.body.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+      image.remove();
+    }
+  });
+});
+
 describe('the popover over a Unicode emoji', () => {
   it('shows the emoji at once, and its name when the table comes, in the reader language', async () => {
     setLang('ja');

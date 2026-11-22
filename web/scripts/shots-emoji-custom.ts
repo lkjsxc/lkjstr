@@ -36,11 +36,11 @@ export async function emojiCustomShots(scene: Scene): Promise<void> {
     await open(page);
     assert.equal(await page.locator('.epick .ecats button').count(), 11, 'one tab for every set');
     await press(page, tab);
-    assert.equal(await atCustom(page), 'mine');
+    assert.match(await atCustom(page), /^10030:\w+:$/);
     const groups = await page
       .locator('.epick .egroup[data-cat="custom"]')
       .evaluateAll((gs) => gs.map((g) => g.getAttribute('data-section') ?? ''));
-    assert.match(groups.join(' '), /^mine set:30030:\w+:kotoba set:30030:\w+:kurashi$/);
+    assert.match(groups.join(' '), /^10030:\w+: 30030:\w+:kotoba 30030:\w+:kurashi$/);
     const before = await gridBox(page);
     // A set's emoji, large in the strip with its code and set.
     const cell = `.epick .egroup[data-section="${groups[1]}"] .ecell:nth-child(2)`;

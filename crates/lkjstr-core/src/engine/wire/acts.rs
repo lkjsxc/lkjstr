@@ -11,11 +11,7 @@ fn act_ref(engine: &Engine, event: &NostrEvent) -> Option<Value> {
     };
     let mut value = json!({"type":kind,"actor":super::note::author(&rows::author(&engine.store,&event.pubkey))});
     if event.kind == 7 {
-        let mut emoji = json!({"emoji":crate::reactions::label(&event.content)});
-        if let Some(url) = crate::reactions::image_url(event) {
-            emoji["url"] = json!(url);
-        }
-        value["emoji"] = emoji;
+        value["emoji"] = super::emoji::reaction(&engine.store, event);
     }
     Some(value)
 }

@@ -3,11 +3,16 @@
 import { kv } from './storage.ts';
 
 /** A Unicode emoji, or `:code:` with the `url` of its picture and the `address` of its set when known. */
-export type Picked = { readonly emoji: string; readonly url?: string; readonly address?: string };
+export type Picked = {
+  readonly emoji: string;
+  readonly url?: string;
+  readonly address?: string;
+  readonly source?: string;
+  readonly set?: string;
+};
 type Used = Picked & { readonly n: number; readonly at: number };
 
-const USED = 'emoji:used';
-const OLD = 'emoji:recent';
+const USED = 'emoji:used:2';
 const TONE = 'emoji:tone';
 /** Kept: enough that a favourite survives a run of one-off picks. Shown: two rows of the picker. */
 const KEEP = 48;
@@ -17,17 +22,15 @@ const DAY = 86_400_000;
 const valid = (x: unknown): x is Used =>
   typeof (x as Used)?.emoji === 'string' &&
   typeof (x as Used).n === 'number' &&
-  typeof (x as Used).at === 'number';
+  typeof (x as Used).at === 'number' &&
+  ['url', 'address', 'source', 'set'].every((key) => {
+    const value = (x as unknown as Record<string, unknown>)[key];
+    return value === undefined || typeof value === 'string';
+  });
 
-function stored(now: number): Used[] {
-  const v = kv.get(USED);
-  if (Array.isArray(v)) return v.filter(valid).slice(0, KEEP);
-  // The earlier list held the latest picks only: each counts once, in its order.
-  const old = kv.get(OLD);
-  if (!Array.isArray(old)) return [];
-  return old
-    .filter((x): x is Picked => typeof x?.emoji === 'string')
-    .map((p, i) => ({ ...p, n: 1, at: now - i }));
+function stored(): Used[] {
+  const value = kv.get(USED);
+  return Array.isArray(value) ? value.filter(valid).slice(0, KEEP) : [];
 }
 
 /** Weight of a pick: a count that halves every two weeks of not being picked. */
@@ -43,11 +46,13 @@ export function ordered(list: readonly Used[], now: number): Used[] {
 
 /** One more pick. Pure; tested. */
 export function withPick(list: readonly Used[], p: Picked, now: number): Used[] {
-  const was = list.find((u) => u.emoji === p.emoji && u.url === p.url);
+  const was = list.find((u) => u.emoji === p.emoji && u.url === p.url && u.source === p.source);
   const next: Used = {
     emoji: p.emoji,
     ...(p.url ? { url: p.url } : {}),
     ...(p.address ? { address: p.address } : {}),
+    ...(p.source ? { source: p.source } : {}),
+    ...(p.set !== undefined ? { set: p.set } : {}),
     n: (was?.n ?? 0) + 1,
     at: now,
   };
@@ -55,17 +60,19 @@ export function withPick(list: readonly Used[], p: Picked, now: number): Used[] 
 }
 
 export function usedEmoji(now = Date.now()): Picked[] {
-  return ordered(stored(now), now)
+  return ordered(stored(), now)
     .slice(0, SHOWN)
-    .map(({ emoji, url, address }) => ({
+    .map(({ emoji, url, address, source, set }) => ({
       emoji,
       ...(url ? { url } : {}),
       ...(address ? { address } : {}),
+      ...(source ? { source } : {}),
+      ...(set !== undefined ? { set } : {}),
     }));
 }
 
 export function recordPick(p: Picked, now = Date.now()): void {
-  kv.set(USED, withPick(stored(now), p, now));
+  kv.set(USED, withPick(stored(), p, now));
 }
 
 /** 0 for none, 1 to 5 from light to dark. */

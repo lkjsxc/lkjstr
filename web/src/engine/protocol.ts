@@ -143,7 +143,13 @@ export type Anchor =
 
 // ───────────────────────────────────────── view models ─────────────────────────────────────────
 
-export type Emoji = { readonly code: string; readonly url: string; readonly address?: string };
+export type Emoji = {
+  readonly code: string;
+  readonly url: string;
+  readonly address?: string;
+  /** Title of the exact tagged set already known to this device. */
+  readonly set?: string;
+};
 
 export type Author = {
   readonly pubkey: Pubkey;
@@ -170,7 +176,7 @@ export type Segment =
   | { readonly k: 'link'; readonly url: string; readonly text: string } // `text`: host and a shortened path
   | { readonly k: 'mention'; readonly pubkey: Pubkey; readonly name: string }
   | { readonly k: 'hashtag'; readonly tag: string }
-  | { readonly k: 'emoji'; readonly code: string; readonly url: string }
+  | ({ readonly k: 'emoji' } & Emoji)
   /** A nostr: reference that is not embedded as a quote (an address, a relay, an unsupported kind). */
   | { readonly k: 'ref'; readonly bech32: string; readonly text: string };
 
@@ -210,6 +216,8 @@ export type Reaction = {
   /** A Unicode emoji, or `:code:` with `url`. */
   readonly emoji: string;
   readonly url?: string;
+  readonly address?: string;
+  readonly set?: string;
   readonly count: number;
   readonly mine: boolean;
 };
@@ -263,7 +271,12 @@ export type LinkPreview = {
 export type ActRef = {
   readonly type: 'reaction' | 'repost';
   readonly actor: Author;
-  readonly emoji?: { readonly emoji: string; readonly url?: string };
+  readonly emoji?: {
+    readonly emoji: string;
+    readonly url?: string;
+    readonly address?: string;
+    readonly set?: string;
+  };
 };
 export type NoteRow = {
   /** The event kind, absent for notes (1) and channel messages (42). */
@@ -390,7 +403,12 @@ export type NotificationRow = {
   readonly others: number;
   readonly at: Millis;
   /** `reaction`: what they reacted with. */
-  readonly emoji?: { readonly emoji: string; readonly url?: string };
+  readonly emoji?: {
+    readonly emoji: string;
+    readonly url?: string;
+    readonly address?: string;
+    readonly set?: string;
+  };
   /** `zap`: sats, and the comment sent with it. */
   readonly sats?: number;
   readonly zapReceipt?: ZapReceipt;
@@ -468,6 +486,8 @@ export type ServerRow = {
 
 export type EmojiRow = {
   readonly kind: 'emoji';
+  /** Owning list or set coordinate; independent of the image tag's provenance. */
+  readonly source: string;
   readonly key: RowKey;
   /** Name of the set it belongs to ('' for the account's own list). */
   readonly set: string;

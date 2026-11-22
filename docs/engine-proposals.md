@@ -6,6 +6,7 @@ Earlier context is preserved in [engine-proposals-history.md](engine-proposals-h
 
 - Protocol 16: `NoteRow.eventKind?: number` identifies public kinds other than notes (1) and channel messages (42).
 - Protocol 16: `Quote` in state `ok` carries `eventKind?: number`. Public snapshots retain it with unchanged scoped-window policy.
+- Protocol 16 emoji additions: [emoji field ledger](engine-proposals-emoji.md).
 
 ## Protocol 6 engine additions (2026-11-16, owner authorized)
 - `ToEngine.dm.open {sub,query:DmQuery}` adds an explicit private subscription.

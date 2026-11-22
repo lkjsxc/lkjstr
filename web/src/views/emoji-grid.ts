@@ -46,7 +46,11 @@ export function createGrid(hooks: Hooks) {
   let hovered = false;
 
   const label = (it: Item): string =>
-    it.glyph ? glyphName(it.glyph) || it.picked.emoji : it.picked.emoji;
+    it.glyph
+      ? glyphName(it.glyph) || it.picked.emoji
+      : it.sourceLabel
+        ? `${it.picked.emoji}, ${it.sourceLabel}`
+        : it.picked.emoji;
   const cell = (it: Item, i: number): HTMLElement =>
     h(
       'button',

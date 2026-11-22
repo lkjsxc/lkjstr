@@ -13,6 +13,7 @@ export const EMOJI: Record<string, string> = {
   yatta: emojiTile('祝', 0),
   'ocha-nomu': emojiTile('茶', 95),
   nemui: emojiTile('眠', 240),
+  pien: emojiTile('涙', 200),
   /** A picture that cannot be had (in no set): the smoke delays its failure while its note is in view. */
   'slow-cat': 'https://emoji.invalid/slow-cat.png',
 };
@@ -20,9 +21,18 @@ export const EMOJI: Record<string, string> = {
 export const EMOJI_SETS: readonly (readonly [set: string, d: string, codes: readonly string[]])[] =
   [
     ['', '', ['neko', 'sakura', 'otsu']],
-    ['ことば', 'kotoba', ['kusa', 'nostr', 'ok', 'wakaru', 'yatta']],
-    ['くらし', 'kurashi', ['ocha-nomu', 'nemui']],
+    ['ことば', 'kotoba', ['kusa', 'nostr', 'ok', 'wakaru', 'yatta', 'pien']],
+    ['くらし', 'kurashi', ['ocha-nomu', 'nemui', 'pien']],
   ];
+const otherPien = emojiTile('涙', 340);
+export const emojiOfSet = (code: string, d: string): string =>
+  code === 'pien' && d === 'kurashi' ? otherPien : (EMOJI[code] ?? '');
+/** Stable fixture identity; the production engine owns its own URL digest. */
+export function emojiKey(source: string, code: string, url: string): string {
+  let hash = 2166136261;
+  for (const letter of url) hash = Math.imul(hash ^ letter.charCodeAt(0), 16777619);
+  return `emoji:${source}:${code}:${(hash >>> 0).toString(16)}`;
+}
 export const emojiOf = (text: string): Emoji[] =>
   [...new Set([...text.matchAll(/:([a-z0-9_-]+):/g)].map((m) => m[1] ?? ''))]
     .filter((code) => EMOJI[code])

@@ -3,7 +3,7 @@
 ## Purpose
 
 Current limits: [parity.md](parity.md), [engine-performance.md](engine-performance.md). [Public deep links](public-deep-links.md) work signed out.
-Claude owns the interface. Account-safe and A1/A2 (972ef776) are live;
+Claude owns the interface. Account-safe and A1/A2 (972ef776) are live. Private S2/E7 is built and reviewed; [checks](emoji-sets.md).
 [Q1](engine-q1-progress.md) passes matched public scoring; Worker and ship gates remain. Q2-Q5 remain.
 
 ## Kind capabilities (private implementation, 2026-11-22)

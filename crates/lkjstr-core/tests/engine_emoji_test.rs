@@ -32,8 +32,9 @@ fn current_owner_references_project_into_the_existing_picker_shape() {
     assert_eq!(
         result["rows"],
         json!([
-            {"kind":"emoji","key":"emoji:home","code":"home","url":"https://images.test/own.png","set":""},
-            {"kind":"emoji","key":"emoji:cat","code":"cat","url":"https://images.test/cat.png","set":"Animals","address":address(&set)}
+            {"kind":"emoji","key":row_key(&format!("10030:{}:",list.pubkey),"home","https://images.test/own.png"),"source":format!("10030:{}:",list.pubkey),"code":"home","url":"https://images.test/own.png","set":""},
+            {"kind":"emoji","key":row_key(&address(&set),"cat","https://images.test/cat.png"),"source":address(&set),"code":"cat","url":"https://images.test/cat.png","set":"Animals","address":address(&set)},
+            {"kind":"emoji","key":row_key(&address(&set),"home","https://images.test/other.png"),"source":address(&set),"code":"home","url":"https://images.test/other.png","set":"Animals","address":address(&set)}
         ])
     );
     assert_eq!(result["atBottom"], true);
@@ -141,9 +142,11 @@ fn duplicates_invalid_values_and_recursive_set_references_stay_bounded() {
         engine.store.insert(event.clone(), None);
     }
     let result = rows(&mut engine, Some(&list.pubkey));
-    assert_eq!(result["rows"].as_array().expect("rows").len(), 2);
+    assert_eq!(result["rows"].as_array().expect("rows").len(), 4);
     assert_eq!(result["rows"][0]["url"], "https://images.test/first.png");
-    assert_eq!(result["rows"][1]["url"], "https://images.test/new.png");
+    assert_eq!(result["rows"][1]["url"], "https://images.test/old.png");
+    assert_eq!(result["rows"][2]["url"], "https://images.test/new.png");
+    assert_eq!(result["rows"][3]["url"], "https://images.test/second.png");
 }
 
 #[test]

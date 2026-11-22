@@ -7,7 +7,7 @@ import { HANDLERS } from './client-handlers.ts';
 import type { ProfileAct } from './fixtures-acts.ts';
 import { previewFixtures } from './fixtures-previews.ts';
 import { hiddenOf } from './hidden.ts';
-import { EMOJI, FOLLOWERS, type Person, SELF } from './people.ts';
+import { FOLLOWERS, type Person, SELF } from './people.ts';
 import type { MNote, World } from './world.ts';
 
 const firstLine = (text: string): string => (text.split('\n')[0] ?? '').slice(0, 120);
@@ -16,9 +16,11 @@ export const noteExcerpt = (note: MNote): string =>
 
 export function reactionsOf(n: MNote): Reaction[] {
   return groupReactions(
-    [...n.reactions].map(([emoji, r]) => ({
-      emoji,
-      url: emoji.startsWith(':') ? EMOJI[emoji.slice(1, -1)] : undefined,
+    [...n.reactions].map(([key, r]) => ({
+      emoji: r.emoji ?? key,
+      url: r.url,
+      address: r.address,
+      set: r.set,
       count: r.count,
       mine: r.mine,
     })),

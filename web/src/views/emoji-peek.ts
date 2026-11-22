@@ -6,6 +6,7 @@
 // no pointer events and closes on any press, scroll or key, so it never stands between the reader and a click.
 import { emojiTable, emojiTableNow, glyphFor } from '../shared/emoji-table.ts';
 import { h, replaceChildren } from '../shared/h.ts';
+import { t } from '../shared/i18n.ts';
 import { pictureOf } from './emoji-load.ts';
 import { describe, onLongPress } from './emoji-preview.ts';
 
@@ -46,8 +47,17 @@ export function installEmojiPeek(layer: HTMLElement): void {
     el.style.top = `${(top - origin.top) / zoom}px`;
   };
   const draw = (img: HTMLElement): void => {
-    if (img instanceof HTMLImageElement)
-      return replaceChildren(el, describe({ picked: { emoji: img.alt, url: pictureOf(img) } }, 0));
+    if (img instanceof HTMLImageElement) {
+      const url = pictureOf(img);
+      let host = '';
+      try {
+        host = new URL(url).host;
+      } catch {
+        /* No host for a non-network picture. */
+      }
+      const set = img.dataset.emojiSet || t('emoji.from', { host });
+      return replaceChildren(el, describe({ picked: { emoji: img.alt, url }, set }, 0));
+    }
     const emoji = img.textContent ?? '';
     const known = glyphFor(emoji);
     replaceChildren(el, describe({ picked: { emoji }, glyph: known?.glyph }, known?.tone ?? 0));

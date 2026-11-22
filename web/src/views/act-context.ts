@@ -24,7 +24,7 @@ export function actChip(act: ActRef, alone = false): HTMLElement {
       title: url || mark ? null : label,
       tabindex: mark && alone ? 0 : null,
     },
-    url ? emojiImg(emoji, url, alone) : label,
+    url ? emojiImg(emoji, url, alone, act.emoji) : label,
   );
 }
 

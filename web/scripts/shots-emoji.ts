@@ -3,6 +3,7 @@
 // the grid does not move while the preview changes, and the preview and popover take no press.
 import assert from 'node:assert/strict';
 import type { Page } from 'playwright-core';
+import { ME } from '../src/engine/mock/rows.ts';
 
 export type Scene = (
   name: string,
@@ -45,13 +46,13 @@ export async function seed(page: Page): Promise<void> {
   const used = [
     { emoji: '🙏', n: 6, at },
     { emoji: '🔥', n: 4, at: at - 9 },
-    { emoji: ':otsu:', url: otsu, n: 3, at: at - 8 },
+    { emoji: ':otsu:', url: otsu, source: `10030:${ME}:`, set: '', n: 3, at: at - 8 },
     { emoji: '😂', n: 3, at: at - 7 },
     { emoji: '👍🏽', n: 2, at: at - 6 },
     { emoji: '🎉', n: 2, at: at - 5 },
     { emoji: '🍵', n: 1, at: at - 4 },
   ];
-  await page.evaluate((v) => localStorage.setItem('lkjstr:emoji:used', JSON.stringify(v)), used);
+  await page.evaluate((v) => localStorage.setItem('lkjstr:emoji:used:2', JSON.stringify(v)), used);
 }
 async function openFromComposer(page: Page): Promise<void> {
   await seed(page);

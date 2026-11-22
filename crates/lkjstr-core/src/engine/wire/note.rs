@@ -14,9 +14,16 @@ pub fn author(a: &Author) -> Value {
         .name_segments
         .iter()
         .filter_map(|p| match p {
-            crate::engine::rows::NameSegment::Emoji { code, url } => {
-                Some(json!({"code":code,"url":url}))
-            }
+            crate::engine::rows::NameSegment::Emoji {
+                code,
+                url,
+                address,
+                set,
+            } => Some(super::emoji::with_details(
+                json!({"code":code,"url":url}),
+                address.as_deref(),
+                set.as_deref(),
+            )),
             _ => None,
         })
         .collect::<Vec<_>>();
@@ -54,9 +61,16 @@ fn parts(row: &Row) -> (Vec<Value>, Vec<Value>, Vec<Value>) {
                 };
                 segments.push(json!({"k":"mention","pubkey":a.pubkey,"name":name}))
             }
-            Segment::Emoji { code, url } => {
-                segments.push(json!({"k":"emoji","code":code,"url":url}))
-            }
+            Segment::Emoji {
+                code,
+                url,
+                address,
+                set,
+            } => segments.push(super::emoji::with_details(
+                json!({"k":"emoji","code":code,"url":url}),
+                address.as_deref(),
+                set.as_deref(),
+            )),
             Segment::Media {
                 url,
                 kind,
@@ -110,7 +124,7 @@ pub(super) fn note(row: &Row, store: &Store, account: Option<&str>) -> Value {
     let mut v = json!({"kind":"note","key":row.id,"id":row.id,"bech32":lkjstr_protocol::encode_note(&row.id).unwrap_or_else(|_|row.id.clone()),
         "author":author(&row.author),"at":row.created_at.saturating_mul(1000),"segments":segments,"media":media,"quotes":quotes,
         "counts":super::counts::note(row,store),
-        "reactions":row.reactions.iter().map(|r|{let mut v=json!({"emoji":r.content,"count":r.count,"mine":r.mine});if let Some(url)=&r.url{v["url"]=json!(url);}v}).collect::<Vec<_>>(),
+        "reactions":row.reactions.iter().map(super::emoji::chip).collect::<Vec<_>>(),
         "mine":{"reposted":row.own.reposted,"bookmarked":row.own.bookmarked,"own":Some(row.author.pubkey.as_str())==account}});
     event_kind(&mut v, row.kind);
     if let Some(event) = store.get(&row.id) {

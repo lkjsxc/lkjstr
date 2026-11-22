@@ -12,6 +12,8 @@ export type Item = {
   readonly glyph?: Glyph;
   /** A custom emoji's set: its title, or '' for the reader's own list. */
   readonly set?: string;
+  /** The source distinguishes same-code search cells for assistive readers. */
+  sourceLabel?: string;
 };
 
 const capital = (s: string): string => s.charAt(0).toUpperCase() + s.slice(1);

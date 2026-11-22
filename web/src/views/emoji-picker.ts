@@ -3,7 +3,7 @@
 // the grid (frequently used first, then the reader's custom emoji by list and set (NIP-30 and NIP-51, from the
 // engine), then the Unicode categories); and a strip at the foot that says what is under the pointer, the keyboard or
 // a resting finger. Every part has a fixed size, so nothing moves.
-import type { Emoji, EmojiRow, Row } from '../engine/protocol.ts';
+import type { EmojiRow, Row } from '../engine/protocol.ts';
 import { toned } from '../shared/emoji-find.ts';
 import { COMMON, emojiTable, emojiTableNow } from '../shared/emoji-table.ts';
 import { type Picked, recordPick, setSkinTone, skinTone, usedEmoji } from '../shared/emoji-used.ts';
@@ -17,11 +17,7 @@ import { CAT_ICONS, CUSTOM, emojiSections, patched } from './emoji-sections.ts';
 import type { ViewEnv } from './registry.ts';
 
 export type { Picked } from '../shared/emoji-used.ts';
-/** The emoji tag a custom pick puts on what is sent; undefined for a Unicode emoji. */
-export const emojiTag = (p: Picked): Emoji | undefined =>
-  p.url
-    ? { code: p.emoji.slice(1, -1), url: p.url, ...(p.address ? { address: p.address } : {}) }
-    : undefined;
+
 const coarse = (): boolean => matchMedia('(pointer: coarse)').matches;
 const TONES = ['✋', '✋🏻', '✋🏼', '✋🏽', '✋🏾', '✋🏿'];
 /** The last custom emoji seen per account: a second opening draws them at once. Bound: accounts on the device. */

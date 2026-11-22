@@ -250,7 +250,12 @@ export function patchNote(el: HTMLElement, row: NoteRow, env: ViewEnv, dated = f
 const heldMark = (el: Element | null): string => {
   const act = [...(el?.classList ?? [])].find((c) => c.startsWith('a-'));
   const emoji = el?.getAttribute('data-emoji');
-  return act ? `.acts > .${act}` : emoji ? `.chips > [data-emoji="${CSS.escape(emoji)}"]` : '';
+  const url = el?.getAttribute('data-emoji-url') ?? '';
+  return act
+    ? `.acts > .${act}`
+    : emoji
+      ? `.chips > [data-emoji="${CSS.escape(emoji)}"][data-emoji-url="${CSS.escape(url)}"]`
+      : '';
 };
 
 const overflowingText = (el: HTMLElement): HTMLElement | undefined => {

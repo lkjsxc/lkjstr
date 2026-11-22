@@ -4,6 +4,8 @@
 
 Record the Core discovery and projection used by the emoji picker. Existing
 native and real Worker conformance cover membership, replacement and bounds.
+The private S2/E7 collision increment is implemented and reviewed. Its checks
+and remaining gate limitation are recorded below.
 
 ## Authority and selection
 
@@ -26,22 +28,23 @@ author/identifier. Equal timestamps choose the lowest lexical event ID. The
 first `d` tag determines the identifier. An unchanged cached event can be used
 while a lookup is pending; cache presence does not establish global freshness.
 
-Direct shortcode entries win over referenced sets. Sets then follow the current
-owner-list order; the first set containing a shortcode wins. Within one event,
-the last valid duplicate retains the earlier direct-entry behavior. Shortcodes
+Each distinct source, shortcode and image URL is retained, including collisions
+within one event and across direct entries and sets. Direct entries remain first;
+sets follow the current owner-list order. Exact repeated triples collapse. Shortcodes
 and HTTPS image URLs use the existing protocol validator. Its outgoing code
 validator now accepts the same NIP-30 hyphens as its incoming path, so selecting
 a valid hyphenated code retains its tag in notes, reactions and private drafts.
 Referenced row `set` contains the bounded title, or the identifier when no title
-exists. Row keys are `emoji:<code>`. The optional `address` identifies the
-containing set. A direct entry can carry a valid address from its own emoji tag.
+exists. Opaque row keys are `emoji:<source>:<code>:<sha256(url)>`. Required `source`
+is the owner-list coordinate for direct entries or the selected set coordinate.
+Optional `address` is separate provenance: a direct entry can carry it in its own tag.
 
 ## Bounds and unavailable data
 
 | Resource | Bound |
 | --- | --- |
 | Referenced coordinates | First 32 distinct valid coordinates per owner list |
-| Picker rows | First 400 distinct shortcodes, direct entries first |
+| Picker rows | First 400 distinct source/code/URL triples, direct entries first |
 | Parsed emoji/reference tags | First 4,096 per list or set |
 | Coordinate identifier | Nonempty, at most 256 UTF-8 bytes; rejected rather than cut |
 | Shortcode / image URL | At most 64 / 2,048 bytes before protocol validation |
@@ -62,10 +65,16 @@ cannot become a completed empty result. Invalid small values and recursive set
 references remain ignored. The existing picker consumes rows but has no per-set
 failure/retry surface.
 
+Public and private drafts alias a conflicting picture to `code_2`, then `code_3`,
+without changing an earlier picture. Reusing a picture reuses its assigned code,
+even across a suffix gap. A new alias trims only its base to stay within 64 ASCII bytes.
+Search collapses equal code/URL choices to the first source; frequency keeps source.
 Public drafts emit one tag per used, validated shortcode. Custom reactions emit
 one tag for their exact `:shortcode:`. Both include the optional set address when
 supplied. Profile names and bios read tags from their signed kind-0 metadata.
-Notes and reactions use their own signed tags. Reaction removal can match the
+Notes and reactions use their own signed tags. A known exact tagged set supplies
+its label without reverse lookup or additional discovery; otherwise the popover
+shows the picture host. Reaction removal can match the
 displayed image so two reactions using the same shortcode can be removed separately.
 Encrypted list/set tags, set browsing/editing and recursive references remain
 outside this flow. DMs send the selected code and URL in their encrypted rumor.
@@ -133,3 +142,27 @@ Primary specifications checked on 2026-11-16:
 
 - https://github.com/nostr-protocol/nips/blob/master/51.md
 - https://github.com/nostr-protocol/nips/blob/master/30.md
+
+## Private collision increment (2026-11-22)
+
+S2 preserves source, code and picture through catalog rows, picker groups,
+frequency, search, draft aliases and selected reactions. An incoming set title
+requires the explicitly tagged retained set to hold that exact picture; a
+claimed address alone does not supply a title. Private draft storage keeps code
+and picture only. There is no S3 preloading or picture-cache change here.
+
+The four quiet gates and frontend check passed before the final Opus corrections.
+The retained negative controls reproduce the missing identity, false provenance,
+collision labels and draft defects. After correction, the full frontend check,
+11 focused native cases and repository check pass. Rebuilt Worker conformance
+passes 16 checks with zero errors and complete owned cleanup. The full real
+smoke passes 574 checks, zero browser errors and 37 loopback publications,
+including three colliding draft pictures and the selected reaction's exact tag.
+Opus accepted the desktop and mobile scene layout.
+
+Canonical mock smoke still fails at the pre-existing wishes selector timeout;
+its independent layout, upload and offline components passed. The failed long
+Chromium socket path, stale first-cell fixture attempt and interrupted stale
+fixture run remain recorded. Evidence is under
+`~/.local/state/crew/evidence/lkjstr-emoji-collision-s2-20261122/`;
+final real proof is `browser-03/smoke-real/report.json`.

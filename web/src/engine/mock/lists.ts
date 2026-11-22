@@ -2,7 +2,7 @@
 import type { NotificationRow, Query, Row } from '../protocol.ts';
 import { PROTOCOL_VERSION } from '../protocol.ts';
 import { actNotifications } from './fixtures-acts.ts';
-import { byHandle, byPubkey, EMOJI, EMOJI_SETS } from './people.ts';
+import { byHandle, byPubkey, EMOJI, EMOJI_SETS, emojiKey, emojiOfSet } from './people.ts';
 import { relays } from './relays.ts';
 import { ME, noteExcerpt, noteRow } from './rows.ts';
 import type { World } from './world.ts';
@@ -160,10 +160,11 @@ export function finite(w: World, q: Query): Row[] | undefined {
       return EMOJI_SETS.flatMap(([set, d, codes]) =>
         codes.map((code) => ({
           kind: 'emoji' as const,
-          key: code,
+          source: d ? `30030:${ME}:${d}` : `10030:${ME}:`,
+          key: emojiKey(d ? `30030:${ME}:${d}` : `10030:${ME}:`, code, emojiOfSet(code, d)),
           set,
           code,
-          url: EMOJI[code] ?? '',
+          url: emojiOfSet(code, d),
           ...(d ? { address: `30030:${ME}:${d}` } : {}),
         })),
       );

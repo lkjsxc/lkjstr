@@ -28,6 +28,10 @@ pub enum Segment {
     Emoji {
         code: String,
         url: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        address: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        set: Option<String>,
     },
     Media {
         url: String,
@@ -78,6 +82,10 @@ pub struct Counts {
 pub struct Reaction {
     pub content: String,
     pub url: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub address: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub set: Option<String>,
     pub count: usize,
     pub mine: bool,
 }
@@ -91,6 +99,15 @@ pub struct Own {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(tag = "type", rename_all = "camelCase")]
 pub enum NameSegment {
-    Text { text: String },
-    Emoji { code: String, url: String },
+    Text {
+        text: String,
+    },
+    Emoji {
+        code: String,
+        url: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        address: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        set: Option<String>,
+    },
 }

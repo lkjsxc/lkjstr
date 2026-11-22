@@ -154,8 +154,8 @@ line as well, and the hover enlargement kept.
   `emoji` tag of its own, so the note shows both pictures. Private drafts work the same way.
 - Incoming notes, names and reactions are drawn only from their own `emoji` tags, never from the reader's emoji.
   Reaction chips are one per code and picture. Two chips with one code stand side by side, each with its own count
-  and its own removal. Their popover names the set when the tag carries an address the device knows, and otherwise
-  says `emoji.from` with the picture's host.
+  and its own removal. Their popover names the set when the tag carries the address of a set the device knows
+  **and that set holds the same picture**, and otherwise says `emoji.from` with the picture's host.
 - Engine ([emoji-sets.md](emoji-sets.md)): one row per source, code and URL, keyed
   `emoji:<source>:<code>:<url hash>`. Direct entries no longer hide set entries, and the first set no longer hides
   later ones. The 400-row bound counts these rows.

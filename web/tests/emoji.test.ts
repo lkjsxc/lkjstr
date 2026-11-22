@@ -12,7 +12,6 @@ import {
 } from '../src/shared/emoji-find.ts';
 import { ordered, withPick } from '../src/shared/emoji-used.ts';
 import { catOf } from '../src/views/emoji-grid.ts';
-import { emojiTag } from '../src/views/emoji-picker.ts';
 import { emojiSections, patched } from '../src/views/emoji-sections.ts';
 import { withHeld } from '../src/views/held.ts';
 import { withEmoji } from '../src/views/parts.ts';
@@ -102,16 +101,6 @@ describe('frequently used', () => {
 });
 
 describe('custom emoji on what is sent', () => {
-  it('a custom pick names its code, picture and set; a Unicode one names nothing', () => {
-    expect(
-      emojiTag({ emoji: ':neko:', url: 'https://a.test/n.png', address: '30030:ab:cats' }),
-    ).toEqual({ code: 'neko', url: 'https://a.test/n.png', address: '30030:ab:cats' });
-    expect(emojiTag({ emoji: ':neko:', url: 'https://a.test/n.png' })).toEqual({
-      code: 'neko',
-      url: 'https://a.test/n.png',
-    });
-    expect(emojiTag({ emoji: '🐱' })).toBeUndefined();
-  });
   it('NIP-30 codes with hyphens and capitals are drawn', () => {
     const parts = withEmoji('hi :Blob-Cat_2:!', [
       { code: 'Blob-Cat_2', url: 'https://a.test/b.png' },
@@ -125,7 +114,13 @@ describe('custom emoji on what is sent', () => {
       reactions: [{ emoji: ':neko:', url: 'https://b.test/neko.png', count: 2, mine: false }],
       counts: { reactions: 2 },
     } as unknown as Parameters<typeof withHeld>[0];
-    const what = { k: 'reaction', emoji: ':neko:', url: 'https://a.test/neko.png' } as const;
+    const what = {
+      k: 'reaction',
+      emoji: ':neko:',
+      url: 'https://a.test/neko.png',
+      address: '30030:ab:cats',
+      set: 'Cats',
+    } as const;
     hold(
       'n9',
       'me',
@@ -138,6 +133,8 @@ describe('custom emoji on what is sent', () => {
     expect(shown.reactions[0]).toMatchObject({ count: 2, mine: false });
     expect(shown.reactions[1]).toMatchObject({
       url: 'https://a.test/neko.png',
+      address: '30030:ab:cats',
+      set: 'Cats',
       count: 1,
       mine: true,
     });
@@ -149,6 +146,7 @@ describe('what the picker holds', () => {
   const row = (code: string, set: string, address?: string) =>
     ({
       kind: 'emoji',
+      source: set ? (address ?? `30030:fixture:${set}`) : '10030:fixture:',
       key: `emoji:${code}`,
       code,
       set,
@@ -160,8 +158,8 @@ describe('what the picker holds', () => {
     const list = emojiSections(custom, table, [{ emoji: '👋🏽' }], '');
     expect(list.map((s) => s.id)).toEqual([
       'used',
-      'mine',
-      'set:30030:ab:cats',
+      '10030:fixture:',
+      '30030:ab:cats',
       ...Array.from({ length: 9 }, (_, i) => `cat:${i}`),
     ]);
     expect(list.map(catOf).slice(0, 4)).toEqual(['used', 'custom', 'custom', 'cat:0']);
@@ -177,10 +175,10 @@ describe('what the picker holds', () => {
   it('two sets with one title stay apart, each under its own address', () => {
     const twins = [row('a', 'Cats', '30030:ab:cats'), row('b', 'Cats', '30030:cd:cats')];
     const ids = emojiSections(twins, table, [], '').map((s) => s.id);
-    expect(ids.slice(1, 3)).toEqual(['set:30030:ab:cats', 'set:30030:cd:cats']);
+    expect(ids.slice(1, 3)).toEqual(['30030:ab:cats', '30030:cd:cats']);
     // A direct entry naming a set of its own is still the reader's own list.
     const own = emojiSections([row('c', '', '30030:ab:cats')], table, [], '');
-    expect(own[1]?.id).toBe('mine');
+    expect(own[1]?.id).toBe('10030:fixture:');
   });
   it('the custom tab with nothing in it says, in one line, how to get some', () => {
     const list = emojiSections([], table, [], '');

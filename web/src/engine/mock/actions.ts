@@ -1,7 +1,6 @@
 // What the mock does with the reader's actions, and what happens in its world on its own.
 
 import { serverAddress } from '../../shared/address.ts';
-import { reactionLabel } from '../../shared/reactions.ts';
 import type { Action, Draft, Failure, FromEngine, ToEngine } from '../protocol.ts';
 import { channelAct, channelTouched, chatter } from './channels.ts';
 import { HANDLERS } from './client-handlers.ts';
@@ -11,6 +10,7 @@ import { revealMockNote } from './hidden.ts';
 import { byHandle, byPubkey, byRef, type Person, SELF } from './people.ts';
 import { retryLists } from './private-lists.ts';
 import { createDelivery } from './publication.ts';
+import { addReaction, removeReaction } from './reactions.ts';
 import { answers, isKnown, relayUrl } from './relays.ts';
 import { createUploads } from './uploads.ts';
 import { vaultAct } from './vault.ts';
@@ -108,21 +108,10 @@ export function createActions(core: Core) {
         const n = world.byId.get(w.id);
         if (!n) return fail(req, 'not-found');
         if (w.k === 'repost') n.mineReposted = true;
-        else if (w.k === 'reaction') {
-          const r = n.reactions.get(w.emoji) ?? { count: 0, mine: false };
-          if (!r.mine) n.reactions.set(w.emoji, { count: r.count + 1, mine: true });
-        } else if (w.of === 'repost') n.mineReposted = false;
-        else if (w.of === 'reaction') {
-          for (const [emoji, r] of n.reactions) {
-            if (
-              !r.mine ||
-              (w.emoji !== undefined && reactionLabel(w.emoji) !== reactionLabel(emoji))
-            )
-              continue;
-            if (r.count <= 1) n.reactions.delete(emoji);
-            else n.reactions.set(emoji, { count: r.count - 1, mine: false });
-          }
-        } else {
+        else if (w.k === 'reaction') addReaction(n.reactions, w);
+        else if (w.of === 'repost') n.mineReposted = false;
+        else if (w.of === 'reaction') removeReaction(n.reactions, w);
+        else {
           world.remove(n.id);
           core.resync();
           return deliver(req);

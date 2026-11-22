@@ -122,3 +122,9 @@ pub fn snapshot(s: &mut wire::Session, e: &mut Engine, now: u64) -> Value {
         .find(|o| o["t"] == "rows")
         .expect("rows")
 }
+
+pub fn row_key(source: &str, code: &str, url: &str) -> String {
+    use sha2::{Digest, Sha256};
+    let hash = lkjstr_protocol::bytes_to_hex(&Sha256::digest(url.as_bytes()));
+    format!("emoji:{source}:{code}:{hash}")
+}

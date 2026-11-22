@@ -6,8 +6,8 @@ import type {
   DmFailedDraft,
   DmMessage,
   DmSnapshot,
-  Emoji,
 } from '../engine/protocol.ts';
+import { insertDraftEmoji, usedDraftEmoji } from '../shared/emoji-draft.ts';
 import { h } from '../shared/h.ts';
 import { t } from '../shared/i18n.ts';
 import { icon } from '../shared/icons.ts';
@@ -18,7 +18,7 @@ import { transmitDm } from './dm-draft-send.ts';
 import { createDmDraftStore } from './dm-draft-store.ts';
 import { renderDmOutbox } from './dm-outbox.ts';
 import { dmAuthor, dmError, dmNames, inboxSetup } from './dm-parts.ts';
-import { emojiTag, openEmojiPicker } from './emoji-picker.ts';
+import { openEmojiPicker } from './emoji-picker.ts';
 import { plainName } from './parts.ts';
 import type { ViewEnv } from './registry.ts';
 
@@ -219,16 +219,12 @@ export function createDmCompose(o: {
       if (stopped || !store.ready()) return;
       const at = area.selectionStart,
         end = area.selectionEnd;
-      area.setRangeText(picked.emoji, at, end, 'end');
-      let custom: readonly Emoji[] | undefined = store.get().draft.emoji;
-      const tag = emojiTag(picked);
-      // A private draft keeps code and picture only.
-      if (tag)
-        custom = [
-          ...(custom ?? []).filter((e) => e.code !== tag.code),
-          { code: tag.code, url: tag.url },
-        ];
-      store.draft({ ...draft(), emoji: custom });
+      const insertion = insertDraftEmoji(
+        usedDraftEmoji(store.get().draft.emoji, area.value),
+        picked,
+      );
+      area.setRangeText(insertion.text, at, end, 'end');
+      store.draft({ ...draft(), emoji: insertion.emoji.map(({ code, url }) => ({ code, url })) });
       area.focus({ preventScroll: true });
     }),
   );

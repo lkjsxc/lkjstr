@@ -15,6 +15,8 @@ export type HeldWhat =
       readonly url?: string;
       /** The NIP-51 address of the custom emoji's set, when known. */
       readonly address?: string;
+      /** Display-only title from the selected source, never published. */
+      readonly set?: string;
     };
 type Held = {
   readonly id: string;
@@ -59,7 +61,15 @@ export function hold(
       clearTimeout(entry.timer);
       entry.timer = undefined;
       const sent: Extract<Action, { a: 'publish' }>['what'] =
-        what.k === 'repost' ? { k: 'repost', id } : { ...what, id };
+        what.k === 'repost'
+          ? { k: 'repost', id }
+          : {
+              k: 'reaction',
+              id,
+              emoji: what.emoji,
+              url: what.url,
+              ...(what.address ? { address: what.address } : {}),
+            };
       // The row keeps showing it until the engine has answered (its own patch arrives before the answer).
       void act({ a: 'publish', as, what: sent }).then((r) => {
         held.delete(key);
@@ -108,12 +118,19 @@ export function withHeld(row: NoteRow): NoteRow {
       );
       if (there?.mine) continue;
       const { emoji, url } = what;
-      const mine = { emoji, url, count: (there?.count ?? 0) + 1, mine: true };
+      const mine = {
+        emoji,
+        url,
+        address: what.address ?? there?.address,
+        set: what.set ?? there?.set,
+        count: (there?.count ?? 0) + 1,
+        mine: true,
+      };
       out = {
         ...out,
         counts: { ...out.counts, reactions: out.counts.reactions + 1 },
         reactions: there
-          ? out.reactions.map((r) => (r === there ? { ...r, count: r.count + 1, mine: true } : r))
+          ? out.reactions.map((r) => (r === there ? { ...r, ...mine } : r))
           : [...out.reactions, mine],
       };
     }

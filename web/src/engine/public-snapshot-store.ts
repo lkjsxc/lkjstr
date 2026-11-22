@@ -48,6 +48,7 @@ export const hasAbsoluteReadingTime = (row: Row): boolean =>
   row.kind === 'note' && row.readingAt !== undefined;
 
 export function snapshotSafe(row: Row): boolean {
+  if (row.kind === 'emoji') return typeof row.source === 'string' && row.source.length > 0;
   if (row.kind === 'notification')
     return row.expiresAt === undefined && (!row.note || snapshotSafe(row.note));
   return (

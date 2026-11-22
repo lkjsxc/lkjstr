@@ -51,8 +51,15 @@ function react(
   url: string | undefined,
   on: boolean,
   address?: string,
+  set?: string,
 ): void {
-  const what: HeldWhat = { k: 'reaction', emoji, url, ...(url && address ? { address } : {}) };
+  const what: HeldWhat = {
+    k: 'reaction',
+    emoji,
+    url,
+    ...(url && address ? { address } : {}),
+    ...(url && set ? { set } : {}),
+  };
   if (on)
     return later(
       env,
@@ -82,10 +89,13 @@ export function reactionChips(row: NoteRow, env: ViewEnv): HTMLElement | null {
           // An emoji says what it is in its popover; a reaction written as words keeps them in a tooltip.
           title: r.url || isEmojiGrapheme(r.emoji) ? null : r.emoji,
           'data-emoji': r.emoji,
+          'data-emoji-url': r.url ?? '',
           'aria-pressed': r.mine,
-          onclick: (e) => (e.stopPropagation(), react(env, row, r.emoji, r.url, !r.mine)),
+          onclick: (e) => (
+            e.stopPropagation(), react(env, row, r.emoji, r.url, !r.mine, r.address, r.set)
+          ),
         },
-        r.url ? emojiImg(r.emoji, r.url) : unicodeEmoji(r.emoji),
+        r.url ? emojiImg(r.emoji, r.url, false, r) : unicodeEmoji(r.emoji),
         h('span', null, countText(r.count, row.counts.partial, getLang())),
       ),
     ),
@@ -199,7 +209,7 @@ export function actionRow(row: NoteRow, env: ViewEnv, chips = true): HTMLElement
     off
       ? null
       : button('smile', 'emoji.pick', '', false, (el) =>
-          openEmojiPicker(env, el, (p) => react(env, row, p.emoji, p.url, true, p.address)),
+          openEmojiPicker(env, el, (p) => react(env, row, p.emoji, p.url, true, p.address, p.set)),
         ),
     off ? null : mark,
     button('more', 'act.more', '', false, (el) => openMenu(env.layer, el, moreItems()), false),

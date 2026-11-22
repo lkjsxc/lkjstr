@@ -5,7 +5,6 @@ use crate::{
     store::Store,
 };
 use lkjstr_protocol::{NostrEvent, content_warning_reason, custom_emojis, reply_parent};
-use std::collections::BTreeMap;
 pub(super) fn event_emoji(event: &NostrEvent) -> Vec<(String, String)> {
     custom_emojis(event)
         .into_iter()
@@ -36,7 +35,15 @@ pub fn author(store: &Store, pubkey: &str) -> Author {
                     .into_iter()
                     .filter_map(|part| match part {
                         Part::Text(text) => Some(NameSegment::Text { text }),
-                        Part::Emoji { code, url } => Some(NameSegment::Emoji { code, url }),
+                        Part::Emoji { code, url } => {
+                            let (address, set) = super::emoji::details(store, &e, &code, &url);
+                            Some(NameSegment::Emoji {
+                                code,
+                                url,
+                                address,
+                                set,
+                            })
+                        }
                         _ => None,
                     })
                     .collect()
@@ -86,7 +93,15 @@ pub fn row_with_lists(
             Part::Mention(key) => Segment::Mention {
                 author: author(store, &key),
             },
-            Part::Emoji { code, url } => Segment::Emoji { code, url },
+            Part::Emoji { code, url } => {
+                let (address, set) = super::emoji::details(store, event, &code, &url);
+                Segment::Emoji {
+                    code,
+                    url,
+                    address,
+                    set,
+                }
+            }
             Part::Quote { id, .. } => Segment::Quote {
                 row: if depth < 2 {
                     store
@@ -137,21 +152,7 @@ pub fn row_with_lists(
             .is_none()
         })
         .count();
-    let mut reactions: BTreeMap<(String, Option<String>), Reaction> = BTreeMap::new();
-    for e in store.reactions(&event.id) {
-        let url = crate::reactions::image_url(&e);
-        let content = crate::reactions::label(&e.content).to_owned();
-        let r = reactions
-            .entry((content.clone(), url.clone()))
-            .or_insert(Reaction {
-                content,
-                url,
-                count: 0,
-                mine: false,
-            });
-        r.count += 1;
-        r.mine |= account == Some(e.pubkey.as_str());
-    }
+    let reactions = super::emoji::reactions(store, &event.id, account);
     let mut reposted_at = None;
     let mut reposts = super::acts::reposts(store, &event.id)
         .map(|repost| {
@@ -195,7 +196,7 @@ pub fn row_with_lists(
             reactions: reaction_count,
             partial: false,
         },
-        reactions: reactions.into_values().collect(),
+        reactions,
         hidden_reason: None,
         own,
     }
