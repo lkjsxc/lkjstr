@@ -128,7 +128,9 @@
 /* Time rail: a quiet strip, with no track or border. Its width is reserved before counts arrive. */
 .feed.has-time-rail { --rail-size: 16px; padding-right: var(--rail-size); scrollbar-width: none; }
 .feed.has-time-rail::-webkit-scrollbar { display: none; width: 0; }
-.time-pin { position: sticky; top: 0; height: 0; margin-right: calc(-1 * var(--rail-size, 16px)); z-index: 4; }
+.time-pin { position: sticky; top: 0; height: 0; z-index: 4; }
+/* Only the padding reserved for an active rail is reclaimed; an inactive pin stays inside its feed. */
+.feed.has-time-rail > .time-pin { margin-right: calc(-1 * var(--rail-size)); }
 .time-rail { position: absolute; right: 0; width: 16px; background: var(--paper); z-index: 4; touch-action: none; user-select: none; cursor: default; }
 .time-rail[hidden], .time-return[hidden] { display: none; }
 /* A tile of 520px or more has the wide rail with its labels, decided by CSS so the first frame already has it. */
