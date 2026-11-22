@@ -1,3 +1,4 @@
+#![allow(clippy::panic, clippy::unwrap_used)]
 use lkjstr_core::engine::avatars::jobs::*;
 fn owner(client: u64, request: usize) -> Owner {
     Owner {

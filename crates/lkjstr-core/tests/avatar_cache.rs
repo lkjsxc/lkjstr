@@ -1,3 +1,4 @@
+#![allow(clippy::expect_used)]
 use lkjstr_core::engine::avatars::{
     MAX_DERIVED_BYTES,
     cache::{self, Entry, Failure, Totals},

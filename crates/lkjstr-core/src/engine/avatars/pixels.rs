@@ -12,7 +12,7 @@ pub fn classify(rgba: &[u8]) -> Option<Pixels> {
     }
     let mut low = [255_u8; 4];
     let mut high = [0_u8; 4];
-    for pixel in rgba.chunks_exact(4) {
+    for pixel in rgba.as_chunks::<4>().0 {
         for channel in 0..4 {
             low[channel] = low[channel].min(pixel[channel]);
             high[channel] = high[channel].max(pixel[channel]);

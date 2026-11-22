@@ -1,3 +1,4 @@
+#![allow(clippy::unwrap_used)]
 use lkjstr_core::engine::avatars::{cache, jobs::*, pixels};
 fn owner(client: u64, request: &str) -> Owner {
     Owner {

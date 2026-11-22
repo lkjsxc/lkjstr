@@ -90,10 +90,10 @@ impl Book {
             .is_some_and(|job| job.active && job.stage == ticket.stage && !job.owners.is_empty())
     }
     fn unmap(&mut self, id: u64) {
-        if let Some(job) = self.jobs.get(&id) {
-            if self.urls.get(&job.key) == Some(&id) {
-                self.urls.remove(&job.key);
-            }
+        if let Some(job) = self.jobs.get(&id)
+            && self.urls.get(&job.key) == Some(&id)
+        {
+            self.urls.remove(&job.key);
         }
     }
     fn reply(&mut self, id: u64, result: ResultKind) -> Vec<Command> {
@@ -124,15 +124,14 @@ impl Book {
             self.capability_failed = true;
         }
         self.negatives.retain(|_, value| value.until > now);
-        if self.negatives.len() == MAX_NEGATIVES {
-            if let Some(key) = self
+        if self.negatives.len() == MAX_NEGATIVES
+            && let Some(key) = self
                 .negatives
                 .iter()
                 .min_by_key(|(_, value)| value.until)
                 .map(|(key, _)| key.clone())
-            {
-                self.negatives.remove(&key);
-            }
+        {
+            self.negatives.remove(&key);
         }
         let duration = if failure == Failure::Transient {
             30_000
