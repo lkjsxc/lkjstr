@@ -6,12 +6,12 @@ import { emojiSections } from '../src/views/emoji-sections.ts';
 
 const custom: EmojiRow[] = ['one', 'two:detail'].map((identifier, i) => ({
   kind: 'emoji',
-  key: 'row-' + i,
+  key: `row-${i}`,
   code: 'pien',
   set: 'Same title',
-  source: '30030:' + 'a'.repeat(64) + ':' + identifier,
-  address: '30030:' + 'a'.repeat(64) + ':' + identifier,
-  url: 'https://pictures.test/' + i + '.png',
+  source: `30030:${'a'.repeat(64)}:${identifier}`,
+  address: `30030:${'a'.repeat(64)}:${identifier}`,
+  url: `https://pictures.test/${i}.png`,
 }));
 afterEach(() => document.body.replaceChildren());
 
@@ -47,7 +47,7 @@ it.each(['search', 'frequent'])(
       grid.draw([found]);
       expect(
         [...grid.el.querySelectorAll('.ecell')].map((cell) => cell.getAttribute('aria-label')),
-      ).toEqual(labels.map((label) => ':pien:, ' + label));
+      ).toEqual(labels.map((label) => `:pien:, ${label}`));
       for (const [index, item] of found.items.entries()) {
         const strip = document.createElement('div');
         strip.append(...describe(item, 0));

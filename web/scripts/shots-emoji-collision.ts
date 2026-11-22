@@ -26,7 +26,7 @@ export async function emojiCollisionShots(scene: Scene): Promise<void> {
       .evaluateAll((images) => images.map((image) => image.getAttribute('src')));
     assert.equal(new Set(urls).size, 2, 'both pictures are distinct');
     const before = await gridBox(page);
-    const target = matches + ':nth-child(2)';
+    const target = `${matches}:nth-child(2)`;
     if (phone(page)) {
       const [x, y] = await centre(page, target);
       await hold(page, x, y);
@@ -56,7 +56,7 @@ export async function emojiCollisionShots(scene: Scene): Promise<void> {
     assert.equal(new Set(urls).size, 2, 'same code has two reaction pictures');
     const id = await row.getAttribute('data-note');
     assert.ok(id);
-    const target = '.note[data-note="' + id + '"] .rchip[data-emoji=":pien:"]:last-child';
+    const target = `.note[data-note="${id}"] .rchip[data-emoji=":pien:"]:last-child`;
     await page.locator(target).scrollIntoViewIfNeeded();
     if (phone(page)) {
       const [x, y] = await centre(page, target);

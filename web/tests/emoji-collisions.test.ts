@@ -9,9 +9,9 @@ import { emojiSections } from '../src/views/emoji-sections.ts';
 
 const a = 'https://first.test/pien.png';
 const b = 'https://second.test/pien.png';
-const own = '10030:' + 'a'.repeat(64) + ':';
-const setA = '30030:' + 'b'.repeat(64) + ':one';
-const setB = '30030:' + 'c'.repeat(64) + ':two';
+const own = `10030:${'a'.repeat(64)}:`;
+const setA = `30030:${'b'.repeat(64)}:one`;
+const setB = `30030:${'c'.repeat(64)}:two`;
 const row = (source: string, set: string, url: string): EmojiRow => ({
   kind: 'emoji',
   key: JSON.stringify([source, 'pien', url]),
@@ -61,7 +61,7 @@ it('keeps every source in its group, and search keeps the first source per code 
     grid.draw(found);
     expect(
       [...grid.el.querySelectorAll('.ecell')].map((cell) => cell.getAttribute('aria-label')),
-    ).toEqual([':pien:, ' + t('emoji.mine'), ':pien:, First set']);
+    ).toEqual([`:pien:, ${t('emoji.mine')}`, ':pien:, First set']);
     const preview = document.createElement('div');
     preview.append(...describeEmoji(matches[1]!, 0));
     expect(preview.querySelector('.ecode')?.textContent).toBe('First set');
@@ -131,9 +131,9 @@ it('reuses an alias beyond a free gap and keeps new aliases within the code boun
   expect(reused.emoji).toBe(existing);
   const base = 'a'.repeat(64);
   const original = [{ code: base, url: a }];
-  const next = insertDraftEmoji(original, { emoji: ':' + base + ':', url: b });
-  expect(next.emoji[1]?.code).toBe('a'.repeat(62) + '_2');
+  const next = insertDraftEmoji(original, { emoji: `:${base}:`, url: b });
+  expect(next.emoji[1]?.code).toBe(`${'a'.repeat(62)}_2`);
   expect(next.emoji[1]?.code.length).toBe(64);
   expect(next.emoji[0]).toEqual(original[0]);
-  expect(insertDraftEmoji(next.emoji, { emoji: ':' + base + ':', url: b }).text).toBe(next.text);
+  expect(insertDraftEmoji(next.emoji, { emoji: `:${base}:`, url: b }).text).toBe(next.text);
 });

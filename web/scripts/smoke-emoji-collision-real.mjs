@@ -4,9 +4,9 @@ export const COLLISIONS = [
   { code: 'pien', url: 'https://emoji.invalid/pien-one.png', d: 'lkjstr-smoke' },
   { code: 'pien', url: 'https://emoji.invalid/pien-two.png', d: 'lkjstr-smoke-alternate' },
 ];
-export const alternateSetOf = (owner) => '30030:' + owner + ':lkjstr-smoke-alternate';
-const group = (id) => '.epick .egroup[data-section="' + id + '"]';
-const cell = (id) => group(id) + ' .ecell[aria-label^=":pien:"]';
+export const alternateSetOf = (owner) => `30030:${owner}:lkjstr-smoke-alternate`;
+const group = (id) => `.epick .egroup[data-section="${id}"]`;
+const cell = (id) => `${group(id)} .ecell[aria-label^=":pien:"]`;
 
 // Preserve the actual rendered URL on its fixture cell before the image becomes fallback text.
 export async function rememberEmojiPictures(page) {
@@ -28,30 +28,30 @@ export const emojiCell = (page, source, code, url) =>
   page.locator(
     group(source) +
       ' .ecell[aria-label^=' +
-      JSON.stringify(':' + code + ':') +
+      JSON.stringify(`:${code}:`) +
       '][data-smoke-emoji-url=' +
       JSON.stringify(url) +
       ']',
   );
 
 export async function emojiCollisionChecks({ page, fake, check, owner, launch }) {
-  const firstSet = '30030:' + owner + ':lkjstr-smoke';
+  const firstSet = `30030:${owner}:lkjstr-smoke`;
   const secondSet = alternateSetOf(owner);
   await launch('Post', 'compose');
   const compose = page.locator('.pane.cur .view[data-kind="compose"]:visible');
   const text = compose.locator('textarea');
-  await text.fill('emoji collision ' + Date.now() + ' ');
+  await text.fill(`emoji collision ${Date.now()} `);
   const smile = compose.locator('.icon:has(.i-smile)');
   await smile.click();
   await emojiCell(page, secondSet, COLLISIONS[2].code, COLLISIONS[2].url).waitFor();
   check(
     'all three sources keep their same-code cells outside search',
-    (await page.locator(cell('10030:' + owner + ':')).count()) === 1 &&
+    (await page.locator(cell(`10030:${owner}:`)).count()) === 1 &&
       (await page.locator(cell(firstSet)).count()) === 1 &&
       (await page.locator(cell(secondSet)).count()) === 2,
   );
   await page.locator('.epick input').fill(':pien');
-  const found = page.locator(group('found:custom') + ' .ecell');
+  const found = page.locator(`${group('found:custom')} .ecell`);
   await page.waitForFunction(
     () =>
       document.querySelectorAll('.epick .egroup[data-section="found:custom"] .ecell').length === 3,
@@ -67,7 +67,7 @@ export async function emojiCollisionChecks({ page, fake, check, owner, launch })
       names.some((name) => name.includes('Smoke alternate')),
   );
   await page.locator('.epick input').fill('');
-  for (const [index, source] of ['10030:' + owner + ':', firstSet, secondSet].entries()) {
+  for (const [index, source] of [`10030:${owner}:`, firstSet, secondSet].entries()) {
     if (index) await smile.click();
     await emojiCell(page, source, COLLISIONS[index].code, COLLISIONS[index].url).click();
   }
@@ -75,7 +75,7 @@ export async function emojiCollisionChecks({ page, fake, check, owner, launch })
   const aliases = ['pien', 'pien_2', 'pien_3'];
   check(
     'one draft keeps all three pictures under separate shortcode aliases',
-    aliases.every((code) => content.includes(':' + code + ':')),
+    aliases.every((code) => content.includes(`:${code}:`)),
   );
   await compose.getByRole('button', { name: 'Post', exact: true }).click();
   const posted = () =>
@@ -91,15 +91,13 @@ export async function emojiCollisionChecks({ page, fake, check, owner, launch })
             tag[0] === 'emoji' &&
             tag[1] === aliases[index] &&
             tag[2] === entry.url &&
-            (entry.d ? tag[3] === '30030:' + owner + ':' + entry.d : tag[3] === undefined),
+            (entry.d ? tag[3] === `30030:${owner}:${entry.d}` : tag[3] === undefined),
         ),
       ),
   );
   if (!published) throw new Error('collision note was not published');
   await page.locator('.tab[data-view="global"]').click();
-  const note = page
-    .locator('.view[data-kind="global"] .note[data-note="' + published.id + '"]')
-    .first();
+  const note = page.locator(`.view[data-kind="global"] .note[data-note="${published.id}"]`).first();
   await note.waitFor();
   await note.locator('.a-smile').click();
   await page.locator('.epick input').fill(':pien');

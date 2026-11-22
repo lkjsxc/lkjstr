@@ -11,8 +11,8 @@ import { setup } from './wishes-support.ts';
 
 const a = 'https://first.test/pien.png';
 const b = 'https://second.test/pien.png';
-const setA = '30030:' + 'b'.repeat(64) + ':one';
-const setB = '30030:' + 'c'.repeat(64) + ':two';
+const setA = `30030:${'b'.repeat(64)}:one`;
+const setB = `30030:${'c'.repeat(64)}:two`;
 beforeEach(() => {
   vi.useFakeTimers();
   localStorage.clear();

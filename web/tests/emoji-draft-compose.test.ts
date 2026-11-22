@@ -25,7 +25,7 @@ const expected = [
   { code: 'pien_2', url: b },
 ];
 function chooseBoth(el: HTMLElement, values = picks): void {
-  const button = el.querySelector<HTMLButtonElement>('[aria-label="' + t('compose.emoji') + '"]')!;
+  const button = el.querySelector<HTMLButtonElement>(`[aria-label="${t('compose.emoji')}"]`)!;
   for (const value of values) {
     chosen.value = value;
     button.click();
@@ -87,7 +87,7 @@ it('the private composer saves both pictures only through its private draft acti
     await tick();
     chooseBoth(
       x.el,
-      picks.map((pick) => ({ ...pick, address: '30030:' + 'c'.repeat(64) + ':set' })),
+      picks.map((pick) => ({ ...pick, address: `30030:${'c'.repeat(64)}:set` })),
     );
     await vi.advanceTimersByTimeAsync(201);
     expect(x.act.mock.calls.map(([action]) => action)).toContainEqual(
@@ -121,9 +121,7 @@ it('a deleted shortcode no longer reserves its old picture when the next pick is
   };
   const dispose = mountCompose(x.el, x.env);
   try {
-    const button = x.el.querySelector<HTMLButtonElement>(
-      '[aria-label="' + t('compose.emoji') + '"]',
-    )!;
+    const button = x.el.querySelector<HTMLButtonElement>(`[aria-label="${t('compose.emoji')}"]`)!;
     chosen.value = picks[0];
     button.click();
     const area = x.el.querySelector('textarea')!;

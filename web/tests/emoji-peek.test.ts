@@ -72,7 +72,7 @@ describe('incoming custom emoji provenance', () => {
       image.alt = ':pien:';
       image.src = 'https://pictures.test/pien.png';
       if (set) {
-        image.dataset.emojiAddress = '30030:' + 'a'.repeat(64) + ':set';
+        image.dataset.emojiAddress = `30030:${'a'.repeat(64)}:set`;
         image.dataset.emojiSet = set;
       }
       document.body.append(image);

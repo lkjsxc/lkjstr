@@ -7,7 +7,7 @@ import {
 } from '../src/engine/public-snapshot-store.ts';
 import { harness, note } from './public-snapshots-support.ts';
 
-const address = '30030:' + 'a'.repeat(64) + ':set';
+const address = `30030:${'a'.repeat(64)}:set`;
 const emoji = { code: 'pien', url: 'https://pictures.test/pien.png', address, set: 'Known set' };
 const incoming: NoteRow = {
   ...note(),
@@ -44,10 +44,10 @@ afterEach(() => {
 
 it('captures and replays distinct same-code picker sources without collapsing their keys', async () => {
   const query: Query = { source: 'emoji', account: 'b'.repeat(64) };
-  const own = '10030:' + 'b'.repeat(64) + ':';
+  const own = `10030:${'b'.repeat(64)}:`;
   const rows: EmojiRow[] = [own, address].map((source) => ({
     kind: 'emoji',
-    key: 'emoji:' + source + ':pien:picture-hash',
+    key: `emoji:${source}:pien:picture-hash`,
     source,
     code: 'pien',
     url: emoji.url,
