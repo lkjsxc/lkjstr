@@ -99,12 +99,15 @@ export async function reviewSettings({
     // Signed in, the ordinary layout as it starts, in Japanese (the language is put back afterwards).
     // Use the reader's reset: deleting storage bypasses the live WM store, whose
     // pending save can restore the old layout on pagehide with Home behind Post.
-    await page.locator('.pane.cur .strip').getByTitle('Tile menu', { exact: true }).click();
-    await page.locator('.menu button').getByText('Reset layout', { exact: true }).click();
+    await launch('Settings', 'settings');
+    await page
+      .locator('.view[data-kind="settings"]:visible')
+      .getByRole('button', { name: 'Reset this workspace', exact: true })
+      .click();
     await page.locator('.view[data-kind="home"] .note').first().waitFor();
     // Its save is still pending here: the stored layout follows on pagehide, and each reload must read it back.
     check(
-      'Reset layout brings Home forward with real notes after Channels and Stats',
+      'Reset this workspace brings Home forward with real notes after Channels and Stats',
       await resetShown(page, 'en', 'Home', false),
     );
     await page.evaluate(() => localStorage.setItem('lkjstr:settings', '{"language":"ja"}'));

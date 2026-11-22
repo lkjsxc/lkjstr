@@ -36,6 +36,8 @@ export const KEYS = {
   tabClose: one('window', 'X', 'Alt+Shift+W'),
   tabSearch: one('window', 'O'),
   tabReopen: one('window', 'Alt+Shift+T'),
+  tileFill: one('window', 'Alt+Shift+F'),
+  tileRestore: one('window', 'Escape'),
   launcherPick: one('window', 'Enter'),
   launcherClose: one('window', 'Escape'),
   menuClose: one('window', 'Escape'),

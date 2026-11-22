@@ -43,6 +43,11 @@ const PATHS = {
   clock: ['M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z', 'M12 7v5l3.5 2'],
   filter: ['M4 5h16l-6 8v5l-4 2v-7z'],
   lock: ['M6 10h12v11H6z', 'M8 10V6a4 4 0 0 1 8 0v4'],
+  /** A tile: fill the workspace, and back; fold to a line, and open again (turned for a row in ui.css). */
+  fill: ['M4 9V4h5', 'M15 4h5v5', 'M20 15v5h-5', 'M9 20H4v-5'],
+  unfill: ['M9 4v5H4', 'M20 9h-5V4', 'M15 20v-5h5', 'M4 15h5v5'],
+  fold: ['M8 4l4 4 4-4', 'M8 20l4-4 4 4', 'M5 12h14'],
+  unfold: ['M8 7l4-4 4 4', 'M8 17l4 4 4-4', 'M5 12h14'],
 } as const;
 export type IconName = keyof typeof PATHS;
 

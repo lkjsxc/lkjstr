@@ -1,4 +1,4 @@
-// Reset layout and its Undo never lose a draft: a tab opened or reopened after the reset, more tabs than the closed
+// Resetting a workspace (Settings) and its Undo never lose a draft: a tab opened or reopened after the reset, more tabs than the closed
 // list holds one by one, the same workspace in a second browser tab, and "Reset every layout" with a draft waiting in
 // a workspace that is not on screen. Each sequence is a reviewed repro of draft loss (2026-11-20).
 import type { BrowserContext, Page } from 'playwright-core';
@@ -33,9 +33,15 @@ const textOf = async (page: Page, view: string): Promise<string | undefined> =>
   ((await stored(page, `view:main1:${view}`)) as { text?: string } | null)?.text;
 const draftField = (page: Page, view: string) =>
   page.locator(`.pane:has(.tab.active[data-view="${view}"]) textarea`);
+/** Settings: "Reset this workspace" (Settings opens first where it is not in the layout). */
 const menuReset = async (page: Page): Promise<void> => {
-  await page.locator('.pane .strip > .icon').first().click();
-  await page.locator('.menu button').getByText('Reset layout', { exact: true }).click();
+  await page.locator('.bar [data-tab-search]').click();
+  await page.locator('.tsearch input').fill('Settings');
+  await page.locator('.tsearch input').press('Enter');
+  await page
+    .locator('.view[data-kind="settings"]:visible')
+    .getByRole('button', { name: 'Reset this workspace', exact: true })
+    .click();
   await page.waitForSelector('.tab[data-view="notifications"]');
 };
 const newPost = async (page: Page): Promise<void> => {

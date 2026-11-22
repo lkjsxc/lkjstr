@@ -11,6 +11,10 @@ export type WmKeyOps = {
   /** The tab in front moves to the next tile. */
   send(): void;
   newTab(): void;
+  /** The current tile fills the workspace, or all tiles show again. */
+  fill(): void;
+  /** All tiles show again; false when none was filling the workspace (Escape then means nothing here). */
+  restore(): boolean;
   close(): void;
   reopen(): void;
   /** Shows a tab of this kind in the current tile: the one that is there, or a new one (starting with `state`). */
@@ -22,7 +26,8 @@ export type WmKeyOps = {
 };
 
 export function mountWmKeys(ops: WmKeyOps): () => void {
-  const table: readonly (readonly [KeyId, () => void])[] = [
+  // An action that returns false did not take the key, which goes on to the browser.
+  const table: readonly (readonly [KeyId, () => unknown])[] = [
     ['tabPrev', () => ops.tab(-1)],
     ['tabNext', () => ops.tab(1)],
     ['tilePrev', () => ops.tile(-1)],
@@ -31,6 +36,8 @@ export function mountWmKeys(ops: WmKeyOps): () => void {
     ['tabNew', ops.newTab],
     ['tabClose', ops.close],
     ['tabReopen', ops.reopen],
+    ['tileFill', ops.fill],
+    ['tileRestore', ops.restore],
     ['goHome', () => ops.go('home')],
     ['goNotifications', () => ops.go('notifications')],
     ['goBookmarks', () => ops.go('bookmarks')],
@@ -54,7 +61,7 @@ export function mountWmKeys(ops: WmKeyOps): () => void {
       return;
     }
     const hit = table.find(([id]) => pressed(e, id));
-    if (hit) e.preventDefault(), hit[1]();
+    if (hit && hit[1]() !== false) e.preventDefault();
   };
   window.addEventListener('keydown', key);
   return () => window.removeEventListener('keydown', key);

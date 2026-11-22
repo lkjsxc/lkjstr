@@ -13,6 +13,7 @@ export function parseLayout(value: unknown): LayoutNode | null {
       id: v.id,
       tabs: v.tabs,
       active: typeof v.active === 'string' ? v.active : '',
+      ...(v.zoom === 'max' || v.zoom === 'min' ? { zoom: v.zoom } : {}),
     };
   if (v.type !== 'split' || (v.dir !== 'row' && v.dir !== 'col') || !Array.isArray(v.children))
     return null;

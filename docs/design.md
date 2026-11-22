@@ -54,6 +54,16 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
   and keeps the tab in front in view. Every tab has one width (136px before the tab scale, a setting; 0 fits each
   to its title): a long title ends in an ellipsis and its tooltip is the whole title. On a phone a full bar narrows
   every tab alike, to 88px, before it scrolls.
+- A tile's bar starts with "…" (its menu: the tab's own items, split, reopen, close tile), then two quiet icons,
+  maximize and collapse, then "+". Maximized, the tile fills the workspace alone; the others keep their tabs and
+  state behind it, and its one icon (indigo while on), Escape or `Alt+Shift+F` shows them again. Collapsed, the tile
+  is its bar alone and its siblings take its room: in a column a bar of tab titles, in a row an upright strip whose
+  titles read downwards (the fold arrows turn with it); where the strip is short, its indigo unfold icon comes first.
+  Its icon, a press on the strip or a tab, or a tab dropped or opened into it opens it again. A lone tile has neither
+  icon; the last open tile of a split cannot collapse. A handle beside a collapsed tile moves the nearest open tiles,
+  and the collapsed one keeps its share for when it opens. While a tile is maximized, a tab brought forward in
+  another (tab search, tile keys, a reopen) maximizes that tile instead, and a split shows every tile again. Both
+  states are layout: saved, shared by browser tabs on the workspace, kept through a reload, cleared by a reset.
 - The tile that keys go to is marked; `Alt+Shift` chords move between tabs
   and tiles, reopen (the closed-tab list survives a reload) and open. `X`
   closes the tab in front. `O` opens tab search over the tile: open tabs,
@@ -69,13 +79,13 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
 - Incoming note, profile and address paths open a Thread or Profile tab, then
   return the address bar to `/`. An invalid path keeps the workspace as it was
   and shows one toast.
-- The default layout, also what "Reset layout" gives: Home at the left
+- The default layout, also what a reset gives: Home at the left
   (Global behind it), Notifications in the middle, and at the right Post over
   Accounts and Settings in equal halves; widths 40/30/30. Under 1200px
   Notifications joins the lower right tile; under 760px one tile. Views
   respond to their tile (container queries).
-- A saved arrangement is the reader's until they reset it (tile menu, or
-  Settings: Layout); one never rearranged takes up a new default once.
+- A saved arrangement is the reader's until they reset it (Settings: Layout); one never rearranged takes up a
+  new default once.
   Reset closes the tabs the default lacks the ordinary way, so what they held
   waits in the closed tabs (as one batch, which later closes do not push out),
   and offers Undo until a tab is opened or closed. Reset every layout does the

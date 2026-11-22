@@ -1,5 +1,5 @@
 // Tab click vs drag. Dropping on a pane edge splits it; on the body joins its tab stack; on a tab strip
-// inserts at the pointer position (reorder), previewed as a caret between tabs.
+// inserts at the pointer position (reorder), previewed as a caret between tabs. A folded tile only takes the tab in.
 import { h } from '../shared/h.ts';
 import type { Zone } from './layout.ts';
 
@@ -52,6 +52,9 @@ export function startTabDrag(e: PointerEvent, tab: HTMLElement, label: string, o
   const sy = e.clientY;
   const origin = o.layer.getBoundingClientRect();
   const rects = [...o.panes].map(([id, el]) => [id, el.getBoundingClientRect()] as const);
+  const folded = new Set(
+    [...o.panes].filter(([, el]) => el.classList.contains('min')).map(([id]) => id),
+  );
   const tabRects = new Map(
     [...o.panes].map(([id, el]) => [
       id,
@@ -82,6 +85,12 @@ export function startTabDrag(e: PointerEvent, tab: HTMLElement, label: string, o
       return;
     }
     const [id, r] = hit;
+    if (folded.has(id)) {
+      target = [id, 'center'];
+      preview.className = 'drop';
+      preview.style.cssText = `left:${r.left - origin.left}px;top:${r.top - origin.top}px;width:${r.width}px;height:${r.height}px`;
+      return;
+    }
     if (ev.clientY - r.top < STRIP_PX) {
       const [index, caret] = insertAt(tabRects.get(id) ?? [], ev.clientX);
       target = [id, 'center', index];

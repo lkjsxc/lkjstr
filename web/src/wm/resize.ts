@@ -1,4 +1,5 @@
-// Pointer-driven split resize. Mutates flex-grow live; commits normalized sizes on release.
+// Pointer-driven split resize. Mutates flex-grow live; commits normalized sizes on release. A folded tile keeps its
+// thin size: the handle moves the nearest open tiles on either side, and the folded one keeps its share for later.
 const MIN_PX = 120;
 
 export function startResize(
@@ -9,8 +10,13 @@ export function startResize(
   commit: (sizes: number[]) => void,
 ): void {
   const handle = e.currentTarget as HTMLElement;
-  const a = cells[index];
-  const b = cells[index + 1];
+  const open = (i: number): boolean => !cells[i]?.classList.contains('min');
+  let ai = index;
+  let bi = index + 1;
+  while (ai > 0 && !open(ai)) ai--;
+  while (bi < cells.length - 1 && !open(bi)) bi++;
+  const a = open(ai) ? cells[ai] : undefined;
+  const b = open(bi) ? cells[bi] : undefined;
   if (!a || !b || e.button !== 0) return;
   e.preventDefault();
   handle.setPointerCapture(e.pointerId);

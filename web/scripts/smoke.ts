@@ -21,6 +21,7 @@ import { timeLabelChecks } from './smoke-time-label.ts';
 import { railSmoke } from './smoke-time-rail.ts';
 import { viaChecks } from './smoke-via.ts';
 import { wishes } from './smoke-wishes.mjs';
+import { zoomChecks } from './smoke-zoom.ts';
 import { seated, seatOf } from './thread-seat.ts';
 
 const here = new URL('..', import.meta.url).pathname;
@@ -463,6 +464,7 @@ async function run(browser: Browser): Promise<void> {
   await keyboard(browser, still);
   await defaults(browser, still);
   await resetChecks((given) => open(browser, '/', { ...still, ...given }), fact);
+  await zoomChecks((given, size) => open(browser, '/', { ...still, ...given }, size), fact);
   await pendingChecks((given) => open(browser, '/', given), fact);
   await threadChecks((path, given, size) => open(browser, path, given, size), fact);
   await momentChecks((path, given, size) => open(browser, path, given, size), fact);
@@ -779,30 +781,36 @@ async function defaults(browser: Browser, still: Record<string, unknown>): Promi
   await p.keyboard.press('Enter');
   const draft = p.locator('.pane:has(.tab.active[data-view="compose~2"]) textarea');
   await draft.fill('kept through a reset');
-  const mine = await tiles(p);
   await p.waitForTimeout(500);
-  await p.locator('.pane .strip > .icon').first().click();
-  await p.locator('.menu button').getByText('Reset layout', { exact: true }).click();
-  await p.waitForSelector('.tab[data-view="settings"]');
+  // Settings resets this workspace (the tile menu has no reset), with Undo.
+  const settingsTab = async () => {
+    await p.locator('.bar [data-tab-search]').click();
+    await p.locator('.tsearch input').fill('Settings');
+    await p.locator('.tsearch input').press('Enter');
+    const set = p.locator('.view[data-kind="settings"]:visible');
+    await set.locator('[data-entry]').first().waitFor();
+    return set;
+  };
+  let set = await settingsTab();
+  const mine = await tiles(p);
+  await set.getByRole('button', { name: 'Reset this workspace', exact: true }).click();
+  await p.waitForSelector('.tab[data-view="notifications"]');
   fact(
-    'Reset layout gives the default layout',
+    'Reset this workspace gives the default layout',
     (await tiles(p)).join() === want('home').join(),
     await tiles(p),
   );
   await p.locator('.toast.undo .lnk').click();
   await p.waitForSelector('.tab[data-view="compose~2"]');
+  const undone = await tiles(p);
+  await p.locator('.tab[data-view="compose~2"]').click();
   fact(
     'Undo puts the arrangement and the draft back',
-    (await tiles(p)).join() === mine.join() &&
-      (await draft.inputValue()) === 'kept through a reset',
-    await tiles(p),
+    undone.join() === mine.join() && (await draft.inputValue()) === 'kept through a reset',
+    [undone, mine],
   );
-  // From Settings: this workspace only, its closed tabs keep what they held, and a reload keeps the result.
-  await p.locator('.bar [data-tab-search]').click();
-  await p.locator('.tsearch input').fill('Settings');
-  await p.locator('.tsearch input').press('Enter');
-  const set = p.locator('.view[data-kind="settings"]:visible');
-  await set.locator('[data-entry]').first().waitFor();
+  // Again, without Undo: its closed tabs keep what they held, and a reload keeps the result.
+  set = await settingsTab();
   await set.getByRole('button', { name: 'Reset this workspace', exact: true }).click();
   await p.waitForSelector('.tab[data-view="account"]');
   fact(

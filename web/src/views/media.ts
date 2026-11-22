@@ -140,7 +140,7 @@ export function mountMedia(el: HTMLElement, env: ViewEnv): () => void {
   const key = (e: KeyboardEvent): void => {
     // A focused button of the bar keeps its own Space and Enter.
     if ((e.key === ' ' || e.key === 'Enter') && (e.target as Element).closest?.('.mbar')) return;
-    if (pressed(e, 'viewerClose')) env.close();
+    if (pressed(e, 'viewerClose')) e.preventDefault(), env.close();
     else if (pressed(e, 'viewerPrev')) go(index - 1);
     else if (pressed(e, 'viewerNext')) go(index + 1);
     else if (player?.key(e)) void 0;

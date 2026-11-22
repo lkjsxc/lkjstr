@@ -2,11 +2,14 @@
 export type ViewId = string;
 export type Dir = 'row' | 'col';
 export type Zone = 'center' | 'left' | 'right' | 'top' | 'bottom';
+/** `max`: the tile fills the workspace (at most one does); `min`: folded to its strip, its room given to its siblings. */
+export type Zoom = 'max' | 'min';
 export type PaneNode = {
   readonly type: 'pane';
   readonly id: string;
   readonly tabs: readonly ViewId[];
   readonly active: ViewId;
+  readonly zoom?: Zoom;
 };
 export type SplitNode = {
   readonly type: 'split';
@@ -59,8 +62,35 @@ const normSizes = (sizes: readonly number[]): number[] => {
     : valid.map(() => 1 / valid.length);
 };
 
-/** Removes empty panes/splits, flattens same-direction nesting, fixes sizes and active tabs. */
+export const unzoomed = ({ zoom: _, ...p }: PaneNode): PaneNode => p;
+const folded = (n: LayoutNode): boolean => n.type === 'pane' && n.zoom === 'min';
+
+/** A lone tile is neither filled nor folded, one tile at most fills the workspace (the first), and a split never
+ * holds only folded tiles (its first one opens again). */
+function settle(root: LayoutNode): LayoutNode {
+  if (root.type === 'pane') return root.zoom ? unzoomed(root) : root;
+  let max = false;
+  const walk = (n: LayoutNode): LayoutNode => {
+    if (n.type === 'pane') {
+      if (n.zoom !== 'max') return n;
+      if (max) return unzoomed(n);
+      max = true;
+      return n;
+    }
+    const kids = n.children.map(walk);
+    if (kids.every(folded)) kids[0] = unzoomed(kids[0] as PaneNode);
+    return { ...n, children: kids };
+  };
+  return walk(root);
+}
+
+/** Removes empty panes/splits, flattens same-direction nesting, fixes sizes, active tabs and zoom. */
 export function normalize(node: LayoutNode | null): LayoutNode | null {
+  const n = tidy(node);
+  return n && settle(n);
+}
+
+function tidy(node: LayoutNode | null): LayoutNode | null {
   if (!node) return null;
   if (node.type === 'pane') {
     const tabs = [...new Set(node.tabs)];
@@ -74,7 +104,7 @@ export function normalize(node: LayoutNode | null): LayoutNode | null {
   const kids: LayoutNode[] = [];
   const sizes: number[] = [];
   node.children.forEach((child, i) => {
-    const n = normalize(child);
+    const n = tidy(child);
     const size = node.sizes[i] ?? 0;
     if (!n) return;
     if (n.type === 'split' && n.dir === node.dir) {
@@ -137,10 +167,17 @@ function splitPane(node: LayoutNode, paneId: string, fresh: PaneNode, zone: Zone
   return { ...node, children: node.children.map((c) => splitPane(c, paneId, fresh, zone)) };
 }
 
+/** A tile that a tab arrives in opens if it was folded. */
+const opened = (p: PaneNode): PaneNode => (p.zoom === 'min' ? unzoomed(p) : p);
+/** A new tile is to be seen: no tile fills the workspace any more. */
+const unfilled = (root: LayoutNode): LayoutNode =>
+  mapPanes(root, (p) => (p.zoom === 'max' ? unzoomed(p) : p)) as LayoutNode;
+
 export function addView(root: LayoutNode, paneId: string, view: ViewId, zone: Zone): LayoutNode {
-  if (zone !== 'center') return normalize(splitPane(root, paneId, pane([view]), zone)) ?? root;
+  if (zone !== 'center')
+    return normalize(unfilled(splitPane(root, paneId, pane([view]), zone))) ?? root;
   const add = (p: PaneNode): PaneNode =>
-    p.id === paneId ? { ...p, tabs: [...p.tabs, view], active: view } : p;
+    p.id === paneId ? { ...opened(p), tabs: [...p.tabs, view], active: view } : p;
   return normalize(mapPanes(root, add)) ?? root;
 }
 
@@ -162,7 +199,7 @@ export function moveView(
       const tabs = p.tabs.filter((t) => t !== view);
       if (p.id !== paneId) return { ...p, tabs };
       tabs.splice(Math.max(0, Math.min(at, tabs.length)), 0, view);
-      return { ...p, tabs, active: view };
+      return { ...(from >= 0 ? p : opened(p)), tabs, active: view };
     });
     return normalize(next) ?? root;
   }
@@ -173,10 +210,18 @@ export function moveView(
   return addView(removed, paneId, view, zone);
 }
 
+/** New sizes for a split. Beside a folded tile they share out the open tiles' room: the folded one keeps its share. */
 export function resize(root: LayoutNode, splitId: string, sizes: readonly number[]): LayoutNode {
   if (root.type === 'pane') return root;
-  if (root.id === splitId && sizes.length === root.children.length)
-    return { ...root, sizes: normSizes(sizes) };
+  if (root.id === splitId && sizes.length === root.children.length) {
+    const open = root.children.map((c) => !folded(c));
+    const sum = (list: readonly number[]): number =>
+      list.reduce((all, z, i) => all + (open[i] ? z : 0), 0);
+    const [share, given] = [sum(root.sizes), sum(sizes)];
+    if (open.every(Boolean) || !(given > 0)) return { ...root, sizes: normSizes(sizes) };
+    const next = sizes.map((z, i) => (open[i] ? (z / given) * share : (root.sizes[i] ?? 0)));
+    return { ...root, sizes: normSizes(next) };
+  }
   return { ...root, children: root.children.map((c) => resize(c, splitId, sizes)) };
 }
 
@@ -186,4 +231,55 @@ export function closePane(root: LayoutNode, paneId: string): LayoutNode | null {
 
 export function views(root: LayoutNode): ViewId[] {
   return panes(root).flatMap((p) => p.tabs);
+}
+
+/** The item `dir` steps from `at`, wrapping. */
+export const step = <T>(list: readonly T[], at: number, dir: number): T | undefined =>
+  list[(at + dir + list.length) % list.length];
+
+/** The tile after (1) or before (-1) `paneId` in reading order, wrapping. */
+export function beside(
+  root: LayoutNode,
+  paneId: string | undefined,
+  dir: number,
+): PaneNode | undefined {
+  const all = panes(root);
+  const at = all.findIndex((p) => p.id === paneId);
+  return step(all, at, dir);
+}
+
+/** The tile that fills the workspace, if one does. */
+export const filled = (root: LayoutNode): PaneNode | undefined =>
+  panes(root).find((p) => p.zoom === 'max');
+
+function parentOf(node: LayoutNode, id: string): SplitNode | undefined {
+  if (node.type === 'pane') return undefined;
+  if (node.children.some((c) => c.id === id)) return node;
+  return node.children.map((c) => parentOf(c, id)).find(Boolean);
+}
+
+/** A tile folds only beside a sibling that stays open to take its room. */
+export function canFold(root: LayoutNode, paneId: string): boolean {
+  const parent = parentOf(root, paneId);
+  return Boolean(parent?.children.some((c) => c.id !== paneId && !folded(c)));
+}
+
+/** Fills the workspace with a tile (ending any other's), folds it, or (`undefined`) gives it its place again. */
+export function zoomPane(root: LayoutNode, paneId: string, zoom?: Zoom): LayoutNode {
+  if (zoom === 'min' && !canFold(root, paneId)) return root;
+  const set = (p: PaneNode): PaneNode => {
+    if (p.id === paneId) return zoom ? { ...p, zoom } : unzoomed(p);
+    return zoom === 'max' && p.zoom === 'max' ? unzoomed(p) : p;
+  };
+  return normalize(mapPanes(root, set)) ?? root;
+}
+
+/** A tab brought to the front is seen: its tile opens if folded, and while a tile fills the workspace, its tile fills
+ * it instead. The same layout (`root` itself) when it is already so. */
+export function front(root: LayoutNode, view: ViewId): LayoutNode {
+  const p = paneOfView(root, view);
+  const max = filled(root);
+  if (!p || (p.active === view && p.zoom !== 'min' && (!max || max.id === p.id))) return root;
+  const next = activate(root, view);
+  return max ? zoomPane(next, p.id, 'max') : p.zoom === 'min' ? zoomPane(next, p.id) : next;
 }

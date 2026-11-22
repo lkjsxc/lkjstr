@@ -1,5 +1,5 @@
 // Screenshots of the mock build for judging the look: ../tmp/screens/<name>-<width>-<theme>-<lang>.png.
-// Scenes: home, profile, thread, notifications, compose (with the emoji picker), media, settings, relays, accounts,
+// Scenes: home, tiles (maximized, collapsed), profile, thread, notifications, compose (with the emoji picker), media, settings, relays, accounts,
 // and a visitor's first run and sign-in (nobody signed in).
 // node scripts/shots.ts [--only=<width>-<theme>-<lang>] [--scenes=home,thread]
 import { spawn } from 'node:child_process';
@@ -15,6 +15,7 @@ import { keysShots } from './shots-keys.ts';
 import { looksShots } from './shots-looks.ts';
 import { sendingShots } from './shots-sending.ts';
 import { threadShots } from './shots-thread.ts';
+import { tilesShots } from './shots-tiles.ts';
 
 const here = new URL('..', import.meta.url).pathname;
 process.env.TMPDIR = browserTmp(process.env.TMPDIR ?? `${here}../tmp/temp`);
@@ -172,6 +173,7 @@ try {
           await page.locator('.tsearch input').waitFor();
         });
         await scene('home', '/', async () => undefined);
+        await tilesShots(scene, width);
         // The scroll time label (interface-time.md C1): a wheel on Home (the rail) and on Notifications (native).
         for (const [name, kind] of [
           ['time-label', 'home'],

@@ -1,5 +1,3 @@
-import { t } from '../shared/i18n.ts';
-import { keyCaps } from '../shared/keys.ts';
 import { kindOf, type OpenOpts, viewOf } from '../views/registry.ts';
 import { CHOICES } from './choices.ts';
 import { type ClosedTab, createClosed } from './closed.ts';
@@ -9,6 +7,7 @@ import * as L from './layout.ts';
 import { parseLayout } from './layout-parse.ts';
 import { openMenu } from './menus.ts';
 import { type BaseEnv, createOwnViews } from './own-views.ts';
+import { paneMenu } from './pane-menu.ts';
 import { FAMILY, presetOf } from './presets.ts';
 import { type Rendered, renderLayout } from './render.ts';
 import { createResets } from './reset.ts';
@@ -71,7 +70,8 @@ export function createWmController(
   const show = (tab: string): void => {
     const p = L.paneOfView(root, tab);
     if (!p) return;
-    if (p.active !== tab) set(L.activate(root, tab));
+    const next = L.front(root, tab);
+    if (next !== root) set(next);
     mark(p.id);
     own.focus(tab);
   };
@@ -108,13 +108,14 @@ export function createWmController(
       const at = p.tabs.includes(from) ? p.tabs.indexOf(from) + 1 : p.tabs.length;
       const all = L.panes(root);
       const i = all.findIndex((x) => x.id === p.id);
-      const q = opts.beside ? (all[i + 1] ?? all[i - 1]) : undefined;
+      // Beside: in the neighbouring tile, unless one tile fills the workspace (then it is the only one in view).
+      const q = opts.beside && !L.filled(root) ? (all[i + 1] ?? all[i - 1]) : undefined;
       if (opts.beside) back.set(tab, { view: (q ?? p).active, el: opts.from });
       if (q) touched = q.id;
       const next = q
         ? L.moveView(root, tab, q.id, 'center', q.tabs.length)
         : L.moveView(root, tab, p.id, 'center', at);
-      set(opts.background ? L.activate(next, p.active) : next);
+      set(opts.background ? L.activate(next, p.active) : L.front(next, tab));
     };
 
   const launcher = (tab: string) => ({
@@ -145,31 +146,27 @@ export function createWmController(
       startTabDrag(e, tab, ctx.title(view), {
         panes: rendered?.panes ?? new Map(),
         layer: host.layer,
-        onClick: () => set(L.activate(root, view)),
+        onClick: () => set(L.front(root, view)),
         onDrop: (paneId, zone, index) => set(L.moveView(root, view, paneId, zone, index)),
       });
     },
     onClose: close,
     closeClicks: () => env.settings.get().closeClicks,
     onPaneMenu(p: L.PaneNode, button: HTMLElement) {
-      const splitTo = (zone: L.Zone) => () => set(L.moveView(root, p.active, p.id, zone));
-      openMenu(host.layer, button, [
-        ...own.menu(p.active),
-        { label: t('pane.splitRight'), run: splitTo('right'), disabled: p.tabs.length < 2 },
-        { label: t('pane.splitDown'), run: splitTo('bottom'), disabled: p.tabs.length < 2 },
-        {
-          label: t('pane.reopen'),
-          key: keyCaps('tabReopen')[0],
-          run: reopen,
-          disabled: !closed.size(),
-        },
-        {
-          label: t('pane.close'),
-          run: () => (p.tabs.forEach(retire), set(L.closePane(root, p.id))),
-        },
-        { label: t('pane.reset'), run: () => resets.reset(preset(), true) },
-      ]);
+      const menu = paneMenu(p, {
+        own: own.menu(p.active),
+        split: (zone) => set(L.moveView(root, p.active, p.id, zone)),
+        reopen: closed.size() ? reopen : undefined,
+        close: () => (p.tabs.forEach(retire), set(L.closePane(root, p.id))),
+      });
+      openMenu(host.layer, button, menu);
     },
+    onZoom(p: L.PaneNode, zoom?: L.Zoom) {
+      set(L.zoomPane(root, p.id, zoom));
+      mark(p.id);
+      if (zoom !== 'min') own.focus(p.active);
+    },
+    canFold: (p: L.PaneNode) => L.canFold(root, p.id),
     onAdd(p: L.PaneNode) {
       const tab = p.tabs.find((x) => kindOf(x) === NEW_TAB) ?? own.fresh(NEW_TAB, used());
       set(p.tabs.includes(tab) ? L.activate(root, tab) : L.addView(root, p.id, tab, 'center'));
@@ -227,20 +224,11 @@ export function createWmController(
     front: () => own.el(cur()?.active ?? ''),
   };
   const compose = (): void => goCompose(finder, env.settings.get().composeNew);
-  const step = <T>(list: readonly T[], at: number, dir: number): T | undefined =>
-    list[(at + dir + list.length) % list.length];
-  const beside = (dir: number): L.PaneNode | undefined => {
-    const all = L.panes(root);
-    return step(
-      all,
-      all.findIndex((x) => x.id === cur()?.id),
-      dir,
-    );
-  };
+  const beside = (dir: number): L.PaneNode | undefined => L.beside(root, cur()?.id, dir);
   const offKeys = mountWmKeys({
     tab(dir) {
       const p = cur();
-      const next = p && step(p.tabs, p.tabs.indexOf(p.active), dir);
+      const next = p && L.step(p.tabs, p.tabs.indexOf(p.active), dir);
       if (next) show(next);
     },
     tile(dir) {
@@ -256,6 +244,14 @@ export function createWmController(
       show(tab);
     },
     newTab: () => void (cur() && ctx.onAdd(cur() as L.PaneNode)),
+    fill() {
+      const p = cur();
+      if (p) ctx.onZoom(p, p.zoom === 'max' ? undefined : 'max');
+    },
+    restore() {
+      const p = L.filled(root);
+      return p ? (ctx.onZoom(p), true) : false;
+    },
     close: () => void (cur() && close((cur() as L.PaneNode).active)),
     reopen,
     go(kind, state) {
