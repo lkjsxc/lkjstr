@@ -706,8 +706,8 @@ async function filtering(browser: Browser, still: Record<string, unknown>): Prom
   await page.context().close();
 }
 
-/** The layout of a device that holds nothing yet, for a reader and a visitor; a saved arrangement kept until it is
- * reset; a reset that loses no draft and can be undone. */
+/** The layout of a device that holds nothing yet, for a reader and a visitor, with what lkjstr is in front of
+ * Notifications; a saved arrangement kept until it is reset; a reset that loses no draft and can be undone. */
 async function defaults(browser: Browser, still: Record<string, unknown>): Promise<void> {
   const tiles = (page: Page): Promise<string[]> =>
     page
@@ -719,9 +719,28 @@ async function defaults(browser: Browser, still: Record<string, unknown>): Promi
             .join(' '),
         ),
       );
+  /** The middle tile opens on what lkjstr is, its first lines in view, and the tab is named after that page. */
+  const firstRead = async (page: Page, who: string): Promise<void> => {
+    const docs = page.locator('.view[data-kind="docs"]:visible');
+    const page1 = docs.locator('.dpage > p').first();
+    await page1.waitFor();
+    const top = await page1.evaluate((p) => {
+      const tile = p.closest('.view') as HTMLElement;
+      return Math.round(p.getBoundingClientRect().top - tile.getBoundingClientRect().top);
+    });
+    fact(
+      `${who} first reads what lkjstr is`,
+      (await docs.locator('.ditem.on').innerText()) === 'What lkjstr is' &&
+        (await page.locator('.tab.active[data-view="docs"]').getAttribute('title')) ===
+          'What lkjstr is' &&
+        (await page1.innerText()).startsWith('lkjstr is a Nostr client') &&
+        top < 400,
+      top,
+    );
+  };
   const want = (front: string): string[] => [
-    front === 'home' ? 'home* global' : 'home global*',
-    'notifications*',
+    front === 'home' ? 'home* their-home~lkjsxc' : 'home their-home~lkjsxc*',
+    'docs* notifications',
     'compose*',
     'account* settings',
   ];
@@ -739,7 +758,7 @@ async function defaults(browser: Browser, still: Record<string, unknown>): Promi
   );
   const [a = [], b = [], c = [], d = []] = boxes;
   fact(
-    'Home, Notifications, then the composer over Accounts in equal halves',
+    'Home, Documentation over Notifications, then the composer over Accounts in equal halves',
     a[0] === 0 &&
       (b[0] ?? 0) > 500 &&
       (c[0] ?? 0) > (b[0] ?? 0) + 380 &&
@@ -748,6 +767,7 @@ async function defaults(browser: Browser, still: Record<string, unknown>): Promi
       Math.abs((c[2] ?? 0) - (d[2] ?? 0)) <= 2,
     boxes,
   );
+  await firstRead(page, 'a reader');
   await page.locator('.tab[data-view="settings"]').click();
   const fresh = page.locator('.view[data-kind="settings"]:visible');
   await fresh.locator('[data-entry]').first().waitFor();
@@ -757,9 +777,15 @@ async function defaults(browser: Browser, still: Record<string, unknown>): Promi
   const guest = await open(browser, '/', { mock: { live: false, accounts: 'none' }, fresh: true });
   fact(
     'a visitor starts on the same layout',
-    (await tiles(guest)).join() === want('global').join(),
+    (await tiles(guest)).join() === want('lkjsxc').join(),
     await tiles(guest),
   );
+  fact(
+    "a visitor reads lkjsxc's Home where Global was",
+    (await guest.locator('.tab.active[data-view="their-home~lkjsxc"]').getAttribute('title')) ===
+      "lkjsxc's Home" && (await count(guest, '.view[data-kind="their-home"]:visible .note')) > 0,
+  );
+  await firstRead(guest, 'a visitor');
   fact(
     'the visitor sees the two ways in at once',
     (await count(guest, '.view[data-kind="account"] [data-f="extension"]:visible')) === 1,
@@ -826,8 +852,9 @@ async function defaults(browser: Browser, still: Record<string, unknown>): Promi
     (await tiles(p)).join() === want('home').join(),
     await tiles(p),
   );
-  // Bookmarks closed last, so it comes back first; then the Post tab with its draft.
-  for (const kind of ['bookmarks', 'compose~']) {
+  // Bookmarks closed last, so it comes back first; then Global (the default has lkjsxc's Home in its place); then
+  // the Post tab with its draft.
+  for (const kind of ['bookmarks', 'global', 'compose~']) {
     await p.locator('.pane .strip > .icon').first().click();
     await p.locator('.menu button', { hasText: 'Reopen closed tab' }).click();
     await p.waitForSelector(`.tab.active[data-view^="${kind}"]`);

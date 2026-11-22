@@ -66,8 +66,8 @@ Seams worth knowing inside `src/views/`:
   draws and walks it, `emoji-preview.ts` is its strip and `emoji-peek.ts` the popover over any emoji
   (Unicode ones are found by `shared/emoji-text.ts`). The
   Unicode table is made at build time by `scripts/emoji-table.ts` and fetched by `shared/emoji-table.ts`.
-- `wm/presets.ts` has two layout families: `main` for an account and `guest`
-  for a visitor; `main.ts` shows the one that fits who is signed in.
+- `wm/presets.ts` has two layout families: `main` for an account and `guest` for a visitor (`main.ts` shows the
+  one that fits); `startState` is what a default's tab first holds (lkjsxc's Home), put there by `wm/own-views.ts`.
 - `wm/controller.ts` owns one workspace; `wm/open-tab.ts` decides where an opened tab goes (a quote: the Post
   tab), `wm/pane-menu.ts` what a tile menu offers; `wm/closed.ts` is its stored list of
   closed tabs (read before every change, so browser tabs share it; entries

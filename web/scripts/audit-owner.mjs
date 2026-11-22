@@ -94,7 +94,8 @@ export async function auditOwner({
             )) === JSON.parse(settings.value).textSize,
         );
       }
-      if (returning) await find('Global', 'global');
+      // The default has lkjsxc's Home where Global was; Global is opened like any tab.
+      await find('Global', 'global');
       await view('global').locator('.note').first().waitFor();
       await fact(
         6,
@@ -132,7 +133,17 @@ export async function auditOwner({
         1,
         'post-name',
         (await page.locator('.tab.active[data-view^="compose"] > span').first().innerText()) ===
-          'Post' && !(await page.locator('body').innerText()).includes('Write'),
+          'Post' &&
+          // The interface's own words; Documentation's prose may use the verb ("Write in the Post tab").
+          !(
+            await page.evaluate(() => {
+              const prose = [...document.querySelectorAll('.dpage')];
+              for (const p of prose) p.style.display = 'none';
+              const text = document.body.innerText;
+              for (const p of prose) p.style.display = '';
+              return text;
+            })
+          ).includes('Write'),
       );
       await page.keyboard.press('Escape');
       const before = await page.locator('.tab[data-view^="compose"]').count();
@@ -246,18 +257,20 @@ export async function auditOwner({
       await find('Stats', 'stats');
       await view('stats').locator('tbody tr').first().waitFor();
       await fact(11, 'stats-figures', (await view('stats').locator('.sval').count()) === 5);
+      // The default's own Documentation tab may be in view too: read the one just opened, in the current tile.
+      const docs = () => page.locator('.pane.cur .view[data-kind="docs"]:visible');
       await find('Privacy policy', 'docs');
       await fact(
         3,
         'legal-tabs',
-        (await view('docs').locator('.ditem.on').getAttribute('data-page')) === 'privacy',
+        (await docs().locator('.ditem.on').getAttribute('data-page')) === 'privacy',
       );
       await find('Terms', 'docs');
       await fact(
         16,
         'docs-tree',
-        (await view('docs').locator('.dgroup').count()) === 3 &&
-          (await view('docs').locator('.ditem.on').getAttribute('data-page')) === 'terms',
+        (await docs().locator('.dgroup').count()) === 3 &&
+          (await docs().locator('.ditem.on').getAttribute('data-page')) === 'terms',
       );
       await page.evaluate(() => document.activeElement?.blur());
       await page.keyboard.press('o');

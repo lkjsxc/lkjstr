@@ -28,27 +28,33 @@ import { tabHits } from '../src/wm/tab-search.ts';
 const shape = (n: L.LayoutNode): unknown =>
   n.type === 'pane' ? n.tabs.join('|') : { [n.dir]: n.children.map(shape) };
 
-const SPLIT_L = 'global';
-const RIGHT = { col: ['compose', 'notifications|account|settings'] };
+const SPLIT_L = 'their-home~lkjsxc';
+const RIGHT = { col: ['compose', 'docs|notifications|account|settings'] };
 
 describe('layout', () => {
   it('presets follow the window width and only name known views', () => {
     const three = {
-      row: ['home|global', 'notifications', { col: ['compose', 'account|settings'] }],
+      row: [
+        'home|their-home~lkjsxc',
+        'docs|notifications',
+        { col: ['compose', 'account|settings'] },
+      ],
     };
     expect(shape(homePreset(1440))).toEqual(three);
     expect(shape(homePreset(1200))).toEqual(three);
-    expect(shape(homePreset(1024))).toEqual({ row: ['home|global', RIGHT] });
-    expect(shape(homePreset(390))).toBe('home|global|notifications|compose|account|settings');
+    expect(shape(homePreset(1024))).toEqual({ row: ['home|their-home~lkjsxc', RIGHT] });
+    expect(shape(homePreset(390))).toBe(
+      'home|their-home~lkjsxc|docs|notifications|compose|account|settings',
+    );
     expect(shape(presetOf(5))).toBe('new');
     const known = new Set(VIEWS.map((v) => v.id));
-    expect(L.views(homePreset(1440)).filter((v) => !known.has(v))).toEqual([]);
+    expect(L.views(homePreset(1440)).filter((v) => !known.has(kindOf(v)))).toEqual([]);
   });
   it('a new tab is inserted right after the tab it was opened from, in the same pane', () => {
     const root = homePreset(1024);
     const p = L.paneOfView(root, 'home') as L.PaneNode;
     const next = L.moveView(root, 'thread', p.id, 'center', 2);
-    expect(shape(next)).toEqual({ row: ['home|global|thread', RIGHT] });
+    expect(shape(next)).toEqual({ row: ['home|their-home~lkjsxc|thread', RIGHT] });
     expect(L.paneOfView(next, 'thread')?.active).toBe('thread');
     expect(L.panes(next)).toHaveLength(3);
   });
@@ -57,7 +63,7 @@ describe('layout', () => {
     const p = L.paneOfView(root, 'home') as L.PaneNode;
     const split = L.moveView(root, 'home', p.id, 'right');
     expect(shape(split)).toEqual({ row: [SPLIT_L, 'home', RIGHT] });
-    expect(shape(L.removeView(split, 'home') as L.LayoutNode)).toEqual({ row: ['global', RIGHT] });
+    expect(shape(L.removeView(split, 'home') as L.LayoutNode)).toEqual({ row: [SPLIT_L, RIGHT] });
     expect(shape(parseLayout(JSON.parse(JSON.stringify(split))) as L.LayoutNode)).toEqual(
       shape(split),
     );

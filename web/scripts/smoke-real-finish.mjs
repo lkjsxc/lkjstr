@@ -49,9 +49,15 @@ export async function finishAccounts({ page, other, relayUrl, check, launch }) {
   check('signed-out relay edit survives reload', (await visitorRelay.count()) === 1);
 }
 
-/** The default a reset gives at 1440px (wm/presets.ts): Home with Global behind it, Notifications, then Post over
- * Accounts and Settings. Each tile's tabs in order, its front tab starred. The seeded layout has four tiles too. */
-const RESET_1440 = ['home* global', 'notifications*', 'compose*', 'account* settings'];
+/** The default a reset gives at 1440px (wm/presets.ts): Home with lkjsxc's Home behind it, Documentation in front
+ * of Notifications, then Post over Accounts and Settings. Each tile's tabs in order, its front tab starred. The
+ * seeded layout has four tiles too. */
+const RESET_1440 = [
+  'home* their-home~lkjsxc',
+  'docs* notifications',
+  'compose*',
+  'account* settings',
+];
 /** Workspace 1 as drawn and as stored for the signed-in reader, with the page language and Home's tab title. */
 const arrangement = (page) =>
   page.evaluate(() => {
@@ -196,7 +202,14 @@ async function probeSharing({ page, ctx, base, fake, trace, check, launch }) {
   await launcher(other).locator('.x').click();
   await launcher(page).waitFor({ state: 'detached' });
   check('browser tabs follow tab changes in the same workspace');
-  await other.locator('.tab[data-view="global"]').click();
+  // After the shots run's reset, workspace 1 is the default, which has no Global: it is opened like any tab.
+  const globalTab = other.locator('.tab[data-view="global"]');
+  if (await globalTab.count()) await globalTab.click();
+  else {
+    await other.locator('.pane.cur .strip').getByTitle('New tab', { exact: true }).click();
+    await other.keyboard.type('Global');
+    await other.locator('.ncard > b').getByText('Global', { exact: true }).click();
+  }
   const otherGlobal = other.locator('.view[data-kind="global"]:visible .note').first();
   await otherGlobal.waitFor();
   check('second app tab receives notes');

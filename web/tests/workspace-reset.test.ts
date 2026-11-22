@@ -53,7 +53,7 @@ describe('Reset layout', () => {
   const stored = () => parseClosed(kv.get('closed:main1'));
   const states = () => stored().map((c) => [c.kind, (c.state as { text?: string }).text]);
   const twoPosts = () =>
-    L.split('row', [L.pane(['home', 'compose~2'], 'compose~2'), L.pane(['docs', 'new'])]);
+    L.split('row', [L.pane(['home', 'compose~2'], 'compose~2'), L.pane(['bookmarks', 'new'])]);
 
   it('gives the default, keeps what the closed tabs held, and Undo puts everything back', () => {
     const w = world(twoPosts(), { 'compose~2': 'half a note' });
@@ -63,7 +63,7 @@ describe('Reset layout', () => {
     // The draft waits in the closed tabs, to be reopened; a New tab page leaves nothing.
     expect(states()).toEqual([
       ['compose', 'half a note'],
-      ['docs', undefined],
+      ['bookmarks', undefined],
     ]);
     expect(kv.get('view:main1:compose~2')).toBeUndefined();
     expect(r?.undo()).toBe(true);
@@ -88,7 +88,7 @@ describe('Reset layout', () => {
     const w = world(twoPosts(), { 'compose~2': 'old draft' });
     const r = resetLayout(w.parts, homePreset(1440));
     const other = createClosed('main1'); // the same workspace in another browser tab
-    expect(other.pop()?.kind).toBe('docs');
+    expect(other.pop()?.kind).toBe('bookmarks');
     expect(r?.undo()).toBe(false);
     expect(states()).toEqual([['compose', 'old draft']]);
   });

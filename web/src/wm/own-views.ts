@@ -8,11 +8,13 @@ import {
   loadViewState,
   restoreViewState,
   saveViewSlice,
+  saveViewState,
   snapshotViewState,
 } from '../shared/view-state.ts';
 import { freshTab, kindOf, type ViewEnv, viewOf } from '../views/registry.ts';
 import { type Launcher, type LauncherApi, mountLauncher, NEW_TAB } from './launcher.ts';
 import type { MenuItem } from './menus.ts';
+import { startState } from './presets.ts';
 
 type Mounted = {
   el: HTMLElement;
@@ -73,6 +75,13 @@ export function createOwnViews(
     titles.delete(tab);
     return !state || restoreViewState(instance(tab), state);
   };
+  /** A default's tab that names what it shows (lkjsxc's Home) holds it before it is first drawn or listed. */
+  const seed = (tab: string): void => {
+    const start = startState(tab);
+    if (!start) return;
+    const held = loadViewState<{ pubkey?: string }>(instance(tab));
+    if (!held.pubkey) saveViewState(instance(tab), { ...held, ...start });
+  };
   const unmount = (tab: string): void => {
     mounts.get(tab)?.dispose(); // a view writes what it still held (its reading position) as it goes
     mounts.delete(tab);
@@ -84,6 +93,7 @@ export function createOwnViews(
       if (!def && !isNew) return undefined;
       let m = mounts.get(tab);
       if (!m) {
+        seed(tab);
         const el = document.createElement('div');
         el.className = 'view';
         el.dataset.kind = kindOf(tab);
@@ -190,6 +200,7 @@ export function createOwnViews(
       if (kindOf(tab) === NEW_TAB) return t('tab.new');
       const def = viewOf(tab);
       if (def && !titles.has(tab)) {
+        seed(tab); // a tab is named before it is drawn
         // A view's saved state may carry the title it last set (a person's name, a hashtag).
         const saved = loadViewState<{ title: string }>(instance(tab)).title;
         titles.set(tab, typeof saved === 'string' && saved ? saved : t(def.title));

@@ -3,6 +3,7 @@ import { setLang } from '../src/shared/i18n.ts';
 import { createSignal } from '../src/shared/signal.ts';
 import { loadViewState, saveViewState } from '../src/shared/view-state.ts';
 import { type BaseEnv, createOwnViews, type OwnViews } from '../src/wm/own-views.ts';
+import { LKJSXC, LKJSXC_HOME } from '../src/wm/presets.ts';
 
 let own: OwnViews;
 let resize: () => void;
@@ -112,4 +113,21 @@ it('restores vertical and horizontal positions independently as their scroll ran
   width = 1000;
   el.append(document.createElement('p'));
   await vi.waitFor(() => expect([el.scrollTop, el.scrollLeft]).toEqual([0, 90]));
+});
+
+it("names and fills the default's tab of lkjsxc's Home before it is drawn, and never over what it holds", () => {
+  setup({});
+  expect(own.title(LKJSXC_HOME)).toBe("lkjsxc's Home");
+  expect(loadViewState(`test:${LKJSXC_HOME}`)).toEqual({ pubkey: LKJSXC, title: "lkjsxc's Home" });
+  // Only that id: a Their Home the reader opened names its own person.
+  expect(own.title('their-home')).toBe('Their Home');
+  expect(loadViewState('test:their-home')).toEqual({});
+  // What the tab already holds (a reading place, a newer title) stays.
+  own.drop(LKJSXC_HOME);
+  saveViewState(`test:${LKJSXC_HOME}`, { pubkey: LKJSXC, title: 'kept', scroll: { self: 9 } });
+  expect(own.title(LKJSXC_HOME)).toBe('kept');
+  expect(loadViewState(`test:${LKJSXC_HOME}`)).toMatchObject({
+    title: 'kept',
+    scroll: { self: 9 },
+  });
 });

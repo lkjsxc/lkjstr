@@ -110,8 +110,10 @@
 @media (pointer: coarse) {
   .aadd .addrow input, .aadd .btn, .abtns .btn, .krow .btn, .kfield { height: 40px; }
 }
-/* Docs: a tree beside the page it shows; under 520px of tile the tree sits on top. */
+/* Docs: a tree beside the page it shows; under 520px of tile the page comes first and the tree follows it. */
 .view.docs { display: grid; grid-template-columns: 200px minmax(0, 1fr); align-items: start; }
+.view.docs > .dtree { grid-area: 1 / 1; }
+.view.docs > .dpage { grid-area: 1 / 2; }
 .view.docs:focus { outline: none; }
 .dtree { position: sticky; top: 0; display: flex; flex-direction: column; gap: 6px; padding: 10px 6px 10px 8px; user-select: none; }
 .dgroup > summary { padding: 3px 6px; border-radius: 4px; color: var(--muted); font-size: 12.5px; font-weight: 600; cursor: pointer; }
@@ -126,7 +128,7 @@
 .dpage > .sgroup { font-size: 14.5px; }
 @container (max-width: 520px) {
   .view.docs { display: block; }
-  .dtree { position: static; padding: 8px 8px 6px; border-bottom: 1px solid var(--line); }
+  .dtree { position: static; padding: 10px 8px 16px; border-top: 1px solid var(--line); }
   .dpage { padding: 10px 12px 24px; }
 }
 

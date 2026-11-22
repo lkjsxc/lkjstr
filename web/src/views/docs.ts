@@ -1,5 +1,5 @@
-// The Docs tab: lkjstr explained as a small tree. Groups open and close; a page is shown beside the tree (under
-// it in a narrow tile) and names the tab. What lkjstr is, keys and safety, relays, filters, the shortcuts (the
+// The Docs tab: lkjstr explained as a small tree. Groups open and close; a page is shown beside the tree (above
+// it in a narrow tile, so the tab starts with what it says) and names the tab. What lkjstr is, keys and safety, relays, filters, the shortcuts (the
 // key table itself), the privacy policy, the terms, and the version facts all live here as pages of one tab kind.
 import { h } from '../shared/h.ts';
 import { both, type Key, t } from '../shared/i18n.ts';
@@ -115,6 +115,7 @@ export function mountDocs(el: HTMLElement, env: ViewEnv): () => void {
       );
       group.addEventListener('toggle', () => {
         const shut = new Set(state.shut ?? []);
+        if (group.open !== shut.has(g.title)) return; // drawn as it was kept: nothing to save
         if (group.open) shut.delete(g.title);
         else shut.add(g.title);
         state.shut = [...shut];
@@ -125,7 +126,7 @@ export function mountDocs(el: HTMLElement, env: ViewEnv): () => void {
   );
   el.classList.add('docs');
   el.tabIndex = -1;
-  el.replaceChildren(tree, page);
+  el.replaceChildren(page, tree);
   show();
   const off = env.engine.info.subscribe(() => void (current().id === 'filters' && show()));
   return () => (off(), dispose?.());

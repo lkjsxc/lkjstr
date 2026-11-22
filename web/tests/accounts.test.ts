@@ -48,8 +48,8 @@ describe('the layout families', () => {
   it('both start from one arrangement; what is in front fits who reads', () => {
     const fronts = (signedIn: boolean): string[] =>
       panes(presetOf(1, 1440, familyOf(signedIn))).map((p) => p.active);
-    expect(fronts(false)).toEqual(['global', 'notifications', 'compose', 'account']);
-    expect(fronts(true)).toEqual(['home', 'notifications', 'compose', 'account']);
+    expect(fronts(false)).toEqual(['their-home~lkjsxc', 'docs', 'compose', 'account']);
+    expect(fronts(true)).toEqual(['home', 'docs', 'compose', 'account']);
   });
 });
 

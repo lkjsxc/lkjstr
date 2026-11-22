@@ -1,15 +1,17 @@
-// The owner's 2026-11-20 workspace: one Documentation entry on the New tab page, the three-column default, and a
-// saved arrangement kept until the reader resets it (the reset itself: workspace-reset.test.ts).
+// The owner's workspace: one Documentation entry on the New tab page, the three-column default with Documentation in
+// front of Notifications (2026-11-22), and a saved arrangement kept until the reader resets it (the reset itself:
+// workspace-reset.test.ts).
 import { afterEach, describe, expect, it } from 'vitest';
 import { setLang } from '../src/shared/i18n.ts';
 import { adoptDefault, migrateStorage } from '../src/shared/migrate.ts';
 import { kv } from '../src/shared/storage.ts';
+import { DOC_PAGES } from '../src/views/docs.ts';
 import { setServed } from '../src/views/registry.ts';
 import { CHOICES } from '../src/wm/choices.ts';
 import { parseClosed } from '../src/wm/closed.ts';
 import * as L from '../src/wm/layout.ts';
 import { parseLayout } from '../src/wm/layout-parse.ts';
-import { homePreset } from '../src/wm/presets.ts';
+import { homePreset, LKJSXC, LKJSXC_HOME, startState } from '../src/wm/presets.ts';
 import { tabHits } from '../src/wm/tab-search.ts';
 
 afterEach(() => {
@@ -45,17 +47,44 @@ describe('Documentation on the New tab page', () => {
 });
 
 describe('the default arrangement', () => {
-  it('the desktop default: Home, Notifications, then Post over Accounts and Settings in equal halves', () => {
+  it('the desktop default: Home, Documentation over Notifications, then Post over Accounts and Settings', () => {
     const root = homePreset(1440) as L.SplitNode;
     expect(root.sizes).toEqual([0.4, 0.3, 0.3]);
     expect((root.children[2] as L.SplitNode).sizes).toEqual([0.5, 0.5]);
     expect((homePreset(1024) as L.SplitNode).children[1]).toMatchObject({ sizes: [0.5, 0.5] });
-    expect(L.panes(root).map((p) => p.active)).toEqual([
-      'home',
-      'notifications',
-      'compose',
-      'account',
-    ]);
+    expect(L.panes(root).map((p) => p.active)).toEqual(['home', 'docs', 'compose', 'account']);
+  });
+  it('what lkjstr is comes first: Documentation is in front of Notifications at every width', () => {
+    for (const family of ['main', 'guest']) {
+      for (const width of [1440, 1024]) {
+        const tile = L.paneOfView(homePreset(width, family), 'notifications') as L.PaneNode;
+        expect(tile.tabs.slice(0, 2), `${width} ${family}`).toEqual(['docs', 'notifications']);
+        expect(tile.active, `${width} ${family}`).toBe('docs');
+      }
+      // One tile on a phone: a visitor starts on Documentation, a reader on Home.
+      expect((homePreset(390, family) as L.PaneNode).active).toBe(
+        family === 'guest' ? 'docs' : 'home',
+      );
+    }
+    // A Docs tab with nothing stored opens on its first page, which says what lkjstr is.
+    expect(DOC_PAGES[0]?.id).toBe('what');
+  });
+  it("lkjsxc's Home takes Global's place, for a visitor and a reader, at every width", () => {
+    for (const family of ['main', 'guest'])
+      for (const width of [1440, 1024, 390]) {
+        const root = homePreset(width, family);
+        expect(L.views(root), `${width} ${family}`).not.toContain('global');
+        expect(L.paneOfView(root, 'home')?.tabs.slice(0, 2), `${width} ${family}`).toEqual([
+          'home',
+          LKJSXC_HOME,
+        ]);
+      }
+    expect((homePreset(1440, 'guest') as L.SplitNode).children[0]).toMatchObject({
+      active: LKJSXC_HOME,
+    });
+    expect(LKJSXC).toMatch(/^[0-9a-f]{64}$/);
+    expect(startState(LKJSXC_HOME)).toEqual({ pubkey: LKJSXC, title: "lkjsxc's Home" });
+    expect(startState('their-home')).toBeUndefined();
   });
 });
 
@@ -110,6 +139,28 @@ describe('saved arrangements', () => {
       expect(kv.get('account')).toBe('ab'.repeat(32));
       expect(kv.get('view:main1:compose')).toEqual({ text: 'draft' });
     }
+  });
+  it('a saved 2026-11-20 default stays as it is: the new default comes only with a reset', () => {
+    // Workspace 1 as it started before Documentation joined Notifications (2026-11-20 to 2026-11-22).
+    const before = (width: number, family: string): L.LayoutNode => {
+      const read = L.pane(['home', 'global'], family === 'guest' ? 'global' : 'home');
+      const own = ['account', 'settings'];
+      if (width < 760)
+        return L.pane([...read.tabs, 'notifications', 'compose', ...own], read.active);
+      const right = (tabs: string[]): L.LayoutNode =>
+        L.split('col', [L.pane(['compose']), L.pane(tabs, tabs[0])], [0.5, 0.5]);
+      return width < 1200
+        ? L.split('row', [read, right(['notifications', ...own])], [0.56, 0.44])
+        : L.split('row', [read, L.pane(['notifications']), right(own)], [0.4, 0.3, 0.3]);
+    };
+    for (const width of [1440, 1024, 390])
+      for (const family of ['main', 'guest']) {
+        localStorage.clear();
+        const layout = JSON.parse(JSON.stringify(before(width, family)));
+        kv.set(`layout:${family}`, layout);
+        migrateStorage();
+        expect(kv.get(`layout:${family}`), `${width} ${family}`).toEqual(layout);
+      }
   });
   it('runs once', () => {
     kv.set('layout:main', saved(1440, 'main'));

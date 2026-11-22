@@ -56,6 +56,8 @@ const pressUndo = async (page: Page): Promise<void> => {
   if (await undo.count()) await undo.first().click();
 };
 const settle = (page: Page): Promise<void> => page.waitForTimeout(600); // the layout is written 400ms after a change
+/** The default is drawn: its middle tile opens on Documentation, which has no notes to wait for. */
+const DRAWN = '.view[data-kind="docs"] .dpage > p';
 
 export async function resetChecks(open: Open, check: Check): Promise<void> {
   // 1. A Post tab opened after the reset takes the free id compose~2; Undo must not bring the old one over it.
@@ -68,7 +70,7 @@ export async function resetChecks(open: Open, check: Check): Promise<void> {
     await pressUndo(page);
     await settle(page);
     await page.reload();
-    await page.waitForSelector('.note');
+    await page.waitForSelector(DRAWN);
     check(
       'the new Post keeps its draft, the old one waits in the closed tabs',
       (await draftField(page, 'compose~2').inputValue()) === 'new draft' &&
@@ -81,7 +83,8 @@ export async function resetChecks(open: Open, check: Check): Promise<void> {
   {
     const page = await open(extraPost('first words'));
     await menuReset(page);
-    for (let i = 0; i < 2 && !(await page.locator('.tab[data-view="compose~2"]').count()); i++)
+    // Bookmarks and Global (which the default no longer has) come back before it.
+    for (let i = 0; i < 3 && !(await page.locator('.tab[data-view="compose~2"]').count()); i++)
       await page.keyboard.press('Alt+Shift+T');
     await page.waitForSelector('.tab.active[data-view="compose~2"]');
     await draftField(page, 'compose~2').fill('first words, edited');
@@ -89,7 +92,7 @@ export async function resetChecks(open: Open, check: Check): Promise<void> {
     await pressUndo(page);
     await settle(page);
     await page.reload();
-    await page.waitForSelector('.note');
+    await page.waitForSelector(DRAWN);
     check(
       'the reopened draft keeps its edit through a reload',
       (await draftField(page, 'compose~2').inputValue()) === 'first words, edited',

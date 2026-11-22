@@ -80,11 +80,10 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
 - Incoming note, profile and address paths open a Thread or Profile tab, then
   return the address bar to `/`. An invalid path keeps the workspace as it was
   and shows one toast.
-- The default layout, also what a reset gives: Home at the left
-  (Global behind it), Notifications in the middle, and at the right Post over
-  Accounts and Settings in equal halves; widths 40/30/30. Under 1200px
-  Notifications joins the lower right tile; under 760px one tile. Views
-  respond to their tile (container queries).
+- The default layout, also what a reset gives: Home at the left (lkjsxc's Home behind it: the people the maker of
+  lkjstr follows, in Global's old place), in the middle Documentation open at what lkjstr is, in front of
+  Notifications, and at the right Post over Accounts and Settings in equal halves; widths 40/30/30. Under 1200px
+  the middle tile joins the lower right one; under 760px one tile. Views respond to their tile (container queries).
 - A saved arrangement is the reader's until they reset it (Settings: Layout); one never rearranged takes up a
   new default once.
   Reset closes the tabs the default lacks the ordinary way, so what they held
@@ -96,8 +95,10 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
 
 ## Signed out, and accounts
 - A visitor's layout is their own but starts from the same arrangement, with
-  Global and the Accounts tab in front (a reader: Home and Accounts).
-  No welcome page, no prose. Signing in shows the reader's own layout and
+  lkjsxc's Home, Documentation and the Accounts tab in front (a reader: Home,
+  Documentation and Accounts); on a phone a visitor starts on Documentation,
+  a reader on Home. No welcome page: what lkjstr is, is the ordinary
+  Documentation tab. Signing in shows the reader's own layout and
   closes the tab that signed in; signing out shows the visitor's again.
 - The Accounts tab is the sign-in surface. It starts with its content: the
   accounts on the device (a press switches; the one in use has an indigo
@@ -179,7 +180,7 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
   where months begin, numbers where years begin, a 2px accent line across only the rightmost 16px for where you are; the current year uses normal text colour;
   pressed or dragged it goes to that time and says it, and leaves a tick to
   come back by. The tile's own width decides the rail (56px with years from 520px, else 16px) and other tile-width
-  layouts (Documentation stacks its tree above the page under 520px) from the first frame; a list the engine refused
+  layouts (Documentation puts its tree under the page below 520px) from the first frame; a list the engine refused
   last time on this device starts without the rail's room, so its notes never widen after a second. Other views keep
   a 14px scrollbar with a slim thumb that widens under the pointer.
 - While the reader scrolls a list in time order (wheel, touch, keys, a dragged thumb or rail), a small label beside
@@ -264,7 +265,8 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
   A second table shows request purposes, weights, counts and completion marks; narrow tiles show Purpose and Relay, with the request id and other values in retained unfolded lines.
 - Documentation is one tab with a tree of groups and pages: what lkjstr is, release
   and licence, keys and safety, relays, filters, shortcuts, the privacy
-  policy, the terms. A page names its tab and is found by name in tab search.
+  policy, the terms. The tree stands beside the page, or under it in a narrow
+  tile, so the tab starts with what it says. A page names its tab and is found by name in tab search.
   Selecting another page opens it at the top; restoring a tab keeps its position.
 ## Language, and checking the look
 Every visible string comes from the two tables in `web/src/shared/`. Japanese is written as Japanese, with no space before particles after a
