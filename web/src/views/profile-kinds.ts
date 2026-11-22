@@ -33,6 +33,14 @@ export function mountProfileKinds(o: {
 } {
   const bar = h('div', { class: 'pkinds', role: 'tablist' });
   let on = rich(o.env.engine);
+  const keepSelectedVisible = (): void => {
+    const selected = bar.querySelector<HTMLElement>('.pkind.on');
+    if (!selected || !bar.clientWidth) return;
+    const x =
+      selected.getBoundingClientRect().left - bar.getBoundingClientRect().left + bar.scrollLeft;
+    if (x < bar.scrollLeft || x + selected.offsetWidth > bar.scrollLeft + bar.clientWidth)
+      bar.scrollLeft = Math.max(0, x - (bar.clientWidth - selected.offsetWidth) / 2);
+  };
   const draw = (): void =>
     bar.replaceChildren(
       ...PROFILE_KINDS.map((k) =>
@@ -48,6 +56,7 @@ export function mountProfileKinds(o: {
               o.state.show = k;
               o.save();
               draw();
+              requestAnimationFrame(keepSelectedVisible);
               o.reopen();
             },
           },
@@ -65,6 +74,7 @@ export function mountProfileKinds(o: {
     seat(header, row) {
       if (!on || !header || row?.kind !== 'profile') return void bar.remove();
       if (bar.parentElement !== header) header.append(bar);
+      requestAnimationFrame(keepSelectedVisible);
     },
     query: () => (on ? { show: kindOf(o.state.show) } : {}),
     dispose: off,

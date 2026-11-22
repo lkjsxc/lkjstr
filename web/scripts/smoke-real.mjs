@@ -136,7 +136,7 @@ try {
   check(
     'protocol 3 exposes all profile kinds',
     (await page.locator('.pkinds [role="tab"]').allTextContents()).join(',') ===
-      'Posts,Replies,Reposts,Reactions,Media',
+      'Posts,Replies,Reposts,Reactions,Media,Articles,Lists,All',
   );
   // A second account that is only a public key: read-only is plain before anything is pressed.
   await page.locator('.acct').click();

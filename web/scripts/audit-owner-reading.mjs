@@ -108,7 +108,8 @@ export async function auditReading({ page, find, fact, view, peopleToken, messag
   await fact(
     26,
     'profile-kinds',
-    (await kinds.allTextContents()).join(',') === 'Posts,Replies,Reposts,Reactions,Media',
+    (await kinds.allTextContents()).join(',') ===
+      'Posts,Replies,Reposts,Reactions,Media,Articles,Lists,All',
   );
   for (const name of ['Replies', 'Reposts', 'Reactions', 'Media', 'Posts']) {
     await view('profile').getByRole('tab', { name, exact: true }).click();

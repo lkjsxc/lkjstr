@@ -70,12 +70,12 @@ what the engine offers and no surface reaches yet.
 | N1 | One kind table instead of the kind allow-lists (engine) | [interface-view.md](interface-view.md#n1-one-kind-table-engine-no-surface) | built |
 | E7 | Two emoji under one shortcode both appear and work | [interface-emoji.md](interface-emoji.md#e7-two-emoji-under-one-shortcode) | built |
 | E6 | Custom emoji and the Unicode table ready before the picker opens | [interface-emoji.md](interface-emoji.md#e6-ready-before-the-picker-opens) | ready |
-| N2 | The generic face; every kind opens; profile Articles, Lists, All | [interface-view.md](interface-view.md#n2-the-generic-face-and-every-kind-opens) | ready |
+| N2 | The generic face; every kind opens; profile Articles, Lists, All | [interface-view.md](interface-view.md#n2-the-generic-face-and-every-kind-opens) | built (private; review pending) |
 | N3 | Embedded events and chains, lazy, with depth and cycle limits | [interface-view.md](interface-view.md#n3-embedded-events-and-chains) | ready |
 | N4 | Acts are posts: act focus, Who reacted, reacting to an act | [interface-view.md](interface-view.md#n4-acts-are-posts) | ready |
 | N5 | Lists (NIP-51) as lists of openable items | [interface-view.md](interface-view.md#n5-lists) | ready |
 | N6 | Articles: the card and the reading view | [interface-view.md](interface-view.md#n6-articles) | ready |
-| N7 | Deep links and Copy link for every kind | [interface-view.md](interface-view.md#n7-deep-links-and-copying-for-every-kind) | ready |
+| N7 | Deep links and Copy link for every kind | [interface-view.md](interface-view.md#n7-deep-links-and-copying-for-every-kind) | built (private; review pending) |
 
 C1 to C3 are the owner's item 5 of 2026-11-21, built: C2 and C3 draw local day marks from the engine's `days` and
 fall back to UTC months without inventing a day. They reach only lists the engine gives the rail (interface-time.md,

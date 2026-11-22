@@ -9,7 +9,7 @@ Claude owns the interface. Account-safe and A1/A2 (972ef776) are live. S2/E7 sup
 
 N1 centralizes kind policy and public ID/address access. Rows and quotes carry their kind; existing feeds and counts stay unchanged.
 Private and ephemeral events stay out. S4 N2/N7 builds a bounded generic face, canonical links and profile
-Articles/Lists/All, pending its independent visual/real gates.
+Articles/Lists/All, with [N2/N7](interface-view.md) review sheet `lkjstr-review/N2-20261122.jpg`; real/Opus gates held.
 
 ## Specified keys and messages (2026-11-16)
 

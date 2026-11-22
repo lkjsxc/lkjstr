@@ -686,7 +686,7 @@ async function filtering(browser: Browser, still: Record<string, unknown>): Prom
   const kinds = await page.locator(`${prof} .pkind`).allInnerTexts();
   fact(
     'a profile’s kinds: posts, replies, reposts, reactions, media',
-    kinds.join() === 'Posts,Replies,Reposts,Reactions,Media',
+    kinds.join() === 'Posts,Replies,Reposts,Reactions,Media,Articles,Lists,All',
     kinds,
   );
   fact(
