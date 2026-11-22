@@ -1,4 +1,4 @@
-import { enqueue, isHex, openState, statePath } from './nostr-enqueue.mjs';
+import { enqueue, isHex, openState, readState, statePath } from './nostr-enqueue.mjs';
 import { initOutbox, inspect, publish, ready, served } from './nostr/outbox.mjs';
 import { packet, stage } from './nostr/review.mjs';
 import { acknowledgeFeedback, listen } from './nostr/listen.mjs';
@@ -7,6 +7,8 @@ const commands = {
   enqueue: [1, 2], releases: [0, 0], ready: [0, 0], packet: [1, 1], stage: [2, 2],
   inspect: [1, 1], publish: [1, 1], served: [2, 2], listen: [0, 0], 'ack-feedback': [1, 40],
 };
+// These only read: they open the store read-only and never create its schema.
+const readers = new Set(['releases', 'ready', 'packet', 'inspect', 'served']);
 
 async function run(command, args) {
   if (!Object.hasOwn(commands, command) || args.length < commands[command][0] ||
@@ -15,9 +17,10 @@ async function run(command, args) {
   }
   const directory = statePath();
   if (command === 'enqueue') return enqueue(directory, ...args);
-  const db = openState(directory);
+  const reader = readers.has(command);
+  const db = reader ? readState(directory) : openState(directory);
   try {
-    initOutbox(db);
+    if (!reader) initOutbox(db);
     switch (command) {
       case 'releases':
         return db.prepare(`SELECT r.revision, r.verified_at, m.announcement, a.event_id, a.delivered_at

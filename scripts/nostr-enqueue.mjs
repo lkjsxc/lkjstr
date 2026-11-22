@@ -11,12 +11,22 @@ export const sha256 = bytes => createHash('sha256').update(bytes).digest('hex');
 export const unixNow = () => Math.floor(Date.now() / 1000);
 export const isHex = (text, size) => typeof text === 'string' && text.length === size && !/[^a-f0-9]/.test(text);
 
-export function openState(directory) {
-  mkdirSync(directory, { recursive: true, mode: 0o700 });
+function privateDirectory(directory) {
   const metadata = lstatSync(directory);
   if (!metadata.isDirectory() || metadata.uid !== process.getuid() || (metadata.mode & 0o077)) {
     throw new Error('Nostr state directory must be private and owned by this user');
   }
+}
+
+// Readers never create, migrate or journal-switch the store: a missing store or table is an error.
+export function readState(directory) {
+  privateDirectory(directory);
+  return new DatabaseSync(join(directory, 'presence.sqlite3'), { readOnly: true, timeout: 5000 });
+}
+
+export function openState(directory) {
+  mkdirSync(directory, { recursive: true, mode: 0o700 });
+  privateDirectory(directory);
   const db = new DatabaseSync(join(directory, 'presence.sqlite3'), { timeout: 5000 });
   try {
     db.exec(`PRAGMA journal_mode = WAL;

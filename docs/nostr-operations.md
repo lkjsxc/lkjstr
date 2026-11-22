@@ -39,6 +39,31 @@ ID and archive exactly. The crew watcher reads the host's own status, so a
 lost enqueue cannot hide itself, and alarms lead once when a served release
 has no matching receipt after 30 minutes.
 
+## Store maintenance
+
+`releases`, `ready`, `packet`, `inspect` and `served` open the store
+read-only and never create or migrate it; a missing store or table is an
+error. `enqueue` (and the ship hook), `stage`, `publish`, `listen` and
+`ack-feedback` are writers and create missing tables, so a schema change
+starts at the first writer of the new code.
+
+Before a change that adds tables or converts rows, exclude every writer,
+not only the scheduled ones: comment out the registered cron jobs, make
+`lkjstr-ship.lock` unopenable so that no ship can start, and remove search
+permission from the state directory until its open descriptors drain.
+Then back up with SQLite's online backup API from one read-only connection
+inside one read transaction, and compare integrity, the full schema and the
+row digests of every table between the backup and that same snapshot. A
+copy of `presence.sqlite3` alone is not a backup while a WAL exists, and
+equal row counts do not show equal rows.
+
+Roll back code first and keep the store. A state restore first moves the
+store with its WAL and SHM aside together. It refuses while the moved
+store holds anything written after the backup that the restore does not
+mean to undo: a signed event, a send attempt or readback, a feedback
+acknowledgement or a later receipt. Carry those rows into the restored
+copy or keep the current store. Never sign again to replace a lost event.
+
 ## Notes
 
 Each staged or delivered note records the source it describes: everything
