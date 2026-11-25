@@ -130,7 +130,7 @@ const top = createTopBar(host.bar, {
   engine,
   settings,
   spaces: bar.el,
-  search: () => ctl?.search(),
+  search: (at) => ctl?.search(at),
   layer: host.layer,
   open: (kind, state) =>
     (kind === 'account' || kind === 'messages') && !state

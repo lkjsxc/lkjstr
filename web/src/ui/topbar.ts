@@ -21,7 +21,7 @@ export function createTopBar(
     settings: SettingsStore;
     spaces: HTMLElement;
     layer: HTMLElement;
-    search(): void;
+    search(at: HTMLElement): void;
     open(kind: string, state?: object): void;
   },
 ): TopBar {
@@ -40,38 +40,43 @@ export function createTopBar(
     if (!a.active) return o.open('account');
     const me = a.accounts.find((x) => x.author.pubkey === a.active);
     const others = a.accounts.filter((x) => x.author.pubkey !== a.active);
-    openMenu(o.layer, account, [
-      ...(lockedAccount(o.engine, me)
-        ? [{ label: t('account.unlock'), run: () => o.open('account', { unlock: a.active }) }]
-        : []),
-      ...(me
-        ? [
-            {
-              label: plainName(me.author),
-              sub: t('view.profile'),
-              lead: avatar(me.author, 'av'),
-              run: () =>
-                o.open('profile', { pubkey: me.author.pubkey, title: plainName(me.author) }),
-            },
-          ]
-        : []),
-      ...(dm.unread.get() > 0
-        ? [
-            {
-              label: t('view.messages'),
-              lead: h('span', { class: 'cnew' }, dm.unread.get()),
-              run: () => o.open('messages'),
-            },
-          ]
-        : []),
-      ...others.map((x, i) => ({
-        label: `${plainName(x.author)}${x.signer === 'none' ? ` (${t('account.signer.none')})` : ''}`,
-        lead: avatar(x.author, 'av sm'),
-        sep: i === 0,
-        run: () => void o.engine.act({ a: 'account.use', pubkey: x.author.pubkey }),
-      })),
-      { ...pages('account')[0], sep: true } as MenuItem,
-    ]);
+    openMenu(
+      o.layer,
+      account,
+      [
+        ...(lockedAccount(o.engine, me)
+          ? [{ label: t('account.unlock'), run: () => o.open('account', { unlock: a.active }) }]
+          : []),
+        ...(me
+          ? [
+              {
+                label: plainName(me.author),
+                sub: t('view.profile'),
+                lead: avatar(me.author, 'av'),
+                run: () =>
+                  o.open('profile', { pubkey: me.author.pubkey, title: plainName(me.author) }),
+              },
+            ]
+          : []),
+        ...(dm.unread.get() > 0
+          ? [
+              {
+                label: t('view.messages'),
+                lead: h('span', { class: 'cnew' }, dm.unread.get()),
+                run: () => o.open('messages'),
+              },
+            ]
+          : []),
+        ...others.map((x, i) => ({
+          label: `${plainName(x.author)}${x.signer === 'none' ? ` (${t('account.signer.none')})` : ''}`,
+          lead: avatar(x.author, 'av sm'),
+          sep: i === 0,
+          run: () => void o.engine.act({ a: 'account.use', pubkey: x.author.pubkey }),
+        })),
+        { ...pages('account')[0], sep: true } as MenuItem,
+      ],
+      { end: true },
+    );
   });
   let faceSig = '';
   const render = (): void => {
@@ -123,7 +128,7 @@ export function createTopBar(
     {
       class: 'icon',
       'data-tab-search': '',
-      onclick: o.search,
+      onclick: () => o.search(search),
       onpointerdown: (e) => e.preventDefault(),
     },
     icon('search'),

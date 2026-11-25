@@ -26,7 +26,8 @@ export type Wm = {
   drop(kind: string): void;
   /** Back to the default arrangement (`undoable`: with Undo); false: no room to keep its tabs, nothing changed. */
   reset(undoable: boolean): boolean;
-  search(): void;
+  /** Tab search over the current tile, or under `at` (the top bar's button). */
+  search(at?: HTMLElement): void;
   show(tab: string): void;
   dispose(): void;
 };
@@ -270,7 +271,7 @@ export function createWmController(
     },
     compose,
     reset: (undoable) => resets.reset(preset(), undoable),
-    search: () => openTabSearch(host.layer, finder),
+    search: (at) => openTabSearch(host.layer, finder, at),
     show,
     dispose() {
       disposed = true;

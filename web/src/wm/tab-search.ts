@@ -80,7 +80,7 @@ export function tabHits(api: Pick<TabFinder, 'tabs' | 'show' | 'open'>, typed: s
 }
 
 let closeSearch: (() => void) | undefined;
-export function openTabSearch(layer: HTMLElement, api: TabFinder): void {
+export function openTabSearch(layer: HTMLElement, api: TabFinder, button?: HTMLElement): void {
   if (closeSearch) return closeSearch();
   const list = h('div', { class: 'tlist', role: 'listbox' });
   let hits: Hit[] = [];
@@ -165,8 +165,10 @@ export function openTabSearch(layer: HTMLElement, api: TabFinder): void {
     },
   });
   const el = h('div', { class: 'tsearch' }, field, list);
-  const close = openPopover(layer, api.anchor(), el, {
+  // From the top bar's button it hangs under the button, its right edge on the button's; from a key, over the tile.
+  const close = openPopover(layer, button ?? api.anchor(), el, {
     panel: true,
+    end: !!button,
     closed: () => {
       people?.close();
       closeSearch = undefined;

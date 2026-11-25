@@ -21,6 +21,8 @@ export type MenuItem = {
 export type PopoverOpts = {
   /** A panel stays through a window resize (an on-screen keyboard opening) and is only put back in place. */
   readonly panel?: boolean;
+  /** Its right edge on the anchor's (an anchor at the right of the bar), not its left. */
+  readonly end?: boolean;
   readonly closed?: () => void;
 };
 
@@ -67,7 +69,8 @@ export function openPopover(
     // The popover is zoomed by the UI scale, which also scales its own offsets: undo that.
     const zoom = Number(getComputedStyle(el).zoom) || 1;
     const m = el.getBoundingClientRect();
-    const left = Math.max(4, Math.min(a.left, innerWidth - 4 - m.width));
+    const start = opts.end ? a.right - m.width : a.left;
+    const left = Math.max(4, Math.min(start, innerWidth - 4 - m.width));
     const below = a.bottom + 2;
     const top = below + m.height <= innerHeight - 4 ? below : Math.max(4, a.top - m.height - 2);
     el.style.left = `${(left - origin.left) / zoom}px`;
@@ -94,6 +97,7 @@ export function openMenu(
   layer: HTMLElement,
   anchor: HTMLElement,
   items: readonly MenuItem[],
+  opts: Pick<PopoverOpts, 'end'> = {},
 ): void {
   const menu = h(
     'div',
@@ -127,6 +131,6 @@ export function openMenu(
     const at = all.indexOf(document.activeElement as HTMLElement);
     all[(at + dir + all.length) % all.length]?.focus();
   });
-  const close = openPopover(layer, anchor, menu);
+  const close = openPopover(layer, anchor, menu, opts);
   enabled()[0]?.focus({ preventScroll: true });
 }
