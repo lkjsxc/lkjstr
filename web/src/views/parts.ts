@@ -1,5 +1,5 @@
 // Small pieces every view draws people and text with.
-import { loadPublicAvatar } from '../engine/avatar-cache.ts';
+import { loadAvatar, retryAvatar } from '../engine/avatar-cache.ts';
 import type { Author, Emoji, Segment } from '../engine/protocol.ts';
 import { emojiRuns } from '../shared/emoji-text.ts';
 import { type Child, h } from '../shared/h.ts';
@@ -46,9 +46,13 @@ function drawFace(el: HTMLElement, a: Author): void {
   if (!state) return;
   const initial = unnamed(a) ? '' : ([...a.name.replace(/:[a-z0-9_]+:/g, '').trim()][0] ?? '');
   if (state.letter.textContent !== initial) state.letter.textContent = initial;
-  const retry = state.image && state.image.parentElement !== el && state.revision !== a.profileId;
+  const revised = state.revision !== a.profileId;
+  const retry = revised && state.image && state.image.parentElement !== el;
   state.revision = a.profileId;
-  if (state.picture === a.picture && !retry) return;
+  if (state.picture === a.picture && !retry) {
+    if (revised && state.image) retryAvatar(state.image);
+    return;
+  }
   state.picture = a.picture;
   state.image?.remove();
   state.image = undefined;
@@ -63,10 +67,8 @@ function drawFace(el: HTMLElement, a: Author): void {
     draggable: 'false',
     referrerpolicy: 'no-referrer',
   });
-  img.addEventListener('error', () => img.remove());
-  if (state.options.cachePublic && a.profileId) loadPublicAvatar(img, a.picture);
-  else img.src = a.picture;
   el.append(img);
+  loadAvatar(img, a.picture, !!(state.options.cachePublic && a.profileId));
   state.image = img;
 }
 onPerson((author) => {

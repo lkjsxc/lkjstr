@@ -64,12 +64,22 @@ worker cannot recreate a deleted name.
 
 ## Public avatars
 
+Remote faces use up to six native image requests per page. Visible faces go
+first. An attempt times out after eight seconds and a visible face retries
+with an exponential delay capped at 30 seconds. Detached faces release their
+pending work. The letter stays in place while an image waits or retries.
+
 The image loader can reuse a browser-local copy of a public note author's
 profile picture after reload. An image must first load successfully. In the
 background the service worker checks an anonymous, CORS-readable copy of the
 same HTTPS address. It stores only decodable raster images with a positive
 cache lifetime, for at most an hour of reuse. The cache holds up to 64 images
 of at most 128 KiB each and evicts the oldest writes first.
+
+The worker accepts up to 16 copy jobs and runs one at a time, prioritizing
+visible offers. Each attempt has a 2.5-second deadline from cache lookup
+through decode and storage. Transient failures retry after one and two
+seconds, then suppress copies for that URL for up to 30 seconds.
 
 URLs with credentials, a query or an existing fragment use the browser's image
 path, as do opaque responses and pictures from private-message views. Private
@@ -98,7 +108,8 @@ finally. No owner account, public relay or publication is involved.
   tabs. A draft keeps its old document and receives the reload notice.
 - A public CORS avatar survives a reload and origin loss. Opaque, private,
   oversized and unselected images stay out of the avatar cache. Expiry and
-  capacity restore the ordinary image path.
+  capacity restore the ordinary image path. A visible avatar recovers after
+  a transient HTTP failure on the same image node.
 
 Both original regressions failed against the saved original generator:
 rollback deleted A's cached index, and the fourth waiting build left four

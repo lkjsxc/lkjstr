@@ -8,6 +8,7 @@ import { problems, valuesOf } from '../src/views/profile-edit-model.ts';
 import { author, flush, ME, row, setup } from './profile-edit-fixture.ts';
 
 afterEach(() => {
+  document.body.replaceChildren();
   localStorage.clear();
   setLang('en');
 });
@@ -124,6 +125,7 @@ it('refuses addresses that are not ones, under their fields, and keeps an unchan
 
 it('uploads a picture file into its field with progress, and says why one fails', async () => {
   const x = setup();
+  document.body.append(x.el);
   mountProfileEdit(x.el, x.env);
   x.handlers().rows([row()], true, true);
   let finish: (r: ActResult) => void = () => {};

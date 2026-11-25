@@ -15,6 +15,7 @@ async function avatarOrigins(bytes, run) {
   const cert = join(directory, 'cert.pem');
   const servers = [];
   const requests = [];
+  let failOnce = true;
   try {
     execFileSync(
       'openssl',
@@ -40,6 +41,11 @@ async function avatarOrigins(bytes, run) {
       const server = createServer(tls, (req, res) => {
         const path = new URL(req.url, 'https://fixture').pathname;
         requests.push({ path, headers: req.headers });
+        if (path === '/transient.png' && req.headers['sec-fetch-mode'] === 'no-cors' && failOnce) {
+          failOnce = false;
+          res.writeHead(503, { 'cache-control': 'no-store' }).end();
+          return;
+        }
         const body = path === '/large.png' ? Buffer.concat([bytes, Buffer.alloc(131072)]) : bytes;
         const cache = new Map([
           ['/private.png', 'private'],
@@ -94,7 +100,7 @@ export async function avatarCacheChecks() {
               return new Promise((resolve) => {
                 img.onload = () => resolve(img.naturalWidth > 0);
                 img.onerror = () => resolve(false);
-                if (loader) loader.loadPublicAvatar(img, url);
+                if (loader) loader.loadAvatar(img, url, true);
                 else img.src = url;
               });
             },
@@ -176,9 +182,32 @@ export async function avatarCacheChecks() {
         await cdp.send('Network.clearBrowserCache');
         assert.ok(await paint(survivor + AVATAR_FRAGMENT, false));
         assert.ok(requests.length > before, 'an expired copy goes to the native image path');
+
+        await page.evaluate(async (url) => {
+          const { loadAvatar } = await import('/avatar-fixture.js');
+          const img = document.createElement('img');
+          img.id = 'transient-avatar';
+          img.width = img.height = 36;
+          img.onerror = () => {
+            img.dataset.failed = 'true';
+          };
+          document.body.append(img);
+          loadAvatar(img, url, true);
+        }, `${cdn}/transient.png`);
+        await waitFor(page, () => {
+          const img = document.querySelector('#transient-avatar');
+          return img?.dataset.failed && img.naturalWidth > 0 && !img.style.visibility;
+        });
+        assert.equal(
+          requests.filter(
+            (r) => r.path === '/transient.png' && r.headers['sec-fetch-mode'] === 'no-cors',
+          ).length,
+          2,
+          'the visible image loaded on its second native request',
+        );
       },
       { fixtureTls: true },
     );
   });
-  console.log('ok avatar cache (public CORS copies, native fallback, expiry and bound)');
+  console.log('ok avatar cache (public CORS copies, native fallback and retry, expiry and bound)');
 }

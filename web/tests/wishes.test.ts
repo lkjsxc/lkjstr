@@ -172,7 +172,8 @@ it('keeps the draft in its field when durable storage fails', () => {
   off();
 });
 
-it('updates a remembered face in place and retries a failed URL when kind 0 changes', () => {
+it('updates a remembered face in place and retries a failed URL when kind 0 changes', async () => {
+  vi.stubGlobal('IntersectionObserver', undefined);
   const a = {
     ...person,
     pubkey: 'b'.repeat(64),
@@ -183,16 +184,19 @@ it('updates a remembered face in place and retries a failed URL when kind 0 chan
   const face = avatar(a);
   document.body.append(face);
   const image = face.querySelector('img')!;
+  await vi.waitFor(() => expect(image.getAttribute('src')).toBe(a.picture));
   learnPerson({ ...a, name: a.pubkey, picture: undefined, profileId: undefined });
   expect(face.querySelector('img')).toBe(image);
   image.dispatchEvent(new Event('error'));
   expect(face.textContent).toBe('A');
-  expect(face.querySelector('img')).toBeNull();
+  expect(image.getAttribute('src')).toBeNull();
+  expect(image.style.visibility).toBe('hidden');
   learnPerson({ ...a, profileId: 'new', name: 'Bea' });
   expect(document.querySelector('[data-face]')).toBe(face);
   expect(face.textContent).toBe('B');
-  expect(face.querySelector('img')).not.toBe(image);
-  expect(face.querySelector('img')?.src).toBe(a.picture);
+  expect(face.querySelector('img')).toBe(image);
+  await Promise.resolve();
+  expect(image.getAttribute('src')).toBe(a.picture);
 });
 
 it('clears an earlier delivery result when a new post starts', async () => {

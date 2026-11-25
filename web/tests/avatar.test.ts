@@ -1,16 +1,89 @@
-import { afterEach, expect, it } from 'vitest';
-import { publicAvatarUrl } from '../src/engine/avatar-cache.ts';
+import { afterEach, beforeEach, expect, it, vi } from 'vitest';
+import { loadAvatar, publicAvatarUrl } from '../src/engine/avatar-cache.ts';
 import { learnPerson } from '../src/shared/people.ts';
 import { createRowList } from '../src/views/feed-draw.ts';
 import { note } from './public-snapshots-support.ts';
 import { vaultEnv } from './vault-ui-fixture.ts';
 
-afterEach(() => {
+beforeEach(() => vi.stubGlobal('IntersectionObserver', undefined));
+
+afterEach(async () => {
   document.body.replaceChildren();
   localStorage.clear();
+  await Promise.resolve();
+  await Promise.resolve();
+  vi.useRealTimers();
+  vi.unstubAllGlobals();
 });
 
-it('keeps each tile’s avatar through metadata changes and a note body redraw', () => {
+it('retries a visible avatar after an image error without a profile refresh', async () => {
+  vi.useFakeTimers();
+  const url = 'https://images.test/transient.png';
+  const img = document.createElement('img');
+  const source = vi.spyOn(img, 'src', 'set');
+  document.body.append(img);
+  loadAvatar(img, url);
+  await vi.advanceTimersByTimeAsync(0);
+  expect(source).toHaveBeenCalledExactlyOnceWith(url);
+  img.dispatchEvent(new Event('error'));
+  await vi.advanceTimersByTimeAsync(999);
+  expect(source).toHaveBeenCalledTimes(1);
+  await vi.advanceTimersByTimeAsync(1);
+  expect(source.mock.calls).toEqual([[url], [url]]);
+  img.dispatchEvent(new Event('load'));
+  expect(img.style.visibility).toBe('');
+});
+
+it('lets a newly visible avatar run after stalled images release their slots', async () => {
+  vi.useFakeTimers();
+  let setVisible = (_target: Element, _isIntersecting: boolean) => {};
+  vi.stubGlobal(
+    'IntersectionObserver',
+    class {
+      constructor(change: IntersectionObserverCallback) {
+        setVisible = (target, isIntersecting) =>
+          change([{ target, isIntersecting } as IntersectionObserverEntry], this as never);
+      }
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    },
+  );
+  const face = (i: number, lazy = false) => {
+    const img = document.createElement('img');
+    if (lazy) img.loading = 'lazy';
+    document.body.append(img);
+    loadAvatar(img, `https://images.test/${i}.png`);
+    return img;
+  };
+  const stalled = Array.from({ length: 6 }, (_, i) => face(i));
+  for (const img of stalled) setVisible(img, true);
+  await vi.advanceTimersByTimeAsync(0);
+  expect(stalled.every((img) => img.hasAttribute('src'))).toBe(true);
+  const background = face(6, true);
+  const onScreen = face(7, true);
+  setVisible(onScreen, true);
+  await vi.advanceTimersByTimeAsync(7999);
+  expect(onScreen.hasAttribute('src')).toBe(false);
+  await vi.advanceTimersByTimeAsync(1);
+  expect(onScreen.getAttribute('src')).toBe('https://images.test/7.png');
+  expect(stalled.every((img) => !img.hasAttribute('src'))).toBe(true);
+  expect(background.hasAttribute('src')).toBe(false);
+  onScreen.dispatchEvent(new Event('load'));
+  setVisible(background, true);
+  await vi.advanceTimersByTimeAsync(0);
+  expect(background.hasAttribute('src')).toBe(true);
+  background.remove();
+  await vi.advanceTimersByTimeAsync(0);
+  expect(background.hasAttribute('src')).toBe(false);
+  document.body.append(background);
+  await vi.advanceTimersByTimeAsync(0);
+  setVisible(background, true);
+  await vi.advanceTimersByTimeAsync(0);
+  expect(background.hasAttribute('src')).toBe(true);
+});
+
+it('keeps each tile’s avatar through metadata changes and a note body redraw', async () => {
   const a = vaultEnv();
   const b = vaultEnv();
   const left = createRowList(a.el, a.env, false);
@@ -22,6 +95,7 @@ it('keeps each tile’s avatar through metadata changes and a note body redraw',
     right.draw([row]);
     const button = a.el.querySelector<HTMLButtonElement>('.nrow > .avb')!;
     const image = button.querySelector<HTMLImageElement>('img')!;
+    await vi.waitFor(() => expect(image.getAttribute('src')).toBe(row.author.picture));
     const other = b.el.querySelector('.nrow > .avb img');
     expect(other).not.toBe(image);
     expect(image.getAttribute('loading')).toBe('eager');
@@ -46,9 +120,12 @@ it('keeps each tile’s avatar through metadata changes and a note body redraw',
     learnPerson({ ...author, picture: 'https://images.test/revised.png' });
     const revised = button.querySelector<HTMLImageElement>('img')!;
     expect(revised).not.toBe(image);
-    expect(revised.getAttribute('src')).toBe('https://images.test/revised.png');
+    await vi.waitFor(() =>
+      expect(revised.getAttribute('src')).toBe('https://images.test/revised.png'),
+    );
     revised.dispatchEvent(new Event('error'));
-    expect(button.querySelector('img')).toBeNull();
+    expect(revised.getAttribute('src')).toBeNull();
+    expect(revised.style.visibility).toBe('hidden');
     expect(button.querySelector('.faceletter')?.textContent).toBe('R');
   } finally {
     left.dispose();
