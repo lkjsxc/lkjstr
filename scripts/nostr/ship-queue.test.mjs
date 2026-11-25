@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, rmdirSync, writeFileSync } from 'node:fs';
+import { chmodSync, cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, rmdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import test from 'node:test';
 import { enqueue, openState, shipReceipt } from '../nostr-enqueue.mjs';
@@ -41,7 +41,8 @@ test('a quiet ship durably enqueues both exact host receipts once per revision',
 test('a verified enqueue failure ships, keeps its receipts outside the worktree and recovers without a deploy', t => {
   const f = fixture(t);
   const store = join(f.state, 'lkjstr-nostr');
-  mkdirSync(store, { recursive: true, mode: 0o755 });
+  mkdirSync(store, { recursive: true });
+  chmodSync(store, 0o755);
   const result = f.run('', { LKJSTR_SHIP_NOTIFY: '0' });
   assert.equal(result.status, 1, result.log);
   const [run] = runs(f);
