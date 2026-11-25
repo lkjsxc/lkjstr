@@ -24,6 +24,8 @@ Home/End address the newest/oldest cached notes. The held label uses actual
 finished row times and the existing scrub wording after the target arrives.
 Loaded and unloaded jumps both retain the original row and offset. Home/End
 belong to an open popover until it closes.
+The last seek can finish after release and still leaves the original return
+point. A return pressed during a seek waits for that window and clears the drag queue.
 
 The sticky holder moves with its view when the WM reparents tiles. Width
 is reserved before marks arrive: 56px at 520px tile width, otherwise 16px.

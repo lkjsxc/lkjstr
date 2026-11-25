@@ -103,16 +103,23 @@ export async function railSmoke(
     jumped.year === oldest && jumped.year !== origin.year,
   );
   await rail.locator('.time-return').click();
-  await page.waitForFunction(
-    ({ feed, key }) => {
-      const el = document.querySelector(feed)!;
-      const n = [...el.querySelectorAll<HTMLElement>('.list > .note')].find(
-        (n) => n.getBoundingClientRect().bottom > el.getBoundingClientRect().top + 1,
+  await page
+    .waitForFunction(
+      ({ feed, key }) => {
+        const el = document.querySelector(feed)!;
+        const n = [...el.querySelectorAll<HTMLElement>('.list > .note')].find(
+          (n) => n.getBoundingClientRect().bottom > el.getBoundingClientRect().top + 1,
+        );
+        return n?.dataset.key === key && el.querySelector<HTMLElement>('.time-return')?.hidden;
+      },
+      { feed, key: origin.key },
+    )
+    .catch(async (cause) => {
+      throw new Error(
+        `return tick expected ${origin.key}, got ${JSON.stringify(await top())}, visible ${await rail.locator('.time-return').isVisible()}`,
+        { cause },
       );
-      return n?.dataset.key === key && el.querySelector<HTMLElement>('.time-return')?.hidden;
-    },
-    { feed, key: origin.key },
-  );
+    });
   check('return tick restores the row and disappears', (await top()).key === origin.key);
   // C2: labels keep 14px; once days are named, months read mm/dd. C3: ] steps to an older day (a month without
   // days), Backspace comes back.

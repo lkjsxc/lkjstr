@@ -38,18 +38,20 @@ export function createSeeker(o: {
   let windowVersion = 0;
   let timelineVersion = 0;
   let pendingVersion = 0;
+  let seekingReturn = false;
   let timer: ReturnType<typeof setTimeout> | undefined;
-  let queued: TimePlace | undefined;
-  const send = (p: TimePlace, anchor: Anchor): void => {
+  let queued: { target: TimePlace; remember: boolean } | undefined;
+  const send = (p: TimePlace, anchor: Anchor, returning = false): void => {
     s.pending = p;
     s.inflight = true;
+    seekingReturn = returning;
     sent = performance.now();
     pendingVersion = windowVersion;
     o.sent();
     o.seek(anchor);
   };
-  const go = (p: TimePlace): void => {
-    if (!s.returning) s.back = s.origin ?? o.current();
+  const go = (p: TimePlace, remember = true): void => {
+    if (remember && !s.returning) s.back = s.origin ?? o.current();
     if (s.inflight) return void ((s.waiting = p), o.sync());
     if (o.scrollTo(p)) (s.pending = undefined), o.landed();
     else send(p, { ...p, returnKey: s.back?.place.key });
@@ -60,11 +62,22 @@ export function createSeeker(o: {
     timer = undefined;
     const p = queued;
     queued = undefined;
-    if (p) go(p);
+    if (p) go(p.target, p.remember);
   };
-  const queue = (p: TimePlace, wait = SEEK_MS): void => {
-    queued = p;
+  const queue = (target: TimePlace, wait = SEEK_MS, remember = true): void => {
+    queued = { target, remember };
     timer ??= setTimeout(flush, Math.max(0, wait));
+  };
+  const returnTo = (): void => {
+    const back = s.back;
+    if (!back) return;
+    if (o.scrollTo(back.time, back.place)) {
+      s.back = s.pending = undefined;
+      s.returning = false;
+      o.landed();
+    } else {
+      send(back.time, { key: back.place.key }, true);
+    }
   };
   return {
     s,
@@ -73,18 +86,25 @@ export function createSeeker(o: {
     queue,
     /** To the return tick, if there is one. */
     ret(): boolean {
-      const back = s.back;
-      if (!back) return false;
+      if (!s.back) return false;
+      clearTimeout(timer);
+      timer = queued = s.waiting = undefined;
       s.returning = true;
-      if (o.scrollTo(back.time, back.place))
-        (s.back = undefined), (s.returning = false), o.landed();
-      else if (!s.inflight) send(back.time, { key: back.place.key });
+      if (!s.inflight) returnTo();
       o.sync();
       return true;
     },
     /** On every paint: land a jump whose window is drawn, then send the target that waited for it. */
     settle(data: Timeline | undefined): void {
       const applied = timelineVersion > pendingVersion;
+      if (s.returning && s.inflight && !seekingReturn) {
+        // Finish receiving the drag window before asking for the return row.
+        if (applied) {
+          s.inflight = false;
+          returnTo();
+        }
+        return;
+      }
       if (s.pending) {
         const requested = applied && data?.positions.find((p) => p.key === data?.anchor);
         // Evicted meanwhile: the window's anchor is the nearest row, and that is where it lands.
@@ -99,7 +119,8 @@ export function createSeeker(o: {
       if (s.inflight && applied) {
         s.inflight = false;
         // A target the drag queued since is newer than the one that waited: it goes instead.
-        if (s.waiting) queue(queued ?? s.waiting, sent + SEEK_MS - performance.now());
+        if (s.waiting)
+          queue(queued?.target ?? s.waiting, sent + SEEK_MS - performance.now(), false);
         s.waiting = undefined;
       }
     },
@@ -114,7 +135,7 @@ export function createSeeker(o: {
     stop(): void {
       clearTimeout(timer);
       timer = queued = s.waiting = s.pending = undefined;
-      s.inflight = false;
+      s.inflight = seekingReturn = false;
     },
   };
 }

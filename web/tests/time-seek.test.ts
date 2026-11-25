@@ -15,10 +15,11 @@ function harness(drawn: number[]) {
   const scrolled: (string | Place)[] = [];
   const seeks: { anchor: Anchor; at: number }[] = [];
   let landed = 0;
+  let reading = 1;
   const seeker = createSeeker({
     scrollTo: (p, saved) => loaded.has(p.offset) && (scrolled.push(saved ?? name(p)), true),
     seek: (anchor) => void seeks.push({ anchor, at: performance.now() }),
-    current: () => ({ time: at(1), place: { key: 'n1', off: -12 } }),
+    current: () => ({ time: at(reading), place: { key: `n${reading}`, off: -12 } }),
     sent: () => undefined,
     landed: () => void landed++,
     sync: () => undefined,
@@ -44,7 +45,14 @@ function harness(drawn: number[]) {
     seeker.timeline(data);
     seeker.settle(data);
   };
-  return { seeker, scrolled, seeks, answer, landed: () => landed };
+  return {
+    seeker,
+    scrolled,
+    seeks,
+    answer,
+    read: (offset: number) => (reading = offset),
+    landed: () => landed,
+  };
 }
 
 beforeEach(() => vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'performance'] }));
@@ -136,4 +144,33 @@ it('returns to the exact row and offset, by scroll or by seek', () => {
   far.answer(1);
   expect(far.scrolled.at(-1)).toEqual({ key: 'n1', off: -12 });
   expect(far.seeker.s.back).toBeUndefined();
+});
+
+it('keeps the drag origin when the last target is sent after release', () => {
+  const x = harness([1]);
+  x.seeker.s.origin = { time: at(1), place: { key: 'n1', off: -12 } };
+  x.seeker.go(at(40));
+  x.seeker.go(at(60));
+  x.seeker.s.origin = undefined; // release before the first answer arrives
+  x.answer(40);
+  x.read(40);
+  vi.advanceTimersByTime(80);
+  expect(x.seeks.at(-1)?.anchor).toEqual({ month, offset: 60, returnKey: 'n1' });
+  expect(x.seeker.s.back?.place).toEqual({ key: 'n1', off: -12 });
+});
+
+it('returns after an in-flight drag seek and drops the other drag targets', () => {
+  const x = harness([1]);
+  x.seeker.go(at(40));
+  x.seeker.go(at(60));
+  x.seeker.queue(at(90));
+  expect(x.seeker.ret()).toBe(true);
+  expect(x.seeks).toHaveLength(1);
+  x.answer(40);
+  expect(x.seeks.at(-1)?.anchor).toEqual({ key: 'n1' });
+  x.answer(1);
+  vi.advanceTimersByTime(80);
+  expect(x.seeks).toHaveLength(2);
+  expect(x.scrolled).toEqual([{ key: 'n1', off: -12 }]);
+  expect(x.seeker.s.back).toBeUndefined();
 });
