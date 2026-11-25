@@ -1,4 +1,5 @@
 use super::*;
+use crate::engine::protocol::Source;
 impl Engine {
     pub(super) fn edit_list(
         &self,
@@ -72,6 +73,17 @@ impl Engine {
             self.error(Some(req), "signer-timeout");
             return;
         }
+        if event.kind == 0
+            && self
+                .store
+                .replaceable(&event.pubkey, 0)
+                .as_ref()
+                .map(|current| current.id.as_str())
+                != pending.profile_base_id.as_deref()
+        {
+            self.error(Some(req), "stale-profile");
+            return;
+        }
         verified();
         if matches!(event.kind, 1 | 7) && !self.network.can_stage_publication(&event.id) {
             self.error(Some(req), "publication-limit");
@@ -103,12 +115,36 @@ impl Engine {
         if event.kind == 1 && self.store.get(&event.id).is_none() {
             self.tentative_notes.insert(event.id.clone());
         }
-        self.store.insert_deferred(event.clone(), None);
+        let inserted = self.store.insert_deferred(event.clone(), None);
+        if event.kind == 0
+            && !matches!(
+                inserted,
+                crate::store::Inserted::New | crate::store::Inserted::Replaced
+            )
+        {
+            self.error(Some(req), "rejected");
+            return;
+        }
         if event.kind != 1 {
             self.pending.push(event.clone(), true);
         }
         for v in self.views.values_mut() {
             v.dirty = true;
+        }
+        if event.kind == 0 {
+            let subs: Vec<_> = self
+                .views
+                .iter()
+                .filter(|(_, v)| {
+                    v.visible
+                        && v.query.source == Source::Profile
+                        && v.query.target.as_deref() == Some(&event.pubkey)
+                })
+                .map(|(sub, _)| sub.clone())
+                .collect();
+            for sub in subs {
+                self.render(&sub, false);
+            }
         }
         if event.kind == 1 {
             let author = event.pubkey.clone();
@@ -132,7 +168,6 @@ impl Engine {
                 .views
                 .iter()
                 .filter(|(_, v)| {
-                    use crate::engine::protocol::Source;
                     v.visible
                         && match v.query.source {
                             Source::Home => v.query.account.as_deref() == Some(&author),

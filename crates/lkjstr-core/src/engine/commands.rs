@@ -25,14 +25,19 @@ impl Engine {
             return;
         }
         match self.build(&account, action.clone(), now / 1000) {
-            Ok(event) => {
+            Ok((event, profile_base_id)) => {
                 if crate::kinds::policy(event.kind).serialized_write
                     && self
                         .signing
                         .values()
                         .any(|s| s.event.pubkey == account && s.event.kind == event.kind)
                 {
-                    self.error(Some(req), "list-edit-pending");
+                    let code = if event.kind == 0 {
+                        "profile-edit-pending"
+                    } else {
+                        "list-edit-pending"
+                    };
+                    self.error(Some(req), code);
                     return;
                 }
                 self.signing.insert(
@@ -40,6 +45,7 @@ impl Engine {
                     Signing {
                         event: event.clone(),
                         deadline: now + 60000,
+                        profile_base_id,
                     },
                 );
                 self.outgoing.push(Output::Sign { req, event });
@@ -60,7 +66,7 @@ impl Engine {
         account: &str,
         action: Action,
         at: u64,
-    ) -> Result<UnsignedNostrEvent, &'static str> {
+    ) -> Result<(UnsignedNostrEvent, Option<String>), &'static str> {
         let mut e = UnsignedNostrEvent {
             pubkey: account.into(),
             created_at: at,
@@ -68,6 +74,7 @@ impl Engine {
             tags: vec![],
             content: String::new(),
         };
+        let mut profile_base = None;
         match action {
             Action::Publish {
                 kind,
@@ -160,12 +167,12 @@ impl Engine {
                 self.edit_list(&mut e, "e", id, value)?;
             }
             Action::ProfileSave { content } => {
-                if !serde_json::from_str::<serde_json::Value>(&content).is_ok_and(|v| v.is_object())
-                {
-                    return Err("invalid-profile");
-                }
                 e.kind = 0;
-                e.content = content;
+                profile_base = self.store.replaceable(account, e.kind);
+                e.content = crate::store::Profile::edit_content(
+                    profile_base.as_ref().map(|event| event.content.as_str()),
+                    &content,
+                )?;
             }
             Action::RelaysSave { relays } => {
                 if relays.len() > 64 {
@@ -199,8 +206,13 @@ impl Engine {
             Action::Upload { .. } => return Err("upload-not-implemented"),
         }
         if crate::kinds::policy(e.kind).monotonic_write
-            && let Some(previous) = self.store.replaceable(account, e.kind)
+            && let Some(previous) = profile_base
+                .clone()
+                .or_else(|| self.store.replaceable(account, e.kind))
         {
+            if e.kind == 0 && previous.created_at == u64::MAX {
+                return Err("rejected");
+            }
             e.created_at = e.created_at.max(previous.created_at.saturating_add(1));
         }
         self.apply_client_tag(&mut e);
@@ -210,7 +222,7 @@ impl Engine {
                 return Err("event-too-large");
             }
         }
-        Ok(e)
+        Ok((e, profile_base.map(|event| event.id.clone())))
     }
 }
 #[path = "commands_finish.rs"]

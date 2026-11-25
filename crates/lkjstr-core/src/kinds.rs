@@ -101,6 +101,7 @@ pub const fn policy(kind: u64) -> KindPolicy {
     match kind {
         0 => {
             p.expires = false;
+            p.serialized_write = true;
             p.monotonic_write = true;
             p.feeds = Feed::People as u16 | Feed::Following as u16;
         }

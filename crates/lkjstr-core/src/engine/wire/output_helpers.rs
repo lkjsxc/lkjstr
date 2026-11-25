@@ -30,7 +30,11 @@ impl Session {
             "event-too-large" => "too-large",
             "invalid-account" => "signed-out",
             "no-relays" => "no-relays",
-            "invalid-relay" | "invalid-server" => "rejected",
+            "invalid-relay"
+            | "invalid-server"
+            | "invalid-profile"
+            | "profile-edit-pending"
+            | "stale-profile" => "rejected",
             "signed-out" | "read-only" | "signer-refused" | "signer-missing" | "rejected"
             | "signer-timeout" | "too-large" | "offline" | "not-found" => code,
             "unsupported" | "upload-not-implemented" | "private-list-edit-unsupported" => {

@@ -103,6 +103,7 @@ pub struct View {
 struct Signing {
     event: UnsignedNostrEvent,
     deadline: u64,
+    profile_base_id: Option<String>,
 }
 pub struct Engine {
     local_reads: local_reads::State,
