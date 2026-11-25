@@ -1,8 +1,5 @@
 use super::{Store, event_payload_bytes};
-use crate::optimizer::{
-    keep_policy::{KeepItem, class},
-    link::{LinkState, cost_ms},
-};
+use crate::optimizer::link::{LinkState, cost_ms};
 use lkjstr_protocol::{NostrEvent, is_addressable_kind, is_replaceable_kind};
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -24,8 +21,6 @@ pub(super) fn identifier(event: &NostrEvent) -> Option<&str> {
 struct Candidate {
     pin: Option<&'static str>,
     score: u64,
-    weight: u64,
-    bytes: usize,
     replaceable: bool,
     id: String,
 }
@@ -55,10 +50,6 @@ impl Store {
 
     pub fn ghost_hits(&self) -> u64 {
         self.ghost_hits
-    }
-
-    pub(crate) fn retention_caps(&self) -> (usize, usize) {
-        (self.cap, self.replaceable_cap)
     }
 
     pub(crate) fn retention_needed(&self) -> bool {
@@ -107,8 +98,6 @@ impl Store {
                 Candidate {
                     pin,
                     score,
-                    weight,
-                    bytes,
                     replaceable: replaceable(event.kind),
                     id: event.id.clone(),
                 }
@@ -137,7 +126,6 @@ impl Store {
         if let Some(score) = last {
             self.keep.advance(score);
         }
-        self.capture_keep(&candidates, weights);
     }
 
     fn pin(
@@ -159,50 +147,5 @@ impl Store {
             return Some("context");
         }
         held.contains(&event.id).then_some("window")
-    }
-
-    fn capture_keep(&mut self, items: &[Candidate], weights: &BTreeMap<String, u64>) {
-        let describe = |item: &Candidate| {
-            let event = self.events.get(&item.id)?;
-            if !crate::kinds::policy(event.kind).retained
-                || matches!(event.kind, 4 | 13 | 14 | 1059 | 10050)
-            {
-                return None;
-            }
-            Some(KeepItem {
-                class: class(event.kind),
-                weight_class: item.weight,
-                age_h: self.now_seconds.saturating_sub(event.created_at) / 3600,
-                bytes: item.bytes,
-                score: item.score as f64 / 1_000_000.0,
-                pin: item.pin,
-            })
-        };
-        self.keep_low = items.iter().filter_map(describe).take(8).collect();
-        self.keep_high = items.iter().rev().filter_map(describe).take(8).collect();
-        self.keep_weights = [0; 6];
-        for (id, event) in &self.events {
-            if !crate::kinds::policy(event.kind).retained
-                || matches!(event.kind, 4 | 13 | 14 | 1059 | 10050)
-            {
-                continue;
-            }
-            let weight = weights.get(id).copied().unwrap_or(1);
-            if let Some(index) = [0, 1, 8, 16, 32, 64]
-                .iter()
-                .position(|class| *class == weight)
-            {
-                self.keep_weights[index] += 1;
-            }
-        }
-    }
-
-    pub(crate) fn keep_stats(&self) -> serde_json::Value {
-        let weight_classes: Vec<_> = [0, 1, 8, 16, 32, 64]
-            .into_iter()
-            .zip(self.keep_weights)
-            .map(|(weight, count)| serde_json::json!({"weight":weight,"count":count}))
-            .collect();
-        serde_json::json!({"weightClasses": weight_classes, "keep":{"low":self.keep_low,"high":self.keep_high}})
     }
 }

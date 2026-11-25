@@ -107,19 +107,13 @@ impl Network {
     pub fn recent_publications(&self) -> Value {
         json!(self.publication_history)
     }
-    pub(super) fn publication_kind(&self, id: &str) -> Option<u64> {
-        self.publication_history
-            .iter()
-            .find(|r| r.id == id)
-            .map(|r| r.kind)
-    }
 
     pub(in crate::engine) fn stats_publications(&self) -> Value {
-        use crate::engine::telemetry::relay_error;
+        use stats_relay::relay_error;
         json!(
             self.publication_history
                 .iter()
-                .filter(|record| telemetry::publication_kind_is_public(record.kind))
+                .filter(|record| stats_relay::publication_kind_is_public(record.kind))
                 .map(|record| {
                     let deliveries: Vec<_> = record
                         .deliveries
@@ -150,7 +144,7 @@ impl Network {
         for d in self
             .publication_history
             .iter()
-            .filter(|r| telemetry::publication_kind_is_public(r.kind))
+            .filter(|r| stats_relay::publication_kind_is_public(r.kind))
             .flat_map(|r| &r.deliveries)
         {
             let row = stats.entry(d.url.as_str()).or_default();

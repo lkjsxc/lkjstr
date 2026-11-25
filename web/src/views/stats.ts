@@ -270,10 +270,7 @@ export function mountStats(el: HTMLElement, env: ViewEnv): () => void {
     h('div', { class: 'stats-table' }, table),
     requests.node,
   );
-  env.menu(() => [
-    { label: t('view.relays'), run: () => env.open('relays') },
-    { label: t('view.orchestration'), run: () => env.open('orchestration') },
-  ]);
+  env.menu(() => [{ label: t('view.relays'), run: () => env.open('relays') }]);
   const off = env.visible.subscribe((on) => watch.show(on));
   watch.show(env.visible.get());
   return () => {

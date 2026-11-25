@@ -1,8 +1,8 @@
 #![allow(clippy::expect_used)]
-use super::{Engine, Query, Relay, Source, array, open};
+use super::{Engine, Query, Source, array, open};
 
 #[test]
-fn stage_snapshot_excludes_private_view_data_and_redacts_auth_history_retroactively() {
+fn stats_sanitizes_relay_rows_and_redacts_auth_required_request_labels() {
     let mut engine = Engine::new();
     let key = "e".repeat(64);
     let target = "private conversation body";
@@ -27,13 +27,13 @@ fn stage_snapshot_excludes_private_view_data_and_redacts_auth_history_retroactiv
         },
     );
     let relay = "wss://peer.example/service?secret=token";
-    engine.network.relays.insert(relay.into(), Relay::default());
-    engine
-        .network
-        .message(relay, r#"["NOTICE","rate-limited: retry"]"#, 1000);
-    assert_eq!(
-        engine.stats()["orchestrationEvents"][0]["relay"],
-        "wss://peer.example"
+    engine.network.configure(vec![relay.into()], 900);
+    open(&mut engine, "feed", Query::default());
+    engine.network.connected(relay, 1_100);
+    assert!(
+        array(&engine.stats(), "requests")
+            .iter()
+            .any(|request| request["relay"] == "wss://peer.example/service")
     );
     engine
         .network
@@ -56,47 +56,13 @@ fn stage_snapshot_excludes_private_view_data_and_redacts_auth_history_retroactiv
     ] {
         assert!(!text.contains(private), "{private}");
     }
-    assert_eq!(array(&stats, "views").len(), 1);
-    assert_eq!(stats["orchestrationEvents"][0]["relay"], "private-relay");
-    assert_eq!(stats["relays"][0]["isPrivateHost"], true);
+    let requests = array(&stats, "requests");
+    assert!(!requests.is_empty());
+    assert!(
+        requests
+            .iter()
+            .all(|request| request["relay"] == "private-relay")
+    );
+    assert_eq!(stats["relays"][0]["url"], "wss://peer.example/service");
     assert_eq!(stats["relays"][0]["lastError"], "relay-error");
-}
-
-#[test]
-fn private_host_covers_address_ranges_and_suffixes() {
-    let engine = Engine::new();
-    for host in [
-        "localhost.",
-        "sub.localhost",
-        "127.8.9.10",
-        "[::1]",
-        "10.0.0.2",
-        "172.31.2.3",
-        "192.168.0.2",
-        "169.254.0.9",
-        "[fe80::1]",
-        "[::ffff:192.168.0.2]",
-        "lan.local.",
-        "something.onion",
-    ] {
-        assert!(
-            engine
-                .network
-                .is_private_relay(Some(&format!("wss://{host}/"))),
-            "{host}"
-        );
-    }
-    for host in [
-        "8.8.8.8",
-        "172.32.2.3",
-        "localhost.example",
-        "onion.example",
-    ] {
-        assert!(
-            !engine
-                .network
-                .is_private_relay(Some(&format!("wss://{host}/"))),
-            "{host}"
-        );
-    }
 }

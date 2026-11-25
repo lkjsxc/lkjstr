@@ -1,11 +1,8 @@
 //! Throughput samples require queued work. Completed seconds are counted once.
-use serde::Serialize;
-
 pub const DEFAULT_BPS: u64 = 3_000_000;
 pub const DEFAULT_RTT_MS: u64 = 80;
 
-#[derive(Clone, Copy, Serialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy)]
 pub struct LinkState {
     pub throughput_bps: u64,
     pub rtt_ms: u64,
@@ -54,10 +51,6 @@ impl Link {
     pub fn observe_rtt(&mut self, ms: u64) {
         let ms = ms.clamp(1, 6000);
         self.rtt = Some(self.rtt.map_or(ms, |old| (old * 7 + ms) / 8));
-    }
-
-    pub fn has_rtt(&self) -> bool {
-        self.rtt.is_some()
     }
 
     pub fn state(&self) -> LinkState {

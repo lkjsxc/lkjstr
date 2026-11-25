@@ -36,8 +36,7 @@ impl Network {
                         .cloned()
                         .collect(),
                     primary: BTreeSet::new(),
-                    change: None,
-                    hedge_delay_ms: 400,
+                    changed_role: None,
                 }
             } else {
                 self.read_route_plan(
@@ -75,18 +74,18 @@ impl Network {
             routes.dedup();
             for r in routes {
                 let primary = selected.primary.contains(&r);
-                let decision = selected
-                    .change
+                let role = selected
+                    .changed_role
                     .as_ref()
                     .filter(|(_, target)| target == &r)
-                    .map(|(kind, _)| (*kind, selected.hedge_delay_ms));
+                    .map(|(role, _)| *role);
                 let key = (
                     r,
                     time_owner.map_or_else(|| want_key::key(f), |owner| owner.to_owned()),
                 );
                 if primary {
-                    let change = primary_reads.entry(key.clone()).or_insert(None);
-                    *change = change.or(decision);
+                    let selected_role = primary_reads.entry(key.clone()).or_insert(None);
+                    *selected_role = selected_role.or(role);
                 }
                 desired
                     .entry(key)
@@ -101,7 +100,7 @@ impl Network {
         for ((relay, key), (filter, members)) in desired {
             let primary = primary_reads.remove(&(relay.clone(), key));
             let read_slot = primary.is_some();
-            let change = primary.flatten();
+            let role = primary.flatten();
             let time_owner = members
                 .iter()
                 .find(|m| crate::engine::time_window_relay::is_owner(m));
@@ -124,19 +123,12 @@ impl Network {
                 r.refresh_metadata(now);
                 r.refresh_profile(&members, &refresh_profiles, now);
                 r.live |= members.contains("~account-discovery");
-                let shared = r.shared_members_added(&members);
                 r.members = members;
                 let promoted = read_slot && !r.read_slot;
                 r.read_slot = read_slot;
                 retained.insert(id.clone());
-                if let Some((kind, delay)) = change.filter(|_| promoted) {
-                    let sub = self.telemetry.member(&r.members);
-                    let hedge = matches!(kind, crate::engine::telemetry::Kind::Hedge);
-                    r.role = if hedge { "hedge" } else { "fallback" };
-                    self.decision_for(now, kind, &relay, sub, None, hedge.then_some(delay));
-                } else if let Some((kind, count)) = shared {
-                    let sub = self.telemetry.member(&r.members);
-                    self.decision_for(now, kind, &relay, sub, Some(count), None);
+                if let Some(role) = role.filter(|_| promoted) {
+                    r.role = role;
                 }
                 if close {
                     self.close_group(&relay, &wire);
@@ -172,17 +164,6 @@ impl Network {
                 } else {
                     self.hydration_ready(&filter, &members, now)
                 };
-                if let Some((kind, delay)) = change {
-                    let sub = self.telemetry.member(&members);
-                    self.decision_for(
-                        now,
-                        kind,
-                        &relay,
-                        sub,
-                        None,
-                        matches!(kind, crate::engine::telemetry::Kind::Hedge).then_some(delay),
-                    );
-                }
                 let previous = pending.as_ref().and_then(|id| self.requests.get(id));
                 let cached_until = previous.and_then(|r| r.cached_until).or_else(|| {
                     self.cached_boundary(&relay, &filter, &members, &queries, store, now)
@@ -207,11 +188,7 @@ impl Network {
                         page_filter: filter.clone(),
                         cached_until,
                         members,
-                        role: match change.map(|(kind, _)| kind) {
-                            Some(crate::engine::telemetry::Kind::Hedge) => "hedge",
-                            Some(crate::engine::telemetry::Kind::Fallback) => "fallback",
-                            _ => "primary",
-                        },
+                        role: role.unwrap_or("primary"),
                         read_slot,
                         verification_retry: previous.is_some_and(|r| r.verification_retry),
                         sent: false,

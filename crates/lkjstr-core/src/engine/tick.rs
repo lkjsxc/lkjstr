@@ -17,7 +17,6 @@ impl Engine {
         let revision = self.store.revision();
         self.advance_visibility_clock(now);
         let was_verifying = self.network.verifying;
-        self.last_slice_verified = 0;
         for _ in 0..VERIFY_SLICE_LIMIT {
             let Some(ingest::QueuedEvent {
                 relay,
@@ -37,10 +36,6 @@ impl Engine {
             }
             if matches!(verify_event(&e), VerificationResult::Ok(_)) {
                 self.verified += 1;
-                self.last_slice_verified += 1;
-                if relay.starts_with("ws") {
-                    self.network.telemetry.traffic(now, |b| b.verified += 1);
-                }
                 self.network.event(&relay, &e, now);
                 if let Some(nested) = lkjstr_protocol::verified_nested_repost(&e) {
                     self.insert_verified(nested, Some(&relay));
@@ -67,8 +62,8 @@ impl Engine {
         }
         if self.queue.iter().any(|entry| entry.relay.starts_with("ws")) {
             self.network
-                .telemetry
-                .traffic(now, |bucket| bucket.queue_busy = true);
+                .ingress
+                .record(now, |bucket| bucket.queue_busy = true);
         }
         observe(TickPhase::Verify);
         self.trim_store();

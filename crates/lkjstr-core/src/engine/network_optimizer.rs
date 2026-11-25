@@ -2,8 +2,60 @@
 use super::*;
 use crate::optimizer::{
     features::{Features, Route},
-    plan_policy::{Plan, hedge_delay},
+    plan_policy::hedge_delay,
 };
+
+const SECONDS: usize = 60;
+
+#[derive(Clone, Copy, Default)]
+pub(in crate::engine) struct Bucket {
+    at_ms: u64,
+    pub bytes_in: u64,
+    pub queue_busy: bool,
+}
+
+pub(in crate::engine) struct Ingress {
+    // One slot for each of the last 60 aligned seconds.
+    seconds: [Option<Bucket>; SECONDS],
+}
+
+impl Default for Ingress {
+    fn default() -> Self {
+        Self {
+            seconds: [None; SECONDS],
+        }
+    }
+}
+
+impl Ingress {
+    pub fn record(&mut self, now: u64, update: impl FnOnce(&mut Bucket)) {
+        let second = now / 1000;
+        let at_ms = second * 1000;
+        let slot = &mut self.seconds[(second % SECONDS as u64) as usize];
+        if slot.is_some_and(|bucket| bucket.at_ms > at_ms) {
+            return;
+        }
+        if slot.is_none_or(|bucket| bucket.at_ms != at_ms) {
+            *slot = Some(Bucket {
+                at_ms,
+                ..Bucket::default()
+            });
+        }
+        if let Some(bucket) = slot {
+            update(bucket);
+        }
+    }
+
+    pub fn bucket(&self, second: u64) -> Bucket {
+        let at_ms = second * 1000;
+        self.seconds[(second % SECONDS as u64) as usize]
+            .filter(|bucket| bucket.at_ms == at_ms)
+            .unwrap_or(Bucket {
+                at_ms,
+                ..Bucket::default()
+            })
+    }
+}
 
 impl Network {
     pub(in crate::engine) fn plan_features(&self, now: u64) -> Features {
@@ -44,7 +96,7 @@ impl Network {
             return fixed.min(r.page_limit as u64);
         }
         // Explicit IDs, account metadata and side-window cursor work keep their quotas.
-        if !telemetry::public_filter(&r.filter)
+        if !stats_relay::public_filter(&r.filter)
             || r.filter.ids.is_some()
             || !r.owns_time(None)
             || r.verification_retry
@@ -70,34 +122,6 @@ impl Network {
         self.optimizer.decide_plan(features, &[]).prefetch_depth
     }
 
-    pub(in crate::engine) fn first_screen_plan(&self, now: u64) -> Plan {
-        let mut routes: Vec<_> = self
-            .relays
-            .iter()
-            .filter(|(_, r)| r.online && !r.publish_only)
-            .collect();
-        routes.sort_by_key(|(url, r)| (std::cmp::Reverse(r.quality_weight(now)), *url));
-        let measured: Vec<_> = routes
-            .iter()
-            .take(8)
-            .enumerate()
-            .map(|(i, (url, _))| self.route_features(url, i, now))
-            .collect();
-        let features = Features {
-            avg_event_bytes: routes
-                .first()
-                .and_then(|(_, r)| r.event_bytes)
-                .unwrap_or(1100),
-            focused: self.focused_sub.is_some(),
-            ..self.plan_features(now)
-        };
-        let mut plan = self.optimizer.decide_plan(features, &measured);
-        plan.hedge_target = plan
-            .hedge_target
-            .and_then(|i| self.telemetry.relay_index(routes[i].0));
-        plan
-    }
-
     pub(super) fn hedge_after<'a>(&self, requests: impl Iterator<Item = &'a Request>) -> u64 {
         let routes: Vec<_> = requests
             .filter(|r| r.read_slot && r.role == "primary")
@@ -116,7 +140,7 @@ impl Network {
         let start = start.max(second.saturating_sub(60));
         let saturated = self.optimizer.link.state().saturated;
         for second in start..second {
-            let bucket = self.telemetry.bucket(second);
+            let bucket = self.ingress.bucket(second);
             self.optimizer
                 .link
                 .observe_bucket(second, bucket.bytes_in, bucket.queue_busy);

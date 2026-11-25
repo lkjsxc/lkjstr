@@ -1079,142 +1079,7 @@ export type SigningSample = {
     readonly queuedMs: number;
   }[];
 };
-export type OrchestrationCoverage =
-  | 'cache-only'
-  | 'unsupported'
-  | 'loading'
-  | 'partial'
-  | 'stalled'
-  | 'end';
-
-export type OrchestrationView = {
-  /** Opaque within this Worker session. */
-  readonly subId: string;
-  readonly source: Source;
-  readonly visible: boolean;
-  readonly focused: boolean;
-  readonly rowCount: number;
-  readonly windowKind: 'top' | 'key' | 'at' | 'month';
-  readonly anchorAtMs?: Millis;
-  readonly olderCoverage?: OrchestrationCoverage;
-  readonly newerCoverage?: OrchestrationCoverage;
-  readonly freshCount: number;
-  readonly sourceKind?: Source;
-  readonly oldestAtMs?: Millis;
-  readonly newestAtMs?: Millis;
-  readonly cacheOldestAtMs?: Millis;
-  readonly cacheNewestAtMs?: Millis;
-};
-
-export type OrchestrationWorker = {
-  readonly verifiedTotal: number;
-  readonly rejectedTotal: number;
-  readonly droppedTotal: number;
-  readonly verifyQueueLen: number;
-  readonly verifyIngressBytes: number;
-  readonly verifyIngressCapBytes: number;
-  readonly persistenceQueueLen: number;
-  readonly lastTickMs: number;
-  readonly maxTickMs: number;
-  readonly sliceLimit: number;
-  readonly regularStored: number;
-  readonly replaceableStored: number;
-  readonly memoryCapBytes: number;
-  readonly lastSliceVerified?: number;
-  readonly verifyQueueCap?: number;
-  readonly storeEvictions?: number;
-  readonly ghostHits?: number;
-  readonly payloadBytes?: number;
-  readonly replaceableCap?: number;
-  readonly regularCap?: number;
-};
-
-export type BandwidthBucket = {
-  readonly atMs: Millis;
-  readonly bytesIn: number;
-  readonly bytesOut: number;
-  readonly eventsIn: number;
-  readonly duplicates: number;
-  readonly verified: number;
-  readonly reqsSent: number;
-  readonly reqsCoalesced?: number;
-  readonly hedgesFired?: number;
-  readonly duplicateBytes?: number;
-  readonly queueBusy?: boolean;
-};
-
-export type OrchestrationEvent = {
-  readonly atMs: Millis;
-  readonly kind:
-    | 'hedge'
-    | 'coalesce'
-    | 'cooldown'
-    | 'fallback'
-    | 'evict'
-    | 'publish_ok'
-    | 'trip'
-    | 'explore';
-  readonly viewSubId?: string;
-  readonly count?: number;
-  readonly delayMs?: number;
-  readonly relay?: string;
-  /** Fixed engine diagnostic; kind is the stable key for interface copy. */
-  readonly summary: string;
-};
-
-export type OrchestrationKeepItem = {
-  readonly class: string;
-  readonly weightClass: number;
-  readonly ageH: number;
-  readonly bytes: number;
-  readonly score: number;
-  readonly pin?: 'own' | 'deletion' | 'window' | 'context';
-};
-
-export type OrchestrationOptimizer = {
-  readonly stage: number;
-  readonly parts?: readonly {
-    readonly id: string;
-    readonly mode: 'off' | 'shadow' | 'on';
-    readonly trippedUntilMs?: Millis | null;
-    readonly tripReason?: string | null;
-  }[];
-  readonly link?: {
-    readonly throughputBps: number;
-    readonly rttMs: number;
-    readonly saturated: boolean;
-    readonly samples: number;
-  };
-  readonly variables?: readonly {
-    readonly id: string;
-    readonly value: number | boolean;
-    readonly unit?: string;
-    readonly source: 'fixed' | 'measured' | 'learned';
-    readonly stage1Value?: number | boolean;
-  }[];
-  readonly weightClasses?: readonly { readonly weight: number; readonly count: number }[];
-  readonly keep?: {
-    readonly low: readonly OrchestrationKeepItem[];
-    readonly high: readonly OrchestrationKeepItem[];
-  };
-  readonly shadow?: {
-    readonly decisions: number;
-    readonly agreements: number;
-    readonly brierStage1: number | null;
-    readonly brierStage2: number | null;
-  };
-};
-
 export type EngineStats = {
-  readonly nowMs?: Millis;
-  readonly optimizer?: OrchestrationOptimizer;
-  /** At most 128 active public engine views. */
-  readonly views?: readonly OrchestrationView[];
-  readonly worker?: OrchestrationWorker;
-  /** At most 60 one-second buckets in ascending time order. */
-  readonly bandwidthHistory?: readonly BandwidthBucket[];
-  /** At most 32 decisions, in arrival order. Private/auth-gated relay labels are redacted. */
-  readonly orchestrationEvents?: readonly OrchestrationEvent[];
   /** Public-event timings in the current Worker only. All timestamps use its monotonic clock. */
   readonly signing?: {
     readonly recent: readonly SigningSample[];
@@ -1240,21 +1105,11 @@ export type EngineStats = {
     readonly sent: boolean;
     readonly complete: boolean;
     readonly members: number;
-    readonly memberSubs?: readonly SubId[];
-    readonly role?: 'primary' | 'hedge' | 'fallback';
-    readonly createdAtMs?: Millis;
-    readonly firstEventAtMs?: Millis | null;
-    readonly hedgeDueAtMs?: Millis | null;
   }[];
   readonly relays: readonly {
     readonly url: string;
     readonly state: string;
     readonly connectedSince: Millis | null;
-    readonly cooldownRemainingMs?: number;
-    readonly isPrivateHost?: boolean;
-    readonly relayIndex?: number;
-    readonly eoseMs?: number | null;
-    readonly usefulShare?: number | null;
     readonly readRule?: 'reader' | 'search' | 'hint' | 'unused';
     readonly route?: 'reading' | 'writing' | 'both' | 'search' | 'own' | 'unused';
     readonly followedCovered?: number;

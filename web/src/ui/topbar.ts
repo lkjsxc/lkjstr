@@ -28,12 +28,11 @@ export function createTopBar(
   const dm = createDmWatch(o.engine, o.settings);
   const relays = h('button', { class: 'relays muted', onclick: () => o.open('relays') });
   const account: HTMLElement = h('button', { class: 'acct' });
-  const pages = (
-    ...kinds: ('account' | 'settings' | 'relays' | 'stats' | 'orchestration' | 'docs')[]
-  ) => kinds.map((kind) => ({ label: t(`view.${kind}`), run: () => o.open(kind) }));
+  const pages = (...kinds: ('account' | 'settings' | 'relays' | 'stats' | 'docs')[]) =>
+    kinds.map((kind) => ({ label: t(`view.${kind}`), run: () => o.open(kind) }));
   const brand: HTMLElement = h('button', { class: 'brand' }, 'lkjstr');
   brand.addEventListener('click', () =>
-    openMenu(o.layer, brand, pages('settings', 'relays', 'stats', 'orchestration', 'docs')),
+    openMenu(o.layer, brand, pages('settings', 'relays', 'stats', 'docs')),
   );
   account.addEventListener('click', () => {
     const a = o.engine.accounts.get();

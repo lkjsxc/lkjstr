@@ -45,7 +45,7 @@ Engine (`crates/`):
 - [read-score-baseline.md](read-score-baseline.md): unchanged-product scorecard baseline.
 - [read-score.md](read-score.md): read-plan scorecard method and results.
 - [orchestration.md](orchestration.md): publication routing, freshness, weights and limits.
-- [orchestration-optimizer.md](orchestration-optimizer.md) covers Stage 1 policy and Stats.
+- [orchestration-optimizer.md](orchestration-optimizer.md) covers Stage 1 scheduling and retention.
 - [relay-orchestration-20261119.md](relay-orchestration-20261119.md): progressive reads, cache gaps, NIP-65 and bounded prefetch.
 - [architecture.md](architecture.md): crates, runtime, orchestration, storage.
 - [cache-bootstrap.md](cache-bootstrap.md): verified public restore, metadata checkpoints, bounds and proof.

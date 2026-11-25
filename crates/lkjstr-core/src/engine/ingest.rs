@@ -18,7 +18,7 @@ impl Engine {
             .network
             .delivery_wire
             .take()
-            .filter(|(url, _, _)| url == &relay);
+            .filter(|(url, _)| url == &relay);
         let known = self.store.get(&event.id).filter(|known| **known == event);
         if let Some(known) = &known {
             self.network
@@ -31,10 +31,6 @@ impl Engine {
                 .saturating_add(u64::from(relay.starts_with("ws")));
             if let Some(r) = self.network.relays.get_mut(&relay) {
                 r.duplicates += 1;
-                self.network.telemetry.traffic(self.network.now, |b| {
-                    b.duplicates += 1;
-                    b.duplicate_bytes += delivery.as_ref().map_or(0, |(_, _, bytes)| *bytes as u64);
-                });
             }
             return;
         }
@@ -51,7 +47,7 @@ impl Engine {
         let entry = QueuedEvent {
             relay,
             event,
-            wire: delivery.map(|(_, wire, _)| wire),
+            wire: delivery.map(|(_, wire)| wire),
             sequence: self.delivery_sequence,
         };
         // Profiles requested for visible authors precede bulk note verification.

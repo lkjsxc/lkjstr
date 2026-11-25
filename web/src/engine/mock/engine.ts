@@ -45,8 +45,7 @@ export function createMockEngine(
   const core: Core = createCore(post, now);
   const { world, subs, later } = core;
   let nextStatsView = 0;
-  let focusedSub: string | undefined;
-  const stats = () => mockStats(core, focusedSub);
+  const stats = () => mockStats(core);
   const act = createActions(core);
   const authorization = createSignerAuthMock(post, now);
   authObserve = authorization.observe;
@@ -152,10 +151,9 @@ export function createMockEngine(
         if (started) live();
         else start();
       } else if (msg.t === 'hint') {
-        const { visibleSubs, focusedSub: focused, pageHidden } = msg.hint;
+        const { visibleSubs, pageHidden } = msg.hint;
         const visible = new Set(pageHidden ? [] : visibleSubs);
         for (const sub of subs.values()) sub.visible = visible.has(sub.id);
-        focusedSub = focused && visible.has(focused) ? focused : undefined;
       } else if (msg.t === 'open') {
         const s: MockEngineSub = {
           id: msg.sub,

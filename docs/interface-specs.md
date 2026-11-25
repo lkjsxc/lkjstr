@@ -76,7 +76,6 @@ what the engine offers and no surface reaches yet.
 | N5 | Lists (NIP-51) as lists of openable items | [interface-view.md](interface-view.md#n5-lists) | ready |
 | N6 | Articles: the card and the reading view | [interface-view.md](interface-view.md#n6-articles) | ready |
 | N7 | Deep links and Copy link for every kind | [interface-view.md](interface-view.md#n7-deep-links-and-copying-for-every-kind) | built (private; review pending) |
-| O1 | Orchestration tab: live routing, Worker and link, Stage-safe and Large | [below](#o1-orchestration-tab) | built on the mock; real loopback pending |
 | P1 | Edit profile: fields, picture and banner upload, preview, save | [interface-profile.md](interface-profile.md#p1-edit-profile) | built |
 
 C1 to C3 are the owner's item 5 of 2026-11-21, built: C2 and C3 draw local day marks from the engine's `days` and
@@ -103,37 +102,7 @@ matrix covers 468 specified width/theme/language captures; real flows passed
 Worker-scoped unlock and coordinated-lock differences; design judgement remains
 with the design owner.
 
-## O1 Orchestration tab
-
-A tab kind `orchestration` (name menu between Stats and Documentation, the Stats tile menu, tab search; not in a
-default layout) shows what the engine does with the link from the existing `stats` request: figures (in/s,
-duplicates dropped/s, REQs saved by sharing, verify queue, views, relays connected) with the Stage-safe, Large and
-Pause chips, then bands: Views -> Requests (one row per `wireId`, `env n`, `xk`, purpose, role, `-> relay`) ->
-Relays (role, first event, duplicate share, cooldown), Windows, Worker, Link (60 s sparklines), Optimizer and
-Events (by `kind`; `summary` is never drawn). Words are the `orch.*` keys. One `stats` poll per engine client runs
-at 1 s while any Stats or Orchestration tab is in front and the page is shown (`views/stats-poll.ts`); a hidden,
-background or folded tab sends nothing.
-
-- Stage-safe, on for a new tab and saved with it, sums every private, LAN or auth relay (`isPrivateHost`,
-  `private-relay` or a private host) into one row and names them "private relay" in requests and events. Off, only
-  the reader's own private relays show, by host. Views are drawn by kind in both modes (Moment by its time); the tab
-  never reads accounts, names, ids or note text. Turning it on redraws at once, even while paused or scrolled.
-- Large (saved with the tab) is for a maximized tab on a 1920x1080 projector: 22px text, 28px/600 figures, 16px
-  labels, 2px `--sep` rules, 3px lines, 44px rows and chips. Use the light theme on a projector.
-- Pause (Space while the tile has the keyboard) freezes drawing, not the engine, and shows the time it froze.
-- Optional additions, read only when present (none is emitted yet; each needs its line in
-  `engine-proposals.md` when the engine adds it): `nowMs`; `requests[].memberSubs`, `role`, `createdAtMs`,
-  `firstEventAtMs`, `hedgeDueAtMs`; `worker.lastSliceVerified`, `verifyQueueCap`, `storeEvictions`, `ghostHits`,
-  `payloadBytes`, `replaceableCap`, `regularCap`; `views[].sourceKind`, `oldestAtMs`, `newestAtMs`,
-  `cacheOldestAtMs`, `cacheNewestAtMs`; `bandwidthHistory[].reqsCoalesced`, `hedgesFired`, `duplicateBytes`,
-  `queueBusy`; `relays[].relayIndex`, `eoseMs`, `usefulShare`; `orchestrationEvents[].viewSubId`, `count`,
-  `delayMs` and kinds `trip`, `explore`; an `optimizer` block (`stage`, `parts[]`, `variables[]`,
-  `weightClasses[]`, `keep { low, high }`). Types: `web/src/views/orch-model.ts`. Absent: a dash or no band.
-- Not built yet: pressing a view row to bring its tab forward (views carry no tab), connector lines between the
-  columns (the joins are `-> env n` / `-> relay` words at every width), unfolding rows below 400px (secondary
-  values wrap or drop instead), and the hedge line's fade.
-
-
+## Sending
 
 The Post tab, Home draft and signed note use the same delivery state. Signing keeps
 the existing Sending mark. After ten seconds the mark names a still-waiting

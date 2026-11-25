@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Document the deterministic read and retention policies and their Stats contract.
+Document the deterministic read and retention policies and the inputs they use.
 
 ## Public reads
 
@@ -43,57 +43,12 @@ The last 4,096 evicted IDs retain a timestamp fence. Matching views can ask
 for the evicted ID at the inclusive missing second. The fence downgrades covered history until
 the event has returned or verified deletion resolves it. A successful relay
 refetch increments the ghost counter. Disk restoration can close the fence.
-Keep samples and weight counts cover the last pressure batch.
 
-## Protocol additions
+## Scheduler hints
 
-Older hosts may omit these fields. Stats request and transport timestamps use
-the engine clock. Row spans and absolute window anchors use event or wall time
-in milliseconds. Relay indexes are stable for the first 4,096 observed routes
-in a Worker session. Request and publication destinations redact private and
-auth-gated origins. Public views are correlated through opaque session IDs.
-The stage is 1 and the learned parts are off. A Brier score is null until
-there are scored decisions.
-
-- `Hint.sinceScrollMs?` reports elapsed scroll time.
-- `Hint.sinceInputMs?` reports elapsed input time.
-- `Hint.scrollRowsPerS?` reports scroll rate.
-- `EngineStats.nowMs?` reports snapshot time.
-- `requests[].memberSubs?` lists opaque public view memberships.
-- `requests[].role?` identifies primary, hedge or fallback work.
-- `requests[].createdAtMs?` reports logical request creation.
-- `requests[].firstEventAtMs?` reports first verified delivery or null.
-- `requests[].hedgeDueAtMs?` reports the pending hedge deadline or null.
-- `worker.lastSliceVerified?` counts successful signature checks in the last slice.
-- `worker.verifyQueueCap?` reports the verification event cap.
-- `worker.storeEvictions?` counts session retention losses.
-- `worker.ghostHits?` counts verified relay refetches of recently evicted events.
-- `worker.payloadBytes?` reports retained event payload bytes.
-- `worker.replaceableCap?` reports the replaceable count cap.
-- `worker.regularCap?` reports the regular count cap.
-- `views[].sourceKind?` exposes the source enum.
-- `views[].oldestAtMs?` reports the oldest held row time.
-- `views[].newestAtMs?` reports the newest held row time.
-- `views[].cacheOldestAtMs?` reports the oldest matching cache time at projection.
-- `views[].cacheNewestAtMs?` reports the newest matching cache time at projection.
-- `bandwidthHistory[].reqsCoalesced?` counts logical request memberships combined.
-- `bandwidthHistory[].hedgesFired?` counts newly selected hedge routes.
-- `bandwidthHistory[].duplicateBytes?` counts wire bytes of recognized duplicate frames.
-- `bandwidthHistory[].queueBusy?` indicates network verification work remaining after a slice.
-- `relays[].relayIndex?` gives the session index.
-- `relays[].eoseMs?` reports smoothed EOSE round-trip time or null.
-- `relays[].usefulShare?` reports the fraction of received events credited as useful or null.
-- `orchestrationEvents[].viewSubId?` identifies a related public view.
-- `orchestrationEvents[].count?` carries a coalesced membership count.
-- `orchestrationEvents[].delayMs?` carries the scheduled hedge delay.
-- `orchestrationEvents[].kind` accepts `trip` and `explore` for a later learner.
-- `optimizer.stage?` identifies the current optimizer stage.
-- `optimizer.parts?` reports per-part modes and trip state.
-- `optimizer.link?` reports throughput, RTT, saturation and the throughput sample count.
-- `optimizer.variables?` lists link estimates and representative first-screen planning values.
-- `optimizer.weightClasses?` counts public candidates by reuse weight.
-- `optimizer.keep?` gives up to eight low and eight high retained candidate scores.
-- `optimizer.shadow?` reports the comparison counts and optional accuracy scores.
+`Hint.focusedSub` identifies the focused visible subscription.
+`Hint.sinceScrollMs`, `Hint.sinceInputMs` and `Hint.scrollRowsPerS` carry
+optional interaction measurements used by the scheduler.
 
 ## Native replay
 

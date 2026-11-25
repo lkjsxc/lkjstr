@@ -50,7 +50,7 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
 
 ## The frame
 - Top bar, 38px: name, nine workspace chips, tab search, new note, account.
-  The name is a menu (Settings, Relays, Stats, Orchestration, Documentation). The relay count is a setting, off.
+  The name is a menu (Settings, Relays, Stats, Documentation). The relay count is a setting, off.
 - Signed in, the account is the active account's face (remembered on the
   device; read-only has a mark) and a menu of the reader's own: their row,
   which opens their profile, the other accounts, and Accounts. Signed out
@@ -305,13 +305,6 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
   Route words, followed-author coverage and weights are sortable columns. Never-connected traffic and all-zero compound cells show one dash; nonzero publication counts show even before a connection. Heads and cells name every compound part in localized tooltips.
   Narrow tiles show Relay, Received and Answer; tapping a row unfolds the other labelled values, one row at a time, retained per tab. Relay names elide inside the host and keep the tail. No horizontal scrolling.
   A second table shows request purposes, weights, counts and completion marks; narrow tiles show Purpose and Relay, with the request id and other values in retained unfolded lines.
-- Orchestration is Stats' live picture of routing: numbers and quiet marks, no prose. Figures in fixed tabular
-  slots, then bands split by hairlines; relay columns share one grid so a changing digit never moves a neighbour.
-  Indigo is the route in use, the focused view's bar and a chip that is on; vermilion only a hedge just fired and
-  a window's new rows. Rows reorder at most every 5 s and never under the pointer or keyboard. Stage-safe (on by
-  default) never draws a private relay host, an account, a name or a key; Large scales only this tab for a
-  projector (22/28/16px, 2px rules, 3px lines, 44px targets). Below 1024px the flow stacks, below 640px figures
-  wrap three a row, below 400px only Views, Relays and Events remain. No horizontal scrolling.
 - Documentation is one tab and one page (owner, 2026-11-22): its contents come first, groups side by side where
   there is room, then every part in order: what lkjstr is, release and licence, keys and safety, messages, relays,
   filters, shortcuts, the privacy policy, the terms. An entry slides the tab to its part (at once with reduced

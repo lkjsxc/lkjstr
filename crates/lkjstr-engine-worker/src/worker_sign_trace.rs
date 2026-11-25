@@ -224,8 +224,8 @@ impl Trace {
         }
         push(&mut self.recent, row, RECENT);
     }
-    pub(super) fn stats(&self, engine: &Engine, now: u64) -> serde_json::Value {
-        let mut stats = engine.stats_at(now);
+    pub(super) fn stats(&self, engine: &Engine) -> serde_json::Value {
+        let mut stats = engine.stats();
         stats["signing"] = serde_json::json!(self);
         stats
     }

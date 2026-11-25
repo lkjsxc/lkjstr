@@ -2,21 +2,15 @@
 import type { EngineStats } from '../protocol.ts';
 import type { Core } from './engine.ts';
 import { relays } from './relays.ts';
-import { sampleTelemetry, statsRelay } from './telemetry.ts';
 
 /** A made-up but steady share of what a relay sent that another had sent before. */
 const dup = (events: number, i: number): number => Math.round((events * (18 + i * 9)) / 100);
-export function mockStats(core: Core, focused?: string): EngineStats {
+export function mockStats(core: Core): EngineStats {
   const rows = relays(core.world);
-  const telemetry = sampleTelemetry(core, focused);
+  const relay = statsRelay(rows[0]!.url);
   return {
-    ...telemetry,
     relays: rows.map((r, i) => ({
-      ...statsRelay(r.url),
-      cooldownRemainingMs: Math.max(0, (r.retryAt ?? 0) - core.now()),
-      relayIndex: i,
-      eoseMs: r.latencyMs === undefined ? null : r.latencyMs + 75,
-      usefulShare: r.events ? (r.events - dup(r.events, i)) / r.events : null,
+      url: statsRelay(r.url).url,
       state: r.state,
       route:
         r.read && r.write
@@ -42,19 +36,19 @@ export function mockStats(core: Core, focused?: string): EngineStats {
     })),
     // Mock wire diagnostics derive from the test double's actual open subscriptions.
     requests: [...core.subs.values()]
-      .filter((sub) => telemetry.views.some((view) => view.subId === sub.statsId))
-      .slice(0, 256)
+      .filter(
+        ({ query }) =>
+          !['bookmarks', 'list', 'mutes', 'media-servers', 'diagnostics', 'relays'].includes(
+            query.source,
+          ) &&
+          !query.privateLists &&
+          (query.source !== 'relay' || !statsRelay(query.relay ?? '').isPrivateHost),
+      )
+      .slice(0, 128)
       .map((sub) => ({
         id: sub.statsId,
         wireId: sub.statsId,
-        relay: statsRelay(rows[0]!.url).isPrivateHost
-          ? 'private-relay'
-          : statsRelay(rows[0]!.url).url,
-        memberSubs: [sub.statsId],
-        role: 'primary',
-        createdAtMs: telemetry.nowMs - 300,
-        firstEventAtMs: telemetry.nowMs - 120,
-        hedgeDueAtMs: null,
+        relay: relay.isPrivateHost ? 'private-relay' : relay.url,
         purpose: sub.query.source === 'notifications' ? 'notifications' : 'visible',
         priority: 1,
         weight: 600,
@@ -78,4 +72,19 @@ export function mockStats(core: Core, focused?: string): EngineStats {
       requestsCoalesced: Math.max(0, core.subs.size * 2 - 1),
     },
   };
+}
+
+function statsRelay(raw: string): { url: string; isPrivateHost: boolean } {
+  try {
+    const url = new URL(raw);
+    url.username = url.password = url.search = url.hash = '';
+    const host = url.hostname.replace(/\.$/, '');
+    const isPrivateHost =
+      /(^|\.)localhost$|\.(local|onion)$/.test(host) ||
+      /^(127\.|10\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.|169\.254\.)/.test(host) ||
+      /^\[(::1\]|f[cd]|fe[89ab])/.test(host);
+    return { url: url.href, isPrivateHost };
+  } catch {
+    return { url: 'private-relay', isPrivateHost: true };
+  }
 }

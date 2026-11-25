@@ -1,4 +1,4 @@
-// One `stats` poll per engine client, shared by every Stats and Orchestration tab that is in front.
+// One `stats` poll per engine client, shared by every Stats tab that is in front.
 // It runs only while at least one of them is visible and the page is shown; otherwise no request is sent.
 import type { EngineStats } from '../engine/protocol.ts';
 
@@ -16,7 +16,7 @@ export const STATS_EVERY_MS = 1000;
 const polls = new WeakMap<Engine, Poll>();
 
 function createPoll(engine: Engine): Poll {
-  const shown = new Set<Listener>(); // bound: the mounted Stats and Orchestration tabs
+  const shown = new Set<Listener>(); // bound: the mounted Stats tabs
   let timer: ReturnType<typeof setInterval> | undefined;
   let asking = false;
   const ask = async (): Promise<void> => {

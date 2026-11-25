@@ -15,7 +15,6 @@ import { gated } from './gated.ts';
 import { mountMedia } from './media.ts';
 import { mountMessage } from './message.ts';
 import { mountMessages } from './messages.ts';
-import { mountOrchestration } from './orchestration.ts';
 import { mountProfileEdit } from './profile-edit.ts';
 import { mountRelays } from './relays.ts';
 import { mountSettings } from './settings.ts';
@@ -171,14 +170,6 @@ export const VIEWS: readonly ViewDef[] = [
     launch: true,
     aliases: 'statistics metrics numbers health cache network 状態 数字 キャッシュ',
     mount: mountStats,
-  },
-  {
-    id: 'orchestration',
-    title: 'view.orchestration',
-    hint: 'view.orchestration.hint',
-    launch: true,
-    aliases: 'orchestration routing hedge relays worker link demo stage 経路 回線 ワーカー 発表',
-    mount: mountOrchestration,
   },
   {
     id: 'docs',

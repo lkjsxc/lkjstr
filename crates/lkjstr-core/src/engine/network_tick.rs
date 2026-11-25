@@ -156,14 +156,6 @@ impl Network {
                                 q.ready_at = now + 1000;
                             }
                         }
-                        let public = self
-                            .requests
-                            .values()
-                            .filter(|q| q.relay == relay && q.wire_id == wire)
-                            .all(|q| telemetry::public_filter(&q.filter));
-                        if public {
-                            self.decision(now, crate::engine::telemetry::Kind::Evict, &relay);
-                        }
                         self.close_group(&relay, &wire);
                     } else {
                         continue;

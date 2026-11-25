@@ -55,11 +55,6 @@ fn stats_count_shared_requests_frames_duplicate_events_bytes_and_latency() {
             > 0
     );
     assert_eq!(stats["totals"]["servedFromNetwork"], 1);
-    let traffic = &stats["bandwidthHistory"][0];
-    assert_eq!(traffic["eventsIn"], 2);
-    assert_eq!(traffic["duplicates"], 1);
-    assert_eq!(traffic["verified"], 1);
-    assert_eq!(stats["orchestrationEvents"][0]["kind"], "coalesce");
     e.network.disconnected(relay, 51);
     assert_eq!(e.stats()["relays"][0]["lastError"], "connection-lost");
 }

@@ -91,8 +91,10 @@ by own/inbox/capacity cap. A local horizontal table scroller preserves narrow
 views. Both string tables supply headings; no other view or CSS rhythm changes.
 recentPublications exposes id, kind, at, unresolvedRecipients and destinations
 with url, rule, state and optional reason. Rules are own/inbox/reply/delete;
-skipped reasons are own-cap/person-cap/inbox-cap/capacity. Wire delivery messages
-keep their existing states; detailed exclusions are Stats records.
+skipped reasons are own-cap/person-cap/inbox-cap/capacity. Stats strips URL
+userinfo, queries and fragments and classifies free-form relay errors. Request
+and publication destinations redact private and known auth-required origins.
+Wire delivery messages keep their existing states. Detailed exclusions are Stats records.
 
 ## Measurement and remaining design
 

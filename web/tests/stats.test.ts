@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { EngineStats } from '../src/engine/protocol.ts';
 import { setLang } from '../src/shared/i18n.ts';
 import { createSignal } from '../src/shared/signal.ts';
@@ -88,6 +88,38 @@ describe('stats', () => {
       }
     },
   );
+
+  it('shares one poll across visible Stats tabs and stops when the last one hides', async () => {
+    vi.useFakeTimers();
+    const stats = vi.fn(async () => undefined);
+    const engine = { stats };
+    const mount = (instance: string) => {
+      const visible = createSignal(true);
+      const off = mountStats(document.createElement('div'), {
+        instance,
+        visible,
+        menu() {},
+        engine,
+      } as unknown as ViewEnv);
+      return { visible, off };
+    };
+    const a = mount('stats-a');
+    const b = mount('stats-b');
+    try {
+      await vi.advanceTimersByTimeAsync(3000);
+      expect(stats).toHaveBeenCalledTimes(4);
+      a.visible.set(false);
+      await vi.advanceTimersByTimeAsync(1000);
+      expect(stats).toHaveBeenCalledTimes(5);
+      b.visible.set(false);
+      await vi.advanceTimersByTimeAsync(3000);
+      expect(stats).toHaveBeenCalledTimes(5);
+    } finally {
+      a.off();
+      b.off();
+      vi.useRealTimers();
+    }
+  });
 
   it('marks a relay that fails, sends nothing, or answers slowly', () => {
     expect(relayMark(relay('a'))).toBeUndefined();

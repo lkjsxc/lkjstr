@@ -69,8 +69,8 @@ mod routing_observations;
 mod scheduler;
 #[path = "network_startup.rs"]
 mod startup;
-#[path = "network_telemetry.rs"]
-mod telemetry;
+#[path = "network_stats_relay.rs"]
+pub(super) mod stats_relay;
 #[path = "network_time_window.rs"]
 mod time_window;
 #[path = "network_union.rs"]
@@ -80,7 +80,7 @@ mod verification;
 #[path = "read_want_key.rs"]
 pub(crate) mod want_key;
 use scheduler::filter_live;
-pub(super) use telemetry::publication_kind_is_public as public_kind_for_optimizer;
+pub(super) use stats_relay::publication_kind_is_public as public_kind_for_optimizer;
 #[path = "read_plan.rs"]
 pub mod read_plan;
 type Desired = BTreeMap<(String, String), (NostrFilter, BTreeSet<String>)>;
@@ -193,7 +193,9 @@ pub(super) struct Publication {
 #[derive(Default)]
 pub struct Network {
     pub(super) optimizer: crate::optimizer::Optimizer,
-    pub(super) telemetry: super::telemetry::Telemetry,
+    pub(super) ingress: optimizer::Ingress,
+    // Last 256 distinct auth-gated origins, including retired connections.
+    auth_origins: std::collections::VecDeque<String>,
     // At most 32 usable device signer public keys, never persisted.
     auth_signers: BTreeSet<String>,
     auth_active: Option<String>,
@@ -232,7 +234,7 @@ pub struct Network {
     pub(super) profiles_changed: bool,
     pub verifying: bool,
     // One most recent socket admission. Ingest consumes it synchronously.
-    pub(super) delivery_wire: Option<(String, String, usize)>,
+    pub(super) delivery_wire: Option<(String, String)>,
     pub(super) invalid_frames: u64,
     pub(super) unmatched_frames: u64,
     pub(super) repeated_deliveries: u64,

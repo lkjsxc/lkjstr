@@ -28,17 +28,15 @@ impl Engine {
                 anchor,
                 before,
                 after,
-            } => {
-                self.set_window(&sub, anchor, None, before, after, now);
             }
-            Input::WindowAtMonth {
+            | Input::WindowAtMonth {
                 sub,
                 anchor,
-                month,
                 before,
                 after,
+                ..
             } => {
-                self.set_window(&sub, anchor, Some(month), before, after, now);
+                self.set_window(&sub, anchor, before, after, now);
             }
             Input::FollowHead {
                 sub,
@@ -47,7 +45,6 @@ impl Engine {
             } => {
                 if let Some(v) = self.views.get_mut(&sub) {
                     v.anchor = None;
-                    v.month_anchor = None;
                     v.before = 0;
                     v.after = after.min(windows::HEAD_ROWS - 1);
                     v.head_through = Some(through);
@@ -134,7 +131,6 @@ impl Engine {
         &mut self,
         sub: &str,
         anchor: Option<String>,
-        month: Option<u64>,
         before: usize,
         after: usize,
         now: u64,
@@ -142,7 +138,6 @@ impl Engine {
         let account = self.views.get(sub).and_then(|v| v.query.account.as_deref());
         let anchor = anchor.filter(|key| self.accepts_private_anchor(account, key));
         if let Some(v) = self.views.get_mut(sub) {
-            v.month_anchor = month.filter(|_| anchor.is_some());
             v.anchor = anchor;
             v.head_through = None;
             v.time_window = None;

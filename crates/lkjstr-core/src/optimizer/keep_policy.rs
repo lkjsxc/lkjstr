@@ -1,21 +1,7 @@
 //! GreedyDual Size Frequency with fixed, integer reuse weights.
-use serde::Serialize;
-
 #[derive(Default)]
 pub(crate) struct KeepScorer {
     inflation: u64,
-}
-
-#[derive(Clone, Copy, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub(crate) struct KeepItem {
-    pub class: &'static str,
-    pub weight_class: u64,
-    pub age_h: u64,
-    pub bytes: usize,
-    pub score: f64,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub pin: Option<&'static str>,
 }
 
 impl KeepScorer {

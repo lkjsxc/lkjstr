@@ -49,7 +49,6 @@ impl Engine {
         } else {
             projection::fresh(&self.store, &v.query, &events[..start])
         };
-        v.fresh_count = fresh;
         let window = &events[start..end];
         let unavailable = selected
             .held
@@ -60,11 +59,6 @@ impl Engine {
             || (v.query.source == Source::Profile
                 && v.query.filters.show.as_deref() == Some("all")))
         .then(|| super::time_window::Order::new(&self.store, &v.query));
-        v.cache_span = super::feedback_stats::span(events.iter().map(|event| {
-            order
-                .as_ref()
-                .map_or(event.created_at, |order| order.at(event))
-        }));
         let items: Vec<_> = window
             .iter()
             .zip(selected.held)

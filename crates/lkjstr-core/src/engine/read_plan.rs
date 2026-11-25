@@ -11,8 +11,7 @@ pub use selection::{Candidate, select, select_weighted};
 pub(super) struct ReadRoutes {
     pub routes: Vec<String>,
     pub primary: BTreeSet<String>,
-    pub change: Option<(crate::engine::telemetry::Kind, String)>,
-    pub hedge_delay_ms: u64,
+    pub changed_role: Option<(&'static str, String)>,
 }
 impl super::Network {
     pub(in crate::engine) fn read_routes<'a>(
@@ -106,7 +105,7 @@ impl super::Network {
         let adaptive = self.optimizer.ready()
             && !channel
             && time_owner.is_none()
-            && super::telemetry::public_filter(f);
+            && super::stats_relay::public_filter(f);
         let plan = crate::optimizer::plan_policy::decide(
             crate::optimizer::features::Features {
                 focused,
@@ -200,9 +199,8 @@ impl super::Network {
             );
         }
         self.preserve_new_outbox(f, &candidates, &mut routes);
-        use crate::engine::telemetry::Kind;
-        let change = if super::telemetry::public_filter(f) {
-            new_hedge.map(|url| (Kind::Hedge, url)).or_else(|| {
+        let changed_role = if super::stats_relay::public_filter(f) {
+            new_hedge.map(|url| ("hedge", url)).or_else(|| {
                 (!unavailable.is_empty())
                     .then(|| {
                         routes.iter().find(|url| {
@@ -210,12 +208,11 @@ impl super::Network {
                         })
                     })
                     .flatten()
-                    .map(|url| (Kind::Fallback, url.clone()))
+                    .map(|url| ("fallback", url.clone()))
             })
         } else {
             None
         };
-        let hedge_delay_ms = self.hedge_after(current.values().copied());
         let primary = routes.iter().cloned().collect();
         // Keep failed-page uncertainty outside those slots. Historical evidence
         // also survives recovery/reranking; bounded by configured read routes and
@@ -235,8 +232,7 @@ impl super::Network {
         ReadRoutes {
             routes,
             primary,
-            change,
-            hedge_delay_ms,
+            changed_role,
         }
     }
 }

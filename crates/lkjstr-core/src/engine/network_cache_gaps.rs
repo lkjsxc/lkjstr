@@ -72,7 +72,7 @@ impl Network {
         let gap_repairs: Vec<_> = desired
             .iter()
             .filter_map(|((relay, _), (filter, members))| {
-                if !telemetry::public_filter(filter)
+                if !stats_relay::public_filter(filter)
                     || filter.ids.is_some()
                     || filter.search.is_some()
                 {

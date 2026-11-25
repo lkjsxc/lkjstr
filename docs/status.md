@@ -143,7 +143,7 @@ indexer/hint lookups and kind-3 JSON fallback. Search-only relay routes remain i
 subscription counts. SharedWorker and Web Locks/BroadcastChannel share visible wants; hidden/detached views release bounded cache and relay work.
 [Relay orchestration](relay-orchestration-20261119.md) adds progressive reads, gap repair, NIP-65 routes and a ten-second startup soft bound.
 
-Public notes use bounded write waves and resolve on the first matching positive OK. See [orchestration.md](orchestration.md).
+Stats shows relay, request and publication data. [Public writes](orchestration.md) run in bounded waves and resolve on the first matching positive OK.
 Signed text notes appear in Home, Profile and Thread before any relay reply. Cached write lists and connected write-enabled relays send while discovery runs.
 Note destinations get ten seconds to connect and five seconds after the first frame; late confirmations remain available. Passive inbox checks yield to writing.
 Persisted receipts help route deletes. Lists wait for initial lookup, retain opaque content and reject unsupported private removals.

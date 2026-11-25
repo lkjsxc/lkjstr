@@ -161,26 +161,12 @@ impl Network {
         (blocked, std::cmp::Reverse(weight))
     }
 
-    pub(in crate::engine) fn cooldown_remaining(&self, url: &str, now: u64) -> u64 {
-        self.relays.get(url).map_or_else(
-            || {
-                self.observations.get(url).map_or(0, |o| {
-                    o.cooldown
-                        .min(120_000)
-                        .saturating_sub(now.saturating_sub(o.at))
-                })
-            },
-            |relay| relay.cooldown_until.saturating_sub(now),
-        )
-    }
-
     pub(super) fn cool_down(&mut self, url: &str, now: u64) {
         if let Some(r) = self.relays.get_mut(url) {
             r.failures = r.failures.saturating_add(1).min(8);
             r.cooldown_until = now.saturating_add((15000u64 << r.failures.min(3)).min(120000));
             r.next_req_at = r.next_req_at.max(r.cooldown_until);
             r.last_error = Some("rate-limited: cooldown".into());
-            self.decision(now, crate::engine::telemetry::Kind::Cooldown, url);
             self.quality_revision = self.quality_revision.wrapping_add(1);
         }
     }

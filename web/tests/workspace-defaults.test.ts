@@ -7,7 +7,7 @@ import { adoptDefault, migrateStorage } from '../src/shared/migrate.ts';
 import { kv } from '../src/shared/storage.ts';
 import { DOC_PAGES } from '../src/views/docs.ts';
 import { filterQuery } from '../src/views/filter-bar.ts';
-import { setServed } from '../src/views/registry.ts';
+import { setServed, viewOf } from '../src/views/registry.ts';
 import { CHOICES } from '../src/wm/choices.ts';
 import { parseClosed } from '../src/wm/closed.ts';
 import * as L from '../src/wm/layout.ts';
@@ -179,9 +179,12 @@ describe('saved arrangements', () => {
     adoptDefault();
     expect(kv.get('layout:main')).not.toEqual(first);
   });
-  it('a legacy tab kind (a Welcome page) is dropped from a saved layout and from the closed tabs', () => {
-    const old = L.split('row', [L.pane(['welcome']), L.pane(['home', 'docs'], 'docs')]);
-    expect(shape(L.retainViews(old, known) as L.LayoutNode)).toBe('home|docs');
-    expect(parseClosed([{ kind: 'welcome', state: {}, pane: 'a', index: 0 }])).toEqual([]);
-  });
+  it.each(['welcome', 'orchestration'])(
+    'drops a saved %s tab from layouts and closed tabs',
+    (kind) => {
+      const old = L.split('row', [L.pane([kind]), L.pane(['home', 'docs'], 'docs')]);
+      expect(shape(L.retainViews(old, { has: (tab) => Boolean(viewOf(tab)) })!)).toBe('home|docs');
+      expect(parseClosed([{ kind, state: {}, pane: 'a', index: 0 }])).toEqual([]);
+    },
+  );
 });

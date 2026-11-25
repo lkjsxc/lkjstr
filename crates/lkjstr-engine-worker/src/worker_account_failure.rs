@@ -66,7 +66,7 @@ pub(super) fn input(h: &mut Host, id: u64, message: I) {
         }),
         I::Stats { req } => Some(O::Stats {
             req,
-            stats: h.engine.stats_at(h.time()),
+            stats: h.engine.stats(),
         }),
         I::RowAtTime { req, sub, .. } => Some(O::RowAtTime {
             req,

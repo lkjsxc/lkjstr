@@ -44,23 +44,6 @@ impl Network {
                 .take(cap - 1)
                 .map(|(key, _)| key.clone()),
         );
-        if ids
-            .iter()
-            .all(|id| telemetry::public_filter(&self.requests[id].filter))
-            && (ids.len() > 1 || first.members.len() > 1)
-        {
-            let count = ids
-                .iter()
-                .map(|id| self.requests[id].members.len())
-                .sum::<usize>();
-            self.decision_detail(
-                now,
-                crate::engine::telemetry::Kind::Coalesce,
-                &relay,
-                Some(count.saturating_sub(1)),
-                None,
-            );
-        }
         self.next = self.next.saturating_add(1);
         let wire = format!("w{}", self.next);
         let mut frame = vec![json!("REQ"), json!(wire)];

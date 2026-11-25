@@ -5,26 +5,6 @@ const SOFT_MS: u64 = 1_500;
 const HARD_MS: u64 = 5_000;
 
 impl Network {
-    pub(super) fn stats_hedge_due(&self, r: &Request) -> Option<u64> {
-        (r.role == "primary"
-            && r.read_slot
-            && !r.page_eose
-            && !r.complete
-            && !self.requests.values().any(|other| {
-                other.shares_view(r)
-                    && want_key::same(&other.page_filter, &r.page_filter)
-                    && (other.role == "hedge"
-                        || other.first_event_at.is_some()
-                        || other.last_event.is_some())
-            }))
-        .then(|| {
-            r.created_at
-                .saturating_add(self.hedge_after(self.requests.values().filter(|other| {
-                    r.shares_view(other) && want_key::same(&r.page_filter, &other.page_filter)
-                })))
-        })
-    }
-
     pub(super) fn hedge_due(
         &self,
         filter: &NostrFilter,

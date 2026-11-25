@@ -88,10 +88,6 @@ pub struct Store {
     weighted: bool,
     access: access::Access,
     keep: crate::optimizer::keep_policy::KeepScorer,
-    // Latest bounded pressure sample.
-    keep_low: Vec<crate::optimizer::keep_policy::KeepItem>,
-    keep_high: Vec<crate::optimizer::keep_policy::KeepItem>,
-    keep_weights: [usize; 6],
     payload_bytes: usize,
     byte_cap: usize,
 }
@@ -138,9 +134,6 @@ impl Store {
             weighted: false,
             access: Default::default(),
             keep: Default::default(),
-            keep_low: Vec::new(),
-            keep_high: Vec::new(),
-            keep_weights: [0; 6],
             payload_bytes: 0,
             byte_cap: 64 * 1024 * 1024,
         }

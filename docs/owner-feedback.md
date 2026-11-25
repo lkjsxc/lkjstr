@@ -59,7 +59,7 @@ Counters are session-local and reset when a relay transport is removed.
 Totals include retained events, event payload bytes (not IndexedDB or JS heap
 size), open relay subscriptions, rows available at subscription open and accepted
 network events. These last two counters have distinct units; neither claims an
-exact cache hit ratio. Orchestration reports active relays serving at least one
+exact cache hit ratio. The `orchestration` field counts active relays serving at least one
 followed author and current request memberships saved by coalescing. It does not
 claim full follow-set coverage or an outbox-routing implementation.
 

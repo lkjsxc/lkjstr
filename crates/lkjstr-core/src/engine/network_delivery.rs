@@ -73,7 +73,6 @@ impl Network {
             }
             let note = (first && p.event.kind == 1).then(|| p.event.clone());
             self.profiles_changed |= note.is_some();
-            self.observe_publication(id, relay, now, fallback, false);
             return note;
         } else if !p.transport_confirmed.contains(relay) && p.attempted.remove(relay) {
             p.observed.remove(relay);
@@ -213,7 +212,6 @@ impl Network {
             None
         };
         if let Some((req, deliveries)) = update {
-            self.observe_publication(id, relay, now, false, accepted);
             self.update_publication(id, &deliveries);
             self.output.push(Output::Delivery { req, deliveries });
             let check = self

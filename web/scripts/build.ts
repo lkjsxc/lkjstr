@@ -34,7 +34,6 @@ const CSS = [
   'profile-edit.css',
   'pages.css',
   'stats.css',
-  'orch.css',
   'channels.css',
   'dm.css',
   'emoji.css',

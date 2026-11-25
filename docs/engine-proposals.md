@@ -1,7 +1,7 @@
 # Engine proposals
 ## Purpose
 Additive protocol ledger under the 2026-11-16 owner delegation. See status.md and parity.md for current behavior and limits.
-See [history](engine-proposals-history.md), [emoji](engine-proposals-emoji.md), and [optimizer](orchestration-optimizer.md#protocol-additions).
+See [history](engine-proposals-history.md), [emoji](engine-proposals-emoji.md), and [optimizer](orchestration-optimizer.md#scheduler-hints).
 - Protocol 17 (S4): `NoteRow.face?` provides bounded public `{type:'generic', alt?, form, tags, moreTags}`; typed
   `GenericTagLine.ref?` carries event/address/person/topic/link/relay identities on policy-authorized public rows.
 - Protocol 17 (S4): `NoteRow.copyLink?` carries the canonical path `/n/nevent` (kind/author) or `/a/naddr` (exact address); `bech32` and Copy ID are unchanged.
@@ -172,22 +172,18 @@ The bounded resolution and representative policy follow [interface-acts.md](inte
 - Absolute-time windows carry optional `NoteRow.readingAt`, the verified slot time in Unix milliseconds, preserved through Show and Hide.
 Mock-only `EngineConfig.mock`: `slow` signs a note late and delays its answers, `stress` makes relay text absurdly long; the real engine ignores it.
 
-## Public signing timing and orchestration
+## Public signing timing and feed status
 - Optional `act.signingTiming: { at, hidden, boot, restart }` records enqueue for public signing actions. Existing callers can omit it.
 - Optional `stats.signing` reports bounded `recent` and `slow` timings. See [signing-latency.md](signing-latency.md) for stages and retention.
 - Optional `window.headThrough` on a top window retains its delivered tail key while following new rows, up to 6800 rows.
 - Optional `NoteRow.unconfirmed` marks the signed-in author's settled note while a retained receipt still has zero accepted deliveries.
-- Optional `stats.views` reports up to 128 public engine views with opaque IDs, window state and retained row counts.
-- Optional `stats.worker` reports Worker verification, persistence, timing and retained store metrics.
-- Optional `stats.relays[].cooldownRemainingMs` gives time until the relay cooldown ends.
-- Optional `stats.relays[].isPrivateHost` identifies local, private and known auth-required relays.
-- Optional `stats.bandwidthHistory` reports activity in up to 60 one-second buckets.
-- Optional `stats.orchestrationEvents` reports up to 32 recent decisions with redacted private relay labels.
+
 ## Client attribution
 - `NoteRow.clientAddress?` carries a valid kind-31990 coordinate next to the existing tag name in `client`.
 - `Action.client.info {address}` resolves one handler on explicit request, or returns `not-found`.
 - `FromEngine.result.clientInfo?` carries the verified handler name and optional HTTP(S) website.
 - `EngineConfig.clientTagAccount?` scopes `clientTag` to one device account. Omit it for the device fallback.
+
 ## Note visibility
 - Existing `NoteRow.hidden` gains `revealable?` and a bounded optional matching mute entry `detail?`; the same row key carries a body-free slot.
 - `NoteRow.revealed?: {reason}` preserves the reason while displaying an explicitly revealed verified note.

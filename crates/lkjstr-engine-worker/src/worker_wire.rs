@@ -83,7 +83,7 @@ impl Host {
                     id,
                     &O::Stats {
                         req,
-                        stats: self.sign_trace.stats(&self.engine, self.time()),
+                        stats: self.sign_trace.stats(&self.engine),
                     },
                 );
                 return;
