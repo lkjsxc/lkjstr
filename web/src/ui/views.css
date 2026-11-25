@@ -156,6 +156,9 @@
 .time-hover { position: absolute; left: 0; right: 0; height: 1px; background: var(--sep); pointer-events: none; }
 .time-hover[hidden] { display: none; }
 .time-place { position: absolute; width: 16px; right: 0; height: 2px; background: var(--accent); pointer-events: none; }
+/* The grip (Immich-style): a 6x32 accent pill centred in the rightmost 16px, shown while the rail is in use. */
+.time-grip { position: absolute; right: 5px; width: 6px; height: 32px; border-radius: 3px; background: var(--accent); transform: translateY(-50%); pointer-events: none; }
+.time-grip[hidden], .time-rail.awake .time-place { display: none; }
 .time-return { position: absolute; right: 1px; width: 10px; height: 6px; border: 1px solid var(--accent); background: var(--paper); transform: translateY(-50%); }
 .time-return::before { content: ""; position: absolute; inset: -5px; }
 .time-rail .scrub { right: calc(100% + 4px); transform: translateY(-50%); }

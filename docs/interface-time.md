@@ -90,6 +90,10 @@ Mouse, pen and touch share one path: pointer events on the rail, with capture.
   Any other target uses the existing window seek with the same 60 rows on each side, which loads around the target.
   Either way one return tick is left at the place the press started, and a press on the tick returns to the exact row
   and offset.
+- **Grip.** While the label shows (scrolled, held, loading or landed) the place line is drawn as the grip: a 6x32px
+  `--accent` pill centred in the rail's rightmost 16px, clamped 16px inside the tile, with no press of its own (the
+  whole rail takes it). While held it stands at the pointer, not at the list's place, so a drag is direct and the
+  label sits beside it. Built 2026-11-25 from the owner's request for an Immich-style scrubber.
 - **Drag.** The label follows the pointer. Seeks run at most once per 80ms and one at a time: while one is out, only
   the latest target waits, and it is sent once the answer is drawn. So a target that arrives late never pulls the list
   back to an earlier one. While a press is held the bands and marks stay frozen, so a Timeline answer that arrives

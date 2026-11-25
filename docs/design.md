@@ -210,7 +210,9 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
   the scrollbar keeps its span. A list in time order has a time rail
   instead: it spans every note known for the list, a busy month longer than
   a quiet one without crowding it out and empty time taking no room, a 2px accent line across only the rightmost
-  16px for where you are. On a tile of 520px or more one right-aligned column names local years, months and days
+  16px for where you are. While the rail is in use (scrolled, held, loading or just landed) that line is the grip, a
+  6x32px accent pill in the same 16px kept whole at the ends; held, it stays under the pointer or finger with the
+  time beside it, and goes with the label a second later. On a tile of 520px or more one right-aligned column names local years, months and days
   where each begins (a year's newest month one line under it, a month as `mm/dd` once days are named), with dots
   beside them; the current year uses normal text colour. A fine pointer draws a `--sep` line and the time under it.
   Pressed or dragged it goes to that time (near a label, to that period's newest note), says the day while it loads,

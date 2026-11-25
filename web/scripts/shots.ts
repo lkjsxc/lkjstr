@@ -196,10 +196,12 @@ try {
             await page.mouse.wheel(0, 1600);
             await feed.locator('.scrub:not([hidden])').waitFor({ timeout: 900 });
           });
-        // The wide scrubber (C2, C3): day, month and year marks with the hover line, and a drag held over the years.
+        // The scrubber (C2, C3): marks with the hover line, and a drag held over the years with its grip. A phone's
+        // Home mixes in notifications (a native list), so the phone holds a profile's rail instead.
+        const railAt = width < 500 ? (['/p/aoi', 'profile'] as const) : (['/', 'home'] as const);
         for (const name of ['time-days', 'time-held'] as const)
-          await scene(name, '/', async (page) => {
-            const rail = page.locator('.view[data-kind="home"]:visible .time-rail').first();
+          await scene(name, railAt[0], async (page) => {
+            const rail = page.locator(`.view[data-kind="${railAt[1]}"]:visible .time-rail`).first();
             await rail.waitFor();
             const box = await rail.boundingBox();
             if (!box) return;
