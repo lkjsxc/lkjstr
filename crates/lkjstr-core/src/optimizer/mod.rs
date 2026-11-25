@@ -34,8 +34,12 @@ impl Default for Optimizer {
 }
 
 impl Optimizer {
+    pub fn ready(&self) -> bool {
+        self.enabled && self.link.state().samples >= 4
+    }
+
     pub fn decide_plan(&self, features: Features, routes: &[Route]) -> Plan {
-        plan_policy::decide(features, self.link.state(), routes, self.enabled)
+        plan_policy::decide(features, self.link.state(), routes, self.ready())
     }
 }
 

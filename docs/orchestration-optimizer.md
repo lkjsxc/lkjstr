@@ -8,7 +8,8 @@ Document the deterministic read and retention policies and their Stats contract.
 
 The Worker observes completed one-second ingress buckets and request round trips.
 The estimator starts at 3,000,000 B/s and 80 ms. Throughput adapts after four
-nonzero busy seconds. The last three busy seconds set the saturation flag when
+nonzero busy seconds. Until then the scheduler keeps its baseline. The last
+three busy seconds set the saturation flag when
 their bytes reach 85% of the throughput estimate across that window. EOSE and
 first verified delivery provide round-trip estimates. First-event timing keeps
 32 samples per active relay and needs 16 before it supplies a p75.

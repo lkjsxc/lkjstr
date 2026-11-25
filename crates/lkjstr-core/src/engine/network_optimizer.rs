@@ -63,9 +63,11 @@ impl Network {
     }
 
     pub(in crate::engine) fn prefetch_depth(&self) -> usize {
-        self.optimizer
-            .decide_plan(self.plan_features(self.now), &[])
-            .prefetch_depth
+        let features = self.plan_features(self.now);
+        if features.hidden || features.offline || features.save_data || features.awaiting_ok {
+            return 0;
+        }
+        self.optimizer.decide_plan(features, &[]).prefetch_depth
     }
 
     pub(in crate::engine) fn first_screen_plan(&self, now: u64) -> Plan {
@@ -102,7 +104,7 @@ impl Network {
             .filter(|r| self.relays.contains_key(&r.relay))
             .map(|r| self.route_features(&r.relay, 0, self.now))
             .collect();
-        hedge_delay(self.optimizer.link.state(), &routes, self.optimizer.enabled)
+        hedge_delay(self.optimizer.link.state(), &routes, self.optimizer.ready())
     }
 
     pub(super) fn observe_link(&mut self, now: u64) {

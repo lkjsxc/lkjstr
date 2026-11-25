@@ -1,10 +1,8 @@
 use super::*;
 impl Network {
     pub fn connected(&mut self, relay: &str, now: u64) {
-        let was_offline = self.relays.values().all(|r| !r.online);
         if let Some(r) = self.relays.get_mut(relay) {
             r.online = true;
-            self.profiles_changed |= was_offline;
             r.connected_since = Some(now);
             r.connecting = false;
             r.last_rx = now;

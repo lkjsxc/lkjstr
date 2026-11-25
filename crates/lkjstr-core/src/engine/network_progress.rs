@@ -48,32 +48,35 @@ impl Network {
                 .any(|r| now.saturating_sub(r.created_at) >= delay)
     }
     pub(super) fn read_wakeup(&mut self, now: u64) {
-        self.next_read_plan = self
-            .requests
-            .values()
-            .filter(|r| !r.complete && !r.page_eose && r.first_event_at.is_none())
-            .flat_map(|r| {
-                [
-                    (r.read_slot && r.role == "primary").then(|| {
-                        r.created_at
-                            .saturating_add(self.hedge_after(std::iter::once(r)))
-                    }),
-                    Some(r.created_at.saturating_add(SOFT_MS)),
-                    Some(r.created_at.saturating_add(HARD_MS)),
-                ]
-                .into_iter()
-                .flatten()
-            })
-            .filter(|at| *at > now)
-            .chain(self.read_startup_wakeup(now))
-            .chain(self.metadata.next_expiry(now))
-            .chain(
-                self.requests
-                    .values()
-                    .filter_map(Request::metadata_expiry)
-                    .filter(|at| *at > now),
-            )
-            .min();
+        self.next_read_plan =
+            self.requests
+                .values()
+                .filter(|r| !r.complete && !r.page_eose && r.first_event_at.is_none())
+                .flat_map(|r| {
+                    [
+                        Some(r.created_at.saturating_add(
+                            if r.read_slot && self.optimizer.ready() {
+                                self.hedge_after(std::iter::once(r))
+                            } else {
+                                400
+                            },
+                        )),
+                        Some(r.created_at.saturating_add(SOFT_MS)),
+                        Some(r.created_at.saturating_add(HARD_MS)),
+                    ]
+                    .into_iter()
+                    .flatten()
+                })
+                .filter(|at| *at > now)
+                .chain(self.read_startup_wakeup(now))
+                .chain(self.metadata.next_expiry(now))
+                .chain(
+                    self.requests
+                        .values()
+                        .filter_map(Request::metadata_expiry)
+                        .filter(|at| *at > now),
+                )
+                .min();
     }
     pub(super) fn wake_reads(&mut self, now: u64) {
         if self.next_read_plan.is_some_and(|at| now >= at) {

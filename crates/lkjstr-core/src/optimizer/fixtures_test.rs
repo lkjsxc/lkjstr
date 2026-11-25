@@ -215,3 +215,17 @@ fn address_deletion_is_owner_and_timestamp_scoped_across_retention() {
     assert_eq!(store.insert_deferred(older, None), Inserted::Deleted);
     assert_eq!(store.insert_deferred(make(4, 1), None), Inserted::New);
 }
+
+#[test]
+fn scheduler_uses_baseline_until_busy_samples_establish_link_confidence() {
+    let mut optimizer = super::Optimizer::default();
+    let features = Features {
+        avg_event_bytes: 8000,
+        ..Default::default()
+    };
+    for second in 0..4 {
+        assert_eq!(optimizer.decide_plan(features, &[]).limit, 200);
+        optimizer.link.observe_bucket(second, 320_000, true);
+    }
+    assert_eq!(optimizer.decide_plan(features, &[]).limit, 20);
+}

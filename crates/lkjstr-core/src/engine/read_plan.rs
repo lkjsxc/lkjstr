@@ -103,7 +103,10 @@ impl super::Network {
             .enumerate()
             .map(|(i, url)| self.route_features(url, i, now))
             .collect();
-        let adaptive = !channel && time_owner.is_none() && super::telemetry::public_filter(f);
+        let adaptive = self.optimizer.ready()
+            && !channel
+            && time_owner.is_none()
+            && super::telemetry::public_filter(f);
         let plan = crate::optimizer::plan_policy::decide(
             crate::optimizer::features::Features {
                 focused,
@@ -111,9 +114,11 @@ impl super::Network {
             },
             self.optimizer.link.state(),
             &observed,
-            self.optimizer.enabled && adaptive,
+            adaptive,
         );
-        let existing_hedge = current.values().find(|r| r.role == "hedge" && r.read_slot);
+        let existing_hedge = current
+            .values()
+            .find(|r| adaptive && r.role == "hedge" && r.read_slot);
         let hedge = hedge || existing_hedge.is_some();
         let limit = if channel {
             24
@@ -163,7 +168,8 @@ impl super::Network {
             routes.truncate(limit);
         }
         let mut new_hedge = None;
-        if hedge
+        if adaptive
+            && hedge
             && routes.len() == limit.saturating_sub(1)
             && let Some(url) =
                 hedge_target.filter(|url| !routes.contains(url) && !unavailable.contains(*url))
@@ -171,11 +177,12 @@ impl super::Network {
             new_hedge = Some(url.clone());
             routes.push(url.clone());
         }
-        for url in ranked {
+        let rank_cap = if adaptive { 8 } else { limit };
+        for url in ranked.into_iter().take(rank_cap) {
             if routes.len() < limit && !routes.contains(&url) {
                 if hedge && routes.len() + 1 == limit && !current.contains_key(url.as_str()) {
                     let peer = self.route_features(&url, 0, now);
-                    if peer.closed_recent || peer.cooldown {
+                    if adaptive && (peer.closed_recent || peer.cooldown) {
                         continue;
                     }
                     new_hedge = Some(url.clone());
