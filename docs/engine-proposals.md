@@ -143,13 +143,13 @@ Feeds reuse `error.internal`. Accounts availability and recovery need an [interf
 
 See [public-view-cache.md](public-view-cache.md). These cache additions remain unshipped and retain all prior protocol meanings.
 ## Protocol 14 act chains and public link validation
-
 - `Action.link.check {route,ref}` validates a public NIP-19 entity for its path and returns a result without a signer or relay lookup.
 - Add `ActRef {type:'reaction'|'repost',actor,emoji?}` for one verified act link, without its counts.
 - Add `NotificationRow.target.act?` for the reader's own targeted reaction/repost; existing target fields describe only the terminal note.
 - Add `NotificationRow.pendingAct? {act,state:'loading'|'missing'|'failed'}` while that note is unresolved; `target` remains absent.
 - Add `NoteRow.act?` for the selected profile person's own act; that event supplies the row time and chronological position.
 - Add `NoteRow.actOn?` for the immediately targeted act in profile Reactions/Reposts; terminal note counts and content stay unchanged.
+- Add `ProfileRow.edit?: ProfileEdit` on the reader's own row: kind-0 fields as published, so P1's editor starts from what a save replaces.
 
 The bounded resolution and representative policy follow [interface-acts.md](interface-acts.md). The implementation records source and proof limits.
 

@@ -1,7 +1,15 @@
 // View models of the mock world: the rows exactly as the real engine will hand them over.
 
 import { groupReactions } from '../../shared/reactions.ts';
-import type { Author, NoteRow, PersonRow, ProfileRow, Quote, Reaction } from '../protocol.ts';
+import type {
+  Author,
+  NoteRow,
+  PersonRow,
+  ProfileEdit,
+  ProfileRow,
+  Quote,
+  Reaction,
+} from '../protocol.ts';
 import { banner } from './art.ts';
 import { HANDLERS } from './client-handlers.ts';
 import type { ProfileAct } from './fixtures-acts.ts';
@@ -126,7 +134,7 @@ export function profileRow(w: World, p: Person, me: string): ProfileRow {
     kind: 'profile',
     key: `profile:${pk}`,
     author: { ...p.author, muted: w.state.mutes.some((m) => m.k === 'person' && m.pubkey === pk) },
-    banner: p.author.picture ? banner(p.hue) : undefined,
+    banner: bannerOf(p),
     about: w.byId.size ? segmentAbout(p.about) : [],
     website: p.website,
     lud16: p.lud16,
@@ -148,8 +156,21 @@ export function profileRow(w: World, p: Person, me: string): ProfileRow {
       0,
       1 + (p.hue % 3),
     ),
+    edit: pk === me ? profileEdit(p) : undefined,
   };
 }
+const bannerOf = (p: Person): string | undefined =>
+  p.banner !== undefined ? p.banner || undefined : p.author.picture ? banner(p.hue) : undefined;
+/** The reader's own fields as published (the mock keeps About as plain text). */
+const profileEdit = (p: Person): ProfileEdit => ({
+  name: p.author.name,
+  about: p.about,
+  picture: p.author.picture,
+  banner: bannerOf(p),
+  nip05: p.author.nip05,
+  website: p.website,
+  lud16: p.lud16,
+});
 /** The header of someone whose profile has not arrived: nothing is known, so no count is given. */
 export const pendingProfile = (author: Author): ProfileRow => ({
   kind: 'profile',

@@ -415,6 +415,10 @@ export type ProfileRow = {
   readonly since?: Millis;
   /** The person's write relays (host names), for the curious. */
   readonly relays: readonly string[];
+  /** Additive: on the reader's own row only, the profile's fields as published (About as typed, NIP-05 with any
+   * `_@`), so the profile editor starts from exactly what a save would replace. Absent: the editor rebuilds them
+   * from what is shown. */
+  readonly edit?: ProfileEdit;
 };
 
 export type PersonRow = {

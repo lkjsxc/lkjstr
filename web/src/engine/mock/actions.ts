@@ -7,7 +7,7 @@ import { HANDLERS } from './client-handlers.ts';
 import type { Core } from './engine.ts';
 import { FILLER } from './fixtures-notes.ts';
 import { revealMockNote } from './hidden.ts';
-import { byHandle, byPubkey, byRef, type Person, SELF } from './people.ts';
+import { byHandle, byPubkey, byRef, type Person, SELF, saveProfile } from './people.ts';
 import { retryLists } from './private-lists.ts';
 import { createDelivery } from './publication.ts';
 import { addReaction, removeReaction } from './reactions.ts';
@@ -183,8 +183,14 @@ export function createActions(core: Core) {
         core.resync((q) => q.source === 'media-servers');
         return done(req);
       }
-      case 'profile.save':
+      case 'profile.save': {
+        if (/\bairdrop\b/i.test(a.profile.about))
+          return later(400, () => fail(req, 'rejected', 'blocked: spam filter'));
+        saveProfile(byPubkey(me) ?? SELF, a.profile);
+        core.accounts();
+        core.resync(undefined, true);
         return deliver(req);
+      }
       case 'channel.join':
       case 'channel.save':
       case 'channel.seen':

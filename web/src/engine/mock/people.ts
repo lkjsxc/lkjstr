@@ -1,5 +1,5 @@
 // The people of the mock world. Keys are made up (not valid bech32): the mock resolves them by table.
-import type { Author, Emoji } from '../protocol.ts';
+import type { Author, Emoji, ProfileEdit } from '../protocol.ts';
 import { avatar, emojiTile } from './art.ts';
 
 export const EMOJI: Record<string, string> = {
@@ -45,7 +45,28 @@ export type Person = {
   readonly hue: number;
   readonly website?: string;
   readonly lud16?: string;
+  /** Set once a saved profile names its banner ('' for none); absent, the banner is drawn from the hue. */
+  readonly banner?: string;
 };
+
+/** The reader's `profile.save`: the person and their author object change in place, so every row that carries
+ * them (notes, accounts, lists) shows the new profile at its next projection. NIP-05 shows without `_@`. */
+export function saveProfile(p: Person, edit: ProfileEdit): void {
+  const nip05 = edit.nip05?.replace(/^_@/, '');
+  Object.assign(p as { -readonly [K in keyof Person]: Person[K] }, {
+    about: edit.about,
+    website: edit.website,
+    lud16: edit.lud16,
+    banner: edit.banner ?? '',
+  });
+  Object.assign(p.author as { -readonly [K in keyof Author]: Author[K] }, {
+    name: edit.name,
+    emoji: emojiOf(edit.name),
+    picture: edit.picture,
+    nip05,
+    verified: Boolean(nip05) && nip05 === p.author.nip05 && p.author.verified,
+  });
+}
 
 const hex = (n: number): string =>
   Array.from({ length: 64 }, (_, i) =>
