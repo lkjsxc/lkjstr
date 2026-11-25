@@ -9,7 +9,7 @@ use std::collections::{BTreeMap, BTreeSet};
 pub struct MetadataAccess {
     /// Wall-clock minutes, shared by cache writers rather than Worker uptime.
     pub minute: u64,
-    /// Bounded by the active views and saved account follow graphs.
+    /// Only resident replaceable authors; absent follow-graph members are excluded.
     pub authors: BTreeMap<String, u64>,
     /// Verified account policies and active read dependencies, never arbitrary hints.
     pub pinned: BTreeSet<String>,
@@ -33,6 +33,7 @@ pub(super) fn select(
     mut entries: Vec<Entry>,
     access: &MetadataAccess,
     inflation: u64,
+    witnesses: BTreeSet<String>,
 ) -> Result<String, serde_json::Error> {
     let mut scorer = KeepScorer::default();
     scorer.advance(inflation);
@@ -80,7 +81,7 @@ pub(super) fn select(
             break;
         }
         let entry = &entries[index];
-        if entry.event.kind == 5 || access.pinned.contains(&entry.event.id) {
+        if witnesses.contains(&entry.event.id) || access.pinned.contains(&entry.event.id) {
             continue;
         }
         bytes = bytes.saturating_sub(cost[index] + usize::from(count > 1) * 2);
@@ -92,7 +93,7 @@ pub(super) fn select(
         // Abort this cache transaction. Required evidence is never silently discarded
         // to admit optional data, and the previous valid checkpoint remains committed.
         return Err(serde_json::Error::io(std::io::Error::other(
-            "required metadata exceeds cache budget; optional admissions paused",
+            "required metadata exceeds cache budget; optional cache writes paused",
         )));
     }
     let mut selected: Vec<_> = entries

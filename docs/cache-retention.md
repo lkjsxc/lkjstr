@@ -28,6 +28,11 @@ deletions precede reuse selection. Stale writers cannot replace newer metadata. 
 deletion evidence and verified dependencies are never silently dropped: if they alone
 exceed the checkpoint budget, that transaction aborts and the prior checkpoint survives.
 
+The proof set keeps the newest sufficient signed witness per event target and possible
+deleting author, or valid author/address coordinate. Unknown targets can still name old
+disk rows, so they remain relevant. Empty or proven-foreign controls do not consume this
+proof set. Access hints cover retained metadata authors, not entire absent follow graphs.
+
 Startup still restores the checkpoint before the newest 2000 event rows and view opens.
 Physical event-row pruning remains the existing 20000-row policy until durable GDSF and
 page storage are implemented. This change does not claim unified durable event retention.

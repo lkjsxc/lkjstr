@@ -7,6 +7,8 @@ use std::collections::{HashMap, HashSet};
 mod retention;
 pub use retention::MetadataAccess;
 use retention::{Entry, Stamp};
+#[path = "cache_metadata_witness.rs"]
+mod witness;
 
 pub const METADATA_KEY: &str = "verified-public-metadata-v1";
 pub const METADATA_EVENTS: usize = 4000;
@@ -66,6 +68,7 @@ pub fn merge_metadata_with_access(
         .collect();
     let rows = existing.map_or_else(Vec::new, |data| data.rows);
     let mut slots = HashMap::new();
+    let mut known = HashMap::new();
     let mut fences = HashMap::new();
     for (order, row) in rows
         .into_iter()
@@ -87,6 +90,7 @@ pub fn merge_metadata_with_access(
             row,
             stamp,
         };
+        known.insert(entry.event.id.clone(), entry.event.pubkey.clone());
         if entry.event.kind == 5 {
             fences.insert(entry.event.id.clone(), entry);
             continue;
@@ -114,10 +118,17 @@ pub fn merge_metadata_with_access(
                 .map(|id| (id, entry.event.pubkey.clone()))
         })
         .collect();
+    let witnesses = witness::select(&known, &fences);
     let entries = slots
         .into_values()
         .filter(|entry| !deleted.contains(&(entry.event.id.clone(), entry.event.pubkey.clone())))
-        .chain(fences.into_values())
+        // Unneeded controls stay in the event cache, not in the metadata proof set.
+        // Otherwise a proven foreign target could look unknown on a later write.
+        .chain(
+            fences
+                .into_values()
+                .filter(|entry| witnesses.contains(&entry.event.id)),
+        )
         .collect();
-    retention::select(entries, access, inflation)
+    retention::select(entries, access, inflation, witnesses)
 }

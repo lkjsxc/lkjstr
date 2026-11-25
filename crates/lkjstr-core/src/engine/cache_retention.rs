@@ -36,6 +36,10 @@ fn authors(row: &Row, out: &mut BTreeSet<String>) {
 
 impl Engine {
     pub(super) fn retention_inputs(&self) -> Inputs {
+        self.retention_inputs_for(None)
+    }
+
+    fn retention_inputs_for(&self, metadata: Option<&BTreeSet<String>>) -> Inputs {
         let mut own: BTreeSet<_> = self.discovery_accounts.iter().cloned().collect();
         own.extend(self.saved_retention_accounts.iter().cloned());
         own.extend(
@@ -63,7 +67,9 @@ impl Engine {
                 && let Some(target) = &view.query.target
             {
                 // This public graph is reuse context, never account or mute authority.
-                affinity.insert(target.clone(), 64);
+                if metadata.is_none_or(|authors| authors.contains(target)) {
+                    affinity.insert(target.clone(), 64);
+                }
                 for person in self
                     .store
                     .follows(target)
@@ -71,12 +77,17 @@ impl Engine {
                     .into_iter()
                     .take(6000)
                 {
-                    affinity.entry(person).or_insert(32);
+                    if metadata.is_none_or(|authors| authors.contains(&person)) {
+                        affinity.entry(person).or_insert(32);
+                    }
                 }
                 if let Some(list) = self.store.replaceable(target, 3) {
                     held.insert(list.id.clone());
                 }
             }
+        }
+        if let Some(metadata) = metadata {
+            visible.retain(|author| metadata.contains(author));
         }
         for person in &visible {
             affinity.insert(person.clone(), 64);
@@ -90,16 +101,20 @@ impl Engine {
     }
 
     /// Optimization hints and verified dependencies for the ordinary cache transaction.
-    /// Bounds follow 128 visible views, each with at most 6000 requested rows/authors.
+    /// Hints contain only resident replaceable authors; absent follow-graph members
+    /// allocate no hint entries. The replaceable store and visible views bound them.
     pub fn cache_metadata_observation(&self, now_ms: u64) -> (MetadataAccess, Vec<Record>) {
-        let input = self.retention_inputs();
+        let retained = self.store.metadata_authors();
+        let input = self.retention_inputs_for(Some(&retained));
         let mut access = MetadataAccess {
             minute: now_ms / 60_000,
             authors: input.affinity,
             pinned: BTreeSet::new(),
         };
         for owner in &input.own {
-            access.authors.insert(owner.clone(), 64);
+            if retained.contains(owner) {
+                access.authors.insert(owner.clone(), 64);
+            }
             for author in self
                 .store
                 .follows(owner)
@@ -107,7 +122,9 @@ impl Engine {
                 .into_iter()
                 .take(6000)
             {
-                access.authors.entry(author).or_insert(32);
+                if retained.contains(&author) {
+                    access.authors.entry(author).or_insert(32);
+                }
             }
             for kind in [0, 3, 10000, 10002, 10030, 10063] {
                 if let Some(event) = self.store.replaceable(owner, kind) {
@@ -136,3 +153,7 @@ impl Engine {
         (access, rows.into_values().collect())
     }
 }
+
+#[cfg(test)]
+#[path = "cache_retention_test.rs"]
+mod tests;

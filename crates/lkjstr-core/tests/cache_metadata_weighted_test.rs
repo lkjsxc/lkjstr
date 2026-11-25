@@ -142,12 +142,22 @@ fn pressure_keeps_deletion_authority_before_optional_metadata() {
 
 #[test]
 fn required_evidence_overflow_refuses_optional_admission_without_oversized_state() {
-    let owner = generate_secret_key();
     let required: Vec<_> = (0..7)
-        .map(|n| record(&event(&owner, 5, n, "x".repeat(700_000), vec![])))
+        .flat_map(|n| {
+            let owner = generate_secret_key();
+            let profile = event(&owner, 0, n * 2, r#"{"name":"known"}"#.into(), vec![]);
+            let deletion = event(
+                &owner,
+                5,
+                n * 2 + 1,
+                "x".repeat(700_000),
+                vec![vec!["e".into(), profile.id.clone()]],
+            );
+            [record(&profile), record(&deletion)]
+        })
         .collect();
-    let previous = merge_metadata(None, &required[..1]).expect("committed witness");
-    assert!(merge_metadata(Some(&previous), &required[1..]).is_err());
+    let previous = merge_metadata(None, &required[..2]).expect("committed witness");
+    assert!(merge_metadata(Some(&previous), &required[2..]).is_err());
     assert!(previous.len() <= METADATA_BYTES);
     assert_eq!(
         metadata_rows(Some(&previous))
