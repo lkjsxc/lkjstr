@@ -170,6 +170,7 @@ The bounded resolution and representative policy follow [interface-acts.md](inte
 - Protocol 15 adds absolute `Anchor.at` and `timeWindow` for [absolute windows and edge coverage](absolute-time-window.md).
 - Protocol 15 Their Home uses `loading | partial | stalled | end` on both `timeWindow` edges for bounded relay reads.
 - Absolute-time windows carry optional `NoteRow.readingAt`, the verified slot time in Unix milliseconds, preserved through Show and Hide.
+- Optional `Timeline.positions[].at` gives the timestamp of the original note or repost that placed the row at that ordinal.
 Mock-only `EngineConfig.mock`: `slow` signs a note late and delays its answers, `stress` makes relay text absurdly long; the real engine ignores it.
 
 ## Public signing timing and feed status

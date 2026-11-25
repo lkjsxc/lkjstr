@@ -188,35 +188,34 @@ pub(super) fn select(store: &Store, q: &Query, collapse_acts: bool) -> Vec<Event
     let mut seen = std::collections::HashSet::new();
     events
         .into_iter()
-        .filter_map(|e| {
-            if e.kind == 6
-                && q.source != Source::Notifications
-                && q.filters.show.as_deref() != Some("reposts")
-            {
-                let target = super::acts::target(&e).and_then(|id| store.get(&id));
-                if target.as_ref().is_some_and(|t| {
-                    t.kind == 42
-                        && matches!(
-                            q.source,
-                            Source::Home
-                                | Source::TheirHome
-                                | Source::Global
-                                | Source::Relay
-                                | Source::Hashtag
-                                | Source::Search
-                                | Source::List
-                        )
-                }) {
-                    None
-                } else {
-                    target.or(Some(e))
-                }
-            } else {
-                Some(e)
-            }
-        })
+        .filter_map(|event| collapse_repost(store, q, event))
         .filter(|e| policy(e.kind).openable && seen.insert(e.id.clone()))
         .collect()
+}
+
+pub(super) fn collapse_repost(store: &Store, q: &Query, event: Event) -> Option<Event> {
+    if event.kind != 6
+        || q.source == Source::Notifications
+        || q.filters.show.as_deref() == Some("reposts")
+    {
+        return Some(event);
+    }
+    let target = super::acts::target(&event).and_then(|id| store.get(&id));
+    if target.as_ref().is_some_and(|target| target.kind == 42)
+        && matches!(
+            q.source,
+            Source::Home
+                | Source::TheirHome
+                | Source::Global
+                | Source::Relay
+                | Source::Hashtag
+                | Source::Search
+                | Source::List
+        )
+    {
+        return None;
+    }
+    target.or(Some(event))
 }
 pub(super) use super::query_hidden::matches_note;
 pub use super::query_hidden::{hidden, hidden_with_lists};

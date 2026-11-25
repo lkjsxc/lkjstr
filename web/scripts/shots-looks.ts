@@ -6,23 +6,24 @@ type Scene = (name: string, path: string, act: (page: Page) => Promise<void>) =>
 const assert = (ok: boolean, why: string) => {
   if (!ok) throw new Error(why);
 };
-export async function looksShots(scene: Scene, statsWord: string) {
-  await scene('looks-rail', '/', async (page) => {
-    const rail = page.locator('.view[data-kind="home"] .time-rail');
+export async function looksShots(scene: Scene, statsWord: string, phone: boolean) {
+  const railKind = phone ? 'profile' : 'home';
+  await scene('looks-rail', phone ? '/p/aoi' : '/', async (page) => {
+    const rail = page.locator(`.view[data-kind="${railKind}"]:visible .time-rail`);
     await rail.waitFor({ state: 'visible' });
     assert(
-      (await rail.locator('.time-place').boundingBox())?.width === 16,
-      'place line spans only dots',
+      (await rail.locator('.time-grip').boundingBox())?.width === 6,
+      'resting grip spans only dots',
     );
     assert((await rail.locator('.time-year.current').count()) === 1, 'one current year');
     const overlap = await rail.evaluate((el) => {
-      const line = el.querySelector('.time-place')!.getBoundingClientRect();
+      const grip = el.querySelector('.time-grip')!.getBoundingClientRect();
       return [...el.querySelectorAll('.time-year')].some((year) => {
         const r = year.getBoundingClientRect();
-        return r.right > line.left && r.left < line.right;
+        return r.right > grip.left && r.left < grip.right;
       });
     });
-    assert(!overlap, 'year column does not intersect place mark');
+    assert(!overlap, 'year column does not intersect grip');
   });
   await scene('looks-rows', '/', async (page) => {
     const row = page

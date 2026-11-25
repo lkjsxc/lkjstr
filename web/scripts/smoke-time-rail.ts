@@ -12,6 +12,34 @@ export async function railSmoke(
   const rail = page.locator(`${feed} .time-rail`);
   await rail.waitFor({ state: 'visible' });
   check('Home has a time rail', await rail.isVisible());
+  const grip = rail.locator('.time-grip');
+  const geometry = () =>
+    grip.evaluate((el) => {
+      const rail = el.closest<HTMLElement>('.time-rail')!;
+      const view = el.closest<HTMLElement>('.view')!;
+      const box = el.getBoundingClientRect();
+      return {
+        railWidth: rail.offsetWidth,
+        viewWidth: view.clientWidth,
+        overflow: view.scrollWidth - view.clientWidth,
+        opacity: Number(getComputedStyle(el).opacity),
+        cursor: getComputedStyle(rail).cursor,
+        center: box.y + box.height / 2,
+        height: box.height,
+        width: box.width,
+      };
+    });
+  await page.mouse.move(10, 10);
+  const rest = await geometry();
+  check(
+    'Home shows a resting grip within a wide tile',
+    rest.viewWidth >= 520 &&
+      rest.railWidth === 56 &&
+      rest.overflow === 0 &&
+      rest.height === 32 &&
+      rest.width === 6 &&
+      rest.opacity > 0,
+  );
   const markBox = await rail.locator('.time-marks').boundingBox();
   check('month marks have height for the honest-end fade', (markBox?.height ?? 0) > 100);
   const top = () =>
@@ -28,28 +56,47 @@ export async function railSmoke(
   const box = await rail.boundingBox();
   if (!box) throw new Error('no rail box');
   const x = box.x + box.width - 6;
+  await page.mouse.move(x, rest.center);
+  const hovered = await geometry();
+  check(
+    'hover highlights the visible grip',
+    hovered.cursor === 'grab' && hovered.opacity > rest.opacity,
+  );
   await page.mouse.move(x, box.y + 9);
   await page.mouse.down();
   await page.mouse.move(x, box.y + box.height - 9, { steps: 8 });
   await page.waitForTimeout(180);
+  const held = await geometry();
+  check(
+    'drag keeps the grip under the pointer without horizontal overflow',
+    held.cursor === 'grabbing' &&
+      held.opacity === 1 &&
+      held.overflow === 0 &&
+      Math.abs(held.center - (box.y + box.height - held.height / 2)) < 1,
+  );
   check('held rail says the pointer time', await rail.locator('.scrub').isVisible());
   await page.mouse.up();
-  await page.waitForFunction((feed) => {
-    const el = document.querySelector(feed)!;
-    const tick = el.querySelector<HTMLElement>('.time-return');
-    return tick && !tick.hidden;
-  }, feed);
+  await rail.locator('.time-return').waitFor({ state: 'visible' });
   const oldest = Number((await rail.locator('.time-year').last().textContent()) ?? 0);
-  await page.waitForFunction(
-    ({ feed, oldest }) => {
-      const el = document.querySelector(feed)!;
-      const n = [...el.querySelectorAll('.list > .note')].find(
-        (n) => n.getBoundingClientRect().bottom > el.getBoundingClientRect().top + 1,
+  await page
+    .waitForFunction(
+      ({ feed, oldest }) => {
+        const el = document.querySelector(feed)!;
+        const n = [...el.querySelectorAll('.list > .note')].find(
+          (n) => n.getBoundingClientRect().bottom > el.getBoundingClientRect().top + 1,
+        );
+        return Number(n?.querySelector('time')?.getAttribute('title')?.slice(0, 4)) === oldest;
+      },
+      { feed, oldest },
+    )
+    .catch(async (cause) => {
+      throw new Error(
+        `drag to oldest year ${oldest} left the top row at ${JSON.stringify(await top())}`,
+        {
+          cause,
+        },
       );
-      return Number(n?.querySelector('time')?.getAttribute('title')?.slice(0, 4)) === oldest;
-    },
-    { feed, oldest },
-  );
+    });
   const jumped = await top();
   check(
     'drag to oldest year changes the top row year',

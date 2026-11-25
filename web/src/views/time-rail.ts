@@ -31,14 +31,12 @@ export function mountTimeRail(o: {
   // A zero-height sticky holder survives WM reparenting and scrolls independently of the filter.
   const rail = h('div', { class: 'time-rail', hidden: true, 'aria-hidden': 'true' });
   const marks = h('div', { class: 'time-marks' });
-  const line = h('div', { class: 'time-place' });
-  // The grip: the place line made graspable while the rail is in use (scrolled, held, loading or just landed).
-  const grip = h('div', { class: 'time-grip', hidden: true });
+  const grip = h('div', { class: 'time-grip' });
   const hoverLine = h('div', { class: 'time-hover', hidden: true });
   const tick = h('div', { class: 'time-return', hidden: true });
   const label = h('div', { class: 'scrub', hidden: true });
   const live = h('div', { class: 'vh', 'aria-live': 'polite' }); // where a key jump landed
-  rail.append(marks, hoverLine, line, grip, tick, label);
+  rail.append(marks, hoverLine, grip, tick, label);
   const pin = h('div', { class: 'time-pin' }, rail, live);
   el.prepend(pin);
   let telling = false; // the reader is scrolling (C1)
@@ -68,6 +66,7 @@ export function mountTimeRail(o: {
     (topRow(el, list, (key) => o.rows().find((r) => r.key === key)) as Row | undefined) ??
     o.rows().findLast((r) => r.kind === 'note' || r.kind === 'notification');
   const position = (key: string | undefined) => data?.positions.find((p) => p.key === key);
+  const readingAt = (row: Row | undefined): number => position(row?.key)?.at ?? rowTime(row);
   const keyAt = (p: TimePlace) =>
     data?.positions.find((r) => r.month === p.month && r.offset === p.offset)?.key;
   const days = () => railDays(shape, zone);
@@ -114,7 +113,7 @@ export function mountTimeRail(o: {
   /** The full time of a loaded note; else its local day; else nothing. Never a minute it does not know. */
   const textFor = (p: TimePlace): string => {
     const key = keyAt(p);
-    const at = rowTime(key ? o.rows().find((r) => r.key === key) : undefined);
+    const at = readingAt(key ? o.rows().find((r) => r.key === key) : undefined);
     return at ? timeText(at) : dayText(days(), p);
   };
   /** The note under `y`, or the period of a label whose centre is within 6px. */
@@ -130,7 +129,7 @@ export function mountTimeRail(o: {
       const day = textFor(s.pending);
       text = day && `${day}${late ? ' …' : ''}`;
       y = 8 + noteToPlace(bands, s.pending);
-    } else if (telling || landed) text = timeText(rowTime(first()));
+    } else if (telling || landed) text = timeText(readingAt(first()));
     else if (hoverY !== undefined) (text = textFor(at(hoverY))), (y = hoverY + 8);
     if (landed && speak && text) (speak = false), (live.textContent = text);
     label.hidden = !text;
@@ -176,17 +175,15 @@ export function mountTimeRail(o: {
     const row = first();
     const p = position(row?.key);
     const year = local
-      ? new Date(rowTime(row)).getFullYear()
+      ? new Date(readingAt(row)).getFullYear()
       : new Date(p?.month ?? data?.months[0]?.at ?? 0).getUTCFullYear();
     for (const number of marks.querySelectorAll('.time-year'))
       number.classList.toggle('current', number.textContent === String(year));
-    line.style.top = `${8 + (p ? noteToPlace(bands, p) : 0)}px`;
-    tell(Number.parseFloat(line.style.top));
     // Held, the grip stays under the pointer, so the drag is direct; the list follows as its seeks land.
-    grip.hidden = !(held || telling || landed || s.pending);
-    const gripY = held ? 8 + pointerY : Number.parseFloat(line.style.top);
-    grip.style.top = `${Math.min(el.clientHeight - 16, Math.max(16, gripY))}px`; // whole at the ends
-    rail.classList.toggle('awake', !grip.hidden);
+    const gripY = 8 + (held ? pointerY : p ? noteToPlace(bands, p) : 0);
+    const centre = Math.min(el.clientHeight - 16, Math.max(16, gripY));
+    grip.style.top = `${centre}px`;
+    tell(centre);
     tick.hidden = !s.back;
     if (s.back) tick.style.top = `${8 + noteToPlace(bands, s.back.time)}px`;
     const pointed = held ? pointerY : hoverY;

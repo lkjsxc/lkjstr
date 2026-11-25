@@ -20,7 +20,7 @@ impl Store {
     pub(super) fn record_insert(&mut self, event: &NostrEvent) {
         let revision = self.revision + 1;
         // Metadata can change follows, mutes or resolved author filters. A late repost
-        // target can change whether an existing wrapper requires native scrolling.
+        // target can add a row at an existing wrapper's position.
         if is_replaceable_kind(event.kind)
             || event.kind == 5
             || self.by_tag_e.get(&event.id).is_some_and(|ids| {

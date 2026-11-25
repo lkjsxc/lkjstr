@@ -10,10 +10,9 @@ return tick. Index and rules: [interface-specs.md](interface-specs.md). The look
 
 ## Reach
 
-Today the engine refuses the rail for a Home with any resolved repost, and for a list whose cache was evicted or cut
-short (time-rail.md, native fallbacks). Most real Homes are therefore native lists: they get C1 at once, but C2
-and C3 reach them only after an engine slice that counts a repost wrapper at its repost time (as `rowTime` already
-reads it) and keeps the rail across eviction. That slice comes before `days` in value.
+Note-only Home can show the rail with reposts. Each note takes the time of the original or repost that places it
+in that view. Home with Notifications set to Show, including the phone default, uses native scrolling and C1.
+Lists whose cache was evicted or cut short also use native scrolling. See the fallbacks in [time-rail.md](time-rail.md).
 
 ## Shared rules
 
@@ -25,7 +24,7 @@ reads it) and keeps the rail across eviction. That slice comes before `days` in 
   uses relative time (even with the relative setting on) and never shows a minute it does not know.
 - The reading place is the first note or notification row whose bottom is below the tile's top (the existing
   `first()`). A repost reads as the repost's time (`rowTime`).
-- No motion: things appear and disappear in one frame. Nothing new is coloured: `--accent` for the place line,
+- No motion: things appear and disappear in one frame. Nothing new is coloured: `--accent` for the grip,
   `--faint` and `--fg` for marks, the existing `.scrub` box (raised, hairline, 6px corners, float shadow).
 - The rail stays `aria-hidden`. The list stays the keyboard scroller; the keys in C3 are the keyboard's way to the
   same jumps.
@@ -43,7 +42,7 @@ One label per list, the existing `.scrub` element. It reads `yyyy/mm/dd hh:mm` f
   note at the head, a tab opening or moving tiles.
 - **Gone.** 1000ms after the last scroll, unless a rail press is held or a jump is still loading (C3).
 - **Where.** Its vertical centre sits on the thumb's centre, clamped 4px inside the tile. In a rail list the thumb is
-  the place line, and the label's right edge is 4px left of the rail (narrow and wide alike). In a list with a
+  the grip, and the label's right edge is 4px left of the rail (narrow and wide alike). In a list with a
   native scrollbar the label's right edge is 4px left of the scrollbar, and its centre is at
   `scrollTop / (scrollHeight - clientHeight) * (clientHeight - thumb) + thumb / 2`, where
   `thumb = max(24, clientHeight^2 / scrollHeight)`.
@@ -51,7 +50,7 @@ One label per list, the existing `.scrub` element. It reads `yyyy/mm/dd hh:mm` f
   profile notes and media, channels, and the native fallbacks such as Notifications. Threads, people lists and
   bookmarks are not in time order and have no label.
 - It sits above notes and rail marks and below menus. It takes no press (`pointer-events: none`).
-- Its width only changes when its text changes, because the digits are tabular. On a phone, it follows the place line
+- Its width only changes when its text changes, because the digits are tabular. On a phone, it follows the grip
   during touch and momentum scrolls.
 
 ## C2 The wide scrubber
@@ -90,10 +89,9 @@ Mouse, pen and touch share one path: pointer events on the rail, with capture.
   Any other target uses the existing window seek with the same 60 rows on each side, which loads around the target.
   Either way one return tick is left at the place the press started, and a press on the tick returns to the exact row
   and offset.
-- **Grip.** While the label shows (scrolled, held, loading or landed) the place line is drawn as the grip: a 6x32px
-  `--accent` pill centred in the rail's rightmost 16px, clamped 16px inside the tile, with no press of its own (the
-  whole rail takes it). While held it stands at the pointer, not at the list's place, so a drag is direct and the
-  label sits beside it. Built 2026-11-25 from the owner's request for an Immich-style scrubber.
+- **Grip.** A visible rail always shows a 6x32px `--accent` pill centred in its rightmost 16px and clamped 16px
+  inside the tile. The whole rail accepts a press. Hover and hold highlight the grip. During a drag it follows
+  the pointer with the time label beside it.
 - **Drag.** The label follows the pointer. Seeks run at most once per 80ms and one at a time: while one is out, only
   the latest target waits, and it is sent once the answer is drawn. So a target that arrives late never pulls the list
   back to an earlier one. While a press is held the bands and marks stay frozen, so a Timeline answer that arrives
@@ -157,7 +155,7 @@ Each check runs on mock fixtures, plus the real-engine smoke where it already co
    time on does not change it.
 2. Trigger. Wheel, touch, key and thumb scrolls show the label, and it goes 1000ms after the last one. Restoring a
    tab, new notes at the head, media growing under the keeper, and opening or moving a tab never show it.
-3. Position. The label's centre is within 1px of the place line's centre, or of the native thumb's. It stays
+3. Position. The label's centre is within 1px of the grip's centre, or of the native thumb's. It stays
    inside the tile, and its box keeps the same width while only digits change.
 4. Marks. At 1440, ten days across a month start read `2026`, `11/05`, `04` ... `01`, `10/31`, `30` ... No two labels
    are under 14px apart, and the oldest year is present. At 390 there are no day labels. With 401 occupied days there

@@ -1,5 +1,5 @@
 // The scroll time label (docs/interface-time.md C1), on the mock: a wheel, a touch-free key or a dragged thumb shows
-// `yyyy/mm/dd HH:mm` beside the thumb (the rail's place line, or the native scrollbar's thumb), inside the tile; it
+// `yyyy/mm/dd HH:mm` beside the thumb (the rail grip or the native scrollbar's thumb), inside the tile; it
 // goes a second after the last scroll; scrolls the list makes itself (a reload, a restored place, a script) show
 // nothing. On a desktop and a phone.
 import type { Page } from 'playwright-core';
@@ -22,9 +22,7 @@ const said = (page: Page) =>
     if (!view || !label) return null;
     const box = view.getBoundingClientRect();
     const r = label.getBoundingClientRect();
-    const line = view
-      .querySelector('.time-rail:not([hidden]) .time-place')
-      ?.getBoundingClientRect();
+    const line = view.querySelector('.time-rail:not([hidden]) .time-grip')?.getBoundingClientRect();
     const h = view.clientHeight;
     const thumb = Math.max(24, (h * h) / view.scrollHeight);
     const room = view.scrollHeight - h;

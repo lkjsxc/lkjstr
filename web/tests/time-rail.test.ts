@@ -249,19 +249,19 @@ it('draws a hover line and label for a fine pointer, and keeps marks still while
   expect(marks.innerHTML).not.toBe(before);
 });
 
-it('shows the grip under a held finger, then hides it a second after the jump lands', () => {
+it('keeps the grip visible at rest, under a held finger and after the jump label fades', () => {
   const x = setup();
   const grip = x.el.querySelector<HTMLElement>('.time-grip')!;
-  expect(grip.hidden).toBe(true); // at rest only the place line shows
+  expect(x.track.hidden || grip.hidden).toBe(false);
   x.pointer(x.track, 'pointerdown', 100, 'touch');
   expect(grip.hidden).toBe(false);
-  expect(grip.style.top).toBe('100px'); // under the finger, not where the list is yet
-  expect(x.track.classList.contains('awake')).toBe(true);
+  expect(grip.style.top).toBe('100px');
+  expect(x.track.classList.contains('held')).toBe(true);
   x.pointer(x.track, 'pointermove', 2, 'touch');
-  expect(grip.style.top).toBe('16px'); // whole at the ends
+  expect(grip.style.top).toBe('16px');
   x.pointer(x.track, 'pointerup', 2, 'touch');
   expect(grip.hidden).toBe(false);
   vi.advanceTimersByTime(1000);
-  expect(grip.hidden).toBe(true);
-  expect(x.track.classList.contains('awake')).toBe(false);
+  expect(grip.hidden).toBe(false);
+  expect(x.track.classList.contains('held')).toBe(false);
 });

@@ -45,7 +45,7 @@ export function railInput(o: {
   const { rail } = o;
   let pointer: number | undefined;
   const down = (e: PointerEvent): void => {
-    if (e.button !== 0) return;
+    if (e.button !== 0 || pointer !== undefined) return;
     e.preventDefault();
     o.el.focus({ preventScroll: true });
     if (e.target === o.tick) return void o.back(false);
@@ -81,6 +81,7 @@ export function railInput(o: {
   rail.addEventListener('pointermove', move);
   rail.addEventListener('pointerup', up);
   rail.addEventListener('pointercancel', up);
+  rail.addEventListener('lostpointercapture', up);
   rail.addEventListener('pointerleave', leave);
   // Capture runs before the list's own Home (to its head) and the note keys.
   window.addEventListener('keydown', key, true);
@@ -91,6 +92,7 @@ export function railInput(o: {
       ['pointermove', move],
       ['pointerup', up],
       ['pointercancel', up],
+      ['lostpointercapture', up],
       ['pointerleave', leave],
     ] as const)
       rail.removeEventListener(type, fn as EventListener);

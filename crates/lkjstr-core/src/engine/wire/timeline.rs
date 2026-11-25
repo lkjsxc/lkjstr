@@ -18,13 +18,18 @@ pub(super) struct Index {
     // Built incrementally, newest first; month counters and lookup avoid a final full-store pass.
     keys: BTreeMap<u64, Vec<String>>,
     previous: BTreeMap<u64, Vec<String>>,
-    positions: BTreeMap<String, (u64, usize)>,
+    positions: BTreeMap<String, (u64, usize, u64)>,
     last: Option<Value>,
     newest: Option<u64>,
     oldest: u64,
     days: Days,
 }
 impl Index {
+    fn position(&self, key: &str) -> Option<Value> {
+        let (month, offset, at) = self.positions.get(key)?;
+        Some(json!({"key":key,"month":month,"offset":offset,"at":at}))
+    }
+
     pub(super) fn key(&self, month: u64, offset: usize) -> Option<String> {
         let keys = if self.done {
             &self.keys
@@ -127,17 +132,15 @@ impl Session {
                 {
                     continue;
                 }
-                // Unresolved repost wrappers have no displayed row; ordinary windows discard them too.
-                if event.kind == 6
-                    && lkjstr_protocol::tags::tag_values(event, "e")
-                        .last()
-                        .and_then(|id| e.store.get(id))
-                        .is_none()
+                let Some(row) = query::collapse_repost(&e.store, &q, event.clone()) else {
+                    continue;
+                };
+                // The first matching original or wrapper owns the row, in the same order as the window.
+                if (event.kind == 6 && row.id == event.id) || index.positions.contains_key(&row.id)
                 {
                     continue;
                 }
-                // Collapsed repost wrappers can display a target at a different time. Keep native scrolling.
-                if !matches!(event.kind, 1 | 42) {
+                if !matches!(row.kind, 1 | 42) {
                     index.supported = false;
                     index.done = true;
                     break;
@@ -147,9 +150,9 @@ impl Session {
                 index.oldest = time;
                 let at = month_start(event.created_at.min(now / 1000));
                 let keys = index.keys.entry(at).or_default();
-                index.positions.insert(event.id.clone(), (at, keys.len()));
                 let offset = keys.len();
-                keys.push(event.id.clone());
+                index.positions.insert(row.id.clone(), (at, offset, time));
+                keys.push(row.id.clone());
                 index.days.count(&*e.calendar, time.min(now), at, offset);
             }
             if batch.len() < 256 {
@@ -170,17 +173,13 @@ impl Session {
             .get(sub)
             .into_iter()
             .flatten()
-            .filter_map(|r| {
-                let key = r["key"].as_str()?;
-                let (month, offset) = index.positions.get(key)?;
-                Some(json!({"key":key,"month":month,"offset":offset}))
-            })
+            .filter_map(|r| index.position(r["key"].as_str()?))
             .collect();
         if let Some(key) = self.return_keys.get(sub)
-            && let Some((month, offset)) = index.positions.get(key)
+            && let Some(position) = index.position(key)
             && !positions.iter().any(|p| p["key"].as_str() == Some(key))
         {
-            positions.push(json!({"key":key,"month":month,"offset":offset}));
+            positions.push(position);
         }
         // Exhaustion is engine policy; a short local window says nothing about relay history.
         let older = !e

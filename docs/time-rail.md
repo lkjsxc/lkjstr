@@ -15,7 +15,7 @@ months have no interval. Future timestamps join the current UTC month;
 epoch zero remains January 1970. Marks are planned in `time-marks.ts`: the
 oldest year label first, then years, months and days newest first, then dots.
 
-`time-rail.ts` uses this map for marks, pointer targets, the place line and
+`time-rail.ts` uses this map for marks, pointer targets, the grip and
 the return tick. The engine supplies positions for the current window.
 Loaded targets scroll normally; other targets use the existing window input
 with a month and note ordinal. The existing keeper restores anchors and
@@ -30,12 +30,12 @@ is reserved before marks arrive: 56px at 520px tile width, otherwise 16px.
 The first frame follows the engine's last answer for the same tab kind on
 this device (`lkjstr:rails`), so a refused list starts at native width. A
 refusal holds for the page's session; an acceptance without months is no
-answer. Narrow year labels appear over content on hover/hold; touch has a
-28px hit area. While in use the place line is drawn as a grip pill that a
-held pointer carries (interface-time.md C3). No animation is used. The
+answer. Narrow year labels appear over content on hover or hold. Touch has a
+28px hit area. A visible rail always shows the grip pill. Hover and hold
+highlight it, and it follows the held pointer (interface-time.md C3). The
 rail is aria-hidden and the original list remains the keyboard scroller. A
 nonoverflowing list hides the rail; one occupied month shows only the
-place line. Unexhausted relay history fades the lower marks. Scrolling to
+grip. Unexhausted relay history fades the lower marks. Scrolling to
 the local end keeps the existing history path.
 
 ## Local days
@@ -71,13 +71,18 @@ window renderer and history scheduler, not a second feed implementation.
 
 ## Deliberate native fallbacks
 
-The real engine retains native scrolling for grouped notifications, feeds
-with notifications mixed in, signed-out Global's contextual spam policy,
+The real engine retains native scrolling for grouped notifications and any
+Home with its Notifications filter set to Show, including the default phone
+Home. That projection interleaves grouped notification keys with notes by
+their original time. It needs an ordinal index for the combined projection.
+Widening a tile changes only the number of marks and labels it can show.
+Native scrolling also covers signed-out Global's contextual spam policy,
 repost/reaction profile kinds, unhydrated disk history beyond the newest
-2000-event startup cache, cache-queue loss or store retention eviction, and
-matching resolved repost wrappers whose
-collapsed target can break chronological order. Unresolved wrappers have no
-displayed row and are ignored. Bookmarks preserve list-owner order, people
+2000-event startup cache, cache-queue loss and store retention eviction.
+In a note-only Home, the same original or resolved repost that earns a row
+its place owns the ordinal and its timestamp. Each displayed note counts
+once. Unresolved wrappers have no displayed row and are ignored.
+Bookmarks preserve list-owner order, people
 lists and threads are not chronological note feeds. Mock search results that
 include people also retain native scrolling. These paths do not advertise
 an approximate count or offer unsupported seeks. Normal Home, signed-in

@@ -1,6 +1,6 @@
 #![allow(clippy::expect_used)]
 mod engine_review_support;
-use engine_review_support::{accept, event};
+use engine_review_support::{accept, event, output};
 use lkjstr_core::engine::{Engine, wire::Session};
 use serde_json::{Value, json};
 
@@ -130,5 +130,56 @@ fn resolving_a_repost_target_invalidates_an_already_scanned_wrapper() {
     }
     assert_eq!(published.len(), 1);
     let data = serde_json::to_value(&published[0]).expect("timeline");
-    assert_eq!(data["timeline"]["supported"], false);
+    assert_eq!(data["timeline"]["supported"], true);
+    assert_eq!(data["timeline"]["months"][0]["count"], 7001);
+}
+
+#[test]
+fn home_counts_a_collapsed_repost_once_at_the_time_that_placed_it_and_seeks_to_its_target() {
+    let mut e = Engine::new();
+    let mut s = Session::default();
+    let original = event(1600000000, 1, "reposted note", vec![]);
+    let other = event(1700000000, 1, "ordinary note", vec![]);
+    let tags = vec![vec!["e".into(), original.id.clone()]];
+    let older = event(1650000000, 6, "", tags.clone());
+    let newer = event(1750000000, 6, "", tags);
+    let notes = [&original, &other, &older, &newer];
+    let follows = event(
+        1760000000,
+        3,
+        "",
+        notes
+            .iter()
+            .map(|note| vec!["p".into(), note.pubkey.clone()])
+            .collect(),
+    );
+    for event in notes.into_iter().chain([&follows]) {
+        e.store.insert(event.clone(), None);
+    }
+    accept(
+        &mut s,
+        &mut e,
+        json!({"t":"open","sub":"s","query":{"source":"home","account":follows.pubkey}}),
+        0,
+    );
+    output(&mut s, &mut e);
+    let data = (0..20)
+        .find_map(|turn| s.timeline_tick(&e, NOW + turn * 25).pop())
+        .map(|out| serde_json::to_value(out).expect("timeline"))
+        .expect("timeline answer");
+    let data = &data["timeline"];
+    assert_eq!(data["supported"], true);
+    assert_eq!(data["months"].as_array().expect("months").len(), 2);
+    assert_eq!(data["positions"][0]["key"], original.id);
+    assert_eq!(data["positions"][0]["at"], newer.created_at * 1000);
+    assert_eq!(data["positions"][1]["key"], other.id);
+    accept(
+        &mut s,
+        &mut e,
+        json!({"t":"window","sub":"s","anchor":{"month":data["months"][0]["at"],"offset":0},"before":0,"after":1}),
+        0,
+    );
+    let rows = output(&mut s, &mut e);
+    let rows = rows.iter().find(|row| row["t"] == "rows").expect("rows");
+    assert_eq!(rows["rows"][0]["key"], original.id);
 }

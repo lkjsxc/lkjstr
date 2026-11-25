@@ -100,32 +100,27 @@ fn invalidation_is_debounced_and_close_releases_counts() {
     assert!(s.timeline_tick(&e, 1800000010000).is_empty());
 }
 #[test]
-fn unsupported_grouping_and_nonmonotonic_reposts_keep_native_scrollbars() {
-    for source in ["notifications", "thread", "bookmarks", "list", "global"] {
-        let e = Engine::new();
+fn grouped_and_non_note_sources_keep_native_scrollbars() {
+    let owner = event(1700000000, 1, "owner", vec![]);
+    for query in [
+        json!({"source":"notifications","account":owner.pubkey}),
+        json!({"source":"home","account":owner.pubkey,"notifications":true}),
+        json!({"source":"thread"}),
+        json!({"source":"bookmarks"}),
+        json!({"source":"list"}),
+        json!({"source":"global"}),
+    ] {
+        let mut e = Engine::new();
         let mut s = Session::default();
-        let mut engine = e;
+        e.store.insert(owner.clone(), None);
         accept(
             &mut s,
-            &mut engine,
-            json!({"t":"open","sub":"s","query":{"source":source}}),
+            &mut e,
+            json!({"t":"open","sub":"s","query":query}),
             0,
         );
-        assert_eq!(timeline(&mut s, &engine, 1800000000000)["supported"], false);
+        assert_eq!(timeline(&mut s, &e, 1800000000000)["supported"], false);
     }
-    let mut e = Engine::new();
-    let mut s = Session::default();
-    let target = event(1600000000, 1, "target", vec![]);
-    let note = event(1700000000, 6, "", vec![vec!["e".into(), target.id.clone()]]);
-    e.store.insert(target, None);
-    e.store.insert(note.clone(), None);
-    accept(
-        &mut s,
-        &mut e,
-        json!({"t":"open","sub":"s","query":{"source":"home","account":note.pubkey}}),
-        0,
-    );
-    assert_eq!(timeline(&mut s, &e, 1800000000000)["supported"], false);
 }
 #[test]
 fn all_retained_rows_beyond_six_thousand_are_counted_and_seekable() {

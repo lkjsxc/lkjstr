@@ -1173,6 +1173,8 @@ export type Timeline = {
     readonly key: RowKey;
     readonly month: Millis;
     readonly offset: number;
+    /** Time of the matching original or repost that placed this row in the window. */
+    readonly at?: Millis;
   }[];
   readonly supported: boolean;
   readonly older: boolean;

@@ -140,7 +140,7 @@ try {
                 throw new Error('horizontal overflow');
             });
         await genericShots(scene);
-        await looksShots(scene, lang === 'ja' ? '統計' : 'Stats');
+        await looksShots(scene, lang === 'ja' ? '統計' : 'Stats', width < 500);
         await emojiShots(scene);
         await emojiCustomShots(scene);
         await emojiCollisionShots(scene);
