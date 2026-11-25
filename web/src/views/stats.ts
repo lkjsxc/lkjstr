@@ -6,12 +6,12 @@ import { loadViewState, saveViewState } from '../shared/view-state.ts';
 import type { ViewEnv } from './registry.ts';
 import { COLUMNS, PUBLISH, PUBLISH_KEYS, type SortKey } from './stats-columns.ts';
 import { compoundTitle, createStatsDetails, relayName } from './stats-details.ts';
+import { watchStats } from './stats-poll.ts';
 import { requestTable, routingCells, routingValue } from './stats-routing.ts';
 
 type Relay = EngineStats['relays'][number];
 export type Mark = 'failing' | 'silent' | 'slow';
 type Sort = { by: SortKey; up: boolean };
-const EVERY_MS = 2000;
 const SLOW_MS = 1000;
 const NONE = '—';
 
@@ -254,25 +254,14 @@ export function mountStats(el: HTMLElement, env: ViewEnv): () => void {
     });
   }
 
-  let timer: ReturnType<typeof setInterval> | undefined;
-  let gone = false;
-  const ask = async (): Promise<void> => {
-    const s = await env.engine.stats();
-    if (gone) return;
+  const watch = watchStats(env.engine, (s) => {
     if (s) return draw(s);
     // No answer: what is on screen is no longer current, and is not left standing as if it were.
     table.hidden = true;
     state.hidden = false;
     put(state, t('stats.none'));
     el.classList.add('off');
-  };
-  const watch = (on: boolean): void => {
-    clearInterval(timer);
-    timer = undefined;
-    if (!on) return;
-    void ask();
-    timer = setInterval(() => void ask(), EVERY_MS);
-  };
+  });
   el.classList.add('pad', 'statsv');
   el.tabIndex = -1;
   el.replaceChildren(
@@ -281,12 +270,14 @@ export function mountStats(el: HTMLElement, env: ViewEnv): () => void {
     h('div', { class: 'stats-table' }, table),
     requests.node,
   );
-  env.menu(() => [{ label: t('view.relays'), run: () => env.open('relays') }]);
-  const off = env.visible.subscribe(watch);
-  watch(env.visible.get());
+  env.menu(() => [
+    { label: t('view.relays'), run: () => env.open('relays') },
+    { label: t('view.orchestration'), run: () => env.open('orchestration') },
+  ]);
+  const off = env.visible.subscribe((on) => watch.show(on));
+  watch.show(env.visible.get());
   return () => {
-    gone = true;
     off();
-    clearInterval(timer);
+    watch.dispose();
   };
 }

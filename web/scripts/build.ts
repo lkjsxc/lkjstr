@@ -33,6 +33,7 @@ const CSS = [
   'people.css',
   'pages.css',
   'stats.css',
+  'orch.css',
   'channels.css',
   'dm.css',
   'emoji.css',
