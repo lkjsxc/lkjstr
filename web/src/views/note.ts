@@ -4,11 +4,11 @@ import type { NoteRow } from '../engine/protocol.ts';
 import { type Child, h } from '../shared/h.ts';
 import { hasKey, t } from '../shared/i18n.ts';
 import { icon } from '../shared/icons.ts';
-import { readNoteState, writeNoteState } from '../shared/note-state.ts';
+import { readNoteState } from '../shared/note-state.ts';
 import { patchActContext } from './act-context.ts';
 import { linkCards } from './link-cards.ts';
 import { actionRow, reactionChips } from './note-actions.ts';
-import { stableNoteWidths } from './note-fit-geometry.ts';
+import { fitNote } from './note-fold.ts';
 import { genericBody } from './note-generic.ts';
 import { hiddenRow, shownLine, warned } from './note-hidden.ts';
 import { mediaGrid } from './note-media.ts';
@@ -18,22 +18,6 @@ import { deliveryMark, timeOf } from './note-time.ts';
 import { stamp } from './note-via.ts';
 import { how, nameButton, nipMark, noteFace, plainName, segments } from './parts.ts';
 import type { ViewEnv } from './registry.ts';
-
-/** Long text folds by whole lines; the button appears only when something is actually cut off. */
-function fold(text: HTMLElement): void {
-  const more = h('button', { class: 'lnk fold' }, t('note.more'));
-  more.addEventListener('click', (e) => {
-    e.stopPropagation();
-    text.classList.add('open');
-    const note = text.closest<HTMLElement>('[data-note]');
-    if (note?.dataset.instance && note.dataset.note)
-      writeNoteState(note.dataset.instance, note.dataset.note, { unfolded: true });
-    text.closest('.content')?.classList.remove('folded');
-    more.remove();
-  });
-  text.closest('.content')?.classList.add('folded');
-  text.after(more);
-}
 
 const drawnBy = new WeakMap<HTMLElement, string>(); // the author each drawn note shows
 /** The line over the text: name, NIP-05, time. One line of fixed height, whatever is known of the author. */
@@ -139,27 +123,28 @@ export function renderNote(
   }
 
   const look = lookOf(row);
+  const allowFold = !row.thread || row.thread.role === 'reply';
   const covered =
     row.cw !== undefined && !env.settings.get().showSensitive && !state.warning && !look?.compact;
-  let text = h('div');
   const makeContent = (): HTMLElement => {
-    text = h('div', { class: state.unfolded ? 'text open' : 'text' }, segments(row.segments, env));
+    const { unfolded } = readNoteState(env.instance, row.id);
     return h(
       'div',
-      { class: 'content' },
-      row.segments.length ? text : null,
+      { class: 'content', 'data-fold': allowFold, 'data-unfolded': unfolded === true },
+      row.segments.length
+        ? h('div', { class: unfolded ? 'text open' : 'text' }, segments(row.segments, env))
+        : null,
       mediaGrid(row.media, env, plainName(row.author), row.id),
       row.quotes.map((q) => quoteCard(q, env, row.id)),
       env.settings.get().linkPreviews ? linkCards(row.previews) : null,
     );
   };
   const warningChanged = (open: boolean): void => {
-    el.dispatchEvent(new CustomEvent('note-warning-changed', { bubbles: true }));
-    if (open && row.face?.type === 'generic') fitNote(el);
-    else if (open) fold(text);
+    if (open) fitNote(el);
+    el.dispatchEvent(new Event('note-content-changed', { bubbles: true }));
   };
   const makeBody = (): HTMLElement =>
-    row.face?.type === 'generic' ? genericBody(row, env) : makeContent();
+    row.face?.type === 'generic' ? genericBody(row, env, allowFold) : makeContent();
   const body = look?.compact
     ? compactBody(row, env)
     : row.cw !== undefined
@@ -171,7 +156,7 @@ export function renderNote(
       class: `note${threadClass(row)}${row.pending ? ' pending' : ''}`,
       'data-note': row.id,
       'data-send': deliveryMark(row) ?? null,
-      'data-previews': row.previews && !look?.compact ? '' : null,
+      'data-previews': row.previews?.length && !look?.compact ? row.id : null,
       'data-instance': env.instance,
     },
     context,
@@ -266,30 +251,3 @@ const heldMark = (el: Element | null): string => {
       ? `.chips > [data-emoji="${CSS.escape(emoji)}"][data-emoji-url="${CSS.escape(url)}"]`
       : '';
 };
-
-const overflowingText = (el: HTMLElement): HTMLElement | undefined => {
-  const text = el.querySelector<HTMLElement>('.content > .text');
-  return text &&
-    !el.classList.contains('th-compact') &&
-    !el.querySelector('.fold') &&
-    !text.classList.contains('open') &&
-    text.scrollHeight > text.clientHeight + 2
-    ? text
-    : undefined;
-};
-
-/** After a note is in the document: fold what is too long. */
-export function fitNote(el: HTMLElement): void {
-  const text = overflowingText(el);
-  if (text) fold(text);
-}
-
-/** Measure the batch before fold controls invalidate another note's layout. */
-export function fitNotes(elements: readonly HTMLElement[]): void {
-  if (!stableNoteWidths(elements)) {
-    for (const el of elements) fitNote(el);
-    return;
-  }
-  const overflowing = elements.map(overflowingText);
-  for (const text of overflowing) if (text) fold(text);
-}

@@ -54,7 +54,7 @@ export const NOTES: readonly NoteSpec[] = [
   {
     by: 'aoi',
     ago: 2,
-    text: '朝の川沿い。霧が出ていて、対岸がほとんど見えませんでした。\n#写真 #朝散歩',
+    text: '朝の川沿い。霧が出ていて、対岸がほとんど見えませんでした。\n#写真 #朝散歩 https://walks.example/river',
     media: [[1600, 1067, 205, '霧の川と対岸の木立']],
     tag: 'river',
     reactions: [

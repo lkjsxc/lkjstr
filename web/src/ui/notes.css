@@ -1,5 +1,5 @@
 /* A note. Text first: no card, no hover wash, a hairline between notes. Sizes come from Settings (--text, --avatar,
-   --media-h, --fold). Nothing here changes size after it is drawn: media boxes have their shape before they load. */
+   --media-h, --fold). Media boxes reserve their shape before files load. */
 .note { padding: 9px 12px 4px; border-bottom: 1px solid var(--line); font-size: var(--text, 15px); line-height: 1.6; line-break: strict; overflow-wrap: anywhere; }
 .note.unread, .notif.unread { box-shadow: inset 2px 0 var(--seal); }
 /* The row the note keys act on: a quiet bar and a breath of tint, never an outline that jumps from note to note. */
@@ -49,8 +49,9 @@
 .ctx > .rwho > .name:only-of-type { max-width: min(28em, 48cqi); }
 .ctx > .rdid { flex: none; margin-left: -6px; white-space: pre; }
 .text { white-space: pre-wrap; }
-.content > .text { max-height: calc(var(--fold, 12) * 1lh); overflow: hidden; }
-.content > .text.open { max-height: none; }
+.content[data-fold] { display: flow-root; }
+.content.folded > .text { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: var(--shown-lines, none); overflow: hidden; }
+.content.folded > .fold-tail, .content:not(.folded) > .fold { display: none; }
 .lnk { display: inline; padding: 0; color: var(--accent); text-align: left; }
 .lnk:hover { text-decoration: underline; }
 .fold { display: block; font-size: 13px; }
@@ -78,6 +79,7 @@
 .mmore { position: absolute; right: 6px; bottom: 6px; padding: 0 7px; border-radius: 10px; background: rgba(0, 0, 0, 0.6); color: #fff; font-size: 12px; }
 .quote { margin: 6px 0 4px; padding: 7px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--raised); font-size: calc(var(--text, 15px) - 1px); cursor: pointer; }
 .quote.muted { cursor: default; font-size: 12.5px; }
+.quote.qloading { min-height: 4lh; }
 .qhead { display: flex; align-items: center; gap: 6px; min-width: 0; font-size: 13px; }
 .qtext { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 6; overflow: hidden; white-space: pre-wrap; }
 .qmedia { display: flex; align-items: center; gap: 4px; font-size: 12px; }
@@ -158,7 +160,6 @@ img.emo:focus-visible, .uemo:focus-visible { outline: 2px solid var(--accent); o
 .lctitle { font-size: 15px; font-weight: 600; }
 .lcdesc { color: var(--muted); font-size: 12.5px; line-height: 16px; }
 .lcdesc[hidden] { display: none; }
-.content.folded > .link-card { font-size: 13.5px; line-height: 1.4; display: none; }
 @container (max-width: 439px) { .lcpicture { flex-basis: 88px; width: 88px; } }
 
 /* A1/A2 display existing act chips without a count or action. */
@@ -172,8 +173,7 @@ img.emo:focus-visible, .uemo:focus-visible { outline: 2px solid var(--accent); o
 /* N2 public generic details use the existing note measure and action rhythm. */
 .generic-face { min-width: 0; }
 .generic-alt { margin-bottom: 6px; }
-.generic-data { color: var(--muted); font: 12px/1.55 ui-monospace, monospace; white-space: pre-wrap; overflow-wrap: anywhere; max-height: 4.65em; overflow: hidden; }
-.generic-data.open { max-height: none; }
+.generic-data { color: var(--muted); font: 12px/1.55 ui-monospace, monospace; white-space: pre-wrap; overflow-wrap: anywhere; }
 .generic-disclosure { display: flex; gap: 4px; margin-top: 7px; font-size: 12px; }
 .generic-tags { margin: 4px 0 7px; font-size: 12px; }
 .generic-tags[hidden] { display: none; }

@@ -48,7 +48,9 @@ export function mediaGrid(
         e.stopPropagation();
         const seen = readNoteState(env.instance, noteId).media ?? [];
         writeNoteState(env.instance, noteId, { media: [...seen, m.url].slice(-16) });
-        show.replaceWith(cell(m, index));
+        const revealed = cell(m, index);
+        show.replaceWith(revealed);
+        revealed.dispatchEvent(new Event('note-content-changed', { bubbles: true }));
       });
       return show;
     }

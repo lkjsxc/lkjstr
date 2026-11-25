@@ -151,7 +151,10 @@ export function inlineEmoji(code: string, url: string, focusable: boolean): HTML
     const width = widthOf(img);
     remember(url, width);
     if (`${width}em` !== img.style.width)
-      whenOutOfSight(img, () => (img.style.width = `${width}em`));
+      whenOutOfSight(img, () => {
+        img.style.width = `${width}em`;
+        img.dispatchEvent(new Event('note-geometry-changed', { bubbles: true }));
+      });
   });
   img.addEventListener('error', () => {
     const box = Number.parseFloat(img.style.width) || SQUARE;
@@ -166,6 +169,7 @@ export function inlineEmoji(code: string, url: string, focusable: boolean): HTML
     whenOutOfSight(text, () => {
       text.classList.remove('held');
       text.style.width = '';
+      text.dispatchEvent(new Event('note-geometry-changed', { bubbles: true }));
     });
   });
   if (near) return img;

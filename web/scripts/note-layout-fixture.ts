@@ -8,7 +8,8 @@ import { createSettings } from '../src/shared/settings.ts';
 import { createSignal } from '../src/shared/signal.ts';
 import { createRowList, type RowList } from '../src/views/feed-draw.ts';
 import { disposeLinkCards } from '../src/views/link-cards.ts';
-import { fitNotes, renderNote } from '../src/views/note.ts';
+import { renderNote } from '../src/views/note.ts';
+import { fitNotes } from '../src/views/note-fold.ts';
 import type { ViewEnv } from '../src/views/registry.ts';
 
 let drawn: RowList | undefined;
@@ -112,6 +113,49 @@ const boundary = async (width: number) => {
   fitNotes([node]);
   return { before, ...(await snapshot()) };
 };
+const prepareWrapping = (): void => {
+  prepare(1, 720);
+  const row = rows[0];
+  if (!row) throw new Error('wrapping fixture note');
+  rows = [
+    {
+      ...row,
+      segments: [
+        { k: 'text', text: 'Rendered width changes how many lines this note uses. '.repeat(10) },
+      ],
+    },
+  ];
+  draw();
+};
+const resize = (width: number): void => {
+  view.style.width = `${width}px`;
+};
+const prepareThreshold = (withMedia: boolean): void => {
+  prepare(1, 720);
+  const row = rows[0];
+  if (!row) throw new Error('threshold fixture note');
+  rows = [
+    {
+      ...row,
+      segments: [{ k: 'text', text: Array.from({ length: 13 }, () => 'One line').join('\n') }],
+      media: withMedia
+        ? [{ type: 'image', url: 'https://fixture.invalid/image.png', w: 240, h: 160 }]
+        : [],
+    },
+  ];
+  draw();
+};
 Object.assign(globalThis, {
-  noteLayout: { prepare, draw, snapshot, repeat, unfold, counts, boundary },
+  noteLayout: {
+    prepare,
+    draw,
+    snapshot,
+    repeat,
+    unfold,
+    counts,
+    boundary,
+    prepareWrapping,
+    resize,
+    prepareThreshold,
+  },
 });

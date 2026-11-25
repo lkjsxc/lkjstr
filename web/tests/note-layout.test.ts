@@ -6,15 +6,9 @@ import { setLang } from '../src/shared/i18n.ts';
 import { createSettings } from '../src/shared/settings.ts';
 import { createSignal } from '../src/shared/signal.ts';
 import { createRowList } from '../src/views/feed-draw.ts';
-import { fitNote } from '../src/views/note.ts';
 import type { ViewEnv } from '../src/views/registry.ts';
 
-const heights = new Map<string, PropertyDescriptor | undefined>();
 afterEach(() => {
-  for (const [name, descriptor] of heights)
-    if (descriptor) Object.defineProperty(HTMLElement.prototype, name, descriptor);
-    else Reflect.deleteProperty(HTMLElement.prototype, name);
-  heights.clear();
   vi.restoreAllMocks();
   localStorage.clear();
   document.body.replaceChildren();
@@ -44,23 +38,19 @@ function setup(count: number) {
   } as unknown as ViewEnv;
   const list = document.createElement('div');
   document.body.append(list);
-  const measured: { controls: number; open: boolean }[] = [];
-  for (const name of ['scrollHeight', 'clientHeight']) {
-    heights.set(name, Object.getOwnPropertyDescriptor(HTMLElement.prototype, name));
-    Object.defineProperty(HTMLElement.prototype, name, {
-      configurable: true,
-      get(this: HTMLElement) {
-        if (name === 'clientHeight') return 100;
-        if (this.matches('.content > .text'))
-          measured.push({
-            controls: list.querySelectorAll('.fold').length,
-            open: this.classList.contains('open'),
-          });
-        return this.textContent === 'short' ? 100 : 900;
-      },
+  const measured: { controls: number }[] = [];
+  const rect = vi
+    .spyOn(HTMLElement.prototype, 'getBoundingClientRect')
+    .mockImplementation(function (this: HTMLElement) {
+      if (this.matches('.content[data-fold]'))
+        measured.push({ controls: list.querySelectorAll('.fold').length });
+      return new DOMRect(0, 0, 320, this.textContent === 'short' ? 20 : 900);
     });
-  }
-  return { rows, list, measured, drawn: createRowList(list, env, false) };
+  vi.spyOn(window, 'getComputedStyle').mockReturnValue({
+    lineHeight: '20px',
+    getPropertyValue: () => '12',
+  } as unknown as CSSStyleDeclaration);
+  return { rows, list, measured, rect, drawn: createRowList(list, env, false) };
 }
 
 it('measures a batch of new notes before a fold control invalidates its next measurement', () => {
@@ -90,13 +80,21 @@ it('keeps short, unfolded and already fitted notes unchanged through later batch
   expect(measured).toHaveLength(1);
   expect(list.querySelectorAll('.fold')).toHaveLength(1);
   expect(list.querySelector('.text.open')).toBe(opened);
-  const newest = list.lastElementChild as HTMLElement;
-  fitNote(newest);
-  expect(list.querySelectorAll('.fold')).toHaveLength(1);
-  expect(measured).toHaveLength(1);
   drawn.draw(rows.map((row) => ({ ...row, counts: { ...row.counts, replies: 3 } })));
   expect(list.querySelector('.text.open')).toBe(opened);
   expect(measured).toHaveLength(1);
+});
+
+it('keeps the thread focus and opened ancestors whole', () => {
+  const { rows, list, drawn } = setup(3);
+  drawn.draw(
+    rows.map((row, i) => ({
+      ...row,
+      thread: { role: i === 0 ? 'focus' : i === 1 ? 'ancestor' : 'reply', depth: 0 },
+    })),
+  );
+  expect(list.querySelectorAll('.fold')).toHaveLength(1);
+  expect(list.querySelector('.th-reply .fold')).not.toBeNull();
 });
 
 it('keeps native-scrollbar decisions sequential when folding can change line width', () => {
@@ -107,7 +105,11 @@ it('keeps native-scrollbar decisions sequential when folding can change line wid
   expect(list.querySelectorAll('.fold')).toHaveLength(3);
 });
 
-function nativeView(list: HTMLElement, height: number): HTMLElement {
+function nativeView(
+  list: HTMLElement,
+  height: number,
+  rect: HTMLElement['getBoundingClientRect'],
+): HTMLElement {
   const view = document.createElement('div');
   view.className = 'view feed';
   list.className = 'list';
@@ -116,14 +118,16 @@ function nativeView(list: HTMLElement, height: number): HTMLElement {
   vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (
     this: HTMLElement,
   ) {
-    return new DOMRect(0, 0, 320, this === view ? height : this.matches('.avb') ? 36 : 0);
+    if (this === view || this.matches('.avb'))
+      return new DOMRect(0, 0, 320, this === view ? height : 36);
+    return rect.call(this);
   });
   return view;
 }
 
 it('batches native notes when their permanent avatar columns keep the scrollbar present', () => {
-  const { rows, list, measured, drawn } = setup(32);
-  nativeView(list, 800);
+  const { rows, list, measured, rect, drawn } = setup(32);
+  nativeView(list, 800, rect.getMockImplementation()!);
   drawn.draw(rows);
   expect(list.querySelectorAll('.fold')).toHaveLength(32);
   expect(measured).toHaveLength(32);
@@ -131,8 +135,8 @@ it('batches native notes when their permanent avatar columns keep the scrollbar 
 });
 
 it('preserves sequential decisions at the native scrollbar boundary', () => {
-  const { rows, list, measured, drawn } = setup(3);
-  nativeView(list, 108);
+  const { rows, list, measured, rect, drawn } = setup(3);
+  nativeView(list, 108, rect.getMockImplementation()!);
   drawn.draw(rows);
   expect(measured.map((read) => read.controls)).toEqual([0, 1, 2]);
   expect(list.querySelectorAll('.fold')).toHaveLength(3);

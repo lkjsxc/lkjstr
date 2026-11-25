@@ -60,7 +60,16 @@ impl Session {
                 self.delivered
                     .get(sub)?
                     .iter()
-                    .map(|row| row.get("note").unwrap_or(row))
+                    .flat_map(|row| {
+                        let note = row.get("note").unwrap_or(row);
+                        std::iter::once(note).chain(
+                            note["quotes"]
+                                .as_array()
+                                .into_iter()
+                                .flatten()
+                                .filter(|q| q["state"] == "ok"),
+                        )
+                    })
                     .filter(|r| ids.iter().any(|id| r["id"] == *id))
                     .flat_map(preview::links)
                     .find(|url| engine.previews.unasked(url))
@@ -117,14 +126,23 @@ impl Session {
 }
 fn decorate(row: &mut Value, engine: &Engine, enabled: bool) {
     if row["kind"] == "note" {
-        if enabled {
-            row["previews"] = json!(engine.previews.cards(row));
-        } else if let Some(row) = row.as_object_mut() {
-            row.remove("previews");
+        decorate_cards(row, engine, enabled);
+        if let Some(quotes) = row.get_mut("quotes").and_then(Value::as_array_mut) {
+            for quote in quotes.iter_mut().filter(|q| q["state"] == "ok") {
+                decorate_cards(quote, engine, enabled);
+            }
         }
     }
     if let Some(note) = row.get_mut("note") {
         decorate(note, engine, enabled);
+    }
+}
+
+fn decorate_cards(row: &mut Value, engine: &Engine, enabled: bool) {
+    if enabled {
+        row["previews"] = json!(engine.previews.cards(row));
+    } else if let Some(row) = row.as_object_mut() {
+        row.remove("previews");
     }
 }
 

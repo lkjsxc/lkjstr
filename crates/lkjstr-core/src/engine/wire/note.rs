@@ -44,7 +44,7 @@ fn event_kind(value: &mut Value, kind: u64) {
         value["eventKind"] = json!(kind);
     }
 }
-fn parts(row: &Row) -> (Vec<Value>, Vec<Value>, Vec<Value>) {
+fn parts(row: &Row, embedded: bool) -> (Vec<Value>, Vec<Value>, Vec<Value>) {
     let mut segments = Vec::new();
     let mut media = Vec::new();
     let mut quotes = Vec::new();
@@ -90,19 +90,25 @@ fn parts(row: &Row) -> (Vec<Value>, Vec<Value>, Vec<Value>) {
                 }
                 media.push(m);
             }
-            Segment::Quote { id, row } => {
+            Segment::Quote { id, row } if !embedded => {
                 let quote = match row.as_deref() {
                     Some(row) if !crate::kinds::policy(row.kind).openable => {
                         json!({"state":"missing","id":id})
                     }
                     Some(row) if row.hidden_reason.is_some() => json!({"state":"muted","id":id}),
                     Some(row) => {
-                        let (segments, media, _) = parts(row);
+                        let (segments, media, _) = parts(row, true);
                         let mut quote = json!({"state":"ok","id":id,"author":author(&row.author),
                             "at":row.created_at.saturating_mul(1000),"segments":segments,"media":media});
                         event_kind(&mut quote, row.kind);
                         if let Some(warning) = &row.warning {
                             quote["cw"] = json!(warning);
+                        }
+                        if let Some(next) = row.content.iter().find_map(|part| match part {
+                            Segment::Quote { id, .. } => Some(id),
+                            _ => None,
+                        }) {
+                            quote["nextId"] = json!(next);
                         }
                         quote
                     }
@@ -110,6 +116,7 @@ fn parts(row: &Row) -> (Vec<Value>, Vec<Value>, Vec<Value>) {
                 };
                 quotes.push(quote);
             }
+            Segment::Quote { .. } => {}
         }
     }
     (segments, media, quotes)
@@ -120,7 +127,7 @@ pub(super) fn note(row: &Row, store: &Store, account: Option<&str>) -> Value {
         event_kind(&mut identity, row.kind);
         return covered(identity, reason);
     }
-    let (segments, media, quotes) = parts(row);
+    let (segments, media, quotes) = parts(row, false);
     let mut v = json!({"kind":"note","key":row.id,"id":row.id,"bech32":lkjstr_protocol::encode_note(&row.id).unwrap_or_else(|_|row.id.clone()),
         "author":author(&row.author),"at":row.created_at.saturating_mul(1000),"segments":segments,"media":media,"quotes":quotes,
         "counts":super::counts::note(row,store),

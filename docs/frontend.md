@@ -103,7 +103,7 @@ Seams worth knowing inside `src/views/`:
   engine that reports 3 (`views/can.ts`: `rich`).
 - Protocol 5 adds optional `NoteRow.previews`, `linkPreviews` configuration,
   and the `preview` near-note hint. The Worker probes same-origin health once;
-  absent service means absent cards. UI hints carry ids, never parsed links.
+  absent service means absent cards. UI hints carry near, uncovered note or quote IDs.
 - Protocol 4 adds channels (NIP-28): the sources `channels` and `channel`,
   `ChannelRow`, `NoteRow.channel`, `Draft.channel` and the actions
   `channel.join`, `channel.save`, `channel.seen`. Nothing about channels is

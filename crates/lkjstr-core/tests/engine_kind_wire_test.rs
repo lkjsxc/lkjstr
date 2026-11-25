@@ -83,7 +83,14 @@ fn quoted_generic_event_keeps_kind_without_changing_note_or_channel_identity() {
         "Referenced live event",
         vec![vec!["d".into(), "quoted".into()]],
     );
-    let note = event(3, 1, "Referenced note", vec![]);
+    let image = "https://images.example/picture.png";
+    let link = "https://news.example/story";
+    let note = event(
+        3,
+        1,
+        &format!("Photo and story: {image} {link}"),
+        vec![vec!["q".into(), generic.id.clone()]],
+    );
     let message = event(
         4,
         42,
@@ -96,6 +103,7 @@ fn quoted_generic_event_keeps_kind_without_changing_note_or_channel_identity() {
         ]],
     );
     let mut engine = Engine::new();
+    engine.previews.available = true;
     engine.store.insert(channel, None);
     for target in [&generic, &note, &message] {
         engine.store.insert(target.clone(), None);
@@ -119,7 +127,15 @@ fn quoted_generic_event_keeps_kind_without_changing_note_or_channel_identity() {
             .find(|quote| quote["id"] == target.id)
             .expect("referenced event");
         assert_eq!(quote["state"], "ok");
-        assert_eq!(quote["segments"][0]["text"], target.content);
+        if target.id == note.id {
+            assert_eq!(quote["media"][0]["url"], image);
+            assert_eq!(quote["previews"][0]["source"], link);
+            assert_eq!(quote["previews"][0]["kind"], "loading");
+            assert_eq!(quote["nextId"], generic.id);
+            assert!(quote.get("quotes").is_none());
+        } else {
+            assert_eq!(quote["segments"][0]["text"], target.content);
+        }
         if target.kind == 30311 {
             assert_eq!(quote["eventKind"], 30311);
         } else {

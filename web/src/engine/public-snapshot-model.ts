@@ -1,5 +1,5 @@
 // Reconciliation preserves held public values while an incomplete engine cache hydrates.
-import type { Author, NoteRow, Row } from './protocol.ts';
+import type { Author, LinkPreview, NoteRow, Row } from './protocol.ts';
 import { mergePublicCounts } from './public-snapshot-counts.ts';
 import { type PublicSnapshot, SNAPSHOT_ROWS, snapshotSafe } from './public-snapshot-store.ts';
 
@@ -10,6 +10,20 @@ const authors = (old: readonly Author[], next: readonly Author[]): readonly Auth
     const previous = old.find((person) => person.pubkey === value.pubkey);
     return previous ? author(previous, value) : value;
   });
+function previews(
+  old: readonly LinkPreview[] | undefined,
+  next: readonly LinkPreview[] | undefined,
+): readonly LinkPreview[] | undefined {
+  return (
+    next?.map((card) => {
+      const previous = old?.find((value) => value.source === card.source);
+      return (card.kind === 'loading' || card.kind === 'link') &&
+        (previous?.kind === 'page' || previous?.kind === 'post')
+        ? previous
+        : card;
+    }) ?? old
+  );
+}
 function note(old: NoteRow, next: NoteRow): NoteRow {
   if (next.hidden) return next;
   return {
@@ -27,20 +41,17 @@ function note(old: NoteRow, next: NoteRow): NoteRow {
           },
         }
       : {}),
-    previews:
-      next.previews?.map((card) => {
-        const previous = old.previews?.find((value) => value.source === card.source);
-        return (card.kind === 'loading' || card.kind === 'link') &&
-          (previous?.kind === 'page' || previous?.kind === 'post')
-          ? previous
-          : card;
-      }) ?? old.previews,
+    previews: previews(old.previews, next.previews),
     quotes: next.quotes.map((quote) => {
       const previous = old.quotes.find((value) => value.id === quote.id);
       if (previous?.state !== 'ok') return quote;
       if (quote.state === 'loading' || quote.state === 'missing') return previous;
       return quote.state === 'ok'
-        ? { ...quote, author: author(previous.author, quote.author) }
+        ? {
+            ...quote,
+            author: author(previous.author, quote.author),
+            previews: previews(previous.previews, quote.previews),
+          }
         : quote;
     }),
   };

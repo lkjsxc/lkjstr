@@ -4,7 +4,8 @@ import { createWorld } from '../src/engine/mock/world.ts';
 import { readNoteState } from '../src/shared/note-state.ts';
 import { createSettings } from '../src/shared/settings.ts';
 import { createSignal } from '../src/shared/signal.ts';
-import { fitNote, renderNote } from '../src/views/note.ts';
+import { renderNote } from '../src/views/note.ts';
+import { fitNote } from '../src/views/note-fold.ts';
 import type { ViewEnv } from '../src/views/registry.ts';
 
 const env = (open = vi.fn()) =>
@@ -55,8 +56,16 @@ it('labels machine data without spilling and reuses normal Show more state', () 
   const text = element.querySelector<HTMLElement>('.generic-data');
   if (!text) throw new Error('machine data element');
   expect(text.textContent).toContain('relay.example.org');
-  Object.defineProperties(text, { scrollHeight: { value: 500 }, clientHeight: { value: 80 } });
+  const style = vi.spyOn(window, 'getComputedStyle').mockReturnValue({
+    lineHeight: '18px',
+    getPropertyValue: () => '3',
+  } as unknown as CSSStyleDeclaration);
+  const geometry = vi
+    .spyOn(HTMLElement.prototype, 'getBoundingClientRect')
+    .mockReturnValue(new DOMRect(0, 0, 320, 500));
   fitNote(element);
+  style.mockRestore();
+  geometry.mockRestore();
   element.querySelector<HTMLButtonElement>('.fold')?.click();
   expect(text.classList.contains('open')).toBe(true);
   expect(readNoteState('generic-test', row.id).unfolded).toBe(true);

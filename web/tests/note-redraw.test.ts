@@ -1,4 +1,4 @@
-import { afterEach, expect, it } from 'vitest';
+import { afterEach, expect, it, vi } from 'vitest';
 import { noteRow } from '../src/engine/mock/rows.ts';
 import { createWorld } from '../src/engine/mock/world.ts';
 import type { NoteRow } from '../src/engine/protocol.ts';
@@ -6,10 +6,11 @@ import { hasKey, setLang, t } from '../src/shared/i18n.ts';
 import { createSettings } from '../src/shared/settings.ts';
 import { createSignal } from '../src/shared/signal.ts';
 import { createRowList } from '../src/views/feed-draw.ts';
-import { fitNote } from '../src/views/note.ts';
+import { fitNote } from '../src/views/note-fold.ts';
 import type { ViewEnv } from '../src/views/registry.ts';
 
 afterEach(() => {
+  vi.restoreAllMocks();
   localStorage.clear();
   document.body.replaceChildren();
   setLang('en');
@@ -45,9 +46,13 @@ it('restores warning, text, media and quote choices after patches and window evi
   const rows = createRowList(list, env, false);
   rows.draw([row]);
   list.querySelector<HTMLButtonElement>('.cw')?.click();
-  const text = list.querySelector<HTMLElement>('.content > .text');
-  if (!text) throw new Error('text');
-  Object.defineProperties(text, { scrollHeight: { value: 900 }, clientHeight: { value: 100 } });
+  vi.spyOn(window, 'getComputedStyle').mockReturnValue({
+    lineHeight: '20px',
+    getPropertyValue: () => '12',
+  } as unknown as CSSStyleDeclaration);
+  vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue(
+    new DOMRect(0, 0, 320, 900),
+  );
   fitNote(list);
   list.querySelector<HTMLButtonElement>('.fold')?.click();
   list.querySelector<HTMLButtonElement>('.media .cw')?.click();

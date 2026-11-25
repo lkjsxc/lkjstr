@@ -183,13 +183,11 @@ Mock-only `EngineConfig.mock`: `slow` signs a note late and delays its answers, 
 - Optional `stats.relays[].isPrivateHost` identifies local, private and known auth-required relays.
 - Optional `stats.bandwidthHistory` reports activity in up to 60 one-second buckets.
 - Optional `stats.orchestrationEvents` reports up to 32 recent decisions with redacted private relay labels.
-
 ## Client attribution
 - `NoteRow.clientAddress?` carries a valid kind-31990 coordinate next to the existing tag name in `client`.
 - `Action.client.info {address}` resolves one handler on explicit request, or returns `not-found`.
 - `FromEngine.result.clientInfo?` carries the verified handler name and optional HTTP(S) website.
 - `EngineConfig.clientTagAccount?` scopes `clientTag` to one device account. Omit it for the device fallback.
-
 ## Note visibility
 - Existing `NoteRow.hidden` gains `revealable?` and a bounded optional matching mute entry `detail?`; the same row key carries a body-free slot.
 - `NoteRow.revealed?: {reason}` preserves the reason while displaying an explicitly revealed verified note.
@@ -198,3 +196,5 @@ Mock-only `EngineConfig.mock`: `slow` signs a note late and delays its answers, 
 - `EngineConfig.signedOutGlobalFilter?` exposes the visitor Global repeated-content and author-frequency policy, enabled by default.
 - `NoteRow.expiresAt?` and `NotificationRow.expiresAt?` name the earliest applicable expiry for content they carry and suppress snapshot replay.
 - `Quote.state` adds `expired` for a verified expiry, with no quoted body.
+- `Quote.previews?` carries at most two cards for a resolved quote; `preview.ids` also accepts delivered quote IDs.
+- `Quote.nextId?` carries the first nested quote's ID for a single-line reference.

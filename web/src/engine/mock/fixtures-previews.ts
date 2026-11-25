@@ -2,11 +2,21 @@
 import type { LinkPreview, Segment } from '../protocol.ts';
 import { photo } from './art.ts';
 import { LONG_TITLE, LONG_WORD } from './fixtures-stress.ts';
+
+const RIVER = 'https://walks.example/river';
 export function previewFixtures(segments: readonly Segment[]): LinkPreview[] {
   return segments
     .filter((s): s is Extract<Segment, { k: 'link' }> => s.k === 'link')
     .slice(0, 2)
     .map(({ url }) => {
+      if (url === RIVER)
+        return {
+          source: url,
+          url,
+          kind: 'page',
+          title: '川沿いの散歩道',
+          description: '橋から水辺の遊歩道を歩くコース。',
+        };
       const u = new URL(url);
       const kind = u.host === 'x.com' ? 'post' : u.host === 'unavailable.example' ? 'link' : 'page';
       return {

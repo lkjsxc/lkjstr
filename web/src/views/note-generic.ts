@@ -50,7 +50,7 @@ function tagLine(line: GenericTagLine, env: ViewEnv): HTMLElement {
     action,
   );
 }
-export function genericBody(row: NoteRow, env: ViewEnv): HTMLElement {
+export function genericBody(row: NoteRow, env: ViewEnv, allowFold: boolean): HTMLElement {
   const face = row.face;
   if (!face) return h('div', { class: 'content' });
   const data = face.form === 'data';
@@ -89,7 +89,20 @@ export function genericBody(row: NoteRow, env: ViewEnv): HTMLElement {
     'div',
     { class: 'content generic-face' },
     face.alt ? h('div', { class: 'generic-alt' }, face.alt) : null,
-    content ?? (!face.alt ? h('div', { class: 'quiet' }, t('generic.empty')) : null),
+    content
+      ? h(
+          'div',
+          {
+            class: 'content',
+            'data-fold': allowFold,
+            'data-unfolded': state.unfolded === true,
+            style: data ? '--fold:3' : null,
+          },
+          content,
+        )
+      : !face.alt
+        ? h('div', { class: 'quiet' }, t('generic.empty'))
+        : null,
     disclosure,
     details,
   );

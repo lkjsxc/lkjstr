@@ -5,6 +5,8 @@ import type { NoteRow } from '../engine/protocol.ts';
 import { h } from '../shared/h.ts';
 import { type Key, t } from '../shared/i18n.ts';
 import { readNoteState, writeNoteState } from '../shared/note-state.ts';
+import { disposeLinkCards } from './link-cards.ts';
+import { disposeNoteAudio } from './note-audio.ts';
 import { threadClass } from './note-thread.ts';
 import type { ViewEnv } from './registry.ts';
 
@@ -129,6 +131,8 @@ export function warned(
     const hide = (e: Event): void => {
       e.stopPropagation();
       writeNoteState(env.instance, row.id, { warning: false });
+      disposeLinkCards(box);
+      disposeNoteAudio(box);
       line.remove();
       box.replaceWith(cover());
       changed(false);

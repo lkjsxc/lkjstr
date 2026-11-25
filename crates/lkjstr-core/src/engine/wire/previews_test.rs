@@ -3,6 +3,37 @@ use crate::engine::Engine;
 use serde_json::json;
 
 #[test]
+fn quote_preview_wants_require_the_quote_id_and_settle_on_the_parent() {
+    let mut e = Engine::new();
+    e.previews.available = true;
+    let mut s = Session::default();
+    s.queries.insert(
+        "view".into(),
+        serde_json::from_value(json!({"source":"global"})).unwrap_or_else(|_| unreachable!()),
+    );
+    let url = "https://example.com/quoted";
+    s.delivered.insert(
+        "view".into(),
+        vec![json!({"kind":"note","id":"outer","quotes":[{
+            "state":"ok","id":"quoted","segments":[{"k":"link","url":url}]
+        }]})],
+    );
+    s.preview_visible = vec!["view".into()];
+    s.preview_near("view".into(), vec!["outer".into()]);
+    assert!(s.preview_want(&e).is_none());
+    s.preview_near("view".into(), vec!["quoted".into()]);
+    assert_eq!(s.preview_want(&e).as_deref(), Some(url));
+    assert!(e.previews.begin(url));
+    e.previews
+        .finish(url, Some(json!({"kind":"page","url":url,"title":"Story"})));
+    assert_eq!(s.preview_refresh(&e).len(), 1);
+    assert_eq!(
+        s.delivered["view"][0]["quotes"][0]["previews"][0]["title"],
+        "Story"
+    );
+}
+
+#[test]
 fn nested_notification_previews_settle_in_notifications_and_mixed_feeds() {
     for source in ["notifications", "home", "global"] {
         for kind in ["reply", "mention"] {

@@ -33,19 +33,20 @@ Artifacts are in `tmp/public-scroll-profile-tpahUH` in the canonical worktree:
 ## Change
 
 `createRowList` marks all newly fitted nodes before measuring them. `fitNotes`
-then measures their text overflow as a group before inserting any fold control.
-It runs synchronously before the draw returns, so the reading-position keeper
-still sees the completed geometry. Existing nodes do not get fitted again.
+then measures natural bodies as a group before applying whole-line clamps,
+retaining media grids and folding complete quote and link cards. Initial fitting runs before
+the draw returns, so the reading-position keeper sees the completed geometry.
+A row-list observer refits when its width changes. Font loads and actual emoji
+width changes also schedule a pass. Explicitly unfolded notes keep their choice.
 
 Time-rail views have stable line widths and use the batched path. A native view
 also batches when the sum of its direct notes' in-flow avatar heights exceeds the
 view height by more than one pixel: folding cannot remove those columns, so the
 scrollbar cannot disappear. The geometry check stops once that lower bound is
 proved. Nested quotes, hidden notes and revealed wrappers do not inflate it.
-Uncertain native views remain sequential because hiding a folded link card can
-change scrollbar width and another note's line wrapping. Single-note reveals
-still use `fitNote`; unfolded text, warning choices, fold-button behavior, DOM
-structure, CSS and both string tables are unchanged.
+Uncertain native views remain sequential because folding can change scrollbar
+width and another note's line wrapping. A top-level warning reveal uses
+`fitNote`. The thread focus and opened ancestors stay whole.
 
 ## Regression and before/after measurements
 

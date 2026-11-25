@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import type { FromEngine } from '../src/engine/protocol.ts';
+import type { FromEngine, Quote } from '../src/engine/protocol.ts';
 import { readPublicSnapshot, snapshotIdentity } from '../src/engine/public-snapshot-store.ts';
 import { harness, note, query, savePublic } from './public-snapshots-support.ts';
 
@@ -29,6 +29,52 @@ it('paints saved public names and pictures before any Worker response and sends 
     state: { phase: 'cache', relaysAsked: 0, relaysAnswered: 0 },
   });
   next.transport.close();
+});
+
+it('keeps rich quote rows in ordinary capture and replay while a same-query time window stays live', async () => {
+  const base = note();
+  const url = 'https://news.example/story';
+  const quote: Quote = {
+    state: 'ok',
+    id: '2'.repeat(64),
+    author: base.author,
+    at: base.at,
+    segments: [{ k: 'link', text: 'Story', url }],
+    media: [{ type: 'image', url: 'https://images.example/photo.png' }],
+    previews: [{ kind: 'page', source: url, url, title: 'Saved story' }],
+    nextId: '3'.repeat(64),
+  };
+  const row = { ...base, quotes: [quote] };
+  await savePublic([row]);
+
+  const scoped = harness();
+  scoped.transport.post({ t: 'open', sub: 'one', query });
+  scoped.transport.post({
+    t: 'window',
+    sub: 'one',
+    anchor: { at: 500 },
+    before: 0,
+    after: 60,
+  });
+  await vi.advanceTimersByTimeAsync(0);
+  expect(scoped.messages).toHaveLength(0);
+  scoped.emit({ t: 'cache.policy', sub: 'one', allow: true });
+  const timed = { ...row, readingAt: 500, quotes: [{ ...quote, previews: [] }] };
+  scoped.rows([timed]);
+  await vi.advanceTimersByTimeAsync(201);
+  expect(scoped.messages.at(-1)).toMatchObject({ t: 'rows', rows: [timed] });
+  scoped.transport.close();
+
+  const ordinary = harness();
+  ordinary.open();
+  await vi.advanceTimersByTimeAsync(0);
+  expect(ordinary.messages.at(-1)).toMatchObject({ t: 'rows', rows: [row] });
+  ordinary.emit({ t: 'cache.policy', sub: 'one', allow: true });
+  ordinary.rows([
+    { ...row, quotes: [{ ...quote, previews: [{ kind: 'loading', source: url, url }] }] },
+  ]);
+  expect(ordinary.messages.at(-1)).toMatchObject({ t: 'rows', rows: [row] });
+  ordinary.transport.close();
 });
 
 it('does not flash an empty or partially loaded bootstrap over the retained screen', async () => {

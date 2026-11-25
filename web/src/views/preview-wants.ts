@@ -10,31 +10,29 @@ export function createPreviewWants(
   const read = (): void => {
     frame = 0;
     const bounds = el.getBoundingClientRect();
-    const ids = bounds.height
-      ? [...el.querySelectorAll<HTMLElement>('[data-previews]')]
-          .filter((n) => {
-            const rect = n.getBoundingClientRect();
-            return (
-              !!n.querySelector('.content') &&
-              rect.bottom >= bounds.top - 400 &&
-              rect.top <= bounds.bottom + 400
-            );
-          })
-          .map((n) => n.dataset.note ?? '')
-          .filter(Boolean)
-          .slice(0, 32)
-      : [];
-    const sig = `${sub()?.id}:${ids.join()}`;
+    const ids = new Set<string>(); // bound: the engine accepts at most 32 near IDs per view
+    if (bounds.height)
+      for (const n of el.querySelectorAll<HTMLElement>('[data-previews]')) {
+        const id = n.dataset.previews;
+        if (!id || ids.has(id) || (n.matches('.note') && !n.querySelector('.content'))) continue;
+        const rect = n.getBoundingClientRect();
+        if (rect.height > 0 && rect.bottom >= bounds.top - 400 && rect.top <= bounds.bottom + 400)
+          ids.add(id);
+        if (ids.size === 32) break;
+      }
+    const near = [...ids];
+    const current = sub();
+    const sig = `${current?.id}:${near.join()}`;
     if (sig !== previous) {
       previous = sig;
-      sub()?.near(ids);
+      current?.near(near);
     }
   };
   const sync = (): void => {
     if (!frame) frame = requestAnimationFrame(read);
   };
   el.addEventListener('scroll', sync, { passive: true });
-  el.addEventListener('note-warning-changed', sync);
+  el.addEventListener('note-content-changed', sync);
   const sizes = new ResizeObserver(sync);
   sizes.observe(el);
   return {
@@ -43,7 +41,7 @@ export function createPreviewWants(
       cancelAnimationFrame(frame);
       sizes.disconnect();
       el.removeEventListener('scroll', sync);
-      el.removeEventListener('note-warning-changed', sync);
+      el.removeEventListener('note-content-changed', sync);
       sub()?.near([]);
     },
   };

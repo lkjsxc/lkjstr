@@ -19,13 +19,13 @@
 .th-compact { cursor: pointer; }
 .th-compact .nhead { height: 19px; }
 .th-compact .content { margin: 0; }
-.th-compact .content > .text { display: -webkit-box; height: 42px; max-height: none; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; color: var(--muted); font-size: 14px; line-height: 21px; white-space: normal; }
+.th-compact .content > .text { display: -webkit-box; height: 42px; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; color: var(--muted); font-size: 14px; line-height: 21px; white-space: normal; }
 .tholds { display: inline-flex; align-items: center; gap: 2px; margin-left: 6px; color: var(--faint); font-size: 12.5px; vertical-align: -2px; }
 .tholds .i { width: 13px; height: 13px; }
 
 /* The focus: whole, larger, untinted; the reply field follows it and a stronger rule opens the conversation. */
 .th-focus { border-bottom: 0; padding-bottom: 2px; }
-.th-focus .content > .text { max-height: none; font-size: calc(var(--text, 15px) + 1.5px); }
+.th-focus .content > .text { font-size: calc(var(--text, 15px) + 1.5px); }
 .tsay.compose { gap: 4px; padding: 2px 12px 10px var(--textx); border-bottom: 1px solid var(--sep); }
 .tsay .cinput { flex: none; min-height: 0; }
 .tsay .cinput > .ctext, .tsay .ctext { flex: none; height: auto; min-height: 40px; max-height: 40vh; padding: 7px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--raised); field-sizing: content; }

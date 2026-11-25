@@ -48,6 +48,8 @@ function quoteOf(w: World, id: string): Quote {
     segments: q.segments,
     media: q.media,
     cw: q.cw,
+    previews: w.linkPreviews ? previewFixtures(q.segments) : undefined,
+    nextId: q.quote,
   };
 }
 

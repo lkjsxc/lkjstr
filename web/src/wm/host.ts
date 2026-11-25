@@ -35,7 +35,7 @@ export function createHost(): Host {
       st.setProperty('--text', `${s.textSize}px`);
       st.setProperty('--avatar', `${s.avatarSize}px`);
       st.setProperty('--media-h', `${s.mediaHeight}px`);
-      st.setProperty('--fold', String(s.foldLines || 9999));
+      st.setProperty('--fold', String(s.foldLines));
       if (s.theme === 'system') delete document.documentElement.dataset.theme;
       else document.documentElement.dataset.theme = s.theme;
     },

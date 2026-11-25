@@ -141,7 +141,13 @@ describe('a content warning', () => {
       cw: 'spoilers',
       client: 'Fixture Client',
       media,
-      previews: [],
+      previews: [
+        {
+          kind: 'loading',
+          url: 'https://example.test/story',
+          source: 'https://example.test/story',
+        },
+      ],
       unconfirmed: true,
     } as Partial<NoteRow>);
     const el = renderNote(warned, env, false);

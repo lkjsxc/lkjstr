@@ -213,6 +213,9 @@ export type Quote =
       readonly segments: readonly Segment[];
       readonly media: readonly Media[];
       readonly cw?: string;
+      readonly previews?: readonly LinkPreview[];
+      /** First quoted event of this quote, as a reference with no nested body. */
+      readonly nextId?: string;
     }
   /** Not found (yet), deleted, expired (NIP-40), or by a muted person: one quiet line, never the raw reference. */
   | {

@@ -145,10 +145,45 @@ try {
       ...(await page.evaluate((width) => globalThis.noteLayout.boundary(width), width)),
     });
   }
+  await page.evaluate(() => globalThis.noteLayout.prepareWrapping());
+  const wide = await page.locator('.fold').count();
+  await page.evaluate(() => globalThis.noteLayout.resize(320));
+  await page.locator('.fold').waitFor();
+  const narrow = await page.locator('.fold').count();
+  const shownLines = await page
+    .locator('.text')
+    .evaluate(
+      (el) =>
+        el.getBoundingClientRect().height / Number.parseFloat(getComputedStyle(el).lineHeight),
+    );
+  await page.evaluate(() => globalThis.noteLayout.resize(720));
+  await page.locator('.fold').waitFor({ state: 'detached' });
+  await page.evaluate(() => globalThis.noteLayout.resize(320));
+  await page.locator('.fold').waitFor();
+  await page.locator('.fold').click();
+  await page.evaluate(() => globalThis.noteLayout.repeat());
+  report.wrapping = {
+    wide,
+    narrow,
+    shownLines,
+    unfolded: await page.locator('.text.open').count(),
+  };
+  await page.evaluate(() => globalThis.noteLayout.prepareThreshold(false));
+  const oneExtraLine = await page.locator('.fold').count();
+  await page.evaluate(() => globalThis.noteLayout.prepareThreshold(true));
+  const reservedMedia =
+    (await page.locator('.fold').count()) === 1 && (await page.locator('.mbox').isVisible());
+  report.threshold = { oneExtraLine, reservedMedia };
   await cdp.detach();
   await context.close();
   report.complete =
     !report.errors.length &&
+    wide === 0 &&
+    narrow === 1 &&
+    Math.abs(shownLines - 12) < 0.05 &&
+    report.wrapping.unfolded === 1 &&
+    oneExtraLine === 0 &&
+    reservedMedia &&
     report.boundaries.every(
       (x) =>
         x.before.scrollHeight > x.before.viewportHeight &&

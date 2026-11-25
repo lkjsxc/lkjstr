@@ -1,4 +1,4 @@
-// Folding can remove a native scrollbar by hiding link cards. Batch only when
+// Folding can remove a native scrollbar. Batch only when
 // unchanged, in-flow avatar columns alone keep every native view overflowing.
 export function stableNoteWidths(elements: readonly HTMLElement[]): boolean {
   const views = new Set(elements.map((el) => el.closest<HTMLElement>('.view:not(.has-time-rail)')));

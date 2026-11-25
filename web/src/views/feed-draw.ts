@@ -8,8 +8,9 @@ import { type MomentPart, renderMoment } from './feed-moment.ts';
 import { rowTime } from './feed-scrub.ts';
 import { withHeld } from './held.ts';
 import { disposeLinkCards } from './link-cards.ts';
-import { bodySig, fitNotes, patchNote, renderNote } from './note.ts';
+import { bodySig, patchNote, renderNote } from './note.ts';
 import { disposeNoteAudio, reuseNoteAudio } from './note-audio.ts';
+import { createNoteFits } from './note-fold.ts';
 import type { ViewEnv } from './registry.ts';
 import { renderNotification, renderPerson, renderProfile } from './rows.ts';
 import type { ThreadPart } from './thread-plan.ts';
@@ -34,6 +35,7 @@ export function createRowList(
   dates: boolean | (() => boolean),
   part?: (p: ThreadPart) => HTMLElement,
 ): RowList {
+  const folds = createNoteFits(list);
   let dated = typeof dates === 'function' ? dates() : dates;
   const nodes = new Map<string, { el: HTMLElement; sig: string; body?: string }>(); // bound: rows of the window plus day dividers
   let shown: readonly ListRow[] = [];
@@ -127,7 +129,7 @@ export function createRowList(
         }
       const unfitted = want.filter((node) => !node.dataset.fit);
       for (const node of unfitted) node.dataset.fit = '1';
-      fitNotes(unfitted);
+      folds.fit(unfitted);
     },
     node: (key) => nodes.get(key)?.el,
     row: (key) => shown.find((r) => r.key === key),
@@ -138,6 +140,7 @@ export function createRowList(
       }
     },
     dispose: () => {
+      folds.dispose();
       for (const node of nodes.values()) {
         disposeLinkCards(node.el);
         disposeNoteAudio(node.el);

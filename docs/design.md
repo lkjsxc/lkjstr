@@ -152,9 +152,11 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
 - Absolute times under day separators say `HH:mm` when the note and divider share a local day; cross-day reposts retain the original date. Elsewhere older rows include the full date; every time tooltip has the full date and time. Relative time applies in every feed and is off by default.
 - Above the header, in `--faint`: who reposted, or what is replied to.
 - Text, then media (one picture keeps its ratio up to the media height; two
-  to four share a grid), then quoted notes as cards. Long notes fold by whole
-  lines. Content warnings cover until pressed. A quoted note that cannot be
-  shown is one quiet sentence in the same card.
+  to four share a grid), then quoted notes as cards with their own text, media and
+  links. A further quote is a link line. Long notes fold by rendered height in
+  the tile, counting the reserved media size and revealing at least two lines'
+  worth. Media grids stay whole. Content warnings cover until pressed. A quoted
+  note that cannot be shown is one quiet sentence in the same card.
 - Until it arrives, the short npub is muted at weight 500. The name that replaces it fades in once (0.24s, from
   0.35 opacity) in every tile drawing it then; later redraws and reduced motion draw it plainly. Each tile lays out
   and paints alone (`contain: layout paint style`), so a row arriving in one tile never re-lays out its neighbours.
