@@ -12,14 +12,16 @@ body { color: var(--fg); font: 13.5px / 1.45 system-ui, -apple-system, "Segoe UI
 .bar > .brand:hover { background: var(--hover); }
 .grow { flex: 1; }
 .bar .icon { flex: 0 0 28px; display: grid; place-items: center; width: 28px; height: 28px; }
-.acct { display: grid; place-items: center; min-width: 28px; height: 28px; padding: 0; border-radius: 50%; color: var(--accent); }
+/* The account takes the room around its face (--ax, --ay), so the whole padded box switches; marks keep to the face. */
+.acct { --ax: 7px; --ay: 7px; display: grid; place-items: center; box-sizing: border-box; min-width: calc(20px + 2 * var(--ax)); height: calc(20px + 2 * var(--ay)); padding: 0 var(--ax); border-radius: 8px; color: var(--accent); }
 .acct { position: relative; flex: none; }
-.acct:hover { box-shadow: 0 0 0 2px var(--hover); }
+.acct:hover { background: var(--hover); }
+@media (pointer: coarse) { .acct { --ax: 10px; --ay: 9px; } }
 /* Signed out, the account is the way in: one button that says so, on one line at any width. */
 .acct.out { height: 26px; padding: 0 11px; border-radius: 6px; background: var(--accent); color: var(--bg); font-weight: 600; white-space: nowrap; }
-.acct.out:hover { box-shadow: none; filter: brightness(1.08); }
+.acct.out:hover { background: var(--accent); filter: brightness(1.08); }
 /* A read-only account: a ring on the face, wherever the face is the one that would post. */
-.acct .ro { position: absolute; right: -3px; bottom: -3px; width: 8px; height: 8px; border: 2px solid var(--paper); border-radius: 50%; background: var(--danger); }
+.acct .ro { position: absolute; right: calc(var(--ax) - 7px); bottom: calc(var(--ay) - 7px); width: 8px; height: 8px; border: 2px solid var(--paper); border-radius: 50%; background: var(--danger); }
 .acct .ro.locked { width: 12px; height: 12px; border: 0; border-radius: 0; background: var(--paper); color: var(--faint); }
 .acct .locked .i { width: 12px; height: 12px; }
 .relays { font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; }
@@ -160,6 +162,8 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .titem:hover, .titem.on { background: var(--hover); }
 .menu .msep { height: 1px; margin: 4px 0; background: var(--line); }
 .menu button > .av { margin-right: 8px; }
+/* A person in a menu (the account menu's rows) is a roomy row: all of it, padding included, is the press. */
+@media not (pointer: coarse) { .menu button:has(> .av) { min-height: 36px; padding-block: 8px; } }
 .menu .mtext { display: flex; flex-direction: column; min-width: 0; line-height: 1.3; font-weight: 600; }
 .menu .msub { color: var(--faint); font-size: 12px; font-weight: 400; }
 .drop { position: absolute; pointer-events: none !important; background: color-mix(in srgb, var(--accent) 18%, transparent); border: 2px solid var(--accent); border-radius: 4px; }

@@ -55,6 +55,8 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
   device; read-only has a mark) and a menu of the reader's own: their row,
   which opens their profile, the other accounts, and Accounts. Signed out
   it is one filled button, "Sign in", and there is no new-note button.
+- The account is pressed anywhere in the room around its face (34px; 40 by 38 on a touch screen), padding
+  included; so are the people in its menu (rows of 36px) and the Accounts tab's rows (44px; 52px on a touch screen).
 - Menus from the bar's right end hang under their button, right edges together; the bar's tab search button opens
   tab search there (its key, over the tile), each kept 4px inside the window (owner, 2026-11-25).
 - At phone width (owner, 2026-11-22, as ytenrich's masthead) the name stays and tab search, Post and the account stay at

@@ -32,4 +32,4 @@
 .dm-outbox-row .actions { display: flex; gap: 6px; margin: 6px 0; }
 .dm-outbox-row .text { white-space: pre-wrap; overflow-wrap: anywhere; }
 .dm-space { pointer-events: none; }
-.dm-dot { position: absolute; right: -1px; top: -1px; width: 7px; height: 7px; border: 2px solid var(--paper); border-radius: 50%; background: var(--seal); }
+.dm-dot { position: absolute; right: calc(var(--ax, 4px) - 5px); top: calc(var(--ay, 4px) - 5px); width: 7px; height: 7px; border: 2px solid var(--paper); border-radius: 50%; background: var(--seal); }

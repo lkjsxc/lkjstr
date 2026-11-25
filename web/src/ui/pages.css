@@ -54,6 +54,7 @@
   .rrow > .chip { padding: 9px 14px; }
   .addrow input, .addrow .btn { height: 40px; }
   .srow { min-height: 44px; }
+  .amain { min-height: 52px; }
     .toast.undo .lnk { padding: 8px 4px; margin: -8px -4px; }
 }
 /* Relays shows state; what each listed relay is used for is said, not switched. */
@@ -65,12 +66,12 @@
 .aadd { max-width: 520px; }
 .alist { margin-bottom: 16px; border-top: 1px solid var(--line); }
 .alist[hidden] { display: none; }
-.arow { padding: 5px 0; border-bottom: 1px solid var(--line); }
+.arow { padding: 2px 0; border-bottom: 1px solid var(--line); }
 .ahead { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; min-width: 0; }
 /* The name keeps about 200px; buttons that would take it go to a line of their own, at the right. */
 .aidentity { display: flex; flex: 1 1 200px; align-items: center; gap: 6px; min-width: 0; }
 .aidentity > .avb { align-self: center; }
-.amain { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; padding: 4px 8px 4px 4px; border-radius: 6px; text-align: left; }
+.amain { display: flex; align-items: center; gap: 10px; flex: 1; box-sizing: border-box; min-width: 0; min-height: 44px; padding: 8px 10px 8px 8px; border-radius: 6px; text-align: left; }
 .amain:hover { background: var(--hover); }
 .amain[aria-current] { cursor: default; }
 .amain[aria-current]:hover { background: none; }
