@@ -9,6 +9,9 @@ fn performance() -> Option<web_sys::Performance> {
 pub(crate) fn now() -> f64 {
     performance().map_or_else(js_sys::Date::now, |p| p.now())
 }
+pub(crate) fn epoch_now() -> u64 {
+    performance().map_or_else(js_sys::Date::now, |p| p.time_origin() + p.now()) as u64
+}
 pub(crate) fn origin() -> f64 {
     performance().map_or(0.0, |p| p.time_origin())
 }

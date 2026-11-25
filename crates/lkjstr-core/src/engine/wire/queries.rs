@@ -57,6 +57,9 @@ pub struct Hint {
     pub save_data: bool,
     pub effective_type: Option<String>,
     pub device_memory: Option<f64>,
+    pub since_scroll_ms: Option<f64>,
+    pub since_input_ms: Option<f64>,
+    pub scroll_rows_per_s: Option<f64>,
 }
 #[derive(Debug, Clone, Deserialize, Default)]
 pub struct Config {

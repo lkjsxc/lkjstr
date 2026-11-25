@@ -2,6 +2,7 @@ use super::*;
 impl Network {
     pub fn tick(&mut self, now: u64) {
         self.now = now;
+        self.observe_link(now);
         self.expire_publish_routes(now);
         self.wake_reads(now);
         self.auth_tick(now);

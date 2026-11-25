@@ -43,6 +43,7 @@ impl Engine {
             .collect();
         rows.sort_by_key(|row| (row.kind != Some(5), row.id.clone()));
         self.store.pin_contexts(&rows)?;
+        self.trim_store();
         self.restore_cache(&rows);
         for context in &contexts {
             if context.deleted() {

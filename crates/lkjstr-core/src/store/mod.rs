@@ -1,12 +1,14 @@
-//! In-memory event store: deduplicated, indexed, bounded. The browser layer
-//! persists it to IndexedDB and reloads the newest slice at startup.
+//! Bounded event store hydrated from IndexedDB.
 
+mod access;
 mod author_feed;
 mod bytes;
 pub use bytes::event_payload_bytes;
 mod address;
 mod context_pins;
+mod deletion_addresses;
 mod directory;
+mod eviction_fences;
 mod expiration;
 mod identity;
 mod index;
@@ -14,6 +16,7 @@ mod profile;
 mod query;
 mod retention;
 mod snapshot;
+mod weighted;
 
 pub use profile::Profile;
 pub use query::Query;
@@ -51,11 +54,14 @@ pub struct Store {
     by_tag_e: HashMap<String, Vec<String>>,
     by_comment_address: HashMap<String, Vec<String>>,
     replaceable: HashMap<(String, u64), String>,
+    // One revision per retained addressable coordinate.
+    addressable: HashMap<(String, u64, String), String>,
     profiles: HashMap<String, Arc<Profile>>,
     verified_nip05: HashMap<String, String>,
     // At most 512 query name bindings; HTTP evidence is checked before insertion.
     query_names: HashMap<String, String>,
     deleted: HashSet<(String, String)>,
+    address_deletions: deletion_addresses::DeletionAddresses,
     context_pins: HashSet<String>,
     context_deleted: HashSet<(String, String)>,
     verified_deleted: HashMap<String, u64>,
@@ -74,18 +80,27 @@ pub struct Store {
     snapshot_revision: u64,
     evictions: u64,
     // At most MAX_DELETED recent evictions, with verified IDs only.
-    evicted: BTreeMap<String, u64>,
+    evicted: BTreeMap<String, eviction_fences::Fence>,
+    // Two orderings of the same bounded fence set, for removal and range repairs.
+    evicted_order: BTreeSet<(u64, String)>,
+    evicted_times: BTreeSet<Key>,
+    ghost_hits: u64,
+    weighted: bool,
+    access: access::Access,
+    keep: crate::optimizer::keep_policy::KeepScorer,
+    // Latest bounded pressure sample.
+    keep_low: Vec<crate::optimizer::keep_policy::KeepItem>,
+    keep_high: Vec<crate::optimizer::keep_policy::KeepItem>,
+    keep_weights: [usize; 6],
     payload_bytes: usize,
     byte_cap: usize,
 }
 
 impl Store {
-    /// Each class (regular and replaceable) retains at most `cap` events.
     pub fn new(cap: usize) -> Store {
         Self::with_caps(cap, cap)
     }
 
-    /// Independent bounds prevent metadata from starving note retention.
     pub fn with_caps(cap: usize, replaceable_cap: usize) -> Store {
         Store {
             events: HashMap::new(),
@@ -96,10 +111,12 @@ impl Store {
             by_tag_e: HashMap::new(),
             by_comment_address: HashMap::new(),
             replaceable: HashMap::new(),
+            addressable: HashMap::new(),
             profiles: HashMap::new(),
             verified_nip05: HashMap::new(),
             query_names: HashMap::new(),
             deleted: HashSet::new(),
+            address_deletions: Default::default(),
             context_pins: HashSet::new(),
             context_deleted: HashSet::new(),
             verified_deleted: HashMap::new(),
@@ -115,6 +132,15 @@ impl Store {
             snapshot_revision: 0,
             evictions: 0,
             evicted: BTreeMap::new(),
+            evicted_order: BTreeSet::new(),
+            evicted_times: BTreeSet::new(),
+            ghost_hits: 0,
+            weighted: false,
+            access: Default::default(),
+            keep: Default::default(),
+            keep_low: Vec::new(),
+            keep_high: Vec::new(),
+            keep_weights: [0; 6],
             payload_bytes: 0,
             byte_cap: 64 * 1024 * 1024,
         }
@@ -145,10 +171,17 @@ impl Store {
         self.get(id)
     }
 
-    /// Inserts a (verified) event seen on `relay`.
     pub fn insert(&mut self, event: NostrEvent, relay: Option<&str>) -> Inserted {
-        if self.was_deleted(&event.id, &event.pubkey) {
-            self.confirm_verified_deletion(&event.id);
+        self.insert_inner(event, relay, false)
+    }
+
+    pub(crate) fn insert_deferred(&mut self, event: NostrEvent, relay: Option<&str>) -> Inserted {
+        self.insert_inner(event, relay, self.weighted)
+    }
+
+    fn insert_inner(&mut self, event: NostrEvent, relay: Option<&str>, deferred: bool) -> Inserted {
+        if self.was_deleted(&event.id, &event.pubkey) || self.address_deletions.covers(&event) {
+            self.apply_verified_deletion(&event.id);
             return Inserted::Deleted;
         }
         if self.events.contains_key(&event.id) {
@@ -159,6 +192,7 @@ impl Store {
         }
         let deadline = match expiration::deadline(&event) {
             Ok(Some(at)) if at <= self.now_seconds => {
+                self.resolve_eviction(&event.id, false);
                 self.record_expiration(&event.id, &event.pubkey);
                 return Inserted::Expired;
             }
@@ -187,6 +221,12 @@ impl Store {
                     .insert(event.pubkey.clone(), Arc::new(profile));
             }
         }
+        if let Some(replaced) = self.replace_address(&event) {
+            match replaced {
+                Inserted::Stale => return Inserted::Stale,
+                _ => outcome = replaced,
+            }
+        }
         if event.kind == 5 {
             self.apply_deletion(&event);
         }
@@ -196,10 +236,15 @@ impl Store {
         if let Some(deadline) = deadline {
             self.expiry_deadlines.insert((deadline, event.id.clone()));
         }
+        self.resolve_eviction(&event.id, relay.is_some_and(|url| url.starts_with("ws")));
+        self.access
+            .record(&event.id, self.now_seconds / 60, self.keep.inflation());
         self.record_insert(&event);
         self.index(Arc::new(event));
         self.revision += 1;
-        self.evict();
+        if !deferred {
+            self.evict();
+        }
         outcome
     }
 }

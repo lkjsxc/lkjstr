@@ -69,7 +69,39 @@ impl Network {
                     .then(|| ((relay.clone(), want_key::key(&repair)), repair, owners))
             })
             .collect();
-        for (key, filter, members) in repairs {
+        let gap_repairs: Vec<_> = desired
+            .iter()
+            .filter_map(|((relay, _), (filter, members))| {
+                if !telemetry::public_filter(filter)
+                    || filter.ids.is_some()
+                    || filter.search.is_some()
+                {
+                    return None;
+                }
+                let (at, id) = store.eviction_target(filter)?;
+                let owners: BTreeSet<_> = members
+                    .iter()
+                    .filter_map(|member| {
+                        let owner =
+                            crate::engine::time_window_relay::view_owner(member).unwrap_or(member);
+                        queries
+                            .contains_key(member)
+                            .then(|| format!("~repair:{owner}"))
+                    })
+                    .collect();
+                if owners.is_empty() || owners.iter().all(|member| member.starts_with("~repair:~"))
+                {
+                    return None;
+                }
+                let mut repair = filter.clone();
+                repair.ids = Some(vec![id.to_owned()]);
+                repair.since = Some(at);
+                repair.until = Some(at);
+                repair.limit = Some(1);
+                Some(((relay.clone(), want_key::key(&repair)), repair, owners))
+            })
+            .collect();
+        for (key, filter, members) in repairs.into_iter().chain(gap_repairs) {
             desired
                 .entry(key)
                 .or_insert_with(|| (filter, BTreeSet::new()))

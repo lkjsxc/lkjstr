@@ -65,7 +65,7 @@ target event; a p tag alone cannot earn weight. Graph entries cap at 12000, plus
 mutes. The policy informs route marginal coverage, request ties and hydration
 exclusion. Device-wide refresh requests without a reader use neutral weight 1.
 PersonRow.weight exposes the account-scoped person weight. There is no composer mention list in this
-checkout to reorder. Retention remains unchanged.
+checkout to reorder. [Stage 1](orchestration-optimizer.md) uses weight classes for retention.
 
 ## Stats and channels
 
@@ -120,7 +120,5 @@ and too-many-requests failures remain unreproduced on the sampled relays.
 - Stable live count buckets: keeping small completed batches reduced replay during
   arrival but occupied slots and caused rotation after arrival stopped. That
   experiment was removed. Finite envelope merging does not solve live count churn.
-- Weighted retention: needs adversarial quality/freshness fixtures before replacing
-  current chronological store caps. Exposing person weight does not change eviction.
 
 No placeholder success, synthetic public channels or claimed two-cover is exposed.

@@ -1,7 +1,7 @@
 # Engine proposals
 ## Purpose
 Additive protocol ledger under the 2026-11-16 owner delegation. See status.md and parity.md for current behavior and limits.
-See [protocol 16](engine-proposals-emoji.md) and [history](engine-proposals-history.md).
+See [history](engine-proposals-history.md), [emoji](engine-proposals-emoji.md), and [optimizer](orchestration-optimizer.md#protocol-additions).
 - Protocol 17 (S4): `NoteRow.face?` provides bounded public `{type:'generic', alt?, form, tags, moreTags}`; typed
   `GenericTagLine.ref?` carries event/address/person/topic/link/relay identities on policy-authorized public rows.
 - Protocol 17 (S4): `NoteRow.copyLink?` carries the canonical path `/n/nevent` (kind/author) or `/a/naddr` (exact address); `bech32` and Copy ID are unchanged.

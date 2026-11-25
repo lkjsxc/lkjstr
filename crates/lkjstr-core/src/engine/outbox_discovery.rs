@@ -48,7 +48,18 @@ impl Engine {
                         && !self.network.metadata_fresh(&self.store, author, 10002, now)
                 })
                 .collect();
-            for chunk in authors.chunks(120).take(50) {
+            let chunk_size = self
+                .network
+                .optimizer
+                .decide_plan(
+                    crate::optimizer::features::Features {
+                        profile: true,
+                        ..Default::default()
+                    },
+                    &[],
+                )
+                .author_chunk;
+            for chunk in authors.chunks(chunk_size).take(6000 / chunk_size) {
                 wants.push((
                     format!("~prefetch:outbox:{sub}"),
                     NostrFilter {

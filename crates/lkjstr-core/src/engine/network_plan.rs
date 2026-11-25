@@ -37,9 +37,18 @@ impl Network {
                         .collect(),
                     primary: BTreeSet::new(),
                     change: None,
+                    hedge_delay_ms: 400,
                 }
             } else {
-                self.read_route_plan(f, q, store, &mut weights, now, time_owner)
+                self.read_route_plan(
+                    f,
+                    q,
+                    store,
+                    &mut weights,
+                    now,
+                    time_owner,
+                    self.focused_sub.as_deref() == Some(progress::view_owner(sub)),
+                )
             };
             let mut routes = selected.routes;
             // Keep unfinished or full preceding, still-permitted routes when a
@@ -66,13 +75,18 @@ impl Network {
             routes.dedup();
             for r in routes {
                 let primary = selected.primary.contains(&r);
+                let decision = selected
+                    .change
+                    .as_ref()
+                    .filter(|(_, target)| target == &r)
+                    .map(|(kind, _)| (*kind, selected.hedge_delay_ms));
                 let key = (
                     r,
                     time_owner.map_or_else(|| want_key::key(f), |owner| owner.to_owned()),
                 );
                 if primary {
                     let change = primary_reads.entry(key.clone()).or_insert(None);
-                    *change = change.or(selected.change);
+                    *change = change.or(decision);
                 }
                 desired
                     .entry(key)
@@ -115,8 +129,14 @@ impl Network {
                 let promoted = read_slot && !r.read_slot;
                 r.read_slot = read_slot;
                 retained.insert(id.clone());
-                if let Some(kind) = change.filter(|_| promoted).or(shared) {
-                    self.decision(now, kind, &relay);
+                if let Some((kind, delay)) = change.filter(|_| promoted) {
+                    let sub = self.telemetry.member(&r.members);
+                    let hedge = matches!(kind, crate::engine::telemetry::Kind::Hedge);
+                    r.role = if hedge { "hedge" } else { "fallback" };
+                    self.decision_for(now, kind, &relay, sub, None, hedge.then_some(delay));
+                } else if let Some((kind, count)) = shared {
+                    let sub = self.telemetry.member(&r.members);
+                    self.decision_for(now, kind, &relay, sub, Some(count), None);
                 }
                 if close {
                     self.close_group(&relay, &wire);
@@ -152,8 +172,16 @@ impl Network {
                 } else {
                     self.hydration_ready(&filter, &members, now)
                 };
-                if let Some(kind) = change {
-                    self.decision(now, kind, &relay);
+                if let Some((kind, delay)) = change {
+                    let sub = self.telemetry.member(&members);
+                    self.decision_for(
+                        now,
+                        kind,
+                        &relay,
+                        sub,
+                        None,
+                        matches!(kind, crate::engine::telemetry::Kind::Hedge).then_some(delay),
+                    );
                 }
                 let previous = pending.as_ref().and_then(|id| self.requests.get(id));
                 let cached_until = previous.and_then(|r| r.cached_until).or_else(|| {
@@ -179,6 +207,11 @@ impl Network {
                         page_filter: filter.clone(),
                         cached_until,
                         members,
+                        role: match change.map(|(kind, _)| kind) {
+                            Some(crate::engine::telemetry::Kind::Hedge) => "hedge",
+                            Some(crate::engine::telemetry::Kind::Fallback) => "fallback",
+                            _ => "primary",
+                        },
                         read_slot,
                         verification_retry: previous.is_some_and(|r| r.verification_retry),
                         sent: false,
@@ -207,38 +240,7 @@ impl Network {
                 );
             }
         }
-        let obsolete: Vec<_> = self
-            .requests
-            .keys()
-            .filter(|id| !retained.contains(*id))
-            .cloned()
-            .collect();
-        for id in obsolete {
-            // Rerouting a still-wanted follower page must not discard its
-            // unfinished physical answer. Wait for the relay's EOSE before
-            // changing routes; a tab truly closing can still cancel at once.
-            let expensive_inflight = self.requests.get(&id).is_some_and(|r| {
-                r.sent
-                    && !r.page_eose
-                    && now.saturating_sub(r.sent_at) < 9000
-                    && r.filter.kinds.as_deref() == Some(&[3])
-                    && r.filter.tags.contains_key("p")
-                    && wants.iter().any(|(sub, filter, _)| {
-                        r.members.contains(sub) && want_key::same(filter, &r.page_filter)
-                    })
-            });
-            if expensive_inflight || self.keep_coverage(&id, now) {
-                continue;
-            }
-            if let Some(r) = self.requests.remove(&id)
-                && r.sent
-                && !self.requests.iter().any(|(id, q)| {
-                    retained.contains(id) && q.sent && q.relay == r.relay && q.wire_id == r.wire_id
-                })
-            {
-                self.close_group(&r.relay, &r.wire_id);
-            }
-        }
+        self.release_obsolete(&wants, &retained, now);
         self.bound_coverage();
         self.request_policy(&queries, store, &mut weights);
         self.read_wakeup(now);

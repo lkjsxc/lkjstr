@@ -4,7 +4,7 @@
 
 Engine routing, delivery bounds and measurements for the 2026-11-15 change.
 The pure publication planner and request selector produce testable route plans;
-the Worker executes effects. Feeds remain chronological.
+the Worker executes effects. Feeds remain chronological. See [Stage 1](orchestration-optimizer.md) for adaptive read policy and retention.
 
 ## Publishing
 
@@ -116,5 +116,5 @@ git show 8e8733596086e5dbdd75e8cb3be5b1af27113134:scripts/engine-orchestration-s
 The read follow-up now ships route-local cursors, durable cooldown/quality,
 finite multi-filter envelopes, focused work, account-scoped weights, request
 purposes and channel metadata discovery. Exact scope, scorecards and remaining
-designs: [outbox.md](outbox.md). Dynamic author two-cover, live count-bucket merging
-and weighted retention remain out of the product.
+designs: [outbox.md](outbox.md). Dynamic author two-cover and live count-bucket merging
+remain open.

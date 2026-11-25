@@ -83,6 +83,7 @@ mod tests {
             page_filter: filter,
             cached_until: None,
             members: BTreeSet::from(["profile".into()]),
+            role: "primary",
             read_slot: false,
             verification_retry: false,
             sent: false,

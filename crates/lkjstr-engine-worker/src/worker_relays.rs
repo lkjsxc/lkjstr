@@ -71,6 +71,7 @@ impl Host {
     }
     pub(super) fn apply_relay_owner(&mut self, force: bool) {
         let at = self.time();
+        self.engine.set_retention_accounts(&self.accounts);
         self.engine.discover_accounts(
             self.accounts
                 .entries

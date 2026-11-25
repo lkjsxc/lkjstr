@@ -49,12 +49,23 @@ impl Network {
             .all(|id| telemetry::public_filter(&self.requests[id].filter))
             && (ids.len() > 1 || first.members.len() > 1)
         {
-            self.decision(now, crate::engine::telemetry::Kind::Coalesce, &relay);
+            let count = ids
+                .iter()
+                .map(|id| self.requests[id].members.len())
+                .sum::<usize>();
+            self.decision_detail(
+                now,
+                crate::engine::telemetry::Kind::Coalesce,
+                &relay,
+                Some(count.saturating_sub(1)),
+                None,
+            );
         }
         self.next = self.next.saturating_add(1);
         let wire = format!("w{}", self.next);
         let mut frame = vec![json!("REQ"), json!(wire)];
         for key in ids {
+            let limit = self.planned_limit(&self.requests[&key], now);
             let r = &mut self.requests.get_mut(&key);
             let Some(r) = r else { continue };
             let wait = r.wait_bound();
@@ -68,12 +79,7 @@ impl Network {
                 };
                 filter.since = Some(at.saturating_sub(overlap).max(filter.since.unwrap_or(0)));
             }
-            filter.limit = Some(
-                filter
-                    .limit
-                    .unwrap_or(200)
-                    .min(self.relays[&relay].max_limit),
-            );
+            filter.limit = Some(limit);
             frame.push(filter_to_value(&filter));
             if !r.page_eose {
                 r.page_limit = filter.limit.unwrap_or(200) as usize;

@@ -44,6 +44,9 @@ impl Request {
         if verifying {
             return TimeEdge::Loading;
         }
+        if store.eviction_gap(&self.filter).is_some() {
+            return TimeEdge::Partial;
+        }
         let verified = self.received.iter().all(|id| {
             store.get(id).is_some_and(|event| {
                 self.received.timestamp(id) == Some(event.created_at)
@@ -72,7 +75,8 @@ impl Request {
         let Some(pages) = self.time_pages.as_ref() else {
             return;
         };
-        if pages.count >= MAX_PAGES
+        if store.eviction_gap(&self.filter).is_some()
+            || pages.count >= MAX_PAGES
             || self.received.len() < self.page_limit
             || self.time_edge(pages, store, false) != TimeEdge::Partial
         {

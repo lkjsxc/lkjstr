@@ -1,63 +1,18 @@
-//! Pure request routing with bounded progressive fallback.
-//! Inputs are observations and verified outbox lists, never timeline order.
 pub use super::quality::weight;
-use std::collections::{BTreeMap, BTreeSet};
+#[cfg(test)]
+use std::collections::BTreeMap;
+use std::collections::BTreeSet;
 #[path = "read_recovery.rs"]
 mod recovery;
-#[derive(Clone, Debug)]
-pub struct Candidate {
-    pub url: String,
-    /// Quantized 0..1000 transport quality; zero is cooling down.
-    pub weight: u64,
-    /// Requested authors whose verified list advertises this relay for writing.
-    pub authors: BTreeSet<String>,
-}
-
-/// Greedy coverage with a quality prior. Two copies are useful; first coverage
-/// counts twice. Unknown authors stay on ordinary reader-selected routes.
-/// This bounded selector does not claim global two-cover or discover transports.
-pub fn select(candidates: &[Candidate], limit: usize) -> Vec<String> {
-    select_weighted(candidates, limit, |_| 1)
-}
-pub fn select_weighted(
-    candidates: &[Candidate],
-    limit: usize,
-    person: impl Fn(&str) -> u64,
-) -> Vec<String> {
-    let mut selected = Vec::new();
-    let mut covered = BTreeMap::<&str, usize>::new();
-    while selected.len() < limit.min(candidates.len()) {
-        let best = candidates
-            .iter()
-            .filter(|r| !selected.contains(&r.url))
-            .max_by(|a, b| {
-                let utility = |r: &Candidate| {
-                    let gain = r.authors.iter().fold(0u64, |sum, author| {
-                        sum.saturating_add(person(author).saturating_mul(
-                            match covered.get(author.as_str()) {
-                                None => 2,
-                                Some(1) => 1,
-                                _ => 0,
-                            },
-                        ))
-                    });
-                    r.weight.saturating_mul(1 + gain)
-                };
-                utility(a).cmp(&utility(b)).then_with(|| b.url.cmp(&a.url))
-            });
-        let Some(best) = best else { break };
-        for author in &best.authors {
-            *covered.entry(author.as_str()).or_default() += 1;
-        }
-        selected.push(best.url.clone());
-    }
-    selected
-}
+#[path = "read_selection.rs"]
+mod selection;
+pub use selection::{Candidate, select, select_weighted};
 
 pub(super) struct ReadRoutes {
     pub routes: Vec<String>,
     pub primary: BTreeSet<String>,
-    pub change: Option<crate::engine::telemetry::Kind>,
+    pub change: Option<(crate::engine::telemetry::Kind, String)>,
+    pub hedge_delay_ms: u64,
 }
 impl super::Network {
     pub(in crate::engine) fn read_routes<'a>(
@@ -68,8 +23,10 @@ impl super::Network {
         weights: &mut crate::engine::weights::PlanWeights<'a>,
         now: u64,
     ) -> Vec<String> {
-        self.read_route_plan(f, q, store, weights, now, None).routes
+        self.read_route_plan(f, q, store, weights, now, None, false)
+            .routes
     }
+    #[allow(clippy::too_many_arguments)]
     pub(super) fn read_route_plan<'a>(
         &self,
         f: &lkjstr_protocol::NostrFilter,
@@ -78,18 +35,12 @@ impl super::Network {
         weights: &mut crate::engine::weights::PlanWeights<'a>,
         now: u64,
         time_owner: Option<&str>,
+        focused: bool,
     ) -> ReadRoutes {
         use crate::engine::protocol::Source;
         let mut candidates = self.read_candidates(f, q, store, now);
         let channel = matches!(q.source, Source::Channel | Source::Channels);
         let hedge = !channel && self.hedge_due(f, now, time_owner);
-        let limit = if channel {
-            24
-        } else if hedge {
-            3
-        } else {
-            2
-        };
         let current = self.count_routes(f, now).unwrap_or_else(|| {
             self.requests
                 .values()
@@ -132,6 +83,47 @@ impl super::Network {
                 candidate.weight = 0;
             }
         }
+        let max = if channel { 24 } else { 8 };
+        let ranked = if candidates.iter().any(|c| !c.authors.is_empty()) {
+            let policy = weights.get(q.account.as_deref());
+            select_weighted(&candidates, max, |p| policy.person(p))
+        } else {
+            select(&candidates, max)
+        };
+        let available: Vec<_> = ranked
+            .iter()
+            .filter(|url| {
+                !q.filters.relay_hints.contains(url)
+                    && !unavailable.contains(*url)
+                    && self.relays[*url].cooldown_until <= now
+            })
+            .collect();
+        let observed: Vec<_> = available
+            .iter()
+            .enumerate()
+            .map(|(i, url)| self.route_features(url, i, now))
+            .collect();
+        let adaptive = !channel && time_owner.is_none() && super::telemetry::public_filter(f);
+        let plan = crate::optimizer::plan_policy::decide(
+            crate::optimizer::features::Features {
+                focused,
+                ..self.plan_features(now)
+            },
+            self.optimizer.link.state(),
+            &observed,
+            self.optimizer.enabled && adaptive,
+        );
+        let existing_hedge = current.values().find(|r| r.role == "hedge" && r.read_slot);
+        let hedge = hedge || existing_hedge.is_some();
+        let limit = if channel {
+            24
+        } else {
+            (plan.fanout + usize::from(hedge)).min(3)
+        };
+        let hedge_target = existing_hedge.map(|r| &r.relay).or_else(|| {
+            plan.hedge_target
+                .and_then(|index| available.get(index).copied())
+        });
         // Stable, usable routes occupy the ordinary slots. A refusal, timeout or
         // failed connection must leave room for another permitted reader.
         let mut routes: Vec<_> = candidates
@@ -170,14 +162,24 @@ impl super::Network {
             });
             routes.truncate(limit);
         }
-        let selected = if candidates.iter().any(|c| !c.authors.is_empty()) {
-            let policy = weights.get(q.account.as_deref());
-            select_weighted(&candidates, limit, |p| policy.person(p))
-        } else {
-            select(&candidates, limit)
-        };
-        for url in selected {
+        let mut new_hedge = None;
+        if hedge
+            && routes.len() == limit.saturating_sub(1)
+            && let Some(url) =
+                hedge_target.filter(|url| !routes.contains(url) && !unavailable.contains(*url))
+        {
+            new_hedge = Some(url.clone());
+            routes.push(url.clone());
+        }
+        for url in ranked {
             if routes.len() < limit && !routes.contains(&url) {
+                if hedge && routes.len() + 1 == limit && !current.contains_key(url.as_str()) {
+                    let peer = self.route_features(&url, 0, now);
+                    if peer.closed_recent || peer.cooldown {
+                        continue;
+                    }
+                    new_hedge = Some(url.clone());
+                }
                 routes.push(url);
             }
         }
@@ -190,24 +192,23 @@ impl super::Network {
                 &q.filters.relay_hints,
             );
         }
-        // A newly discovered outbox may join an in-flight configured page without
-        // discarding either route's cursor or waiting for its EOSE.
-        if f.until.is_none()
-            && routes.len() < 3
-            && !routes.iter().any(|url| {
-                candidates
-                    .iter()
-                    .any(|c| &c.url == url && !c.authors.is_empty())
+        self.preserve_new_outbox(f, &candidates, &mut routes);
+        use crate::engine::telemetry::Kind;
+        let change = if super::telemetry::public_filter(f) {
+            new_hedge.map(|url| (Kind::Hedge, url)).or_else(|| {
+                (!unavailable.is_empty())
+                    .then(|| {
+                        routes.iter().find(|url| {
+                            !current.contains_key(url.as_str()) && !unavailable.contains(*url)
+                        })
+                    })
+                    .flatten()
+                    .map(|url| (Kind::Fallback, url.clone()))
             })
-            && let Some(outbox) = candidates
-                .iter()
-                .filter(|c| !c.authors.is_empty() && c.weight > 0)
-                .max_by_key(|c| c.weight)
-            && !routes.contains(&outbox.url)
-        {
-            routes.push(outbox.url.clone());
-        }
-        let change = super::telemetry::read_changes(f, &current, &routes, hedge);
+        } else {
+            None
+        };
+        let hedge_delay_ms = self.hedge_after(current.values().copied());
         let primary = routes.iter().cloned().collect();
         // Keep failed-page uncertainty outside those slots. Historical evidence
         // also survives recovery/reranking; bounded by configured read routes and
@@ -228,6 +229,7 @@ impl super::Network {
             routes,
             primary,
             change,
+            hedge_delay_ms,
         }
     }
 }

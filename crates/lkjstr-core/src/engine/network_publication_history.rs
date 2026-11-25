@@ -115,7 +115,7 @@ impl Network {
     }
 
     pub(in crate::engine) fn stats_publications(&self) -> Value {
-        use crate::engine::telemetry::{relay_error, relay_label};
+        use crate::engine::telemetry::relay_error;
         json!(
             self.publication_history
                 .iter()
@@ -126,14 +126,16 @@ impl Network {
                         .iter()
                         .cloned()
                         .map(|mut route| {
-                            route.url = relay_label(&route.url);
+                            route.url = self.stats_relay_label(&route.url);
                             route
                         })
                         .collect();
                     let messages: BTreeMap<_, _> = record
                         .messages
                         .iter()
-                        .map(|(relay, message)| (relay_label(relay), relay_error(message)))
+                        .map(|(relay, message)| {
+                            (self.stats_relay_label(relay), relay_error(message))
+                        })
                         .collect();
                     json!({"id":record.id,"kind":record.kind,"at":record.at,"deliveries":deliveries,
                     "messages":messages,"unresolvedRecipients":record.unresolved_recipients})

@@ -1,4 +1,4 @@
-//! At most one speculative older page per visible view, within one buffer of its end.
+//! Bounded speculative older pages near the end of a visible window.
 use super::{
     Engine,
     protocol::{Query, Source},
@@ -7,6 +7,10 @@ use lkjstr_protocol::NostrFilter;
 const PREFETCH_BUFFER_ROWS: usize = 60;
 impl Engine {
     pub(super) fn nearby_wants(&self) -> Vec<(String, NostrFilter, Query)> {
+        let depth = self.network.prefetch_depth();
+        if depth == 0 {
+            return Vec::new();
+        }
         let mut wants = Vec::new();
         for (sub, view) in self.views.iter().filter(|(_, view)| view.visible) {
             if view.time_window.is_some()
@@ -45,10 +49,29 @@ impl Engine {
             {
                 continue;
             }
-            let mut older = head.clone();
-            older.until = Some(until);
-            if &older != active {
-                wants.push((format!("~prefetch:{sub}"), older, view.query.clone()));
+            let mut until = until;
+            for _ in 0..depth {
+                let mut older = head.clone();
+                older.until = Some(until);
+                if &older == active {
+                    break;
+                }
+                wants.push((
+                    format!("~prefetch:{sub}"),
+                    older.clone(),
+                    view.query.clone(),
+                ));
+                if !self.network.page_finished(&older) || self.network.page_exhausted(&older) {
+                    break;
+                }
+                let Some(next) = self
+                    .network
+                    .page_cursor(&older)
+                    .filter(|next| *next < until)
+                else {
+                    break;
+                };
+                until = next;
             }
         }
         wants

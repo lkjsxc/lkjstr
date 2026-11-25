@@ -48,6 +48,11 @@ impl Store {
             self.expiry_deadlines.remove(&(at, id.to_owned()));
         }
         self.generations.remove(id);
+        self.access.remove(id);
+        if let Some(d) = super::weighted::identifier(&event) {
+            self.addressable
+                .remove(&(event.pubkey.clone(), event.kind, d.to_owned()));
+        }
         self.snapshot_revision = self.revision;
         self.payload_bytes = self
             .payload_bytes

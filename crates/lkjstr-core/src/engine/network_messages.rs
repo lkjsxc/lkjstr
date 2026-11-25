@@ -49,6 +49,8 @@ impl Network {
                 self.telemetry.traffic(now, |bucket| bucket.events_in += 1);
                 if let Some(r) = self.relays.get_mut(relay) {
                     r.received += 1;
+                    let bytes = text.len() as u64;
+                    r.event_bytes = Some(r.event_bytes.map_or(bytes, |old| (old * 7 + bytes) / 8));
                     self.quality_revision = self.quality_revision.wrapping_add(1);
                 }
                 if self.delivery_event(relay, &subscription_id, &event) {
@@ -67,7 +69,7 @@ impl Network {
                     }
                 }
                 if accepted {
-                    self.delivery_wire = Some((relay.into(), subscription_id));
+                    self.delivery_wire = Some((relay.into(), subscription_id, text.len()));
                     return Some(event);
                 }
                 self.unmatched_frames = self.unmatched_frames.saturating_add(1);
@@ -96,6 +98,7 @@ impl Network {
                 if let Some(latency) = first_latency
                     && let Some(peer) = self.relays.get_mut(relay)
                 {
+                    self.optimizer.link.observe_rtt(latency);
                     peer.latency_ms = Some(
                         peer.latency_ms
                             .map_or(latency, |old| (old * 7 + latency) / 8),
@@ -142,6 +145,7 @@ impl Network {
                     self.quality_revision = self.quality_revision.wrapping_add(1);
                     if let Some(relay) = self.relays.get_mut(relay) {
                         relay.last_error = Some(message.chars().take(512).collect());
+                        relay.last_closed = Some(now);
                     }
                     r.deadline = now;
                     r.complete = !split && !quality::limited(&message);

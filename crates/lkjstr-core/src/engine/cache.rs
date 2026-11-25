@@ -16,13 +16,16 @@ impl Engine {
         relay: Option<&str>,
     ) -> crate::store::Inserted {
         self.read_contexts.changed(&event);
-        self.store.insert(event, relay)
+        self.store.insert_deferred(event, relay)
     }
     pub fn restore_cache(&mut self, records: &[Record]) {
         let revision = self.store.revision();
         let evictions = self.store.evictions();
         let dropped = self.dropped;
-        for record in records {
+        for (index, record) in records.iter().enumerate() {
+            if index != 0 && index.is_multiple_of(64) {
+                self.trim_store();
+            }
             match record.restore() {
                 Ok(Restored::Verified(event)) => {
                     let policy =
@@ -46,6 +49,7 @@ impl Engine {
                 Err(_) => self.cached_history_complete = false,
             }
         }
+        self.trim_store();
         self.cached_history_complete &=
             self.dropped == dropped && self.store.evictions() == evictions;
         if self.store.revision() != revision {

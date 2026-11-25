@@ -38,7 +38,10 @@ pub(super) fn exhausted(network: &Network, store: &Store, v: &View) -> bool {
     }
     query::signed_out(&v.query)
         || !paged(v)
-        || (!network.verifying
+        || (store
+            .eviction_gap(&query::filter(store, &v.query))
+            .is_none()
+            && !network.verifying
             && network.page_exhausted(
                 v.history
                     .as_ref()

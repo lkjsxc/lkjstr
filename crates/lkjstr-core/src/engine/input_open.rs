@@ -25,6 +25,7 @@ impl Engine {
             sub.clone(),
             View {
                 telemetry_id,
+                cache_span: None,
                 month_anchor: None,
                 fresh_count: 0,
                 query,

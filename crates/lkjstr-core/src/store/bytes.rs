@@ -18,7 +18,7 @@ impl Store {
         self.byte_cap
     }
     pub(crate) fn replaceable_len(&self) -> usize {
-        self.replaceable.len()
+        self.replaceable.len() + self.addressable.len()
     }
     pub fn payload_bytes(&self) -> usize {
         self.payload_bytes

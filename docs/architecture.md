@@ -57,12 +57,12 @@ format-tagged receipts; older or mismatched rows still pass ordinary verificatio
 Startup restores a bounded metadata/deletion checkpoint before the newest 2000
 event rows and before opening views. The checkpoint adds at most 4000 records
 and 4 MiB of encoded bytes, including duplicates of event-store bodies.
-Physical event pruning remains 20000 newest rows; memory still retains at most
-16000 regular and 4000 replaceable events with a 64 MiB payload bound. Details,
-verification boundaries and unfinished retention work: [cache-bootstrap.md](cache-bootstrap.md).
+Physical event pruning keeps the newest 20000 rows. Memory targets 16000 regular
+and 4000 replaceable events and 64 MiB of payload using [weighted retention](orchestration-optimizer.md).
+See [cache-bootstrap.md](cache-bootstrap.md) for storage and verification bounds.
 
 There are at most 128 views and 32 attached clients. Each visible view hydrates
-up to 6000 authors; shared profile requests chunk at 120 authors per relay.
+up to 6000 authors. Shared profile requests chunk at 120 authors, or 60 under saturation.
 Per-relay limits and deadlines bound socket work. A visible profile request may
 pause another request, which resumes when a slot becomes available.
 

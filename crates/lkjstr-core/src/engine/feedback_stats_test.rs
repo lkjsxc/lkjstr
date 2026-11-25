@@ -32,7 +32,7 @@ fn view_entries_are_bounded_and_track_focus_and_window_intent() {
     assert_eq!(
         first,
         &json!({
-            "subId":"view-1","source":"global","visible":true,"focused":false,
+            "subId":"view-1","source":"global","sourceKind":"global","visible":true,"focused":false,
             "rowCount":0,"windowKind":"top","freshCount":0
         })
     );
@@ -202,7 +202,32 @@ fn new_worker_fields_leave_existing_stats_totals_and_relay_counters_available() 
             "verifiedTotal":0,"rejectedTotal":0,"droppedTotal":0,"verifyQueueLen":0,
             "verifyIngressBytes":0,"verifyIngressCapBytes":32 * 1024 * 1024,
             "persistenceQueueLen":0,"lastTickMs":4.0,"maxTickMs":12.0,"sliceLimit":32,
-            "regularStored":0,"replaceableStored":0,"memoryCapBytes":64 * 1024 * 1024
+            "regularStored":0,"replaceableStored":0,"memoryCapBytes":64 * 1024 * 1024,
+            "lastSliceVerified":0,"verifyQueueCap":4096,"storeEvictions":0,"ghostHits":0,
+            "payloadBytes":0,"replaceableCap":4000,"regularCap":16000
         })
     );
+}
+
+#[test]
+fn requests_and_relay_timings_use_the_public_orchestration_schema() {
+    let mut engine = Engine::new();
+    let relay = "wss://timing.example/";
+    engine.network.configure(vec![relay.into()], 900);
+    open(&mut engine, "raw-client-id", Query::default());
+    engine.network.connected(relay, 1_100);
+    let stats = engine.stats_at(1_140);
+    assert_eq!(stats["nowMs"], 1_140);
+    assert_eq!(stats["relays"][0]["relayIndex"], 0);
+    assert_eq!(stats["optimizer"]["stage"], 1);
+    let requests = array(&stats, "requests");
+    let primary = requests
+        .iter()
+        .find(|req| req["role"] == "primary")
+        .expect("primary request");
+    assert_eq!(primary["memberSubs"], json!(["view-1"]));
+    assert_eq!(primary["createdAtMs"], 1_000);
+    assert_eq!(primary["hedgeDueAtMs"], 1_400);
+    assert!(primary["firstEventAtMs"].is_null());
+    assert!(!stats.to_string().contains("raw-client-id"));
 }

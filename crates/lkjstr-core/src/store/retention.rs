@@ -1,5 +1,5 @@
 //! Deletion ownership and independent retention bounds for notes and metadata.
-use lkjstr_protocol::{NostrEvent, is_replaceable_kind, tags::tag_values};
+use lkjstr_protocol::{NostrEvent, tags::tag_values};
 
 use super::{MAX_DELETED, Store};
 
@@ -19,6 +19,7 @@ impl Store {
     }
 
     pub(super) fn apply_deletion(&mut self, deletion: &NostrEvent) {
+        self.apply_address_deletion(deletion);
         for target in tag_values(deletion, "e") {
             if self
                 .events
@@ -29,10 +30,13 @@ impl Store {
             }
             if self.events.contains_key(&target)
                 || self.expired_author(&target) == Some(deletion.pubkey.as_str())
+                || self
+                    .evicted
+                    .get(&target)
+                    .is_some_and(|fence| fence.author == deletion.pubkey)
             {
-                self.confirm_verified_deletion(&target);
+                self.apply_verified_deletion(&target);
             }
-            self.remove(&target);
             if self.deleted.len() < MAX_DELETED {
                 self.deleted.insert((target, deletion.pubkey.clone()));
             }
@@ -42,9 +46,9 @@ impl Store {
     pub(super) fn evict(&mut self) {
         for (replaceable, cap) in [(false, self.cap), (true, self.replaceable_cap)] {
             let count = if replaceable {
-                self.replaceable.len()
+                self.replaceable.len() + self.addressable.len()
             } else {
-                self.events.len() - self.replaceable.len()
+                self.events.len() - self.replaceable.len() - self.addressable.len()
             };
             if count <= cap {
                 continue;
@@ -54,8 +58,9 @@ impl Store {
                 .iter()
                 .filter_map(|(_, id)| {
                     let e = self.events.get(id)?;
-                    (is_replaceable_kind(e.kind) == replaceable && !self.context_pins.contains(id))
-                        .then(|| id.clone())
+                    (super::weighted::replaceable(e.kind) == replaceable
+                        && !self.context_pins.contains(id))
+                    .then(|| id.clone())
                 })
                 .take(count.saturating_sub(cap))
                 .collect();
@@ -75,20 +80,12 @@ impl Store {
             self.evict_one(&id);
         }
     }
-    fn evict_one(&mut self, id: &str) {
+    pub(super) fn evict_one(&mut self, id: &str) {
+        let Some(event) = self.get(id) else { return };
+        self.revision = self.revision.saturating_add(1);
         self.remove(id);
         self.evictions = self.evictions.saturating_add(1);
-        if self.evicted.len() >= MAX_DELETED
-            && !self.evicted.contains_key(id)
-            && let Some(oldest) = self
-                .evicted
-                .iter()
-                .min_by_key(|(id, n)| (**n, *id))
-                .map(|(id, _)| id.clone())
-        {
-            self.evicted.remove(&oldest);
-        }
-        self.evicted.insert(id.into(), self.evictions);
+        self.remember_eviction(&event);
     }
 
     pub fn was_evicted(&self, id: &str) -> bool {

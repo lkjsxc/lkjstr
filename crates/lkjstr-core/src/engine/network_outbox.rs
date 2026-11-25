@@ -115,4 +115,28 @@ impl Network {
             })
             .collect()
     }
+    pub(super) fn preserve_new_outbox(
+        &self,
+        f: &NostrFilter,
+        candidates: &[read_plan::Candidate],
+        routes: &mut Vec<String>,
+    ) {
+        // A newly discovered outbox may join an in-flight configured page without
+        // discarding either route's cursor or waiting for its EOSE.
+        if f.until.is_none()
+            && routes.len() < 3
+            && !routes.iter().any(|url| {
+                candidates
+                    .iter()
+                    .any(|c| &c.url == url && !c.authors.is_empty())
+            })
+            && let Some(outbox) = candidates
+                .iter()
+                .filter(|c| !c.authors.is_empty() && c.weight > 0)
+                .max_by_key(|c| c.weight)
+            && !routes.contains(&outbox.url)
+        {
+            routes.push(outbox.url.clone());
+        }
+    }
 }

@@ -1,7 +1,10 @@
 //! Session counters and stage-safe relay labels for the orchestration view.
 use serde::Serialize;
-use std::{collections::VecDeque, net::Ipv4Addr};
-use url::{Host, Url};
+use std::{
+    cell::RefCell,
+    collections::{BTreeMap, VecDeque},
+};
+use url::Url;
 
 const SECONDS: usize = 60;
 const EVENTS: usize = 32;
@@ -17,6 +20,10 @@ pub(super) struct Bucket {
     pub duplicates: u64,
     pub verified: u64,
     pub reqs_sent: u64,
+    pub reqs_coalesced: u64,
+    pub hedges_fired: u64,
+    pub duplicate_bytes: u64,
+    pub queue_busy: bool,
 }
 
 #[derive(Clone, Copy, Serialize)]
@@ -28,6 +35,10 @@ pub(super) enum Kind {
     Fallback,
     Evict,
     PublishOk,
+    #[allow(dead_code)]
+    Trip,
+    #[allow(dead_code)]
+    Explore,
 }
 
 #[derive(Serialize)]
@@ -37,6 +48,12 @@ pub(super) struct Decision {
     kind: Kind,
     #[serde(skip_serializing_if = "Option::is_none")]
     relay: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    view_sub_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    count: Option<usize>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    delay_ms: Option<u64>,
     summary: &'static str,
 }
 
@@ -47,6 +64,10 @@ pub(super) struct Telemetry {
     pub decisions: VecDeque<Decision>,
     // Last 256 distinct auth-gated origins, even if a connection is retired.
     auth: VecDeque<String>,
+    // Current public views, keyed by internal subscription and replaced each plan.
+    pub views: BTreeMap<String, u64>,
+    // First 4096 observed routes have a stable index until the Worker stops.
+    relay_indexes: RefCell<BTreeMap<String, usize>>,
 }
 impl Default for Telemetry {
     fn default() -> Self {
@@ -54,6 +75,8 @@ impl Default for Telemetry {
             bandwidth: [None; SECONDS],
             decisions: VecDeque::new(),
             auth: VecDeque::new(),
+            views: BTreeMap::new(),
+            relay_indexes: RefCell::default(),
         }
     }
 }
@@ -76,23 +99,58 @@ impl Telemetry {
         }
     }
 
+    pub fn bucket(&self, second: u64) -> Bucket {
+        let at_ms = second * 1000;
+        self.bandwidth[(second % SECONDS as u64) as usize]
+            .filter(|bucket| bucket.at_ms == at_ms)
+            .unwrap_or(Bucket {
+                at_ms,
+                ..Bucket::default()
+            })
+    }
+
     pub fn bandwidth(&self, now: u64) -> Vec<Bucket> {
         let second = now / 1000;
         let first = second.saturating_sub(SECONDS as u64 - 1);
-        (first..=second)
-            .map(|second| {
-                let at_ms = second * 1000;
-                self.bandwidth[(second % SECONDS as u64) as usize]
-                    .filter(|bucket| bucket.at_ms == at_ms)
-                    .unwrap_or(Bucket {
-                        at_ms,
-                        ..Bucket::default()
-                    })
-            })
-            .collect()
+        (first..=second).map(|second| self.bucket(second)).collect()
     }
 
-    pub fn decision(&mut self, at_ms: u64, kind: Kind, relay: Option<String>) {
+    pub fn member(&self, members: &std::collections::BTreeSet<String>) -> Option<u64> {
+        members.iter().find_map(|member| {
+            let member = member
+                .strip_prefix("~prefetch:")
+                .or_else(|| member.strip_prefix("~repair:"))
+                .unwrap_or(member);
+            let member = super::time_window_relay::view_owner(member).unwrap_or(member);
+            self.views.get(member).copied()
+        })
+    }
+
+    pub fn relay_index(&self, relay: &str) -> Option<usize> {
+        let mut indexes = self.relay_indexes.borrow_mut();
+        let next = indexes.len();
+        indexes.get(relay).copied().or_else(|| {
+            (next < 4096).then(|| {
+                indexes.insert(relay.into(), next);
+                next
+            })
+        })
+    }
+
+    pub fn decision(
+        &mut self,
+        at_ms: u64,
+        kind: Kind,
+        relay: Option<String>,
+        view: Option<u64>,
+        count: Option<usize>,
+        delay_ms: Option<u64>,
+    ) {
+        self.traffic(at_ms, |bucket| match kind {
+            Kind::Coalesce => bucket.reqs_coalesced += count.unwrap_or(1) as u64,
+            Kind::Hedge => bucket.hedges_fired += 1,
+            _ => {}
+        });
         let summary = match kind {
             Kind::Hedge => "Added a parallel read route after a slow start",
             Kind::Coalesce => "Shared a relay request across logical reads",
@@ -100,6 +158,8 @@ impl Telemetry {
             Kind::Fallback => "Used an alternate relay route",
             Kind::Evict => "Reclaimed a relay request slot",
             Kind::PublishOk => "Relay accepted a publication",
+            Kind::Trip => "Optimizer part returned to Stage 1",
+            Kind::Explore => "Optimizer tried an alternate hedge route",
         };
         if self.decisions.len() == EVENTS {
             self.decisions.pop_front();
@@ -108,6 +168,9 @@ impl Telemetry {
             at_ms,
             kind,
             relay,
+            view_sub_id: view.map(|id| format!("view-{id}")),
+            count,
+            delay_ms,
             summary,
         });
     }
@@ -134,59 +197,7 @@ impl Telemetry {
     }
 }
 
-pub(super) fn relay_url(raw: &str) -> Option<Url> {
-    let mut url = Url::parse(raw).ok()?;
-    if !matches!(url.scheme(), "ws" | "wss") || !url.has_host() {
-        return None;
-    }
-    url.set_username("").ok()?;
-    url.set_password(None).ok()?;
-    url.set_query(None);
-    url.set_fragment(None);
-    Some(url)
-}
-
-pub(super) fn relay_label(raw: &str) -> String {
-    relay_url(raw).map_or_else(|| "private-relay".into(), |url| url.into())
-}
-
-fn origin(url: &Url) -> String {
-    url.origin().ascii_serialization()
-}
-
-fn private_host(host: Option<Host<&str>>) -> bool {
-    match host {
-        Some(Host::Ipv4(ip)) => private_v4(ip),
-        Some(Host::Ipv6(ip)) => {
-            ip.is_loopback()
-                || ip.is_unspecified()
-                || ip.is_unique_local()
-                || ip.is_unicast_link_local()
-                || ip.to_ipv4_mapped().is_some_and(private_v4)
-        }
-        Some(Host::Domain(name)) => {
-            let name = name.trim_end_matches('.');
-            name == "localhost"
-                || name.ends_with(".localhost")
-                || name.ends_with(".local")
-                || name.ends_with(".onion")
-        }
-        None => true,
-    }
-}
-
-fn private_v4(ip: Ipv4Addr) -> bool {
-    ip.is_loopback() || ip.is_private() || ip.is_link_local() || ip.is_unspecified()
-}
-
-/// Relay responses can echo arbitrary event fields or credentials.
-pub(super) fn relay_error(value: &str) -> &'static str {
-    match value {
-        "connection-lost" => "connection-lost",
-        "read-timeout" => "read-timeout",
-        "rate-limited: cooldown" => "rate-limited: cooldown",
-        "capacity" => "capacity",
-        _ if value.starts_with("auth-required:") => "auth-required",
-        _ => "relay-error",
-    }
-}
+#[path = "telemetry_relay.rs"]
+mod relay;
+use relay::{origin, private_host};
+pub(super) use relay::{relay_error, relay_url};

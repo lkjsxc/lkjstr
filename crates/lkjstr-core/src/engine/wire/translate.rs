@@ -54,13 +54,21 @@ impl Session {
                 } else {
                     hint.visible_subs.iter().cloned().collect()
                 });
-                let mut inputs = vec![p::Input::Hint {
-                    visible_subs: hint.visible_subs,
-                    focused_sub: hint.focused_sub,
-                    page_hidden: hint.page_hidden,
-                    idle: hint.idle,
-                    save_data: hint.save_data,
-                }];
+                let interaction = crate::optimizer::features::Interaction::new(
+                    hint.since_scroll_ms,
+                    hint.since_input_ms,
+                    hint.scroll_rows_per_s,
+                );
+                let mut inputs = vec![
+                    p::Input::OptimizerHint(interaction),
+                    p::Input::Hint {
+                        visible_subs: hint.visible_subs,
+                        focused_sub: hint.focused_sub,
+                        page_hidden: hint.page_hidden,
+                        idle: hint.idle,
+                        save_data: hint.save_data,
+                    },
+                ];
                 if let Some(reqs) = watches {
                     inputs.push(p::Input::DeliveryWatch {
                         reqs: reqs.into_iter().take(128).collect(),

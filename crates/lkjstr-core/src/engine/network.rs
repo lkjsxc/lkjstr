@@ -43,6 +43,8 @@ mod metadata;
 mod note_delivery;
 #[path = "network_stats.rs"]
 mod observations;
+#[path = "network_optimizer.rs"]
+mod optimizer;
 #[path = "network_outbox.rs"]
 mod outbox;
 #[path = "network_paging.rs"]
@@ -78,6 +80,7 @@ mod verification;
 #[path = "read_want_key.rs"]
 pub(crate) mod want_key;
 use scheduler::filter_live;
+pub(super) use telemetry::publication_kind_is_public as public_kind_for_optimizer;
 #[path = "read_plan.rs"]
 pub mod read_plan;
 type Desired = BTreeMap<(String, String), (NostrFilter, BTreeSet<String>)>;
@@ -119,6 +122,9 @@ pub struct Relay {
     pub next_req_at: u64,
     pub latency_ms: Option<u64>,
     pub first_event_ms: Option<u64>,
+    pub(super) read_timing: crate::optimizer::features::Timing,
+    pub(super) event_bytes: Option<u64>,
+    pub(super) last_closed: Option<u64>,
     pub request_uses: u64,
     pub timeouts: u32,
 }
@@ -132,6 +138,7 @@ pub(super) struct Request {
     pub page_filter: NostrFilter, // Logical union, independent of the route cursor.
     pub cached_until: Option<u64>, // Inclusive background repair boundary, never exhaustion proof.
     pub members: BTreeSet<String>,
+    pub role: &'static str,
     pub read_slot: bool, // Owns an ordinary reader slot; recovery routes remain separate.
     pub verification_retry: bool, // Local queue loss: replay this span after backlog drains.
     pub sent: bool,
@@ -185,6 +192,7 @@ pub(super) struct Publication {
 }
 #[derive(Default)]
 pub struct Network {
+    pub(super) optimizer: crate::optimizer::Optimizer,
     pub(super) telemetry: super::telemetry::Telemetry,
     // At most 32 usable device signer public keys, never persisted.
     auth_signers: BTreeSet<String>,
@@ -224,22 +232,11 @@ pub struct Network {
     pub(super) profiles_changed: bool,
     pub verifying: bool,
     // One most recent socket admission. Ingest consumes it synchronously.
-    pub(super) delivery_wire: Option<(String, String)>,
+    pub(super) delivery_wire: Option<(String, String, usize)>,
     pub(super) invalid_frames: u64,
     pub(super) unmatched_frames: u64,
     pub(super) repeated_deliveries: u64,
     pub(super) reported: BTreeMap<String, String>,
     // At most 4096 active foreground observations; pruned on plan and reset on Open.
     read_starts: BTreeMap<String, startup::ReadStart>,
-}
-
-impl Network {
-    pub fn plan(
-        &mut self,
-        wants: Vec<(String, NostrFilter, Query)>,
-        store: &crate::store::Store,
-        now: u64,
-    ) {
-        self.plan_with_lists(wants, store, &Default::default(), now);
-    }
 }

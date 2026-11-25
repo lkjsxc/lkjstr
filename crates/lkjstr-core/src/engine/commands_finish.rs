@@ -103,7 +103,7 @@ impl Engine {
         if event.kind == 1 && self.store.get(&event.id).is_none() {
             self.tentative_notes.insert(event.id.clone());
         }
-        self.store.insert(event.clone(), None);
+        self.store.insert_deferred(event.clone(), None);
         if event.kind != 1 {
             self.pending.push(event.clone(), true);
         }

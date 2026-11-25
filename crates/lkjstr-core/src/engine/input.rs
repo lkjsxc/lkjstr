@@ -97,13 +97,20 @@ impl Engine {
                 self.network.configure(relays, now);
                 self.replan(now);
             }
+            Input::OptimizerHint(interaction) => {
+                self.network.optimizer.interaction = interaction;
+                self.network.optimizer.hinted_at = now;
+            }
             Input::Hint {
                 visible_subs,
                 focused_sub,
                 page_hidden,
+                save_data,
                 ..
             } => {
                 self.discovery_paused = page_hidden;
+                self.network.optimizer.hidden = page_hidden;
+                self.network.optimizer.save_data = save_data;
                 self.network.focused_sub =
                     focused_sub.filter(|s| !page_hidden && visible_subs.contains(s));
                 for (id, v) in &mut self.views {

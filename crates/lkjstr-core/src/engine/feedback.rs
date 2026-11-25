@@ -196,8 +196,9 @@ impl Engine {
             .map(|q| &q.relay)
             .collect::<std::collections::BTreeSet<_>>()
             .len();
-        json!({"requests":self.network.stats_requests(),"recentPublications":self.network.stats_publications(),"relays":relays,
-            "views":self.view_stats(),"worker":self.worker_stats(),
+        let views = self.telemetry_views();
+        json!({"nowMs":now,"requests":self.network.stats_requests(&views),"recentPublications":self.network.stats_publications(),"relays":relays,
+            "views":self.view_stats(&views),"worker":self.worker_stats(),"optimizer":self.optimizer_stats(now),
             "bandwidthHistory":self.network.telemetry.bandwidth(now),
             "orchestrationEvents":self.network.telemetry.decisions,"totals":{"eventsStored":self.store.len(),"cacheBytes":self.store.payload_bytes(),
             "subscriptions":subscriptions,"servedFromCache":self.metrics.served_from_cache,"servedFromNetwork":network},

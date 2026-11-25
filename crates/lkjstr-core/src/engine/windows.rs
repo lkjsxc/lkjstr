@@ -60,6 +60,11 @@ impl Engine {
             || (v.query.source == Source::Profile
                 && v.query.filters.show.as_deref() == Some("all")))
         .then(|| super::time_window::Order::new(&self.store, &v.query));
+        v.cache_span = super::feedback_stats::span(events.iter().map(|event| {
+            order
+                .as_ref()
+                .map_or(event.created_at, |order| order.at(event))
+        }));
         let items: Vec<_> = window
             .iter()
             .zip(selected.held)
@@ -152,6 +157,13 @@ impl Engine {
             pivot.report(sub, &items, follow_list, edges, full, &mut self.outgoing);
         }
         v.at_bottom = at_bottom;
+        if v.visible {
+            for row in &items {
+                if row.hidden_reason.is_none() {
+                    self.store.mark_read(&row.id);
+                }
+            }
+        }
         v.rows = items;
         self.outgoing.push(Output::Visibility {
             sub: sub.into(),

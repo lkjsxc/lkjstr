@@ -2,6 +2,7 @@
 // A few complete signed follow lists can exceed 8 MiB before a WASM tick gets
 // time to verify them. Retrying a partially queued 200-event response costs
 // far more wire bandwidth than retaining that burst until verification runs.
+pub(super) const MAX_VERIFY_QUEUE: usize = 4096;
 pub(super) const MAX_VERIFY_QUEUE_BYTES: usize = 32 * 1024 * 1024;
 use super::*;
 
@@ -13,12 +14,11 @@ pub(super) struct QueuedEvent {
 }
 impl Engine {
     pub fn enqueue(&mut self, relay: String, event: NostrEvent) {
-        let wire = self
+        let delivery = self
             .network
             .delivery_wire
             .take()
-            .filter(|(url, _)| url == &relay)
-            .map(|(_, wire)| wire);
+            .filter(|(url, _, _)| url == &relay);
         let known = self.store.get(&event.id).filter(|known| **known == event);
         if let Some(known) = &known {
             self.network
@@ -31,14 +31,15 @@ impl Engine {
                 .saturating_add(u64::from(relay.starts_with("ws")));
             if let Some(r) = self.network.relays.get_mut(&relay) {
                 r.duplicates += 1;
-                self.network
-                    .telemetry
-                    .traffic(self.network.now, |b| b.duplicates += 1);
+                self.network.telemetry.traffic(self.network.now, |b| {
+                    b.duplicates += 1;
+                    b.duplicate_bytes += delivery.as_ref().map_or(0, |(_, _, bytes)| *bytes as u64);
+                });
             }
             return;
         }
         let bytes = crate::store::event_payload_bytes(&event);
-        if self.queue.len() >= 4096
+        if self.queue.len() >= MAX_VERIFY_QUEUE
             || self.queue_bytes.saturating_add(bytes) > MAX_VERIFY_QUEUE_BYTES
         {
             self.dropped += 1;
@@ -50,7 +51,7 @@ impl Engine {
         let entry = QueuedEvent {
             relay,
             event,
-            wire,
+            wire: delivery.map(|(_, wire, _)| wire),
             sequence: self.delivery_sequence,
         };
         // Profiles requested for visible authors precede bulk note verification.

@@ -5,6 +5,11 @@ mod filters;
 use filters::requests;
 impl Engine {
     pub(super) fn replan(&mut self, now: u64) {
+        self.network.telemetry.views = self
+            .telemetry_views()
+            .into_iter()
+            .map(|(sub, view)| (sub.to_owned(), view.telemetry_id))
+            .collect();
         let mut wants = self.publication_wants(now);
         wants.extend(self.cache_reference_wants());
         wants.extend(self.dm_wants.clone());

@@ -67,6 +67,7 @@ pub enum Input {
         event: Option<NostrEvent>,
         error: Option<String>,
     },
+    OptimizerHint(crate::optimizer::features::Interaction),
     Hint {
         #[serde(rename = "visibleSubs")]
         visible_subs: Vec<String>,

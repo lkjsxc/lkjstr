@@ -24,3 +24,22 @@ impl Store {
             .cloned()
     }
 }
+
+impl Store {
+    pub(super) fn replace_address(
+        &mut self,
+        event: &lkjstr_protocol::NostrEvent,
+    ) -> Option<super::Inserted> {
+        let identifier = super::weighted::identifier(event)?;
+        let key = (event.pubkey.clone(), event.kind, identifier.to_owned());
+        let old = self.addressable.get(&key).and_then(|id| self.get(id));
+        if let Some(old) = &old {
+            if compare_events_desc(old, event).is_lt() {
+                return Some(super::Inserted::Stale);
+            }
+            self.remove(&old.id);
+        }
+        self.addressable.insert(key, event.id.clone());
+        old.map(|_| super::Inserted::Replaced)
+    }
+}

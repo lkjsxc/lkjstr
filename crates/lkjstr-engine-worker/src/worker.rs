@@ -114,7 +114,7 @@ pub struct WorkerHandle {
     message: Closure<dyn FnMut(web_sys::MessageEvent)>,
 }
 fn now() -> u64 {
-    js_sys::Date::now() as u64
+    crate::measure::epoch_now()
 }
 /// Call once inside a dedicated Worker after wasm-bindgen initialization.
 #[wasm_bindgen]

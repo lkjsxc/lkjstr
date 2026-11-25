@@ -59,10 +59,12 @@ mod tick;
 mod time_window;
 mod time_window_relay;
 pub use tick::TickPhase;
+mod optimizer_stats;
 pub mod upload;
 pub mod upload_jobs;
 pub mod visibility;
 mod wants;
+mod weighted_retention;
 pub mod weights;
 mod windows;
 pub mod wire;
@@ -78,6 +80,7 @@ use rows::Row;
 use std::collections::{BTreeMap, VecDeque};
 pub struct View {
     telemetry_id: u64,
+    cache_span: Option<(u64, u64)>,
     month_anchor: Option<u64>,
     fresh_count: usize,
     query: Query,
@@ -120,6 +123,7 @@ pub struct Engine {
     client_info: client_info::Lookups,
     pub discovery_paused: bool,
     pub discovery_accounts: Vec<String>,
+    saved_retention_accounts: Vec<String>,
     pub discovery_relays: Vec<String>,
     pub servers: BTreeMap<String, feedback::ServerVerdict>,
     server_revision: u64,
@@ -144,6 +148,7 @@ pub struct Engine {
     outgoing: Vec<Output>,
     queue: VecDeque<ingest::QueuedEvent>,
     queue_bytes: usize,
+    last_slice_verified: usize,
     last_flush: u64,
     pub verified: u64,
     pub rejected: u64,
@@ -173,6 +178,7 @@ impl Engine {
             client_info: Default::default(),
             discovery_paused: false,
             discovery_accounts: vec![],
+            saved_retention_accounts: vec![],
             discovery_relays: vec![],
             servers: BTreeMap::new(),
             server_revision: 0,
@@ -182,7 +188,7 @@ impl Engine {
             notification_ties: BTreeMap::new(),
             notification_zaps: BTreeMap::new(),
             metrics: Default::default(),
-            store: Store::with_caps(16000, 4000),
+            store: Store::with_caps(16000, 4000).weight_retention(),
             read_contexts: Default::default(),
             cached_history_complete: true,
             signed_out_global_filter: true,
@@ -194,6 +200,7 @@ impl Engine {
             outgoing: vec![],
             queue: VecDeque::new(),
             queue_bytes: 0,
+            last_slice_verified: 0,
             last_flush: 0,
             verified: 0,
             rejected: 0,

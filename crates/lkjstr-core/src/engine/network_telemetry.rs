@@ -44,7 +44,39 @@ impl Network {
         self.relays.get(raw).is_some_and(|r| r.auth_required) || self.telemetry.is_private(parsed)
     }
 
+    pub(super) fn stats_relay_label(&self, relay: &str) -> String {
+        let (label, private) = self.relay_display(relay);
+        if private {
+            "private-relay".into()
+        } else {
+            label
+        }
+    }
+
     pub(super) fn decision(&mut self, now: u64, kind: Kind, relay: &str) {
+        self.decision_detail(now, kind, relay, None, None);
+    }
+
+    pub(super) fn decision_detail(
+        &mut self,
+        now: u64,
+        kind: Kind,
+        relay: &str,
+        count: Option<usize>,
+        delay: Option<u64>,
+    ) {
+        self.decision_for(now, kind, relay, None, count, delay);
+    }
+
+    pub(super) fn decision_for(
+        &mut self,
+        now: u64,
+        kind: Kind,
+        relay: &str,
+        view: Option<u64>,
+        count: Option<usize>,
+        delay: Option<u64>,
+    ) {
         let url = relay_url(relay);
         let label = if self.private_origin(relay, url.as_ref()) {
             "private-relay".into()
@@ -54,7 +86,8 @@ impl Network {
                 |url| url.origin().ascii_serialization(),
             )
         };
-        self.telemetry.decision(now, kind, Some(label));
+        self.telemetry
+            .decision(now, kind, Some(label), view, count, delay);
     }
 
     pub(super) fn observe_publication(
@@ -84,7 +117,7 @@ impl Network {
     }
 }
 
-pub(super) fn publication_kind_is_public(kind: u64) -> bool {
+pub(in crate::engine) fn publication_kind_is_public(kind: u64) -> bool {
     crate::kinds::policy(kind).retained && !matches!(kind, 10050)
 }
 
@@ -94,35 +127,13 @@ pub(super) fn public_filter(filter: &NostrFilter) -> bool {
     })
 }
 
-pub(super) fn read_changes(
-    filter: &NostrFilter,
-    current: &BTreeMap<&str, &Request>,
-    primary: &[String],
-    hedging: bool,
-) -> Option<Kind> {
-    if !public_filter(filter) {
-        return None;
-    }
-    let current = current.values().filter(|request| request.read_slot);
-    if current
-        .clone()
-        .any(|request| !primary.contains(&request.relay))
-    {
-        Some(Kind::Fallback)
-    } else if hedging && primary.len() == 3 && current.count() == 2 {
-        Some(Kind::Hedge)
-    } else {
-        None
-    }
-}
-
 impl Request {
-    pub(super) fn shared_members_added(&self, members: &BTreeSet<String>) -> Option<Kind> {
+    pub(super) fn shared_members_added(&self, members: &BTreeSet<String>) -> Option<(Kind, usize)> {
         (self.sent
             && members.len() > 1
             && !members.is_subset(&self.members)
             && public_filter(&self.filter))
-        .then_some(Kind::Coalesce)
+        .then(|| (Kind::Coalesce, members.difference(&self.members).count()))
     }
 
     pub(super) fn visible_in_stats(&self) -> bool {

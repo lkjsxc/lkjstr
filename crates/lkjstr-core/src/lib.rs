@@ -8,6 +8,7 @@ mod comments;
 pub mod content;
 pub mod kinds;
 pub mod layout;
+pub mod optimizer;
 pub mod pagination;
 pub mod persistence;
 pub mod plan;

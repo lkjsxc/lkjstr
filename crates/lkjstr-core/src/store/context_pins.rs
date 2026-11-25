@@ -57,7 +57,9 @@ impl Store {
         }
         self.context_pins = pins;
         self.context_deleted = deleted;
-        self.evict();
+        if !self.weighted {
+            self.evict();
+        }
         Ok(())
     }
 

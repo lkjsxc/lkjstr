@@ -118,7 +118,17 @@ impl Network {
                 }
             }
             let cap = if matches!(kind, 0 | 1 | 3) {
-                self.relays[&relay].max_limit.min(120) as usize
+                let chunk = self
+                    .optimizer
+                    .decide_plan(
+                        crate::optimizer::features::Features {
+                            profile: true,
+                            ..Default::default()
+                        },
+                        &[],
+                    )
+                    .author_chunk;
+                self.relays[&relay].max_limit.min(chunk as u64) as usize
             } else {
                 120
             }

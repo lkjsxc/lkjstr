@@ -28,7 +28,7 @@ impl<'a> Order<'a> {
         })
     }
 
-    pub(super) fn at(&self, event: &Event) -> u64 {
+    pub(in crate::engine) fn at(&self, event: &Event) -> u64 {
         if self.query.source == crate::engine::protocol::Source::Profile
             && self.query.filters.show.as_deref() == Some("all")
         {
