@@ -2,7 +2,7 @@
 
 use std::collections::{HashSet, VecDeque};
 
-use super::{Event, Store};
+use super::{Event, OrderedEvent, Store, decode_id};
 use crate::kinds::{ActKind, policy};
 use lkjstr_protocol::parse_relay_list_suggestions;
 use lkjstr_protocol::{follow_entries_from_event, reply_parent, reply_root};
@@ -22,19 +22,20 @@ impl Store {
     /// Indexed, tie-stable scan; exclusive cursor survives equal timestamps. At most `limit` clones.
     pub fn scan(&self, before: Option<&(u64, String)>, limit: usize) -> Vec<Event> {
         use std::ops::Bound::{Excluded, Unbounded};
-        let end = before.map_or(Unbounded, Excluded);
+        let cursor = before.and_then(|(at, id)| decode_id(id).map(|id| (*at, id)));
+        let end = cursor.as_ref().map_or(Unbounded, Excluded);
         self.by_time
-            .range((Unbounded, end))
+            .range::<super::compact::OrderKey, _>((Unbounded, end))
             .rev()
             .take(limit)
-            .filter_map(|(_, id)| self.events.get(id).cloned())
+            .map(|key| key.0.materialize())
             .collect()
     }
 
-    /// Newest-first events matching `query`.
+    /// Newest-first events matching `query`; decode only selected results.
     pub fn feed(&self, query: &Query) -> Vec<Event> {
-        let source: Box<dyn Iterator<Item = &(u64, String)>> = match &query.mention {
-            Some(pubkey) => match self.by_tag_p.get(pubkey) {
+        let source: Box<dyn Iterator<Item = &OrderedEvent>> = match &query.mention {
+            Some(pubkey) => match decode_id(pubkey).and_then(|key| self.by_tag_p.get(&key)) {
                 Some(set) => Box::new(set.iter().rev()),
                 None => return Vec::new(),
             },
@@ -43,28 +44,36 @@ impl Store {
                 _ => Box::new(self.by_time.iter().rev()),
             },
         };
+        let authors = query.authors.as_ref().map(|values| {
+            values
+                .iter()
+                .filter_map(|key| decode_id(key))
+                .collect::<HashSet<_>>()
+        });
+        let excluded = query.exclude_author.as_deref().and_then(decode_id);
         source
-            .filter(|(at, _)| query.until.is_none_or(|until| *at <= until))
-            .filter_map(|(_, id)| self.events.get(id))
+            .map(|key| &key.0)
+            .filter(|event| query.until.is_none_or(|until| event.order.0 <= until))
             .filter(|event| query.kinds.is_empty() || query.kinds.contains(&event.kind))
             .filter(|event| {
-                query
-                    .authors
+                authors
                     .as_ref()
-                    .is_none_or(|authors| authors.contains(&event.pubkey))
+                    .is_none_or(|authors| authors.contains(event.pubkey()))
             })
-            .filter(|event| query.exclude_author.as_ref() != Some(&event.pubkey))
+            .filter(|event| excluded.as_ref() != Some(event.pubkey()))
             .take(query.limit)
-            .cloned()
+            .map(|event| event.materialize())
             .collect()
     }
 
     /// Ids of events that reference `id` with an `e` or `q` tag.
     pub fn referencing(&self, id: &str) -> Vec<Event> {
-        self.by_tag_e
-            .get(id)
-            .map(|ids| ids.iter().filter_map(|id| self.get(id)).collect())
-            .unwrap_or_default()
+        decode_id(id)
+            .and_then(|key| self.by_tag_e.get(&key))
+            .into_iter()
+            .flatten()
+            .map(|event| event.materialize())
+            .collect()
     }
 
     /// Reactions to this note, excluding ancestor and quote references.
@@ -113,13 +122,17 @@ impl Store {
                 );
                 out.push(event);
             }
-            for child in self.by_tag_e.get(&id).into_iter().flatten() {
-                if self.get(child).is_some_and(|event| {
-                    policy(event.kind).reply && is_reply_to(&event, &id)
-                        || event.kind == 1111
-                            && crate::comments::parent(self, &event).as_deref() == Some(id.as_str())
-                }) {
-                    queue.push_back(child.clone());
+            for child in decode_id(&id)
+                .and_then(|id| self.by_tag_e.get(&id))
+                .into_iter()
+                .flatten()
+            {
+                let event = child.materialize();
+                if policy(event.kind).reply && is_reply_to(&event, &id)
+                    || event.kind == 1111
+                        && crate::comments::parent(self, &event).as_deref() == Some(id.as_str())
+                {
+                    queue.push_back(child.id_hex());
                 }
             }
             // Address-scoped NIP-22 comments are indexed by the exact coordinate.
@@ -128,10 +141,10 @@ impl Store {
                 .and_then(|event| crate::comments::address(&event))
             {
                 for child in self.by_comment_address.get(&address).into_iter().flatten() {
-                    if self.get(child).is_some_and(|event| {
-                        crate::comments::parent(self, &event).as_deref() == Some(id.as_str())
-                    }) {
-                        queue.push_back(child.clone());
+                    if crate::comments::parent(self, &child.materialize()).as_deref()
+                        == Some(id.as_str())
+                    {
+                        queue.push_back(child.id_hex());
                     }
                 }
             }
@@ -162,60 +175,22 @@ impl Store {
         )
     }
 
-    /// Case-insensitive text match over notes, newest first.
-    pub fn search_notes(&self, needle: &str, limit: usize) -> Vec<Event> {
-        let needle = needle.to_lowercase();
-        if needle.trim().is_empty() {
-            return Vec::new();
-        }
-        self.by_time
-            .iter()
-            .rev()
-            .filter_map(|(_, id)| self.events.get(id))
-            .filter(|event| {
-                policy(event.kind).reply && event.content.to_lowercase().contains(&needle)
-            })
-            .take(limit)
-            .cloned()
-            .collect()
-    }
-
-    /// People whose name, display name or NIP-05 contains `needle`.
-    pub fn search_people(&self, needle: &str, limit: usize) -> Vec<String> {
-        let needle = needle.to_lowercase();
-        if needle.trim().is_empty() {
-            return Vec::new();
-        }
-        let mut found: Vec<&String> = self
-            .profiles
-            .iter()
-            .filter(|(_, profile)| {
-                [&profile.name, &profile.display_name, &profile.nip05]
-                    .iter()
-                    .any(|field| field.to_lowercase().contains(&needle))
-            })
-            .map(|(pubkey, _)| pubkey)
-            .collect();
-        found.sort();
-        found.into_iter().take(limit).cloned().collect()
-    }
-
     /// Newest events first, for persistence snapshots.
     pub fn newest(&self, limit: usize) -> Vec<Event> {
         self.by_time
             .iter()
             .rev()
-            .filter_map(|(_, id)| self.events.get(id))
+            .map(|key| &key.0)
             .take(limit)
-            .cloned()
+            .map(|event| event.materialize())
             .collect()
     }
 
     /// Kind 7 reactions, kind 6 reposts and kind 1 replies pointing at `id`.
     pub fn counts(&self, id: &str) -> (usize, usize, usize) {
         let mut out = (0, 0, 0);
-        for event in self.by_tag_e.get(id).into_iter().flatten() {
-            match self.events.get(event) {
+        for event in self.referencing(id) {
+            match Some(event.as_ref()) {
                 Some(e) if policy(e.kind).reply && is_reply_to(e, id) => out.0 += 1,
                 Some(e)
                     if policy(e.kind).act == Some(ActKind::Repost) && is_action_target(e, id) =>

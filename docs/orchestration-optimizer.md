@@ -31,10 +31,10 @@ capacity and the view and device allow background work.
 ## Public retention
 
 The default in-memory caps are 16,000 regular events, 4,000 replaceable events
-and 64 MiB of event payload. After a verification slice crosses a cap, a
+and 64 MiB of managed resident allocation. After a verification slice crosses a cap, a
 deterministic GreedyDual Size Frequency batch targets 95% of the exceeded cap.
 The score combines author affinity, access age, estimated refetch time and
-payload size. The inflation clock advances with the last selected victim.
+charged resident size, separately from wire refetch cost. The inflation clock advances with the last selected victim.
 Projection records access for readable rows. Account lists, one signed witness per active deletion target, read contexts
 and held rows take priority over the score. NIP-01 ordering
 resolves multiple revisions of an addressable event.

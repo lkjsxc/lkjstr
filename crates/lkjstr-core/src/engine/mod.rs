@@ -212,11 +212,14 @@ impl Engine {
                 ..
             } = output
                 && self.tentative_notes.remove(id)
-                && error
+            {
+                self.pending.cancel_reservation(id);
+                if error
                     .as_deref()
                     .is_some_and(|code| matches!(code, "no-relays" | "relay-unreachable"))
-            {
-                removed |= self.store.discard_unseen_note(id);
+                {
+                    removed |= self.store.discard_unseen_note(id);
+                }
             }
         }
         if removed {

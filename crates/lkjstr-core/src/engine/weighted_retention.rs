@@ -16,6 +16,8 @@ impl Engine {
     }
 
     pub(super) fn trim_store(&mut self) {
+        self.store
+            .set_persistence_overhead(self.pending.overhead_bytes());
         if !self.store.retention_needed() {
             return;
         }
@@ -36,20 +38,18 @@ impl Engine {
             .map(|key| Weights::new(&self.store, &self.private_lists, Some(key)))
             .collect();
         let mut author_weights = BTreeMap::new();
-        let weights = self.store.retention_weights(|event| {
-            if !super::network::public_kind_for_optimizer(event.kind) {
+        let weights = self.store.retention_weights(|kind, pubkey| {
+            if !super::network::public_kind_for_optimizer(kind) {
                 return 0;
             }
-            *author_weights
-                .entry(event.pubkey.clone())
-                .or_insert_with(|| {
-                    policies
-                        .iter()
-                        .map(|policy| policy.person(&event.pubkey))
-                        .max()
-                        .unwrap_or(1)
-                        .max(input.affinity.get(&event.pubkey).copied().unwrap_or(0))
-                })
+            *author_weights.entry(pubkey.to_owned()).or_insert_with(|| {
+                policies
+                    .iter()
+                    .map(|policy| policy.person(pubkey))
+                    .max()
+                    .unwrap_or(1)
+                    .max(input.affinity.get(pubkey).copied().unwrap_or(0))
+            })
         });
         let first_event_ms: BTreeMap<_, _> = self
             .network

@@ -14,7 +14,7 @@ pub fn run(clock: impl Fn() -> f64) -> Value {
                 kind: 1,
                 content: format!("benchmark note {i} #nostr https://example.test/image.png"),
                 tags: vec![],
-                sig: String::new(),
+                sig: "0".repeat(128),
             },
             None,
         );

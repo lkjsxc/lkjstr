@@ -58,7 +58,8 @@ Startup restores a bounded metadata/deletion checkpoint before the newest 2000
 event rows and before opening views. The checkpoint adds at most 4000 records
 and 4 MiB of encoded bytes, including duplicates of event-store bodies.
 Physical event pruning keeps the newest 20000 rows. Memory targets 16000 regular
-and 4000 replaceable events and 64 MiB of payload using [weighted retention](orchestration-optimizer.md).
+and 4000 replaceable events and 64 MiB of managed allocation using [weighted retention](orchestration-optimizer.md).
+The [compact resident store](compact-event-store.md) shares binary payloads with pending persistence.
 See [cache-bootstrap.md](cache-bootstrap.md) for storage and verification bounds.
 
 There are at most 128 views and 32 attached clients. Each visible view hydrates

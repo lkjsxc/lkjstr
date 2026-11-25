@@ -192,7 +192,7 @@ mod tests {
                 created_at: 1,
                 content: String::new(),
                 tags,
-                sig: String::new(),
+                sig: "0".repeat(128),
             },
             None,
         );

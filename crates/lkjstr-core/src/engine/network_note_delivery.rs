@@ -145,8 +145,8 @@ impl crate::engine::Engine {
             .network
             .publication_frame_sent_at(relay, frame, sent, now)
         {
-            if self.tentative_notes.remove(&note.id) {
-                self.pending.push(note, true);
+            if self.tentative_notes.contains(&note.id) && self.pending.activate(&note.id) {
+                self.tentative_notes.remove(&note.id);
             }
             self.invalidate();
         }

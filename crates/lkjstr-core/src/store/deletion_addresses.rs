@@ -1,5 +1,5 @@
 //! Bounded NIP-09 address cutoffs survive removal of the deleting event.
-use super::{MAX_DELETED, Store, weighted::identifier};
+use super::{Event, MAX_DELETED, Store, weighted::identifier};
 use lkjstr_nips::address::Coordinate;
 use lkjstr_protocol::{NostrEvent, compare_events_desc, tags::tag_values};
 use std::collections::{BTreeMap, BTreeSet};
@@ -21,6 +21,18 @@ fn key(event: &NostrEvent) -> Address {
 }
 
 impl DeletionAddresses {
+    pub(super) fn managed_bytes(&self) -> usize {
+        if self.cutoffs.is_empty() {
+            return 11 * std::mem::size_of::<(Address, u64)>() + 16;
+        }
+        (self.cutoffs.len().div_ceil(5) + 1)
+            * (11 * std::mem::size_of::<(Address, u64)>() + 12 * std::mem::size_of::<usize>() + 16)
+            + self
+                .cutoffs
+                .keys()
+                .map(|(author, _, d)| author.capacity() + d.capacity())
+                .sum::<usize>()
+    }
     pub fn covers(&self, event: &NostrEvent) -> bool {
         super::weighted::replaceable(event.kind)
             && self
@@ -65,18 +77,22 @@ impl Store {
 
     /// Keep one signed witness per held or fenced target. Redundant copies
     /// cannot consume the entire retention floor.
-    pub(super) fn deletion_pins(&self) -> BTreeSet<&str> {
-        let mut witnesses: BTreeMap<(&str, &str, &str), &NostrEvent> = BTreeMap::new();
-        for event in self.events.values().filter(|event| event.kind == 5) {
+    pub(super) fn deletion_pins(&self) -> BTreeSet<String> {
+        let mut witnesses: BTreeMap<(String, String, String), Event> = BTreeMap::new();
+        for event in self
+            .events
+            .values()
+            .filter(|event| event.kind == 5)
+            .map(|event| event.materialize())
+        {
             for tag in &event.tags {
                 let [kind, target, ..] = tag.as_slice() else {
                     continue;
                 };
                 let protected = match kind.as_str() {
                     "e" => {
-                        self.events
-                            .get(target)
-                            .is_some_and(|e| e.pubkey == event.pubkey)
+                        self.lease(target)
+                            .is_some_and(|e| e.pubkey_hex() == event.pubkey)
                             || self
                                 .evicted
                                 .get(target)
@@ -86,22 +102,22 @@ impl Store {
                                 .contains(&(target.clone(), event.pubkey.clone()))
                     }
                     "a" => Coordinate::parse(target)
-                        .is_ok_and(|address| self.address_deletions.holds(event, &address)),
+                        .is_ok_and(|address| self.address_deletions.holds(&event, &address)),
                     _ => false,
                 };
                 if protected {
                     let current = witnesses
-                        .entry((kind, target, &event.pubkey))
-                        .or_insert(event);
-                    if compare_events_desc(event, current).is_lt() {
-                        *current = event;
+                        .entry((kind.clone(), target.clone(), event.pubkey.clone()))
+                        .or_insert_with(|| event.clone());
+                    if compare_events_desc(&event, current).is_lt() {
+                        *current = event.clone();
                     }
                 }
             }
         }
         witnesses
             .into_values()
-            .map(|event| event.id.as_str())
+            .map(|event| event.id.clone())
             .collect()
     }
 

@@ -97,7 +97,15 @@ fn signed_edit_merges_latest_metadata_and_updates_the_open_profile_before_relay_
     let profile = engine.store.profile(&account).expect("indexed profile");
     assert_eq!(profile.label(), Some("New name"));
     assert!(profile.picture.is_empty());
-    assert_eq!(engine.pending.batch(), vec![signed.clone()]);
+    assert_eq!(
+        engine
+            .pending
+            .batch()
+            .iter()
+            .map(|e| e.to_nostr())
+            .collect::<Vec<_>>(),
+        vec![signed.clone()]
+    );
     assert!(
         engine
             .drain()

@@ -31,11 +31,11 @@ fn rich_filters_words_phrases_exclusions_media_names_and_inclusive_days() {
     let mut meta = profile.clone();
     meta.content = r#"{"name":"aoi","nip05":"aoi@example.com"}"#.into();
     let mut spam = good.clone();
-    spam.id = "spam".into();
+    spam.id = "14".repeat(32);
     spam.content += " SPAM";
     let mut e = Engine::new();
     for v in [meta, good.clone(), spam] {
-        e.store.insert(v, None);
+        assert_eq!(e.store.insert(v, None), lkjstr_core::store::Inserted::New);
     }
     let q = json!({"source":"search","text":"blue 猫","phrases":["静かな 朝"],"exclude":["spam"],"has":["image","link"],"from":["aoi"],"since":20000,"until":20999});
     assert_eq!(

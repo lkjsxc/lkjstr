@@ -13,7 +13,7 @@ fn merged_author_indexes_equal_global_filter_with_ties_and_eviction() {
                 kind: 1,
                 tags: vec![],
                 content: "index fixture".into(),
-                sig: String::new(),
+                sig: "0".repeat(128),
             },
             None,
         );

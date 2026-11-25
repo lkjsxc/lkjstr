@@ -4,7 +4,7 @@ use std::collections::HashMap;
 #[derive(Default)]
 pub(super) struct Access {
     // One stamp for each retained event, capped by the event store itself.
-    stamps: HashMap<String, Stamp>,
+    stamps: HashMap<super::Id, Stamp>,
 }
 
 #[derive(Clone, Copy, Default)]
@@ -14,16 +14,18 @@ pub(super) struct Stamp {
 }
 
 impl Access {
-    pub fn record(&mut self, id: &str, minute: u64, inflation: u64) {
-        self.stamps
-            .insert(id.to_owned(), Stamp { minute, inflation });
+    pub fn managed_bytes(&self) -> usize {
+        super::accounting::table::<super::Id, Stamp>(self.stamps.capacity())
+    }
+    pub fn record(&mut self, id: &super::Id, minute: u64, inflation: u64) {
+        self.stamps.insert(*id, Stamp { minute, inflation });
     }
 
-    pub fn get(&self, id: &str) -> Stamp {
+    pub fn get(&self, id: &super::Id) -> Stamp {
         self.stamps.get(id).copied().unwrap_or_default()
     }
 
-    pub fn remove(&mut self, id: &str) {
+    pub fn remove(&mut self, id: &super::Id) {
         self.stamps.remove(id);
     }
 }

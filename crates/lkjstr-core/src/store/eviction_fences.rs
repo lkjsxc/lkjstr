@@ -19,6 +19,12 @@ pub(super) struct Fence {
     tags_truncated: bool,
 }
 
+impl Fence {
+    pub(super) fn heap_bytes(&self) -> usize {
+        self.author.capacity() + self.tags.capacity() * std::mem::size_of::<u64>()
+    }
+}
+
 impl Store {
     pub(super) fn remember_eviction(&mut self, event: &NostrEvent) {
         let mut tags: Vec<_> = event

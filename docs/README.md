@@ -48,6 +48,8 @@ Engine (`crates/`):
 - [orchestration-optimizer.md](orchestration-optimizer.md) covers Stage 1 scheduling and retention.
 - [relay-orchestration-20261119.md](relay-orchestration-20261119.md): progressive reads, cache gaps, NIP-65 and bounded prefetch.
 - [architecture.md](architecture.md): crates, runtime, orchestration, storage.
+- [cache-retention.md](cache-retention.md): Home parity and weighted metadata checkpoints.
+- [compact-event-store.md](compact-event-store.md): binary resident payloads, leases and memory qualification.
 - [cache-bootstrap.md](cache-bootstrap.md): verified public restore, metadata checkpoints, bounds and proof.
 - [cache-repeat.md](cache-repeat.md): repeated public cache reads and measurement.
 - [cache-repeat-private.md](cache-repeat-private.md): private cache authorization proof.

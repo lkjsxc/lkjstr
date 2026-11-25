@@ -14,6 +14,9 @@ impl Store {
         self.evict();
         self
     }
+    pub(crate) fn set_persistence_overhead(&mut self, bytes: usize) {
+        self.persistence_overhead = bytes;
+    }
     pub fn payload_bytes(&self) -> usize {
         self.payload_bytes
     }

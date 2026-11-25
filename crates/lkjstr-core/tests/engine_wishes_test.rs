@@ -5,6 +5,7 @@ use lkjstr_core::engine::{
     Engine, protocol,
     wire::{Output, Session},
 };
+use lkjstr_core::store::Inserted;
 use serde_json::{Value, json};
 fn messages(s: &mut Session, e: &mut Engine, q: Value) -> Vec<Value> {
     accept(s, e, json!({"t":"open","sub":"wish","query":q}), 0);
@@ -89,17 +90,17 @@ fn their_home_is_independent_of_reader_and_tracks_replaced_follows() {
         a.id
     );
     follow.created_at += 1;
-    follow.id = "new-list".into();
+    follow.id = "12".repeat(32);
     follow.tags = vec![vec!["p".into(), other]];
-    e.store.insert(follow.clone(), None);
+    assert_eq!(e.store.insert(follow.clone(), None), Inserted::Replaced);
     assert_eq!(
         rows(messages(&mut Session::default(), &mut e, q.clone()))[0]["id"],
         b.id
     );
     follow.created_at += 1;
-    follow.id = "empty-list".into();
+    follow.id = "13".repeat(32);
     follow.tags.clear();
-    e.store.insert(follow, None);
+    assert_eq!(e.store.insert(follow, None), Inserted::Replaced);
     assert!(rows(messages(&mut Session::default(), &mut e, q)).is_empty());
 }
 #[test]

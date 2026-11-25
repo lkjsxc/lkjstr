@@ -20,7 +20,7 @@ fn signed(kind: u64, at: u64, content: &str, tags: Vec<Vec<String>>) -> NostrEve
         kind: 0,
         tags: vec![],
         content: String::new(),
-        sig: String::new(),
+        sig: "0".repeat(128),
     })
 }
 

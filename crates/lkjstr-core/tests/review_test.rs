@@ -72,9 +72,23 @@ fn failed_batches_survive_retry_and_concurrent_arrivals() {
     queue.push(a.clone(), true);
     let failed = queue.batch();
     queue.push(b.clone(), true);
-    assert_eq!(queue.batch(), vec![a.clone(), b.clone()]);
+    assert_eq!(
+        queue
+            .batch()
+            .iter()
+            .map(|e| e.to_nostr())
+            .collect::<Vec<_>>(),
+        vec![a.clone(), b.clone()]
+    );
     queue.committed(&failed);
-    assert_eq!(queue.batch(), vec![b]);
+    assert_eq!(
+        queue
+            .batch()
+            .iter()
+            .map(|e| e.to_nostr())
+            .collect::<Vec<_>>(),
+        vec![b]
+    );
     let retry = queue.batch();
     queue.committed(&retry);
     assert!(queue.is_empty());
@@ -95,7 +109,7 @@ fn unavailable_storage_buffers_nothing_and_repeated_failures_stay_bounded() {
     }
     assert_eq!(queue.len(), 20_000);
     assert_eq!(queue.batch().len(), 500);
-    assert_eq!(queue.batch()[0].id, format!("{:064x}", 100));
+    assert_eq!(queue.batch()[0].id_hex(), format!("{:064x}", 0));
 }
 
 #[test]

@@ -70,13 +70,15 @@ impl Store {
             || self
                 .context_deleted
                 .contains(&(id.to_owned(), author.to_owned()))
-            || self.by_tag_e.get(id).into_iter().flatten().any(|fence| {
-                self.events.get(fence).is_some_and(|event| {
+            || decode_id(id)
+                .and_then(|id| self.by_tag_e.get(&id))
+                .into_iter()
+                .flatten()
+                .any(|event| {
                     event.kind == 5
-                        && event.pubkey == author
-                        && tag_values(event, "e").iter().any(|target| target == id)
+                        && event.pubkey_hex() == author
+                        && event.tag_values("e").any(|target| target == id)
                 })
-            })
     }
 }
 

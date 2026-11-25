@@ -88,7 +88,7 @@ fn pending_mute_and_late_old_ack_never_bless_the_new_policy_count() -> Result {
     let batch = engine.pending.batch();
     engine.store.insert(second.clone(), None);
     engine.pending.push(second.clone(), true);
-    engine.public_policy_committed(&batch);
+    engine.public_policy_leases_committed(&batch);
     engine.pending.committed(&batch);
     let pending = project(&engine, &note, &note.pubkey);
     assert_eq!(pending["counts"]["replies"], 0);
@@ -99,7 +99,7 @@ fn pending_mute_and_late_old_ack_never_bless_the_new_policy_count() -> Result {
         false
     );
     let batch = engine.pending.batch();
-    engine.public_policy_committed(&batch);
+    engine.public_policy_leases_committed(&batch);
     engine.pending.committed(&batch);
     engine.public_policy_committed(&[first]);
     let committed = project(&engine, &note, &note.pubkey);

@@ -22,13 +22,8 @@ pub(super) fn event(n: u64, author: u64, kind: u64, size: usize) -> NostrEvent {
 
 pub(super) fn trim(store: &mut Store, held: &BTreeSet<String>, readers: &[u64]) {
     let authors: BTreeSet<_> = readers.iter().map(|n| format!("{n:064x}")).collect();
-    let weights = store.retention_weights(|event| {
-        if authors.contains(&event.pubkey) {
-            64
-        } else {
-            1
-        }
-    });
+    let weights =
+        store.retention_weights(|_, pubkey| if authors.contains(pubkey) { 64 } else { 1 });
     store.trim_weighted(
         &authors,
         held,
@@ -42,7 +37,7 @@ pub(super) fn trim(store: &mut Store, held: &BTreeSet<String>, readers: &[u64]) 
 fn caps_keep_open_threads_and_small_weighted_notes_through_spam() {
     let mut store = Store::with_caps(60, 10)
         .weight_retention()
-        .with_byte_cap(50_000);
+        .with_byte_cap(256_000);
     let mut held = BTreeSet::new();
     for n in 1..=16 {
         let note = event(n, 1, 1, 90);
@@ -62,7 +57,8 @@ fn caps_keep_open_threads_and_small_weighted_notes_through_spam() {
     assert!(held.iter().all(|id| store.get(id).is_some()));
     assert!(store.get(&event(16, 1, 1, 90).id).is_some());
     assert!(store.get(&own.id).is_some());
-    assert!(store.payload_bytes() <= 47_500);
+    // The budget now includes indexes, dictionary capacity and loss evidence.
+    assert!(store.managed_bytes() <= 243_200);
     assert!(store.evictions() > 200);
 }
 

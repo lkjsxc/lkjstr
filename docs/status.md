@@ -11,6 +11,11 @@ Home and Their Home both include the feed owner's posts. Visible Their Home foll
 its public follow list is a read dependency, without granting account or mute authority. The bounded metadata checkpoint now uses the resident
 scorer and durable access hints, retaining signed deletion evidence ahead of optional cache entries. See [cache-retention.md](cache-retention.md).
 
+The [compact event store](compact-event-store.md) now uses binary identities, shared dictionaries and pointer-only persistence batches. Count caps
+remain 16000/4000; the managed budget includes indexes, evidence and pending leases. Native allocation density improved 2.51x on the frozen fixture.
+Real Worker warm-IDB testing passes 120/120 cases and all four paired timing gates against fixes-only. First-note DOM/rAF improves 16.8/14.2 ms
+for Home/Their Home; eight named rows improve 16.6/14.6 ms, with lower p95 in the same 30 alternating pairs/source. See the compact-store scope.
+
 ## Kind capabilities (2026-11-22)
 
 N1 centralizes kind policy and public ID/address access. Quotes carry their kind, optional previews and a one-line reference to their first quote.
@@ -56,36 +61,27 @@ Protocol 6 introduced DM, encrypted-key and relay authentication operations. Pro
 
 - Core/Worker DM supports local, NIP-07 and NIP-46 signers. NIP-17 text/group
   messages use NIP-44 seals and NIP-59 wrappers sent to each participant and self.
-  Success needs every envelope accepted. Conversation/read marks, history,
-  hidden-view release and read-only NIP-04 are implemented. Private bodies stay
-  out of public caches; lock/replacement revoke them. Reconnect overlaps
-  backdated wraps by 48 hours. See [dm.md](dm.md).
+  Success needs every envelope accepted. Conversation/read marks, history,   hidden-view release and read-only NIP-04 are implemented. Private bodies stay
+  out of public caches; lock/replacement revoke them. Reconnect overlaps   backdated wraps by 48 hours. See [dm.md](dm.md).
 - NIP-49 import/export and explicit lock/unlock commit accounts transactionally.
   Encrypted imports persist ciphertext only; session keys do not survive Worker
-  restart. Existing plaintext accounts remain usable until explicit protection.
-  K1-K4 supply verified password/import/unlock/backup/migration controls.
-  Unlock is Worker-scoped; strict per-page permission needs
-  a vault/cache lease, not a visual flag. See [keys.md](keys.md).
+  restart. Existing plaintext accounts remain usable until explicit protection.   K1-K4 supply verified password/import/unlock/backup/migration controls.
+  Unlock is Worker-scoped; strict per-page permission needs   a vault/cache lease, not a visual flag. See [keys.md](keys.md).
 - NIP-42 auth-required reads/writes use all signers. A challenge alone causes no
   signature. Demand, original owner and authority are checked on asynchronous
-  completion. AUTH never enters public history. Optional NIP-67 hints remain
-  unsupported; see [relay-auth.md](relay-auth.md).
+  completion. AUTH never enters public history. Optional NIP-67 hints remain   unsupported; see [relay-auth.md](relay-auth.md).
 - Current signed mute, bookmark and people lists decrypt locally or through
   extensions/bunkers using NIP-44 or historical read-only NIP-04. Visible external
   reads have owner-scoped leases; local mute policy also qualifies background
-  unread counts. Private editing and list-specific Retry controls remain absent;
-  see [private-lists.md](private-lists.md).
+  unread counts. Private editing and list-specific Retry controls remain absent;   see [private-lists.md](private-lists.md).
 - NIP-57 providers authorize receipt actors/totals and finite zapper queries.
   Explicit local/extension/bunker invoice requests are HTTPS-only and return
   unpaid intents; no payment control exists. Bounds/evidence: [zaps.md](zaps.md).
 - Failed/silent relays do not veto healthy history forever. Paging waits for
-  completion or the original deadline, advances successful pages and preserves
-  failed-route cursors. Failure never establishes empty history.
+  completion or the original deadline, advances successful pages and preserves   failed-route cursors. Failure never establishes empty history.
 - Real builds install a complete hash-verified offline shell with CacheStorage
-  and Web Locks. Open clients check on boot, return and periodically, and
-  adopt verified updates once visible and idle. Drafts defer reload with a notice.
-  Previous hashed assets remain during handoff,
-  and interrupted cleanup recovers on fetch. Events, keys and media are excluded.
+  and Web Locks. Open clients check on boot, return and periodically, and   adopt verified updates once visible and idle. Drafts defer reload with a notice.
+  Previous hashed assets remain during handoff,   and interrupted cleanup recovers on fetch. Events, keys and media are excluded.
   Loopback cases cover corruption, rollback, offline links and two-tab races ([offline-shell.md](offline-shell.md)).
 
 The separate `pnpm real:hour` uses fresh read-only public-account data and fail-closed publication guards. Its dated baseline hour and fault phases
@@ -167,8 +163,7 @@ These are concrete runtime limits, not permission to fake a successful answer.
   NIP-04. Public edits preserve ciphertext; private editing, named-set navigation
   and list-specific Retry controls remain absent. Rows/hydration are owner-scoped.
 - Search: retained people, language OR and unavailable repost quotas/Fresh pass
-  native/Worker proof and combined gates. Remote people discovery remains absent.
-  See [unavailable-reposts.md](unavailable-reposts.md).
+  native/Worker proof and combined gates. Remote people discovery remains absent.   See [unavailable-reposts.md](unavailable-reposts.md).
 - Bunkers: auth_url passes native/52 Worker checks and combined gates, without controls; see [bunker-auth.md](bunker-auth.md). Relay switching is unsupported.
   Without a registered authorization presenter, the current client returns unsupported promptly; no new surface exists.
 - Uploads: phases, zero/validated completion and cancellation work; actual byte
@@ -193,8 +188,7 @@ of 2000 requested notes and seven unresolved Home coverage candidates. Productiv
 production Worker before/after proof and combined gates. Public availability is still unknown; see [engine-live-route.md](engine-live-route.md).
 The sixth prescribed ship stopped before deployment at 16:35:57 UTC: separate package validators still required a direct HTML WASM preload.
 The archive graph and numeric-token corrections pass 80 package cases and 19 xtask tests; all required combined gates and exact packaging passed.
-The seventh ship's stale host validator was corrected through GitOps.
-Account-safe 07e88178 shipped at 02:07 UTC with schema-2 rollback and HTTPS proof;
+The seventh ship's stale host validator was corrected through GitOps. Account-safe 07e88178 shipped at 02:07 UTC with schema-2 rollback and HTTPS proof;
 A1/A2 shipped at 972ef776. [Receipts and hashes](engine-shipping.md).
 Q1: 894 -> 567 requests; 100/100 witnesses. Worker 543/549, mock, upload and offline gates pass; ship pending. [Score](q1-public-score-20261117.md).
 

@@ -21,7 +21,7 @@ pub(super) fn persist(host: &Rc<RefCell<Host>>) {
         let batch = h.engine.pending.batch();
         let mut rows = batch
             .iter()
-            .filter_map(|e| lkjstr_core::cache::Record::verified(e).ok())
+            .filter_map(|e| lkjstr_core::cache::Record::verified(&e.to_nostr()).ok())
             .collect::<Vec<_>>();
         let (access, metadata) = h.engine.cache_metadata_observation(h.time());
         let mut ids: std::collections::BTreeSet<_> =
@@ -78,7 +78,7 @@ pub(super) fn persist(host: &Rc<RefCell<Host>>) {
                         },
                     );
                 }
-                h.engine.public_policy_committed(&work.2);
+                h.engine.public_policy_leases_committed(&work.2);
                 let policy_was_pending = h.engine.pending.public_policy_pending();
                 h.engine.pending.committed(&work.2);
                 if policy_was_pending && !h.engine.pending.public_policy_pending() {

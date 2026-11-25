@@ -28,7 +28,7 @@ fn coverage_requires_both_a_verified_write_list_and_an_active_request() {
                 created_at: 1,
                 tags,
                 content: String::new(),
-                sig: String::new(),
+                sig: "0".repeat(128),
             },
             None,
         );

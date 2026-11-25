@@ -19,12 +19,15 @@ impl Engine {
             .delivery_wire
             .take()
             .filter(|(url, _)| url == &relay);
-        let known = self.store.get(&event.id).filter(|known| **known == event);
-        if let Some(known) = &known {
+        let known = self
+            .store
+            .lease(&event.id)
+            .is_some_and(|known| known.matches(&event));
+        if known {
             self.network
-                .observe_verified(&relay, known, self.network.now);
+                .observe_verified(&relay, &event, self.network.now);
         }
-        if known.is_some() || self.queue.iter().any(|queued| queued.event == event) {
+        if known || self.queue.iter().any(|queued| queued.event == event) {
             self.network.repeated_deliveries = self
                 .network
                 .repeated_deliveries
@@ -35,7 +38,10 @@ impl Engine {
             return;
         }
         let bytes = crate::store::event_payload_bytes(&event);
-        if self.queue.len() >= MAX_VERIFY_QUEUE
+        // Legacy cache rows bypass the relay frame cap. A row that can never fit
+        // persistence must not block every later verification at the queue head.
+        if !crate::persistence::PendingEvents::can_ever_admit(&event)
+            || self.queue.len() >= MAX_VERIFY_QUEUE
             || self.queue_bytes.saturating_add(bytes) > MAX_VERIFY_QUEUE_BYTES
         {
             self.dropped += 1;

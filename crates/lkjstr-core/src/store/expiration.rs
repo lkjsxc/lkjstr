@@ -54,9 +54,7 @@ impl Store {
     }
 
     pub fn expires_at(&self, id: &str) -> Option<u64> {
-        self.events
-            .get(id)
-            .and_then(|event| deadline(event).ok().flatten())
+        self.lease(id).and_then(|event| event.expires_at)
     }
 
     pub fn expiration_evidence(&self) -> (u64, u64) {

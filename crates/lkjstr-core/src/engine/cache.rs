@@ -30,7 +30,7 @@ impl Engine {
                 Ok(Restored::Verified(event)) => {
                     let policy =
                         (event.kind == 10000).then(|| (event.pubkey.clone(), event.id.clone()));
-                    if self.store.get(&event.id).is_none() {
+                    if self.store.lease(&event.id).is_none() {
                         // Embedded repost targets are not separately receipted records.
                         if let Some(nested) = lkjstr_protocol::verified_nested_repost(&event) {
                             self.insert_verified(nested, Some("cache"));

@@ -8,11 +8,10 @@ impl ReadContexts {
         target: &str,
     ) -> Option<ContextEvidence> {
         let entry = self.committed.get(target)?;
-        let restored = entry
-            .members
-            .iter()
-            .all(|(id, (author, _))| store.get(id).is_some() || store.was_deleted(id, author))
-            && entry
+        let restored =
+            entry.members.iter().all(|(id, (author, _))| {
+                store.lease(id).is_some() || store.was_deleted(id, author)
+            }) && entry
                 .members
                 .iter()
                 .filter(|(_, (_, kind))| *kind == 9735)
@@ -59,7 +58,7 @@ impl ReadContexts {
             .iter()
             .filter(|(_, entry)| {
                 entry.members.iter().any(|(id, (author, kind))| {
-                    *kind != 5 && store.get(id).is_none() && store.was_deleted(id, author)
+                    *kind != 5 && store.lease(id).is_none() && store.was_deleted(id, author)
                 })
             })
             .map(|(id, _)| id.clone())

@@ -1,8 +1,11 @@
 //! Bounded event store hydrated from IndexedDB.
 
 mod access;
+mod accounting;
 mod author_feed;
 mod bytes;
+pub mod compact;
+mod insert;
 pub use bytes::event_payload_bytes;
 mod address;
 mod context_pins;
@@ -15,6 +18,7 @@ mod index;
 mod profile;
 mod query;
 mod retention;
+mod search;
 mod snapshot;
 mod weighted;
 
@@ -27,6 +31,7 @@ use std::sync::Arc;
 use lkjstr_protocol::{NostrEvent, is_replaceable_kind, tags::tag_values};
 
 pub type Event = Arc<NostrEvent>;
+use compact::{AtomRef, Id, Lease, OrderedEvent, Pool, decode_id};
 type Key = (u64, String);
 
 /// Relays an event was seen on, kept small: hints, not a log.
@@ -43,19 +48,23 @@ pub enum Inserted {
     Deleted,
     Expired,
     InvalidExpiration,
+    InvalidEncoding,
 }
 
 pub struct Store {
-    events: HashMap<String, Event>,
-    seen_on: HashMap<String, Vec<String>>,
-    by_time: BTreeSet<Key>,
-    by_author: HashMap<String, BTreeSet<Key>>,
-    by_tag_p: HashMap<String, BTreeSet<Key>>,
-    by_tag_e: HashMap<String, Vec<String>>,
-    by_comment_address: HashMap<String, Vec<String>>,
-    replaceable: HashMap<(String, u64), String>,
+    events: HashMap<Id, Lease>,
+    compact: Pool,
+    seen_on: HashMap<Id, Vec<AtomRef>>,
+    // Exact aggregate capacity of the relay-reference vectors, excluding atoms.
+    seen_on_bytes: usize,
+    by_time: BTreeSet<OrderedEvent>,
+    by_author: HashMap<Id, BTreeSet<OrderedEvent>>,
+    by_tag_p: HashMap<Id, BTreeSet<OrderedEvent>>,
+    by_tag_e: HashMap<Id, Vec<Lease>>,
+    by_comment_address: HashMap<String, Vec<Lease>>,
+    replaceable: HashMap<(Id, u64), Id>,
     // One revision per retained addressable coordinate.
-    addressable: HashMap<(String, u64, String), String>,
+    addressable: HashMap<(Id, u64, String), Id>,
     profiles: HashMap<String, Arc<Profile>>,
     verified_nip05: HashMap<String, String>,
     // At most 512 query name bindings; HTTP evidence is checked before insertion.
@@ -76,7 +85,7 @@ pub struct Store {
     replaceable_cap: usize,
     revision: u64,
     // One generation per retained event; removed together with its event.
-    generations: HashMap<String, u64>,
+    generations: HashMap<Id, u64>,
     snapshot_revision: u64,
     evictions: u64,
     // At most MAX_DELETED recent evictions, with verified IDs only.
@@ -90,6 +99,7 @@ pub struct Store {
     keep: crate::optimizer::keep_policy::KeepScorer,
     payload_bytes: usize,
     byte_cap: usize,
+    persistence_overhead: usize,
 }
 
 impl Store {
@@ -100,7 +110,9 @@ impl Store {
     pub fn with_caps(cap: usize, replaceable_cap: usize) -> Store {
         Store {
             events: HashMap::new(),
+            compact: Pool::default(),
             seen_on: HashMap::new(),
+            seen_on_bytes: 0,
             by_time: BTreeSet::new(),
             by_author: HashMap::new(),
             by_tag_p: HashMap::new(),
@@ -136,6 +148,7 @@ impl Store {
             keep: Default::default(),
             payload_bytes: 0,
             byte_cap: 64 * 1024 * 1024,
+            persistence_overhead: 0,
         }
     }
 
@@ -148,11 +161,30 @@ impl Store {
     }
 
     pub fn get(&self, id: &str) -> Option<Event> {
-        self.events.get(id).cloned()
+        self.lease(id).map(|event| event.materialize())
     }
 
-    pub fn seen_on(&self, id: &str) -> &[String] {
-        self.seen_on.get(id).map_or(&[], Vec::as_slice)
+    /// Immutable verified payload lease; survives removal from query indexes.
+    pub fn lease(&self, id: &str) -> Option<Lease> {
+        self.events.get(&decode_id(id)?).cloned()
+    }
+
+    /// Public metadata authors only; avoids expanding absent target follow graphs.
+    pub fn metadata_authors(&self) -> BTreeSet<String> {
+        self.events
+            .values()
+            .filter(|event| is_replaceable_kind(event.kind))
+            .map(|event| event.pubkey_hex())
+            .collect()
+    }
+
+    pub fn seen_on(&self, id: &str) -> Vec<String> {
+        decode_id(id)
+            .and_then(|id| self.seen_on.get(&id))
+            .into_iter()
+            .flatten()
+            .map(|atom| atom.text().into_owned())
+            .collect()
     }
 
     pub fn profile(&self, pubkey: &str) -> Option<Arc<Profile>> {
@@ -160,84 +192,10 @@ impl Store {
     }
 
     pub fn replaceable(&self, pubkey: &str, kind: u64) -> Option<Event> {
-        let id = self.replaceable.get(&(pubkey.to_owned(), kind))?;
-        self.get(id)
-    }
-
-    pub fn insert(&mut self, event: NostrEvent, relay: Option<&str>) -> Inserted {
-        self.insert_inner(event, relay, false)
-    }
-
-    pub(crate) fn insert_deferred(&mut self, event: NostrEvent, relay: Option<&str>) -> Inserted {
-        self.insert_inner(event, relay, self.weighted)
-    }
-
-    fn insert_inner(&mut self, event: NostrEvent, relay: Option<&str>, deferred: bool) -> Inserted {
-        if self.was_deleted(&event.id, &event.pubkey) || self.address_deletions.covers(&event) {
-            self.apply_verified_deletion(&event.id);
-            return Inserted::Deleted;
-        }
-        if self.events.contains_key(&event.id) {
-            if let Some(relay) = relay {
-                self.note_relay(&event.id, relay);
-            }
-            return Inserted::Duplicate;
-        }
-        let deadline = match expiration::deadline(&event) {
-            Ok(Some(at)) if at <= self.now_seconds => {
-                self.resolve_eviction(&event.id, false);
-                self.record_expiration(&event.id, &event.pubkey);
-                return Inserted::Expired;
-            }
-            Ok(at) => at,
-            Err(_) => {
-                self.invalid_expiration = self.invalid_expiration.saturating_add(1);
-                return Inserted::InvalidExpiration;
-            }
-        };
-        let mut outcome = Inserted::New;
-        if is_replaceable_kind(event.kind) {
-            let slot = (event.pubkey.clone(), event.kind);
-            if let Some(old) = self.replaceable.get(&slot).and_then(|id| self.get(id)) {
-                if old.created_at > event.created_at
-                    || (old.created_at == event.created_at && old.id < event.id)
-                {
-                    return Inserted::Stale;
-                }
-                self.remove(&old.id);
-                outcome = Inserted::Replaced;
-            }
-            self.replaceable.insert(slot, event.id.clone());
-            if event.kind == 0 {
-                let profile = Profile::parse(&event.content);
-                self.profiles
-                    .insert(event.pubkey.clone(), Arc::new(profile));
-            }
-        }
-        if let Some(replaced) = self.replace_address(&event) {
-            match replaced {
-                Inserted::Stale => return Inserted::Stale,
-                _ => outcome = replaced,
-            }
-        }
-        if event.kind == 5 {
-            self.apply_deletion(&event);
-        }
-        if let Some(relay) = relay {
-            self.note_relay(&event.id, relay);
-        }
-        if let Some(deadline) = deadline {
-            self.expiry_deadlines.insert((deadline, event.id.clone()));
-        }
-        self.resolve_eviction(&event.id, relay.is_some_and(|url| url.starts_with("ws")));
-        self.access
-            .record(&event.id, self.now_seconds / 60, self.keep.inflation());
-        self.record_insert(&event);
-        self.index(Arc::new(event));
-        self.revision += 1;
-        if !deferred {
-            self.evict();
-        }
-        outcome
+        let id = self.replaceable.get(&(decode_id(pubkey)?, kind))?;
+        self.events.get(id).map(|event| event.materialize())
     }
 }
+
+#[cfg(test)]
+mod relay_accounting_test;

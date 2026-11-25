@@ -70,6 +70,12 @@ impl ReadContexts {
 impl Engine {
     /// Call only after the event transaction committed. A late old ack cannot
     /// bless a newer, still-pending policy that changed the rendered reply count.
+    pub fn public_policy_leases_committed(&mut self, events: &[crate::store::compact::Lease]) {
+        for event in events.iter().filter(|event| event.kind == 10000) {
+            self.read_contexts
+                .policy_committed(&self.store, &event.pubkey_hex(), &event.id_hex());
+        }
+    }
     pub fn public_policy_committed(&mut self, events: &[NostrEvent]) {
         for event in events.iter().filter(|event| event.kind == 10000) {
             self.read_contexts

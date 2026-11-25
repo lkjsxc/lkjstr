@@ -19,7 +19,7 @@ fn put(store: &mut Store, id: u64, author: &str, kind: u64, tags: Vec<Vec<String
             created_at: id,
             tags,
             content: String::new(),
-            sig: String::new(),
+            sig: "0".repeat(128),
         },
         None,
     );

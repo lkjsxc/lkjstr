@@ -66,6 +66,11 @@ Engine work:
 - Long-lived collections document their bound; relay and timer work has an
   explicit release path (wants are dropped when a view hides or unmounts).
 - Source files at most 250 lines, docs at most 200; docs are ASCII English.
+- Cache owner: engine/cache maintainer. Measure committed warm-IDB reloads under
+  mixed metadata pressure; row freshness alone does not prove name retention.
+  Compare identical fixtures and count pending leases before claiming capacity gains.
+  Membership checks must not materialize payloads; remeasure startup after storage changes.
+  Profile the shipped Worker and inspect committed row overlap before adding boot shortcuts.
 - Keep docs and code aligned in the same change, especially docs/status.md.
 - Release-word checks apply to prose, not inline identifiers or fenced code:
   exact protocol fields and report paths must remain copyable and truthful.

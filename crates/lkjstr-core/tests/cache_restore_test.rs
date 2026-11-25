@@ -56,7 +56,7 @@ fn a_legacy_object_still_verifies_and_becomes_a_new_receipted_write() -> Result 
     let pending = engine.pending.batch();
     assert_eq!(pending.len(), 1);
     assert!(matches!(
-        Record::verified(&pending[0])?.restore()?,
+        Record::verified(&pending[0].to_nostr())?.restore()?,
         Restored::Verified(_)
     ));
     Ok(())

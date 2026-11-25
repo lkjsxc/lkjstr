@@ -195,3 +195,5 @@ Mock-only `EngineConfig.mock`: `slow` signs a note late and delays its answers, 
 - `Quote.state` adds `expired` for a verified expiry, with no quoted body.
 - `Quote.previews?` carries at most two cards for a resolved quote; `preview.ids` also accepts delivered quote IDs.
 - `Quote.nextId?` carries the first nested quote's ID for a single-line reference.
+
+Diagnostics add cacheManagedBytes and pendingPersistenceOverheadBytes to distinguish managed allocations from eventPayloadBytes.

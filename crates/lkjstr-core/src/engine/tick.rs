@@ -18,6 +18,13 @@ impl Engine {
         self.advance_visibility_clock(now);
         let was_verifying = self.network.verifying;
         for _ in 0..VERIFY_SLICE_LIMIT {
+            if self
+                .queue
+                .front()
+                .is_some_and(|entry| !self.pending.can_admit(&entry.event))
+            {
+                break;
+            }
             let Some(ingest::QueuedEvent {
                 relay,
                 event: e,
@@ -30,7 +37,11 @@ impl Engine {
             self.queue_bytes = self
                 .queue_bytes
                 .saturating_sub(crate::store::event_payload_bytes(&e));
-            if self.store.get(&e.id).is_some_and(|known| *known == e) {
+            if self
+                .store
+                .lease(&e.id)
+                .is_some_and(|known| known.matches(&e))
+            {
                 self.network.observe_verified(&relay, &e, now);
                 continue;
             }
@@ -40,17 +51,25 @@ impl Engine {
                 if let Some(nested) = lkjstr_protocol::verified_nested_repost(&e) {
                     self.insert_verified(nested, Some(&relay));
                 }
-                let outcome = self.insert_verified(e.clone(), Some(&relay));
-                if outcome == crate::store::Inserted::InvalidExpiration {
+                self.read_contexts.changed(&e);
+                let (outcome, lease) = self.store.insert_leased(e, Some(&relay));
+                if matches!(
+                    outcome,
+                    crate::store::Inserted::InvalidExpiration
+                        | crate::store::Inserted::InvalidEncoding
+                ) {
                     self.record_invalid_delivery(&relay, wire.as_deref(), sequence);
                 }
                 if relay != "cache"
                     && !matches!(
                         outcome,
-                        crate::store::Inserted::Expired | crate::store::Inserted::InvalidExpiration
+                        crate::store::Inserted::Expired
+                            | crate::store::Inserted::InvalidExpiration
+                            | crate::store::Inserted::InvalidEncoding
                     )
+                    && let Some(lease) = lease
                 {
-                    self.pending.push(e, true);
+                    self.pending.push_lease(lease);
                 }
                 for v in self.views.values_mut() {
                     v.dirty = true;

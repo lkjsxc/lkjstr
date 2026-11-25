@@ -85,6 +85,10 @@ impl Engine {
             return;
         }
         verified();
+        if !self.pending.can_admit(&event) {
+            self.error(Some(req), "storage-write-failed");
+            return;
+        }
         if matches!(event.kind, 1 | 7) && !self.network.can_stage_publication(&event.id) {
             self.error(Some(req), "publication-limit");
             return;
@@ -115,7 +119,7 @@ impl Engine {
         if event.kind == 1 && self.store.get(&event.id).is_none() {
             self.tentative_notes.insert(event.id.clone());
         }
-        let inserted = self.store.insert_deferred(event.clone(), None);
+        let (inserted, lease) = self.store.insert_leased(event.clone(), None);
         if event.kind == 0
             && !matches!(
                 inserted,
@@ -125,8 +129,15 @@ impl Engine {
             self.error(Some(req), "rejected");
             return;
         }
-        if event.kind != 1 {
-            self.pending.push(event.clone(), true);
+        if let Some(lease) = lease {
+            if event.kind != 1 {
+                self.pending.push_lease(lease);
+            } else if self.tentative_notes.contains(&event.id) && !self.pending.reserve(lease) {
+                self.tentative_notes.remove(&event.id);
+                self.store.discard_unseen_note(&event.id);
+                self.error(Some(req), "storage-write-failed");
+                return;
+            }
         }
         for v in self.views.values_mut() {
             v.dirty = true;
