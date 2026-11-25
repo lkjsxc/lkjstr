@@ -6,6 +6,7 @@ import type {
   OrchestrationWorker,
 } from '../protocol.ts';
 import type { Core } from './engine.ts';
+import { mockOptimizer } from './optimizer.ts';
 
 export function statsRelay(raw: string): { url: string; isPrivateHost: boolean } {
   try {
@@ -35,6 +36,10 @@ function bucket(atMs: number): BandwidthBucket {
     bytesIn: eventsIn * 683 + (wave % 3) * 21,
     bytesOut: reqsSent * 274,
     reqsSent,
+    reqsCoalesced: reqsSent ? wave % 4 : 0,
+    hedgesFired: wave === 8 ? 1 : 0,
+    duplicateBytes: duplicates * 683,
+    queueBusy: eventsIn > 12,
   };
 }
 
@@ -50,12 +55,14 @@ export function sampleTelemetry(core: Core, focused?: string) {
     {
       atMs: cycle,
       kind: 'hedge',
+      delayMs: 320,
       relay: 'wss://relay.example',
       summary: 'Added a parallel read route after a slow start',
     },
     {
       atMs: cycle + 8000,
       kind: 'coalesce',
+      count: 3,
       relay: 'wss://relay.example',
       summary: 'Shared a relay request across logical reads',
     },
@@ -95,6 +102,13 @@ export function sampleTelemetry(core: Core, focused?: string) {
     lastTickMs: 1.8 + (second % 5) * 0.7,
     maxTickMs: 15.2,
     sliceLimit: 32,
+    lastSliceVerified: second % 17,
+    verifyQueueCap: 4096,
+    storeEvictions: 14,
+    ghostHits: 2,
+    payloadBytes: core.world.notes.reduce((n, x) => n + 420 + x.text.length * 3, 0),
+    replaceableCap: 4000,
+    regularCap: 16000,
     regularStored: core.world.notes.length,
     replaceableStored: 0,
     memoryCapBytes: 64 * 1024 * 1024,
@@ -111,9 +125,21 @@ export function sampleTelemetry(core: Core, focused?: string) {
     .slice(0, 128)
     .map((sub): OrchestrationView => {
       const anchorAtMs = sub.timeRange?.at ?? sub.monthAnchor;
+      const heldStart = sub.windowed ? sub.start : 0;
+      const heldEnd = sub.windowed ? sub.end : Math.min(51, sub.entries.length);
+      const at = (index: number) => {
+        const row = sub.entries[index]?.row();
+        return row?.kind === 'note' || row?.kind === 'notification' ? row.at : undefined;
+      };
       return {
         subId: sub.statsId,
         source: sub.query.source,
+        sourceKind: sub.query.source,
+        ...(heldEnd > heldStart && { oldestAtMs: at(heldEnd - 1), newestAtMs: at(heldStart) }),
+        ...(sub.entries.length > 0 && {
+          cacheOldestAtMs: at(sub.entries.length - 1),
+          cacheNewestAtMs: at(0),
+        }),
         visible: sub.visible,
         focused: sub.visible && sub.id === focused,
         rowCount: sub.windowed ? sub.end - sub.start : Math.min(51, sub.entries.length),
@@ -130,9 +156,18 @@ export function sampleTelemetry(core: Core, focused?: string) {
       };
     });
   return {
+    nowMs: now,
+    optimizer: mockOptimizer(core.world.notes.length, now),
     views,
     worker,
     bandwidthHistory,
-    orchestrationEvents: orchestrationEvents.filter((event) => event.atMs <= now),
+    orchestrationEvents: orchestrationEvents
+      .filter((event) => event.atMs <= now)
+      .map((event) => {
+        const sub = views.find((v) => v.focused) ?? views[0];
+        return sub && (event.kind === 'hedge' || event.kind === 'coalesce')
+          ? { ...event, viewSubId: sub.subId }
+          : event;
+      }),
   };
 }

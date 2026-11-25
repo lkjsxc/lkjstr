@@ -8,11 +8,15 @@ import { sampleTelemetry, statsRelay } from './telemetry.ts';
 const dup = (events: number, i: number): number => Math.round((events * (18 + i * 9)) / 100);
 export function mockStats(core: Core, focused?: string): EngineStats {
   const rows = relays(core.world);
+  const telemetry = sampleTelemetry(core, focused);
   return {
-    ...sampleTelemetry(core, focused),
+    ...telemetry,
     relays: rows.map((r, i) => ({
       ...statsRelay(r.url),
       cooldownRemainingMs: Math.max(0, (r.retryAt ?? 0) - core.now()),
+      relayIndex: i,
+      eoseMs: r.latencyMs === undefined ? null : r.latencyMs + 75,
+      usefulShare: r.events ? (r.events - dup(r.events, i)) / r.events : null,
       state: r.state,
       route:
         r.read && r.write
@@ -37,18 +41,28 @@ export function mockStats(core: Core, focused?: string): EngineStats {
       latencyMs: r.latencyMs ?? null,
     })),
     // Mock wire diagnostics derive from the test double's actual open subscriptions.
-    requests: [...core.subs.values()].slice(0, 256).map((sub) => ({
-      id: sub.id,
-      wireId: sub.id,
-      relay: statsRelay(rows[0]!.url).url,
-      purpose: sub.query.source === 'notifications' ? 'notifications' : 'visible',
-      priority: 1,
-      weight: 600,
-      received: sub.end - sub.start,
-      sent: true,
-      complete: true,
-      members: 1,
-    })),
+    requests: [...core.subs.values()]
+      .filter((sub) => telemetry.views.some((view) => view.subId === sub.statsId))
+      .slice(0, 256)
+      .map((sub) => ({
+        id: sub.statsId,
+        wireId: sub.statsId,
+        relay: statsRelay(rows[0]!.url).isPrivateHost
+          ? 'private-relay'
+          : statsRelay(rows[0]!.url).url,
+        memberSubs: [sub.statsId],
+        role: 'primary',
+        createdAtMs: telemetry.nowMs - 300,
+        firstEventAtMs: telemetry.nowMs - 120,
+        hedgeDueAtMs: null,
+        purpose: sub.query.source === 'notifications' ? 'notifications' : 'visible',
+        priority: 1,
+        weight: 600,
+        received: sub.end - sub.start,
+        sent: true,
+        complete: true,
+        members: 1,
+      })),
     totals: {
       eventsStored: core.world.notes.length,
       cacheBytes: core.world.notes.reduce((n, x) => n + 420 + x.text.length * 3, 0),
