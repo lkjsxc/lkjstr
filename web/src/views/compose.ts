@@ -5,6 +5,7 @@ import { h, replaceChildren } from '../shared/h.ts';
 import { t } from '../shared/i18n.ts';
 import { icon } from '../shared/icons.ts';
 import { keyCaps, pressed } from '../shared/keys.ts';
+import { afterSend } from '../shared/platform.ts';
 import { kv } from '../shared/storage.ts';
 import { loadViewState, saveViewState } from '../shared/view-state.ts';
 import { openMenu } from '../wm/menus.ts';
@@ -201,7 +202,7 @@ export function mountCompose(
     if (!relays.length) return replaceChildren(result);
     replaceChildren(result, sendLine(relays, final, id, ms));
   }
-  function send(): void {
+  function send(byKey = false): void {
     ready();
     if (ability(env.engine) === 'locked') return denied(env, 'locked');
     if (post.disabled) return;
@@ -218,7 +219,7 @@ export function mountCompose(
     };
     const clear = (): void => {
       area.value = state.text = '';
-      area.focus({ preventScroll: true });
+      afterSend(area, byKey);
       state.mentions = [];
       mentions.reset();
       state.replyTo = state.replyOf = state.quote = state.quoteOf = state.emoji = undefined;
@@ -234,7 +235,7 @@ export function mountCompose(
   }
   area.addEventListener('input', () => (ready(), (state.text = area.value), save()));
   area.addEventListener('keydown', (e) => {
-    if (pressed(e, 'send')) e.preventDefault(), void send();
+    if (pressed(e, 'send')) e.preventDefault(), void send(true);
   });
   area.addEventListener('paste', (e) => {
     if (e.clipboardData?.files.length) e.preventDefault(), media.add(e.clipboardData.files);

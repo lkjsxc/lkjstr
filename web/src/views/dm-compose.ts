@@ -12,6 +12,7 @@ import { h } from '../shared/h.ts';
 import { t } from '../shared/i18n.ts';
 import { icon } from '../shared/icons.ts';
 import { keyCaps, pressed } from '../shared/keys.ts';
+import { afterSend } from '../shared/platform.ts';
 import { createDmEditor } from './dm-compose-edit.ts';
 import type { createDmDraftPool } from './dm-draft-pool.ts';
 import { transmitDm } from './dm-draft-send.ts';
@@ -98,7 +99,7 @@ export function createDmCompose(o: {
   const transmit = (item: DmFailedDraft): void => {
     if (!stopped && !blocked.length) transmitDm({ env, account: owner, store, key: item.key });
   };
-  const submit = (): void => {
+  const submit = (byKey = false): void => {
     if (send.disabled || stopped) return;
     if (store.get().failed.length >= 32) {
       error = dmError('too-large');
@@ -111,7 +112,7 @@ export function createDmCompose(o: {
       failed: [item, ...store.get().failed],
     });
     area.value = '';
-    area.focus({ preventScroll: true });
+    afterSend(area, byKey);
     void transmit(item);
   };
   function draw(): void {
@@ -210,10 +211,10 @@ export function createDmCompose(o: {
   area.addEventListener('keydown', (event) => {
     if (pressed(event, 'send')) {
       event.preventDefault();
-      submit();
+      submit(true);
     }
   });
-  send.addEventListener('click', submit);
+  send.addEventListener('click', () => submit());
   emoji.addEventListener('click', () =>
     openEmojiPicker(env, emoji, (picked) => {
       if (stopped || !store.ready()) return;

@@ -26,3 +26,11 @@ export function matches(e: KeyboardEvent, combo: string, apple = isApple()): boo
   if (e.shiftKey !== want.has('Shift')) return false;
   return e.code === (/\d/.test(key) ? `Digit${key}` : `Key${key.toUpperCase()}`);
 }
+
+/** After a send the field is empty. A key kept the keyboard there, so the caret stays; a press on a touch screen
+ * puts the on-screen keyboard away instead of opening it again over what was just sent. */
+export function afterSend(field: HTMLElement, byKey: boolean): void {
+  const touch = globalThis.matchMedia?.('(pointer: coarse)').matches ?? false;
+  if (byKey || !touch) field.focus({ preventScroll: true });
+  else field.blur();
+}
