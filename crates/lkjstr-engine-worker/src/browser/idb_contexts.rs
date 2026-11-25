@@ -28,9 +28,12 @@ pub async fn put(
     db: &IdbDatabase,
     rows: &[Record],
     contexts: &[Context],
+    access: &cache::MetadataAccess,
 ) -> Result<Option<Vec<Context>>, String> {
     if contexts.is_empty() && !rows.iter().any(|row| row.kind == Some(5)) {
-        return idb_events::put(db, rows).await.map(|()| None);
+        return idb_events::put_with_access(db, rows, access)
+            .await
+            .map(|()| None);
     }
     let seed = lkjstr_protocol::bytes_to_hex(&super::random_bytes::<32>().map_err(str::to_owned)?);
     let metadata: Vec<_> = rows
@@ -46,6 +49,7 @@ pub async fn put(
     let metadata = Rc::new(metadata);
     let deletions = Rc::new(deletions);
     let contexts = Rc::new(contexts.to_vec());
+    let access = Rc::new(access.clone());
     let output = Rc::new(RefCell::new(None));
     let mut requests = Vec::new();
     let mut handlers = Vec::new();
@@ -64,6 +68,7 @@ pub async fn put(
             let metadata = metadata.clone();
             let deletions = deletions.clone();
             let contexts = contexts.clone();
+            let access = access.clone();
             let kv = kv.clone();
             let tx = tx.clone();
             let left = left.clone();
@@ -76,8 +81,12 @@ pub async fn put(
                 }
                 let write = || -> Result<(), JsValue> {
                     let old_metadata = metadata_request.result()?.as_string();
-                    let merged_metadata = cache::merge_metadata(old_metadata.as_deref(), &metadata)
-                        .map_err(|_| JsValue::from_str("Public metadata encoding failed"))?;
+                    let merged_metadata = cache::merge_metadata_with_access(
+                        old_metadata.as_deref(),
+                        &metadata,
+                        &access,
+                    )
+                    .map_err(|_| JsValue::from_str("Public metadata encoding failed"))?;
                     let mut fences =
                         cache::metadata_rows(Some(&merged_metadata)).map_err(JsValue::from_str)?;
                     fences.retain(|row| row.kind == Some(5));

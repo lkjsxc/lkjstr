@@ -31,16 +31,16 @@ pub fn filter(store: &Store, q: &Query) -> NostrFilter {
             f.kinds = Some(feed_kinds(Feed::People));
             f.limit = Some(32);
         }
-        Source::TheirHome => {
-            f.authors = Some(store.follows(&target).unwrap_or_default());
-        }
-        Source::Home => {
-            let mut authors = q
-                .account
-                .as_deref()
-                .and_then(|a| store.follows(a))
-                .unwrap_or_default();
-            authors.extend(q.account.clone());
+        Source::TheirHome | Source::Home => {
+            let owner = if q.source == Source::TheirHome {
+                q.target.as_deref()
+            } else {
+                q.account.as_deref()
+            };
+            let mut authors = owner.and_then(|key| store.follows(key)).unwrap_or_default();
+            authors.extend(owner.map(str::to_owned));
+            authors.sort();
+            authors.dedup();
             f.authors = Some(authors);
         }
         Source::Profile => {

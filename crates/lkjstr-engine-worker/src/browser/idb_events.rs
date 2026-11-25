@@ -41,6 +41,14 @@ pub(super) fn read(row: JsValue) -> Option<Record> {
 }
 
 pub async fn put(db: &IdbDatabase, rows: &[Record]) -> Result<(), String> {
+    put_with_access(db, rows, &cache::MetadataAccess::default()).await
+}
+
+pub async fn put_with_access(
+    db: &IdbDatabase,
+    rows: &[Record],
+    access: &cache::MetadataAccess,
+) -> Result<(), String> {
     let metadata: Vec<_> = rows
         .iter()
         .filter(|row| row.is_checkpoint())
@@ -66,11 +74,13 @@ pub async fn put(db: &IdbDatabase, rows: &[Record]) -> Result<(), String> {
         let current = request.clone();
         let transaction = tx.clone();
         let metadata = metadata.clone();
+        let access = access.clone();
         let step = Closure::<dyn FnMut(web_sys::Event)>::new(move |_| {
             let save = || -> Result<(), JsValue> {
                 let previous = current.result()?.as_string();
-                let merged = cache::merge_metadata(previous.as_deref(), &metadata)
-                    .map_err(|_| JsValue::from_str("metadata cache encoding failed"))?;
+                let merged =
+                    cache::merge_metadata_with_access(previous.as_deref(), &metadata, &access)
+                        .map_err(|_| JsValue::from_str("metadata cache encoding failed"))?;
                 kv.put_with_key(&merged.into(), &cache::METADATA_KEY.into())?;
                 Ok(())
             };

@@ -19,10 +19,18 @@ pub(super) fn persist(host: &Rc<RefCell<Host>>) {
         h.flushing = true;
         h.next_persist = now() + 1500;
         let batch = h.engine.pending.batch();
-        let rows = batch
+        let mut rows = batch
             .iter()
             .filter_map(|e| lkjstr_core::cache::Record::verified(e).ok())
             .collect::<Vec<_>>();
+        let (access, metadata) = h.engine.cache_metadata_observation(h.time());
+        let mut ids: std::collections::BTreeSet<_> =
+            rows.iter().map(|row| row.id.clone()).collect();
+        rows.extend(
+            metadata
+                .into_iter()
+                .filter(|row| ids.insert(row.id.clone())),
+        );
         let routes = h.engine.network.publication_routes_json();
         let revision = h.engine.network.publication_revision;
         (
@@ -36,6 +44,7 @@ pub(super) fn persist(host: &Rc<RefCell<Host>>) {
             h.engine
                 .read_contexts
                 .batch(&h.engine.store, &h.engine.zaps.receipts),
+            access,
         )
     };
     let weak = Rc::downgrade(host);
@@ -43,7 +52,7 @@ pub(super) fn persist(host: &Rc<RefCell<Host>>) {
         let begin = crate::measure::now();
         let result = match idb::kv_put(&work.0, "publication-routes-v1", &work.3).await {
             Ok(()) => match idb::kv_put(&work.0, "relay-quality-v1", &work.5).await {
-                Ok(()) => idb::put_read_contexts(&work.0, &work.1, &work.7.contexts).await,
+                Ok(()) => idb::put_read_contexts(&work.0, &work.1, &work.7.contexts, &work.8).await,
                 Err(error) => Err(error),
             },
             Err(error) => Err(error),

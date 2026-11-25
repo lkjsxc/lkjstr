@@ -14,7 +14,10 @@ mod validate;
 pub use validate::{validate_metadata, validate_public_reference};
 #[path = "cache_zaps.rs"]
 pub mod zaps;
-pub use metadata::{METADATA_BYTES, METADATA_EVENTS, METADATA_KEY, merge_metadata, metadata_rows};
+pub use metadata::{
+    METADATA_BYTES, METADATA_EVENTS, METADATA_KEY, MetadataAccess, merge_metadata,
+    merge_metadata_with_access, metadata_rows,
+};
 
 const RECEIPT: &str = "lkjstr-verified-1:";
 pub const VERIFY_SOURCE: &str = "cache-verify";

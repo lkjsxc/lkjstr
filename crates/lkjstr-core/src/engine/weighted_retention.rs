@@ -1,6 +1,8 @@
 //! Resolve public pinning and reuse weights once per pressure batch.
 use super::{Engine, weights::Weights};
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
+#[path = "cache_retention.rs"]
+mod cache_retention;
 
 impl Engine {
     /// Supply only verified public account IDs before restoring cache rows.
@@ -17,19 +19,19 @@ impl Engine {
         if !self.store.retention_needed() {
             return;
         }
-        let mut own: BTreeSet<_> = self.discovery_accounts.iter().cloned().collect();
-        own.extend(self.saved_retention_accounts.iter().cloned());
-        own.extend(
-            self.views
-                .values()
-                .filter_map(|view| view.query.account.clone()),
-        );
-        let held = self
-            .views
-            .values()
-            .flat_map(|view| view.rows.iter().map(|row| row.id.clone()))
-            .collect();
-        let policies: Vec<_> = own
+        let input = self.retention_inputs();
+        // A painted note also accesses its author metadata. Otherwise minute=0
+        // ages frequently displayed names to the lowest score on every pressure pass.
+        for author in &input.visible {
+            if let Some(profile) = self.store.replaceable(author, 0) {
+                self.store.mark_read(&profile.id);
+            }
+        }
+        for id in &input.held {
+            self.store.mark_read(id);
+        }
+        let policies: Vec<_> = input
+            .own
             .iter()
             .map(|key| Weights::new(&self.store, &self.private_lists, Some(key)))
             .collect();
@@ -46,6 +48,7 @@ impl Engine {
                         .map(|policy| policy.person(&event.pubkey))
                         .max()
                         .unwrap_or(1)
+                        .max(input.affinity.get(&event.pubkey).copied().unwrap_or(0))
                 })
         });
         let first_event_ms: BTreeMap<_, _> = self
@@ -56,8 +59,8 @@ impl Engine {
             .collect();
         let evictions = self.store.evictions();
         self.store.trim_weighted(
-            &own,
-            &held,
+            &input.own,
+            &input.held,
             &weights,
             &first_event_ms,
             self.network.optimizer.link.state(),
@@ -70,3 +73,7 @@ impl Engine {
         }
     }
 }
+
+#[cfg(test)]
+#[path = "weighted_retention_test.rs"]
+mod tests;

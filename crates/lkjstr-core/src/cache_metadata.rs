@@ -1,10 +1,12 @@
 //! A bounded metadata checkpoint survives timestamp-based event pruning.
-//! Updates merge in the same transaction as event writes; an older Worker
-//! snapshot cannot replace a newer author/kind value.
+//! Verified replacement/deletion rules precede shared GDSF reuse selection.
 use super::{Record, Restored};
-use lkjstr_protocol::NostrEvent;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
+#[path = "cache_metadata_retention.rs"]
+mod retention;
+pub use retention::MetadataAccess;
+use retention::{Entry, Stamp};
 
 pub const METADATA_KEY: &str = "verified-public-metadata-v1";
 pub const METADATA_EVENTS: usize = 4000;
@@ -14,12 +16,13 @@ pub const METADATA_BYTES: usize = 4 * 1024 * 1024;
 struct Checkpoint {
     version: u8,
     rows: Vec<Record>,
+    #[serde(default)]
+    access: Vec<Stamp>,
+    #[serde(default)]
+    inflation: u64,
 }
 
-pub fn metadata_rows(raw: Option<&str>) -> Result<Vec<Record>, &'static str> {
-    let Some(raw) = raw else {
-        return Ok(vec![]);
-    };
+fn checkpoint(raw: &str) -> Result<Checkpoint, &'static str> {
     if raw.len() > METADATA_BYTES {
         return Err("metadata cache exceeds byte budget");
     }
@@ -27,19 +30,44 @@ pub fn metadata_rows(raw: Option<&str>) -> Result<Vec<Record>, &'static str> {
     if data.version != 1 || data.rows.len() > METADATA_EVENTS {
         return Err("unsupported metadata cache");
     }
-    Ok(data.rows)
+    Ok(data)
+}
+
+pub fn metadata_rows(raw: Option<&str>) -> Result<Vec<Record>, &'static str> {
+    raw.map(checkpoint)
+        .transpose()
+        .map(|data| data.map_or_else(Vec::new, |data| data.rows))
 }
 
 pub fn merge_metadata(
     previous: Option<&str>,
     incoming: &[Record],
 ) -> Result<String, serde_json::Error> {
-    // Public cache corruption never becomes authority for a new receipt.
-    let existing = metadata_rows(previous).unwrap_or_default();
-    let mut slots: HashMap<(String, u64), (usize, NostrEvent, Record)> = HashMap::new();
+    merge_metadata_with_access(previous, incoming, &MetadataAccess::default())
+}
+
+pub fn merge_metadata_with_access(
+    previous: Option<&str>,
+    incoming: &[Record],
+    access: &MetadataAccess,
+) -> Result<String, serde_json::Error> {
+    // Unverified rows and corrupt checkpoints cannot become receipt authority.
+    let existing = previous.and_then(|raw| checkpoint(raw).ok());
+    let inflation = existing.as_ref().map_or(0, |data| data.inflation);
+    let stamps: HashMap<_, _> = existing
+        .as_ref()
+        .into_iter()
+        .flat_map(|data| {
+            data.rows
+                .iter()
+                .zip(&data.access)
+                .map(|(row, stamp)| (row.id.clone(), *stamp))
+        })
+        .collect();
+    let rows = existing.map_or_else(Vec::new, |data| data.rows);
+    let mut slots = HashMap::new();
     let mut fences = HashMap::new();
-    // Rows are stored most recently observed first, independently of event age.
-    for (order, row) in existing
+    for (order, row) in rows
         .into_iter()
         .rev()
         .chain(incoming.iter().cloned())
@@ -48,55 +76,48 @@ pub fn merge_metadata(
         let Ok(Restored::Verified(event)) = row.restore() else {
             continue;
         };
-        if event.kind == 5 {
-            fences.insert(event.id.clone(), (order, event, row));
+        let stamp = stamps.get(&row.id).copied().unwrap_or(Stamp {
+            minute: access.minute,
+            weight: 1,
+            inflation,
+        });
+        let entry = Entry {
+            order,
+            event,
+            row,
+            stamp,
+        };
+        if entry.event.kind == 5 {
+            fences.insert(entry.event.id.clone(), entry);
             continue;
         }
-        if !lkjstr_protocol::is_replaceable_kind(event.kind) {
+        if !lkjstr_protocol::is_replaceable_kind(entry.event.kind) {
             continue;
         }
-        let key = (event.pubkey.clone(), event.kind);
-        let keep = slots.get(&key).is_none_or(|(_, old, _)| {
-            event.created_at > old.created_at
-                || (event.created_at == old.created_at && event.id <= old.id)
+        let key = (entry.event.pubkey.clone(), entry.event.kind);
+        let keep = slots.get(&key).is_none_or(|old: &Entry| {
+            entry.event.created_at > old.event.created_at
+                || (entry.event.created_at == old.event.created_at
+                    && entry.event.id <= old.event.id)
         });
         if keep {
-            slots.insert(key, (order, event, row));
+            slots.insert(key, entry);
         }
     }
-    // A stale writer cannot restore metadata after its signed deletion, even
-    // once that deletion leaves the newest-event replay slice. Match the store's
-    // target-and-author rule; another author's deletion has no authority.
+    // Keep signed deletion evidence even when its target is no longer a resident row.
+    // A foreign author's deletion still has no authority over the target.
     let deleted: HashSet<_> = fences
         .values()
-        .flat_map(|(_, event, _)| {
-            lkjstr_protocol::tags::tag_values(event, "e")
+        .flat_map(|entry| {
+            lkjstr_protocol::tags::tag_values(&entry.event, "e")
                 .into_iter()
-                .map(|id| (id, event.pubkey.clone()))
+                .map(|id| (id, entry.event.pubkey.clone()))
         })
         .collect();
-    let mut values: Vec<_> = slots
+    let entries = slots
         .into_values()
-        .filter(|(_, event, _)| !deleted.contains(&(event.id.clone(), event.pubkey.clone())))
+        .filter(|entry| !deleted.contains(&(entry.event.id.clone(), entry.event.pubkey.clone())))
         .chain(fences.into_values())
         .collect();
-    values.sort_by_key(|value| std::cmp::Reverse(value.0));
-    let mut rows = Vec::new();
-    // Exact serialized row sizes plus the fixed JSON envelope and separators.
-    let mut bytes = serde_json::to_string(&Checkpoint {
-        version: 1,
-        rows: vec![],
-    })?
-    .len();
-    for (_, _, row) in values {
-        let cost = serde_json::to_string(&row)?.len() + usize::from(!rows.is_empty());
-        if rows.len() >= METADATA_EVENTS {
-            break;
-        }
-        if bytes.saturating_add(cost) <= METADATA_BYTES {
-            bytes += cost;
-            rows.push(row);
-        }
-    }
-    serde_json::to_string(&Checkpoint { version: 1, rows })
+    retention::select(entries, access, inflation)
 }

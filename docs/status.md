@@ -5,6 +5,12 @@ Current limits: [parity.md](parity.md), [engine-performance.md](engine-performan
 Claude owns the interface. Account-safe and A1/A2 (972ef776) are live. [Emoji sets](emoji-sets.md) support shared shortcodes across sources.
 [Q1](engine-q1-progress.md) passed public scoring. Worker, ship and Q2-Q5 remain. [Stage 1 orchestration](orchestration-optimizer.md) adds weighted retention.
 
+## Cache reload and Home parity (2026-11-26)
+
+Home and Their Home both include the feed owner's posts. Visible Their Home follows and author metadata use the same GDSF reuse weights;
+its public follow list is a read dependency, without granting account or mute authority. The bounded metadata checkpoint now uses the resident
+scorer and durable access hints, retaining signed deletion evidence ahead of optional cache entries. See [cache-retention.md](cache-retention.md).
+
 ## Kind capabilities (2026-11-22)
 
 N1 centralizes kind policy and public ID/address access. Quotes carry their kind, optional previews and a one-line reference to their first quote.
