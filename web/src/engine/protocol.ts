@@ -1070,7 +1070,70 @@ export type SigningSample = {
     readonly queuedMs: number;
   }[];
 };
+export type OrchestrationCoverage =
+  | 'cache-only'
+  | 'unsupported'
+  | 'loading'
+  | 'partial'
+  | 'stalled'
+  | 'end';
+
+export type OrchestrationView = {
+  /** Opaque within this Worker session. */
+  readonly subId: string;
+  readonly source: Source;
+  readonly visible: boolean;
+  readonly focused: boolean;
+  readonly rowCount: number;
+  readonly windowKind: 'top' | 'key' | 'at' | 'month';
+  readonly anchorAtMs?: Millis;
+  readonly olderCoverage?: OrchestrationCoverage;
+  readonly newerCoverage?: OrchestrationCoverage;
+  readonly freshCount: number;
+};
+
+export type OrchestrationWorker = {
+  readonly verifiedTotal: number;
+  readonly rejectedTotal: number;
+  readonly droppedTotal: number;
+  readonly verifyQueueLen: number;
+  readonly verifyIngressBytes: number;
+  readonly verifyIngressCapBytes: number;
+  readonly persistenceQueueLen: number;
+  readonly lastTickMs: number;
+  readonly maxTickMs: number;
+  readonly sliceLimit: number;
+  readonly regularStored: number;
+  readonly replaceableStored: number;
+  readonly memoryCapBytes: number;
+};
+
+export type BandwidthBucket = {
+  readonly atMs: Millis;
+  readonly bytesIn: number;
+  readonly bytesOut: number;
+  readonly eventsIn: number;
+  readonly duplicates: number;
+  readonly verified: number;
+  readonly reqsSent: number;
+};
+
+export type OrchestrationEvent = {
+  readonly atMs: Millis;
+  readonly kind: 'hedge' | 'coalesce' | 'cooldown' | 'fallback' | 'evict' | 'publish_ok';
+  readonly relay?: string;
+  /** Fixed engine diagnostic; kind is the stable key for interface copy. */
+  readonly summary: string;
+};
+
 export type EngineStats = {
+  /** At most 128 active public engine views. */
+  readonly views?: readonly OrchestrationView[];
+  readonly worker?: OrchestrationWorker;
+  /** At most 60 one-second buckets in ascending time order. */
+  readonly bandwidthHistory?: readonly BandwidthBucket[];
+  /** At most 32 decisions, in arrival order. Private/auth-gated relay labels are redacted. */
+  readonly orchestrationEvents?: readonly OrchestrationEvent[];
   /** Public-event timings in the current Worker only. All timestamps use its monotonic clock. */
   readonly signing?: {
     readonly recent: readonly SigningSample[];
@@ -1101,6 +1164,8 @@ export type EngineStats = {
     readonly url: string;
     readonly state: string;
     readonly connectedSince: Millis | null;
+    readonly cooldownRemainingMs?: number;
+    readonly isPrivateHost?: boolean;
     readonly readRule?: 'reader' | 'search' | 'hint' | 'unused';
     readonly route?: 'reading' | 'writing' | 'both' | 'search' | 'own' | 'unused';
     readonly followedCovered?: number;

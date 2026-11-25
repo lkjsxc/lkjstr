@@ -24,6 +24,8 @@ impl Network {
     ) -> Option<NostrEvent> {
         self.now = now;
         self.delivery_wire = None;
+        self.telemetry
+            .traffic(now, |bucket| bucket.bytes_in += text.len() as u64);
         if text.len() > 1024 * 1024 {
             self.invalid_frames = self.invalid_frames.saturating_add(1);
             return None;
@@ -44,6 +46,7 @@ impl Network {
                 subscription_id,
                 event,
             } => {
+                self.telemetry.traffic(now, |bucket| bucket.events_in += 1);
                 if let Some(r) = self.relays.get_mut(relay) {
                     r.received += 1;
                     self.quality_revision = self.quality_revision.wrapping_add(1);

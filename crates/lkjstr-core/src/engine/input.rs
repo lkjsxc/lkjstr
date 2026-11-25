@@ -29,21 +29,16 @@ impl Engine {
                 before,
                 after,
             } => {
-                let account = self
-                    .views
-                    .get(&sub)
-                    .and_then(|v| v.query.account.as_deref());
-                let anchor = anchor.filter(|key| self.accepts_private_anchor(account, key));
-                if let Some(v) = self.views.get_mut(&sub) {
-                    v.anchor = anchor;
-                    v.head_through = None;
-                    v.time_window = None;
-                    v.before = before.min(6000);
-                    v.after = after.min(800);
-                    self.advance_history(&sub);
-                    self.replan(now);
-                    self.render(&sub, true);
-                }
+                self.set_window(&sub, anchor, None, before, after, now);
+            }
+            Input::WindowAtMonth {
+                sub,
+                anchor,
+                month,
+                before,
+                after,
+            } => {
+                self.set_window(&sub, anchor, Some(month), before, after, now);
             }
             Input::FollowHead {
                 sub,
@@ -52,6 +47,7 @@ impl Engine {
             } => {
                 if let Some(v) = self.views.get_mut(&sub) {
                     v.anchor = None;
+                    v.month_anchor = None;
                     v.before = 0;
                     v.after = after.min(windows::HEAD_ROWS - 1);
                     v.head_through = Some(through);
@@ -124,6 +120,30 @@ impl Engine {
             Input::Signed { req, event, error } => {
                 self.accept_signature(req, event, error, now, || {});
             }
+        }
+    }
+
+    fn set_window(
+        &mut self,
+        sub: &str,
+        anchor: Option<String>,
+        month: Option<u64>,
+        before: usize,
+        after: usize,
+        now: u64,
+    ) {
+        let account = self.views.get(sub).and_then(|v| v.query.account.as_deref());
+        let anchor = anchor.filter(|key| self.accepts_private_anchor(account, key));
+        if let Some(v) = self.views.get_mut(sub) {
+            v.month_anchor = month.filter(|_| anchor.is_some());
+            v.anchor = anchor;
+            v.head_through = None;
+            v.time_window = None;
+            v.before = before.min(6000);
+            v.after = after.min(800);
+            self.advance_history(sub);
+            self.replan(now);
+            self.render(sub, true);
         }
     }
 }

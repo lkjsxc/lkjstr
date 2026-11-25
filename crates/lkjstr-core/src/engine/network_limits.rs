@@ -1,38 +1,29 @@
 //! NIP-11 constraints, observed failures and bounded usefulness statistics.
 use super::network::*;
+use serde_json::Value;
 impl Network {
     pub fn relay_information(&mut self, relay: &str, json: &str) {
         let Ok(info) = lkjstr_nips::metadata::RelayInformation::parse(json, 65536) else {
             return;
         };
+        let limits = info.limitation.as_ref();
+        let setting = |key| limits.and_then(|limits| limits.get(key));
+        if setting("auth_required").and_then(Value::as_bool) == Some(true) {
+            self.mark_auth_required(relay);
+        }
         if let Some(r) = self.relays.get_mut(relay) {
             // NIP-01 advertises multi-filter REQ support. Try only two when no
             // tighter NIP-11 limit is given; CLOSED falls back to single filters.
             if info.supports(1) && r.max_filters <= 1 && !r.single_filters {
                 r.max_filters = 2;
             }
-            if let Some(limit) = info
-                .limitation
-                .as_ref()
-                .and_then(|l| l.get("max_subscriptions"))
-                .and_then(|v| v.as_u64())
-            {
+            if let Some(limit) = setting("max_subscriptions").and_then(Value::as_u64) {
                 r.max_reqs = (limit as usize).clamp(1, 4);
             }
-            if let Some(limit) = info
-                .limitation
-                .as_ref()
-                .and_then(|l| l.get("max_limit"))
-                .and_then(|v| v.as_u64())
-            {
+            if let Some(limit) = setting("max_limit").and_then(Value::as_u64) {
                 r.max_limit = limit.clamp(1, 200);
             }
-            if let Some(limit) = info
-                .limitation
-                .as_ref()
-                .and_then(|l| l.get("max_filters"))
-                .and_then(|v| v.as_u64())
-            {
+            if let Some(limit) = setting("max_filters").and_then(Value::as_u64) {
                 r.max_filters = limit.clamp(1, 8) as usize;
             }
             if r.single_filters {

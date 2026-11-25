@@ -80,6 +80,10 @@ impl Session {
                 after: after - 1,
             }]);
         }
+        let month_at = match &request.anchor {
+            Anchor::Month { month, .. } => Some(*month),
+            _ => None,
+        };
         let anchor = match request.anchor {
             Anchor::Top(_) => None,
             Anchor::Time { .. } => unreachable!(),
@@ -131,11 +135,21 @@ impl Session {
             sub.clone(),
             (anchor.clone(), before, request.after.min(800)),
         );
-        Ok(vec![Input::Window {
-            sub,
-            anchor,
-            before,
-            after: request.after.saturating_sub(1),
+        let after = request.after.saturating_sub(1);
+        Ok(vec![match month_at {
+            Some(month) => Input::WindowAtMonth {
+                sub,
+                anchor,
+                month,
+                before,
+                after,
+            },
+            None => Input::Window {
+                sub,
+                anchor,
+                before,
+                after,
+            },
         }])
     }
 

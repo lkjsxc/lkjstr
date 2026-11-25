@@ -20,3 +20,9 @@ export type Sub = {
   timeRange?: { at: number; before: number; after: number };
   liveRange?: { before: number; after: number };
 };
+
+export type MockEngineSub = Sub & {
+  readonly statsId: string;
+  visible: boolean;
+  monthAnchor?: number;
+};

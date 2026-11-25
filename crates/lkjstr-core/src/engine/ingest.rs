@@ -2,7 +2,7 @@
 // A few complete signed follow lists can exceed 8 MiB before a WASM tick gets
 // time to verify them. Retrying a partially queued 200-event response costs
 // far more wire bandwidth than retaining that burst until verification runs.
-const MAX_VERIFY_QUEUE_BYTES: usize = 32 * 1024 * 1024;
+pub(super) const MAX_VERIFY_QUEUE_BYTES: usize = 32 * 1024 * 1024;
 use super::*;
 
 pub(super) struct QueuedEvent {
@@ -31,6 +31,9 @@ impl Engine {
                 .saturating_add(u64::from(relay.starts_with("ws")));
             if let Some(r) = self.network.relays.get_mut(&relay) {
                 r.duplicates += 1;
+                self.network
+                    .telemetry
+                    .traffic(self.network.now, |b| b.duplicates += 1);
             }
             return;
         }

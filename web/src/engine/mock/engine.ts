@@ -18,7 +18,7 @@ import { searchWindow } from './search-window.ts';
 import { createSignerAuthMock } from './signer-auth.ts';
 import { mockStats } from './stats.ts';
 import { createStorageMock } from './storage.ts';
-import type { Sub } from './subscription.ts';
+import type { MockEngineSub } from './subscription.ts';
 import { seekTime } from './time-window.ts';
 import { timeKey } from './timeline.ts';
 import { createZapMock, MOCK_ZAP_EVIDENCE } from './zaps.ts';
@@ -44,6 +44,9 @@ export function createMockEngine(
   };
   const core: Core = createCore(post, now);
   const { world, subs, later } = core;
+  let nextStatsView = 0;
+  let focusedSub: string | undefined;
+  const stats = () => mockStats(core, focusedSub);
   const act = createActions(core);
   const authorization = createSignerAuthMock(post, now);
   authObserve = authorization.observe;
@@ -92,7 +95,7 @@ export function createMockEngine(
       if (boot.accountError) {
         if (msg.t === 'detach') return dispose();
         start();
-        if (msg.t === 'stats') post({ t: 'stats', req: msg.req, stats: mockStats(core) });
+        if (msg.t === 'stats') post({ t: 'stats', req: msg.req, stats: stats() });
         else failedAccountInput(post, msg);
         return;
       }
@@ -100,7 +103,7 @@ export function createMockEngine(
       if (zaps.handle(msg)) return;
       if (dm.handle(msg)) return;
       if (msg.t === 'upload.cancel') return act.cancelUpload(msg.req);
-      if (msg.t === 'stats') post({ t: 'stats', req: msg.req, stats: mockStats(core) });
+      if (msg.t === 'stats') post({ t: 'stats', req: msg.req, stats: stats() });
       else if (msg.t === 'cache.hold') {
         if (subs.has(msg.sub))
           post({
@@ -148,10 +151,17 @@ export function createMockEngine(
         if (!started && config.mock?.accounts === 'none') core.who.clear();
         if (started) live();
         else start();
+      } else if (msg.t === 'hint') {
+        const { visibleSubs, focusedSub: focused, pageHidden } = msg.hint;
+        const visible = new Set(pageHidden ? [] : visibleSubs);
+        for (const sub of subs.values()) sub.visible = visible.has(sub.id);
+        focusedSub = focused && visible.has(focused) ? focused : undefined;
       } else if (msg.t === 'open') {
-        const s: Sub = {
+        const s: MockEngineSub = {
           id: msg.sub,
           query: msg.query,
+          statsId: subs.get(msg.sub)?.statsId ?? `view-${++nextStatsView}`,
+          visible: msg.visible !== false,
           entries: select(world, msg.query, core.me()),
           start: 0,
           end: 0,
@@ -221,6 +231,8 @@ export function createMockEngine(
           return;
         }
         s.timeRange = undefined;
+        s.monthAnchor =
+          msg.anchor !== 'top' && 'month' in msg.anchor ? msg.anchor.month : undefined;
         if (s.query.source === 'search') searchWindow(s, msg, core.now(), post);
         else {
           const key = timeKey(s.entries, msg.anchor, core.now());

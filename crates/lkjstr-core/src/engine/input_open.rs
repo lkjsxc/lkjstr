@@ -15,9 +15,18 @@ impl Engine {
             super::list_events::events(&self.store, &query, &self.private_lists)
                 .len()
                 .min(50) as u64;
+        let telemetry_id = if let Some(view) = self.views.get(&sub) {
+            view.telemetry_id
+        } else {
+            self.next_telemetry_view += 1;
+            self.next_telemetry_view
+        };
         self.views.insert(
             sub.clone(),
             View {
+                telemetry_id,
+                month_anchor: None,
+                fresh_count: 0,
                 query,
                 anchor: None,
                 time_window: None,

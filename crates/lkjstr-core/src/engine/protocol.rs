@@ -39,6 +39,13 @@ pub enum Input {
         before: usize,
         after: usize,
     },
+    WindowAtMonth {
+        sub: String,
+        anchor: Option<String>,
+        month: u64,
+        before: usize,
+        after: usize,
+    },
     FollowHead {
         sub: String,
         through: String,

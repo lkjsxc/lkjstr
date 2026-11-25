@@ -1,14 +1,6 @@
 //! Build shared logical wants before scheduling physical envelopes.
 use super::*;
 impl Network {
-    pub fn plan(
-        &mut self,
-        wants: Vec<(String, NostrFilter, Query)>,
-        store: &crate::store::Store,
-        now: u64,
-    ) {
-        self.plan_with_lists(wants, store, &Default::default(), now);
-    }
     pub fn plan_with_lists(
         &mut self,
         wants: Vec<(String, NostrFilter, Query)>,
@@ -31,7 +23,7 @@ impl Network {
         let queries = wants.iter().map(|(sub, _, q)| (sub.clone(), q)).collect();
         let mut weights = crate::engine::weights::PlanWeights::new(store, private);
         let mut desired = Desired::new();
-        let mut primary_reads = BTreeSet::new();
+        let mut primary_reads = BTreeMap::new();
         for (sub, f, q) in &wants {
             let time_owner =
                 crate::engine::time_window_relay::is_owner(sub).then_some(sub.as_str());
@@ -44,6 +36,7 @@ impl Network {
                         .cloned()
                         .collect(),
                     primary: BTreeSet::new(),
+                    change: None,
                 }
             } else {
                 self.read_route_plan(f, q, store, &mut weights, now, time_owner)
@@ -78,17 +71,23 @@ impl Network {
                     time_owner.map_or_else(|| want_key::key(f), |owner| owner.to_owned()),
                 );
                 if primary {
-                    primary_reads.insert(key.clone());
+                    let change = primary_reads.entry(key.clone()).or_insert(None);
+                    *change = change.or(selected.change);
                 }
-                let entry = desired.entry(key).or_insert((f.clone(), BTreeSet::new()));
-                entry.1.insert(sub.clone());
+                desired
+                    .entry(key)
+                    .or_insert((f.clone(), BTreeSet::new()))
+                    .1
+                    .insert(sub.clone());
             }
         }
         self.add_cache_repairs(&mut desired, &queries, store, now);
         self.stabilize_profiles(&mut desired, &live_lists);
         let mut retained = BTreeSet::new();
         for ((relay, key), (filter, members)) in desired {
-            let read_slot = primary_reads.contains(&(relay.clone(), key));
+            let primary = primary_reads.remove(&(relay.clone(), key));
+            let read_slot = primary.is_some();
+            let change = primary.flatten();
             let time_owner = members
                 .iter()
                 .find(|m| crate::engine::time_window_relay::is_owner(m));
@@ -111,9 +110,14 @@ impl Network {
                 r.refresh_metadata(now);
                 r.refresh_profile(&members, &refresh_profiles, now);
                 r.live |= members.contains("~account-discovery");
+                let shared = r.shared_members_added(&members);
                 r.members = members;
+                let promoted = read_slot && !r.read_slot;
                 r.read_slot = read_slot;
                 retained.insert(id.clone());
+                if let Some(kind) = change.filter(|_| promoted).or(shared) {
+                    self.decision(now, kind, &relay);
+                }
                 if close {
                     self.close_group(&relay, &wire);
                 }
@@ -148,6 +152,9 @@ impl Network {
                 } else {
                     self.hydration_ready(&filter, &members, now)
                 };
+                if let Some(kind) = change {
+                    self.decision(now, kind, &relay);
+                }
                 let previous = pending.as_ref().and_then(|id| self.requests.get(id));
                 let cached_until = previous.and_then(|r| r.cached_until).or_else(|| {
                     self.cached_boundary(&relay, &filter, &members, &queries, store, now)
@@ -236,13 +243,5 @@ impl Network {
         self.request_policy(&queries, store, &mut weights);
         self.read_wakeup(now);
         self.tick(now);
-    }
-    pub(super) fn send(&mut self, relay: &str, value: Value) {
-        if let Some(r) = self.relays.get_mut(relay) {
-            r.sent += 1;
-            r.bytes_out += value.to_string().len() as u64;
-        }
-        self.effects
-            .push(Effect::Send(relay.into(), value.to_string()));
     }
 }

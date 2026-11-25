@@ -2,14 +2,17 @@
 import type { EngineStats } from '../protocol.ts';
 import type { Core } from './engine.ts';
 import { relays } from './relays.ts';
+import { sampleTelemetry, statsRelay } from './telemetry.ts';
 
 /** A made-up but steady share of what a relay sent that another had sent before. */
 const dup = (events: number, i: number): number => Math.round((events * (18 + i * 9)) / 100);
-export function mockStats(core: Core): EngineStats {
+export function mockStats(core: Core, focused?: string): EngineStats {
   const rows = relays(core.world);
   return {
+    ...sampleTelemetry(core, focused),
     relays: rows.map((r, i) => ({
-      url: r.url,
+      ...statsRelay(r.url),
+      cooldownRemainingMs: Math.max(0, (r.retryAt ?? 0) - core.now()),
       state: r.state,
       route:
         r.read && r.write
@@ -37,7 +40,7 @@ export function mockStats(core: Core): EngineStats {
     requests: [...core.subs.values()].slice(0, 256).map((sub) => ({
       id: sub.id,
       wireId: sub.id,
-      relay: rows[0]!.url,
+      relay: statsRelay(rows[0]!.url).url,
       purpose: sub.query.source === 'notifications' ? 'notifications' : 'visible',
       priority: 1,
       weight: 600,

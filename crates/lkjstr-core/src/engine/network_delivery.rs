@@ -54,9 +54,8 @@ impl Network {
         if frame[0] != "EVENT" {
             return None;
         }
-        let p = frame[1]["id"]
-            .as_str()
-            .and_then(|id| self.publications.get_mut(id))?;
+        let id = frame[1]["id"].as_str()?;
+        let p = self.publications.get_mut(id)?;
         if sent {
             let first = p.transport_confirmed.is_empty();
             if p.transport_confirmed.insert(relay.into())
@@ -65,26 +64,26 @@ impl Network {
             {
                 *ack = Some(now.saturating_add(NOTE_ACK_WAIT_MS));
             }
-            if !p.default_notice_sent && p.default_routes.iter().any(|url| url == relay) {
+            let fallback =
+                !p.default_notice_sent && p.default_routes.iter().any(|url| url == relay);
+            if fallback {
                 p.default_notice_sent = true;
                 self.output
                     .push(Output::PublishFallback { req: p.req.clone() });
             }
-            if first && p.event.kind == 1 {
-                self.profiles_changed = true;
-                return Some(p.event.clone());
+            let note = (first && p.event.kind == 1).then(|| p.event.clone());
+            self.profiles_changed |= note.is_some();
+            self.observe_publication(id, relay, now, fallback, false);
+            return note;
+        } else if !p.transport_confirmed.contains(relay) && p.attempted.remove(relay) {
+            p.observed.remove(relay);
+            if let Some((_, ack)) = p.route_deadlines.get_mut(relay) {
+                *ack = None;
             }
-        } else {
-            if !p.transport_confirmed.contains(relay) && p.attempted.remove(relay) {
-                p.observed.remove(relay);
-                if let Some((_, ack)) = p.route_deadlines.get_mut(relay) {
-                    *ack = None;
-                }
-                self.output.push(Output::Delivery {
-                    req: p.req.clone(),
-                    deliveries: p.delivery(),
-                });
-            }
+            self.output.push(Output::Delivery {
+                req: p.req.clone(),
+                deliveries: p.delivery(),
+            });
         }
         None
     }
@@ -214,6 +213,7 @@ impl Network {
             None
         };
         if let Some((req, deliveries)) = update {
+            self.observe_publication(id, relay, now, false, accepted);
             self.update_publication(id, &deliveries);
             self.output.push(Output::Delivery { req, deliveries });
             let check = self

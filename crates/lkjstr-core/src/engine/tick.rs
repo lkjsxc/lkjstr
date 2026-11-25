@@ -1,5 +1,6 @@
 //! Bounded verification, replanning and view updates away from socket callbacks.
 use super::*;
+pub(super) const VERIFY_SLICE_LIMIT: usize = 32;
 #[derive(Clone, Copy)]
 pub enum TickPhase {
     Verify,
@@ -16,7 +17,7 @@ impl Engine {
         let revision = self.store.revision();
         self.advance_visibility_clock(now);
         let was_verifying = self.network.verifying;
-        for _ in 0..32 {
+        for _ in 0..VERIFY_SLICE_LIMIT {
             let Some(ingest::QueuedEvent {
                 relay,
                 event: e,
@@ -35,6 +36,9 @@ impl Engine {
             }
             if matches!(verify_event(&e), VerificationResult::Ok(_)) {
                 self.verified += 1;
+                if relay.starts_with("ws") {
+                    self.network.telemetry.traffic(now, |b| b.verified += 1);
+                }
                 self.network.event(&relay, &e, now);
                 if let Some(nested) = lkjstr_protocol::verified_nested_repost(&e) {
                     self.insert_verified(nested, Some(&relay));

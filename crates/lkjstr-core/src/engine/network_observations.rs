@@ -2,12 +2,19 @@
 use super::*;
 impl Network {
     pub fn request_stats(&self) -> Value {
+        self.project_requests(false)
+    }
+    pub(in crate::engine) fn stats_requests(&self) -> Value {
+        self.project_requests(true)
+    }
+    fn project_requests(&self, stage_safe: bool) -> Value {
         json!(
             self.requests
                 .iter()
+                .filter(|(_, request)| !stage_safe || request.visible_in_stats())
                 .take(256)
                 .map(|(id, r)| json!({
-                    "id":id,"relay":r.relay,"wireId":r.wire_id,"purpose":r.purpose,
+                    "id":id,"relay":if stage_safe { crate::engine::telemetry::relay_label(&r.relay) } else { r.relay.clone() },"wireId":r.wire_id,"purpose":r.purpose,
                     "priority":r.priority,"weight":r.weight,"received":r.received.len(),
                     "sent":r.sent,"complete":r.page_eose,"members":r.members.len()
                 }))

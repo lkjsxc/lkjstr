@@ -67,6 +67,8 @@ mod routing_observations;
 mod scheduler;
 #[path = "network_startup.rs"]
 mod startup;
+#[path = "network_telemetry.rs"]
+mod telemetry;
 #[path = "network_time_window.rs"]
 mod time_window;
 #[path = "network_union.rs"]
@@ -91,6 +93,7 @@ pub struct Relay {
     pub(super) publish_only: bool,
     pub(super) publish_slot: bool,
     pub(super) auth: auth::Authentication,
+    pub(super) auth_required: bool,
     pub cooldown_until: u64,
     pub quality_at: u64,
     pub prior_useful: u64,
@@ -182,6 +185,7 @@ pub(super) struct Publication {
 }
 #[derive(Default)]
 pub struct Network {
+    pub(super) telemetry: super::telemetry::Telemetry,
     // At most 32 usable device signer public keys, never persisted.
     auth_signers: BTreeSet<String>,
     auth_active: Option<String>,
@@ -227,4 +231,15 @@ pub struct Network {
     pub(super) reported: BTreeMap<String, String>,
     // At most 4096 active foreground observations; pruned on plan and reset on Open.
     read_starts: BTreeMap<String, startup::ReadStart>,
+}
+
+impl Network {
+    pub fn plan(
+        &mut self,
+        wants: Vec<(String, NostrFilter, Query)>,
+        store: &crate::store::Store,
+        now: u64,
+    ) {
+        self.plan_with_lists(wants, store, &Default::default(), now);
+    }
 }

@@ -2,8 +2,8 @@
 ## Purpose
 
 Current limits: [parity.md](parity.md), [engine-performance.md](engine-performance.md). [Public deep links](public-deep-links.md) work signed out.
-Claude owns the interface. Account-safe and A1/A2 (972ef776) are live. S2/E7 supports matching shortcodes from different sources; [checks](emoji-sets.md).
-[Q1](engine-q1-progress.md) passes matched public scoring; Worker and ship gates remain. Q2-Q5 remain.
+Claude owns the interface. Account-safe and A1/A2 (972ef776) are live. [Emoji sets](emoji-sets.md) support shared shortcodes across sources.
+[Q1](engine-q1-progress.md) passed public scoring. Worker, ship and Q2-Q5 remain. [Stats telemetry](interface-needs.md#live-orchestration) is ready.
 
 ## Kind capabilities (2026-11-22)
 

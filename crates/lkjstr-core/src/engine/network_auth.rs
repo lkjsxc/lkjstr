@@ -64,6 +64,7 @@ impl Network {
             r.deadline = now.saturating_add(60_000);
         }
         relay_state.last_error = Some(message.chars().take(512).collect());
+        self.mark_auth_required(relay);
         self.profiles_changed = true;
         true
     }
@@ -81,6 +82,7 @@ impl Network {
         };
         r.auth.writes.insert(p.event.id.clone());
         r.last_error = Some(message.chars().take(512).collect());
+        self.mark_auth_required(relay);
         true
     }
     /// Active public reader, or the explicit owner of a private inbox/publication.

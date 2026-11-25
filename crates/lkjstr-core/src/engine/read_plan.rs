@@ -1,9 +1,9 @@
 //! Pure request routing with bounded progressive fallback.
 //! Inputs are observations and verified outbox lists, never timeline order.
+pub use super::quality::weight;
 use std::collections::{BTreeMap, BTreeSet};
 #[path = "read_recovery.rs"]
 mod recovery;
-
 #[derive(Clone, Debug)]
 pub struct Candidate {
     pub url: String,
@@ -54,30 +54,10 @@ pub fn select_weighted(
     selected
 }
 
-/// First useful arrivals receive credit, duplicate volume does not. Small
-/// samples have a neutral prior; latency, failures and refusal reduce quality.
-/// Callers retain cooling routes when no alternatives exist, so retry recovers.
-pub fn weight(
-    useful: u64,
-    received: u64,
-    latency_ms: Option<u64>,
-    failures: u32,
-    cooling: bool,
-    refused: bool,
-) -> u64 {
-    if cooling {
-        return 0;
-    }
-    let yield_score = 400u64.saturating_mul(useful.min(received).saturating_add(1))
-        / received.saturating_add(2).max(1);
-    let speed = 400_000 / latency_ms.unwrap_or(1000).saturating_add(1000);
-    let quality = (200 + yield_score + speed) / (1 + u64::from(failures.min(8)));
-    if refused { quality / 4 } else { quality }
-}
-
 pub(super) struct ReadRoutes {
     pub routes: Vec<String>,
     pub primary: BTreeSet<String>,
+    pub change: Option<crate::engine::telemetry::Kind>,
 }
 impl super::Network {
     pub(in crate::engine) fn read_routes<'a>(
@@ -101,9 +81,11 @@ impl super::Network {
     ) -> ReadRoutes {
         use crate::engine::protocol::Source;
         let mut candidates = self.read_candidates(f, q, store, now);
-        let limit = if matches!(q.source, Source::Channel | Source::Channels) {
+        let channel = matches!(q.source, Source::Channel | Source::Channels);
+        let hedge = !channel && self.hedge_due(f, now, time_owner);
+        let limit = if channel {
             24
-        } else if self.hedge_due(f, now, time_owner) {
+        } else if hedge {
             3
         } else {
             2
@@ -225,6 +207,7 @@ impl super::Network {
         {
             routes.push(outbox.url.clone());
         }
+        let change = super::telemetry::read_changes(f, &current, &routes, hedge);
         let primary = routes.iter().cloned().collect();
         // Keep failed-page uncertainty outside those slots. Historical evidence
         // also survives recovery/reranking; bounded by configured read routes and
@@ -241,7 +224,11 @@ impl super::Network {
                 routes.push(candidate.url.clone());
             }
         }
-        ReadRoutes { routes, primary }
+        ReadRoutes {
+            routes,
+            primary,
+            change,
+        }
     }
 }
 

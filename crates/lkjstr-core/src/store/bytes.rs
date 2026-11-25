@@ -14,6 +14,12 @@ impl Store {
         self.evict();
         self
     }
+    pub(crate) fn byte_cap(&self) -> usize {
+        self.byte_cap
+    }
+    pub(crate) fn replaceable_len(&self) -> usize {
+        self.replaceable.len()
+    }
     pub fn payload_bytes(&self) -> usize {
         self.payload_bytes
     }

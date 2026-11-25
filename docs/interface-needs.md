@@ -110,3 +110,37 @@ failed loading still have no specified surface. No automatic alert, toast,
 new control or popup is added; an attempted action keeps its existing failure.
 The user needs to distinguish unavailable account storage from a loaded empty
 account set and recover without discarding unsaved editors or retained keys.
+
+## Live Orchestration
+
+Reuse the existing `stats` request. The additive fields are optional for hosts
+using an earlier engine. A present empty array has no current entries. The
+engine retains telemetry for the current Worker session only.
+
+- `views` contains up to 128 active public engine views, including hidden views.
+  `subId` is a session-local diagnostic label. `rowCount` and `freshCount` describe
+  the last core projection and exclude interface headers. `windowKind` is
+  `top`, `key`, `at` or `month`. `anchorAtMs` is the absolute pivot or UTC
+  month start. `olderCoverage` and `newerCoverage` are present for absolute
+  windows and reuse the coverage states in `timeWindow`.
+- `worker` has cumulative verification counters, current queue lengths and
+  ingress bytes, last and peak tick durations, the verification slice limit,
+  retained regular and replaceable counts, and the in-memory event payload cap.
+  The cap measures retained event payloads. Index and Worker overhead are separate.
+- Relay rows add `cooldownRemainingMs` (zero without a cooldown) and `isPrivateHost`.
+  Stats strips relay URL userinfo, queries and fragments, and classifies free-form
+  relay errors. Use `isPrivateHost` to hide relay row hostnames on stage.
+- `bandwidthHistory` contains the latest 60 aligned one-second buckets, with
+  Unix millisecond starts in ascending order and zeros for idle seconds.
+  Ingress counts relay text bytes and parsed EVENT frames. Egress counts
+  successful relay text sends and REQ envelopes. Duplicates and verified events
+  are counted when the engine drops a copy or verifies an event from a relay.
+- `orchestrationEvents` keeps the last 32 observations in arrival order.
+  `kind` is `hedge`, `coalesce`, `cooldown`, `fallback`, `evict` or
+  `publish_ok`. Timestamps use Unix milliseconds. Public labels use relay
+  origins. Private and known auth-required origins use `private-relay`.
+  `summary` is a fixed diagnostic. Use `kind` for localized interface copy.
+
+Sampled global counters include relay transport activity. View and decision
+details omit private message metadata. The mock supplies a bounded repeatable
+traffic sample and representative decision kinds for interface development.

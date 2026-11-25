@@ -61,6 +61,7 @@ impl Engine {
             return;
         };
         view.anchor = None;
+        view.month_anchor = None;
         view.head_through = None;
         if view.time_window.as_ref().is_none_or(|pivot| pivot.at != at) {
             view.reading = None;
@@ -83,6 +84,10 @@ impl Engine {
 }
 
 impl Pivot {
+    pub(super) fn coverage(&self) -> (TimeEdge, TimeEdge) {
+        (self.older, self.newer)
+    }
+
     pub(super) fn report(
         &mut self,
         sub: &str,

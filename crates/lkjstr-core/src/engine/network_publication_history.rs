@@ -107,10 +107,50 @@ impl Network {
     pub fn recent_publications(&self) -> Value {
         json!(self.publication_history)
     }
+    pub(super) fn publication_kind(&self, id: &str) -> Option<u64> {
+        self.publication_history
+            .iter()
+            .find(|r| r.id == id)
+            .map(|r| r.kind)
+    }
+
+    pub(in crate::engine) fn stats_publications(&self) -> Value {
+        use crate::engine::telemetry::{relay_error, relay_label};
+        json!(
+            self.publication_history
+                .iter()
+                .filter(|record| telemetry::publication_kind_is_public(record.kind))
+                .map(|record| {
+                    let deliveries: Vec<_> = record
+                        .deliveries
+                        .iter()
+                        .cloned()
+                        .map(|mut route| {
+                            route.url = relay_label(&route.url);
+                            route
+                        })
+                        .collect();
+                    let messages: BTreeMap<_, _> = record
+                        .messages
+                        .iter()
+                        .map(|(relay, message)| (relay_label(relay), relay_error(message)))
+                        .collect();
+                    json!({"id":record.id,"kind":record.kind,"at":record.at,"deliveries":deliveries,
+                    "messages":messages,"unresolvedRecipients":record.unresolved_recipients})
+                })
+                .collect::<Vec<_>>()
+        )
+    }
+
     /// One pass over at most 32 x 2240 destinations, including skipped URLs.
     pub fn publication_stats(&self) -> BTreeMap<&str, PublicationStats> {
         let mut stats = BTreeMap::<&str, PublicationStats>::new();
-        for d in self.publication_history.iter().flat_map(|r| &r.deliveries) {
+        for d in self
+            .publication_history
+            .iter()
+            .filter(|r| telemetry::publication_kind_is_public(r.kind))
+            .flat_map(|r| &r.deliveries)
+        {
             let row = stats.entry(d.url.as_str()).or_default();
             row.publish_planned += usize::from(d.state != "skipped");
             match d.state.as_str() {

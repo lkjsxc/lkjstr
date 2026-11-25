@@ -161,16 +161,51 @@ impl Network {
         (blocked, std::cmp::Reverse(weight))
     }
 
+    pub(in crate::engine) fn cooldown_remaining(&self, url: &str, now: u64) -> u64 {
+        self.relays.get(url).map_or_else(
+            || {
+                self.observations.get(url).map_or(0, |o| {
+                    o.cooldown
+                        .min(120_000)
+                        .saturating_sub(now.saturating_sub(o.at))
+                })
+            },
+            |relay| relay.cooldown_until.saturating_sub(now),
+        )
+    }
+
     pub(super) fn cool_down(&mut self, url: &str, now: u64) {
         if let Some(r) = self.relays.get_mut(url) {
             r.failures = r.failures.saturating_add(1).min(8);
             r.cooldown_until = now.saturating_add((15000u64 << r.failures.min(3)).min(120000));
             r.next_req_at = r.next_req_at.max(r.cooldown_until);
             r.last_error = Some("rate-limited: cooldown".into());
+            self.decision(now, crate::engine::telemetry::Kind::Cooldown, url);
             self.quality_revision = self.quality_revision.wrapping_add(1);
         }
     }
 }
+/// First useful arrivals receive credit, duplicate volume does not. Small
+/// samples have a neutral prior; latency, failures and refusal reduce quality.
+/// Callers retain cooling routes when no alternatives exist, so retry recovers.
+pub fn weight(
+    useful: u64,
+    received: u64,
+    latency_ms: Option<u64>,
+    failures: u32,
+    cooling: bool,
+    refused: bool,
+) -> u64 {
+    if cooling {
+        return 0;
+    }
+    let yield_score = 400u64.saturating_mul(useful.min(received).saturating_add(1))
+        / received.saturating_add(2).max(1);
+    let speed = 400_000 / latency_ms.unwrap_or(1000).saturating_add(1000);
+    let quality = (200 + yield_score + speed) / (1 + u64::from(failures.min(8)));
+    if refused { quality / 4 } else { quality }
+}
+
 pub(super) fn limited(message: &str) -> bool {
     let lower = message.to_ascii_lowercase();
     lower.contains("rate-limit")

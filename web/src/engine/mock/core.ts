@@ -8,7 +8,7 @@ import { entry, matches, select } from './query.ts';
 import { relays } from './relays.ts';
 import { searchPrefix } from './search.ts';
 import { refreshSearch, resyncSearch } from './search-window.ts';
-import type { Sub } from './subscription.ts';
+import type { MockEngineSub, Sub } from './subscription.ts';
 import { timeWindow } from './time-window.ts';
 import { sendTimelines } from './timeline.ts';
 import { createWorld, type MNote } from './world.ts';
@@ -17,7 +17,7 @@ import { MOCK_ZAP_EVIDENCE } from './zaps.ts';
 const PATCH_MS = 80;
 export function createCore(post: (msg: FromEngine) => void, now: () => number) {
   const world = createWorld(now());
-  const subs = new Map<string, Sub>(); // bound: the interface's open subscriptions
+  const subs = new Map<string, MockEngineSub>(); // bound: the interface's open subscriptions
   const timers = new Set<ReturnType<typeof setTimeout>>(); // bound: pending mock delays
   const who = createAccounts();
   let unread = 3;

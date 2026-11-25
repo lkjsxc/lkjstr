@@ -126,6 +126,11 @@ impl Engine {
             || self.network.list_loaded(&self.store, account, 10063)
     }
     pub fn stats(&self) -> Value {
+        self.stats_at(self.network.now)
+    }
+
+    pub fn stats_at(&self, now: u64) -> Value {
+        use super::telemetry::relay_error;
         let followed = self
             .views
             .values()
@@ -148,10 +153,13 @@ impl Engine {
         let no_publications = Default::default();
         let relays = urls.iter().map(|url| {
             let r = self.network.relays.get(url).unwrap_or(&idle);
-            let mut row = json!({"url":url,"state":if r.online {"connected"} else if r.connecting {"connecting"} else if r.failures>0 {"waiting"} else {"idle"},
+            let (label, private) = self.network.relay_display(url);
+            let mut row = json!({"url":label,
+                "cooldownRemainingMs":self.network.cooldown_remaining(url, now),
+                "isPrivateHost":private,"state":if r.online {"connected"} else if r.connecting {"connecting"} else if r.failures>0 {"waiting"} else {"idle"},
                 "connectedSince":r.connected_since,"eventsReceived":r.received,"duplicatesDropped":r.duplicates,
                 "openSubscriptions":open_subscriptions.get(url.as_str()).copied().unwrap_or(0),
-                "bytesIn":r.bytes_in,"bytesOut":r.bytes_out,"lastError":if self.network.deferred_relays.contains(url) {Some("capacity".to_owned())} else {r.last_error.clone()},"latencyMs":r.latency_ms});
+                "bytesIn":r.bytes_in,"bytesOut":r.bytes_out,"lastError":if self.network.deferred_relays.contains(url) {Some("capacity")} else {r.last_error.as_deref().map(relay_error)},"latencyMs":r.latency_ms});
             if let (Some(row), Some(publication)) = (row.as_object_mut(), json!(publication_stats.get(url.as_str()).unwrap_or(&no_publications)).as_object()) {
                 row.extend(publication.clone());
             }
@@ -188,7 +196,10 @@ impl Engine {
             .map(|q| &q.relay)
             .collect::<std::collections::BTreeSet<_>>()
             .len();
-        json!({"requests":self.network.request_stats(),"recentPublications":self.network.recent_publications(),"relays":relays,"totals":{"eventsStored":self.store.len(),"cacheBytes":self.store.payload_bytes(),
+        json!({"requests":self.network.stats_requests(),"recentPublications":self.network.stats_publications(),"relays":relays,
+            "views":self.view_stats(),"worker":self.worker_stats(),
+            "bandwidthHistory":self.network.telemetry.bandwidth(now),
+            "orchestrationEvents":self.network.telemetry.decisions,"totals":{"eventsStored":self.store.len(),"cacheBytes":self.store.payload_bytes(),
             "subscriptions":subscriptions,"servedFromCache":self.metrics.served_from_cache,"servedFromNetwork":network},
             "orchestration":{"relaysCoveringFollowSet":covering,"requestsCoalesced":coalesced}})
     }

@@ -141,6 +141,9 @@ impl Network {
 
 impl crate::engine::Engine {
     pub fn publication_frame_sent(&mut self, relay: &str, frame: &str, sent: bool, now: u64) {
+        if sent {
+            self.network.sent_frame(frame, now);
+        }
         if let Some(note) = self
             .network
             .publication_frame_sent_at(relay, frame, sent, now)

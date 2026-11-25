@@ -91,17 +91,14 @@ impl Clients {
             }
             Input::Reading { sub, id } => Input::Reading { sub: ns(sub), id },
             Input::CacheRead { sub, ids } => Input::CacheRead { sub: ns(sub), ids },
-            Input::Window {
-                sub,
-                anchor,
-                before,
-                after,
-            } => Input::Window {
-                sub: ns(sub),
-                anchor,
-                before,
-                after,
-            },
+            mut window @ (Input::Window { .. } | Input::WindowAtMonth { .. }) => {
+                let (Input::Window { sub, .. } | Input::WindowAtMonth { sub, .. }) = &mut window
+                else {
+                    unreachable!();
+                };
+                *sub = ns(std::mem::take(sub));
+                window
+            }
             Input::FollowHead {
                 sub,
                 through,

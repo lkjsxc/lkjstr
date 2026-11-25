@@ -145,3 +145,45 @@ fn stats_handles_maximum_distinct_publication_destinations() {
         32
     );
 }
+
+#[test]
+fn stats_strips_nested_relay_credentials_and_omits_direct_message_publications() {
+    let mut engine = crate::engine::Engine::new();
+    let relay = "wss://login:password@relay.example/path?credential=token#fragment";
+    let clean = "wss://relay.example/path";
+    let mut public = record(1, vec![destination(relay, "accepted", None)]);
+    public
+        .messages
+        .insert(relay.into(), "Nostr content or secret".into());
+    let mut private = record(
+        2,
+        vec![destination("wss://dm-relay.example/", "accepted", None)],
+    );
+    private.kind = 1059;
+    let private_id = private.id.clone();
+    engine.network.publication_history.extend([public, private]);
+
+    let stats = engine.stats();
+    assert_eq!(stats["relays"][0]["url"], clean);
+    assert_eq!(
+        stats["recentPublications"][0]["deliveries"][0]["url"],
+        clean
+    );
+    assert_eq!(
+        stats["recentPublications"][0]["messages"],
+        json!({clean: "relay-error"})
+    );
+    let text = stats.to_string();
+    for excluded in [
+        "login",
+        "password",
+        "credential",
+        "token",
+        "fragment",
+        "Nostr content",
+        "dm-relay",
+        &private_id,
+    ] {
+        assert!(!text.contains(excluded), "{excluded}");
+    }
+}

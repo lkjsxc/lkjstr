@@ -3,8 +3,7 @@
 Additive protocol ledger under the 2026-11-16 owner delegation. See status.md and parity.md for current behavior and limits.
 See [protocol 16](engine-proposals-emoji.md) and [history](engine-proposals-history.md).
 - Protocol 17 (S4): `NoteRow.face?` provides bounded public `{type:'generic', alt?, form, tags, moreTags}`; typed
-  `GenericTagLine.ref?` carries event/address/person/topic/link/relay identities. Only policy-authorized public rows project
-  it.
+  `GenericTagLine.ref?` carries event/address/person/topic/link/relay identities on policy-authorized public rows.
 - Protocol 17 (S4): `NoteRow.copyLink?` carries the canonical path `/n/nevent` (kind/author) or `/a/naddr` (exact address); `bech32` and Copy ID are unchanged.
 - Protocol 17 (S4): `Query.show` adds profile `articles`, `lists`, `all`; signed-in and signed-out public snapshot boundaries and source filters remain.
 ## Protocol 6 engine additions (2026-11-16, owner authorized)
@@ -121,8 +120,7 @@ Bounds, atomic removal, conflicts and the Worker-scoped unlock limit are in [dm-
 - `StorageReport.origin.at` records the estimate callback in the same Worker clock, only when ready.
 - `Engine.storage?` offers `inspect({signal?})` with bounded cancellation and no replay across Worker lifetimes.
 
-Inspection bounds and verification limits are in [storage-inspection.md](storage-inspection.md).
-Merged gate and exact production evidence are in [engine-device-verification.md](engine-device-verification.md).
+See [inspection bounds](storage-inspection.md) and [merged gate and production evidence](engine-device-verification.md).
 ## Protocol 13 account availability (2026-11-17, owner authorized)
 
 - `FromEngine.ready.accountError? {code:"internal"}` marks failed account loading without inventing an Accounts snapshot or exposing storage details.
@@ -130,16 +128,13 @@ Merged gate and exact production evidence are in [engine-device-verification.md]
 - `AccountState.phase` is loading on initial/reconnected clients, ready only after Accounts, or failed after the fixed Ready marker.
 - `AccountState.error` is the fixed internal code on failure; an ordinary Ready alone does not clear that failure.
 
-Existing feed status nodes reuse `error.internal`; automatic Accounts availability
-and recovery still need a specification in [interface-needs.md](interface-needs.md).
+Feeds reuse `error.internal`. Accounts availability and recovery need an [interface specification](interface-needs.md).
 ## Protocol 13 public cache additions (2026-11-17, owner authorized)
 
 - `cache.policy {sub,allow}` authorizes only public projected rows for a bounded pre-Worker rendering cache.
 - Private-list-derived rows and all DM/key/action messages remain ineligible.
-- `cache.hold {sub,rows:[{key,id?,profiles?:[{pubkey,id}],quotes?:[{id}]}]}` announces at most 64 held rows and bounded
-  verified-reference identities, never event bodies.
-- `cache.reconcile {sub,removedKeys,invalidProfileIds,removedQuoteIds}` invalidates only announced public references after
-  verified author-owned deletion; mock emits empty arrays.
+- `cache.hold {sub,rows:[{key,id?,profiles?:[{pubkey,id}],quotes?:[{id}]}]}` announces up to 64 held rows and bounded verified-reference IDs.
+- `cache.reconcile {sub,removedKeys,invalidProfileIds,removedQuoteIds}` invalidates announced public references on verified deletion. Mock arrays are empty.
 - Holds are separate from engine-delivered rows and release on close or cache-policy revocation; absence, EOSE and arbitrary cache content confer no authority.
 - `Counts.context?` carries a contributor lineage, canonical decimal generation, opaque token, restored flag and current flag.
 - `Counts.context.selection?` binds account and committed public-mute ID/time to the token. Older, unknown or pending selection preserves held counts.
@@ -171,18 +166,23 @@ The bounded resolution and representative policy follow [interface-acts.md](inte
 - `Draft.emoji[].address?` carries the optional NIP-30 set coordinate into a public note tag.
 - `Publish` reactions take optional `address` (4th custom emoji tag element); deletes take optional `url` for an exact image ('' for text).
 - `NoteRow.thread.parent` (thread source): the id of the note a row answers, also when it is not stored.
-Relay Stats add optional firstEventMs, requestUses and readTimeouts: verified first-event latency, session REQ envelopes and bounded read timeout score.
-Inactive routes without retained transport observations report null.
+- Relay Stats add optional `firstEventMs`, `requestUses` and `readTimeouts`. Inactive routes report null without retained transport observations.
 - Protocol 15 adds absolute `Anchor.at` and `timeWindow` for [absolute windows and edge coverage](absolute-time-window.md).
 - Protocol 15 Their Home uses `loading | partial | stalled | end` on both `timeWindow` edges for bounded relay reads.
 - Absolute-time windows carry optional `NoteRow.readingAt`, the verified slot time in Unix milliseconds, preserved through Show and Hide.
 Mock-only `EngineConfig.mock`: `slow` signs a note late and delays its answers, `stress` makes relay text absurdly long; the real engine ignores it.
 
-## Public signing timing
+## Public signing timing and orchestration
 - Optional `act.signingTiming: { at, hidden, boot, restart }` records enqueue for public signing actions. Existing callers can omit it.
 - Optional `stats.signing` reports bounded `recent` and `slow` timings. See [signing-latency.md](signing-latency.md) for stages and retention.
 - Optional `window.headThrough` on a top window retains its delivered tail key while following new rows, up to 6800 rows.
 - Optional `NoteRow.unconfirmed` marks the signed-in author's settled note while a retained receipt still has zero accepted deliveries.
+- Optional `stats.views` reports up to 128 public engine views with opaque IDs, window state and retained row counts.
+- Optional `stats.worker` reports Worker verification, persistence, timing and retained store metrics.
+- Optional `stats.relays[].cooldownRemainingMs` gives time until the relay cooldown ends.
+- Optional `stats.relays[].isPrivateHost` identifies local, private and known auth-required relays.
+- Optional `stats.bandwidthHistory` reports activity in up to 60 one-second buckets.
+- Optional `stats.orchestrationEvents` reports up to 32 recent decisions with redacted private relay labels.
 
 ## Client attribution
 - `NoteRow.clientAddress?` carries a valid kind-31990 coordinate next to the existing tag name in `client`.

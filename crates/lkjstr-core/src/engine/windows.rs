@@ -49,6 +49,7 @@ impl Engine {
         } else {
             projection::fresh(&self.store, &v.query, &events[..start])
         };
+        v.fresh_count = fresh;
         let window = &events[start..end];
         let unavailable = selected
             .held

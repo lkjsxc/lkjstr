@@ -18,6 +18,7 @@ pub mod dm;
 mod dm_network;
 mod emoji;
 pub mod feedback;
+mod feedback_stats;
 mod filter_identity;
 pub mod global;
 mod history;
@@ -52,6 +53,7 @@ mod row_model;
 pub mod rows;
 pub mod settings;
 pub mod storage_inspection;
+mod telemetry;
 mod thread;
 mod tick;
 mod time_window;
@@ -75,6 +77,9 @@ use protocol::{Input, Output, Query};
 use rows::Row;
 use std::collections::{BTreeMap, VecDeque};
 pub struct View {
+    telemetry_id: u64,
+    month_anchor: Option<u64>,
+    fresh_count: usize,
     query: Query,
     anchor: Option<String>,
     time_window: Option<time_window::Pivot>,
@@ -134,6 +139,7 @@ pub struct Engine {
     pub pending: crate::persistence::PendingEvents,
     pub network: Network,
     views: BTreeMap<String, View>,
+    next_telemetry_view: u64,
     signing: BTreeMap<String, Signing>,
     outgoing: Vec<Output>,
     queue: VecDeque<ingest::QueuedEvent>,
@@ -183,6 +189,7 @@ impl Engine {
             pending: Default::default(),
             network: Network::default(),
             views: BTreeMap::new(),
+            next_telemetry_view: 0,
             signing: BTreeMap::new(),
             outgoing: vec![],
             queue: VecDeque::new(),
