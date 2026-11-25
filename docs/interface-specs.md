@@ -107,7 +107,7 @@ with the design owner.
 A tab kind `orchestration` (name menu between Stats and Documentation, the Stats tile menu, tab search; not in a
 default layout) shows what the engine does with the link from the existing `stats` request: figures (in/s,
 duplicates dropped/s, REQs saved by sharing, verify queue, views, relays connected) with the Stage-safe, Large and
-Pause chips, then bands: Views -> Requests (one row per `wireId`, `env n`, `×k`, purpose, role, `→ relay`) ->
+Pause chips, then bands: Views -> Requests (one row per `wireId`, `env n`, `xk`, purpose, role, `-> relay`) ->
 Relays (role, first event, duplicate share, cooldown), Windows, Worker, Link (60 s sparklines), Optimizer and
 Events (by `kind`; `summary` is never drawn). Words are the `orch.*` keys. One `stats` poll per engine client runs
 at 1 s while any Stats or Orchestration tab is in front and the page is shown (`views/stats-poll.ts`); a hidden,
@@ -129,7 +129,7 @@ background or folded tab sends nothing.
   `delayMs` and kinds `trip`, `explore`; an `optimizer` block (`stage`, `parts[]`, `variables[]`,
   `weightClasses[]`, `keep { low, high }`). Types: `web/src/views/orch-model.ts`. Absent: a dash or no band.
 - Not built yet: pressing a view row to bring its tab forward (views carry no tab), connector lines between the
-  columns (the joins are `→ env n` / `→ relay` words at every width), unfolding rows below 400px (secondary
+  columns (the joins are `-> env n` / `-> relay` words at every width), unfolding rows below 400px (secondary
   values wrap or drop instead), and the hedge line's fade.
 
 
