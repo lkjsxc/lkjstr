@@ -23,6 +23,8 @@ export type Keeper = {
 
 const TOP_PX = 8; // closer to the top than this is "at the top"
 const SAVE_MS = 300;
+/** A scroll this recent, or a finger on the list, means the reader is moving it (a fling coasts on its own). */
+const MOVING_MS = 150;
 
 export function createKeeper(o: {
   /** The scroller and, inside it, the element whose children are the rows (`data-key` on each). */
@@ -43,6 +45,25 @@ export function createKeeper(o: {
   let timer: ReturnType<typeof setTimeout> | undefined;
   let dirty = false;
   let fraction = 0;
+  // Any write to scrollTop stops a fling's momentum on a phone. While the reader moves the list, the place read at
+  // `readAt` is behind the screen by however far it has scrolled since: a put allows for that and writes only when
+  // rows above really changed height.
+  let readAt = el.scrollTop;
+  let coasting = false; // a move made while the reader moves the list
+  let touching = false;
+  let scrolledAt = -Infinity;
+  const moving = (): boolean => touching || performance.now() - scrolledAt < MOVING_MS;
+  const touched = (on: boolean) => (): void => {
+    touching = on;
+    scrolledAt = performance.now();
+  };
+  const onTouch = touched(true);
+  const onLift = touched(false);
+  const onScroll = (): void => void (scrolledAt = performance.now());
+  el.addEventListener('touchstart', onTouch, { passive: true });
+  el.addEventListener('touchend', onLift, { passive: true });
+  el.addEventListener('touchcancel', onLift, { passive: true });
+  el.addEventListener('scroll', onScroll, { passive: true });
   const shiftList = (next: number): void => {
     if (next === fraction) return;
     fraction = next;
@@ -83,13 +104,17 @@ export function createKeeper(o: {
   // reader's doing: reading it would overwrite the place with wherever the rows fell.
   let size = '';
   const sized = (): string => `${el.clientWidth}:${list.offsetHeight}`;
-  const read = (): void => {
-    if (!o.active()) return;
-    if (place && size !== sized() && put()) return;
+  const take = (): void => {
     if (el.scrollTop < TOP_PX) shiftList(0);
     const first = el.scrollTop < TOP_PX ? undefined : onScreen(1)[0];
     set(first && { key: first.key, off: first.top });
     size = sized();
+    readAt = el.scrollTop;
+  };
+  const read = (): void => {
+    if (!o.active()) return;
+    if (place && size !== sized() && put()) return;
+    take();
   };
   const moveTo = (key: string, off: number, selected = false): boolean => {
     const node = o.node(key);
@@ -103,18 +128,27 @@ export function createKeeper(o: {
       tail.style.height = `${tail.offsetHeight + Math.max(0, deficit)}px`;
     }
     const before = el.scrollTop;
-    if (Math.abs(delta) >= 0.5) el.scrollTop += delta;
+    // In motion a sub-pixel is left to the shift below, so nothing touches the scroll.
+    if (Math.abs(delta) >= (coasting ? 1 : 0.5)) el.scrollTop += delta;
     // Scroll positions can round to a device pixel even when row heights are fractional.
     const remainder = delta - (el.scrollTop - before);
     if (Math.abs(remainder) < 1) shiftList(-remainder);
     size = sized();
+    readAt = el.scrollTop;
     return true;
   };
   const put = (): boolean => {
     if (!o.active()) return true;
+    if (place && moving()) {
+      coasting = true;
+      const kept = moveTo(place.key, place.off - (el.scrollTop - readAt));
+      coasting = false;
+      if (kept) take(); // the place is where the reader has got to
+      return kept;
+    }
     if (place) return moveTo(place.key, place.off);
     if (el.scrollTop < TOP_PX) shiftList(0);
-    if (el.scrollTop < TOP_PX && el.scrollTop > 0) el.scrollTop = 0;
+    if (el.scrollTop < TOP_PX && el.scrollTop > 0 && !moving()) el.scrollTop = 0;
     return true;
   };
   // A picture that loads, a font that arrives, a note that unfolds, a tile that gets another width: all change the
@@ -143,7 +177,10 @@ export function createKeeper(o: {
           held.unshift({ key: preferred, top: row.top - view.top });
       }
       return () => {
-        if (held.some((r) => moveTo(r.key, r.top, r.key === preferred))) read();
+        coasting = moving();
+        const kept = held.some((r) => moveTo(r.key, r.top, r.key === preferred));
+        coasting = false;
+        if (kept) read();
         else put();
       };
     },
@@ -155,6 +192,10 @@ export function createKeeper(o: {
     },
     dispose() {
       watch.disconnect();
+      el.removeEventListener('touchstart', onTouch);
+      el.removeEventListener('touchend', onLift);
+      el.removeEventListener('touchcancel', onLift);
+      el.removeEventListener('scroll', onScroll);
       document.removeEventListener('visibilitychange', leaving);
       window.removeEventListener('pagehide', flush);
       flush();

@@ -186,6 +186,8 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
 - New notes are always loaded into the feed as they arrive, after a reload too. At the top they show at once and the list stays at the top. Anywhere else they are inserted above while the reading position holds (the anchor note keeps its place on screen); the pill counts the unread notes above, scrolling up reaches them with no click, and pressing the pill goes to the top. A row selected by the keyboard holds the list too. The feed keeps its bounded window: when more arrive above than the window holds, the pill says so, and pressing it reloads the head.
 - The reading position is an anchor note plus offset: it survives reload,
   another tile width, a moved or reopened tab, late media.
+  While the reader moves the list (a finger on it, or a scroll in the last 150ms), loads and late media never write
+  the scroll unless rows above change height, so a fling coasts on (owner, 2026-11-25).
 - A thread ([interface-thread.md](interface-thread.md)) opens on its focused note about a third down the tile, with
   what it answers in view above it, whole, its text 1.5px larger, untinted; the reply field is under it. The notes it
   answers are above, compact (two lines and the action row, one height) and joined by a rail that ends in a stub on
