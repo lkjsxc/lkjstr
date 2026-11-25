@@ -27,3 +27,13 @@ fn roundtrips_utf8_and_validates_ascii() -> Result<(), String> {
     assert_eq!(bytes_to_ascii(&[0x61, 0xff]), None);
     Ok(())
 }
+
+#[test]
+fn hex_encoding_matches_canonical_format_for_every_byte() {
+    assert_eq!(bytes_to_hex(&[]), "");
+    let bytes: Vec<_> = (0..=u8::MAX).collect();
+    let expected: String = bytes.iter().map(|byte| format!("{byte:02x}")).collect();
+    assert_eq!(bytes_to_hex(&bytes), expected);
+    assert_eq!(try_hex_to_bytes(&expected), Some(bytes));
+    assert_eq!(bytes_to_hex(&[0; 32]), "0".repeat(64));
+}

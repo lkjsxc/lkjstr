@@ -40,3 +40,7 @@ incremental = false
 opt-level = "z"
 lto = true
 codegen-units = 1
+
+# SHA-256 receipt validation is a measured Worker startup hot path.
+[profile.release.package.sha2]
+opt-level = 3
