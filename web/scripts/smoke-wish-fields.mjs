@@ -56,13 +56,9 @@ export async function wishFields({ page, width, real, relayUrl, events, fact }) 
     // Blurring saves the address. Keep the actual edit on the owned fixture relay.
     if (real) await relay.fill(`${relayUrl}/wish`);
     await page.getByLabel('Search settings', { exact: true }).fill('server');
-    await slowly(
-      page,
-      page.getByLabel('Media server address', { exact: true }),
-      'https://media.test',
-      fact,
-      '2 server address',
-      arrival,
-    );
+    const server = page.getByLabel('Media server address', { exact: true });
+    await slowly(page, server, 'https://media.test', fact, '2 server address', arrival);
+    // Leave the shared relay's media defaults intact when the next step moves focus.
+    if (real) await server.fill('');
   }
 }
