@@ -7,11 +7,13 @@ import { h } from '../shared/h.ts';
 import type { ListRow } from './feed-draw.ts';
 import { scrollIntent } from './scroll-intent.ts';
 
+export type RailRow = ListRow | { readonly kind: 'dm'; readonly key: string; readonly at: number };
+
 /** When a row happened (0: a row without a time, such as a profile's header). A repost reads as the repost's time. */
-export const rowTime = (row: ListRow | undefined): number =>
+export const rowTime = (row: RailRow | undefined): number =>
   row?.kind === 'note'
     ? (row.readingAt ?? row.repostedBy?.at ?? row.at)
-    : row?.kind === 'notification'
+    : row?.kind === 'notification' || row?.kind === 'dm'
       ? row.at
       : 0;
 /** The label for `at`: always the whole local date and time, whatever the list spans. Pure, tested. */
@@ -25,8 +27,8 @@ export const centred = (label: HTMLElement, y: number, view: number): number =>
 export function topRow(
   el: HTMLElement,
   list: HTMLElement,
-  row: (key: string) => ListRow | undefined,
-): ListRow | undefined {
+  row: (key: string) => RailRow | undefined,
+): RailRow | undefined {
   const top = el.getBoundingClientRect().top;
   const kids = list.children;
   let lo = 0;

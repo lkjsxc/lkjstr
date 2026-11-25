@@ -2,6 +2,7 @@ import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import type { Row, Timeline } from '../src/engine/protocol.ts';
 import { localZone } from '../src/shared/format.ts';
 import type { Keeper } from '../src/views/feed-place.ts';
+import { railKey } from '../src/views/rail-guess.ts';
 import { mountTimeRail } from '../src/views/time-rail.ts';
 import { openPopover, popoverOpen } from '../src/wm/menus.ts';
 
@@ -46,6 +47,7 @@ function setup(extra: Partial<Timeline> = {}) {
   const rail = mountTimeRail({
     candidate: true,
     version: () => 5,
+    key: (kind) => kind,
     el,
     list,
     tail,
@@ -134,7 +136,7 @@ it('starts at the width the engine last gave the same kind of tab', () => {
   const reserved = (el: HTMLElement) => el.classList.contains('has-time-rail');
   const answer = (supported: boolean, count = 1) =>
     ({ supported, months: count ? [{ at: month, count }] : [], positions: [] }) as const;
-  const open = (kind: string) => {
+  const open = (kind: string, mode?: { notifications?: boolean; account?: string }) => {
     const el = document.createElement('div');
     const list = document.createElement('div');
     const tail = document.createElement('div');
@@ -143,6 +145,7 @@ it('starts at the width the engine last gave the same kind of tab', () => {
     document.body.append(el);
     const rail = mountTimeRail({
       ...{ candidate: true, version: () => 5, el, list, tail, rows: () => [] },
+      key: (tab: string) => (mode ? railKey(tab, mode) : tab),
       ...{ keeper: { set: vi.fn() } as unknown as Keeper, seek: vi.fn(), active: () => true },
     });
     const say = (supported: boolean, count?: number) => {
@@ -174,6 +177,13 @@ it('starts at the width the engine last gave the same kind of tab', () => {
   search.say(true);
   search.dispose();
   expect(reserved(open('search').el)).toBe(true);
+  // A refused mode keeps its own answer: signed-out Global never narrows signed-in Global.
+  const out = open('global', {});
+  out.say(false);
+  out.dispose();
+  expect(reserved(open('global', {}).el)).toBe(false);
+  expect(reserved(open('global', { account: 'me' }).el)).toBe(true);
+  expect(railKey('home', { notifications: true, account: 'me' })).toBe('home:notifications');
 });
 
 // Three local days, one note each, in the page's zone; and a fourth, older, whose notes are not loaded.

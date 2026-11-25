@@ -58,6 +58,13 @@ pause this work; close/detach releases the session index. Counts debounce for
 arrivals join the next scan without restarting partial work. Deletions,
 metadata/filter changes and late repost targets invalidate partial scans. Matching
 reuses the ordinary window predicate, including rich filters and mutes.
+Grouped and activity lists (`notifications`, `home` with Notifications set to
+Show including the default phone Home, and `profile` `reposts`/`reactions`)
+index their projected `(key, time)` rows in `wire/timeline_projected.rs`,
+counting at most 256 rows per client Worker turn and releasing the temporary
+list when done or closed. Profile `articles`, `lists` and `all` index openable
+events by authored time. Search indexes matching notes while keeping its
+bounded directory people header uncounted.
 There are at most 128 queries per client and 32 clients. Each query retains
 at most two store-sized key maps and one store-sized ordinal lookup. A prior
 finished map remains seekable while its replacement is built. The actual
@@ -65,31 +72,44 @@ store remains bounded at 16000 regular plus 4000 replaceable events.
 The shared store retains one generation per event, released on removal;
 snapshots do not clone events or the store and keep the 256-event slice bound.
 
+Private DM lists (`messages` inbox conversations ordered newest-first by latest
+message time, and `message` conversation timelines ordered newest-first) reuse
+`mountTimeRail` via `web/src/views/dm-rail.ts` over their already-projected
+rows (bounded at 200 conversations and 8000 messages) without putting private
+bodies into public caches. In `message`, jumps mount the target slice in
+`dm-window.ts` on demand and preserve return ticks; unexhausted DM history
+(`more`) fades the lower marks.
+
 Candidate selection no longer truncates ordinary notes at 6000, allowing
 seeks to reach every retained match. UI windows retain the existing 800-row
 bound; a rail seek requests 60 rows on each side. Transport reconnect waits
 for the rebuilt index before replaying an ordinal window. There is one
 window renderer and history scheduler, not a second feed implementation.
+`rail-guess.ts` keys persisted width guesses by tab kind and mode (`railKey`),
+so a refused mode (such as signed-out Global) never narrows a supported one.
 
-## Deliberate native fallbacks
+## Supported tabs and deliberate native fallbacks
 
-The real engine retains native scrolling for grouped notifications and any
-Home with its Notifications filter set to Show, including the default phone
-Home. That projection interleaves grouped notification keys with notes by
-their original time. It needs an ordinal index for the combined projection.
-Widening a tile changes only the number of marks and labels it can show.
-Native scrolling also covers signed-out Global's contextual spam policy,
-repost/reaction profile kinds, unhydrated disk history beyond the newest
-2000-event startup cache, cache-queue loss and store retention eviction.
-In a note-only Home, the same original or resolved repost that earns a row
-its place owns the ordinal and its timestamp. Each displayed note counts
-once. Unresolved wrappers have no displayed row and are ignored.
-Bookmarks preserve list-owner order, people
-lists and threads are not chronological note feeds. Mock search results that
-include people also retain native scrolling. These paths do not advertise
-an approximate count or offer unsupported seeks. Normal Home, signed-in
-Global, hashtag, chronological search, profile notes/media and channels can
-use the rail. Neither native fallback nor metadata headers enter counts.
+Chronological lists using the time rail: `home` (note-only and Notifications:
+Show, including the default phone Home), `their-home`, `global` (signed in),
+`notifications`, `search` (chronological notes with bounded people header),
+`hashtag`, `profile` (`posts`, `replies`, `reposts`, `reactions`, `media`,
+`articles`, `lists`, `all`), `channel`, `messages` (DM inbox) and `message`
+(DM conversation). In a note-only Home, the original or resolved repost that
+earns a row its place owns the ordinal and timestamp; unresolved wrappers are
+ignored. Neither native fallback nor metadata headers enter counts.
+
+Signed-out `global` retains native scrolling: its contextual spam policy
+(`global.rs` `classify_window`) caps each author at three rows and folds
+ten-minute duplicate bursts relative to each window's starting slice. A
+cache-wide ordinal index would weight spam bursts and expose spam by resetting
+window context at seek targets. Native scrolling also covers unhydrated disk
+history beyond the newest 2000-event startup cache, cache-queue loss and store
+retention eviction. Non-chronological views remain native: `bookmarks` (NIP-51
+list-owner order), `thread` (reply tree), `following` and `followers` (people
+lists), `channels` (channel directory), `media`, `compose`, `profile-edit`,
+`account`, `settings`, `relays`, `stats` and `docs`. These paths do not
+advertise an approximate count or offer unsupported seeks.
 
 ## Verification
 

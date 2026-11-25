@@ -1,28 +1,33 @@
 //! Incremental cache-only time index. One 256-event slice per client tick, round robin across
 //! at most 128 subscriptions. Current/prior key maps and the ordinal lookup each
 //! retain at most one store-capacity snapshot; close releases all three. Local days
-//! (timeline_days.rs) come from the same scan.
+//! (timeline_days.rs) come from the same scan. Grouped and activity lists index their own
+//! projected rows instead (timeline_projected.rs).
 use super::timeline_days::Days;
+use super::timeline_projected as projected;
 use super::{Output, Session};
 use crate::engine::{Engine, protocol::Source, query};
 use serde_json::{Value, json};
 use std::collections::BTreeMap;
 #[derive(Default)]
 pub(super) struct Index {
-    revision: u64,
+    pub(super) revision: u64,
     started: u64,
     month: u64,
     cursor: Option<(u64, String)>,
-    done: bool,
-    supported: bool,
+    pub(super) done: bool,
+    pub(super) supported: bool,
     // Built incrementally, newest first; month counters and lookup avoid a final full-store pass.
-    keys: BTreeMap<u64, Vec<String>>,
+    pub(super) keys: BTreeMap<u64, Vec<String>>,
     previous: BTreeMap<u64, Vec<String>>,
-    positions: BTreeMap<String, (u64, usize, u64)>,
+    pub(super) positions: BTreeMap<String, (u64, usize, u64)>,
     last: Option<Value>,
-    newest: Option<u64>,
-    oldest: u64,
-    days: Days,
+    pub(super) newest: Option<u64>,
+    pub(super) oldest: u64,
+    pub(super) days: Days,
+    /// A projected list's (key, time) rows, taken once per build; at most one store-sized list.
+    pub(super) rows: Option<Vec<(String, u64)>>,
+    pub(super) next: usize,
 }
 impl Index {
     fn position(&self, key: &str) -> Option<Value> {
@@ -59,6 +64,8 @@ fn eligible(q: &crate::engine::protocol::Query, e: &Engine) -> bool {
         && matches!(
             q.source,
             Source::Home
+                | Source::TheirHome
+                | Source::Notifications
                 | Source::Global
                 | Source::Hashtag
                 | Source::Search
@@ -66,8 +73,7 @@ fn eligible(q: &crate::engine::protocol::Query, e: &Engine) -> bool {
                 | Source::Channel
                 | Source::Relay
         )
-        && q.filters.notifications != Some(true)
-        && !matches!(q.filters.show.as_deref(), Some("reposts" | "reactions"))
+        // Signed-out Global holds rows by their window's context (global.rs): no cache-wide ordinal exists.
         && !(q.source == Source::Global && q.account.is_none())
 }
 impl Session {
@@ -92,15 +98,32 @@ impl Session {
         let Some(q) = self.queries[sub].convert() else {
             return vec![];
         };
+        let sub = sub.clone();
+        // Out of the map while it is built, so a projected list can read this session's rows.
+        let mut taken = self.timelines.remove(&sub).unwrap_or_default();
+        let out = self.timeline_step(&sub, &q, &mut taken, e, now);
+        self.timelines.insert(sub.clone(), taken);
+        out.map(|timeline| Output::Timeline { sub, timeline })
+            .into_iter()
+            .collect()
+    }
+
+    fn timeline_step(
+        &self,
+        sub: &str,
+        q: &crate::engine::protocol::Query,
+        index: &mut Index,
+        e: &Engine,
+        now: u64,
+    ) -> Option<Value> {
         let revision = e.store.revision();
         let month = month_start(now / 1000);
         let (zone, today) = (e.calendar.zone(), e.calendar.day_start(now));
-        let index = self.timelines.entry(sub.clone()).or_default();
         if (index.done && index.revision != revision)
             || e.store.snapshot_revision() > index.revision
             || index.month != month
             || index.days.stale(&zone, today)
-            || (index.supported && !eligible(&q, e))
+            || (index.supported && !eligible(q, e))
         {
             let last = index.last.take();
             let previous = if index.done {
@@ -113,34 +136,55 @@ impl Session {
                 previous,
                 month,
                 started: now,
-                supported: eligible(&q, e),
+                supported: eligible(q, e),
                 last,
                 days: Days::new(zone, today),
                 ..Default::default()
             };
             index.done = !index.supported;
         }
-        if !index.done && now.saturating_sub(index.started) >= 100 {
-            let filter = query::filter(&e.store, &q);
-            let authors = crate::engine::rich::authors(&e.store, &q);
+        if !index.done && now.saturating_sub(index.started) >= 100 && projected::projected(q) {
+            if index.rows.is_none() {
+                index.rows = Some(projected::rows(&self.project_source(sub, e, false)));
+            }
+            projected::slice(index, &*e.calendar, now);
+        } else if !index.done && now.saturating_sub(index.started) >= 100 {
+            let filter = query::filter(&e.store, q);
+            let authors = crate::engine::rich::authors(&e.store, q);
             let batch = e.store.scan(index.cursor.as_ref(), 256);
+            let profile_all =
+                q.source == Source::Profile && q.filters.show.as_deref() == Some("all");
+            let openable = q.source == Source::Profile
+                && matches!(
+                    q.filters.show.as_deref(),
+                    Some("articles" | "lists" | "all")
+                );
             for event in &batch {
                 index.cursor = Some((event.created_at, event.id.clone()));
                 if !e.store.existed_at(&event.id, index.revision)
-                    || query::signed_out(&q)
-                    || !query::accepts(&e.store, &q, event, &filter, &authors)
+                    || query::signed_out(q)
+                    || !query::accepts(&e.store, q, event, &filter, &authors)
                 {
                     continue;
                 }
-                let Some(row) = query::collapse_repost(&e.store, &q, event.clone()) else {
+                let Some(row) = (if profile_all {
+                    Some(event.clone())
+                } else {
+                    query::collapse_repost(&e.store, q, event.clone())
+                }) else {
                     continue;
                 };
                 // The first matching original or wrapper owns the row, in the same order as the window.
-                if (event.kind == 6 && row.id == event.id) || index.positions.contains_key(&row.id)
+                if (!profile_all && event.kind == 6 && row.id == event.id)
+                    || index.positions.contains_key(&row.id)
                 {
                     continue;
                 }
-                if !matches!(row.kind, 1 | 42) {
+                if if openable {
+                    !crate::kinds::policy(row.kind).openable
+                } else {
+                    !matches!(row.kind, 1 | 42)
+                } {
                     index.supported = false;
                     index.done = true;
                     break;
@@ -160,7 +204,7 @@ impl Session {
             }
         }
         if !index.done {
-            return vec![];
+            return None;
         }
         let months: Vec<_> = index
             .keys
@@ -185,7 +229,7 @@ impl Session {
         let older = !e
             .views
             .values()
-            .filter(|v| v.query == q)
+            .filter(|v| v.query == *q)
             .any(|v| v.source_exhausted);
         let mut value = json!({"newest":index.newest.unwrap_or(0),"oldest":index.oldest,"supported":index.supported,"months":if index.supported {months} else {vec![]},"positions":positions,"older":older});
         if let Some((Some(key), _, _)) = self.windows.get(sub) {
@@ -195,12 +239,9 @@ impl Session {
             index.days.fields(&mut value);
         }
         if index.last.as_ref() == Some(&value) {
-            return vec![];
+            return None;
         }
         index.last = Some(value.clone());
-        vec![Output::Timeline {
-            sub: sub.clone(),
-            timeline: value,
-        }]
+        Some(value)
     }
 }

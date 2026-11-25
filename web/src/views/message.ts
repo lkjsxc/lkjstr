@@ -7,11 +7,13 @@ import { createDmCompose } from './dm-compose.ts';
 import { createDmDraftPool } from './dm-draft-pool.ts';
 import { createDmHead } from './dm-head.ts';
 import { dmEnd, dmPeople } from './dm-parts.ts';
+import { type DmRailRow, dmTimeline } from './dm-rail.ts';
 import { createDmStream } from './dm-stream.ts';
 import { dmVisible, mountDmSurface } from './dm-surface.ts';
 import { createDmWindow } from './dm-window.ts';
 import { createKeeper, type Place } from './feed-place.ts';
 import type { ViewEnv } from './registry.ts';
+import { mountTimeRail } from './time-rail.ts';
 
 type State = { participants?: readonly string[]; place?: Place };
 export function mountMessage(el: HTMLElement, env: ViewEnv): () => void {
@@ -32,7 +34,9 @@ function mountConversation(
     owner = account.author.pubkey;
   const peers = [...new Set(saved.participants ?? [])].filter((key) => key !== owner).slice(0, 31);
   const list = h('div', { class: 'list dm-list' }),
-    end = h('div');
+    end = h('div'),
+    tail = h('div', { class: 'ftail' });
+  let railRows: DmRailRow[] = [];
   let stopped = false,
     newestSeen = '',
     marking = false,
@@ -51,7 +55,7 @@ function mountConversation(
     changed: () => keep?.put(),
   });
   const desk = h('div', { class: 'cdesk' }, head.el, compose.el);
-  el.replaceChildren(desk, list, end);
+  el.replaceChildren(desk, list, end, tail);
   const seen = async (): Promise<void> => {
     const message = stream.rows()[0],
       room = stream.room();
@@ -82,11 +86,25 @@ function mountConversation(
   keep = createKeeper({
     el,
     list,
+    stretch: tail,
     saved: saved.place,
     active: () => dmVisible(env),
     node: (id) => window?.node(id),
     anchors: (key) => !!stream.known(key),
     save: (place) => saveViewState(env.instance, { participants: peers, place }),
+  });
+  const rail = mountTimeRail({
+    candidate: true,
+    version: () => env.engine.info.get()?.version ?? 6,
+    key: (tab) => tab,
+    el,
+    list,
+    tail,
+    keeper: keep,
+    rows: () => railRows,
+    ensure: (id) => void window?.mount(id),
+    active: () => dmVisible(env) && Boolean(el.closest('.pane.cur')),
+    seek: () => rail.window(),
   });
   function draw(): void {
     if (stopped || !window) return;
@@ -103,6 +121,8 @@ function mountConversation(
       return { ...message, unread: unread.get(message.id) ?? false };
     });
     window.draw(marked, people);
+    railRows = rows.map((m) => ({ kind: 'dm', key: m.id, at: m.at }));
+    rail.timeline(dmTimeline(railRows, Boolean(snapshot?.more)));
     end.replaceChildren(dmEnd(snapshot, rows.length, stream.loading(), stream.open));
     if (restoreWanted && window.show(restoreWanted.key)) {
       keep?.set(restoreWanted);
@@ -128,7 +148,7 @@ function mountConversation(
     older();
   };
   const key = (event: KeyboardEvent): void => {
-    if (typing(event) || !dmVisible(env)) return;
+    if (event.defaultPrevented || typing(event) || !dmVisible(env)) return;
     if (pressed(event, 'next')) {
       event.preventDefault();
       window?.move(1);
@@ -176,6 +196,7 @@ function mountConversation(
     el.removeEventListener('scroll', scroll);
     el.removeEventListener('keydown', key);
     keep?.dispose();
+    rail.dispose();
     compose.dispose();
     head.dispose();
     stream.dispose();

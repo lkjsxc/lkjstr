@@ -100,11 +100,9 @@ fn invalidation_is_debounced_and_close_releases_counts() {
     assert!(s.timeline_tick(&e, 1800000010000).is_empty());
 }
 #[test]
-fn grouped_and_non_note_sources_keep_native_scrollbars() {
+fn non_chronological_and_contextual_sources_keep_native_scrollbars() {
     let owner = event(1700000000, 1, "owner", vec![]);
     for query in [
-        json!({"source":"notifications","account":owner.pubkey}),
-        json!({"source":"home","account":owner.pubkey,"notifications":true}),
         json!({"source":"thread"}),
         json!({"source":"bookmarks"}),
         json!({"source":"list"}),

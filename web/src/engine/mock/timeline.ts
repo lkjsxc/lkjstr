@@ -3,7 +3,18 @@ import { localDay, localZone } from '../../shared/format.ts';
 import type { Anchor, FromEngine, Query, Timeline } from '../protocol.ts';
 import type { Entry } from './query.ts';
 
-const dated = new Set(['home', 'global', 'hashtag', 'profile', 'channel', 'relay', 'search']);
+// As crates/lkjstr-core/src/engine/wire/timeline.rs: grouped and activity lists index their drawn rows.
+const dated = new Set([
+  'home',
+  'their-home',
+  'notifications',
+  'global',
+  'hashtag',
+  'profile',
+  'channel',
+  'relay',
+  'search',
+]);
 export function timeline(
   q: Query,
   entries: readonly Entry[],
@@ -14,15 +25,15 @@ export function timeline(
   returnKey?: string,
 ): Timeline {
   const months = new Map<number, number>();
-  const positions: { key: string; month: number; offset: number }[] = [];
+  const positions: { key: string; month: number; offset: number; at: number }[] = [];
   // Local days as the real engine counts them (crates/lkjstr-core/src/engine/wire/timeline_days.rs).
   const days: { at: number; month: number; offset: number; count: number }[] = [];
   let occupied = 0;
   let previous = Infinity;
   let newest = 0;
   let oldest = 0;
-  let supported =
-    dated.has(q.source) && !q.notifications && !['reposts', 'reactions'].includes(q.show ?? '');
+  // Signed-out Global holds rows by their window's context: no cache-wide ordinal exists.
+  let supported = dated.has(q.source) && !(q.source === 'global' && !q.account);
   entries.forEach((e, i) => {
     const row = e.row();
     if (row.kind !== 'note' && row.kind !== 'notification') {
@@ -35,10 +46,10 @@ export function timeline(
       return;
     }
     const time = row.kind === 'note' ? (row.repostedBy?.at ?? row.at) : row.at;
-    const at = Math.min(time, now);
+    // Months stay monotonic in list order; the position keeps the row's own time.
+    const at = Math.min(time, now, previous);
     if (previous === Infinity) newest = time;
     oldest = time;
-    if (at > previous) supported = false;
     previous = at;
     const date = new Date(at);
     const month = Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), 1);
@@ -49,7 +60,7 @@ export function timeline(
     if (part?.at === day && part.month === month) part.count++;
     else (occupied += part?.at === day ? 0 : 1), days.push({ at: day, month, offset, count: 1 });
     if ((i >= start && i < end) || e.key === returnKey)
-      positions.push({ key: row.key, month, offset });
+      positions.push({ key: row.key, month, offset, at: time });
   });
   return {
     ...(anchor ? { anchor } : {}),

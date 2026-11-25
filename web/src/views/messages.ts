@@ -5,10 +5,12 @@ import { h } from '../shared/h.ts';
 import { getLang, t } from '../shared/i18n.ts';
 import { createDmFind } from './dm-find.ts';
 import { dmEnd, dmFaces, dmNames, dmPeople, inboxSetup, openMessage } from './dm-parts.ts';
+import { createListKeeper, type DmRailRow, dmTimeline } from './dm-rail.ts';
 import { dmSubscription } from './dm-subscription.ts';
 import { dmVisible, mountDmSurface } from './dm-surface.ts';
 import { type Keyed, reconcile } from './lists.ts';
 import type { ViewEnv } from './registry.ts';
+import { mountTimeRail } from './time-rail.ts';
 
 export function mountMessages(el: HTMLElement, env: ViewEnv): () => void {
   return mountDmSurface(el, env, (account) => mountList(el, env, account));
@@ -22,7 +24,9 @@ function mountList(el: HTMLElement, env: ViewEnv, account: Account): () => void 
   let subscription: ReturnType<typeof dmSubscription> | undefined;
   const list = h('div', { class: 'list' }),
     setup = h('div'),
-    end = h('div');
+    end = h('div'),
+    tail = h('div', { class: 'ftail' });
+  let railRows: DmRailRow[] = [];
   let peopleSignature = '',
     lastAutomatic = '';
   let moreFrame = 0;
@@ -157,7 +161,10 @@ function mountList(el: HTMLElement, env: ViewEnv, account: Account): () => void 
       peopleSignature = signature;
       cache.clear();
     }
-    reconcile(list, cache, matched(), render);
+    const shown = matched();
+    reconcile(list, cache, shown, render);
+    railRows = shown.map((c) => ({ kind: 'dm', key: c.key, at: c.last.at }));
+    rail.timeline(dmTimeline(railRows, Boolean(snapshot?.more && !text.trim())));
     finder.refresh();
     rule.hidden = !text.trim() || !finder.count();
     end.replaceChildren(
@@ -170,6 +177,7 @@ function mountList(el: HTMLElement, env: ViewEnv, account: Account): () => void 
   }
   const open = (): void => {
     subscription?.close();
+    rail.reset();
     snapshot = undefined;
     older = false;
     lastAutomatic = '';
@@ -218,7 +226,20 @@ function mountList(el: HTMLElement, env: ViewEnv, account: Account): () => void 
     rule,
     finder.results,
     end,
+    tail,
   );
+  const rail = mountTimeRail({
+    candidate: true,
+    version: () => env.engine.info.get()?.version ?? 6,
+    key: (tab) => tab,
+    el,
+    list,
+    tail,
+    keeper: createListKeeper(el, list, tail),
+    rows: () => railRows,
+    active: () => dmVisible(env) && Boolean(el.closest('.pane.cur')),
+    seek: () => rail.window(),
+  });
   el.addEventListener('scroll', more, { passive: true });
   document.addEventListener('visibilitychange', visible);
   const offs = [
@@ -235,6 +256,7 @@ function mountList(el: HTMLElement, env: ViewEnv, account: Account): () => void 
     cancelAnimationFrame(moreFrame);
     document.removeEventListener('visibilitychange', visible);
     subscription?.close();
+    rail.dispose();
     finder.dispose();
     offs.forEach((off) => off());
     el.removeEventListener('scroll', more);

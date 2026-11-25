@@ -1,10 +1,10 @@
 // The rail owns only pixels and input. Membership, note ordinals and local days come from the engine
 // (docs/interface-time.md: C1 the label while scrolling, C2 the marks and hover, C3 jumps and their loading).
-import type { Anchor, Row, Timeline } from '../engine/protocol.ts';
+import type { Anchor, Timeline } from '../engine/protocol.ts';
 import { localZone } from '../shared/format.ts';
 import { h } from '../shared/h.ts';
 import type { Keeper, Place } from './feed-place.ts';
-import { centred, rowTime, timeText, topRow } from './feed-scrub.ts';
+import { centred, type RailRow, rowTime, timeText, topRow } from './feed-scrub.ts';
 import { railGuess, railSaid } from './rail-guess.ts';
 import { scrollIntent } from './scroll-intent.ts';
 import { dayText, railDays } from './time-days.ts';
@@ -19,11 +19,13 @@ const LANDED_MS = 1000; // the label stays this long after a jump lands
 export function mountTimeRail(o: {
   candidate: boolean;
   version(): number;
+  key(kind: string): string; // the rail-guess key of this list's current mode
   el: HTMLElement;
   list: HTMLElement;
   tail: HTMLElement;
   keeper: Keeper;
-  rows(): readonly Row[];
+  rows(): readonly RailRow[];
+  ensure?(key: string): void;
   seek(anchor: Anchor): void;
   active(): boolean;
 }) {
@@ -42,8 +44,8 @@ export function mountTimeRail(o: {
   let telling = false; // the reader is scrolling (C1)
   const intent = scrollIntent(el, () => ((telling = false), sync()));
   // The view's tab kind (set before mounting) keys what the engine last said, so the first frame has the final width.
-  const kind = el.dataset.kind ?? '';
-  const guess = (): boolean => o.candidate && o.version() >= 5 && railGuess(kind);
+  const kind = (): string => o.key(el.dataset.kind ?? '');
+  const guess = (): boolean => o.candidate && o.version() >= 5 && railGuess(kind());
   el.classList.toggle('has-time-rail', guess());
   let data: Timeline | undefined;
   let shape: Timeline | undefined; // what the map is drawn from; frozen while a press is held
@@ -62,29 +64,33 @@ export function mountTimeRail(o: {
   let speak = false;
   let lateTimer: ReturnType<typeof setTimeout> | undefined;
   let landTimer: ReturnType<typeof setTimeout> | undefined;
-  const first = (): Row | undefined =>
-    (topRow(el, list, (key) => o.rows().find((r) => r.key === key)) as Row | undefined) ??
-    o.rows().findLast((r) => r.kind === 'note' || r.kind === 'notification');
+  const first = (): RailRow | undefined =>
+    topRow(el, list, (key) => o.rows().find((r) => r.key === key)) ??
+    o.rows().findLast((r) => r.kind === 'note' || r.kind === 'notification' || r.kind === 'dm');
   const position = (key: string | undefined) => data?.positions.find((p) => p.key === key);
-  const readingAt = (row: Row | undefined): number => position(row?.key)?.at ?? rowTime(row);
+  const readingAt = (row: RailRow | undefined): number => position(row?.key)?.at ?? rowTime(row);
   const keyAt = (p: TimePlace) =>
     data?.positions.find((r) => r.month === p.month && r.offset === p.offset)?.key;
+  const nodeOf = (key: string) =>
+    [...list.children].find((n) => (n as HTMLElement).dataset.key === key) as
+      | HTMLElement
+      | undefined;
   const days = () => railDays(shape, zone);
   const current = () => {
     const row = first();
     const time = position(row?.key);
     if (!row || !time) return;
-    const node = [...list.children].find((n) => (n as HTMLElement).dataset.key === row.key);
-    const off = (node?.getBoundingClientRect().top ?? 0) - el.getBoundingClientRect().top;
+    const off =
+      (nodeOf(row.key)?.getBoundingClientRect().top ?? 0) - el.getBoundingClientRect().top;
     return { time, place: { key: row.key, off } };
   };
   const seeker = createSeeker({
     scrollTo(p: TimePlace, saved?: Place): boolean {
       const key = keyAt(p);
-      const node = [...list.children].find((n) => (n as HTMLElement).dataset.key === key) as
-        | HTMLElement
-        | undefined;
-      if (!key || !node) return false;
+      if (!key) return false;
+      let node = nodeOf(key);
+      if (!node && o.ensure) o.ensure(key), (node = nodeOf(key));
+      if (!node) return false;
       // Allow even the oldest note to stand at the top after a seek, as in a focused thread.
       const footer = o.tail.previousElementSibling?.getBoundingClientRect().height ?? 0;
       o.tail.style.height = `${Math.max(0, el.clientHeight - node.offsetHeight - footer)}px`;
@@ -265,7 +271,7 @@ export function mountTimeRail(o: {
       // Refused mid-drag: the hold ends and the list stays where it is.
       if (!next.supported) stop(), (s.back = undefined);
       data = next;
-      if (o.candidate && (!next.supported || next.months.length)) railSaid(kind, next.supported);
+      if (o.candidate && (!next.supported || next.months.length)) railSaid(kind(), next.supported);
       seeker.timeline(next);
       sync();
     },

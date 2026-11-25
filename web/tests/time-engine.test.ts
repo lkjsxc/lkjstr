@@ -78,13 +78,32 @@ it('resends exact counts after publish and deletion, releases on close', () => {
   engine.handle({ t: 'window', sub: 's', anchor: 'top', before: 0, after: 2 });
   expect(messages).toHaveLength(n);
 });
-it('keeps native scrolling for people, threads and unordered profile kinds', () => {
+it('keeps native scrolling for people, threads, bookmarks and signed-out Global', () => {
   for (const query of [
     { source: 'thread' },
     { source: 'following' },
-    { source: 'profile', show: 'reactions' },
+    { source: 'bookmarks' },
+    { source: 'global' },
   ] as Query[]) {
     engine.handle({ t: 'open', sub: 's', query });
     expect(last('timeline')?.timeline.supported).toBe(false);
+  }
+});
+it('indexes grouped notifications, a Home with notifications and profile acts by their drawn rows', () => {
+  for (const query of [
+    { source: 'notifications' },
+    { source: 'home', notifications: true },
+    { source: 'profile', show: 'reactions' },
+    { source: 'profile', show: 'reposts' },
+    { source: 'search', text: 'nostr' },
+  ] as Query[]) {
+    engine.handle({ t: 'open', sub: 's', query });
+    engine.handle({ t: 'window', sub: 's', anchor: 'top', before: 0, after: 3 });
+    const data = last('timeline')?.timeline;
+    expect(data?.supported, JSON.stringify(query)).toBe(true);
+    const months = data?.months.map((m) => m.at) ?? [];
+    expect([...months].sort((a, b) => b - a)).toEqual(months);
+    for (const p of data?.positions ?? [])
+      expect(last('rows')?.rows.some((r) => r.key === p.key)).toBe(true);
   }
 });

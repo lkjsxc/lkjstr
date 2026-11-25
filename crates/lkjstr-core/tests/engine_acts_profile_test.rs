@@ -163,15 +163,24 @@ fn profile_ties_anchor_and_time_rail_follow_the_selected_act() -> Test {
         held.iter()
             .any(|r| r["kind"] == "note" && r["id"] == note.id)
     );
-    let timeline = session
-        .timeline_tick(&engine, 1000)
-        .into_iter()
-        .map(serde_json::to_value)
-        .collect::<Result<Vec<_>, _>>()?;
+    // The rail indexes the projected activity rows: the reacted note holds the selected act's time.
+    let mut timeline = vec![];
+    for tick in 0..20 {
+        for out in session.timeline_tick(&engine, 1000 + tick * 25) {
+            timeline.push(serde_json::to_value(out)?);
+        }
+    }
+    let answer = timeline
+        .iter()
+        .rfind(|m| m["sub"] == "person")
+        .ok_or("no timeline")?;
+    assert_eq!(answer["timeline"]["supported"], true);
     assert!(
-        timeline
+        answer["timeline"]["positions"]
+            .as_array()
+            .ok_or("positions")?
             .iter()
-            .any(|m| m["sub"] == "person" && m["timeline"]["supported"] == false)
+            .any(|p| p["key"] == note.id && p["at"] == 40_000)
     );
     engine.input(
         Input::Close {

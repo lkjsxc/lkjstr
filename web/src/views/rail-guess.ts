@@ -4,7 +4,7 @@
 // follows what the engine last said for the same kind of tab on this device, and only a kind never seen guesses yes.
 import { kv } from '../shared/storage.ts';
 
-const KEY = 'rails'; // { [tab kind]: boolean }; bound: one entry per kind of tab
+const KEY = 'rails'; // { [railKey]: boolean }; bound: one entry per kind of tab and mode
 // Kinds refused since this page loaded (bound: one per kind of tab). A Home can be accepted before its reposts
 // resolve and refused after; the refusal is what its next start will meet, so a later acceptance does not undo it.
 const refused = new Set<string>();
@@ -15,6 +15,22 @@ const read = (): Record<string, boolean> => {
 };
 
 export const railGuess = (kind: string): boolean => read()[kind] !== false;
+
+/** The guess's key: the tab kind plus the query's mode, so a refused mode (signed-out Global) never narrows a
+ * supported one (signed-in Global), and a Home with notifications is remembered apart from a note-only Home. */
+export function railKey(
+  kind: string,
+  q?: { notifications?: boolean; show?: string; account?: string },
+): string {
+  const mode = [
+    q?.notifications ? 'notifications' : '',
+    q?.show ?? '',
+    q && !q.account ? 'out' : '',
+  ]
+    .filter(Boolean)
+    .join('+');
+  return mode ? `${kind}:${mode}` : kind;
+}
 
 export function railSaid(kind: string, supported: boolean): void {
   if (!supported) refused.add(kind);

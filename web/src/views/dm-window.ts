@@ -131,6 +131,15 @@ export function createDmWindow(o: {
     },
     node: (id: string) => nodes.get(id)?.el,
     selected: () => rows.find((m) => m.id === selected),
+    mount(id: string): boolean {
+      const at = rows.findIndex((m) => m.id === id);
+      if (at < 0) return false;
+      if (!nodes.has(id)) {
+        start = Math.max(0, at - 20);
+        render();
+      }
+      return true;
+    },
     show(id: string): boolean {
       const at = rows.findIndex((m) => m.id === id);
       if (at < 0) return false;
