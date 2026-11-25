@@ -5,8 +5,8 @@
 The service worker is build/transport glue, not an event store or a signer.
 Real builds emit sw.js from web/scripts/shell-cache.ts. The app registers it
 after startup with updateViaCache: none. Mock builds do not register a worker.
-Only packaged, same-origin static assets enter CacheStorage. Relays, events,
-accounts, keys, remote pictures and uploads never enter this cache.
+Only packaged, same-origin static assets enter the shell cache. The worker also
+manages a separate, optional cache of eligible public avatars.
 
 Installation requires a secure context, Service Worker, CacheStorage, SHA-256
 and Web Locks. Unsupported or denied capabilities leave the online app usable.
@@ -59,8 +59,23 @@ A browser may discard or terminate activation work while still advancing the
 worker to activated. Cleanup therefore also runs on the first controlled fetch
 in each worker runtime, retained with waitUntil. Concurrent fetches share one
 maintenance promise. Failed maintenance preserves caches and waits 30 seconds
-before a later request can retry. Fetches never open a cache, so a retiring
+before a later request can retry. Shell fetches never open a cache, so a retiring
 worker cannot recreate a deleted name.
+
+## Public avatars
+
+The image loader can reuse a browser-local copy of a public note author's
+profile picture after reload. An image must first load successfully. In the
+background the service worker checks an anonymous, CORS-readable copy of the
+same HTTPS address. It stores only decodable raster images with a positive
+cache lifetime, for at most an hour of reuse. The cache holds up to 64 images
+of at most 128 KiB each and evicts the oldest writes first.
+
+URLs with credentials, a query or an existing fragment use the browser's image
+path, as do opaque responses and pictures from private-message views. Private
+and no-store responses, accounts, events, keys, uploads and timeline media
+stay out of the avatar cache. Missing or expired copies fall through to normal
+image loading. Denied storage leaves the online path available.
 
 ## Regression evidence
 
@@ -81,6 +96,9 @@ finally. No owner account, public relay or publication is involved.
   retired caches before the fixture claims recovery.
 - One ordinary reload activates and adopts an update in a warm browser with two
   tabs. A draft keeps its old document and receives the reload notice.
+- A public CORS avatar survives a reload and origin loss. Opaque, private,
+  oversized and unselected images stay out of the avatar cache. Expiry and
+  capacity restore the ordinary image path.
 
 Both original regressions failed against the saved original generator:
 rollback deleted A's cached index, and the fourth waiting build left four

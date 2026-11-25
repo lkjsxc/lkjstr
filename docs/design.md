@@ -143,8 +143,8 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
   The name is relay text, drawn as text and bounded. With a handler address it is a button: a press asks once and
   shows the verified app's name and site, or that it could not be verified; nothing navigates by itself.
 - A person whose name has not arrived is shown by a short npub, never by
-  hex. When the name comes only the header line and the face are drawn
-  again, so text, folds and loaded pictures stay. Tab titles follow.
+  hex. When the name comes the header line is redrawn and the face's initial
+  updates in place. Text, folds and loaded pictures stay. Tab titles follow.
 - Absolute times under day separators say `HH:mm` when the note and divider share a local day; cross-day reposts retain the original date. Elsewhere older rows include the full date; every time tooltip has the full date and time. Relative time applies in every feed and is off by default.
 - Above the header, in `--faint`: who reposted, or what is replied to.
 - Text, then media (one picture keeps its ratio up to the media height; two

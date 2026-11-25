@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright-core';
 import { browserTmp } from './browser-tmp.ts';
 
-export async function shellBrowser() {
+export async function shellBrowser({ fixtureTls = false } = {}) {
   const root = fileURLToPath(new URL('../../tmp/', import.meta.url));
   await mkdir(root, { recursive: true });
   // Keep a caller's short symlink spelling, but only when its target is inside this checkout.
@@ -29,7 +29,11 @@ export async function shellBrowser() {
     process.env.TMPDIR = scratch;
     browser = await chromium.launch({
       executablePath: chrome,
-      args: ['--no-sandbox', '--host-resolver-rules=MAP * ~NOTFOUND, EXCLUDE 127.0.0.1'],
+      args: [
+        '--no-sandbox',
+        '--host-resolver-rules=MAP * ~NOTFOUND, EXCLUDE 127.0.0.1',
+        ...(fixtureTls ? ['--ignore-certificate-errors'] : []),
+      ],
     });
   } catch (error) {
     await rm(scratch, { recursive: true, force: true });

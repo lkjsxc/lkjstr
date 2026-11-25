@@ -1,4 +1,5 @@
 // Small pieces every view draws people and text with.
+import { loadPublicAvatar } from '../engine/avatar-cache.ts';
 import type { Author, Emoji, Segment } from '../engine/protocol.ts';
 import { emojiRuns } from '../shared/emoji-text.ts';
 import { type Child, h } from '../shared/h.ts';
@@ -29,35 +30,63 @@ export const nameText = (name: string): string =>
 const nameOf = (a: Author): string => (unnamed(a) ? shortNpub(a) : a.name);
 
 /** A circle: the picture, or a flat colour from the pubkey with the first letter of the name. */
-const faceState = new WeakMap<HTMLElement, string>();
+type FaceOptions = { cachePublic?: boolean; lazy?: boolean };
+const faceState = new WeakMap<
+  HTMLElement,
+  {
+    letter: HTMLElement;
+    options: FaceOptions;
+    picture?: string;
+    image?: HTMLImageElement;
+    revision?: string;
+  }
+>();
 function drawFace(el: HTMLElement, a: Author): void {
-  const sig = JSON.stringify([a.picture, a.profileId, a.name]);
-  if (faceState.get(el) === sig) return;
-  faceState.set(el, sig);
-  el.replaceChildren(
-    h(
-      'span',
-      { class: 'faceletter' },
-      unnamed(a) ? '' : ([...a.name.replace(/:[a-z0-9_]+:/g, '').trim()][0] ?? ''),
-    ),
-  );
+  const state = faceState.get(el);
+  if (!state) return;
+  const initial = unnamed(a) ? '' : ([...a.name.replace(/:[a-z0-9_]+:/g, '').trim()][0] ?? '');
+  if (state.letter.textContent !== initial) state.letter.textContent = initial;
+  const retry = state.image && state.image.parentElement !== el && state.revision !== a.profileId;
+  state.revision = a.profileId;
+  if (state.picture === a.picture && !retry) return;
+  state.picture = a.picture;
+  state.image?.remove();
+  state.image = undefined;
   if (!a.picture) return;
-  const img = h('img', { src: a.picture, alt: '', decoding: 'async', draggable: false });
+  const img = h('img', {
+    alt: '',
+    width: 36,
+    height: 36,
+    loading: state.options.lazy && a.picture.startsWith('https:') ? 'lazy' : 'eager',
+    fetchpriority: 'high',
+    decoding: 'async',
+    draggable: 'false',
+    referrerpolicy: 'no-referrer',
+  });
   img.addEventListener('error', () => img.remove());
+  if (state.options.cachePublic && a.profileId) loadPublicAvatar(img, a.picture);
+  else img.src = a.picture;
   el.append(img);
+  state.image = img;
 }
 onPerson((author) => {
-  for (const el of document.querySelectorAll<HTMLElement>('[data-face]'))
-    if (el.dataset.face === author.pubkey) drawFace(el, author);
+  const selector = `[data-face="${CSS.escape(author.pubkey)}"]`;
+  for (const el of document.querySelectorAll<HTMLElement>(selector)) drawFace(el, author);
 });
-export function avatar(a: Author, cls = 'av'): HTMLElement {
+export function avatar(a: Author, cls = 'av', options: FaceOptions = {}): HTMLElement {
   const hue = Number.parseInt(a.pubkey.slice(0, 4), 16) % 360;
-  const el = h('span', {
-    class: cls,
-    style: `background:hsl(${hue} 35% 55%)`,
-    'aria-hidden': 'true',
-    'data-face': a.pubkey,
-  });
+  const letter = h('span', { class: 'faceletter' });
+  const el = h(
+    'span',
+    {
+      class: cls,
+      style: `background:hsl(${hue} 35% 55%)`,
+      'aria-hidden': 'true',
+      'data-face': a.pubkey,
+    },
+    letter,
+  );
+  faceState.set(el, { letter, options });
   drawFace(el, knownPerson(a.pubkey) ?? a);
   return el;
 }
@@ -127,16 +156,45 @@ export function nameButton(a: Author, env: ViewEnv, cls = 'name'): HTMLElement {
 }
 
 /** A person's face as a button that opens their profile, as the name does. */
-export function faceButton(a: Author, env: ViewEnv, cls = 'av'): HTMLElement {
+export function faceButton(
+  a: Author,
+  env: ViewEnv,
+  cls = 'av',
+  options?: FaceOptions,
+): HTMLElement {
   const name = plainName(a);
-  const el = h('button', { class: 'avb', title: name, 'aria-label': name }, avatar(a, cls));
+  const el = h(
+    'button',
+    { class: 'avb', title: name, 'aria-label': name },
+    avatar(a, cls, options),
+  );
   const go = (e: MouseEvent): void => {
     e.stopPropagation();
-    env.open('profile', { pubkey: a.pubkey, title: name }, how(e));
+    env.open('profile', { pubkey: a.pubkey, title: el.title }, how(e));
   };
   el.addEventListener('click', go);
   el.addEventListener('auxclick', (e) => void (e.button === 1 && go(e)));
   return el;
+}
+
+/** Reuse the public note's author control across metadata updates and body redraws. */
+export function noteFace(
+  a: Author,
+  env: ViewEnv,
+  previous?: HTMLElement,
+  lazy = false,
+): HTMLElement {
+  const button = previous?.querySelector<HTMLElement>(':scope > .nrow > .avb');
+  const face = button?.firstElementChild as HTMLElement | null | undefined;
+  if (!button || face?.dataset.face !== a.pubkey)
+    return faceButton(a, env, 'av', { cachePublic: true, lazy });
+  const name = plainName(a);
+  if (button.title !== name) {
+    button.title = name;
+    button.setAttribute('aria-label', name);
+  }
+  drawFace(face, knownPerson(a.pubkey) ?? a);
+  return button;
 }
 
 /** Note text. Links say where they go; mentions and hashtags open tabs. `inside`: drawn inside a control (a

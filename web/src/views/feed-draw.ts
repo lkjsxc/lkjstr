@@ -37,10 +37,10 @@ export function createRowList(
   let dated = typeof dates === 'function' ? dates() : dates;
   const nodes = new Map<string, { el: HTMLElement; sig: string; body?: string }>(); // bound: rows of the window plus day dividers
   let shown: readonly ListRow[] = [];
-  const render = (row: ListRow): HTMLElement | null => {
+  const render = (row: ListRow, previous?: HTMLElement, lazyFace?: boolean): HTMLElement | null => {
     if (row.kind === 'thread-part') return part?.(row) ?? null;
     if (row.kind === 'moment-part') return renderMoment(row, env);
-    if (row.kind === 'note') return renderNote(row, env, dated);
+    if (row.kind === 'note') return renderNote(row, env, dated, { previous, lazyFace });
     if (row.kind === 'profile') return renderProfile(row, env);
     if (row.kind === 'person') return renderPerson(row, env);
     if (row.kind === 'notification') return renderNotification(row, env);
@@ -52,6 +52,7 @@ export function createRowList(
       shown = rows.map((r) => (r.kind === 'note' ? withHeld(r) : r));
       const want: HTMLElement[] = [];
       const seen = new Set<string>();
+      let eagerFaces = 6; // Start the head of the window ahead of the first layout and its lazy media.
       let day = dated ? dayOf(Date.now()) : '';
       const put = (key: string, sig: string, make: () => HTMLElement | null): void => {
         let n = nodes.get(key);
@@ -71,6 +72,7 @@ export function createRowList(
         want.push(n.el);
       };
       for (const row of shown) {
+        const lazyFace = row.kind === 'note' && !row.hidden && eagerFaces-- <= 0;
         // A moment line counts as an item at its time: a divider for its own day goes above it.
         const at =
           row.kind === 'note' ? rowTime(row) : row.kind === 'moment-part' && !row.end ? row.at : 0;
@@ -98,7 +100,7 @@ export function createRowList(
           patchNote(had.el, row, env, dated);
           had.sig = sig;
         }
-        put(row.key, sig, () => render(row));
+        put(row.key, sig, () => render(row, had?.el, lazyFace));
         const now = nodes.get(row.key);
         if (now && row.kind === 'note') now.body = bodySig(row);
         if (now && row.kind === 'notification')

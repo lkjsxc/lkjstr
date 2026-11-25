@@ -14,7 +14,7 @@ export async function waitFor(page, predicate, arg, timeout = 30000) {
   }
 }
 
-export async function shellFixture(generate, run) {
+export async function shellFixture(generate, run, browserOptions) {
   const versions = new Map();
   for (const id of ['a', 'b', 'c', 'd', 'e']) {
     const files = new Map([
@@ -57,7 +57,7 @@ export async function shellFixture(generate, run) {
   await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
   let browser;
   try {
-    browser = await shellBrowser();
+    browser = await shellBrowser(browserOptions);
     const context = await browser.newContext();
     if (process.env.LKJSTR_SHELL_DEBUG)
       context.on('console', (message) => console.error(message.text()));

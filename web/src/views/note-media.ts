@@ -95,9 +95,9 @@ export function mediaGrid(
     };
     if (m.type === 'image') {
       const img = h('img', {
-        src: m.thumb ?? m.url,
         alt: m.alt ?? '',
         loading: 'lazy',
+        fetchpriority: 'low',
         decoding: 'async',
       });
       img.addEventListener('error', gone(img));
@@ -105,12 +105,13 @@ export function mediaGrid(
         learnMediaSize(img.src, img.naturalWidth, img.naturalHeight);
         if (one && !sized) settle(box, img);
       });
+      img.src = m.thumb ?? m.url;
       box.append(img);
     } else {
       const video = h('video', {
         src: m.url,
         poster: m.thumb ?? null,
-        preload: 'metadata',
+        preload: m.thumb ? 'none' : 'metadata',
         muted: true,
         playsinline: true,
       });

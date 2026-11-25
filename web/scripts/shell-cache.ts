@@ -2,6 +2,7 @@
 import { createHash } from 'node:crypto';
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { avatarWorker } from './avatar-cache.ts';
 
 type Asset = readonly [path: string, sha256: string];
 const worker = `
@@ -232,7 +233,7 @@ self.addEventListener('fetch', (event) => {
 
 export function shellWorker(assets: readonly Asset[]): string {
   if (assets.length === 0 || assets.length > 64) throw new Error('shell asset count');
-  const source = worker.replace('__ASSETS__', JSON.stringify(assets));
+  const source = worker.replace('__ASSETS__', JSON.stringify(assets)) + avatarWorker;
   const version = createHash('sha256').update(source).digest('hex').slice(0, 24);
   return source.replace('__BUILD__', JSON.stringify(version));
 }

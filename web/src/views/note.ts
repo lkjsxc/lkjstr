@@ -16,7 +16,7 @@ import { quoteCard } from './note-quote.ts';
 import { compactBody, lookOf, threadClass, threadMark } from './note-thread.ts';
 import { deliveryMark, timeOf } from './note-time.ts';
 import { stamp } from './note-via.ts';
-import { displayName, faceButton, how, nameButton, nipMark, plainName, segments } from './parts.ts';
+import { how, nameButton, nipMark, noteFace, plainName, segments } from './parts.ts';
 import type { ViewEnv } from './registry.ts';
 
 /** Long text folds by whole lines; the button appears only when something is actually cut off. */
@@ -55,7 +55,12 @@ function head(row: NoteRow, env: ViewEnv, dated: boolean): HTMLElement {
   );
 }
 
-export function renderNote(row: NoteRow, env: ViewEnv, dated = false): HTMLElement {
+export function renderNote(
+  row: NoteRow,
+  env: ViewEnv,
+  dated = false,
+  options?: { previous?: HTMLElement; lazyFace?: boolean },
+): HTMLElement {
   const state = readNoteState(env.instance, row.id);
   if (row.hidden) return hiddenRow(row, env);
   const openThread = (e: MouseEvent): void => {
@@ -173,7 +178,7 @@ export function renderNote(row: NoteRow, env: ViewEnv, dated = false): HTMLEleme
     h(
       'div',
       { class: 'nrow' },
-      faceButton(row.author, env),
+      noteFace(row.author, env, options?.previous, options?.lazyFace),
       h(
         'div',
         { class: 'nmain' },
@@ -234,7 +239,8 @@ export function patchNote(el: HTMLElement, row: NoteRow, env: ViewEnv, dated = f
     main.querySelector<HTMLElement>(':scope > .nhead > .name')?.focus({ preventScroll: true });
   if (JSON.stringify(row.author) !== drawnBy.get(el)) {
     drawnBy.set(el, JSON.stringify(row.author));
-    el.querySelector(':scope > .nrow > .avb')?.replaceWith(faceButton(row.author, env));
+    const face = noteFace(row.author, env, el);
+    if (main.previousElementSibling !== face) main.previousElementSibling?.replaceWith(face);
   }
   // The button that was pressed is drawn again: the keyboard stays on its successor.
   const held = document.activeElement?.closest('.acts, .chips')?.parentElement === main;
@@ -287,4 +293,3 @@ export function fitNotes(elements: readonly HTMLElement[]): void {
   const overflowing = elements.map(overflowingText);
   for (const text of overflowing) if (text) fold(text);
 }
-export { displayName };

@@ -101,8 +101,9 @@ one predecessor cache. Cleanup also retains the active, waiting and current
 installer. An interrupted activation retries cleanup on the first controlled
 fetch; fetches never recreate retired caches. Short Web Locks
 serialize allocation, completion and cleanup; network downloads hold no lock.
-Root, note, profile and address navigation work from the cached shell. Only packaged static
-assets are cached: no events, keys, uploads or remote media. Serve sw.js with
+Root, note, profile and address navigation work from the cached shell. The shell cache
+contains packaged static assets. A separate browser cache can keep eligible public note
+avatars. Events, keys, uploads and timeline media stay out of both caches. Serve sw.js with
 no-cache as above; no new headers or backend are required. CacheStorage and
 Web Locks must be available for shell installation. Storage or locking denial
 keeps the normal online app operational. Shell installation does not make

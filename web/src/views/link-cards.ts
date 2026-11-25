@@ -32,11 +32,12 @@ export function linkCards(cards: readonly LinkPreview[] | undefined): HTMLElemen
         card.imageUrl && /^(https?:\/\/|data:image\/)/.test(card.imageUrl)
           ? h('img', {
               class: 'lcpicture',
-              src: card.imageUrl,
               alt: '',
               loading: 'lazy',
+              fetchpriority: 'low',
               decoding: 'async',
               referrerpolicy: 'no-referrer',
+              src: card.imageUrl,
             })
           : null;
       picture?.addEventListener('error', () => picture.remove());
