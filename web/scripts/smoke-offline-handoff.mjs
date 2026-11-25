@@ -17,6 +17,17 @@ export async function shellHandoff() {
       `
       ${client}
       const field = document.querySelector('textarea');
+      const update = ServiceWorkerRegistration.prototype.update;
+      window.fixtureChecks = 0;
+      ServiceWorkerRegistration.prototype.update = function () {
+        window.fixtureChecks++;
+        return update.call(this);
+      };
+      window.fixtureVisible = true;
+      Object.defineProperty(document, 'visibilityState', {
+        get: () => window.fixtureVisible ? 'visible' : 'hidden',
+      });
+      sessionStorage.setItem('fixture-loads', Number(sessionStorage.getItem('fixture-loads')) + 1);
       field.value = sessionStorage.getItem('fixture-draft') ?? '';
       field.addEventListener('input', () => sessionStorage.setItem('fixture-draft', field.value));
       document.documentElement.dataset.ready = '${id}';
@@ -57,39 +68,60 @@ export async function shellHandoff() {
     const context = await browser.newContext();
     const first = await context.newPage();
     await first.goto(origin);
-    await first.evaluate(() => navigator.serviceWorker.ready.then(() => true));
-    await first.close();
-    const reload = await context.newPage();
-    await reload.goto(origin);
-    await waitFor(reload, () => navigator.serviceWorker.controller?.state === 'activated');
+    await waitFor(first, () => navigator.serviceWorker.ready.then(() => true));
+    await waitFor(first, () => window.fixtureChecks === 1);
+    await first.locator('textarea').fill('Keep my unsent text');
     const reading = await context.newPage();
+    await reading.clock.install();
     await reading.goto(origin);
-    await waitFor(reading, () => document.documentElement.dataset.ready === 'a');
-    serving = 'b';
-    await reload.reload();
-    await reload.locator('html[data-ready="b"]').waitFor({ state: 'attached' });
-    assert.equal(await reading.title(), 'shell a', 'a different open tab keeps its running app');
+    await waitFor(reading, () => window.fixtureChecks === 1);
+    await reading.evaluate(() => {
+      document.dispatchEvent(new Event('visibilitychange'));
+      window.dispatchEvent(new Event('focus'));
+      window.fixtureVisible = false;
+      document.dispatchEvent(new Event('visibilitychange'));
+    });
+    await reading.clock.fastForward(60_000);
     assert.equal(
-      await reading.evaluate(async (path) => (await fetch(path)).text(), versions.get('a').appPath),
+      await reading.evaluate(() => window.fixtureChecks),
+      1,
+      'rapid visibility and focus events are throttled and hidden tabs skip checks',
+    );
+    serving = 'b';
+    await reading.evaluate(() => {
+      window.fixtureVisible = true;
+      document.dispatchEvent(new Event('visibilitychange'));
+      window.fixtureVisible = false;
+      document.dispatchEvent(new Event('visibilitychange'));
+    });
+    await waitFor(reading, () => window.fixtureChecks === 2);
+    await first.getByRole('status').filter({ hasText: 'A new version is ready.' }).waitFor();
+    assert.equal(await reading.title(), 'shell a', 'a hidden client keeps its running document');
+    assert.equal(await first.title(), 'shell a', 'a draft keeps its running document');
+    assert.equal(await first.locator('textarea').inputValue(), 'Keep my unsent text');
+    assert.equal(
+      await first.evaluate(async (path) => (await fetch(path)).text(), versions.get('a').appPath),
       versions.get('a').app,
       'old hashed assets are still available after handoff',
     );
-    await reading.close();
-    await reload.bringToFront();
-    await reload.locator('textarea').fill('Keep my unsent text');
+    await reading.evaluate(() => {
+      window.fixtureVisible = true;
+      document.dispatchEvent(new Event('visibilitychange'));
+    });
+    await reading.locator('html[data-ready="b"]').waitFor({ state: 'attached' });
+    assert.equal(await reading.evaluate(() => sessionStorage.getItem('fixture-loads')), '2');
+    await waitFor(reading, () => window.fixtureChecks === 1);
+    await first.locator('textarea').clear();
+    await first.locator('textarea').blur();
+    await first.locator('html[data-ready="b"]').waitFor({ state: 'attached' });
+    assert.equal(await first.evaluate(() => sessionStorage.getItem('fixture-loads')), '2');
+    await first.close();
     serving = 'c';
-    await reload.reload();
-    await reload
-      .getByRole('status')
-      .filter({ hasText: 'A new version is ready. Reload to update.' })
-      .waitFor();
-    assert.equal(await reload.title(), 'shell b', 'an unsent draft prevents an automatic reload');
-    assert.equal(await reload.locator('textarea').inputValue(), 'Keep my unsent text');
-    await reload.reload();
-    await reload.locator('html[data-ready="c"]').waitFor({ state: 'attached' });
-    assert.equal(await reload.locator('textarea').inputValue(), 'Keep my unsent text');
+    await reading.clock.fastForward(5 * 60_000);
+    await reading.locator('html[data-ready="c"]').waitFor({ state: 'attached' });
+    assert.equal(await reading.evaluate(() => sessionStorage.getItem('fixture-loads')), '3');
     await context.close();
-    console.log('ok offline handoff (ordinary reload, old assets, retained draft)');
+    console.log('ok offline handoff (boot, throttled visibility, periodic update, retained draft)');
   } finally {
     await browser?.close();
     await new Promise((resolve) => {

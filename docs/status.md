@@ -76,11 +76,11 @@ Protocol 6 introduced DM, encrypted-key and relay authentication operations. Pro
   completion or the original deadline, advances successful pages and preserves
   failed-route cursors. Failure never establishes empty history.
 - Real builds install a complete hash-verified offline shell with CacheStorage
-  and Web Locks. A verified update can take over the next reload while an
-  open draft gets a notice. The previous hashed assets remain during handoff,
+  and Web Locks. Open clients check on boot, return and periodically, and
+  adopt verified updates once visible and idle. Drafts defer reload with a notice.
+  Previous hashed assets remain during handoff,
   and interrupted cleanup recovers on fetch. Events, keys and media are excluded.
-  Loopback cases cover corruption, rollback, offline links and two-tab races;
-  see [offline-shell.md](offline-shell.md).
+  Loopback cases cover corruption, rollback, offline links and two-tab races ([offline-shell.md](offline-shell.md)).
 
 The separate `pnpm real:hour` uses fresh read-only public-account data and fail-closed publication guards. Its dated baseline hour and fault phases
 are recorded independently; mock/loopback checks do not replace network measurements. Host evidence now copies capture-time targets, query endings

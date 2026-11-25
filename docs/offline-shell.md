@@ -12,12 +12,15 @@ Installation requires a secure context, Service Worker, CacheStorage, SHA-256
 and Web Locks. Unsupported or denied capabilities leave the online app usable.
 Web Locks coordinates same-origin workers across generations; the lock name
 is stable across builds. The app has one root-scope registration per origin.
-The generated app offers a verified waiting shell a handoff. Handoff activates
-with skipWaiting and claims clients without navigating them. On an ordinary
-reload already in progress, the app can reload once into the new graph. If a
-draft or post is active, it shows a reload notice and leaves the document open.
-An older app without the handoff protocol can discover the verified replacement
-on its first reload and use it on the next request after activation.
+The app checks for updates on boot, then every five minutes while visible.
+Returning to the tab or going online checks again when at least one minute
+has passed since the last check. The app offers a verified waiting worker
+a handoff, which activates it with skipWaiting and claims existing clients.
+After a replacement takes control, a visible page reloads once it has been
+idle for five seconds and has no active draft, post or focused editing
+field. A draft receives a reload notice and keeps its running document.
+Pages still running the earlier reload-only client use that client's
+handoff behavior until they first load this update.
 
 ## Immutable installation
 
@@ -104,8 +107,10 @@ finally. No owner account, public relay or publication is involved.
   C finishes honestly, and C does not take over an open B tab.
 - If activation cleanup is interrupted, a fresh controlled request removes
   retired caches before the fixture claims recovery.
-- One ordinary reload activates and adopts an update in a warm browser with two
-  tabs. A draft keeps its old document and receives the reload notice.
+- With two open tabs, a return to the page checks and activates an update.
+  The hidden tab keeps its document until it comes back. A draft receives
+  the notice and keeps its document until cleared. An idle visible tab
+  detects and adopts a later update on its periodic check.
 - A public CORS avatar survives a reload and origin loss. Opaque, private,
   oversized and unselected images stay out of the avatar cache. Expiry and
   capacity restore the ordinary image path. A visible avatar recovers after
