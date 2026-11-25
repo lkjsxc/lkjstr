@@ -27,7 +27,6 @@ cannot provide the required isolation.
 
 | Capability | Contract and user need |
 | --- | --- |
-| Profile editing | `profile.save {as,profile}` carries name/about/picture/banner/NIP-05/website/lightning address. The user wants to edit their public profile and use an uploaded picture. |
 | Person relays | `ProfileRow.relays` projects known outbox URLs. The user wants to inspect where a person's public notes can be read. |
 | People lists | `open {sub,query:{source:"list",tag:"30000:<pubkey>:<identifier>",account?,privateLists?}}` projects current signed public and authorized private members. The user wants to open a saved people list without treating it as a feed. |
 | Article publishing | `publish` with `Draft.longForm` emits kind 30023. The user wants to write a long-form article; a parsed article reader is still missing. |

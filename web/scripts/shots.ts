@@ -1,5 +1,5 @@
 // Screenshots of the mock build for judging the look: ../tmp/screens/<name>-<width>-<theme>-<lang>.png.
-// Scenes: home, tiles (maximized, collapsed), orchestration (and Large), quote (with a warning), profile, thread, notifications, compose (with the emoji picker), media, settings, relays, accounts,
+// Scenes: home, tiles (maximized, collapsed), orchestration (and Large), quote (with a warning), profile, profile editing, thread, notifications, compose (with the emoji picker), media, settings, relays, accounts,
 // and a visitor's first run and sign-in (nobody signed in).
 // node scripts/shots.ts [--only=<width>-<theme>-<lang>] [--scenes=home,thread]
 import { spawn } from 'node:child_process';
@@ -16,6 +16,7 @@ import { genericShots } from './shots-generic.ts';
 import { keysShots } from './shots-keys.ts';
 import { looksShots } from './shots-looks.ts';
 import { orchShots } from './shots-orch.ts';
+import { profileEditShots } from './shots-profile-edit.ts';
 import { quoteShots } from './shots-quote.ts';
 import { sendingShots } from './shots-sending.ts';
 import { threadShots } from './shots-thread.ts';
@@ -213,6 +214,7 @@ try {
         await scene('profile', '/p/aoi', (page) =>
           page.waitForSelector('.profile').then(() => undefined),
         );
+        await profileEditShots(scene);
         await scene('thread', '/', async (page) => {
           await page.locator('.note:has(.ctx .clip) .text').first().click();
           await page.waitForSelector('.th-focus');

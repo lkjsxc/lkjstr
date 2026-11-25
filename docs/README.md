@@ -112,6 +112,7 @@ Engine (`crates/`):
 - [interface-keys.md](interface-keys.md): password-protected keys: sign-in, lock, backup, protection.
 - [interface-dm.md](interface-dm.md): private messages: list, conversation, writing, inbox relays.
 - [interface-acts.md](interface-acts.md): reactions and reposts of reactions and reposts.
+- [interface-profile.md](interface-profile.md): editing one's own profile, with picture and banner uploads.
 - [interface-emoji.md](interface-emoji.md): the emoji picker, its preview, the popover, preloading, shared codes.
 - [interface-view.md](interface-view.md): every kind opens: generic, list and article faces, chains, acts as posts.
 - [interface-thread.md](interface-thread.md): the thread tab: focus, compact notes above, replies, reply field.

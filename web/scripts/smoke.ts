@@ -1748,9 +1748,14 @@ async function pages(browser: Browser, still: Record<string, unknown>): Promise<
   );
   await page.locator('.menu button').first().click();
   await page.locator('.pane.cur .tab.active[data-view^="profile"]').waitFor();
+  // The own header has no Follow: its one button is Edit profile.
+  const ownButtons = await page
+    .locator('.pane.cur .view[data-kind="profile"] .profile .pbtns .btn')
+    .allInnerTexts();
   fact(
     'the menu’s own row opens the reader’s profile',
-    (await count(page, '.pane.cur .view[data-kind="profile"] .profile .pbtns .btn')) === 0,
+    ownButtons.length === 1 && ownButtons[0] === 'Edit profile',
+    ownButtons,
   );
   await page.keyboard.press('Escape');
   await menu('Relays');

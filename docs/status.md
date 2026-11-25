@@ -132,7 +132,7 @@ Visitor Global covers repeats and author bursts. Missing profile metadata never 
 Notes project client names and valid NIP-89 handler coordinates. Explicit presses resolve verified app metadata; signing honors the account preference.
 Custom reactions, mentions, warnings and media remain in note rows. See [client attribution](client-attribution.md).
 Notes, reactions, names and bios use signed emoji tags. The picker preserves set coordinates in note and reaction tags. See [emoji-sets.md](emoji-sets.md).
-`Draft.longForm` publishes kind 30023. Article reading, profile editing and per-note reaction/repost detail await surfaces. Deletion checks authorship.
+`Draft.longForm` publishes kind 30023. Article reading and reaction detail await surfaces. [P1](interface-profile.md) edits profiles. Deletes check authorship.
 ## Accounts, routing and publication
 Account writes compare durable revisions; strict boot and schema fencing preserve rows across Worker graphs. Protocol13 separately reports account-load
 failure, retains client accounts and uses existing feed error wording. [Completed production proof](engine-availability-verification.md).

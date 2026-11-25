@@ -77,6 +77,7 @@ what the engine offers and no surface reaches yet.
 | N6 | Articles: the card and the reading view | [interface-view.md](interface-view.md#n6-articles) | ready |
 | N7 | Deep links and Copy link for every kind | [interface-view.md](interface-view.md#n7-deep-links-and-copying-for-every-kind) | built (private; review pending) |
 | O1 | Orchestration tab: live routing, Worker and link, Stage-safe and Large | [below](#o1-orchestration-tab) | built on the mock; real loopback pending |
+| P1 | Edit profile: fields, picture and banner upload, preview, save | [interface-profile.md](interface-profile.md#p1-edit-profile) | built on the mock; real `ProfileRow.edit` pending |
 
 C1 to C3 are the owner's item 5 of 2026-11-21, built: C2 and C3 draw local day marks from the engine's `days` and
 fall back to UTC months without inventing a day. They reach only lists the engine gives the rail (interface-time.md,

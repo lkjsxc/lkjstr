@@ -16,6 +16,7 @@ import { mountMedia } from './media.ts';
 import { mountMessage } from './message.ts';
 import { mountMessages } from './messages.ts';
 import { mountOrchestration } from './orchestration.ts';
+import { mountProfileEdit } from './profile-edit.ts';
 import { mountRelays } from './relays.ts';
 import { mountSettings } from './settings.ts';
 import { mountStats } from './stats.ts';
@@ -101,6 +102,13 @@ export const VIEWS: readonly ViewDef[] = [
   feed('hashtag', false),
   feed('thread', false),
   feed('profile', false),
+  {
+    id: 'profile-edit',
+    title: 'view.profile-edit',
+    hint: 'view.profile-edit.hint',
+    launch: false,
+    mount: mountProfileEdit,
+  },
   feed('following', false),
   feed('followers', false),
   {

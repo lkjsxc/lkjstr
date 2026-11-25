@@ -31,6 +31,7 @@ const CSS = [
   'views.css',
   'compose-media.css',
   'people.css',
+  'profile-edit.css',
   'pages.css',
   'stats.css',
   'orch.css',

@@ -203,6 +203,9 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
 - A profile's header (banner, bio, counts, "Follows you") scrolls away with
   the notes. The npub copies on click. A count is shown once it is known;
   until then the label stands alone and still opens the list.
+- The reader's own header, when that account can publish, offers Edit profile: a tab after the profile with a live
+  preview (banner, face, name), the picture and banner as an address or an upload, then the other fields; Save
+  closes it, a failure stays in words under the buttons ([interface-profile.md](interface-profile.md)).
 - A list keeps what was read (up to 800 rows): nothing vanishes above and
   the scrollbar keeps its span. A list in time order has a time rail
   instead: it spans every note known for the list, a busy month longer than

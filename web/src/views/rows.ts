@@ -18,6 +18,7 @@ import {
   segments,
   unnamed,
 } from './parts.ts';
+import { editable } from './profile-edit.ts';
 import type { ViewEnv } from './registry.ts';
 import { openTheirHome, theirHomeButton } from './their-home.ts';
 
@@ -82,6 +83,22 @@ export function renderProfile(row: ProfileRow, env: ViewEnv): HTMLElement {
         { class: 'pbtns' },
         row.followsYou ? h('span', { class: 'badge' }, t('profile.followsYou')) : null,
         row.self ? null : followButton(env, a.pubkey, row.followed),
+        editable(row, env)
+          ? h(
+              'button',
+              {
+                class: 'btn',
+                'data-f': 'edit-profile',
+                onclick: (e) =>
+                  env.open(
+                    'profile-edit',
+                    { pubkey: a.pubkey, title: t('view.profile-edit') },
+                    { from: e.currentTarget as HTMLElement },
+                  ),
+              },
+              t('profile.edit'),
+            )
+          : null,
         (env.engine.info.get()?.version ?? 0) >= 5
           ? h(
               'button',
