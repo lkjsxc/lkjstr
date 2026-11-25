@@ -160,6 +160,7 @@ pub(in crate::worker) fn pump_accounts(host: &Rc<RefCell<Host>>) {
                     for account in removed {
                         h.engine.forget_public_policy(&account);
                     }
+                    h.engine.set_profile_account(&next);
                     h.accounts = next;
                     bunker::sync(&mut h);
                     zaps::committed(&mut h, zap_change);

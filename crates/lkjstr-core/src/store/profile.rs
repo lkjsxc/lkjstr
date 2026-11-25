@@ -1,6 +1,9 @@
 //! Kind 0 metadata, parsed leniently: unknown or malformed fields are empty.
 
-use serde_json::value::{RawValue, to_raw_value};
+use serde_json::{
+    Map, Value,
+    value::{RawValue, to_raw_value},
+};
 use std::collections::BTreeMap;
 
 /// Longest field kept; profile JSON is untrusted and sometimes enormous.
@@ -9,6 +12,7 @@ const MAX_CONTENT_BYTES: usize = 65_536;
 const NAME_KEYS: [&str; 2] = ["name", "username"];
 const DISPLAY_NAME_KEYS: [&str; 2] = ["display_name", "displayName"];
 const PICTURE_KEYS: [&str; 2] = ["picture", "image"];
+const EDIT_OPTIONAL: [&str; 5] = ["picture", "banner", "nip05", "website", "lud16"];
 
 // Retain extension values verbatim, including JSON numbers beyond f64 precision.
 type Metadata<'a> = BTreeMap<String, &'a RawValue>;
@@ -90,6 +94,34 @@ impl Profile {
             .find(|text| !text.is_empty())
     }
 
+    pub(crate) fn edit_fields(content: Option<&str>) -> Value {
+        let metadata = content
+            .and_then(|content| serde_json::from_str::<Metadata<'_>>(content).ok())
+            .unwrap_or_default();
+        // The form edits the visible name. Take its unabridged value so a save
+        // can preserve both the display alias and the separate Nostr handle.
+        let name = text_field(&metadata, &DISPLAY_NAME_KEYS)
+            .filter(|name| !name.trim().is_empty())
+            .or_else(|| text_field(&metadata, &NAME_KEYS))
+            .unwrap_or_default();
+        let about = text_field(&metadata, &["about"]).unwrap_or_default();
+        let mut fields = Map::from_iter([
+            ("name".into(), Value::String(name)),
+            ("about".into(), Value::String(about)),
+        ]);
+        for key in EDIT_OPTIONAL {
+            let value = if key == "picture" {
+                text_field(&metadata, &PICTURE_KEYS)
+            } else {
+                text_field(&metadata, &[key])
+            };
+            if let Some(value) = value {
+                fields.insert(key.into(), Value::String(value));
+            }
+        }
+        Value::Object(fields)
+    }
+
     pub(crate) fn edit_content(
         previous: Option<&str>,
         edits: &str,
@@ -102,9 +134,7 @@ impl Profile {
         let mut profile: Metadata<'_> = previous
             .and_then(|content| serde_json::from_str(content).ok())
             .unwrap_or_default();
-        for key in [
-            "name", "about", "picture", "banner", "nip05", "website", "lud16",
-        ] {
+        for key in ["name", "about"].into_iter().chain(EDIT_OPTIONAL) {
             let raw = edits.remove(key);
             let value = match raw {
                 Some(raw) => serde_json::from_str::<Option<String>>(raw.get())
@@ -115,11 +145,11 @@ impl Profile {
             };
             let clear = value.trim().is_empty();
             if key == "name" {
-                // The editor starts with the rendered label. Keep the separate
-                // handle when the submitted label still matches the display name.
+                // Keep the handle when either editor projection leaves the label unchanged.
                 if !clear
                     && text_field(&profile, &DISPLAY_NAME_KEYS).is_some_and(|name| {
-                        name.trim().chars().take(MAX_FIELD).eq(value.trim().chars())
+                        name.trim() == value.trim()
+                            || name.trim().chars().take(MAX_FIELD).eq(value.trim().chars())
                     })
                 {
                     continue;
@@ -128,12 +158,19 @@ impl Profile {
                     profile.remove(alias);
                 }
             }
-            let fallback = match key {
-                "name" => Some(NAME_KEYS[1]),
-                "picture" => Some(PICTURE_KEYS[1]),
-                _ => None,
+            let keys: &[&str] = match key {
+                "name" => &NAME_KEYS,
+                "picture" => &PICTURE_KEYS,
+                _ => &[key],
             };
-            if clear && fallback.is_some_and(|alias| profile.contains_key(alias)) {
+            if !value.is_empty() && text_field(&profile, keys).as_deref() == Some(value.as_str()) {
+                continue;
+            }
+            if clear
+                && keys
+                    .get(1)
+                    .is_some_and(|alias| profile.contains_key(*alias))
+            {
                 // An empty canonical value masks a retained legacy alias.
                 profile.insert(key.into(), &empty);
             } else if clear {

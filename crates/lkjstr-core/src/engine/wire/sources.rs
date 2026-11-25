@@ -193,6 +193,11 @@ fn profile(e: &Engine, p: &str, account: Option<&str>) -> Value {
     result["key"] = json!(format!("profile:{p}"));
     let meta = store.profile(p).unwrap_or_default();
     let metadata = store.replaceable(p, 0);
+    if account == Some(p) && e.writable_profile_account.as_deref() == account {
+        result["edit"] = crate::store::Profile::edit_fields(
+            metadata.as_ref().map(|event| event.content.as_str()),
+        );
+    }
     let emoji = metadata
         .as_ref()
         .map(|event| rows::event_emoji(event))

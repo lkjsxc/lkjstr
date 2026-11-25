@@ -126,6 +126,7 @@ export function invalidatePublicRow(row: Row, bad: PublicInvalidations | undefin
             website: undefined,
             lud16: undefined,
             updatedAt: undefined,
+            edit: undefined,
           }
         : {}),
     };

@@ -1,4 +1,5 @@
 use super::{Engine, generate_secret_key, json, sign, support, unsigned};
+use lkjstr_core::engine::accounts::Accounts;
 use lkjstr_core::engine::wire::{self, Session};
 use serde_json::Value;
 
@@ -24,7 +25,11 @@ fn signed_edit_merges_latest_metadata_and_updates_the_open_profile_before_relay_
             "nip05":"old@example.test","website":"https://old.test","lud16":"old@pay.test",
             "lud06":"legacy invoice","bot":true,"pronouns":"they/them",
             "custom":{"history":[false,null,18446744073709551617001]}}"#,
-        vec![],
+        vec![vec![
+            "emoji".into(),
+            "wave".into(),
+            "https://media.test/wave.png".into(),
+        ]],
     );
     let account = previous.pubkey.clone();
     engine.enqueue("cache".into(), previous);
@@ -59,6 +64,11 @@ fn signed_edit_merges_latest_metadata_and_updates_the_open_profile_before_relay_
     );
     let draft = unsigned(engine.drain());
     assert_eq!(draft.created_at, 101);
+    assert!(draft.tags.contains(&vec![
+        "emoji".into(),
+        "wave".into(),
+        "https://media.test/wave.png".into(),
+    ]));
     assert!(draft.content.contains("18446744073709551617001"));
     let merged: Value = serde_json::from_str(&draft.content).expect("merged object");
     assert_eq!(
@@ -103,5 +113,96 @@ fn signed_edit_merges_latest_metadata_and_updates_the_open_profile_before_relay_
                 && op["row"]["banner"] == ""
                 && op["row"]["website"] == "https://new.test"))
             )
+    );
+}
+
+#[test]
+fn editable_profile_uses_unabridged_kind_zero_only_for_the_writable_active_owner() {
+    let mut engine = Engine::new();
+    let mut session = Session::default();
+    let event = support::event(
+        &generate_secret_key(),
+        0,
+        100,
+        &json!({
+            "name": "handle",
+            "displayName": "Visible name",
+            "about": format!("  Links: #nostr @someone\r\n{}  ", "字".repeat(2100)),
+            "image": "legacy image",
+            "nip05": "_@example.test",
+            "website": "raw address with no scheme",
+            "banner": null,
+            "extension": true,
+        })
+        .to_string(),
+        vec![],
+    );
+    let account = event.pubkey.clone();
+    let raw: Value = serde_json::from_str(&event.content).expect("metadata object");
+    engine.store.insert(event, None);
+    let mut accounts = Accounts::default();
+    let other = "a".repeat(64);
+    let mut read = |engine: &mut Engine, target: &str, reader: Option<&str>| {
+        send(
+            &mut session,
+            engine,
+            json!({"t":"open","sub":"profile","query":{"source":"profile","pubkey":target,"account":reader}}),
+            101_000,
+        );
+        engine
+            .drain()
+            .into_iter()
+            .flat_map(|out| session.output(out, engine))
+            .find_map(|out| match out {
+                wire::Output::Rows { rows, .. } => rows.into_iter().next(),
+                _ => None,
+            })
+            .expect("profile header")
+    };
+    accounts
+        .add("extension", Some(&other))
+        .expect("other signer");
+    let npub = lkjstr_protocol::encode_npub(&account).expect("npub");
+    accounts.add("key", Some(&npub)).expect("read-only account");
+    engine.set_profile_account(&accounts);
+    assert!(
+        read(&mut engine, &account, Some(&account))
+            .get("edit")
+            .is_none()
+    );
+
+    accounts
+        .add("extension", Some(&account))
+        .expect("writable account");
+    engine.set_profile_account(&accounts);
+    let row = read(&mut engine, &account, Some(&account));
+    assert_eq!(row["author"]["name"], "Visible name");
+    assert_eq!(
+        row["edit"],
+        json!({
+            "name":"Visible name",
+            "about":raw["about"],
+            "picture":"legacy image",
+            "nip05":"_@example.test",
+            "website":"raw address with no scheme",
+        })
+    );
+    for (target, reader) in [
+        (&account, None),
+        (&other, Some(account.as_str())),
+        (&other, Some(other.as_str())),
+    ] {
+        assert!(read(&mut engine, target, reader).get("edit").is_none());
+    }
+    accounts.use_account(&other).expect("switch account");
+    engine.set_profile_account(&accounts);
+    assert!(
+        read(&mut engine, &account, Some(&account))
+            .get("edit")
+            .is_none()
+    );
+    assert_eq!(
+        read(&mut engine, &other, Some(&other))["edit"],
+        json!({"name":"", "about":""})
     );
 }

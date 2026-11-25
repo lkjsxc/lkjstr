@@ -162,7 +162,7 @@ export function createMockEngine(
           query: msg.query,
           statsId: subs.get(msg.sub)?.statsId ?? `view-${++nextStatsView}`,
           visible: msg.visible !== false,
-          entries: select(world, msg.query, core.me()),
+          entries: select(world, msg.query, core.me(), core.profileWritable()),
           start: 0,
           end: 0,
           live: false,

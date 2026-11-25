@@ -195,8 +195,6 @@ export const en = {
   'pedit.saved': 'Profile saved',
   'pedit.loading': 'Loading your profile…',
   'pedit.fresh': 'No profile of this account has been found yet. Saving publishes a new one.',
-  'pedit.rebuilt':
-    'About is rebuilt from how it is shown. Check links, mentions and hashtags before saving.',
   'pedit.other': 'This profile is not the account in use. Switch to it to edit.',
   'pedit.badImage': 'An image address starts with https://',
   'pedit.badWebsite': 'A website address starts with https:// or http://',

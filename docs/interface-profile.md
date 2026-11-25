@@ -9,9 +9,9 @@ lightning address, with a picture either pasted as an address or uploaded from t
 ## P1 Edit profile
 
 Contract: `profile.save {as,profile:ProfileEdit}` publishes; `upload {as,name,mime,bytes}` with `progress`
-answers gives an address. Additive: `ProfileRow.edit?` carries the fields as published on the reader's own row,
-so the form starts from exactly what a save replaces ([engine-proposals.md](engine-proposals.md)). The mock
-answers it; until the real engine does, the form rebuilds the fields from the row (fallback below).
+answers gives an address. `ProfileRow.edit?` carries the editable kind-0 fields for the active writable
+account's own row. About and the optional fields use the published text. Name uses the active display alias
+or the handle. The engine preserves the stored handle when the display name is unchanged.
 
 ### Where it opens
 
@@ -27,8 +27,8 @@ One column at a form's measure (560px), top to bottom:
 
 1. Preview: the header's banner band, the 76px face over its lower edge and the name beside it, drawn from what
    is typed. An address that is not a usable image yet shows the flat face or an empty band.
-2. One quiet line (`--muted`, 12.5px) for the state: `pedit.loading` until the profile row arrives;
-   `pedit.fresh` when no profile of the account is known; `pedit.rebuilt` when About was rebuilt (fallback);
+2. One quiet line (`--muted`, 12.5px) for the state: `pedit.loading` until the editable fields arrive;
+   `pedit.fresh` when no profile of the account is known;
    `pedit.other` or the read-only/locked reason when this account cannot save it. Empty, it takes no room.
 3. Picture (`pedit.picture`) and Banner (`pedit.banner`): an address field (`pedit.imageUrl`), Upload
    (`pedit.upload`, a file picker for images), Remove (`pedit.remove`, shown when the field holds something) and
@@ -57,16 +57,14 @@ Fields are 30px (40px on touch), 6px corners, an indigo outline when focused, no
 A field left as it was is never refused. Otherwise: Picture and Banner start with `https://`
 (`pedit.badImage`); Website with `https://` or `http://` (`pedit.badWebsite`); NIP-05 is `name@domain` or a
 bare domain, saved as `_@domain` (`pedit.badAddress`); Lightning address is `name@domain`
-(`pedit.badAddress`). The first refused field takes the keyboard. Empty optional fields are left out; text is
-trimmed. Name may be empty.
+(`pedit.badAddress`). The first refused field takes the keyboard. Edited text is trimmed, and cleared
+optional fields are left out. Untouched text preserves its published value. Name may be empty.
 
-### Fallback without `ProfileRow.edit`
+### Published source
 
-The form starts from the row: the name unless it is a key, the picture, banner, NIP-05 as shown, website,
-lightning address, and About rebuilt from its segments (a link is its address, a custom emoji `:code:`, a
-hashtag `#tag`, a reference `nostr:...`). Segments the engine shows as nothing stay nothing, so a non-empty
-rebuilt About says `pedit.rebuilt`. Fields the form does not know (`display_name` and others) are the engine's
-to keep (kind-0 field preservation in `lkjstr-core`).
+The form waits for the Worker's editable fields. Public display snapshots can render the profile header
+and omit `ProfileRow.edit`. On save the engine keeps unrelated kind-0 fields and tags and checks the base event again
+after signing. Relay delivery is tracked separately from the local profile update.
 
 ### Scenes for `pnpm shots`
 

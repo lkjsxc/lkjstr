@@ -123,7 +123,7 @@ export function noteRow(w: World, n: MNote, o: RowOpts): NoteRow {
   };
 }
 
-export function profileRow(w: World, p: Person, me: string): ProfileRow {
+export function profileRow(w: World, p: Person, me: string, writable = false): ProfileRow {
   const pk = p.author.pubkey;
   const mine = w.notes.filter((n) => n.by === p && !n.channel);
   const known = [...w.state.following]
@@ -156,7 +156,7 @@ export function profileRow(w: World, p: Person, me: string): ProfileRow {
       0,
       1 + (p.hue % 3),
     ),
-    edit: pk === me ? profileEdit(p) : undefined,
+    edit: writable && pk === me ? profileEdit(p) : undefined,
   };
 }
 const bannerOf = (p: Person): string | undefined =>

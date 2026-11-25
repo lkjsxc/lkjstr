@@ -4,7 +4,7 @@
 // in the form in words. The form is one standing element: rows that arrive later never rewrite a field.
 import type { Subscription } from '../engine/client.ts';
 import { applyOps } from '../engine/ops.ts';
-import type { ProfileRow, Row } from '../engine/protocol.ts';
+import type { ProfileEdit, ProfileRow, Row } from '../engine/protocol.ts';
 import { h, replaceChildren } from '../shared/h.ts';
 import { type Key, t } from '../shared/i18n.ts';
 import type { Disposer } from '../shared/signal.ts';
@@ -18,8 +18,8 @@ import {
   problems,
   profileOf,
   same,
-  startOf,
   type Values,
+  valuesOf,
 } from './profile-edit-model.ts';
 import type { ViewEnv } from './registry.ts';
 
@@ -143,12 +143,10 @@ export function mountProfileEdit(el: HTMLElement, env: ViewEnv): Disposer {
     const can = ability(env.engine);
     return can === 'ok' ? '' : abilityText(can);
   };
-  let start = { rebuilt: false, fresh: false };
+  let fresh = false;
   const draw = (v: Values): void => {
     const why = blocked();
-    note.textContent = !base
-      ? t('pedit.loading')
-      : why || (start.fresh ? t('pedit.fresh') : start.rebuilt ? t('pedit.rebuilt') : '');
+    note.textContent = why || (!base ? t('pedit.loading') : fresh ? t('pedit.fresh') : '');
     const off = !base || Boolean(why) || saving;
     for (const x of [name.input, about, nip05.input, website.input, lud16.input]) x.disabled = off;
     picture.enable(!off);
@@ -170,12 +168,12 @@ export function mountProfileEdit(el: HTMLElement, env: ViewEnv): Disposer {
     shownName.textContent = v.name.trim();
   };
 
-  const seat = (r: ProfileRow): void => {
-    const s = startOf(r);
-    start = s;
+  const seat = (r: ProfileRow, edit: ProfileEdit): void => {
+    const published = valuesOf(edit);
+    fresh = !r.author.profileId && FIELDS.every((field) => !published[field]);
     const draft = loadViewState<State>(env.instance).draft;
-    if (!base) fill(draft ?? s.values);
-    const b = (base ??= s.values);
+    if (!base) fill(draft ?? published);
+    const b = (base ??= published);
     picture.rebase(b.picture);
     bannerField.rebase(b.banner);
     keep(draft);
@@ -194,12 +192,12 @@ export function mountProfileEdit(el: HTMLElement, env: ViewEnv): Disposer {
   const take = (next: Row[]): void => {
     rows = next;
     const r = rows.find((x): x is ProfileRow => x.kind === 'profile');
-    if (!r || seated) return;
+    if (!r?.edit || !r.self || r.author.pubkey !== pubkey || seated) return;
     seated = true;
-    seat(r);
+    seat(r, r.edit);
   };
   const sub: Subscription = env.engine.open(
-    { source: 'profile', pubkey, account: env.engine.me() || undefined },
+    { source: 'profile', pubkey, account: pubkey || undefined },
     { rows: (r) => take([...r]), patch: (ops) => take(applyOps(rows, ops)) },
     el,
   );
@@ -235,7 +233,7 @@ export function mountProfileEdit(el: HTMLElement, env: ViewEnv): Disposer {
     saving = true;
     said.textContent = '';
     draw(v);
-    const r = await env.engine.act({ a: 'profile.save', as: pubkey, profile: profileOf(v) });
+    const r = await env.engine.act({ a: 'profile.save', as: pubkey, profile: profileOf(v, base) });
     saving = false;
     if (r.ok) {
       toast(env.layer, t('pedit.saved'));

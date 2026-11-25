@@ -228,3 +228,14 @@ impl Accounts {
         }
     }
 }
+
+impl super::Engine {
+    /// Only the active account with an available signer can receive editable profile fields.
+    pub fn set_profile_account(&mut self, accounts: &Accounts) {
+        self.writable_profile_account = accounts
+            .active
+            .as_ref()
+            .filter(|key| accounts.require_signer(key).is_ok())
+            .cloned();
+    }
+}

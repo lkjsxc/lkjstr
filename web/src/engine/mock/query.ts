@@ -160,7 +160,7 @@ export const entry = (w: World, n: MNote, o: RowOpts): Entry => ({
 });
 const fixed = (row: Row): Entry => ({ key: row.key, row: () => row });
 
-export function select(w: World, q: Query, me: string): Entry[] {
+export function select(w: World, q: Query, me: string, profileWritable = false): Entry[] {
   // Signed out, what belongs to an account is empty, as it is in the real engine.
   if (!me && ['home', 'notifications', 'bookmarks', 'mutes', 'emoji'].includes(q.source)) return [];
   if (q.source === 'people') {
@@ -254,9 +254,13 @@ export function select(w: World, q: Query, me: string): Entry[] {
     return c ? [channelHeader(w, c, me), ...notes] : [];
   }
   if (q.source === 'profile') {
+    const writable = profileWritable && q.account === me;
     const p = byPubkey(q.pubkey ?? '') ?? byRef(q.ref ?? '');
     if (p)
-      return [{ key: `profile:${p.author.pubkey}`, row: () => profileRow(w, p, me) }, ...notes];
+      return [
+        { key: `profile:${p.author.pubkey}`, row: () => profileRow(w, p, me, writable) },
+        ...notes,
+      ];
     // A key nobody here knows: the header as it is before any metadata has arrived.
     const named = q.pubkey ?? q.ref ?? '';
     const unknown = /^([0-9a-f]{64}|npub1[a-z0-9]{20,})$/.test(named) ? stranger(named) : undefined;

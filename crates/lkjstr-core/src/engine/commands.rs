@@ -169,6 +169,9 @@ impl Engine {
             Action::ProfileSave { content } => {
                 e.kind = 0;
                 profile_base = self.store.replaceable(account, e.kind);
+                if let Some(previous) = profile_base.as_ref() {
+                    e.tags.clone_from(&previous.tags);
+                }
                 e.content = crate::store::Profile::edit_content(
                     profile_base.as_ref().map(|event| event.content.as_str()),
                     &content,

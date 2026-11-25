@@ -64,7 +64,7 @@ it('starts from the published fields, previews them and saves the edited whole',
   expect(loadViewState(x.instance)).toEqual({ pubkey: ME });
 });
 
-it('rebuilds About from what is shown when the engine gives no published fields, and says so', () => {
+it('waits for published fields when the first profile row is a display snapshot', () => {
   const x = setup();
   mountProfileEdit(x.el, x.env);
   x.handlers().rows(
@@ -84,13 +84,19 @@ it('rebuilds About from what is shown when the engine gives no published fields,
     true,
     true,
   );
-  expect(x.field('about').value).toBe('Hi https://ex.example/a/long/path :neko:#nostr');
-  expect(x.el.querySelector('.penote')?.textContent).toContain('About is rebuilt');
-  x.type('lud16', 'me@wallet.example ');
-  x.type('name', 'K');
+  expect(x.field('about').value).toBe('');
+  expect(x.field('save').disabled).toBe(true);
+  expect(x.el.querySelector('.penote')?.textContent).toBe('Loading your profile…');
+  const original = '  Hi #nostr\r\nnostr:npub1friend  ';
+  x.handlers().patch([{ op: 'update', row: row(ME, { edit: { name: 'K', about: original } }) }]);
+  const normalized = original.replace('\r\n', '\n');
+  expect(x.field('about').value.replace('\r\n', '\n')).toBe(normalized);
+  x.type('about', normalized);
+  x.type('nip05', 'example.jp');
   x.submit();
-  // A bare NIP-05 domain is the `_@` name it was shown for.
-  expect(x.act.mock.calls[0]?.[0]).toMatchObject({ profile: { name: 'K', nip05: '_@example.jp' } });
+  expect(x.act.mock.calls[0]?.[0]).toMatchObject({
+    profile: { name: 'K', about: original, nip05: '_@example.jp' },
+  });
 });
 
 it('refuses addresses that are not ones, under their fields, and keeps an unchanged data picture', () => {

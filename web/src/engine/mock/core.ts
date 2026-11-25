@@ -30,6 +30,8 @@ export function createCore(post: (msg: FromEngine) => void, now: () => number) {
     later(PATCH_MS, () => ((timelineQueued = false), timelines()));
   };
   const me = (): string => who.active() ?? '';
+  const profileWritable = (): boolean =>
+    who.list().some((a) => a.author.pubkey === me() && a.signer !== 'none' && !a.locked);
   const later = (ms: number, fn: () => void): void => {
     const t = setTimeout(() => (timers.delete(t), fn()), ms);
     timers.add(t);
@@ -62,6 +64,7 @@ export function createCore(post: (msg: FromEngine) => void, now: () => number) {
     now,
     later,
     me,
+    profileWritable,
     accounts,
     who,
     setUnread: (n: number) => void (unread = n),
@@ -130,7 +133,7 @@ export function createCore(post: (msg: FromEngine) => void, now: () => number) {
     resync(only?: (q: Query) => boolean, refresh = false): void {
       for (const s of subs.values()) {
         if (only && !only(s.query)) continue;
-        const next = select(world, s.query, me());
+        const next = select(world, s.query, me(), profileWritable());
         if (s.query.source === 'search') {
           resyncSearch(s, next, post);
           queueTimeline();

@@ -149,7 +149,7 @@ See [public-view-cache.md](public-view-cache.md). These cache additions remain u
 - Add `NotificationRow.pendingAct? {act,state:'loading'|'missing'|'failed'}` while that note is unresolved; `target` remains absent.
 - Add `NoteRow.act?` for the selected profile person's own act; that event supplies the row time and chronological position.
 - Add `NoteRow.actOn?` for the immediately targeted act in profile Reactions/Reposts; terminal note counts and content stay unchanged.
-- Add `ProfileRow.edit?: ProfileEdit` on the reader's own row: kind-0 fields as published, so P1's editor starts from what a save replaces.
+- Add `ProfileRow.edit?: ProfileEdit` on the active writable account's own row: published kind-0 edit values, omitted from public view snapshots.
 
 The bounded resolution and representative policy follow [interface-acts.md](interface-acts.md). The implementation records source and proof limits.
 

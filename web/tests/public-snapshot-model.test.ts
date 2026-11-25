@@ -1,7 +1,9 @@
 import { expect, it } from 'vitest';
-import type { NoteRow, ProfileRow } from '../src/engine/protocol.ts';
+import type { NoteRow, ProfileRow, Query } from '../src/engine/protocol.ts';
 import { mergePublicRow } from '../src/engine/public-snapshot-model.ts';
-import { note } from './public-snapshots-support.ts';
+import { forgetPublicSnapshot, snapshotIdentity } from '../src/engine/public-snapshot-store.ts';
+import { row as profile } from './profile-edit-fixture.ts';
+import { harness, note } from './public-snapshots-support.ts';
 
 it('retains complete quote names and link cards through incomplete hydration', () => {
   const value = note();
@@ -80,4 +82,48 @@ it('keeps a remembered profile body until a verified profile replacement arrives
   });
   const changed = { ...next, author: { ...next.author, profileId: 'new-profile' } };
   expect(mergePublicRow(old, changed)).toEqual(changed);
+});
+
+it('replays only the public profile display after ordinary and scoped visits to the same query', async () => {
+  const { edit, ...display } = profile();
+  const query: Query = {
+    source: 'profile',
+    pubkey: display.author.pubkey,
+    account: display.author.pubkey,
+  };
+  const ordinary = harness();
+  const scoped = harness();
+  const reload = harness();
+  try {
+    ordinary.open(query);
+    ordinary.emit({ t: 'cache.policy', sub: 'one', allow: true });
+    ordinary.emit({
+      t: 'rows',
+      sub: 'one',
+      rows: [{ ...display, edit }],
+      atTop: true,
+      atBottom: true,
+    });
+    expect(ordinary.messages.at(-1)).toMatchObject({ t: 'rows', rows: [{ edit }] });
+    ordinary.transport.close();
+
+    scoped.transport.post({ t: 'open', sub: 'one', query });
+    scoped.transport.post({ t: 'window', sub: 'one', anchor: { at: 1000 }, before: 0, after: 5 });
+    scoped.emit({ t: 'cache.policy', sub: 'one', allow: true });
+    const updated = { ...display, edit: { name: 'Revised', about: 'Scoped revision' } };
+    scoped.emit({ t: 'rows', sub: 'one', rows: [updated], atTop: false, atBottom: true });
+    expect(scoped.messages.at(-1)).toMatchObject({ t: 'rows', rows: [updated] });
+    scoped.transport.close();
+
+    reload.open(query);
+    await Promise.resolve();
+    expect(
+      reload.messages.filter((message) => message.t === 'rows').map((message) => message.rows),
+    ).toEqual([[display]]);
+  } finally {
+    ordinary.transport.close();
+    scoped.transport.close();
+    reload.transport.close();
+    forgetPublicSnapshot(snapshotIdentity(query, 'en', true));
+  }
 });

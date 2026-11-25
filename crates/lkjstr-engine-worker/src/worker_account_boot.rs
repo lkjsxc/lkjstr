@@ -81,6 +81,7 @@ pub(super) fn load(host: &Rc<RefCell<Host>>) {
         h.account_store.opening = None;
         h.account_store.state = account_storage::State::Ready(loaded.revision);
         h.engine.set_retention_accounts(&loaded.accounts);
+        h.engine.set_profile_account(&loaded.accounts);
         h.accounts = loaded.accounts;
         h.engine.cached_history_complete = complete;
         for state in h.accounts.notification_zaps.values_mut() {

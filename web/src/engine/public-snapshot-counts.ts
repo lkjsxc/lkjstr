@@ -91,6 +91,10 @@ export function rememberPublicCounts(rows: readonly Row[], values: DurableCounts
 
 export function durablePublicRows(rows: readonly Row[], values: DurableCounts): readonly Row[] {
   return rows.map((row): Row => {
+    if (row.kind === 'profile' && row.edit) {
+      const { edit: _, ...display } = row;
+      return display;
+    }
     if (row.kind === 'notification')
       return row.note ? { ...row, note: durablePublicRows([row.note], values)[0] as NoteRow } : row;
     if (row.kind !== 'note') return row;

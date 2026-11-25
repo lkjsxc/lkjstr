@@ -121,6 +121,7 @@ pub struct Engine {
     pub client_tag: bool,
     // One override per registered device account, at most 32.
     pub client_tag_accounts: BTreeMap<String, bool>,
+    writable_profile_account: Option<String>,
     client_info: client_info::Lookups,
     pub discovery_paused: bool,
     pub discovery_accounts: Vec<String>,
@@ -176,6 +177,7 @@ impl Engine {
             channel_pending: BTreeMap::new(),
             client_tag: true,
             client_tag_accounts: BTreeMap::new(),
+            writable_profile_account: None,
             client_info: Default::default(),
             discovery_paused: false,
             discovery_accounts: vec![],
