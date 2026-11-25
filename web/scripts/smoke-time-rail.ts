@@ -150,18 +150,25 @@ export async function railSmoke(
   await page.locator(feed).focus();
   const today = await day();
   await page.keyboard.press(']');
-  await page.waitForFunction(
-    ({ feed, today }) => {
+  const landedDay = await page.waitForFunction(
+    ({ feed, today, originKey }) => {
       const el = document.querySelector(feed)!;
-      const n = [...el.querySelectorAll('.list > .note')].find(
+      const n = [...el.querySelectorAll<HTMLElement>('.list > .note')].find(
         (n) => n.getBoundingClientRect().bottom > el.getBoundingClientRect().top + 1,
       );
-      const at = n?.querySelector('time')?.getAttribute('title')?.slice(0, 10) ?? today;
-      return at !== today && el.querySelector('.time-return:not([hidden])') !== null;
+      if (!n || n.dataset.key === originKey || !el.querySelector('.time-return:not([hidden])'))
+        return false;
+      // A covered note has no time element. The rail still announces its time when the jump lands.
+      const time = n.classList.contains('hid')
+        ? el.querySelector('.time-pin > [aria-live]')?.textContent
+        : n.querySelector('time')?.getAttribute('title');
+      const at = time?.slice(0, 10);
+      return at && at < today ? at : false;
     },
-    { feed, today },
+    { feed, today, originKey: origin.key },
   );
-  const older = await day();
+  const older = await landedDay.jsonValue();
+  await landedDay.dispose();
   await page.keyboard.press('Backspace');
   await page.waitForFunction(
     ({ feed, key }) => {
@@ -173,7 +180,7 @@ export async function railSmoke(
     },
     { feed, key: origin.key },
   );
-  check('] goes to an older day and Backspace comes back', older < today);
+  check('] goes to an older day and Backspace comes back', Boolean(older && older < today));
   if (shots) {
     await mkdir(smokePath('screens'), { recursive: true });
     const themeBefore = await page.evaluate(() => document.documentElement.dataset.theme);
