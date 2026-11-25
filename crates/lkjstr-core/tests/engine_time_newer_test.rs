@@ -56,9 +56,12 @@ fn newer_narrows_despite_a_full_window_then_grows_with_sorted_deduped_ties() {
     f.engine.store.insert(cached.clone(), None);
     start(&mut f, &list, 1, 1);
     let first = latest(&f, A);
+    let mut authors = vec![cached.pubkey.clone(), list.pubkey.clone()];
+    authors.sort();
+    authors.dedup();
     assert_eq!(
         first[2],
-        json!({"authors":[cached.pubkey],"kinds":[1,6],"since":101,"until":200,"limit":3})
+        json!({"authors":authors,"kinds":[1,6],"since":101,"until":200,"limit":3})
     );
     assert!(f.report("feed").get("key").is_none());
     f.receive(A, json!(["EVENT", first[1], outside]));

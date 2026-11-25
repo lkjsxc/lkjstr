@@ -22,9 +22,12 @@ fn inclusive_older_pages_grow_and_a_stalled_route_does_not_claim_end() {
     f.tick(150);
     let first = f.request(A, 1);
     let stalled = f.request(B, 1);
+    let mut authors = vec![a.pubkey.clone(), list.pubkey.clone()];
+    authors.sort();
+    authors.dedup();
     assert_eq!(
         first[2],
-        json!({"authors":[a.pubkey],"kinds":[1,6],"since":81,"until":100,"limit":3})
+        json!({"authors":authors,"kinds":[1,6],"since":81,"until":100,"limit":3})
     );
     assert_eq!(first[2], stalled[2]);
     assert_eq!(f.report("feed")["older"], "loading");
