@@ -26,6 +26,11 @@
 .name { flex: 0 1 auto; min-width: 0; padding: 0; overflow: hidden; font-weight: 600; text-align: left; text-overflow: ellipsis; white-space: nowrap; }
 .name:hover { text-decoration: underline; }
 .name.quiet { font-weight: 500; }
+/* Before the name arrives the short npub is quiet; the name settles in once (name-arrival.ts), never on a plain redraw. */
+.name.pending { color: var(--muted); font-weight: 500; }
+.name.arrived { animation: name-arrive 0.24s ease-out; }
+@keyframes name-arrive { from { opacity: 0.35; } }
+@media (prefers-reduced-motion: reduce) { .name.arrived { animation: none; } }
 /* A custom emoji keeps its box while in view (emoji-load.ts sets its width); a failed one is its code. */
 .emo { height: 1.25em; object-fit: contain; vertical-align: -0.25em; -webkit-touch-callout: none; }
 .emo.efail { display: inline-block; height: 1.25em; line-height: 1.25em; overflow: hidden; color: var(--muted); text-overflow: ellipsis; white-space: nowrap; }

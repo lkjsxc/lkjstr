@@ -7,6 +7,7 @@ import { icon } from '../shared/icons.ts';
 import { knownPerson, onPerson } from '../shared/people.ts';
 import { inlineEmoji } from './emoji-load.ts';
 import { UNDO_MS } from './held.ts';
+import { nameState } from './name-arrival.ts';
 import type { ViewEnv } from './registry.ts';
 
 /** Shift-click splits a new tile off to the right; a middle click opens behind. */
@@ -106,9 +107,14 @@ export const plainName = (a: Author): string =>
 /** A person's name as a button that opens their profile. */
 export function nameButton(a: Author, env: ViewEnv, cls = 'name'): HTMLElement {
   // The whole name first (a long one is cut), then who it is.
+  const state = nameState(a.pubkey, unnamed(a));
   const el = h(
     'button',
-    { class: cls, dir: 'auto', title: `${plainName(a)}\n${a.nip05 ?? a.npub}` },
+    {
+      class: state ? `${cls} ${state}` : cls,
+      dir: 'auto',
+      title: `${plainName(a)}\n${a.nip05 ?? a.npub}`,
+    },
     displayName(a),
   );
   const go = (e: MouseEvent): void => {

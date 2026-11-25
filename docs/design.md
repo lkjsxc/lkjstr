@@ -151,6 +151,9 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
   to four share a grid), then quoted notes as cards. Long notes fold by whole
   lines. Content warnings cover until pressed. A quoted note that cannot be
   shown is one quiet sentence in the same card.
+- Until it arrives, the short npub is muted at weight 500. The name that replaces it fades in once (0.24s, from
+  0.35 opacity) in every tile drawing it then; later redraws and reduced motion draw it plainly. Each tile lays out
+  and paints alone (`contain: layout paint style`), so a row arriving in one tile never re-lays out its neighbours.
 - Links have up to two distinct 88px cards below text and media, at most 560px wide, aligned with the text, in link order, in the
   quoted-note surface: raised, hairline, 8px corners. Loading reserves the same
   height on hold with the host; failure, timeout or no title closes the slot using the reading anchor. Failed answers reserve nothing for their cache time. Pictures are 120x88
