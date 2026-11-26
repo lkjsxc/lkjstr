@@ -8,8 +8,10 @@ import { centred, type RailRow, rowTime, timeText, topRow } from './feed-scrub.t
 import { railGuess, railSaid } from './rail-guess.ts';
 import { scrollIntent } from './scroll-intent.ts';
 import { dayText, railDays } from './time-days.ts';
+import { drawMarks, scrolledY, scrollShare } from './time-draw.ts';
 import { railInput } from './time-input.ts';
-import { boundaries, type Label, planMarks, snap } from './time-marks.ts';
+import { type Label, snap } from './time-marks.ts';
+import { nearPlace } from './time-near.ts';
 import { noteToPlace, placeToNote, type TimePlace, timeScale } from './time-scale.ts';
 import { createSeeker } from './time-seek.ts';
 
@@ -56,6 +58,7 @@ export function mountTimeRail(o: {
   let drawn: { shape?: Timeline; key: string } = { key: '' };
   let frame = 0;
   let held = false;
+  let plain = false; // nothing counted yet: the grip says only the share scrolled
   let under: TimePlace | undefined;
   let pointerY = 0;
   let hoverY: number | undefined;
@@ -67,7 +70,10 @@ export function mountTimeRail(o: {
   const first = (): RailRow | undefined =>
     topRow(el, list, (key) => o.rows().find((r) => r.key === key)) ??
     o.rows().findLast((r) => r.kind === 'note' || r.kind === 'notification' || r.kind === 'dm');
-  const position = (key: string | undefined) => data?.positions.find((p) => p.key === key);
+  let placed = new Map<string, Timeline['positions'][number]>();
+  const position = (key: string | undefined) => (key === undefined ? undefined : placed.get(key));
+  // The reading place: the top row's own position, else its nearest counted neighbour's.
+  const near = (row: RailRow | undefined) => nearPlace(o.rows(), row?.key, position);
   const readingAt = (row: RailRow | undefined): number => position(row?.key)?.at ?? rowTime(row);
   const keyAt = (p: TimePlace) =>
     data?.positions.find((r) => r.month === p.month && r.offset === p.offset)?.key;
@@ -145,48 +151,41 @@ export function mountTimeRail(o: {
   };
   const paint = (): void => {
     frame = 0;
-    const show = Boolean(
-      data?.supported && data.months.length && el.scrollHeight > el.clientHeight + 1,
-    );
-    rail.hidden = !show;
+    const overflow = el.scrollHeight > el.clientHeight + 1;
+    const counted = Boolean(data?.supported && data.months.length);
     // An answer with no months yet (a Home before its follows arrive) still says nothing about the width.
     const said = data && (!data.supported || data.months.length) ? data.supported : undefined;
     el.classList.toggle('has-time-rail', said ?? guess());
+    // Its room reserved and nothing counted yet, the rail is plain: a grip for the share scrolled, never empty.
+    plain = !counted && el.classList.contains('has-time-rail');
+    rail.hidden = !overflow || !(counted || plain);
+    rail.classList.toggle('plain', plain);
     if (!held) shape = data;
     height = Math.max(1, el.clientHeight - 16);
-    bands = timeScale(shape?.months ?? [], height);
-    if (!show) return;
+    bands = timeScale(plain ? [] : (shape?.months ?? []), height);
+    if (rail.hidden) return;
     rail.style.top = '0px';
     rail.style.height = `${el.clientHeight}px`;
     rail.classList.toggle('open-end', data?.older === true);
     const wide = rail.offsetWidth > 16;
     const local = days();
     // Marks are planned again when what they are drawn from changes, not on every scroll.
-    const key = `${height}:${wide}:${zone}`;
+    const key = `${height}:${wide}:${zone}:${plain}`;
     if (shape !== drawn.shape || key !== drawn.key) {
       drawn = { shape, key };
-      const plan = planMarks(boundaries(bands, local), height, wide);
-      labels = plan.labels;
-      const top = (y: number): string => `top: ${y + 8}px`;
-      marks.replaceChildren(
-        ...plan.dots.map((d) =>
-          h('span', { class: d.size === 2 ? 'time-dot fine' : 'time-dot', style: top(d.y) }),
-        ),
-        ...plan.labels.map((l) =>
-          h('span', { class: `time-label time-${l.level}`, style: top(l.centre) }, l.text),
-        ),
-      );
+      labels = drawMarks(marks, bands, plain ? undefined : local, height, wide);
     }
     seeker.settle(data);
     const row = first();
-    const p = position(row?.key);
+    const p = near(row);
     const year = local
       ? new Date(readingAt(row)).getFullYear()
       : new Date(p?.month ?? data?.months[0]?.at ?? 0).getUTCFullYear();
     for (const number of marks.querySelectorAll('.time-year'))
       number.classList.toggle('current', number.textContent === String(year));
     // Held, the grip stays under the pointer, so the drag is direct; the list follows as its seeks land.
-    const gripY = 8 + (held ? pointerY : p ? noteToPlace(bands, p) : 0);
+    const gripY =
+      8 + (held ? pointerY : plain ? scrolledY(el, height) : p ? noteToPlace(bands, p) : 0);
     const centre = Math.min(el.clientHeight - 16, Math.max(16, gripY));
     grip.style.top = `${centre}px`;
     tell(centre);
@@ -201,6 +200,7 @@ export function mountTimeRail(o: {
   };
   const drag = (y: number): void => {
     pointerY = y;
+    if (plain) return void (scrollShare(el, y / height), sync());
     under = at(y);
     seeker.queue(under);
     sync();
@@ -234,9 +234,9 @@ export function mountTimeRail(o: {
     release: end,
     hover: (y) => void ((hoverY = y), sync()),
     back: (said) => Boolean(s.back) && ((speak = said), seeker.ret()),
-    usable: () => !rail.hidden && Boolean(data?.supported) && o.active() && !held && !s.returning,
+    usable: () => !rail.hidden && !plain && o.active() && !held && !s.returning,
     jump(to) {
-      const p = to(s.waiting ?? s.pending ?? position(first()?.key), bands, days());
+      const p = to(s.waiting ?? s.pending ?? near(first()), bands, days());
       if (!p) return false;
       s.back = undefined;
       speak = true;
@@ -271,13 +271,14 @@ export function mountTimeRail(o: {
       // Refused mid-drag: the hold ends and the list stays where it is.
       if (!next.supported) stop(), (s.back = undefined);
       data = next;
+      placed = new Map(next.positions.map((p) => [p.key, p]));
       if (o.candidate && (!next.supported || next.months.length)) railSaid(kind(), next.supported);
       seeker.timeline(next);
       sync();
     },
     reset() {
       stop();
-      data = shape = s.back = undefined;
+      (data = shape = s.back = undefined), (placed = new Map());
       o.tail.style.height = '';
       sync();
     },

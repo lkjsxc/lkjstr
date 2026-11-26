@@ -19,11 +19,12 @@ const ends =
     const b = newest ? bands[0] : bands.at(-1);
     return b && { month: b.at, offset: newest ? 0 : b.count - 1 };
   };
-/** By one occupied local day; without days, by one occupied month. Nothing at the ends. */
+/** By one occupied local day; without days, or past the days the engine names, by one occupied month. Nothing at
+ * the ends. */
 const step =
   (dir: -1 | 1): Step =>
   (from, bands, days) =>
-    from && (days ? stepDay(days, from, dir) : stepMonth(bands, from, dir));
+    from && ((days && stepDay(days, from, dir)) || stepMonth(bands, from, dir));
 
 export function railInput(o: {
   readonly el: HTMLElement;

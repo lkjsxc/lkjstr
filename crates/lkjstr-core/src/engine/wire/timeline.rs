@@ -3,6 +3,7 @@
 //! retain at most one store-capacity snapshot; close releases all three. Local days
 //! (timeline_days.rs) come from the same scan. Grouped and activity lists index their own
 //! projected rows instead (timeline_projected.rs).
+use super::timeline_answer::Lookup;
 use super::timeline_days::Days;
 use super::timeline_projected as projected;
 use super::{Output, Session};
@@ -20,7 +21,9 @@ pub(super) struct Index {
     // Built incrementally, newest first; month counters and lookup avoid a final full-store pass.
     pub(super) keys: BTreeMap<u64, Vec<String>>,
     previous: BTreeMap<u64, Vec<String>>,
-    pub(super) positions: BTreeMap<String, (u64, usize, u64)>,
+    pub(super) positions: Lookup,
+    /// The last finished lookup, kept only while its replacement builds.
+    prior: Lookup,
     last: Option<Value>,
     pub(super) newest: Option<u64>,
     pub(super) oldest: u64,
@@ -30,11 +33,6 @@ pub(super) struct Index {
     pub(super) next: usize,
 }
 impl Index {
-    fn position(&self, key: &str) -> Option<Value> {
-        let (month, offset, at) = self.positions.get(key)?;
-        Some(json!({"key":key,"month":month,"offset":offset,"at":at}))
-    }
-
     pub(super) fn key(&self, month: u64, offset: usize) -> Option<String> {
         let keys = if self.done {
             &self.keys
@@ -126,14 +124,21 @@ impl Session {
             || (index.supported && !eligible(q, e))
         {
             let last = index.last.take();
-            let previous = if index.done {
-                std::mem::take(&mut index.keys)
+            let (previous, prior) = if index.done {
+                (
+                    std::mem::take(&mut index.keys),
+                    std::mem::take(&mut index.positions),
+                )
             } else {
-                std::mem::take(&mut index.previous)
+                (
+                    std::mem::take(&mut index.previous),
+                    std::mem::take(&mut index.prior),
+                )
             };
             *index = Index {
                 revision,
                 previous,
+                prior,
                 month,
                 started: now,
                 supported: eligible(q, e),
@@ -204,37 +209,24 @@ impl Session {
             }
         }
         if !index.done {
-            return None;
+            // A moved window still lands while the replacement builds: the prior answer, placed again.
+            let mut value = index.last.clone().filter(|v| v["supported"] == true)?;
+            self.window_fields(sub, q, &index.prior, e, &mut value);
+            if index.last.as_ref() == Some(&value) {
+                return None;
+            }
+            index.last = Some(value.clone());
+            return Some(value);
         }
+        index.prior = Lookup::new();
         let months: Vec<_> = index
             .keys
             .iter()
             .rev()
             .map(|(at, keys)| json!({"at":at,"count":keys.len()}))
             .collect();
-        let mut positions: Vec<_> = self
-            .delivered
-            .get(sub)
-            .into_iter()
-            .flatten()
-            .filter_map(|r| index.position(r["key"].as_str()?))
-            .collect();
-        if let Some(key) = self.return_keys.get(sub)
-            && let Some(position) = index.position(key)
-            && !positions.iter().any(|p| p["key"].as_str() == Some(key))
-        {
-            positions.push(position);
-        }
-        // Exhaustion is engine policy; a short local window says nothing about relay history.
-        let older = !e
-            .views
-            .values()
-            .filter(|v| v.query == *q)
-            .any(|v| v.source_exhausted);
-        let mut value = json!({"newest":index.newest.unwrap_or(0),"oldest":index.oldest,"supported":index.supported,"months":if index.supported {months} else {vec![]},"positions":positions,"older":older});
-        if let Some((Some(key), _, _)) = self.windows.get(sub) {
-            value["anchor"] = json!(key);
-        }
+        let mut value = json!({"newest":index.newest.unwrap_or(0),"oldest":index.oldest,"supported":index.supported,"months":if index.supported {months} else {vec![]}});
+        self.window_fields(sub, q, &index.positions, e, &mut value);
         if index.supported {
             index.days.fields(&mut value);
         }

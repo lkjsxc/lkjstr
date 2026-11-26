@@ -57,8 +57,10 @@ export function timeline(
     months.set(month, offset + 1);
     const day = localDay(at);
     const part = days.at(-1);
+    // Past 400 occupied days only the newest stay named, as in the engine.
     if (part?.at === day && part.month === month) part.count++;
-    else (occupied += part?.at === day ? 0 : 1), days.push({ at: day, month, offset, count: 1 });
+    else if ((occupied += part?.at === day ? 0 : 1) <= 400)
+      days.push({ at: day, month, offset, count: 1 });
     if ((i >= start && i < end) || e.key === returnKey)
       positions.push({ key: row.key, month, offset, at: time });
   });
@@ -71,7 +73,7 @@ export function timeline(
     positions,
     older: false,
     zone: localZone(),
-    ...(occupied <= 400 ? { days } : {}),
+    days,
   };
 }
 export function timeKey(

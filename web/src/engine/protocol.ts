@@ -1180,7 +1180,7 @@ export type Timeline = {
   readonly older: boolean;
   /** Local days of the engine's zone, newest first: one part per local day per UTC month, so a day that crosses a
    * UTC month has two parts with the same `at`, the newer first. `offset` is the ordinal of the part's newest note
-   * in `month`, `count` its notes. Absent past 400 occupied days (docs/interface-time.md). */
+   * in `month`, `count` its notes. Past 400 occupied days, only the newest 400 (docs/interface-time.md). */
   readonly days?: readonly {
     readonly at: Millis;
     readonly month: Millis;

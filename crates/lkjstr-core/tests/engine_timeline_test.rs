@@ -162,7 +162,12 @@ fn all_retained_rows_beyond_six_thousand_are_counted_and_seekable() {
     newest.id = format!("{:064x}", 8000);
     newest.created_at = 1700008000;
     e.store.insert(newest, None);
-    assert!(s.timeline_tick(&e, 1800000004000).is_empty());
+    // The seek's window lands at once, placed by the last published counts while the next scan runs.
+    let prompt = s.timeline_tick(&e, 1800000004000);
+    let prompt = serde_json::to_value(&prompt[0]).expect("timeline")["timeline"].clone();
+    assert_eq!(prompt["months"][0]["count"], 7000);
+    assert_eq!(prompt["positions"][0]["key"], format!("{:064x}", 0));
+    assert!(s.timeline_tick(&e, 1800000004025).is_empty());
     // An ordinal from the last published counts remains usable while the next scan runs.
     accept(
         &mut s,

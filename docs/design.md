@@ -210,10 +210,10 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
   closes it, a failure stays in words under the buttons ([interface-profile.md](interface-profile.md)).
 - A list keeps what was read (up to 800 rows): nothing vanishes above and
   the scrollbar keeps its span. A list in time order has a time rail
-  instead: it spans every note known for the list, a busy month longer than
-  a quiet one without crowding it out and empty time taking no room. A 6x32px accent grip in the rightmost 16px
-  marks the reading place and stays whole at the ends. Hover and hold highlight it. During a drag it follows
-  the pointer or finger with the time beside it. On a tile of 520px or more one right-aligned column names local years, months and days
+  instead: it spans every note known for the list by rank, as a native scrollbar
+  would, so busy weeks keep their room over a few short old posts; a quiet month stays reachable and empty time
+  takes none. A 6x32px accent grip in the rightmost 16px marks the reading place and stays whole at the ends.
+  Hover and hold highlight it. During a drag it follows the pointer or finger with the time beside it. On a tile of 520px or more one right-aligned column names local years, months and days
   where each begins (a year's newest month one line under it, a month as `mm/dd` once days are named), with dots
   beside them; the current year uses normal text colour. A fine pointer draws a `--sep` line and the time under it.
   Pressed or dragged it goes to that time (near a label, to that period's newest note), says the day while it loads,

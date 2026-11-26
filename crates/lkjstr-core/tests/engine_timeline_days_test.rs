@@ -147,18 +147,24 @@ fn a_25_hour_day_is_one_day_in_new_york() {
 }
 
 #[test]
-fn more_than_400_occupied_days_leave_days_out() {
+fn past_400_occupied_days_the_newest_400_stay_named() {
+    // A sparse old tail (one post a day for years) below recent days keeps the recent days.
     let start = utc(2025, 1, 1, 12, 0);
-    for (count, kept) in [(400, true), (401, false)] {
+    for count in [400u64, 401, 600] {
         let notes: Vec<u64> = (0..count).map(|i| start + i * DAY as u64).collect();
         let (e, mut s) = setup(Box::new(Utc), &notes);
         let data = timeline(&mut s, &e, NOW);
         assert_eq!(data["supported"], true);
         assert_eq!(data["zone"], "UTC");
-        assert_eq!(data.get("days").is_some(), kept, "{count} days");
-        if kept {
-            assert_eq!(days(&data).len(), 400);
-        }
+        let kept = days(&data);
+        assert_eq!(kept.len(), 400, "{count} days");
+        let newest = start + (count - 1) * DAY as u64;
+        assert_eq!(
+            kept[0].0,
+            newest - 12 * H as u64,
+            "{count} days start at the newest"
+        );
+        assert_eq!(kept[399].0, newest - 12 * H as u64 - 399 * DAY as u64);
     }
 }
 

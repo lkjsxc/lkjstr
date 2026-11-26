@@ -1,11 +1,13 @@
 //! Local day boundaries for the time rail (docs/interface-time.md, engine addition), built in the
 //! same newest-first scan as the month counts. One entry per local day per UTC month part, so a
 //! local day that crosses a UTC month gives two entries with the same `at`, the newer part first.
-//! Bound: at most `MAX_DAYS` occupied days plus one part per month; past that, none are kept.
+//! Bound: the newest `MAX_DAYS` occupied days plus one part per month. Older notes have no day
+//! parts: a few old posts far below busy recent weeks keep the recent days named, and the rail
+//! marks the older months by their UTC month bands.
 use crate::calendar::Calendar;
 use serde_json::{Value, json};
 
-/// More occupied local days than this cannot be drawn as day marks: the answer leaves days out.
+/// More occupied local days than this cannot be drawn as day marks: the answer names the newest.
 pub const MAX_DAYS: usize = 400;
 
 #[derive(Default)]
@@ -48,19 +50,15 @@ impl Days {
                 }
                 if self.occupied > MAX_DAYS {
                     self.over = true;
-                    self.parts = Vec::new();
                     return;
                 }
                 self.parts.push((day, month, offset, 1));
             }
         }
     }
-    /// The `days` and `zone` fields of a Timeline answer; no `days` past the bound.
+    /// The `days` and `zone` fields of a Timeline answer; past the bound, the newest days only.
     pub(super) fn fields(&self, value: &mut Value) {
         value["zone"] = json!(self.zone);
-        if self.over {
-            return;
-        }
         value["days"] = self
             .parts
             .iter()

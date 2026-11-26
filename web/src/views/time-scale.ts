@@ -8,19 +8,24 @@ export type TimeBand = {
   readonly y: number;
   readonly h: number;
 };
+const FLOOR = 3; // px a month gets before its share of the notes
+const FLOORS = 0.1; // the most of the rail all floors together take
 const clamp = (n: number, max: number): number => Math.max(0, Math.min(max, n));
 export const monthOf = (at: number, now = Date.now()): number => {
   const d = new Date(Math.min(at, now));
   return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1);
 };
+/** Each occupied month is as long as its notes, as a native scrollbar would draw them, plus a small floor so even a
+ * one-note month stays reachable. The floors together take at most a tenth of the rail: a few old posts years below
+ * dense recent notes (a sparse tail) stay at the bottom, short, and never squeeze the busy weeks the reader is in. */
 export function timeScale(months: Timeline['months'], height: number): readonly TimeBand[] {
   const h = Math.max(0, height);
   const all = months.filter((m) => m.count > 0);
-  const floor = Math.min(4, h / (2 * all.length));
-  const weights = all.reduce((sum, m) => sum + Math.sqrt(m.count), 0);
+  const floor = Math.min(FLOOR, (h * FLOORS) / all.length);
+  const notes = all.reduce((sum, m) => sum + m.count, 0);
   let y = 0;
   return all.map((m) => {
-    const size = floor + ((h - floor * all.length) * Math.sqrt(m.count)) / weights;
+    const size = floor + ((h - floor * all.length) * m.count) / notes;
     const band = { ...m, y, h: size };
     y += size;
     return band;

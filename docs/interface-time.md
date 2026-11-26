@@ -73,7 +73,8 @@ A tile of 520px or more keeps today's 56px rail. Its marks now come in three lev
   `11/22`, then the days. (Built 2026-11-22: drawn at the same line, the year label hid that month from the reader.)
 - **Which boundaries.** With `days` (engine addition below), boundaries are local: a year or a month begins at its
   newest occupied local day, which need not be the 1st. `mm/dd` keeps a month apart from a day in the one column.
-  Without `days`, the marks are today's UTC month marks, and only years are named.
+  Without `days`, the marks are today's UTC month marks, and only years are named. Past the days the engine
+  names (the bound below), older months are marked the same way: years named, months as dots.
 - **Hover (fine pointer, any rail width).** A 1px `--sep` line crosses the rail at the pointer, and the label
   stands at the pointer: the full time if the note a press there would reach is loaded, otherwise `yyyy/mm/dd` from
   `days`, otherwise nothing. Leaving the rail removes both. The line stays with a held mouse.
@@ -140,8 +141,9 @@ seek input are unchanged: the UI never sends a day, only the existing `{ month, 
   `days` (C2 and C3 fall back as if absent) until an answer arrives with a matching zone. A wrong day is never drawn.
 - Future timestamps join today's local day, matching the month rule. Epoch zero is the local day it falls on (a day
   start before the epoch is sent as 0).
-- Bound: `days` is left out when the query has more than 400 occupied local days. At that span day marks cannot be
-  drawn, and the C2 and C3 fallbacks apply. At most 400 + months entries per query.
+- Bound: past 400 occupied local days, `days` names only the newest 400, so a few old posts far below busy
+  recent weeks keep the recent days named. Older notes have no part; there the C2 and C3 fallbacks apply (and
+  `[` `]` step by month). At most 400 + months entries per query.
 - The mock engine answers `days` and `zone` for its fixtures, including one local day that crosses a UTC month.
 
 ## Acceptance
@@ -158,8 +160,8 @@ Each check runs on mock fixtures, plus the real-engine smoke where it already co
 3. Position. The label's centre is within 1px of the grip's centre, or of the native thumb's. It stays
    inside the tile, and its box keeps the same width while only digits change.
 4. Marks. At 1440, ten days across a month start read `2026`, `11/05`, `04` ... `01`, `10/31`, `30` ... No two labels
-   are under 14px apart, and the oldest year is present. At 390 there are no day labels. With 401 occupied days there
-   are no `days`, and the marks are today's.
+   are under 14px apart, and the oldest year is present. At 390 there are no day labels. With 401 occupied days the
+   newest 400 are named, and older months are marked by their UTC bands.
 5. Local boundaries. In JST, notes on both sides of local New Year put the `2027` label at the newest local 2027
    note. A note at 2026-12-31T16:00Z sits below that label, inside the UTC December band.
 6. DST. In `America/New_York`, a fixture across 2026-11-01 has one day mark per local day and labels in local

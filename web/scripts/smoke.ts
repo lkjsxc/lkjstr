@@ -21,6 +21,7 @@ import { stressChecks } from './smoke-stress.ts';
 import { threadChecks } from './smoke-thread.ts';
 import { timeLabelChecks } from './smoke-time-label.ts';
 import { railSmoke } from './smoke-time-rail.ts';
+import { railTailChecks } from './smoke-time-tail.ts';
 import { viaChecks } from './smoke-via.ts';
 import { wishes } from './smoke-wishes.mjs';
 import { zoomChecks } from './smoke-zoom.ts';
@@ -141,6 +142,7 @@ async function run(browser: Browser): Promise<void> {
   const still = { mock: { live: false } };
   const page = await open(browser, '/', still);
   await railSmoke(page, fact, process.env.LKJSTR_SHOTS === '1');
+  await railTailChecks(page, fact);
   if (shot) mkdirSync(dirname(shot), { recursive: true }), await page.screenshot({ path: shot });
   const home = '.pane:has(.tab.active[data-view="home"])';
 

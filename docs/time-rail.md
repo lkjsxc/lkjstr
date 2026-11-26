@@ -9,9 +9,13 @@ No relay counts are estimated and no public traffic is used in verification.
 ## Map and input
 
 `web/src/views/time-scale.ts` is the pure shared map. An occupied month gets
-min(4px, H/(2M)) plus its share of the remaining height, weighted by sqrt(n).
-Within that interval, notes occupy equal ordinal slots, newest first. Empty
-months have no interval. Future timestamps join the current UTC month;
+min(3px, H/(10M)) plus its share of the remaining height by note count, so the
+map is by rank, like a native scrollbar, and all floors take at most a tenth.
+A few old posts years below busy recent weeks (a sparse tail) stay short at
+the bottom instead of halving the room of the weeks being read: 3000 and 800
+notes over 36 one-to-three-note months on 800px got 413px under the former
+sqrt weighting and get 711px now. Within a month, notes occupy equal ordinal
+slots, newest first. Empty months have no interval. Future timestamps join the current UTC month;
 epoch zero remains January 1970. Marks are planned in `time-marks.ts`: the
 oldest year label first, then years, months and days newest first, then dots.
 
@@ -37,14 +41,20 @@ answer. Narrow year labels appear over content on hover or hold. Touch has a
 highlight it, and it follows the held pointer (interface-time.md C3). The
 rail is aria-hidden and the original list remains the keyboard scroller. A
 nonoverflowing list hides the rail; one occupied month shows only the
-grip. Unexhausted relay history fades the lower marks. Scrolling to
+grip. With its room reserved and nothing counted yet (before the first scan,
+or a Home before its follows), the rail is plain: no marks, the grip at the
+share scrolled, and a drag scrolls by share. A top row the engine has not
+counted yet (`time-near.ts`) places the grip at its nearest counted row,
+older first, never at the top. Unexhausted relay history fades the lower marks. Scrolling to
 the local end keeps the existing history path.
 
 ## Local days
 
 The same scan also builds `days` (`wire/timeline_days.rs`): one part per local day per UTC month,
 newest first, from the page's own calendar (the Worker's `Date`; UTC natively). A changed zone or
-local date rebuilds the index. Past 400 occupied days the answer has no days. The interface uses
+local date rebuilds the index. Past 400 occupied days the answer names only the newest 400; older
+months are marked from their UTC bands (years labelled, months as dots; `[` `]` step by month
+there), so a sparse old tail never takes the recent days' names away. The interface uses
 them only in its own zone: `time-marks.ts` plans labels and dots, `time-days.ts` finds a place's
 day and the `[` `]` steps, `time-seek.ts` keeps one seek out at a time, `time-input.ts` reads the
 pointer and keys. Narrow rails name only years.
@@ -66,8 +76,12 @@ list when done or closed. Profile `articles`, `lists` and `all` index openable
 events by authored time. Search indexes matching notes while keeping its
 bounded directory people header uncounted.
 There are at most 128 queries per client and 32 clients. Each query retains
-at most two store-sized key maps and one store-sized ordinal lookup. A prior
-finished map remains seekable while its replacement is built. The actual
+at most two store-sized key maps and two store-sized ordinal lookups. A prior
+finished map and lookup remain seekable while the replacement is built
+(`wire/timeline_answer.rs`): a window that moves then (older history or live
+notes arrived, a seek landed) is answered at once with the prior months, days
+and positions, so a drag never waits a whole rebuild for its landing. The
+prior lookup is released when the build finishes. The actual
 store remains bounded at 16000 regular plus 4000 replaceable events.
 The shared store retains one generation per event, released on removal;
 snapshots do not clone events or the store and keep the 256-event slice bound.

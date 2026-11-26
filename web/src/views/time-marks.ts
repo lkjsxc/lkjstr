@@ -21,6 +21,8 @@ export type Boundary = {
   readonly day: number; // 1 to 31
   /** A year's newest month: its label stands one line under the year's. */
   readonly stacked?: boolean;
+  /** A UTC month past the engine's days (a sparse old tail): a dot, never a label, since its day is not known. */
+  readonly coarse?: boolean;
 };
 export type Label = Boundary & { readonly centre: number; readonly text: string };
 export type Dot = { readonly y: number; readonly size: 2 | 3 };
@@ -53,9 +55,22 @@ export function boundaries(bands: readonly TimeBand[], days?: readonly Day[]): B
       out.push({ ...at, level: 'day' });
       last = d;
     }
-    return out;
+    // The engine names the newest 400 occupied days; older months are marked by their UTC month bands.
+    const end = days.at(-1)?.month ?? 0;
+    return out.concat(
+      monthMarks(
+        bands.filter((b) => b.at < end),
+        last?.getFullYear(),
+        true,
+      ),
+    );
   }
-  let lastYear = Number.NaN;
+  return monthMarks(bands, undefined, false);
+}
+
+function monthMarks(bands: readonly TimeBand[], after: number | undefined, coarse: boolean) {
+  const out: Boundary[] = [];
+  let lastYear = after ?? Number.NaN;
   for (const b of bands) {
     const d = new Date(b.at);
     const at = {
@@ -66,7 +81,7 @@ export function boundaries(bands: readonly TimeBand[], days?: readonly Day[]): B
       day: 1,
     };
     if (at.year !== lastYear) out.push({ ...at, level: 'year' });
-    out.push({ ...at, level: 'month', stacked: at.year !== lastYear });
+    out.push({ ...at, level: 'month', stacked: at.year !== lastYear, coarse });
     lastYear = at.year;
   }
   return out;
@@ -94,6 +109,7 @@ export function planMarks(
   const labels: Label[] = [];
   for (const b of order) {
     if (!(wide && local) && b.level !== 'year') break;
+    if (b.coarse) continue;
     const base = Math.max(0, Math.min(height - LABEL, b.y)) + LABEL / 2;
     const centre = Math.min(height - LABEL / 2, base + (b.stacked ? LABEL_GAP : 0));
     if (labels.every((l) => Math.abs(l.centre - centre) >= LABEL_GAP))

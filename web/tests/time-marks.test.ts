@@ -29,6 +29,28 @@ const H = 3_600_000;
 const D = 24 * H;
 
 describe('local boundaries', () => {
+  it('names the newest days above a sparse old tail past the day bound, and only years in the tail', () => {
+    inZone('UTC');
+    // Ten busy recent days, then one old post a month for three years: the engine names only the recent days.
+    const recent = Array.from({ length: 300 }, (_, i) => Date.UTC(2026, 10, 25, 20) - i * 0.8 * H);
+    const old = Array.from({ length: 36 }, (_, i) => Date.UTC(2025, 9 - i, 15));
+    const { months, days } = counted([...recent, ...old]);
+    const cut = days.filter((d) => d.at >= Date.UTC(2026, 10, 1)); // as if past the bound
+    const bands = timeScale(months, 800);
+    const all = boundaries(bands, cut);
+    const { labels, dots } = planMarks(all, 800, true);
+    const named = labels.map((l) => l.text);
+    expect(named.slice(0, 3)).toEqual(['2026', '11/25', '24']);
+    expect(named.filter((t) => /^\d\d$/.test(t)).length).toBeGreaterThanOrEqual(6);
+    for (const year of ['2025', '2024', '2023']) expect(named).toContain(year);
+    // Tail months are dots, never a label claiming a day nobody counted.
+    expect(labels.filter((l) => l.coarse)).toEqual([]);
+    expect(dots.length).toBeGreaterThan(named.length);
+    // The recent days hold most of the rail.
+    const lastDay = all.filter((b) => b.level === 'day').at(-1)?.y ?? 0;
+    expect(lastDay).toBeGreaterThan(0.75 * 800);
+  });
+
   it('puts a JST new year at its first local day, above a UTC December note', () => {
     inZone('Asia/Tokyo');
     const late = Date.UTC(2026, 11, 31, 16); // 2027/01/01 01:00 JST, still the UTC December
