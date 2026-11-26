@@ -24,7 +24,6 @@ import { pauseNoteAudio } from './note-audio.ts';
 import { onOwnPublished } from './own-published.ts';
 import { createPreviewWants } from './preview-wants.ts';
 import { mountProfileKinds } from './profile-kinds.ts';
-import { railKey } from './rail-guess.ts';
 import type { ViewEnv } from './registry.ts';
 import { watchHomeTitle } from './their-home.ts';
 import { mountThread } from './thread.ts';
@@ -68,7 +67,6 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
     anchors: (key) => !/^(day|th|moment):/.test(key), // dividers and drawn parts never anchor
     save: (place) => ((state.pos = place), save()),
   });
-  const query0 = (): Query => feedQuery(kind, account, state, env.engine);
   const query = (): Query => feedQuery(kind, account, state, env.engine, kinds?.query());
   const request = (anchor: Anchor, before: number, after: number, liveAbove = false): void => {
     [before, after] = clampFeedWindow(before, after);
@@ -228,9 +226,8 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
   const pin = h('div', { class: 'fpin' }, fresh.el);
   el.replaceChildren(barSlot, pin, ...(drafts ? [drafts.el] : []), list, status, tail);
   const rail = mountTimeRail({
-    candidate: RAILED.has(kind) && !moment,
+    candidate: () => RAILED.has(kind) && !moment && (kind !== 'global' || Boolean(account)),
     version: () => env.engine.info.get()?.version ?? 5,
-    key: (tab) => railKey(tab, { ...query0(), show: kind === 'profile' ? state.show : undefined }),
     el,
     list,
     tail,

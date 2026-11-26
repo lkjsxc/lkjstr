@@ -67,9 +67,8 @@ it('mounts an unmounted DM row on jump and restores the original row via the ret
   const keeper = createListKeeper(el, list, tail);
   const set = vi.spyOn(keeper, 'set');
   const rail = mountTimeRail({
-    candidate: true,
+    candidate: () => true,
     version: () => 8,
-    key: (tab) => tab,
     el,
     list,
     tail,

@@ -94,9 +94,8 @@ function mountConversation(
     save: (place) => saveViewState(env.instance, { participants: peers, place }),
   });
   const rail = mountTimeRail({
-    candidate: true,
+    candidate: () => true,
     version: () => env.engine.info.get()?.version ?? 6,
-    key: (tab) => tab,
     el,
     list,
     tail,

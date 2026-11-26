@@ -229,9 +229,8 @@ function mountList(el: HTMLElement, env: ViewEnv, account: Account): () => void 
     tail,
   );
   const rail = mountTimeRail({
-    candidate: true,
+    candidate: () => true,
     version: () => env.engine.info.get()?.version ?? 6,
-    key: (tab) => tab,
     el,
     list,
     tail,

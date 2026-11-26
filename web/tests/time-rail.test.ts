@@ -1,8 +1,5 @@
 import { expect, it, vi } from 'vitest';
 import { localZone } from '../src/shared/format.ts';
-import type { Keeper } from '../src/views/feed-place.ts';
-import { railKey } from '../src/views/rail-guess.ts';
-import { mountTimeRail } from '../src/views/time-rail.ts';
 import { openPopover, popoverOpen } from '../src/wm/menus.ts';
 
 import { month, setup } from './time-rail-fixture.ts';
@@ -53,59 +50,12 @@ it('leaves Home and End with an open button-based popover, then resumes after cl
   expect(x.set).toHaveBeenCalled();
 });
 
-it('starts at the width the engine last gave the same kind of tab', () => {
-  localStorage.clear();
-  const reserved = (el: HTMLElement) => el.classList.contains('has-time-rail');
-  const answer = (supported: boolean, count = 1) =>
-    ({ supported, months: count ? [{ at: month, count }] : [], positions: [] }) as const;
-  const open = (kind: string, mode?: { notifications?: boolean; account?: string }) => {
-    const el = document.createElement('div');
-    const list = document.createElement('div');
-    const tail = document.createElement('div');
-    el.dataset.kind = kind;
-    el.append(list, tail);
-    document.body.append(el);
-    const rail = mountTimeRail({
-      ...{ candidate: true, version: () => 5, el, list, tail, rows: () => [] },
-      key: (tab: string) => (mode ? railKey(tab, mode) : tab),
-      ...{ keeper: { set: vi.fn() } as unknown as Keeper, seek: vi.fn(), active: () => true },
-    });
-    const say = (supported: boolean, count?: number) => {
-      rail.timeline({ ...answer(supported, count), newest: month, oldest: month, older: false });
-      vi.advanceTimersByTime(16);
-    };
-    return { el, say, dispose: rail.dispose };
-  };
-  const first = open('home');
-  expect(reserved(first.el)).toBe(true); // a kind never answered reserves the rail
-  first.say(true, 0); // accepted with nothing counted yet: no answer about the width
-  first.say(false);
-  expect(reserved(first.el)).toBe(false);
-  first.dispose();
-  const again = open('home');
-  expect(reserved(again.el)).toBe(false); // refused before: native width from the first frame
-  again.say(true, 0);
-  expect(reserved(again.el)).toBe(false);
-  again.say(true);
-  expect(reserved(again.el)).toBe(true);
-  again.dispose();
-  expect(reserved(open('home').el)).toBe(false); // refused earlier in this page: still its next start
-  const tag = open('hashtag');
-  expect(reserved(tag.el)).toBe(true); // other kinds keep their own answer
-  tag.say(false, 0);
-  tag.dispose();
-  expect(reserved(open('hashtag').el)).toBe(false);
-  const search = open('search');
-  search.say(true);
-  search.dispose();
-  expect(reserved(open('search').el)).toBe(true);
-  // A refused mode keeps its own answer: signed-out Global never narrows signed-in Global.
-  const out = open('global', {});
-  out.say(false);
-  out.dispose();
-  expect(reserved(open('global', {}).el)).toBe(false);
-  expect(reserved(open('global', { account: 'me' }).el)).toBe(true);
-  expect(railKey('home', { notifications: true, account: 'me' })).toBe('home:notifications');
+it('resets an unsupported answer when the chronological view opens again', () => {
+  const x = setup({ supported: false, months: [], positions: [] });
+  expect(x.track.hidden).toBe(true);
+  x.rail.reset();
+  vi.advanceTimersByTime(16);
+  expect(x.track.hidden).toBe(false);
 });
 
 // Three local days, one note each, in the page's zone; and a fourth, older, whose notes are not loaded.

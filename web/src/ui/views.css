@@ -137,6 +137,7 @@
 /* Only the padding reserved for an active rail is reclaimed; an inactive pin stays inside its feed. */
 .feed.has-time-rail > .time-pin { margin-right: calc(-1 * var(--rail-size)); }
 .time-rail { position: absolute; top: 0; right: 0; width: 16px; background: var(--paper); z-index: 4; touch-action: none; user-select: none; cursor: grab; -webkit-tap-highlight-color: transparent; }
+.time-rail.empty::after { content: ""; position: absolute; right: 7.5px; inset-block: var(--time-inset); width: 1px; background: var(--line); pointer-events: none; }
 .time-rail.held { cursor: grabbing; }
 .time-rail[hidden], .time-return[hidden] { display: none; }
 /* A tile of 520px or more has the wide rail with its labels, decided by CSS so the first frame already has it. */

@@ -47,9 +47,8 @@ export function setup(
   });
   const seek = vi.fn();
   const rail = mountTimeRail({
-    candidate: true,
+    candidate: () => true,
     version: () => 5,
-    key: (kind) => kind,
     el,
     list,
     tail,

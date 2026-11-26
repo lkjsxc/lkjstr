@@ -3,7 +3,6 @@ import type { Anchor, Timeline } from '../engine/protocol.ts';
 import { localZone } from '../shared/format.ts';
 import type { Keeper, Place } from './feed-place.ts';
 import { type RailRow, rowTime, timeText, topRow } from './feed-scrub.ts';
-import { railAnswer, railGuess, railSaid } from './rail-guess.ts';
 import { scrollIntent } from './scroll-intent.ts';
 import { dayText, railDays } from './time-days.ts';
 import {
@@ -26,9 +25,8 @@ import { createSeeker } from './time-seek.ts';
 const LATE_MS = 500;
 const LANDED_MS = 1000;
 export function mountTimeRail(o: {
-  candidate: boolean;
+  candidate(): boolean;
   version(): number;
-  key(kind: string): string; // the rail-guess key of this list's current mode
   el: HTMLElement;
   list: HTMLElement;
   tail: HTMLElement;
@@ -44,9 +42,8 @@ export function mountTimeRail(o: {
   const painter = createMarkPainter(marks, lens);
   let telling = false; // the reader is scrolling (C1)
   const intent = scrollIntent(el, () => ((telling = false), sync()));
-  const kind = (): string => o.key(el.dataset.kind ?? '');
-  const guess = (): boolean => o.candidate && o.version() >= 5 && railGuess(kind());
-  el.classList.toggle('has-time-rail', guess());
+  const available = (): boolean => o.candidate() && o.version() >= 5;
+  el.classList.toggle('has-time-rail', available());
   let data: Timeline | undefined;
   let shape: Timeline | undefined; // what the map is drawn from; frozen while a press is held
   let zone = localZone();
@@ -151,11 +148,14 @@ export function mountTimeRail(o: {
     const view = el.clientHeight;
     if (!held) shape = data; // Freeze the map and scroll mode until release, even before the first count.
     const counted = Boolean(shape?.supported && shape.months.length);
-    el.classList.toggle('has-time-rail', railAnswer(data) ?? guess());
-    plain = !counted && el.classList.contains('has-time-rail');
+    const visible = available() && (data?.supported !== false || data.provisional === true);
+    el.classList.toggle('has-time-rail', visible);
+    plain = !counted && visible;
     const rows = o.rows();
     const needsGrip = rows.some(dated) || el.scrollHeight > view + 1;
-    rail.hidden = !view || !(counted || plain) || !needsGrip;
+    rail.hidden = !view || !visible;
+    grip.hidden = !needsGrip;
+    rail.classList.toggle('empty', !needsGrip);
     rail.classList.toggle('plain', plain);
     if (rail.hidden) return;
     axis = fitTimeRail(rail, view);
@@ -248,6 +248,7 @@ export function mountTimeRail(o: {
   const watch = new ResizeObserver(sync);
   watch.observe(el);
   watch.observe(list);
+  sync();
   const stop = (): void => {
     seeker.stop(), clearTimeout(lateTimer), clearTimeout(landTimer);
     late = landed = speak = false;
@@ -256,7 +257,7 @@ export function mountTimeRail(o: {
   return {
     sync,
     rowsChanged() {
-      const hasRows = o.candidate && o.rows().some(dated);
+      const hasRows = available() && o.rows().some(dated);
       const firstRows = hasRows && (!hadRows || rail.hidden);
       hadRows = hasRows;
       if (!firstRows) return sync();
@@ -272,8 +273,6 @@ export function mountTimeRail(o: {
       if (!next.supported && (!next.provisional || data?.supported)) stop(), (s.back = undefined);
       data = next;
       placed = new Map(next.positions.map((p) => [p.key, p]));
-      const said = railAnswer(next);
-      if (o.candidate && said !== undefined) railSaid(kind(), said);
       seeker.timeline(next);
       sync();
     },

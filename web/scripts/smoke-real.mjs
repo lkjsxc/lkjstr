@@ -33,6 +33,7 @@ const {
   fake,
   readerFake,
   deepLinkFake,
+  railFake,
   bunker,
   media,
   socketSharing,
@@ -121,7 +122,7 @@ try {
   await page.locator('.view[data-kind="home"] .note').first().waitFor();
   check('home renders signed-in notes');
   await railSmoke(page, check, shots);
-  await warmRailChecks({ ...scenario, observe });
+  await warmRailChecks({ ...scenario, railFake, observe });
   check(
     'signing in brings the ordinary layout',
     (await page.locator('.pane').count()) === 4 &&

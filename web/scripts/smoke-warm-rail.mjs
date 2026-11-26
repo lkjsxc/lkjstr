@@ -6,9 +6,11 @@ import { installExtension } from './smoke-visitors.mjs';
 
 const RUNS = 3;
 const HISTORY = 2001;
+const TINY = 20;
 
 async function warmRecords(sign, pubkey) {
   const records = [];
+  const arrivals = [];
   const newest = Math.floor(Date.now() / 1000) - 120;
   for (let i = 0; i < HISTORY; i++) {
     const event = await sign({
@@ -18,6 +20,7 @@ async function warmRecords(sign, pubkey) {
       tags: [],
       content: `Warm rail fixture ${i}`,
     });
+    if (i < TINY) arrivals.push(event);
     const raw = JSON.stringify([
       1,
       event.id,
@@ -31,7 +34,7 @@ async function warmRecords(sign, pubkey) {
     const receipt = `lkjstr-verified-1:${createHash('sha256').update(raw).digest('hex')}`;
     records.push({ id: event.id, created_at: event.created_at, kind: event.kind, raw, receipt });
   }
-  return records;
+  return { records, arrivals };
 }
 
 const writeHistory = (page, records) =>
@@ -61,14 +64,15 @@ const writeHistory = (page, records) =>
 
 async function checkRail(page, width, phase, measurements) {
   const feed = page.locator('.feed[data-kind="home"]:visible');
-  const note = feed.locator('.list .note').first();
-  // Capture the miss as a real layout observation as well as a test failure.
-  const observed = await Promise.allSettled([
-    note.waitFor({ state: 'visible', timeout: 12000 }),
-    feed
-      .locator('.time-rail:not([hidden]) .time-grip')
-      .waitFor({ state: 'visible', timeout: 12000 }),
-  ]);
+  const empty = phase.startsWith('empty');
+  const target = empty ? '.time-rail.empty:not([hidden])' : '.time-rail:not([hidden]) .time-grip';
+  const observed = await feed
+    .locator(target)
+    .waitFor({ state: 'visible', timeout: 12000 })
+    .then(
+      () => true,
+      () => false,
+    );
   const result = await feed.evaluate((el) => {
     const rail = el.querySelector('.time-rail');
     const grip = rail?.querySelector('.time-grip').getBoundingClientRect();
@@ -80,11 +84,11 @@ async function checkRail(page, width, phase, measurements) {
     };
   });
   const ok =
-    observed.every((r) => r.status === 'fulfilled') &&
-    result.dated > 0 &&
-    result.grip === 32 &&
+    observed &&
     result.rail === (width === 390 ? 16 : 56) &&
-    (phase.startsWith('cold') || result.plain);
+    (empty ? result.dated === 0 && result.grip === 0 : result.dated > 0 && result.grip === 32) &&
+    (!phase.startsWith('tiny') || result.dated <= TINY) &&
+    (!phase.startsWith('cap') || result.plain);
   measurements.push({ phase, width, ok, ...result });
 }
 
@@ -96,19 +100,23 @@ async function runLoad({
   errors,
   width,
   records,
+  arrivals,
+  railFake,
   run,
   measurements,
 }) {
+  railFake.stored.length = 0;
   const ctx = await browser.newContext({
     viewport: { width, height: width === 390 ? 844 : 900 },
     hasTouch: width === 390,
     isMobile: width === 390,
   });
   try {
-    await installExtension(ctx, relayUrl, pubkey, errors);
+    await installExtension(ctx, `${relayUrl}/rail-visibility`, pubkey, errors);
     await ctx.addInitScript(
       ({ mobile }) => {
         if (location.protocol !== 'http:') return;
+        localStorage.setItem('lkjstr:rails', '{"home":false,"home:notifications":false}');
         const home = mobile ? 'home~news' : 'home';
         if (!localStorage.getItem('lkjstr:layout:main'))
           localStorage.setItem(
@@ -145,10 +153,14 @@ async function runLoad({
     const home = page.locator('.tab[data-view^="home"]');
     const docs = page.locator('.tab[data-view="docs"]');
 
-    await checkRail(page, width, `cold ${run}`, measurements);
+    await checkRail(page, width, `empty cold ${run}`, measurements);
+    for (const event of arrivals) railFake.add(event);
+    await checkRail(page, width, `tiny arrival ${run}`, measurements);
     await docs.click();
     await home.click();
-    await checkRail(page, width, `cold tab switch ${run}`, measurements);
+    await checkRail(page, width, `tiny tab switch ${run}`, measurements);
+    await page.reload();
+    await checkRail(page, width, `tiny warm reload ${run}`, measurements);
 
     const committed = await writeHistory(page, records);
     measurements.push({
@@ -158,10 +170,10 @@ async function runLoad({
       ok: committed >= HISTORY,
     });
     await page.reload();
-    await checkRail(page, width, `warm reload ${run}`, measurements);
+    await checkRail(page, width, `cap warm reload ${run}`, measurements);
     await docs.click();
     await home.click();
-    await checkRail(page, width, `warm tab switch ${run}`, measurements);
+    await checkRail(page, width, `cap warm tab switch ${run}`, measurements);
   } catch (error) {
     measurements.push({
       phase: `load ${run}`,
@@ -174,12 +186,33 @@ async function runLoad({
   }
 }
 
-export async function warmRailChecks({ browser, base, relayUrl, pubkey, sign, errors, observe }) {
-  const records = await warmRecords(sign, pubkey);
+export async function warmRailChecks({
+  browser,
+  base,
+  relayUrl,
+  pubkey,
+  sign,
+  errors,
+  railFake,
+  observe,
+}) {
+  const { records, arrivals } = await warmRecords(sign, pubkey);
   const measurements = [];
   for (const width of [390, 1440])
     for (let run = 1; run <= RUNS; run++)
-      await runLoad({ browser, base, relayUrl, pubkey, errors, width, records, run, measurements });
+      await runLoad({
+        browser,
+        base,
+        relayUrl,
+        pubkey,
+        errors,
+        width,
+        records,
+        arrivals,
+        railFake,
+        run,
+        measurements,
+      });
   await writeFile(smokePath('warm-rail-visibility.json'), JSON.stringify(measurements, null, 2));
   await observe(
     [390, 1440].map((width) => [

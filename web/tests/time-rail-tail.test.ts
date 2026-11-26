@@ -5,8 +5,12 @@ import { month, setup } from './time-rail-fixture.ts';
 
 it('paints the grip with the first rows before a timeline or local overflow', () => {
   const x = setup(null, { rowsReady: false, scrollHeight: 200 });
-  expect(x.track.hidden).toBe(true);
+  expect(x.track.hidden).toBe(false);
+  expect(x.track.classList.contains('empty')).toBe(true);
+  expect(x.track.querySelector<HTMLElement>('.time-grip')?.hidden).toBe(true);
   x.showRows();
+  expect(x.track.classList.contains('empty')).toBe(false);
+  expect(x.track.querySelector<HTMLElement>('.time-grip')?.hidden).toBe(false);
   expect(x.track.hidden).toBe(false);
   expect(x.track.classList.contains('plain')).toBe(true);
   expect(x.track.querySelector<HTMLElement>('.time-grip')?.style.top).toBe('20px');

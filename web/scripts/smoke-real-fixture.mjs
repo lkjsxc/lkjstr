@@ -34,6 +34,7 @@ export async function createRealFixture() {
   const fake = fakeRelay({ maxEvents: 2000 });
   // The archive/audit can fill one 1000-event store; reader arrivals get their own bounded fixture.
   const readerFake = fakeRelay();
+  const railFake = fakeRelay({ maxEvents: 20 });
   const deepLinkFake = fakeRelay();
   const bunker = await fakeBunker();
   const media = await fakeMediaSet();
@@ -45,7 +46,7 @@ export async function createRealFixture() {
   let signing = Promise.resolve();
   const relay = createServer();
   const ws = new bundle.wsServer({ server: relay });
-  const socketSharing = attachSmokeRelay(ws, { fake, readerFake, deepLinkFake, bunker });
+  const socketSharing = attachSmokeRelay(ws, { fake, readerFake, deepLinkFake, railFake, bunker });
   await new Promise((done) => relay.listen(0, '127.0.0.1', done));
   const relayUrl = `ws://127.0.0.1:${relay.address().port}`;
   signer.stdin.write(
@@ -86,6 +87,7 @@ export async function createRealFixture() {
     fake,
     readerFake,
     deepLinkFake,
+    railFake,
     bunker,
     media,
     socketSharing,
@@ -95,7 +97,7 @@ export async function createRealFixture() {
   };
 }
 
-export function attachSmokeRelay(ws, { fake, readerFake, deepLinkFake, bunker }) {
+export function attachSmokeRelay(ws, { fake, readerFake, deepLinkFake, railFake, bunker }) {
   const trace = createSocketTrace();
   const activePaths = new Map(); // all isolated test contexts share the loopback server
   const mainSockets = new Set(); // tagged context, excluding readers and signer routes
@@ -122,7 +124,13 @@ export function attachSmokeRelay(ws, { fake, readerFake, deepLinkFake, bunker })
       }
     });
     const fixtureRelay =
-      req.url === '/deep-links' ? deepLinkFake : req.url === '/reader' ? readerFake : fake;
+      req.url === '/deep-links'
+        ? deepLinkFake
+        : req.url === '/reader'
+          ? readerFake
+          : req.url === '/rail-visibility'
+            ? railFake
+            : fake;
     fixtureRelay.route({
       send: (text) => socket.send(text),
       onMessage: (fn) => socket.on('message', fn),

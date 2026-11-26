@@ -41,10 +41,9 @@ seconds to answer. At expiry the rail releases it and handles the waiting press 
 
 The sticky holder moves with its view when the WM reparents tiles. Width
 is reserved before marks arrive: 56px at 520px tile width, otherwise 16px.
-The first frame follows the engine's last answer for the same tab kind on
-this device (`lkjstr:rails`), so a refused list starts at native width. A
-refusal holds for the page's session; an acceptance without months is no
-answer. Narrow year labels appear over content on hover or hold. Touch has a
+Chronological rail views reserve this width from the first frame, including
+an empty view waiting for its first notes. The empty track stays visible and
+gains marks and a grip as the rows arrive. Narrow year labels appear over content on hover or hold. Touch has a
 28px hit area. The grip pill appears with the first dated row, even while the
 list fits in the tile. The same vertical inset seats marks, the grip and pointer
 targets, with 4px of room beyond the grip at both ends. Hover and hold highlight it,
@@ -122,8 +121,6 @@ seeks to reach every retained match. UI windows retain the existing 800-row
 bound; a rail seek requests 60 rows on each side. Transport reconnect waits
 for the rebuilt index before replaying an ordinal window. There is one
 window renderer and history scheduler, not a second feed implementation.
-`rail-guess.ts` keys persisted width guesses by tab kind and mode (`railKey`),
-so a refused mode (such as signed-out Global) never narrows a supported one.
 
 ## Supported tabs and deliberate native fallbacks
 

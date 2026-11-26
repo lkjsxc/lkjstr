@@ -83,7 +83,8 @@ Mouse, pen and touch share one path: pointer events on the rail, with capture.
   Any other target uses the existing window seek with the same 60 rows on each side, which loads around the target.
   Either way a thin return tick is left at the place the press started, and a press on the tick returns to the exact row
   and offset.
-- **Grip.** A 6x32px `--accent` pill appears with the first dated row. It is centred in the rail's rightmost 16px
+- **Grip.** An empty timeline keeps a faint track. A 6x32px `--accent` pill appears with the first dated row.
+  It is centred in the rail's rightmost 16px
   and rests 4px inside the tile at either end. It starts at the share scrolled with the reading time and provisional marks
   from the loaded rows. The counted map takes over when it arrives.
   The whole rail accepts a press. Hover and hold highlight the grip. During a drag it follows the pointer with

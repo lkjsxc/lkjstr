@@ -225,10 +225,9 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
   Pressed or dragged it goes to that time (near a label, to that period's newest note), says the day while it loads,
   and leaves a thin tick to come back by; `[` and `]` step a day, Backspace returns
   ([interface-time.md](interface-time.md) C2, C3). The tile's own width decides the rail (56px from 520px, else 16px
-  with years shown on hover) and other tile-width
-  layouts (link-card pictures, the folded action row) from the first frame; a list the engine refused
-  last time on this device starts without the rail's room, so its notes never widen after a second. Other views keep
-  a 14px scrollbar with a slim thumb that widens under the pointer.
+  with years shown on hover) and other tile-width layouts (link-card pictures, the folded action row) from the first
+  frame. The rail keeps its track while empty and draws the range already loaded as it grows. Other views keep a
+  14px scrollbar with a slim thumb that widens under the pointer.
 - Home and other merged chronological lists end at the time their expected
   sources have reached. The rail ends at the same place. Older notes appear
   in order as pages arrive, with the usual quiet loading end in the meantime.

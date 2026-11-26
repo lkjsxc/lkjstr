@@ -124,8 +124,7 @@ Rules:
 - The interface keeps on this device, in `localStorage` under `lkjstr:`, only
   what is its own: settings, layouts, each tab's state and reading position,
   closed tabs, the active account's pubkey and face (name, picture, kind of
-  signer: public data, so a reload starts as the reader), and per tab kind
-  whether the engine last gave its list the time rail. Events, keys and
+  signer: public data, so a reload starts as the reader). Events, keys and
   relay state are the engine's; a typed or shown key is never stored.
   The second owner note permits bounded public row replay and media dimensions;
   engine permission fences it from private projections. See [public-view-cache.md](public-view-cache.md).
