@@ -48,7 +48,7 @@ export async function uploadScenarios(options) {
           name: 'fixture.png',
           mimeType: 'image/png',
           buffer: Buffer.from(
-            'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a/YQAAAAASUVORK5CYII=',
+            'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGMw6lj1HwAEuAJku8vlhQAAAABJRU5ErkJggg==',
             'base64',
           ),
         };
@@ -98,9 +98,12 @@ export async function uploadScenarios(options) {
             const start = media.requests.length;
             await page.locator(`${compose} input[type=file]`).setInputFiles(file);
             const thumb = page.locator(`${compose} .thumb`).last();
+            const done = thumb.and(page.locator('.thumb.done'));
             await thumb.locator('[role=status]').waitFor();
             if (['slow', 'processing'].includes(mode)) {
-              await thumb.locator('img').waitFor();
+              // The picture shows from the moment it is chosen; done is the upload's own mark.
+              await thumb.locator('.tpic img').waitFor();
+              await done.waitFor({ timeout: 45000 });
               check(
                 `upload ${signer} ${protocol} ${mode} shows the destination`,
                 (await thumb.innerText()).includes(origin.replace('https://', '')),
@@ -134,7 +137,7 @@ export async function uploadScenarios(options) {
               media.set(protocol === 'blossom' ? 'nip96' : 'blossom', 'ok');
               phase += ' retry';
               await thumb.getByRole('button', { name: 'Retry', exact: true }).click();
-              await thumb.locator('img').waitFor();
+              await done.waitFor({ timeout: 45000 });
               check(`upload ${signer} ${protocol} ${mode} retry completes`);
             }
             const requests = media.requests.slice(start);

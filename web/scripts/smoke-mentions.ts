@@ -116,8 +116,10 @@ async function opens(
     await note.locator('.content > .text').first().innerText(),
   );
   if (!(await link.count())) return;
-  if (touch) await link.tap();
-  else await link.click();
+  if (touch) {
+    await page.waitForTimeout(450); // The published row just moved into place. Let the 400 ms touch guard expire.
+    await link.tap();
+  } else await link.click();
   const head = page.locator(`${PROFILE} .profile`).first();
   await head.waitFor();
   fact(`${route}: the link opens that person`, (await head.innerText()).includes(NAME));

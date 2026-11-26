@@ -115,7 +115,7 @@ for (const channel of [undefined, 'room'])
     saveViewState(x.env.instance, {
       text: 'first',
       replyTo: channel ? undefined : 'parent',
-      media: [{ url: 'https://example.test/a.png', mime: 'image/png', type: 'image' }],
+      media: [{ url: 'https://example.test/draft.png', mime: 'image/png', type: 'image' }],
     });
     x.act.mockImplementation(
       () =>

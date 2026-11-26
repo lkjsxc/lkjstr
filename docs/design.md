@@ -44,7 +44,9 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
 - One system sans stack with the Japanese families named. No web fonts.
 - Interface 13.5px / 1.45. Note text 15px / 1.6 (a setting); the focused note of a thread is 1.5px larger. Headers and context lines 12.5 to 13.5px.
 - On a touch screen every field (input, text area, select) is 16px or more, so iOS never zooms the page into one when it
-  takes the keyboard (owner, 2026-11-22). Zooming by hand stays the reader's: the viewport never forbids it.
+  takes the keyboard (owner, 2026-11-22). Zooming by hand stays the reader's: the viewport never forbids it. The page
+  itself never scrolls; when iOS scrolls it to lift a field above the keyboard, an open panel (the emoji picker) stays,
+  and the page goes back once no field has the keyboard (owner, 2026-11-26).
 - Names are 600; everything else regular. Numbers that change are tabular.
 - Note text uses `line-break: strict`. Interface sentences break by phrase in Japanese (`word-break: auto-phrase`), never inside a word.
 
@@ -88,7 +90,7 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
   (Shortcuts, Terms) comes up once its name is typed. A title that is the typed
   text, or starts with it, goes before a word found in a description.
   `N` goes to the Post tab that is open (a setting: always a new one).
-- Menus close on outside press, Escape, scroll and after choosing. No close
+- Menus close on outside press, Escape, a list's scroll and after choosing. No close
   buttons on menus. Shortcuts are a page of Documentation, in the platform's names.
 - Opening a note or a person opens a tab in the same tile, right after the current one, in front. Shift-click splits, middle click opens behind.
   Nothing opens in another tile by itself, and nothing takes the place of the tab being read: closing an opened
@@ -190,11 +192,14 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
 - On is indigo. Keyboard selection is a wash with an indigo bar at the
   left; unread is a vermilion bar at the left.
 ## Lists
-- New notes are always loaded into the feed as they arrive, after a reload too. At the top they show at once and the list stays at the top. Anywhere else they are inserted above while the reading position holds (the anchor note keeps its place on screen); the pill counts the unread notes above, scrolling up reaches them with no click, and pressing the pill goes to the top. A row selected by the keyboard holds the list too. The feed keeps its bounded window: when more arrive above than the window holds, the pill says so, and pressing it reloads the head.
+- New notes are always loaded into the feed as they arrive, after a reload too. At the top they show at once and the list stays at the top. Anywhere else they are inserted above while the reading position holds (the anchor note keeps its place on screen); the pill counts the unread notes above, scrolling up reaches them with no click, and pressing the pill goes to the top (at once when the arrivals are already drawn above). A row selected by the keyboard holds the list too. The feed keeps its bounded window: when more arrive above than the window holds, the pill says so, and pressing it reloads the head.
 - The reading position is an anchor note plus offset: it survives reload,
   another tile width, a moved or reopened tab, late media.
-  While the reader moves the list (a finger on it, or a scroll in the last 150ms), loads and late media never write
-  the scroll unless rows above change height, so a fling coasts on (owner, 2026-11-25).
+  While the reader moves the list (a finger on it, or a scroll in the last 150ms), nothing writes the scroll, so a
+  fling coasts on (owner, 2026-11-25): rows above that change height shift the list instead, and the shift goes into
+  the scroll once the list rests (owner, 2026-11-26).
+- For 0.4s after rows move under the finger (a reaction, an arrival at the top, a row that grows), a tap on a moved
+  note, notification, or one of its controls is ignored. The reply form remains usable while it grows (owner, 2026-11-26).
 - A thread ([interface-thread.md](interface-thread.md)) opens on its focused note about a third down the tile, with
   what it answers in view above it, whole, its text 1.5px larger, untinted; the reply field is under it. The notes it
   answers are above, compact (two lines and the action row, one height) and joined by a rail that ends in a stub on
@@ -265,7 +270,8 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
 - The composer is the Post tab: text at note size, who is posting (a button
   that switches accounts), content warning, emoji, media, Post. A primary button that cannot
   act yet is neutral. Sending and failed drafts stay below the field; failed Edit swaps keep both drafts.
-  Reopened tabs restore drafts; fresh tabs start empty. Hidden composers release mention lookups.
+  Reopened tabs restore drafts; fresh tabs start empty. A picture shows from the moment it is chosen; pressed, it opens
+  full size in a media tab, as in a note (owner, 2026-11-26). Hidden composers release mention lookups.
 - Quote (the repost menu) writes in the Post tab, never over what is being read: an open Post tab holding nothing
   takes the quote; otherwise a new Post tab opens right after the read tab, in its tile. The keyboard goes into the
   field. The quoted note is a card under the field and the media, in the quoted-note surface: face, name, time, its

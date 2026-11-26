@@ -208,8 +208,9 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
     sub?.window('top', 0, count, false, window.last);
   };
   const toTop = (): void => {
-    keys.clear();
-    jump = true;
+    // Arrivals already drawn above the reader: up at once; the engine's answer only confirms it.
+    if (mode === 'held-head' && !fresh.overflow() && !outside.count) keeper.forget();
+    keys.clear(), (jump = true);
     showHead(live ? feedWindow(kind, rows) : undefined);
   };
   const keys = mountFeedKeys({

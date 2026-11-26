@@ -1,11 +1,13 @@
-// A failed attachment keeps its File for retry; buffers are freshly read before transfer.
+// A failed attachment keeps its File for retry; buffers are freshly read before transfer. A picture shows from the
+// moment it is chosen (from the file itself while it uploads); pressed, it opens full size in a media tab, like a
+// picture in a note, with the draft's other pictures beside it (owner, 2026-11-26).
 import type { ServerRow, Uploaded } from '../engine/protocol.ts';
 import { hostOf } from '../shared/address.ts';
 import { h, replaceChildren } from '../shared/h.ts';
 import { type Key, t } from '../shared/i18n.ts';
 import { SERVER_CHOICES } from '../shared/media-servers.ts';
-import { loadImage } from '../shared/media-source.ts';
 import { failureText } from './can.ts';
+import { draftPicture } from './compose-picture.ts';
 import { watchList } from './lists.ts';
 import type { ViewEnv } from './registry.ts';
 
@@ -14,9 +16,10 @@ type Item = {
   el: HTMLElement;
   busy: boolean;
   done?: Uploaded;
-  preview?: string;
   removed?: boolean;
   abort?: AbortController;
+  /** The chosen picture's own address on this device; let go when the item goes. */
+  local?: string;
 };
 const READ_MS = 10_000;
 export function createAttachments(
@@ -49,6 +52,17 @@ export function createAttachments(
   };
   let disposed = false;
   let off: (() => void) | undefined;
+  const source = (i: Item): string | undefined =>
+    i.done ? (i.done.type === 'image' ? i.done.url : undefined) : i.local;
+  const forget = (i: Item): void => {
+    if (i.local) URL.revokeObjectURL(i.local);
+    i.local = undefined;
+  };
+  const picture = (item: Item, src: string): HTMLElement =>
+    draftPicture(env, src, item.done?.alt, () => {
+      const shown = items.filter((i) => source(i));
+      return { urls: shown.map((i) => source(i) ?? ''), index: shown.indexOf(item) };
+    });
   const watchServers = (): void => {
     off ??= watchList(env, 'media-servers', (rows, loaded) => {
       verdicts = rows.filter((r): r is ServerRow => r.kind === 'server');
@@ -82,7 +96,7 @@ export function createAttachments(
         onclick: () => {
           item.removed = true;
           item.abort?.abort();
-          if (item.preview) URL.revokeObjectURL(item.preview);
+          forget(item);
           items = items.filter((x) => x !== item);
           const picker = item.el.querySelector('select');
           if (picker) pickers.delete(picker);
@@ -94,6 +108,7 @@ export function createAttachments(
     );
     replaceChildren(
       item.el,
+      item.local ? picture(item, item.local) : null,
       h('span', { class: 'clip' }, item.file.name),
       h('span', { class: 'prog' }, bar),
       status,
@@ -153,11 +168,9 @@ export function createAttachments(
         item.done = result.uploaded;
         item.el.classList.add('done');
         status.textContent = hostOf(target);
-        if (result.uploaded.type === 'image') {
-          item.preview = URL.createObjectURL(item.file);
-          const img = h('img', { alt: item.file.name });
-          item.el.prepend(img);
-          loadImage(img, item.preview, () => img.remove());
+        if (result.uploaded.type === 'image' && !item.local) {
+          item.local = URL.createObjectURL(item.file);
+          item.el.prepend(picture(item, item.local));
         }
       }
     } catch (error) {
@@ -215,6 +228,7 @@ export function createAttachments(
         }
         limit.remove();
         const item: Item = { file, el: h('div', { class: 'thumb' }), busy: false };
+        if (file.type.startsWith('image/')) item.local = URL.createObjectURL(file);
         items.push(item);
         el.append(item.el);
         void run(item);
@@ -227,8 +241,10 @@ export function createAttachments(
           file: new File([], done.url),
           done,
           busy: false,
-          el: h('div', { class: 'thumb done' }, done.url),
+          el: h('div', { class: 'thumb done' }),
         };
+        if (done.type === 'image') item.el.append(picture(item, done.url));
+        item.el.append(done.url);
         item.el.append(
           h(
             'button',
@@ -258,7 +274,7 @@ export function createAttachments(
       for (const i of items) {
         i.removed = true;
         i.abort?.abort();
-        if (i.preview) URL.revokeObjectURL(i.preview);
+        forget(i);
       }
       items = [];
       pickers.clear();
@@ -268,7 +284,7 @@ export function createAttachments(
       disposed = true;
       for (const i of items) {
         i.abort?.abort();
-        if (i.preview) URL.revokeObjectURL(i.preview);
+        forget(i);
       }
       off?.();
       pickers.clear();

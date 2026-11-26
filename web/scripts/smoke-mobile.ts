@@ -1,7 +1,8 @@
 // The phone and touch batch (owner, 2026-11-22), at 390 with a finger and at 1440 with a mouse: no field under 16px
 // on a touch screen, so iOS never zooms into one; the top bar keeps the name and its right-hand buttons while the
 // chips scroll with a fade; the phone default (Post collapsed at the bottom, notifications in Home, no Notifications
-// tab), whose collapsed Post maximizes at once; and a picture that handles like a map, its percentage a handle.
+// tab), whose collapsed Post maximizes at once; the emoji search through the page scroll iOS makes for its keyboard;
+// and a picture that handles like a map, its percentage a handle.
 import type { CDPSession, Page } from 'playwright-core';
 
 type Check = (name: string, ok: boolean, detail?: unknown) => void;
@@ -125,6 +126,24 @@ export async function mobileChecks(open: Open, check: Check): Promise<void> {
   );
   await page.keyboard.press('Escape');
   await page.locator('.pane.max .zoom.on').tap();
+
+  // The emoji picker's search: iOS scrolls the page to lift the field above its keyboard, and the picker stays.
+  await page.waitForTimeout(500); // a press just after rows moved is let go
+  await page
+    .locator('.view[data-kind="home"] .acts [aria-label="React with an emoji"]')
+    .first()
+    .tap();
+  const find = page.locator('.epick .ehead input');
+  await find.tap();
+  await page.evaluate(() => document.dispatchEvent(new Event('scroll')));
+  await page.keyboard.type('smile');
+  check(
+    'phone: the emoji search takes the keyboard and stays through the page scroll iOS makes for it',
+    (await page.locator('.epick').count()) === 1 &&
+      (await find.inputValue()) === 'smile' &&
+      (await find.evaluate((e) => e === document.activeElement)),
+  );
+  await page.keyboard.press('Escape');
 
   // A picture, with one finger and then two.
   await page.locator('.view[data-kind="home"] .mbox').first().tap();

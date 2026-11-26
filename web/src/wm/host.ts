@@ -14,12 +14,37 @@ export type Host = {
   dispose(): void;
 };
 
+const FIELD = 'input, textarea, select, [contenteditable]:not([contenteditable="false"])';
+
+/** iOS lifts a field above its keyboard by scrolling the page, which nothing else scrolls (only lists do), and does
+ * not always put the page back when the keyboard goes. Once no field has the keyboard, the page goes back to the
+ * top. A page the reader has pinched closer is theirs and is left as it is. */
+function keepPageInPlace(): () => void {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const settle = (): void => {
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      const port = globalThis.visualViewport;
+      if (document.activeElement?.matches(FIELD) || (port && port.scale > 1.01)) return;
+      if (scrollX || scrollY) scrollTo(0, 0);
+    }, 100);
+  };
+  document.addEventListener('focusout', settle);
+  globalThis.visualViewport?.addEventListener('resize', settle);
+  return () => {
+    clearTimeout(timer);
+    document.removeEventListener('focusout', settle);
+    globalThis.visualViewport?.removeEventListener('resize', settle);
+  };
+}
+
 export function createHost(): Host {
   const bar = h('header', { class: 'bar' });
   const root = h('div', { class: 'wm' });
   const layer = h('div', { class: 'layer' });
   const app = h('div', { class: 'app' }, bar, h('div', { class: 'stage' }, root, layer));
   document.body.append(app);
+  const offPage = keepPageInPlace();
   return {
     bar,
     root,
@@ -39,6 +64,6 @@ export function createHost(): Host {
       if (s.theme === 'system') delete document.documentElement.dataset.theme;
       else document.documentElement.dataset.theme = s.theme;
     },
-    dispose: () => app.remove(),
+    dispose: () => (offPage(), app.remove()),
   };
 }

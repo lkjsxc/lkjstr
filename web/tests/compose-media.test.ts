@@ -147,3 +147,54 @@ it('a late File read cannot start an attachment removed before transfer', async 
     x.attachments.dispose();
   }
 });
+
+it('opens a draft picture full size in a media tab, while it uploads and once it is up', async () => {
+  const x = setup();
+  const open = vi.fn();
+  const made = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:local/1');
+  const revoked = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
+  let done: (r: ActResult) => void = () => {};
+  x.act.mockImplementation(() => new Promise<ActResult>((resolve) => (done = resolve)));
+  const viewEnv = {
+    visible: createSignal(true),
+    open,
+    engine: {
+      me: () => 'author',
+      accounts: createSignal({ accounts: [] }),
+      act: x.act,
+      open: () => ({ window() {}, visible() {}, close() {} }),
+    },
+  } as unknown as ViewEnv;
+  const a = createAttachments(viewEnv, () => {});
+  try {
+    a.add([x.file]);
+    const pending = a.el.querySelector<HTMLAnchorElement>('.tpic');
+    expect(pending?.querySelector('img')?.getAttribute('src')).toBe('blob:local/1');
+    pending?.click();
+    expect(open).toHaveBeenLastCalledWith(
+      'media',
+      { media: [{ type: 'image', url: 'blob:local/1' }], index: 0 },
+      expect.objectContaining({ split: false }),
+    );
+    await vi.waitFor(() => expect(x.act).toHaveBeenCalled());
+    done({
+      t: 'result',
+      req: 'upload',
+      ok: true,
+      uploaded: { url: 'https://media.example/a.png', type: 'image', mime: 'image/png' },
+    } as ActResult);
+    await vi.waitFor(() => expect(a.el.querySelector('.thumb.done')).not.toBeNull());
+    a.el.querySelector<HTMLAnchorElement>('.tpic')?.click();
+    expect(open).toHaveBeenLastCalledWith(
+      'media',
+      { media: [{ type: 'image', url: 'https://media.example/a.png' }], index: 0 },
+      expect.anything(),
+    );
+    a.clear();
+    expect(revoked).toHaveBeenCalledWith('blob:local/1');
+  } finally {
+    made.mockRestore();
+    revoked.mockRestore();
+    a.dispose();
+  }
+});

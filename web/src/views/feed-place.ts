@@ -2,6 +2,7 @@
 // scroll offset, which means nothing once rows above change, a tile gets another width or a picture arrives. The
 // place is read from the screen whenever the reader scrolls and put back whenever anything else moves the rows.
 import type { ListRow } from './feed-draw.ts';
+import { guardTaps } from './tap-guard.ts';
 
 export type Place = { readonly key: string; readonly off: number };
 
@@ -46,8 +47,9 @@ export function createKeeper(o: {
   let dirty = false;
   let fraction = 0;
   // Any write to scrollTop stops a fling's momentum on a phone. While the reader moves the list, the place read at
-  // `readAt` is behind the screen by however far it has scrolled since: a put allows for that and writes only when
-  // rows above really changed height.
+  // `readAt` is behind the screen by however far it has scrolled since: a put allows for that, and when rows above
+  // really changed height it shifts the rows (`fraction`, then however far) instead of writing; the shift goes
+  // into the scroll once the list comes to rest (`rest`).
   let readAt = el.scrollTop;
   let coasting = false; // a move made while the reader moves the list
   let touching = false;
@@ -58,8 +60,12 @@ export function createKeeper(o: {
     scrolledAt = performance.now();
   };
   const onTouch = touched(true);
-  const onLift = touched(false);
-  const onScroll = (): void => void (scrolledAt = performance.now());
+  const lift = touched(false);
+  const onLift = (): void => (lift(), shifted());
+  let resting: ReturnType<typeof setTimeout> | undefined;
+  const later = (): void => void (resting ??= setTimeout(rest, MOVING_MS));
+  const shifted = (): void => void (Math.abs(fraction) >= 1 && later());
+  const onScroll = (): void => ((scrolledAt = performance.now()), shifted());
   el.addEventListener('touchstart', onTouch, { passive: true });
   el.addEventListener('touchend', onLift, { passive: true });
   el.addEventListener('touchcancel', onLift, { passive: true });
@@ -114,9 +120,11 @@ export function createKeeper(o: {
   // reader's doing: reading it would overwrite the place with wherever the rows fell.
   let size = '';
   const sized = (): string => `${el.clientWidth}:${list.offsetHeight}`;
+  /** At the very top as the reader sees it: a shift still waiting for rest is not the top. */
+  const top = (): boolean => el.scrollTop < TOP_PX && Math.abs(fraction) < 1;
   const take = (): void => {
-    if (el.scrollTop < TOP_PX) shiftList(0);
-    const first = el.scrollTop < TOP_PX ? undefined : onScreen(1)[0];
+    if (top()) shiftList(0);
+    const first = top() ? undefined : onScreen(1)[0];
     set(first && { key: first.key, off: first.top });
     size = sized();
     readAt = el.scrollTop;
@@ -138,11 +146,14 @@ export function createKeeper(o: {
       tail.style.height = `${tail.offsetHeight + Math.max(0, deficit)}px`;
     }
     const before = el.scrollTop;
-    // In motion a sub-pixel is left to the shift below, so nothing touches the scroll.
-    if (Math.abs(delta) >= (coasting ? 1 : 0.5)) el.scrollTop += delta;
-    // Scroll positions can round to a device pixel even when row heights are fractional.
-    const remainder = delta - (el.scrollTop - before);
-    if (Math.abs(remainder) < 1) shiftList(-remainder);
+    // In motion the whole move is a shift of the rows, so nothing touches the scroll until the list rests.
+    if (coasting) shiftList(-delta), shifted();
+    else {
+      if (Math.abs(delta) >= 0.5) el.scrollTop += delta;
+      // Scroll positions can round to a device pixel even when row heights are fractional.
+      const remainder = delta - (el.scrollTop - before);
+      shiftList(Math.abs(remainder) < 1 ? -remainder : 0);
+    }
     size = sized();
     readAt = el.scrollTop;
     return true;
@@ -157,15 +168,25 @@ export function createKeeper(o: {
       return kept;
     }
     if (place) return moveTo(place.key, place.off);
-    if (el.scrollTop < TOP_PX) shiftList(0);
-    if (el.scrollTop < TOP_PX && el.scrollTop > 0 && !moving()) el.scrollTop = 0;
+    if (top()) shiftList(0);
+    if (top() && el.scrollTop > 0 && !moving()) el.scrollTop = 0;
     return true;
   };
+  /** The list has come to rest: a shift that kept the rows in place while it moved goes into the scroll. */
+  function rest(): void {
+    resting = undefined;
+    if (Math.abs(fraction) < 1 || !o.active()) return;
+    if (moving()) return later();
+    const first = onScreen(1)[0];
+    if (!first || !moveTo(first.key, first.top)) shiftList(0);
+    take();
+  }
   // A picture that loads, a font that arrives, a note that unfolds, a tile that gets another width: all change the
   // height of rows, and all are seen here before the frame is painted.
   const watch = new ResizeObserver(() => void put());
   watch.observe(list);
   watch.observe(el);
+  const offTaps = guardTaps(el, list); // a press just after rows moved under it
   const leaving = (): void => void (document.visibilityState === 'hidden' && flush());
   document.addEventListener('visibilitychange', leaving);
   window.addEventListener('pagehide', flush);
@@ -178,7 +199,7 @@ export function createKeeper(o: {
     hold(preferred) {
       if (!o.active()) return () => undefined;
       // Several rows, because the first may be the one that goes away.
-      const held = place || el.scrollTop >= TOP_PX ? onScreen(6, true) : [];
+      const held = place || !top() ? onScreen(6, true) : [];
       const node = preferred && o.node(preferred);
       if (node) {
         const row = node.getBoundingClientRect();
@@ -210,7 +231,9 @@ export function createKeeper(o: {
       el.scrollTop = 0;
     },
     dispose() {
+      clearTimeout(resting);
       watch.disconnect();
+      offTaps();
       el.removeEventListener('touchstart', onTouch);
       el.removeEventListener('touchend', onLift);
       el.removeEventListener('touchcancel', onLift);

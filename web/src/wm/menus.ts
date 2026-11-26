@@ -1,6 +1,7 @@
 // One popover at a time in the overlay layer: a dropdown menu, or a panel such as the emoji picker. It closes on an
 // outside press, Escape, a scroll or wheel outside it, a window blur, or a choice, and gives the keyboard back to
-// what opened it. Menus have no close button.
+// what opened it. Menus have no close button. The page itself never scrolls (only a list does): when it does, the
+// browser is lifting a field above an on-screen keyboard (iOS), and nothing closes.
 import { h } from '../shared/h.ts';
 import { pressed } from '../shared/keys.ts';
 
@@ -59,7 +60,8 @@ export function openPopover(
     opts.closed?.();
   };
   const outside = (e: PointerEvent): void => void (inside(e) || close());
-  const away = (e: Event): void => void (inside(e) || close());
+  const away = (e: Event): void =>
+    void (inside(e) || e.target === document || e.target === window || close());
   const key = (e: KeyboardEvent): void => {
     if (pressed(e, 'menuClose')) e.stopPropagation(), e.preventDefault(), close();
   };

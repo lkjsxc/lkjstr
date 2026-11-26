@@ -47,7 +47,8 @@ it('holds the same viewport offset when scrolling rounds fractional row heights'
   }
 });
 
-it('never writes the scroll while a fling coasts, unless rows above change', () => {
+it('never writes the scroll while a fling coasts; rows above that change are made up for at rest', () => {
+  vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'performance'] });
   const view = document.createElement('div');
   const list = document.createElement('div');
   const note = document.createElement('article');
@@ -89,16 +90,31 @@ it('never writes the scroll while a fling coasts, unless rows above change', () 
     expect(keeper.put()).toBe(true);
     keeper.hold()();
     expect(writes).toEqual([]);
-    // A row above grows by 50px while it coasts: only that is made up for, from where the reader has got to.
+    // A row above grows by 50px while it coasts: the rows shift by that much and the scroll is not touched.
     const before = note.getBoundingClientRect().top;
     const settle = keeper.hold();
     layoutTop += 50;
     settle();
-    expect(writes).toEqual([637 + 50]);
+    expect(writes).toEqual([]);
+    expect(shift()).toBe(-50);
     expect(note.getBoundingClientRect().top).toBe(before);
+    // Still coasting: more scroll events, still nothing written.
+    for (let i = 0; i < 5; i++) {
+      vi.advanceTimersByTime(16);
+      scroll += 4;
+      view.dispatchEvent(new Event('scroll'));
+    }
+    expect(writes).toEqual([]);
+    const moving = note.getBoundingClientRect().top;
+    // At rest, the shift goes into the scroll and the screen does not move.
+    vi.advanceTimersByTime(400);
+    expect(writes).toEqual([657 + 50]);
+    expect(shift()).toBe(0);
+    expect(note.getBoundingClientRect().top).toBe(moving);
   } finally {
     keeper.dispose();
     view.remove();
+    vi.useRealTimers();
   }
 });
 
