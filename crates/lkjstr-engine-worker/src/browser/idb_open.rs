@@ -7,6 +7,7 @@ use wasm_bindgen::{JsCast, JsValue, closure::Closure};
 use web_sys::{AbortSignal, IdbDatabase, IdbOpenDbRequest};
 type Handler = Closure<dyn FnMut(web_sys::Event)>;
 const DB_NAME: &str = "lkjstr-wasm";
+const RECOVERY_SCHEMA: u32 = 4;
 struct Pending {
     request: IdbOpenDbRequest,
     live: Cell<bool>,
@@ -51,10 +52,7 @@ pub async fn open(signal: &AbortSignal) -> Result<IdbDatabase, String> {
         .dyn_into()
         .map_err(|_| "storage unavailable")?;
     let request = factory
-        .open_with_u32(
-            DB_NAME,
-            lkjstr_core::engine::account_storage::DATABASE_SCHEMA,
-        )
+        .open_with_u32(DB_NAME, RECOVERY_SCHEMA)
         .map_err(|_| "storage unavailable")?;
     let state = Rc::new(Pending {
         request,
@@ -104,7 +102,7 @@ pub async fn open(signal: &AbortSignal) -> Result<IdbDatabase, String> {
                 .and_then(|e| super::idb_schema::begin(&upgrading.request, e.old_version()));
             match result {
                 Ok(guard) => {
-                    *upgrading.upgrade.borrow_mut() = Some(guard);
+                    *upgrading.upgrade.borrow_mut() = guard;
                 }
                 Err(_) => upgrading.cancel(),
             }

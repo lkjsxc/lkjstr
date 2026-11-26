@@ -1,9 +1,13 @@
-//! Non-destructive schema fence: validate the old account row and add only CAS metadata.
-use lkjstr_core::engine::account_storage::{self, Read, Revision};
+//! Preserve account authority while returning to the schema-2 cache layout.
+use lkjstr_core::{
+    cache::METADATA_KEY,
+    engine::account_storage::{self, Read, Revision},
+};
 use wasm_bindgen::{JsCast, JsValue, closure::Closure};
-use web_sys::{IdbOpenDbRequest, IdbRequest};
+use web_sys::{IdbDatabase, IdbOpenDbRequest, IdbRequest};
 
 type Handler = Closure<dyn FnMut(web_sys::Event)>;
+const SCHEMA_3_RETENTION_KEY: &str = "durable-gdsf-v1";
 pub(super) struct Upgrade {
     request: IdbRequest,
     _handler: Handler,
@@ -13,14 +17,31 @@ impl Drop for Upgrade {
         self.request.set_onsuccess(None);
     }
 }
-pub(super) fn begin(request: &IdbOpenDbRequest, old: f64) -> Result<Upgrade, JsValue> {
-    let db = request.result()?.dyn_into::<web_sys::IdbDatabase>()?;
+fn create_events(db: &IdbDatabase) -> Result<(), JsValue> {
+    let options = web_sys::IdbObjectStoreParameters::new();
+    options.set_key_path(&"id".into());
+    let events = db.create_object_store_with_optional_parameters("events", &options)?;
+    events.create_index_with_str("created_at", "created_at")?;
+    Ok(())
+}
+
+pub(super) fn begin(request: &IdbOpenDbRequest, old: f64) -> Result<Option<Upgrade>, JsValue> {
+    let db = request.result()?.dyn_into::<IdbDatabase>()?;
     let tx = request.transaction().ok_or("missing upgrade transaction")?;
+    if old == f64::from(account_storage::DATABASE_SCHEMA) {
+        return Ok(None);
+    }
+    if old == 3.0 {
+        // The account rows and all other KV records stay in place.
+        db.delete_object_store("events")?;
+        create_events(&db)?;
+        let store = tx.object_store("kv")?;
+        store.delete(&METADATA_KEY.into())?;
+        store.delete(&SCHEMA_3_RETENTION_KEY.into())?;
+        return Ok(None);
+    }
     if old == 0.0 {
-        let options = web_sys::IdbObjectStoreParameters::new();
-        options.set_key_path(&"id".into());
-        let events = db.create_object_store_with_optional_parameters("events", &options)?;
-        events.create_index_with_str("created_at", "created_at")?;
+        create_events(&db)?;
         db.create_object_store("kv")?;
     } else if old != 1.0 {
         return Err("unsupported database schema".into());
@@ -58,8 +79,8 @@ pub(super) fn begin(request: &IdbOpenDbRequest, old: f64) -> Result<Upgrade, JsV
         }
     });
     current.set_onsuccess(Some(handler.as_ref().unchecked_ref()));
-    Ok(Upgrade {
+    Ok(Some(Upgrade {
         request: current,
         _handler: handler,
-    })
+    }))
 }
