@@ -200,8 +200,7 @@ pub struct Network {
     pub(super) ingress: optimizer::Ingress,
     // Last 256 distinct auth-gated origins, including retired connections.
     auth_origins: std::collections::VecDeque<String>,
-    // At most 32 usable device signer public keys, never persisted.
-    auth_signers: BTreeSet<String>,
+    auth_signers: BTreeSet<String>, // At most 32 usable device signer public keys, never persisted.
     auth_active: Option<String>,
     // Job identities survive relay removal/re-admission; exhaustion refuses new AUTH.
     auth_next_job: u64,
