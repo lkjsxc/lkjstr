@@ -213,11 +213,12 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
   instead: it spans every note known for the list by rank, as a native scrollbar
   would, so busy weeks keep their room over a few short old posts; a quiet month stays reachable and empty time
   takes none. A 6x32px accent grip in the rightmost 16px marks the reading place and stays whole at the ends.
+  It appears with the first dated row at the share scrolled, then uses the rank map as counts arrive.
   Hover and hold highlight it. During a drag it follows the pointer or finger with the time beside it. On a tile of 520px or more one right-aligned column names local years, months and days
   where each begins (a year's newest month one line under it, a month as `mm/dd` once days are named), with dots
   beside them; the current year uses normal text colour. A fine pointer draws a `--sep` line and the time under it.
   Pressed or dragged it goes to that time (near a label, to that period's newest note), says the day while it loads,
-  and leaves a tick to come back by; `[` and `]` step a day, Backspace returns
+  and leaves a thin tick to come back by; `[` and `]` step a day, Backspace returns
   ([interface-time.md](interface-time.md) C2, C3). The tile's own width decides the rail (56px from 520px, else 16px
   with years shown on hover) and other tile-width
   layouts (link-card pictures, the folded action row) from the first frame; a list the engine refused

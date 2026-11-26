@@ -104,7 +104,7 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
     settle();
     fresh.read(rows);
     paintFresh();
-    keys.paint(), previews.sync(), rail.sync();
+    keys.paint(), previews.sync(), rail.rowsChanged();
   };
   const seatThread = createThreadSeat(el, tail, keeper, Boolean(state.pos), drawn.node);
   const seat = (): void => void (thread && env.visible.get() && seatThread(shown));
@@ -265,7 +265,7 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
   const offVisible = env.visible.subscribe((on) => {
     sub?.visible(on);
     if (!on) pauseNoteAudio(list);
-    if (on) seat(), keeper.put(), follow();
+    if (on) seat(), keeper.put(), rail.rowsChanged(), follow();
   });
   const offAccounts = env.engine.accounts.subscribe((a) => {
     const now = ability(env.engine);

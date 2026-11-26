@@ -17,6 +17,8 @@ import { createSeeker } from './time-seek.ts';
 
 const LATE_MS = 500; // a jump still loading this long after its seek says so
 const LANDED_MS = 1000; // the label stays this long after a jump lands
+const timed = (r: RailRow): boolean =>
+  r.kind === 'note' || r.kind === 'notification' || r.kind === 'dm';
 
 export function mountTimeRail(o: {
   candidate: boolean;
@@ -32,7 +34,6 @@ export function mountTimeRail(o: {
   active(): boolean;
 }) {
   const { el, list, keeper } = o;
-  // A zero-height sticky holder survives WM reparenting and scrolls independently of the filter.
   const rail = h('div', { class: 'time-rail', hidden: true, 'aria-hidden': 'true' });
   const marks = h('div', { class: 'time-marks' });
   const grip = h('div', { class: 'time-grip' });
@@ -45,7 +46,6 @@ export function mountTimeRail(o: {
   el.prepend(pin);
   let telling = false; // the reader is scrolling (C1)
   const intent = scrollIntent(el, () => ((telling = false), sync()));
-  // The view's tab kind (set before mounting) keys what the engine last said, so the first frame has the final width.
   const kind = (): string => o.key(el.dataset.kind ?? '');
   const guess = (): boolean => o.candidate && o.version() >= 5 && railGuess(kind());
   el.classList.toggle('has-time-rail', guess());
@@ -57,6 +57,7 @@ export function mountTimeRail(o: {
   let labels: readonly Label[] = [];
   let drawn: { shape?: Timeline; key: string } = { key: '' };
   let frame = 0;
+  let hadRows = false;
   let held = false;
   let plain = false; // nothing counted yet: the grip says only the share scrolled
   let under: TimePlace | undefined;
@@ -68,11 +69,9 @@ export function mountTimeRail(o: {
   let lateTimer: ReturnType<typeof setTimeout> | undefined;
   let landTimer: ReturnType<typeof setTimeout> | undefined;
   const first = (): RailRow | undefined =>
-    topRow(el, list, (key) => o.rows().find((r) => r.key === key)) ??
-    o.rows().findLast((r) => r.kind === 'note' || r.kind === 'notification' || r.kind === 'dm');
+    topRow(el, list, (key) => o.rows().find((r) => r.key === key)) ?? o.rows().findLast(timed);
   let placed = new Map<string, Timeline['positions'][number]>();
   const position = (key: string | undefined) => (key === undefined ? undefined : placed.get(key));
-  // The reading place: the top row's own position, else its nearest counted neighbour's.
   const near = (row: RailRow | undefined) => nearPlace(o.rows(), row?.key, position);
   const readingAt = (row: RailRow | undefined): number => position(row?.key)?.at ?? rowTime(row);
   const keyAt = (p: TimePlace) =>
@@ -97,7 +96,6 @@ export function mountTimeRail(o: {
       let node = nodeOf(key);
       if (!node && o.ensure) o.ensure(key), (node = nodeOf(key));
       if (!node) return false;
-      // Allow even the oldest note to stand at the top after a seek, as in a focused thread.
       const footer = o.tail.previousElementSibling?.getBoundingClientRect().height ?? 0;
       o.tail.style.height = `${Math.max(0, el.clientHeight - node.offsetHeight - footer)}px`;
       keeper.set(saved ?? { key, off: 0 });
@@ -122,13 +120,11 @@ export function mountTimeRail(o: {
     clearTimeout(landTimer);
     landTimer = setTimeout(() => ((landed = false), sync()), LANDED_MS);
   };
-  /** The full time of a loaded note; else its local day; else nothing. Never a minute it does not know. */
   const textFor = (p: TimePlace): string => {
     const key = keyAt(p);
     const at = readingAt(key ? o.rows().find((r) => r.key === key) : undefined);
     return at ? timeText(at) : dayText(days(), p);
   };
-  /** The note under `y`, or the period of a label whose centre is within 6px. */
   const at = (y: number): TimePlace =>
     snap(labels, y)?.place ?? placeToNote(bands, y) ?? { month: 0, offset: 0 };
   const tell = (lineY: number, row: RailRow | undefined): void => {
@@ -152,25 +148,23 @@ export function mountTimeRail(o: {
   };
   const paint = (): void => {
     frame = 0;
-    const overflow = el.scrollHeight > el.clientHeight + 1;
+    const view = el.clientHeight;
     if (!held) shape = data; // Freeze the map and scroll mode until release, even before the first count.
     const counted = Boolean(shape?.supported && shape.months.length);
     // An answer with no months yet (a Home before its follows arrive) still says nothing about the width.
     const said = data && (!data.supported || data.months.length) ? data.supported : undefined;
     el.classList.toggle('has-time-rail', said ?? guess());
-    // Its room reserved and nothing counted yet, the rail is plain: a grip for the share scrolled, never empty.
     plain = !counted && el.classList.contains('has-time-rail');
-    rail.hidden = !overflow || !(counted || plain);
+    const needsGrip = o.rows().some(timed) || el.scrollHeight > view + 1;
+    rail.hidden = !view || !(counted || plain) || !needsGrip;
     rail.classList.toggle('plain', plain);
-    height = Math.max(1, el.clientHeight - 16);
+    height = Math.max(1, view - 16);
     bands = timeScale(plain ? [] : (shape?.months ?? []), height);
     if (rail.hidden) return;
-    rail.style.top = '0px';
-    rail.style.height = `${el.clientHeight}px`;
+    rail.style.height = `${view}px`;
     rail.classList.toggle('open-end', data?.older === true);
     const wide = rail.offsetWidth > 16;
     const local = days();
-    // Marks are planned again when what they are drawn from changes, not on every scroll.
     const key = `${height}:${wide}:${zone}:${plain}`;
     if (shape !== drawn.shape || key !== drawn.key) {
       drawn = { shape, key };
@@ -184,10 +178,8 @@ export function mountTimeRail(o: {
       : new Date(p?.month ?? data?.months[0]?.at ?? 0).getUTCFullYear();
     for (const number of marks.querySelectorAll('.time-year'))
       number.classList.toggle('current', number.textContent === String(year));
-    // Held, the grip stays under the pointer, so the drag is direct; the list follows as its seeks land.
-    const gripY =
-      8 + (held ? pointerY : plain ? scrolledY(el, height) : p ? noteToPlace(bands, p) : 0);
-    const centre = Math.min(el.clientHeight - 16, Math.max(16, gripY));
+    const y = held ? pointerY : p && !plain ? noteToPlace(bands, p) : scrolledY(el, height);
+    const centre = Math.min(view - 16, Math.max(16, y + 8));
     grip.style.top = `${centre}px`;
     tell(centre, row);
     tick.hidden = !s.back;
@@ -263,13 +255,21 @@ export function mountTimeRail(o: {
   };
   return {
     sync,
+    rowsChanged() {
+      // Paint the first grip with the drawn rows, after the keeper has restored their scroll.
+      const hasRows = o.candidate && o.rows().some(timed);
+      const firstRows = hasRows && (!hadRows || rail.hidden);
+      hadRows = hasRows;
+      if (!firstRows) return sync();
+      cancelAnimationFrame(frame);
+      paint();
+    },
     window() {
       seeker.window();
       sync();
     },
     busy: () => Boolean(s.pending || s.inflight || held),
     timeline(next: Timeline) {
-      // Refused mid-drag: the hold ends and the list stays where it is.
       if (!next.supported) stop(), (s.back = undefined);
       data = next;
       placed = new Map(next.positions.map((p) => [p.key, p]));

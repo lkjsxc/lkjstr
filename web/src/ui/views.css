@@ -131,11 +131,12 @@
 .date-hint { max-width: 270px; margin-top: 3px; font-size: 12.5px; line-height: 1.5; }
 /* Time rail: a quiet strip, with no track or border. Its width is reserved before counts arrive. */
 .feed.has-time-rail { --rail-size: 16px; padding-right: var(--rail-size); scrollbar-width: none; }
+.feed.has-time-rail:focus-visible:not(.time-pointer-focus) { outline: 2px solid var(--accent); outline-offset: -2px; }
 .feed.has-time-rail::-webkit-scrollbar { display: none; width: 0; }
 .time-pin { position: sticky; top: 0; height: 0; z-index: 4; }
 /* Only the padding reserved for an active rail is reclaimed; an inactive pin stays inside its feed. */
 .feed.has-time-rail > .time-pin { margin-right: calc(-1 * var(--rail-size)); }
-.time-rail { position: absolute; right: 0; width: 16px; background: var(--paper); z-index: 4; touch-action: none; user-select: none; cursor: grab; }
+.time-rail { position: absolute; top: 0; right: 0; width: 16px; background: var(--paper); z-index: 4; touch-action: none; user-select: none; cursor: grab; -webkit-tap-highlight-color: transparent; }
 .time-rail.held { cursor: grabbing; }
 .time-rail[hidden], .time-return[hidden] { display: none; }
 /* A tile of 520px or more has the wide rail with its labels, decided by CSS so the first frame already has it. */
@@ -159,8 +160,8 @@
 /* The grip stays in the rightmost 16px on both rail widths. */
 .time-grip { position: absolute; right: 5px; width: 6px; height: 32px; border-radius: 3px; background: var(--accent); opacity: 0.8; transform: translateY(-50%); pointer-events: none; }
 .time-rail:hover .time-grip, .time-rail.held .time-grip { opacity: 1; }
-.time-return { position: absolute; right: 1px; width: 10px; height: 6px; border: 1px solid var(--accent); background: var(--paper); transform: translateY(-50%); }
-.time-return::before { content: ""; position: absolute; inset: -5px -1px -5px -5px; }
+.time-return { position: absolute; right: 2px; width: 12px; height: 2px; border-radius: 1px; background: var(--accent); transform: translateY(-50%); }
+.time-return::before { content: ""; position: absolute; inset: -8px -2px -8px -5px; }
 .time-rail .scrub { right: calc(100% + 4px); transform: translateY(-50%); }
 .time-rail.touch .scrub { right: calc(100% + 24px); } /* a thumb on the rail does not cover it */
 .vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }

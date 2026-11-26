@@ -18,7 +18,10 @@ afterEach(() => {
   vi.useRealTimers();
   vi.unstubAllGlobals();
 });
-export function setup(extra: Partial<Timeline> = {}) {
+export function setup(
+  extra: Partial<Timeline> | null = {},
+  { scrollHeight = 600, rowsReady = true } = {},
+) {
   const el = document.createElement('div');
   const list = document.createElement('div');
   const tail = document.createElement('div');
@@ -26,7 +29,7 @@ export function setup(extra: Partial<Timeline> = {}) {
   document.body.append(el);
   Object.defineProperties(el, {
     clientHeight: { value: 200 },
-    scrollHeight: { value: 600 },
+    scrollHeight: { value: scrollHeight },
     offsetWidth: { value: 600 },
   });
   el.getBoundingClientRect = () => ({ top: 0 }) as DOMRect;
@@ -51,20 +54,21 @@ export function setup(extra: Partial<Timeline> = {}) {
     list,
     tail,
     keeper: { set } as unknown as Keeper,
-    rows: () => rows,
+    rows: () => (rowsReady ? rows : []),
     seek,
     active: () => true,
   });
   dispose = rail.dispose;
-  rail.timeline({
-    supported: true,
-    months: [{ at: month, count: 3 }],
-    positions: rows.map((r, offset) => ({ key: r.key, month, offset })),
-    newest: month,
-    oldest: month,
-    older: false,
-    ...extra,
-  });
+  if (extra)
+    rail.timeline({
+      supported: true,
+      months: [{ at: month, count: 3 }],
+      positions: rows.map((r, offset) => ({ key: r.key, month, offset })),
+      newest: month,
+      oldest: month,
+      older: false,
+      ...extra,
+    });
   vi.advanceTimersByTime(16);
   const track = el.querySelector<HTMLElement>('.time-rail')!;
   track.setPointerCapture = vi.fn();
@@ -81,5 +85,9 @@ export function setup(extra: Partial<Timeline> = {}) {
     vi.advanceTimersByTime(16);
     return e;
   };
-  return { el, rail, track, tick, pointer, key, set, seek };
+  const showRows = () => {
+    rowsReady = true;
+    rail.rowsChanged();
+  };
+  return { el, rail, track, tick, pointer, key, set, seek, showRows };
 }

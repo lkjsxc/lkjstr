@@ -4,7 +4,7 @@
 
 Protocol 5 replaces native scrollbars in supported chronological note lists
 with a cache-wide month rail. The reference is the owner's image01.png.
-No relay counts are estimated and no public traffic is used in verification.
+No relay counts are estimated. Automated verification uses loopback relays.
 
 ## Map and input
 
@@ -37,16 +37,15 @@ The first frame follows the engine's last answer for the same tab kind on
 this device (`lkjstr:rails`), so a refused list starts at native width. A
 refusal holds for the page's session; an acceptance without months is no
 answer. Narrow year labels appear over content on hover or hold. Touch has a
-28px hit area. A visible rail always shows the grip pill. Hover and hold
-highlight it, and it follows the held pointer (interface-time.md C3). The
-rail is aria-hidden and the original list remains the keyboard scroller. A
-nonoverflowing list hides the rail; one occupied month shows only the
-grip. With its room reserved and nothing counted yet (before the first scan,
-or a Home before its follows), the rail is plain: no marks and the grip at the
-share scrolled. A plain drag scrolls by share and shows the top row's time
+28px hit area. The grip pill appears with the first dated row, even while the
+list fits in the tile. Hover and hold highlight it, and it follows the held
+pointer (interface-time.md C3). A jump leaves a thin return tick. The rail is
+aria-hidden and the original list shows focus for keyboard input. With its room
+reserved and nothing counted yet, the rail shows the grip at the share scrolled.
+Marks appear as soon as counts arrive. A plain drag scrolls by share and shows the top row's time
 until release, when any new count takes effect. A top row the engine has not
 counted yet (`time-near.ts`) places the grip at its nearest counted row,
-older first, never at the top. Unexhausted relay history fades the lower marks. Scrolling to
+older first, with the share scrolled as a fallback. Unexhausted relay history fades the lower marks. Scrolling to
 the local end keeps the existing history path.
 
 ## Local days

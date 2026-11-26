@@ -3,6 +3,30 @@ import { expect, it, vi } from 'vitest';
 import { timeText } from '../src/views/feed-scrub.ts';
 import { month, setup } from './time-rail-fixture.ts';
 
+it('paints the grip with the first rows before a timeline or local overflow', () => {
+  const x = setup(null, { rowsReady: false, scrollHeight: 200 });
+  expect(x.track.hidden).toBe(true);
+  x.showRows();
+  expect(x.track.hidden).toBe(false);
+  expect(x.track.classList.contains('plain')).toBe(true);
+  expect(x.track.querySelector<HTMLElement>('.time-grip')?.style.top).toBe('16px');
+});
+
+it('keeps the plain grip when a header overflows before dated rows arrive', () => {
+  const x = setup({ months: [], positions: [] }, { rowsReady: false });
+  expect(x.track.hidden).toBe(false);
+  expect(x.track.classList.contains('plain')).toBe(true);
+});
+
+it('paints the first grip at the restored share and keeps it there without a counted position', () => {
+  const x = setup({ positions: [] }, { rowsReady: false });
+  expect(x.track.hidden).toBe(false); // The header already overflows.
+  x.el.scrollTop = 200;
+  x.showRows();
+  expect(x.track.hidden).toBe(false);
+  expect(x.track.querySelector<HTMLElement>('.time-grip')?.style.top).toBe('100px');
+});
+
 it('keeps the grip beside an uncounted top row instead of at the top', () => {
   // Older history or live notes arrived while the engine rebuilds its count: the top row has no position yet.
   const x = setup({

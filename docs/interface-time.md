@@ -88,11 +88,12 @@ Mouse, pen and touch share one path: pointer events on the rail, with capture.
 - **Press.** It jumps to the note under the pointer. A press within 6px of a placed label's centre snaps to that
   boundary's newest note (so does a drag, and the hover label says the same target). A loaded target scrolls at once.
   Any other target uses the existing window seek with the same 60 rows on each side, which loads around the target.
-  Either way one return tick is left at the place the press started, and a press on the tick returns to the exact row
+  Either way a thin return tick is left at the place the press started, and a press on the tick returns to the exact row
   and offset.
-- **Grip.** A visible rail always shows a 6x32px `--accent` pill centred in its rightmost 16px and clamped 16px
-  inside the tile. The whole rail accepts a press. Hover and hold highlight the grip. During a drag it follows
-  the pointer with the time label beside it.
+- **Grip.** A 6x32px `--accent` pill appears with the first dated row. It is centred in the rail's rightmost 16px
+  and clamped 16px inside the tile. It starts at the share scrolled and takes its place on the map when counts arrive.
+  The whole rail accepts a press. Hover and hold highlight the grip. During a drag it follows the pointer with
+  the time label beside it.
 - **Drag.** The label follows the pointer. Seeks run at most once per 80ms and one at a time: while one is out, only
   the latest target waits, and it is sent once the answer is drawn. So a target that arrives late never pulls the list
   back to an earlier one. While a press is held the bands and marks stay frozen, so a Timeline answer that arrives
@@ -176,8 +177,9 @@ Each check runs on mock fixtures, plus the real-engine smoke where it already co
     nothing while typing, with a popover open, or at the ends. The live node speaks once per jump.
 11. Touch at 390 light. A drag on the rail moves the list, with the label at least 24px left of the rail. A tap
     leaves the tick, and a swipe on the notes shows the label.
-12. Bounds. Paint stays one frame callback. Mark planning for 400 days plus 120 months stays under 1ms (0.18ms in
-    Chrome's engine on 2026-11-22), and runs only when the map changes, not on every scroll. The label reads no layout beyond
+12. Bounds. The first grip paints with the rows. Later updates coalesce into one frame callback. Mark planning
+    for 400 days plus 120 months stays under 1ms (0.18ms in Chrome's engine on 2026-11-22), and runs when the map
+    changes. The label reads no layout beyond
     the existing top-row search.
 
 Built 2026-11-22: unit tests `time-marks`, `time-days`, `time-seek` and `time-rail`, native
