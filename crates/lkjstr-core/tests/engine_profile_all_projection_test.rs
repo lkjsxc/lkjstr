@@ -199,13 +199,13 @@ fn all_reveal_reconstruction_and_repeated_windows_keep_authored_time() -> Test {
 }
 
 #[test]
-fn home_and_profile_reposts_keep_their_attribution() -> Test {
-    for mode in ["home", "reposts"] {
+fn home_and_profile_repost_projections_keep_their_attribution() -> Test {
+    for mode in ["home", "reposts", "posts"] {
         let (mut engine, note, own) = fixture()?;
         let query = if mode == "home" {
             json!({"source":"home","account":note.pubkey})
         } else {
-            profile(&note.pubkey, &note.pubkey, "reposts")
+            profile(&note.pubkey, &note.pubkey, mode)
         };
         let mut session = Session::default();
         let state = start(&mut engine, &mut session, query)?;
@@ -217,7 +217,7 @@ fn home_and_profile_reposts_keep_their_attribution() -> Test {
             original["repostedBy"].is_object(),
             "{mode} keeps attribution"
         );
-        if mode == "reposts" {
+        if mode != "home" {
             assert_eq!(original["repostedBy"]["at"], own.created_at * 1000);
             assert_eq!(state.iter().filter(|row| row["kind"] == "note").count(), 1);
         }

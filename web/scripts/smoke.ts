@@ -226,7 +226,9 @@ async function run(browser: Browser): Promise<void> {
   fact('a tab closed before a reload opens again as it was', (await seatNow())?.top === seat?.top);
   // The tab in front is never hidden past an edge of its bar, however many tabs the tile holds.
   await page.setViewportSize({ width: 390, height: 844 });
-  for (let i = 0; i < 3; i++) await page.locator(`.note .name`).first().click();
+  // Repost context can clip its name button in this tile. Open tabs from the note's author header.
+  const noteAuthor = page.locator('.pane.cur .view:visible .note > .nrow .nhead > .name:visible');
+  for (let i = 0; i < 3; i++) await noteAuthor.first().click();
   const inBar = await page.evaluate(() => {
     const tab = document.querySelector('.pane.cur .tab.active')?.getBoundingClientRect();
     const bar = document.querySelector('.pane.cur .tabrow')?.getBoundingClientRect();

@@ -16,6 +16,20 @@ export type Entry = { readonly key: string; row(): Row };
 const LISTS: Record<string, readonly string[]> = {
   photographers: ['aoi', 'marco', 'ichiro', 'mio'],
 };
+const profilePosts = (q: Query): boolean =>
+  q.source === 'profile' && (q.show === undefined || q.show === 'posts');
+const inPeriod = (q: Query, at: number): boolean =>
+  (q.since === undefined || at >= q.since) && (q.until === undefined || at <= q.until);
+const profileRepost = (q: Query, n: MNote) => {
+  if (!profilePosts(q) || q.reposts === false) return;
+  const who = q.pubkey ?? byRef(q.ref ?? '')?.author.pubkey;
+  const [latest] = n.reposts
+    .filter((r) => r.by.author.pubkey === who && inPeriod(q, r.at))
+    .sort((a, b) => b.at - a.at);
+  const authored = n.by.author.pubkey === who && !n.re && n.eventKind === undefined && !n.channel;
+  if (latest && !(authored && inPeriod(q, n.at) && n.at >= latest.at))
+    return { actors: [latest.by.author], others: 0, at: latest.at };
+};
 const hay = (n: MNote): string => `${n.text} ${n.by.author.name}`.toLowerCase();
 
 /** Whether `typed` (a name, a handle, an npub, a NIP-05 name) names this person. */
@@ -51,7 +65,7 @@ function ofProfile(w: World, q: Query, n: MNote, who: string | undefined, me: st
       ? [...n.reactions.values()].some((r) => r.mine)
       : pk !== who && Number.parseInt(n.id.slice(0, 4), 16) % 5 === 0;
   if (pk !== who) return false;
-  if (q.show === 'posts') return !n.re;
+  if (profilePosts(q)) return !n.re;
   if (q.show === 'replies') return Boolean(n.re);
   return q.show === 'media' ? n.media.length > 0 : true;
 }
@@ -60,13 +74,14 @@ function ofProfile(w: World, q: Query, n: MNote, who: string | undefined, me: st
 export function matches(w: World, q: Query, n: MNote, me: string): boolean {
   const pk = n.by.author.pubkey;
   // A channel message (kind 42) is no note of the timelines: it shows in its channel, and among bookmarks.
-  if (Boolean(n.channel) !== (q.source === 'channel') && q.source !== 'bookmarks') return false;
+  const repost = profileRepost(q, n);
+  if (!repost && Boolean(n.channel) !== (q.source === 'channel') && q.source !== 'bookmarks')
+    return false;
   if (n.eventKind !== undefined && q.source !== 'profile' && q.source !== 'bookmarks') return false;
   if (w.isMuted(n) && q.source !== 'profile') return false;
   if (q.authors?.length && !q.authors.includes(pk)) return false;
-  const at = profileAct(w, q, n)?.at ?? n.at;
-  if (q.since !== undefined && at < q.since) return false;
-  if (q.until !== undefined && at > q.until) return false;
+  const at = repost?.at ?? profileAct(w, q, n)?.at ?? n.at;
+  if (!inPeriod(q, at)) return false;
   if (q.media === 'only' && !n.media.length) return false;
   if (q.media === 'none' && n.media.length) return false;
   if (q.replies === false && n.re) return false;
@@ -107,7 +122,7 @@ export function matches(w: World, q: Query, n: MNote, me: string): boolean {
     case 'relay':
       return servedBy(q.relay ?? '', n.id);
     case 'profile':
-      return ofProfile(w, q, n, q.pubkey ?? byRef(q.ref ?? '')?.author.pubkey, me);
+      return !!repost || ofProfile(w, q, n, q.pubkey ?? byRef(q.ref ?? '')?.author.pubkey, me);
     case 'hashtag':
       return n.segments.some(
         (s) => s.k === 'hashtag' && s.tag.toLowerCase() === q.tag?.toLowerCase(),
@@ -219,17 +234,20 @@ export function select(w: World, q: Query, me: string, profileWritable = false):
           );
     return people.map((p) => ({ key: p.author.pubkey, row: () => personRow(w, p, me) }));
   }
-  const opts: RowOpts = { me, reposts: q.reposts };
+  const opts: RowOpts = { me, reposts: profilePosts(q) ? false : q.reposts };
   const time = (n: MNote): number =>
-    q.source === 'profile' && q.show === 'all'
-      ? n.at
-      : (profileAct(w, q, n)?.at ?? (q.reposts === false ? n.at : (n.reposts[0]?.at ?? n.at)));
+    profilePosts(q)
+      ? (profileRepost(q, n)?.at ?? n.at)
+      : q.source === 'profile' && q.show === 'all'
+        ? n.at
+        : (profileAct(w, q, n)?.at ?? (q.reposts === false ? n.at : (n.reposts[0]?.at ?? n.at)));
   const kept = w.notes
     .filter((n) => matches(w, q, n, me))
     .sort((a, b) => time(b) - time(a) || b.id.localeCompare(a.id));
   const notes = kept.map((n) =>
     entry(w, n, {
       ...opts,
+      repostedBy: profileRepost(q, n),
       activity: q.source === 'profile' && q.show === 'all' ? undefined : profileAct(w, q, n),
     }),
   );

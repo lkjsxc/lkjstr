@@ -162,11 +162,13 @@ impl Session {
             let batch = e.store.scan(index.cursor.as_ref(), 256);
             let profile_all =
                 q.source == Source::Profile && q.filters.show.as_deref() == Some("all");
-            let openable = q.source == Source::Profile
-                && matches!(
-                    q.filters.show.as_deref(),
-                    Some("articles" | "lists" | "all")
-                );
+            let profile_posts = query::profile_posts(q);
+            let openable = profile_posts
+                || q.source == Source::Profile
+                    && matches!(
+                        q.filters.show.as_deref(),
+                        Some("articles" | "lists" | "all")
+                    );
             for event in &batch {
                 if horizon.is_some_and(|at| event.created_at < at) {
                     index.done = true;
@@ -187,7 +189,10 @@ impl Session {
                     continue;
                 };
                 // The first matching original or wrapper owns the row, in the same order as the window.
-                if (!profile_all && event.kind == 6 && row.id == event.id)
+                if (!profile_all
+                    && (event.kind == 6
+                        || (profile_posts && crate::engine::acts::is_repost(event.kind)))
+                    && row.id == event.id)
                     || horizon.is_some_and(|at| row.created_at < at)
                     || index.positions.contains_key(&row.id)
                 {

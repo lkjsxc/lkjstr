@@ -11,6 +11,9 @@ use std::collections::{BTreeMap, BTreeSet};
 pub(super) fn is_act(kind: u64) -> bool {
     policy(kind).act.is_some()
 }
+pub(super) fn is_repost(kind: u64) -> bool {
+    policy(kind).act == Some(ActKind::Repost)
+}
 pub(super) fn target(event: &NostrEvent) -> Option<String> {
     event
         .tags
@@ -111,9 +114,10 @@ pub(super) fn representatives(store: &Store, events: Vec<Event>) -> Vec<Event> {
     out
 }
 pub(super) fn reposts(store: &Store, id: &str) -> impl Iterator<Item = Event> {
-    store.referencing(id).into_iter().filter(move |event| {
-        policy(event.kind).act == Some(ActKind::Repost) && target(event).as_deref() == Some(id)
-    })
+    store
+        .referencing(id)
+        .into_iter()
+        .filter(move |event| is_repost(event.kind) && target(event).as_deref() == Some(id))
 }
 
 pub(super) fn matches_terminal(store: &Store, event: &NostrEvent, query: &Query) -> bool {

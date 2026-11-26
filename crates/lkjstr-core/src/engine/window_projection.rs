@@ -11,6 +11,10 @@ pub(in crate::engine) fn unavailable(store: &Store, query: &Query, event: &Event
     if crate::engine::acts::activity(query) {
         return crate::engine::acts::resolve(store, event).note.is_none();
     }
+    if crate::engine::query::profile_posts(query) {
+        return crate::engine::acts::is_repost(event.kind)
+            && crate::engine::acts::target(event).is_some_and(|id| store.lease(&id).is_none());
+    }
     query.filters.notifications != Some(true)
         && matches!(
             query.source,

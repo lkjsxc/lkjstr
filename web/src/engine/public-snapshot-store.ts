@@ -53,6 +53,10 @@ export const snapshotIdentity = (
     canonical(query),
     // Earlier Their Home entries can hold Moment order without any row marker.
     ...(query.source === 'their-home' ? ['ordinary'] : []),
+    // Older Profile Posts snapshots can contain unrelated repost attribution and authored order.
+    ...(query.source === 'profile' && (query.show === undefined || query.show === 'posts')
+      ? ['profile-posts']
+      : []),
     ...(mergedHistory.has(query.source) ? ['covered-history'] : []),
   ]);
 

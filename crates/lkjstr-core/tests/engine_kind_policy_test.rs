@@ -126,7 +126,7 @@ fn generic_references_do_not_become_reply_edges_or_act_terminals() {
 }
 
 #[test]
-fn existing_feed_filters_and_selected_kinds_are_unchanged() {
+fn feed_filters_and_selected_kinds_match_their_sources() {
     let key = generate_secret_key();
     let mut store = Store::new(100);
     let mut account = String::new();
@@ -142,7 +142,7 @@ fn existing_feed_filters_and_selected_kinds_are_unchanged() {
         (Source::Global, vec![1, 6]),
         (Source::Home, vec![1, 6]),
         (Source::Search, vec![1, 6]),
-        (Source::Profile, vec![1]),
+        (Source::Profile, vec![1, 6, 16]),
         (Source::Thread, vec![1, 42]),
         (Source::Notifications, vec![1, 42, 6, 16, 7, 9735]),
         (Source::Following, vec![0, 3]),

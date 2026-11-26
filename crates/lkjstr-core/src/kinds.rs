@@ -146,8 +146,10 @@ pub const fn policy(kind: u64) -> KindPolicy {
             p.publication_recipients = kind != 9735;
             p.feeds = Feed::Notifications as u16;
             p.feeds |= match kind {
-                6 => Feed::Timeline as u16 | Feed::ProfileReposts as u16,
-                16 => Feed::ProfileReposts as u16,
+                6 => {
+                    Feed::Timeline as u16 | Feed::ProfilePosts as u16 | Feed::ProfileReposts as u16
+                }
+                16 => Feed::ProfilePosts as u16 | Feed::ProfileReposts as u16,
                 7 => Feed::ProfileReactions as u16,
                 _ => 0,
             };

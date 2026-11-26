@@ -18,6 +18,7 @@ export type FeedState = BarState & {
   tag?: string;
   relay?: string;
   show?: string;
+  profileReposts?: boolean;
   pos?: Place;
   extent?: number;
   head?: string;

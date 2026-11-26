@@ -41,6 +41,34 @@ export async function personReferenceChecks({
   );
   add(malformed);
   add(note);
+  const article = await sign({
+    pubkey: owner,
+    kind: 30023,
+    created_at: createdAt - 1,
+    tags: [['d', 'profile-repost-fixture']],
+    content: 'An article found through a generic repost.',
+  });
+  add(article);
+  const wrappers = [];
+  for (const [kind, target] of [
+    [6, fixture.note],
+    [16, article],
+  ]) {
+    const tags = [
+      ['e', target.id, relayUrl],
+      ['p', target.pubkey],
+    ];
+    if (kind === 16) tags.push(['k', String(target.kind)]);
+    const wrapper = await sign({
+      pubkey: actor.pubkey,
+      kind,
+      created_at: createdAt + 2,
+      tags,
+      content: kind === 16 ? JSON.stringify(target) : '',
+    });
+    add(wrapper);
+    wrappers.push(wrapper.id);
+  }
 
   const npub = bech32('npub', actor.pubkey);
   const shortNpub = `${npub.slice(0, 10)}…${npub.slice(-4)}`;
@@ -71,11 +99,16 @@ export async function personReferenceChecks({
                   if (data?.t === 'ready') globalThis.personReferenceReady = true;
                 });
               }
-              if (message?.t === 'open') opened.set(message.sub, message.query.source);
+              if (message?.t === 'open') {
+                opened.set(message.sub, message.query.source);
+                if (message.query.source === 'profile')
+                  globalThis.firstProfileWasPostsOnly ??= message.query.reposts === false;
+              }
               if (message?.t === 'close') opened.delete(message.sub);
               if (message?.t === 'hint') focused.add(opened.get(message.hint.focusedSub));
               return post.call(this, message, ...args);
             };
+            if (localStorage.getItem('lkjstr:migration') === '"owner-audit-1"') return;
             const put = (key, value) =>
               localStorage.setItem(`lkjstr:${key}`, JSON.stringify(value));
             const pane = (id, kind) => ({ type: 'pane', id, tabs: [kind], active: kind });
@@ -135,21 +168,7 @@ export async function personReferenceChecks({
           },
         );
         await row.waitFor({ timeout: 12000 });
-        await page.waitForFunction(
-          (id) =>
-            new Promise((resolve) => {
-              const open = indexedDB.open('lkjstr-wasm');
-              open.onerror = () => resolve(false);
-              open.onsuccess = () => {
-                const db = open.result;
-                const read = db.transaction('events').objectStore('events').getKey(id);
-                read.onsuccess = () => resolve(read.result === id);
-                read.onerror = () => resolve(false);
-                db.close();
-              };
-            }),
-          malformed.id,
-        );
+        await committedEvents(page, [malformed.id]);
         await row.getByText(shortNpub, { exact: true }).waitFor();
         if (source === 'profile')
           await view.locator('.pname').filter({ hasText: shortNpub }).waitFor();
@@ -158,6 +177,35 @@ export async function personReferenceChecks({
           0,
         );
         assert.equal(await page.locator('.toast').count(), 0);
+        if (!signed && source === 'profile') {
+          const toggle = view.getByRole('group', { name: 'Reposts', exact: true });
+          const show = toggle.getByRole('button', { name: 'Show', exact: true });
+          const hide = toggle.getByRole('button', { name: 'Hide', exact: true });
+          const reposts = [fixture.note, article].map(({ id }) =>
+            view.locator(`[data-note="${id}"]`),
+          );
+          const visibleReposts = async () => {
+            for (const repost of reposts) {
+              await repost.locator('.rwho').getByText(shortNpub, { exact: true }).waitFor();
+              assert.equal(await repost.count(), 1);
+            }
+          };
+          await visibleReposts();
+          await committedEvents(page, [note.id, ...wrappers]);
+          assert.equal(await show.getAttribute('aria-pressed'), 'true');
+          await hide.click();
+          for (const repost of reposts) await repost.waitFor({ state: 'detached' });
+          await row.waitFor();
+          await page.reload();
+          await row.waitFor();
+          await page.waitForFunction(() => globalThis.firstProfileWasPostsOnly !== undefined);
+          assert.equal(await page.evaluate(() => globalThis.firstProfileWasPostsOnly), true);
+          assert.equal(await hide.getAttribute('aria-pressed'), 'true');
+          for (const repost of reposts) assert.equal(await repost.count(), 0);
+          await show.click();
+          await visibleReposts();
+          check('Profile Posts shows both repost kinds and remembers the posts-only setting');
+        }
         check(
           `${signed ? 'read-only' : 'signed-out'} ${source} reference loads notes with a quiet npub fallback`,
         );
@@ -166,4 +214,24 @@ export async function personReferenceChecks({
       }
     }
   }
+}
+
+async function committedEvents(page, ids) {
+  await page.waitForFunction(
+    (ids) =>
+      new Promise((resolve) => {
+        const open = indexedDB.open('lkjstr-wasm');
+        open.onerror = () => resolve(false);
+        open.onsuccess = () => {
+          const db = open.result;
+          const tx = db.transaction('events');
+          const store = tx.objectStore('events');
+          const reads = ids.map((id) => store.getKey(id));
+          tx.oncomplete = () => resolve(reads.every((read, i) => read.result === ids[i]));
+          tx.onerror = tx.onabort = () => resolve(false);
+          db.close();
+        };
+      }),
+    ids,
+  );
 }

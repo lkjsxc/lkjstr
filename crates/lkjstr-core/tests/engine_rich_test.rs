@@ -104,7 +104,7 @@ fn profile_kinds_project_targets_and_order_by_actor_time() {
         e.store.insert(v.clone(), None);
     }
     for (kind, ids) in [
-        ("posts", vec![&post.id]),
+        ("posts", vec![&target.id, &post.id]),
         ("replies", vec![&reply.id]),
         ("media", vec![&post.id]),
         ("reposts", vec![&target.id]),

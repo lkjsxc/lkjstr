@@ -24,7 +24,9 @@ row format. The event database and encrypted account/archive stores are not
 opened by the main-thread cache.
 Merged chronological lists use a new snapshot identity and replay rows inside
 the preview age supplied by the engine. Live historical coverage is rebuilt
-from relay evidence. Moment windows remain transient.
+from relay evidence. Profile Posts uses a new identity for its owner-scoped
+repost order, separate from the saved posts-only query. Moment windows remain
+transient.
 
 ## Bounds and reconciliation
 

@@ -26,6 +26,7 @@ mod people;
 mod previews;
 mod private_cache;
 mod private_lists;
+mod profile_posts;
 mod publish;
 mod publish_types;
 pub mod queries;

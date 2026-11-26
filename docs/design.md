@@ -249,7 +249,7 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
   whose placeholder shows what can be typed (words, from:, has:image), a
   period of two days, people to keep, notifications flowing in; own Clear. An unchanged query keeps results and reading position.
   A period accepts common date forms and relative days; it is normalised to yyyy/mm/dd when the field is left.
-- A profile lists by kind under its header: Posts, Replies, Reposts, Reactions, Media, Articles, Lists, All. The selected tab is revealed once measurable on mount or selection; header replacements and returning to a hidden tab preserve the reader's horizontal position.
+- A profile lists by kind under its header: Posts, Replies, Reposts, Reactions, Media, Articles, Lists, All. Posts includes reposts by default and has a saved Reposts Show/Hide filter under the header. The selected tab is revealed once measurable on mount or selection; header replacements and returning to a hidden tab preserve the reader's horizontal position.
   Public lists use the generic face until N5; authored act rows have no action row or reaction chips until S6 defines their targets. A press anywhere on a notification opens it.
   Notification toggles cover reactions, replies/mentions, reposts and zaps.
 - The Channels tab (NIP-28): joined ones first, a rule, the others by

@@ -116,6 +116,8 @@ impl Engine {
                     .map(|row| &row.id)
                     .ne(items.iter().map(|row| &row.id))
                 || v.query.filters.notifications == Some(true)
+                // Repost placement can change while the native target row stays identical.
+                || query::profile_posts(&v.query)
                 || matches!(
                     v.query.source,
                     Source::Thread

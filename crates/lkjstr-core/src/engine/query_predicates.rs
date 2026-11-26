@@ -1,12 +1,24 @@
-use super::protocol::{Query, Source};
-use crate::{kinds::policy, store::Store};
+use super::{
+    acts,
+    protocol::{Query, Source},
+};
+use crate::{
+    kinds::policy,
+    store::{Event, Store},
+};
 use lkjstr_protocol::{NostrEvent, NostrFilter, reply_parent};
 pub(super) fn matches_extra(e: &NostrEvent, q: &Query) -> bool {
+    matches_fields(e, q, false)
+}
+
+fn matches_fields(e: &NostrEvent, q: &Query, repost_target: bool) -> bool {
     let f = &q.filters;
-    if f.since.is_some_and(|s| e.created_at < s)
-        || f.until.is_some_and(|u| e.created_at > u)
+    // Repost placement already matched the date and kind; these fields describe the target.
+    if (!repost_target
+        && (f.since.is_some_and(|s| e.created_at < s)
+            || f.until.is_some_and(|u| e.created_at > u)
+            || f.reposts.is_some_and(|v| (e.kind == 6) != v)))
         || f.replies.is_some_and(|v| reply_parent(e).is_some() != v)
-        || f.reposts.is_some_and(|v| (e.kind == 6) != v)
         || f.media
             .is_some_and(|v| !lkjstr_protocol::embedded_media_attachments(e).is_empty() != v)
         || f.text.as_ref().is_some_and(|t| {
@@ -26,9 +38,10 @@ pub(super) fn matches_extra(e: &NostrEvent, q: &Query) -> bool {
         || f.has
             .as_ref()
             .is_some_and(|v| v.iter().any(|x| !super::rich::has(e, x)))
-        || (q.source == Source::Profile
+        || (!repost_target
+            && q.source == Source::Profile
             && match f.show.as_deref() {
-                Some("posts") => reply_parent(e).is_some(),
+                None | Some("posts") => reply_parent(e).is_some(),
                 Some("replies") => reply_parent(e).is_none(),
                 Some("media") => !super::rich::has(e, "image") && !super::rich::has(e, "video"),
                 _ => false,
@@ -113,6 +126,12 @@ pub(super) fn accepts(
             && matches!(q.filters.show.as_deref(), Some("reposts" | "reactions"))
         {
             super::acts::matches_terminal(store, e, q)
+        } else if profile_posts(q) && acts::is_repost(e.kind) {
+            acts::target(e).is_some_and(|id| {
+                store.get(&id).is_none_or(|target| {
+                    policy(target.kind).openable && matches_fields(&target, q, true)
+                })
+            })
         } else if e.kind == 6 && q.source != Source::Notifications {
             q.filters.reposts != Some(false)
                 && super::acts::target(e)
@@ -121,4 +140,33 @@ pub(super) fn accepts(
         } else {
             matches_extra(e, q)
         }
+}
+
+pub(super) fn profile_posts(q: &Query) -> bool {
+    q.source == Source::Profile && matches!(q.filters.show.as_deref(), None | Some("posts"))
+}
+
+pub(super) fn collapse_repost(store: &Store, q: &Query, event: Event) -> Option<Event> {
+    if !(event.kind == 6 || (profile_posts(q) && acts::is_repost(event.kind)))
+        || q.source == Source::Notifications
+        || q.filters.show.as_deref() == Some("reposts")
+    {
+        return Some(event);
+    }
+    let target = acts::target(&event).and_then(|id| store.get(&id));
+    if target.as_ref().is_some_and(|target| target.kind == 42)
+        && matches!(
+            q.source,
+            Source::Home
+                | Source::TheirHome
+                | Source::Global
+                | Source::Relay
+                | Source::Hashtag
+                | Source::Search
+                | Source::List
+        )
+    {
+        return None;
+    }
+    target.or(Some(event))
 }

@@ -115,3 +115,33 @@ it('captures and replays authored All rows after live attribution is removed', a
     expect(row.readingAt).toBeUndefined();
   }
 });
+
+it('replays ordinary Profile Posts with scoped attribution and a separate posts-only snapshot', async () => {
+  const posts: Query = { ...all, show: 'posts' };
+  const postsOnly: Query = { ...posts, reposts: false };
+  const original = note('1'.repeat(64));
+  const repost = { ...generic, repostedBy: { actors: [original.author], others: 0, at: 3000 } };
+  const first = client();
+  first.open(posts);
+  cache(first);
+  first.rows([repost, original]);
+  await vi.advanceTimersByTimeAsync(201);
+  first.transport.close();
+
+  const scoped = client();
+  scoped.open(posts);
+  scoped.transport.post({ t: 'window', sub: 'one', anchor: { at: 1000 }, before: 0, after: 60 });
+  cache(scoped);
+  scoped.rows([{ ...original, readingAt: 20_000 }]);
+  await vi.advanceTimersByTimeAsync(201);
+  scoped.transport.close();
+
+  const cold = client();
+  cold.open(posts);
+  const hidden = client();
+  hidden.open(postsOnly);
+  await vi.advanceTimersByTimeAsync(0);
+  expect(seen(cold).map((frame) => frame.rows)).toEqual([[repost, original]]);
+  expect(seen(hidden)).toEqual([]);
+  expect(readPublicSnapshot(at(posts), 'top')?.rows.map(rowTime)).toEqual([3000, 1000]);
+});

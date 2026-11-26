@@ -54,6 +54,9 @@ impl Session {
             "emoji"=>crate::engine::emoji::rows(store,q.account.as_deref()).into_iter().map(super::emoji::entry).collect(),
             "notifications"=>super::notifications::visible(q,e,horizon),
             "profile" if converted.as_ref().is_some_and(crate::engine::acts::activity) => super::acts::profile(self,sub,q,e),
+            "profile" if converted.as_ref().is_some_and(query::profile_posts) => {
+                converted.as_ref().map_or_else(Vec::new, |q| super::profile_posts::rows(self, sub, e, q))
+            }
             "bookmarks"=>converted.as_ref().map(|q|crate::engine::list_events::events(store,q,&e.private_lists).iter().filter(|event|crate::kinds::policy(event.kind).openable).map(|event|self.project_event(sub,e,q,event,None)).collect()).unwrap_or_default(),
             "list"=>{
                 q.convert().map(|converted|query::events(store,&converted).into_iter().next().map(|event|crate::engine::settings::list_tags_for(&event,&e.private_lists,q.account.as_deref()).iter().filter(|t|t.first().is_some_and(|k|k=="p")).filter_map(|t|t.get(1)).filter(|p|lkjstr_protocol::is_pubkey(p)).map(|p|person(e,p,q.account.as_deref(), weights.person(p))).collect()).unwrap_or_default()).unwrap_or_default()
@@ -67,13 +70,11 @@ impl Session {
                             Some(positions) => Some(*positions.get(&event.id)?),
                             None => None,
                         };
-                        let wrapper = !(q.source == "profile" && q.show.as_deref() == Some("all")) && q.source != "thread" && (event.kind == 6 || (q.source == "profile" && matches!(q.show.as_deref(), Some("reposts" | "reactions"))));
-                        let shown = if wrapper { crate::engine::acts::target(&event).and_then(|id| store.get(&id))? } else { event.clone() };
+                        let shown = if event.kind == 6 && q.source != "thread" && !(q.source == "profile" && q.show.as_deref() == Some("all")) {
+                            crate::engine::acts::target(&event).and_then(|id| store.get(&id))?
+                        } else { event };
                         if !crate::kinds::policy(shown.kind).openable { return None; }
                         let mut value = self.project_event(sub, e, converted, &shown, None);
-                        if wrapper && q.show.as_deref() == Some("reposts") {
-                            value["repostedBy"] = json!({"actors":[super::note::author(&rows::author(store,&event.pubkey))],"others":0,"at":event.created_at.saturating_mul(1000)});
-                        }
                         if let Some((role, depth)) = position {
                             value["thread"] = json!({"role":role,"depth":depth});
                             // The answered note's id, also when it is not stored (the interface holds its room).

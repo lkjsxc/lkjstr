@@ -76,6 +76,7 @@ what the engine offers and no surface reaches yet.
 | N5 | Lists (NIP-51) as lists of openable items | [interface-view.md](interface-view.md#n5-lists) | ready |
 | N6 | Articles: the card and the reading view | [interface-view.md](interface-view.md#n6-articles) | ready |
 | N7 | Deep links and Copy link for every kind | [interface-view.md](interface-view.md#n7-deep-links-and-copying-for-every-kind) | built (private; review pending) |
+| P2 | Profile Posts includes reposts, with a saved Show/Hide choice | [interface-profile.md](interface-profile.md#p2-reposts-in-profile-posts) | built |
 | P1 | Edit profile: fields, picture and banner upload, preview, save | [interface-profile.md](interface-profile.md#p1-edit-profile) | built |
 | R1 | Relay tab: one relay, its NIP-11 head and the notes it served | [interface-relay.md](interface-relay.md#r1-a-relay-tab) | built |
 

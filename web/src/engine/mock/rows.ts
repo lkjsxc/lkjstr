@@ -57,6 +57,7 @@ export type RowOpts = {
   /** The reader's account. */
   me: string;
   reposts?: boolean;
+  repostedBy?: NoteRow['repostedBy'];
   activity?: ProfileAct;
   /** In a thread the parent is in view: no reply context line. */
   thread?: NoteRow['thread'];
@@ -88,13 +89,14 @@ export function noteRow(w: World, n: MNote, o: RowOpts): NoteRow {
     repostedBy:
       o.activity?.act?.type === 'repost'
         ? { actors: [o.activity.act.actor], others: 0, at: o.activity.at }
-        : shown.length
-          ? {
-              actors: shown.slice(0, 2).map((r) => r.by.author),
-              others: Math.max(0, shown.length - 2),
-              at: shown[0]?.at ?? n.at,
-            }
-          : undefined,
+        : (o.repostedBy ??
+          (shown.length
+            ? {
+                actors: shown.slice(0, 2).map((r) => r.by.author),
+                others: Math.max(0, shown.length - 2),
+                at: shown[0]?.at ?? n.at,
+              }
+            : undefined)),
     cw: n.cw,
     counts: {
       replies: w.repliesTo(n.id).length,

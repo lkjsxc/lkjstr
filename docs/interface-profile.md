@@ -70,3 +70,10 @@ after signing. Relay delivery is tracked separately from the local profile updat
 
 `profile-edit` (ready, own profile), `profile-edit-uploading`, `profile-edit-failed`, and the own header with
 Edit profile, each at 1440 dark and 390 light.
+
+## P2 Reposts in Profile Posts
+
+Posts includes the person's kind 6 and 16 reposts by default. One copy of the original appears at its newest
+matching placement, with the same repost context as Home and the original as the target of note actions.
+Posts keeps its own Reposts Show/Hide choice, drawn with the existing filter segments above the kind tabs.
+The choice is saved with the profile tab. The existing Reposts tab still lists the person's repost activity.
