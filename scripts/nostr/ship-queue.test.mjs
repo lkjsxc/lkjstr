@@ -61,10 +61,13 @@ test('a verified enqueue failure ships, keeps its receipts outside the worktree 
 test('shipping the same revision again keeps the first release receipt and adds the new deployment', t => {
   const f = fixture(t);
   assert.equal(f.run('', { LKJSTR_SHIP_NOTIFY: '0' }).status, 0);
+  const first = shipReceipt(runs(f)[0]);
   assert.equal(f.run('', { LKJSTR_SHIP_NOTIFY: '0' }).status, 0);
   assert.equal(deploys(f.events()).length, 2);
   const store = join(f.state, 'lkjstr-nostr');
-  const [first, second] = runs(f).map(run => shipReceipt(run));
+  // Same-second run names contain random suffixes, not chronological order.
+  const second = runs(f).map(run => shipReceipt(run)).find(receipt => receipt.current !== first.current);
+  assert.ok(second);
   assert.notEqual(first.current, second.current);
   assert.deepEqual(rows(store, 'SELECT current FROM deployments ORDER BY verified_at, current')
     .map(row => row.current).sort(), [first.current, second.current].sort());
