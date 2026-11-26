@@ -68,6 +68,9 @@ pub enum Input {
         error: Option<String>,
     },
     OptimizerHint(crate::optimizer::features::Interaction),
+    LinkHint {
+        hint: Option<crate::optimizer::link::Hint>,
+    },
     Hint {
         #[serde(rename = "visibleSubs")]
         visible_subs: Vec<String>,

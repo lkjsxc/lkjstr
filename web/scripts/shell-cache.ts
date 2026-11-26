@@ -3,6 +3,7 @@ import { createHash } from 'node:crypto';
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { avatarWorker } from './avatar-cache.ts';
+import { shellFetch } from './shell-fetch.ts';
 
 type Asset = readonly [path: string, sha256: string];
 const worker = `
@@ -112,17 +113,6 @@ async function prune(ignore, local) {
   await Promise.all(names.filter((name) => !keep.has(name)).map((name) => caches.delete(name)));
   return completed;
 }
-async function verified(path, signal) {
-  const response = await fetch(path, {
-    cache: 'no-store', credentials: 'omit', redirect: 'error', signal,
-  });
-  if (!response.ok) throw new Error('shell asset unavailable');
-  const bytes = await response.clone().arrayBuffer();
-  const digest = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', bytes)),
-    (v) => v.toString(16).padStart(2, '0')).join('');
-  if (digest !== hashes.get(path)) throw new Error('shell asset changed');
-  return response;
-}
 self.addEventListener('install', (event) => {
   const owner = self.registration.installing;
   event.waitUntil((async () => {
@@ -138,7 +128,7 @@ self.addEventListener('install', (event) => {
     });
     if (reserved.reused) return takeOverLegacy();
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 60000);
+    const timer = setTimeout(() => controller.abort(), 15 * 60000);
     try {
       // Network waits never hold the shared cache lock or delay another build's activation.
       for (let start = 0; start < assets.length; start += 4) {
@@ -233,7 +223,7 @@ self.addEventListener('fetch', (event) => {
 
 export function shellWorker(assets: readonly Asset[]): string {
   if (assets.length === 0 || assets.length > 64) throw new Error('shell asset count');
-  const source = worker.replace('__ASSETS__', JSON.stringify(assets)) + avatarWorker;
+  const source = worker.replace('__ASSETS__', JSON.stringify(assets)) + shellFetch + avatarWorker;
   const version = createHash('sha256').update(source).digest('hex').slice(0, 24);
   return source.replace('__BUILD__', JSON.stringify(version));
 }

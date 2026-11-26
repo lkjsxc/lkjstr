@@ -62,7 +62,7 @@ impl Engine {
             input.held,
             &weights,
             &first,
-            self.network.optimizer.link.state(),
+            self.network.optimizer.link.observed_state(),
         );
         access.authors.extend(authors);
         access
@@ -120,7 +120,7 @@ impl Engine {
             &input.held,
             &weights,
             &first_event_ms,
-            self.network.optimizer.link.state(),
+            self.network.optimizer.link.observed_state(),
         );
         if self.store.evictions() != evictions {
             self.cached_history_complete = false;

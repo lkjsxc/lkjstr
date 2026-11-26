@@ -52,12 +52,14 @@ impl Network {
             self.quality_revision = self.quality_revision.wrapping_add(1);
         }
         let mut first = None;
+        let mut matched_delivery = false;
         for r in self
             .requests
             .values_mut()
             .filter(|r| r.relay == relay && lkjstr_protocol::matches_filter(e, &r.filter))
         {
             r.last_rx = now;
+            matched_delivery |= r.sent || (r.asked && r.page_eose && r.received.contains(&e.id));
             if r.first_event_at.is_none()
                 && (r.sent || (r.asked && r.page_eose && r.received.contains(&e.id)))
             {
@@ -68,6 +70,17 @@ impl Network {
             if e.created_at <= now / 1000 {
                 r.last_event = Some(r.last_event.unwrap_or(0).max(e.created_at));
             }
+        }
+        // A healthy signed delivery resets transport backoff, never a mere handshake.
+        // Explicit relay rate-limit cooldown retains its independent deadline.
+        if matched_delivery
+            && let Some(r) = self.relays.get_mut(relay)
+            && r.online
+            && r.connected_since
+                .is_some_and(|at| now.saturating_sub(at) >= 10_000)
+            && now >= r.cooldown_until
+        {
+            r.failures = 0;
         }
         if let Some(latency) = first
             && let Some(r) = self.relays.get_mut(relay)

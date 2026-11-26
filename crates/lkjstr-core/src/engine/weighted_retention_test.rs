@@ -147,3 +147,44 @@ fn ordinary_home_and_their_home_share_owner_and_followed_authors() {
     assert_eq!(ids(&home), ids(&their));
     assert_eq!(ids(&their).len(), 2);
 }
+
+#[test]
+fn thin_hints_leave_observed_capacity_and_durable_costs_unchanged() {
+    use crate::optimizer::link::Hint;
+    let mut engine = Engine::new();
+    let mut note = event(1, 1, 1);
+    note.content = "retained body ".repeat(2_000);
+    engine.store.insert_deferred(note.clone(), None);
+    let baseline = engine.durable_retention_observation(60_000).events[&note.id];
+    let observed = engine.network.optimizer.link.observed_state();
+    for hint in [Some(Hint::VeryThin), Some(Hint::Thin), None] {
+        engine.input(Input::LinkHint { hint }, 60_000);
+        assert_eq!(engine.network.optimizer.link.observed_state(), observed);
+        assert_eq!(engine.network.optimizer.link.observed_state().samples, 0);
+        let actual = engine.durable_retention_observation(60_000).events[&note.id];
+        assert_eq!(
+            (actual.minute, actual.weight, actual.refetch),
+            (baseline.minute, baseline.weight, baseline.refetch)
+        );
+    }
+    // Real capacity observations still change recovery cost; only the advisory hint is excluded.
+    for second in 0..4 {
+        engine
+            .network
+            .optimizer
+            .link
+            .observe_bucket(second, 6_250, true);
+    }
+    assert_eq!(
+        engine
+            .network
+            .optimizer
+            .link
+            .observed_state()
+            .throughput_bps,
+        6_250
+    );
+    assert!(
+        engine.durable_retention_observation(60_000).events[&note.id].refetch > baseline.refetch
+    );
+}

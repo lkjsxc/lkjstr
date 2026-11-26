@@ -33,7 +33,7 @@ export async function shellHandoff() {
       document.documentElement.dataset.ready = '${id}';
       installShell(() => Boolean(field.value), () => {
         document.querySelector('[role="status"]').textContent = 'A new version is ready. Reload to update.';
-      });
+      }, { get: () => true, subscribe: () => () => {} });
     `,
       { loader: 'ts', format: 'esm' },
     );

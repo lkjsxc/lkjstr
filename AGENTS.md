@@ -72,6 +72,8 @@ Engine work:
   Membership checks must not materialize payloads; remeasure startup after storage changes.
   Profile the shipped Worker and inspect committed row overlap before adding boot shortcuts.
   Proof-floor recovery needs a bounded control lane; recheck live pins inside the final durable transaction.
+- Transport owner: distinguish loading liveness from runtime readiness. Qualify thin links with one
+  measured aggregate byte budget across page, Worker and offline-shell traffic; per-target caps can multiply it.
 - Keep docs and code aligned in the same change, especially docs/status.md.
 - Release-word checks apply to prose, not inline identifiers or fenced code:
   exact protocol fields and report paths must remain copyable and truthful.

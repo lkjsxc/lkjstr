@@ -16,7 +16,9 @@ pub struct Plan {
 }
 
 pub fn decide(features: Features, link: LinkState, routes: &[Route], enabled: bool) -> Plan {
-    let fanout = if enabled
+    let fanout = if enabled && link.thin() {
+        2
+    } else if enabled
         && features.focused
         && routes.len() >= 2
         && routes[..2]
@@ -41,7 +43,7 @@ pub fn decide(features: Features, link: LinkState, routes: &[Route], enabled: bo
     let budget = BUDGETS_MS[features.lane.min(3)];
     let limit = if enabled {
         (budget * link.throughput_bps / 1000 / bytes)
-            .clamp(20, 200)
+            .clamp(if link.very_thin() { 8 } else { 20 }, 200)
             .min(features.relay_limit)
     } else {
         features.relay_limit.min(200)
@@ -76,6 +78,7 @@ pub fn decide(features: Features, link: LinkState, routes: &[Route], enabled: bo
         || features.awaiting_ok
         || features.interaction.active()
         || link.saturated
+        || link.thin()
     {
         0
     } else {
@@ -92,6 +95,17 @@ pub fn decide(features: Features, link: LinkState, routes: &[Route], enabled: bo
 }
 
 pub fn hedge_delay(link: LinkState, primaries: &[Route], enabled: bool) -> u64 {
+    if enabled && link.thin() {
+        let observed = primaries
+            .iter()
+            .filter_map(|route| route.first_event_p75_ms)
+            .max()
+            .unwrap_or(0);
+        return observed
+            .saturating_add(link.rtt_ms)
+            .max(link.rtt_ms.saturating_mul(2))
+            .clamp(400, 4_000);
+    }
     if !enabled
         || primaries.is_empty()
         || primaries

@@ -18,8 +18,8 @@ absence and history.
 | Decision | Bound |
 | --- | --- |
 | Initial ordinary routes | Two complete-filter routes |
-| No-data hedge | Third route at 400ms |
-| Soft first-event bound | 1.5s frees a primary slot; owed span remains |
+| No-data hedge | Third route at 400ms; thin-link prior waits up to 3s |
+| Soft first-event bound | 1.5s normally; 4.5s at the 2g prior; owed span remains |
 | Public request deadline | 5s per transmitted request |
 | Zero-connection startup | Neutral until all attempts fail, or a 10s soft error |
 | Private reads | Existing 15s bound |
@@ -38,7 +38,15 @@ with their owners. First-event latency uses verified
 events, including exact verified cache duplicates; the useful-event counter
 still credits first insertion only. EOSE is observed once per envelope.
 Connection failure, CLOSED, timeout and rate-limit evidence reduces quality;
-existing bounded exponential cooldown persists across reloads.
+existing bounded exponential cooldown persists across reloads. A matching verified
+delivery after ten healthy connected seconds resets transport failure backoff,
+without bypassing an explicit rate-limit cooldown.
+
+The existing effectiveType hint supplies a bounded scheduling prior before four
+observed throughput samples exist. It changes no verification or coverage evidence.
+Very thin public note pages start at eight records; already transmitted quotas,
+explicit IDs, metadata and time-window quotas stay fixed. Two primary routes remain.
+Thin links suppress speculative older-page prefetch. See [thin links](thin-link.md).
 
 ## Cache and metadata
 

@@ -185,3 +185,20 @@ test('public signing preserves enqueue time across boot and identifies a restart
     });
   });
 });
+
+for (const fallback of [false, true]) test(`running ${fallback ? 'dedicated' : 'shared'} worker still expires without heartbeats`, () => {
+  fixture((_transport, shared, state) => {
+    if (fallback) state.lead();
+    const port = fallback ? state.pairs[0].port1 : shared;
+    deliver(port, ready);
+    state.now = 59_000;
+    deliver(port, { t: 'heartbeat' });
+    state.tick();
+    assert.equal(state.workers.length, 1);
+    state.now = 119_001;
+    state.tick();
+    assert.equal(state.workers.length, 2);
+    if (fallback) assert.equal(state.workers[0].terminated, true);
+    else assert.equal(port.closed, true);
+  }, fallback);
+});

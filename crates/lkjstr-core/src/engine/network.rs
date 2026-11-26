@@ -246,3 +246,9 @@ pub struct Network {
     // At most 4096 active foreground observations; pruned on plan and reset on Open.
     read_starts: BTreeMap<String, startup::ReadStart>,
 }
+#[cfg(test)]
+#[path = "network_thin_link_test.rs"]
+mod thin_link_test;
+#[cfg(test)]
+#[path = "network_thin_recovery_test.rs"]
+mod thin_recovery_test;

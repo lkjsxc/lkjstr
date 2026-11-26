@@ -4,7 +4,9 @@
 
 The service worker is build/transport glue, not an event store or a signer.
 Real builds emit sw.js from web/scripts/shell-cache.ts. The app registers it
-after startup with updateViaCache: none. Mock builds do not register a worker.
+after engine readiness with updateViaCache: none. An already-controlled page
+checks immediately so an update can repair a broken engine. Mock builds do not
+register a worker.
 Only packaged, same-origin static assets enter the shell cache. The worker also
 manages a separate, optional cache of eligible public avatars.
 
@@ -27,8 +29,15 @@ handoff behavior until they first load this update.
 The manifest contains at most 64 packaged paths and SHA-256 digests. The build
 identity hashes both that manifest and the worker template. A new installation
 reserves a random cache name under a short exclusive lock. Its assets download
-four at a time with credentials omitted, redirects rejected and a 60-second
-aggregate deadline. Downloads never hold the cache lock.
+four at a time with credentials omitted and redirects rejected. Each download
+has a 60-second inactivity bound and a 15-minute total bound; the entire install
+also has a 15-minute bound. Downloads never hold the cache lock.
+
+Hash-named immutable assets reuse the HTTP cache after foreground engine loading.
+Every reused body still needs its manifest digest. A mismatch or cached HTTP
+failure allows one reload
+fetch with the same digest check; mutable paths always request fresh bytes.
+This avoids downloading the foreground engine twice on a thin connection.
 
 Every asset is verified before being stored. Completion adds a marker bound to
 the build only after all writes succeed and the installer still owns its named

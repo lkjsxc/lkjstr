@@ -72,7 +72,8 @@ impl super::Network {
                     || (!request.page_eose
                         && (request.complete
                             || (request.first_event_at.is_none()
-                                && now.saturating_sub(request.created_at) >= 1_500)
+                                && now.saturating_sub(request.created_at)
+                                    >= self.soft_first_event_bound())
                             || (request.asked && now >= request.initial_deadline)))
             })
             .map(|c| c.url.clone())

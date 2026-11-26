@@ -6,6 +6,16 @@ Record the real-build startup regression found before the protocol-9 landing,
 and the packaging correction that preserves the engine and offline shell.
 These are finite loopback browser results, not public-network measurements.
 
+## Thin connections (2026-11-26)
+
+Both Worker entries retain at most 32 transferred ports while WASM initializes.
+They acknowledge liveness every ten seconds until the engine owns those ports,
+then release the bootstrap timer. Failure closes pending ports and releases it.
+A 15-minute boot bound terminates a stalled loader and fences late completion.
+The ordinary runtime watchdog and generation fences remain in the transport.
+A progressing multi-minute WASM download therefore does not look like a silent
+running engine. [Thin-link qualification](thin-link.md) covers this boundary.
+
 ## Reproduction and scope
 
 The ordinary web smoke starts three fresh browser contexts for local, extension

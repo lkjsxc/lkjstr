@@ -94,6 +94,9 @@ impl Engine {
                 self.network.configure(relays, now);
                 self.replan(now);
             }
+            Input::LinkHint { hint } => {
+                self.network.optimizer.link.set_hint(hint);
+            }
             Input::OptimizerHint(interaction) => {
                 self.network.optimizer.interaction = interaction;
                 self.network.optimizer.hinted_at = now;

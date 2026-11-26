@@ -46,6 +46,7 @@ Engine (`crates/`):
 - [read-score.md](read-score.md): read-plan scorecard method and results.
 - [orchestration.md](orchestration.md): publication routing, freshness, weights and limits.
 - [orchestration-optimizer.md](orchestration-optimizer.md) covers Stage 1 scheduling and retention.
+- [thin-link.md](thin-link.md): slow-link scheduling, startup and measured bounds.
 - [relay-orchestration-20261119.md](relay-orchestration-20261119.md): progressive reads, cache gaps, NIP-65 and bounded prefetch.
 - [architecture.md](architecture.md): crates, runtime, orchestration, storage.
 - [cache-retention.md](cache-retention.md): Home parity and weighted metadata checkpoints.

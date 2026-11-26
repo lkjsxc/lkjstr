@@ -208,4 +208,5 @@ if (__REAL_ENGINE__)
       ) ||
       document.querySelector('.compose .thumb, .compose .cctx') !== null,
     () => toast(host.layer, t('shell.updateReady')),
+    engine.info,
   );

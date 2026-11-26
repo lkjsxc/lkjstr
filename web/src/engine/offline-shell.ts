@@ -1,10 +1,12 @@
+type Readiness = { get(): unknown; subscribe(fn: (value: unknown) => void): () => void };
+
 // Optional shell caching has no account access and cannot interrupt startup.
 const bootController = globalThis.navigator?.serviceWorker?.controller;
 const CHECK_INTERVAL_MS = 5 * 60_000;
 const CHECK_THROTTLE_MS = 60_000;
 const RELOAD_IDLE_MS = 5_000;
 
-export function installShell(hasDraft: () => boolean, notice: () => void): void {
+export function installShell(hasDraft: () => boolean, notice: () => void, ready: Readiness): void {
   if (!('serviceWorker' in navigator) || !globalThis.isSecureContext) return;
   const workers = navigator.serviceWorker;
   let controller = bootController;
@@ -74,24 +76,43 @@ export function installShell(hasDraft: () => boolean, notice: () => void): void 
   workers.addEventListener('controllerchange', activated);
   activated();
   start();
-  void workers
-    .register('/sw.js', { scope: '/', updateViaCache: 'none' })
-    .then((registered) => {
-      registration = registered;
-      // The first worker may leave this page uncontrolled until its next navigation.
-      controller ??= registered.active;
-      void workers.ready.then((ready) => {
-        controller ??= ready.active;
-      });
-      const offer = (): void => {
-        registered.waiting?.postMessage({ k: 'lkjstr-shell-takeover' });
-      };
-      registered.addEventListener('updatefound', () => {
+  const register = (): void => {
+    void workers
+      .register('/sw.js', { scope: '/', updateViaCache: 'none' })
+      .then((registered) => {
+        registration = registered;
+        // The first worker may leave this page uncontrolled until its next navigation.
+        controller ??= registered.active;
+        void workers.ready.then((ready) => {
+          controller ??= ready.active;
+        });
+        const offer = (): void => {
+          registered.waiting?.postMessage({ k: 'lkjstr-shell-takeover' });
+        };
+        registered.addEventListener('updatefound', () => {
+          registered.installing?.addEventListener('statechange', offer);
+        });
         registered.installing?.addEventListener('statechange', offer);
-      });
-      registered.installing?.addEventListener('statechange', offer);
-      offer();
-      check();
-    })
-    .catch(() => {});
+        offer();
+        check();
+      })
+      .catch(() => {});
+  };
+  // Existing controlled clients must still discover updates if their old engine fails to boot.
+  if (bootController || ready.get()) register();
+  else {
+    const dispose = ready.subscribe((value) => {
+      if (!value) return;
+      dispose();
+      window.removeEventListener('pagehide', abandoned);
+      register();
+    });
+    const abandoned = (event: PageTransitionEvent): void => {
+      if (!event.persisted) {
+        dispose();
+        window.removeEventListener('pagehide', abandoned);
+      }
+    };
+    window.addEventListener('pagehide', abandoned);
+  }
 }

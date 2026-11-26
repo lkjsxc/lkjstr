@@ -122,6 +122,16 @@ impl Network {
         self.optimizer.decide_plan(features, &[]).prefetch_depth
     }
 
+    pub(super) fn soft_first_event_bound(&self) -> u64 {
+        let link = self.optimizer.link.state();
+        if self.optimizer.ready() && link.thin() {
+            // Even an observed hedge can reach four seconds on a thin link.
+            link.rtt_ms.saturating_mul(3).clamp(4_500, 5_000)
+        } else {
+            1_500
+        }
+    }
+
     pub(super) fn hedge_after<'a>(&self, requests: impl Iterator<Item = &'a Request>) -> u64 {
         let routes: Vec<_> = requests
             .filter(|r| r.read_slot && r.role == "primary")

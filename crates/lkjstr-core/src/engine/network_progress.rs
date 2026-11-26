@@ -1,7 +1,6 @@
 //! Read readiness is distinct from complete history and proven absence.
 use super::*;
 const READY_MS: u64 = 300;
-const SOFT_MS: u64 = 1_500;
 const HARD_MS: u64 = 5_000;
 
 impl Network {
@@ -41,7 +40,7 @@ impl Network {
                                 400
                             },
                         )),
-                        Some(r.created_at.saturating_add(SOFT_MS)),
+                        Some(r.created_at.saturating_add(self.soft_first_event_bound())),
                         Some(r.created_at.saturating_add(HARD_MS)),
                     ]
                     .into_iter()

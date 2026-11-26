@@ -16,8 +16,8 @@ remain 16000/4000; the managed budget includes indexes, evidence and pending lea
 Real Worker warm-IDB testing passes 120/120 cases and all four paired timing gates against fixes-only. First-note DOM/rAF improves 16.8/14.2 ms
 for Home/Their Home; eight named rows improve 16.6/14.6 ms, with lower p95 in the same 30 alternating pairs/source. See the compact-store scope.
 
-[Durable GDSF](durable-cache.md) replaces timestamp pruning with bounded epochs, proof references, control recovery and schema-3 fencing.
-Signed authority survives retries; 20 fault checks, 52 reader assertions and all four warm-reload timing gates against b181f606 pass.
+[Durable GDSF](durable-cache.md) bounds disk pressure and proof recovery; its fault, reader and warm-reload controls pass.
+[Thin-link support](thin-link.md) adds bounded startup liveness, verified HTTP asset reuse and advisory read budgets.
 
 ## Kind capabilities (2026-11-22)
 

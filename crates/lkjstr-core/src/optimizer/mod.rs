@@ -36,7 +36,7 @@ impl Default for Optimizer {
 
 impl Optimizer {
     pub fn ready(&self) -> bool {
-        self.enabled && self.link.state().samples >= 4
+        self.enabled && self.link.ready()
     }
 
     pub fn decide_plan(&self, features: Features, routes: &[Route]) -> Plan {
@@ -48,3 +48,6 @@ impl Optimizer {
 mod fixtures_test;
 #[cfg(test)]
 mod replay_test;
+
+#[cfg(test)]
+mod thin_link_test;

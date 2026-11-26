@@ -61,6 +61,11 @@ impl Session {
                 );
                 let mut inputs = vec![
                     p::Input::OptimizerHint(interaction),
+                    p::Input::LinkHint {
+                        hint: crate::optimizer::link::Hint::from_effective_type(
+                            hint.effective_type.as_deref(),
+                        ),
+                    },
                     p::Input::Hint {
                         visible_subs: hint.visible_subs,
                         focused_sub: hint.focused_sub,
