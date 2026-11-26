@@ -42,8 +42,9 @@ highlight it, and it follows the held pointer (interface-time.md C3). The
 rail is aria-hidden and the original list remains the keyboard scroller. A
 nonoverflowing list hides the rail; one occupied month shows only the
 grip. With its room reserved and nothing counted yet (before the first scan,
-or a Home before its follows), the rail is plain: no marks, the grip at the
-share scrolled, and a drag scrolls by share. A top row the engine has not
+or a Home before its follows), the rail is plain: no marks and the grip at the
+share scrolled. A plain drag scrolls by share and shows the top row's time
+until release, when any new count takes effect. A top row the engine has not
 counted yet (`time-near.ts`) places the grip at its nearest counted row,
 older first, never at the top. Unexhausted relay history fades the lower marks. Scrolling to
 the local end keeps the existing history path.

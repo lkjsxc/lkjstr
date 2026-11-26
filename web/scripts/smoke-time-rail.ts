@@ -10,7 +10,8 @@ export async function railSmoke(
 ): Promise<void> {
   const feed = '.view[data-kind="home"]';
   const rail = page.locator(`${feed} .time-rail`);
-  await rail.waitFor({ state: 'visible' });
+  // The plain grip appears before the first count. This drag exercises the indexed rail.
+  await page.locator(`${feed} .time-rail:not(.plain) .time-year`).last().waitFor();
   check('Home has a time rail', await rail.isVisible());
   const grip = rail.locator('.time-grip');
   const geometry = () =>
@@ -47,10 +48,8 @@ export async function railSmoke(
       const node = [...el.querySelectorAll<HTMLElement>('.list > .note')].find(
         (n) => n.getBoundingClientRect().bottom > el.getBoundingClientRect().top + 1,
       );
-      return {
-        key: node?.dataset.key,
-        year: Number(node?.querySelector('time')?.getAttribute('title')?.slice(0, 4)),
-      };
+      const time = node?.querySelector('time')?.getAttribute('title') ?? '';
+      return { key: node?.dataset.key, year: Number(time.slice(0, 4)), time };
     });
   const origin = await top();
   const box = await rail.boundingBox();
@@ -74,7 +73,7 @@ export async function railSmoke(
       held.overflow === 0 &&
       Math.abs(held.center - (box.y + box.height - held.height / 2)) < 1,
   );
-  check('held rail says the pointer time', await rail.locator('.scrub').isVisible());
+  const [heldTime] = await rail.locator('.scrub:visible').allTextContents();
   await page.mouse.up();
   await rail.locator('.time-return').waitFor({ state: 'visible' });
   const oldest = Number((await rail.locator('.time-year').last().textContent()) ?? 0);
@@ -98,6 +97,10 @@ export async function railSmoke(
       );
     });
   const jumped = await top();
+  check(
+    'held rail says the pointer time',
+    heldTime === jumped.time.slice(0, 10) || heldTime === jumped.time.slice(0, 16),
+  );
   check(
     'drag to oldest year changes the top row year',
     jumped.year === oldest && jumped.year !== origin.year,

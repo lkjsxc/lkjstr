@@ -170,9 +170,9 @@ The bounded resolution and representative policy follow [interface-acts.md](inte
 - Protocol 15 adds absolute `Anchor.at` and `timeWindow` for [absolute windows and edge coverage](absolute-time-window.md).
 - Protocol 15 Their Home uses `loading | partial | stalled | end` on both `timeWindow` edges for bounded relay reads.
 - Absolute-time windows carry optional `NoteRow.readingAt`, the verified slot time in Unix milliseconds, preserved through Show and Hide.
+- `Timeline.days` past 400 occupied days names the newest 400 instead of being left out; older notes have no part.
 - Optional `Timeline.positions[].at` gives the timestamp of the original note or repost that placed the row at that ordinal.
 Mock-only `EngineConfig.mock`: `slow` signs a note late and delays its answers, `stress` makes relay text absurdly long; the real engine ignores it.
-
 ## Public signing timing and feed status
 - Optional `act.signingTiming: { at, hidden, boot, restart }` records enqueue for public signing actions. Existing callers can omit it.
 - Optional `stats.signing` reports bounded `recent` and `slow` timings. See [signing-latency.md](signing-latency.md) for stages and retention.
@@ -198,4 +198,3 @@ Mock-only `EngineConfig.mock`: `slow` signs a note late and delays its answers, 
 
 Diagnostics add cacheManagedBytes and pendingPersistenceOverheadBytes to distinguish managed allocations from eventPayloadBytes.
 - Debug cache diagnostics add pressureScratchBytes for separately bounded resident GDSF epoch allocations.
-- `Timeline.days` past 400 occupied days names the newest 400 instead of being left out; older notes have no part.

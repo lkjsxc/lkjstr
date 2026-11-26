@@ -131,17 +131,18 @@ export function mountTimeRail(o: {
   /** The note under `y`, or the period of a label whose centre is within 6px. */
   const at = (y: number): TimePlace =>
     snap(labels, y)?.place ?? placeToNote(bands, y) ?? { month: 0, offset: 0 };
-  // Held, it says the target at the pointer; loading, the target's day where it is going; landed or scrolling, the
-  // row at the top beside the place line; hovered, the note under the pointer.
-  const tell = (lineY: number): void => {
+  const tell = (lineY: number, row: RailRow | undefined): void => {
     let text = '';
     let y = lineY;
-    if (held && under) (text = textFor(under)), (y = pointerY + 8);
-    else if (s.pending) {
+    if (held) {
+      const at = plain ? readingAt(row) : 0;
+      text = under ? textFor(under) : at ? timeText(at) : '';
+      y = pointerY + 8;
+    } else if (s.pending) {
       const day = textFor(s.pending);
       text = day && `${day}${late ? ' …' : ''}`;
       y = 8 + noteToPlace(bands, s.pending);
-    } else if (telling || landed) text = timeText(readingAt(first()));
+    } else if (telling || landed) text = timeText(readingAt(row));
     else if (hoverY !== undefined) (text = textFor(at(hoverY))), (y = hoverY + 8);
     if (landed && speak && text) (speak = false), (live.textContent = text);
     label.hidden = !text;
@@ -152,7 +153,8 @@ export function mountTimeRail(o: {
   const paint = (): void => {
     frame = 0;
     const overflow = el.scrollHeight > el.clientHeight + 1;
-    const counted = Boolean(data?.supported && data.months.length);
+    if (!held) shape = data; // Freeze the map and scroll mode until release, even before the first count.
+    const counted = Boolean(shape?.supported && shape.months.length);
     // An answer with no months yet (a Home before its follows arrive) still says nothing about the width.
     const said = data && (!data.supported || data.months.length) ? data.supported : undefined;
     el.classList.toggle('has-time-rail', said ?? guess());
@@ -160,7 +162,6 @@ export function mountTimeRail(o: {
     plain = !counted && el.classList.contains('has-time-rail');
     rail.hidden = !overflow || !(counted || plain);
     rail.classList.toggle('plain', plain);
-    if (!held) shape = data;
     height = Math.max(1, el.clientHeight - 16);
     bands = timeScale(plain ? [] : (shape?.months ?? []), height);
     if (rail.hidden) return;
@@ -188,7 +189,7 @@ export function mountTimeRail(o: {
       8 + (held ? pointerY : plain ? scrolledY(el, height) : p ? noteToPlace(bands, p) : 0);
     const centre = Math.min(el.clientHeight - 16, Math.max(16, gripY));
     grip.style.top = `${centre}px`;
-    tell(centre);
+    tell(centre, row);
     tick.hidden = !s.back;
     if (s.back) tick.style.top = `${8 + noteToPlace(bands, s.back.time)}px`;
     const pointed = held ? pointerY : hoverY;

@@ -1,5 +1,6 @@
 // Owner report 2026-11-26: the rail showed nothing, and the grip stuck to the top after scrolling down.
 import { expect, it, vi } from 'vitest';
+import { timeText } from '../src/views/feed-scrub.ts';
 import { month, setup } from './time-rail-fixture.ts';
 
 it('keeps the grip beside an uncounted top row instead of at the top', () => {
@@ -32,4 +33,29 @@ it('is never empty while its room is reserved and nothing is counted yet', () =>
   expect(x.el.scrollTop).toBe(400);
   expect(x.seek).not.toHaveBeenCalled();
   expect(x.set).not.toHaveBeenCalled();
+});
+
+it('keeps a plain drag and its reading time when the first count arrives', () => {
+  const x = setup({ months: [], positions: [] });
+  const label = x.track.querySelector<HTMLElement>('.scrub')!;
+  x.pointer(x.track, 'pointerdown', 100);
+  expect.soft(label.hidden).toBe(false);
+  expect.soft(label.textContent).toBe(timeText(month + 1));
+  x.rail.timeline({
+    supported: true,
+    months: [{ at: month, count: 3 }],
+    positions: [{ key: 'n1', month, offset: 1, at: month + 1 }],
+    newest: month,
+    oldest: month,
+    older: false,
+  });
+  vi.advanceTimersByTime(16);
+  x.pointer(x.track, 'pointermove', 8 + 184);
+  expect.soft(x.track.classList.contains('plain')).toBe(true);
+  expect.soft(x.el.scrollTop).toBe(400);
+  expect.soft(label.hidden).toBe(false);
+  expect.soft(label.textContent).toBe(timeText(month + 1));
+  x.pointer(x.track, 'pointerup', 8 + 184);
+  expect(x.track.classList.contains('plain')).toBe(false);
+  expect(x.seek).not.toHaveBeenCalled();
 });
