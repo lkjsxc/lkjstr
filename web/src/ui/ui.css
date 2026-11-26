@@ -213,9 +213,5 @@ input[type="number"] { width: 70px; }
 .ncard .badge { margin: 4px 0 0; }
 
 .tworkspace { margin-left: auto; color: var(--faint); font-variant-numeric: tabular-nums; }
-/* iOS zooms the page into a field whose text is under 16px when it takes the keyboard. On a touch screen every field
-   is 16px or more, so nothing zooms by itself; zooming by hand stays the reader's. */
-@media (pointer: coarse) {
-  :where(input, textarea, select, [contenteditable]):not([type="checkbox"], [type="radio"], [type="range"]) { font-size: max(16px, 1em) !important; }
-  .ctext { font-size: max(16px, var(--text, 15px)) !important; }
-}
+/* Safari can zoom on focus below 16px. Keep the text floor independent of the primary pointer. */
+:where(input, textarea, select, [contenteditable]):not([type="checkbox"], [type="radio"], [type="range"], [contenteditable="false"]) { font-size: max(16px, var(--field-text, 1em)) !important; }

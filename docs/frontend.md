@@ -145,7 +145,8 @@ pnpm build          # mock ../dist, prints "ok build"
 pnpm build:real     # Rust package plus real-engine ../dist
 pnpm smoke:real     # real app against loopback fixtures only
 pnpm package        # pack current dist into ../tmp/lkjstr-dist.tar.gz
-pnpm smoke          # mock UI, then fresh and lived-in loopback stores; prints ok lines
+pnpm exec playwright-core install webkit # once for the pinned WebKit browser
+pnpm smoke          # iPhone WebKit, mock UI, then fresh and lived-in loopback stores
 pnpm shots          # screenshots to ../tmp/screens (all sizes, themes, languages)
 pnpm vitest run tests/undo.test.ts   # one test file
 pnpm fix            # biome --write

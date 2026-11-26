@@ -1,5 +1,5 @@
-// The phone and touch batch (owner, 2026-11-22), at 390 with a finger and at 1440 with a mouse: no field under 16px
-// on a touch screen, so iOS never zooms into one; the top bar keeps the name and its right-hand buttons while the
+// The phone and touch batch (owner, 2026-11-22), at 390 with a finger and at 1440 with a mouse: the top bar
+// keeps the name and its right-hand buttons while the
 // chips scroll with a fade; the phone default (Post collapsed at the bottom, notifications in Home, no Notifications
 // tab), whose collapsed Post maximizes at once; the emoji search through the page scroll iOS makes for its keyboard;
 // and a picture that handles like a map, its percentage a handle.
@@ -109,22 +109,6 @@ export async function mobileChecks(open: Open, check: Check): Promise<void> {
     titles,
   );
 
-  // No field under 16px on a touch screen: iOS would zoom the page into it.
-  await page.locator('.bar [data-tab-search]').tap();
-  await page.locator('.tsearch input').waitFor();
-  const small = await page.evaluate(() =>
-    [...document.querySelectorAll<HTMLElement>('input, textarea, select, [contenteditable]')]
-      .filter((e) => !['checkbox', 'radio', 'range'].includes((e as HTMLInputElement).type))
-      .map((e) => [e.className || e.tagName, Number.parseFloat(getComputedStyle(e).fontSize)])
-      .filter(([, size]) => (size as number) < 16),
-  );
-  const fields = await page.locator('input, textarea').count();
-  check(
-    'touch: no field is under 16px, so iOS does not zoom into it',
-    !small.length && fields > 3,
-    small,
-  );
-  await page.keyboard.press('Escape');
   await page.locator('.pane.max .zoom.on').tap();
 
   // The emoji picker's search: iOS scrolls the page to lift the field above its keyboard, and the picker stays.

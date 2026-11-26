@@ -13,7 +13,7 @@
 .rclear { flex: none; align-self: center; padding: 0 4px; font-size: 12.5px; white-space: nowrap; }
 .prow > .muted:first-child { flex: 0 0 76px; }
 .pdays, .ppeople { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; min-width: 0; }
-.pdays input, .padd { box-sizing: border-box; height: 26px; padding: 0 6px; border-radius: 6px; font-size: 12.5px; font-variant-numeric: tabular-nums; }
+.pdays input, .padd { box-sizing: border-box; height: 26px; padding: 0 6px; border-radius: 6px; font-variant-numeric: tabular-nums; }
 .pdays input { width: 104px; }
 .pdays input[aria-invalid="true"] { border-color: var(--danger); }
 .padd { flex: 1 1 140px; min-width: 0; max-width: 220px; }
@@ -34,7 +34,7 @@
 .fstate:empty { display: none; }
 .compose { display: flex; flex-direction: column; gap: 6px; padding: 10px 12px; }
 .compose.drop-on { box-shadow: inset 0 0 0 2px var(--accent); }
-.ctext { box-sizing: border-box; flex: 1 1 96px; min-height: 96px; max-height: 60%; width: 100%; padding: 4px 0; border: 0; outline: 0; resize: none; background: none; color: var(--fg); font: inherit; font-size: var(--text, 15px); line-height: 1.6; }
+.ctext { --field-text: var(--text, 15px); box-sizing: border-box; flex: 1 1 96px; min-height: 96px; max-height: 60%; width: 100%; padding: 4px 0; border: 0; outline: 0; resize: none; background: none; color: var(--fg); font: inherit; line-height: 1.6; }
 .ctext::placeholder { color: var(--faint); }
 .cctx { display: flex; align-items: center; gap: 6px; min-width: 0; padding: 4px 8px; border-left: 2px solid var(--accent); background: var(--wash); font-size: 12.5px; }
 .cctx .x { margin-left: auto; flex: none; }
@@ -51,7 +51,7 @@
 .cquote { flex: none; margin: 0; cursor: default; }
 .cquote .qtext { -webkit-line-clamp: 4; }
 .cquote .qhead > .x { flex: none; }
-.ccw { box-sizing: border-box; flex: none; width: 100%; height: 32px; padding: 0 10px; border: 1px dashed var(--sep); border-radius: 8px; background: none; color: var(--fg); font: inherit; font-size: 13px; }
+.ccw { box-sizing: border-box; flex: none; width: 100%; height: 32px; padding: 0 10px; border: 1px dashed var(--sep); border-radius: 8px; background: none; color: var(--fg); font: inherit; }
 .ccw:focus { outline: 0; border-color: var(--accent); }
 .cbar .icon.on { color: var(--accent); }
 .thumbs { display: flex; flex-wrap: wrap; gap: 6px; }

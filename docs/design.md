@@ -43,8 +43,8 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
 ## Type
 - One system sans stack with the Japanese families named. No web fonts.
 - Interface 13.5px / 1.45. Note text 15px / 1.6 (a setting); the focused note of a thread is 1.5px larger. Headers and context lines 12.5 to 13.5px.
-- On a touch screen every field (input, text area, select) is 16px or more, so iOS never zooms the page into one when it
-  takes the keyboard (owner, 2026-11-22). Zooming by hand stays the reader's: the viewport never forbids it. The page
+- Editable controls use at least 16px text in every pointer mode. Keep them outside scaled bars so iOS can reveal a
+  focused field at normal page zoom (owner, 2026-11-22). The viewport allows manual zoom. The page
   itself never scrolls; when iOS scrolls it to lift a field above the keyboard, an open panel (the emoji picker) stays,
   and the page goes back once no field has the keyboard (owner, 2026-11-26).
 - Names are 600; everything else regular. Numbers that change are tabular.
