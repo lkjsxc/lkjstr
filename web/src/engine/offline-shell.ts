@@ -91,6 +91,7 @@ export function installShell(hasDraft: () => boolean, notice: () => void, ready:
       installing = registered.installing;
       installing?.addEventListener('statechange', changed);
       changed();
+      if (!registered.active && !registered.waiting && !registered.installing) failed();
     };
     registered.addEventListener('updatefound', updated);
     unwatch = () => {
@@ -99,7 +100,6 @@ export function installShell(hasDraft: () => boolean, notice: () => void, ready:
     };
     updated();
     if (registered.active || registered.waiting) failures = 0;
-    else if (!registered.installing) failed();
   };
   const register = (): void => {
     if (registration || registering || !active() || (!bootController && !ready.get())) return;

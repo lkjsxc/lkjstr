@@ -259,4 +259,30 @@ describe('shell registration recovery', () => {
     expect(removedRegistration).toHaveBeenCalledWith('updatefound', current);
     expect(vi.getTimerCount()).toBe(0);
   });
+
+  it('retries once when a queued updatefound observes no remaining worker slots', async () => {
+    const f = await fixture();
+    const installing = Object.assign(new EventTarget(), {
+      state: 'installing' as ServiceWorkerState,
+    });
+    f.registration.active = null;
+    f.registration.installing = installing;
+    const removed = vi.spyOn(installing, 'removeEventListener');
+    const removedRegistration = vi.spyOn(f.registration, 'removeEventListener');
+    f.ready.set({});
+    await vi.advanceTimersByTimeAsync(0);
+    f.registration.installing = null;
+    f.registration.dispatchEvent(new Event('updatefound'));
+    expect(removed).toHaveBeenCalledWith('statechange', expect.any(Function));
+    expect(removedRegistration).toHaveBeenCalledWith('updatefound', expect.any(Function));
+    expect(vi.getTimerCount()).toBe(2);
+    f.registration.dispatchEvent(new Event('updatefound'));
+    await vi.advanceTimersByTimeAsync(999);
+    expect(f.workers.register).toHaveBeenCalledTimes(1);
+    f.registration.active = {};
+    await vi.advanceTimersByTimeAsync(1);
+    expect(f.workers.register).toHaveBeenCalledTimes(2);
+    await vi.advanceTimersByTimeAsync(30_000);
+    expect(f.workers.register).toHaveBeenCalledTimes(2);
+  });
 });
