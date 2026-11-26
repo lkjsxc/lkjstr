@@ -3,7 +3,7 @@ import type { Anchor, Timeline } from '../engine/protocol.ts';
 import { localZone } from '../shared/format.ts';
 import type { Keeper, Place } from './feed-place.ts';
 import { type RailRow, rowTime, timeText, topRow } from './feed-scrub.ts';
-import { railGuess, railSaid } from './rail-guess.ts';
+import { railAnswer, railGuess, railSaid } from './rail-guess.ts';
 import { scrollIntent } from './scroll-intent.ts';
 import { dayText, railDays } from './time-days.ts';
 import {
@@ -150,9 +150,7 @@ export function mountTimeRail(o: {
     const view = el.clientHeight;
     if (!held) shape = data; // Freeze the map and scroll mode until release, even before the first count.
     const counted = Boolean(shape?.supported && shape.months.length);
-    // An answer with no months yet (a Home before its follows arrive) still says nothing about the width.
-    const said = data && (!data.supported || data.months.length) ? data.supported : undefined;
-    el.classList.toggle('has-time-rail', said ?? guess());
+    el.classList.toggle('has-time-rail', railAnswer(data) ?? guess());
     plain = !counted && el.classList.contains('has-time-rail');
     const rows = o.rows();
     const needsGrip = rows.some(dated) || el.scrollHeight > view + 1;
@@ -269,10 +267,11 @@ export function mountTimeRail(o: {
     },
     busy: () => Boolean(s.pending || s.inflight || held),
     timeline(next: Timeline) {
-      if (!next.supported) stop(), (s.back = undefined);
+      if (!next.supported && (!next.provisional || data?.supported)) stop(), (s.back = undefined);
       data = next;
       placed = new Map(next.positions.map((p) => [p.key, p]));
-      if (o.candidate && (!next.supported || next.months.length)) railSaid(kind(), next.supported);
+      const said = railAnswer(next);
+      if (o.candidate && said !== undefined) railSaid(kind(), said);
       seeker.timeline(next);
       sync();
     },

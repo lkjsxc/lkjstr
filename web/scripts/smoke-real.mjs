@@ -21,6 +21,7 @@ import { signerScenarios } from './smoke-signers.mjs';
 import { railSmoke } from './smoke-time-rail.ts';
 import { uploadScenarios } from './smoke-uploads.mjs';
 import { accounts, installExtension, npub, visitorChecks } from './smoke-visitors.mjs';
+import { warmRailChecks } from './smoke-warm-rail.mjs';
 
 const errors = [];
 const shots = process.env.LKJSTR_SHOTS === '1';
@@ -120,6 +121,7 @@ try {
   await page.locator('.view[data-kind="home"] .note').first().waitFor();
   check('home renders signed-in notes');
   await railSmoke(page, check, shots);
+  await warmRailChecks({ ...scenario, observe });
   check(
     'signing in brings the ordinary layout',
     (await page.locator('.pane').count()) === 4 &&

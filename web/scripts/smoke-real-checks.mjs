@@ -52,6 +52,8 @@ const main = [
   'a wrong key is refused in words, and is gone from the field and the page',
   'home renders signed-in notes',
   'Home has a time rail',
+  'signed-in Home rail stays visible on cold, warm and tab revisits at 390px',
+  'signed-in Home rail stays visible on cold, warm and tab revisits at 1440px',
   'Home shows a resting grip within a wide tile',
   'hover highlights the visible grip',
   'drag keeps the grip under the pointer without horizontal overflow',

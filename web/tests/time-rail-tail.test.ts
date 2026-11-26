@@ -86,3 +86,14 @@ it('keeps a plain drag and its reading time when the first count arrives', () =>
   expect(x.track.classList.contains('plain')).toBe(false);
   expect(x.seek).not.toHaveBeenCalled();
 });
+
+it('shows a loaded-row rail when an incomplete cache cannot give a full rank map', () => {
+  const recovery = setup({ supported: false, provisional: true, months: [], positions: [] });
+  expect(recovery.track.hidden).toBe(false);
+  expect(recovery.track.classList.contains('plain')).toBe(true);
+  expect(recovery.track.querySelector('.time-year')).not.toBeNull();
+  recovery.pointer(recovery.track, 'pointerdown', 200);
+  recovery.pointer(recovery.track, 'pointerup', 200);
+  expect(recovery.el.scrollTop).toBe(400);
+  expect(recovery.seek).not.toHaveBeenCalled();
+});

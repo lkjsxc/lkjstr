@@ -151,7 +151,6 @@ See [public-view-cache.md](public-view-cache.md). These cache additions remain u
 - Add `ProfileRow.edit?: ProfileEdit` on the active writable account's own row: published kind-0 edit values, omitted from public view snapshots.
 
 The bounded resolution and representative policy follow [interface-acts.md](interface-acts.md). The implementation records source and proof limits.
-
 - Optional `window.liveAbove` lets newly projected rows fill the explicit before budget, including grouped notifications.
 - `publish.signed {req,id}` delivers a verified note id to the initiating client before its first signed row or a delivery result.
 - `publish.fallback {req}` reports the first actual frame sent to a default relay while the author's relay list is unknown.
@@ -170,6 +169,7 @@ The bounded resolution and representative policy follow [interface-acts.md](inte
 - Protocol 15 Their Home uses `loading | partial | stalled | end` on both `timeWindow` edges for bounded relay reads.
 - Absolute-time windows carry optional `NoteRow.readingAt`, the verified slot time in Unix milliseconds, preserved through Show and Hide.
 - `Timeline.days` past 400 occupied days names the newest 400 instead of being left out; older notes have no part.
+- Optional `Timeline.provisional` asks for a loaded-row rail while retained counts are incomplete.
 - Optional `Timeline.clock` carries up to 4096 occupied local five-minute parts as `[at, month, offset, count]`.
 - Optional `Timeline.positions[].at` gives the timestamp of the original note or repost that placed the row at that ordinal.
 Mock-only `EngineConfig.mock`: `slow` signs a note late and delays its answers, `stress` makes relay text absurdly long; the real engine ignores it.

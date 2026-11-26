@@ -10,9 +10,9 @@ return tick. Index and rules: [interface-specs.md](interface-specs.md). The look
 
 ## Reach
 
-Note-only Home can show the rail with reposts. Each note takes the time of the original or repost that places it
-in that view. Home with Notifications set to Show, including the phone default, uses native scrolling and C1.
-Lists whose cache was evicted or cut short also use native scrolling. See the fallbacks in [time-rail.md](time-rail.md).
+Home can show the rail with reposts and with Notifications set to Show, including the phone default. Each note uses
+the time of the original or repost that places it in that view. A cut-short cache keeps a scroll-share rail with
+marks from the loaded rows. See the fallbacks in [time-rail.md](time-rail.md).
 
 ## Shared rules
 

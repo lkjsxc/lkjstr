@@ -138,9 +138,11 @@ Signed-out `global` retains native scrolling: its contextual spam policy
 (`global.rs` `classify_window`) caps each author at three rows and folds
 ten-minute duplicate bursts relative to each window's starting slice. A
 cache-wide ordinal index would weight spam bursts and expose spam by resetting
-window context at seek targets. Native scrolling also covers unhydrated disk
-history beyond the newest 2000-event startup cache, cache-queue loss and store
-retention eviction. Non-chronological views remain native: `bookmarks` (NIP-51
+window context at seek targets. A startup cache cut to the newest 2000 events,
+cache-queue loss or eviction can withhold exact counts. For rail sources the
+engine then requests a provisional rail with marks from the loaded rows and
+scroll-share navigation. The rail sends ordinal seeks only with exact counts.
+Non-chronological views remain native: `bookmarks` (NIP-51
 list-owner order), `thread` (reply tree), `following` and `followers` (people
 lists), `channels` (channel directory), `media`, `compose`, `profile-edit`,
 `account`, `settings`, `relays`, `stats` and `docs`. These paths do not

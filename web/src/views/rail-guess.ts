@@ -2,6 +2,7 @@
 // frame; reserving it for a list the engine then refuses (a Home with reposts, a device whose cache was cut short)
 // drew every note narrower until the answer came a second later, then widened them all at once. So the first frame
 // follows what the engine last said for the same kind of tab on this device, and only a kind never seen guesses yes.
+import type { Timeline } from '../engine/protocol.ts';
 import { kv } from '../shared/storage.ts';
 
 const KEY = 'rails'; // { [railKey]: boolean }; bound: one entry per kind of tab and mode
@@ -15,6 +16,11 @@ const read = (): Record<string, boolean> => {
 };
 
 export const railGuess = (kind: string): boolean => read()[kind] !== false;
+
+/** Empty accepted counts can precede the first map. A provisional rail explicitly reserves its width. */
+export const railAnswer = (next: Timeline | undefined): boolean | undefined =>
+  next?.provisional ??
+  (next && (!next.supported || next.months.length) ? next.supported : undefined);
 
 /** The guess's key: the tab kind plus the query's mode, so a refused mode (signed-out Global) never narrows a
  * supported one (signed-in Global), and a Home with notifications is remembered apart from a note-only Home. */
