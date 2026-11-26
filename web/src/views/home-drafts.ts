@@ -87,7 +87,12 @@ function renderDraft(entry: HomeDraft, env: ViewEnv): HTMLElement {
           h(
             'time',
             { title: fullTime(entry.at) },
-            failure ? '' : t((!signed && waiting && waitKey(asks)) || 'note.sending'),
+            failure
+              ? ''
+              : t(
+                  (!signed && waiting && waitKey(asks)) ||
+                    (signed ? 'note.sending' : 'note.posting'),
+                ),
           ),
         ),
         h('div', { class: 'content' }, draftBody(draft, env)),

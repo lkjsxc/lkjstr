@@ -40,7 +40,8 @@ export function sendWords(
   wait?: Key,
 ): string {
   const counts = { ok: relays.filter((r) => r.state === 'ok').length, all: relays.length };
-  if (phase === 'signing') return t(wait ?? 'compose.pending');
+  // Before the signature nothing has left the browser: 'posting', not 'sending' (owner, 2026-11-26).
+  if (phase === 'signing') return t(wait ?? 'compose.posting');
   if (phase === 'sending')
     return relays.length ? t('compose.sending', counts) : t('compose.pending');
   if (phase === 'sent') return t('compose.sent', counts);

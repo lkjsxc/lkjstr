@@ -273,8 +273,9 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
   refused or unanswered relays and points to the remaining count. Without any acceptance, the unconfirmed draft keeps Retry, Edit and Remove.
 - Pressing Post empties the field and leaves the caret in it at once, whatever the signer; what is being sent is shown below, and a failure keeps its text.
   On a touch screen a tap on Post puts the on-screen keyboard away instead (owner, 2026-11-25); the send key keeps the caret.
-- At Post, Home shows the retained draft at once with the Sending mark and the room of an action row, as a signed note: a slow
-  signer looks like any send. An extension or remote signer still waiting after ten seconds gets its own waiting mark. Refused or failed
+- At Post, Home shows the retained draft at once with the Posting mark and the room of an action row, as a signed note: a slow
+  signer looks like any send. Posting (投稿中) holds until the note is signed, since nothing has left the browser yet; Sending
+  (送信中) starts with the signature. An extension or remote signer still waiting after ten seconds gets its own waiting mark. Refused or failed
   signing keeps the draft with Retry, Edit and discard. The verified event takes the draft's place, by its exact id, without moving it.
 - A signed note appears locally in Home, the author's profile and its thread with the existing Sending mark. At the head it follows the live list.
   While reading farther down, the new-notes pill counts arrivals above the held row and says "Your note" with an up arrow

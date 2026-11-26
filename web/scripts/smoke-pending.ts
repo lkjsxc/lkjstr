@@ -50,9 +50,9 @@ export async function pendingChecks(open: Open, check: Check): Promise<void> {
   const signing = await top(page);
   const [slow, after] = signing;
   check(
-    'pending: the unsigned outlier shows the same Sending mark and height as a signed note',
+    'pending: the unsigned outlier shows the Posting mark at the height of a signed note',
     Boolean(slow?.draft && after && !after.draft) &&
-      slow?.time === 'sending…' &&
+      slow?.time === 'posting…' &&
       Math.abs((slow?.h ?? 0) - (after?.h ?? 0)) <= 1,
     signing,
   );

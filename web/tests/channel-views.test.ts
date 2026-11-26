@@ -213,7 +213,7 @@ it('settles a publication across remount without overwriting the next ordinary d
   const next = x.el.querySelector('textarea')!;
   next.value = 'next draft';
   next.dispatchEvent(new Event('input'));
-  expect(x.el.querySelector('.cdraft')?.textContent).toContain('Sending');
+  expect(x.el.querySelector('.cdraft')?.textContent).toContain('Posting');
   finish({
     t: 'result',
     req: 'done',
@@ -273,7 +273,7 @@ it.each([undefined, 'old-room'])(
       off();
     }
     off = mountCompose(x.el, x.env, oldChannel ? 'different-room' : undefined);
-    expect(x.el.querySelector('.cdraft')?.textContent).toContain('Sending');
+    expect(x.el.querySelector('.cdraft')?.textContent).toContain('Posting');
     finishes[1]!({ t: 'result', req: 'new', ok: true });
     await vi.waitFor(() => expect(x.el.querySelector('.cdraft')).toBeNull());
     off();

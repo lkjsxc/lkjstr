@@ -90,7 +90,7 @@ it('a refused post keeps its text with Retry, and Retry does not touch what is b
   expect(c.field.value).toBe('typing the next one');
 });
 
-it('Home shows the draft with the Sending mark while it is signed, never a word about signing', async () => {
+it('Home shows the draft as posting until it is signed, then sending, never a word about signing', async () => {
   const c = composer();
   const home = mountHomeDrafts(c.env);
   const off = home.watch(() => home.draw([]));
@@ -98,7 +98,7 @@ it('Home shows the draft with the Sending mark while it is signed, never a word 
   await vi.waitFor(() => expect(home.el.querySelector('.home-draft')).not.toBeNull());
   home.draw([]);
   const row = home.el.querySelector<HTMLElement>('.home-draft');
-  expect(row?.querySelector('time')?.textContent).toBe('sending…');
+  expect(row?.querySelector('time')?.textContent).toBe('posting…');
   expect(row?.getAttribute('aria-label')).toBeNull();
   expect(row?.querySelector('.acts')).not.toBeNull(); // the room of the signed note's action row
   c.sends[0]?.watch.signed?.('abc');

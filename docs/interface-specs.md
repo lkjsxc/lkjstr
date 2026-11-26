@@ -105,8 +105,8 @@ with the design owner.
 
 ## Sending
 
-The Post tab, Home draft and signed note use the same delivery state. Signing keeps
-the existing Sending mark. After ten seconds the mark names a still-waiting
+The Post tab, Home draft and signed note use the same delivery state. Signing shows
+the Posting mark (nothing has left the browser yet); the signature turns it into Sending. After ten seconds the mark names a still-waiting
 extension or remote signer. The first accepting relay answer shows Sent and clears
 the draft. Late answers update its count. A note with no acceptance at its deadline
 shows unconfirmed and keeps Retry, Edit and Remove. All refusals show the relay
