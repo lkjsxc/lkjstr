@@ -7,10 +7,10 @@ import { railGuess, railSaid } from './rail-guess.ts';
 import { scrollIntent } from './scroll-intent.ts';
 import { dayText, railDays } from './time-days.ts';
 import {
-  createMarkPainter,
   createTimeRailNodes,
   drawCurrentYear,
   drawLabel,
+  drawMarks,
   loadingText,
   scrolledY,
   scrollShare,
@@ -18,7 +18,7 @@ import {
 import { railInput } from './time-input.ts';
 import { type Label, snap } from './time-marks.ts';
 import { nearPlace } from './time-near.ts';
-import { createTimePreview, dated } from './time-preview.ts';
+import { createTimePreview, dated, type timePreview } from './time-preview.ts';
 import { noteToPlace, placeToNote, type TimePlace, timeScale } from './time-scale.ts';
 import { createSeeker } from './time-seek.ts';
 
@@ -39,8 +39,7 @@ export function mountTimeRail(o: {
   active(): boolean;
 }) {
   const { el, list, keeper } = o;
-  const { rail, marks, lens, grip, hoverLine, tick, label, live, pin } = createTimeRailNodes(el);
-  const painter = createMarkPainter(marks, lens);
+  const { rail, marks, grip, hoverLine, tick, label, live, pin } = createTimeRailNodes(el);
   let telling = false; // the reader is scrolling (C1)
   const intent = scrollIntent(el, () => ((telling = false), sync()));
   const kind = (): string => o.key(el.dataset.kind ?? '');
@@ -53,6 +52,8 @@ export function mountTimeRail(o: {
   let height = 0;
   let labels: readonly Label[] = [];
   const preview = createTimePreview();
+  let markSource: Timeline | ReturnType<typeof timePreview> | undefined;
+  let markKey = '';
   let frame = 0;
   let hadRows = false;
   let held = false;
@@ -165,19 +166,17 @@ export function mountTimeRail(o: {
     rail.classList.toggle('open-end', data?.older === true);
     const wide = rail.offsetWidth > 16;
     const loaded = plain ? preview.read(rows, zone, held) : undefined;
-    const local = Boolean(loaded || days());
-    labels = painter.draw(
-      loaded ? timeScale(loaded.months, height) : bands,
-      loaded ?? shape,
-      height,
-      wide,
-      zone,
-      local,
-    );
-    painter.lens(held ? pointerY : undefined, height);
+    const source = loaded ?? shape;
+    const key = `${height}:${wide}:${zone}:${plain}`;
+    if (source !== markSource || key !== markKey) {
+      [markSource, markKey] = [source, key];
+      const map = loaded ? timeScale(loaded.months, height) : bands;
+      labels = drawMarks(marks, map, loaded?.days ?? days(), height, wide, loaded?.hours);
+    }
     seeker.settle(data);
     const row = first();
     const p = near(row);
+    const local = Boolean(loaded || days());
     drawCurrentYear(marks, local ? readingAt(row) : (p?.month ?? data?.months[0]?.at ?? 0), local);
     const y = held ? pointerY : p && !plain ? noteToPlace(bands, p) : scrolledY(el, height);
     const centre = Math.min(view - 16, Math.max(16, y + 8));

@@ -4,7 +4,7 @@
 import { pressed, typing } from '../shared/keys.ts';
 import { popoverOpen } from '../wm/menus.ts';
 import { stepDay, stepMonth } from './time-days.ts';
-import type { Day } from './time-parts.ts';
+import type { Day } from './time-marks.ts';
 import type { TimeBand, TimePlace } from './time-scale.ts';
 
 type Step = (

@@ -1,4 +1,5 @@
 #![allow(clippy::expect_used)]
+//! Local day boundaries beside the month counts (docs/interface-time.md, engine addition).
 mod engine_review_support;
 use engine_review_support::{accept, event, output};
 use lkjstr_core::calendar::{Calendar, Utc};
@@ -7,6 +8,7 @@ use serde_json::{Value, json};
 
 const H: i64 = 3_600_000;
 const DAY: i64 = 24 * H;
+/// 2026-11-22T00:00:00Z
 const NOW: u64 = 1_795_305_600_000;
 
 fn local_midnight(ms: i64, offset: i64) -> i64 {
@@ -186,64 +188,4 @@ fn a_zone_change_rebuilds_days_and_future_notes_join_today() {
             (utc(2026, 11, 20, 15, 0), nov, 1, 1)
         ]
     );
-}
-
-#[test]
-fn clock_counts_exact_occupied_five_minute_parts_in_ordinal_order() {
-    let notes = [
-        utc(2026, 11, 21, 18, 54),
-        utc(2026, 11, 21, 18, 53),
-        utc(2026, 11, 21, 18, 50),
-        utc(2026, 11, 21, 18, 37),
-        utc(2026, 11, 20, 23, 59),
-    ];
-    let (mut e, mut s) = setup(Box::new(Fixed(9 * H, "Asia/Tokyo")), &notes);
-    let nov = utc(2026, 11, 1, 0, 0);
-    let clock = json!([
-        [utc(2026, 11, 21, 18, 50), nov, 0, 3],
-        [utc(2026, 11, 21, 18, 35), nov, 3, 1],
-        [utc(2026, 11, 20, 23, 55), nov, 4, 1]
-    ]);
-    let data = timeline(&mut s, &e, NOW);
-    assert_eq!(data["clock"], clock);
-    let key = format!("{:064x}", 3);
-    accept(
-        &mut s,
-        &mut e,
-        json!({"t":"window","sub":"s","anchor":{"key":key},"before":1,"after":1}),
-        NOW + 3000,
-    );
-    output(&mut s, &mut e);
-    let next = timeline(&mut s, &e, NOW + 3000);
-    assert_eq!(next["anchor"], key);
-    assert_eq!(
-        next["clock"], clock,
-        "the clock stays attached on window-only moves"
-    );
-}
-
-#[test]
-fn clock_budget_keeps_complete_dense_days_before_quiet_days() {
-    let day = DAY as u64;
-    let block = 300_000;
-    let dense = NOW - 30 * day;
-    let much: Vec<_> = (0..250).map(|i| dense + i * block).collect();
-    let mut notes: Vec<_> = (1..=22)
-        .flat_map(|days_ago| (0..200).map(move |i| NOW - days_ago * day + i * block))
-        .collect();
-    notes.extend(much);
-    let (e, mut s) = setup(Box::new(Utc), &notes);
-    let data = timeline(&mut s, &e, NOW);
-    let parts = data["clock"].as_array().expect("clock");
-    assert!(parts.len() <= 4096);
-    assert_eq!(parts.len(), 4050, "250 dense parts and 19 complete days");
-    let count = |day| {
-        parts
-            .iter()
-            .filter(|p| p[0].as_u64().expect("start") / 86_400_000 == day)
-            .count()
-    };
-    assert_eq!(count(dense / day), 250);
-    assert_eq!(count(NOW / day - 1), 200);
-    assert_eq!(count(NOW / day - 22), 0);
 }

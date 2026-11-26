@@ -58,6 +58,7 @@ See [history](engine-proposals-history.md), [emoji](engine-proposals-emoji.md), 
 - `FromEngine.result.dmDraftRevision?` returns an opaque account/tab/generation revision even for absence and after successful save/clear.
 - `Failure.code:signer-timeout` distinguishes an observed signer deadline from a missing signer or a relay/network timeout.
 - `ToEngine.crypted.error:signer-timeout` lets a bounded extension call release its queue and discard a late reply.
+
 - `Action.dm.editor {as,editor,open,dirty?}` acknowledges bounded private editor admission and tracks pending encrypted writes across page expiry.
 - `FromEngine.dm.flush {req,account,phase}` holds participating editors during lock preparation and releases them after commit or failure.
 - `ToEngine.dm.flushed {req,ok}` acknowledges only that port's exact lock preparation after its latest encrypted state commits.
@@ -170,7 +171,6 @@ The bounded resolution and representative policy follow [interface-acts.md](inte
 - Protocol 15 Their Home uses `loading | partial | stalled | end` on both `timeWindow` edges for bounded relay reads.
 - Absolute-time windows carry optional `NoteRow.readingAt`, the verified slot time in Unix milliseconds, preserved through Show and Hide.
 - `Timeline.days` past 400 occupied days names the newest 400 instead of being left out; older notes have no part.
-- Optional `Timeline.clock` carries up to 4096 occupied local five-minute parts as `[at, month, offset, count]`.
 - Optional `Timeline.positions[].at` gives the timestamp of the original note or repost that placed the row at that ordinal.
 Mock-only `EngineConfig.mock`: `slow` signs a note late and delays its answers, `stress` makes relay text absurdly long; the real engine ignores it.
 ## Public signing timing and feed status

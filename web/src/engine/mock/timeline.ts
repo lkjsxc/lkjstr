@@ -1,6 +1,5 @@
 // Mock counts use the same finished, ordered entries as mock windows; never just the current slice.
-import { localZone } from '../../shared/format.ts';
-import { createTimeParts } from '../../views/time-parts.ts';
+import { localDay, localZone } from '../../shared/format.ts';
 import type { Anchor, FromEngine, Query, Timeline } from '../protocol.ts';
 import type { Entry } from './query.ts';
 
@@ -27,7 +26,9 @@ export function timeline(
 ): Timeline {
   const months = new Map<number, number>();
   const positions: { key: string; month: number; offset: number; at: number }[] = [];
-  const parts = createTimeParts();
+  // Local days as the real engine counts them (crates/lkjstr-core/src/engine/wire/timeline_days.rs).
+  const days: { at: number; month: number; offset: number; count: number }[] = [];
+  let occupied = 0;
   let previous = Infinity;
   let newest = 0;
   let oldest = 0;
@@ -55,7 +56,12 @@ export function timeline(
     const month = Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), 1);
     const offset = months.get(month) ?? 0;
     months.set(month, offset + 1);
-    parts.count(at, month, offset);
+    const day = localDay(at);
+    const part = days.at(-1);
+    // Past 400 occupied days only the newest stay named, as in the engine.
+    if (part?.at === day && part.month === month) part.count++;
+    else if ((occupied += part?.at === day ? 0 : 1) <= 400)
+      days.push({ at: day, month, offset, count: 1 });
     if ((i >= start && i < end) || e.key === returnKey)
       positions.push({ key: row.key, month, offset, at: time });
   });
@@ -68,7 +74,7 @@ export function timeline(
     positions,
     older: false,
     zone: localZone(),
-    ...parts.fields(),
+    days,
   };
 }
 export function timeKey(

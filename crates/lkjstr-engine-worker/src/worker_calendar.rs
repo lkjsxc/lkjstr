@@ -40,11 +40,4 @@ impl Calendar for BrowserCalendar {
         );
         start.get_time().max(0.0) as u64
     }
-
-    fn five_minute_start(&self, ms: u64) -> u64 {
-        let date = Date::new(&JsValue::from_f64(ms as f64));
-        // Subtract within this occurrence of the hour, including the repeated hour at fall back.
-        let elapsed = (date.get_minutes() % 5 * 60 + date.get_seconds()) as u64;
-        ms.saturating_sub(elapsed * 1000 + u64::from(date.get_milliseconds()))
-    }
 }

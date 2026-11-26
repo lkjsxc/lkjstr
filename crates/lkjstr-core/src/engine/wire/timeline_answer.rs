@@ -1,7 +1,7 @@
 //! The per-window part of a Timeline answer: positions of the delivered rows (plus the return
 //! row), the window's anchor and whether relay history remains. A finished index answers from its
 //! own lookup. While a replacement builds (older history or live notes arrived), a moved window is
-//! answered from the prior finished lookup with the prior calendar counts, so the rail never loses
+//! answered from the prior finished lookup with the prior months and days, so the rail never loses
 //! the reading place or a seek's landing for the length of a rebuild.
 use super::Session;
 use crate::engine::Engine;
@@ -17,14 +17,8 @@ fn position(lookup: &Lookup, key: &str) -> Option<Value> {
 }
 
 impl Session {
-    /// Updates `positions`, `older` and `anchor` for the current window. Returns true on change.
-    pub(super) fn window_fields(
-        &self,
-        sub: &str,
-        lookup: &Lookup,
-        e: &Engine,
-        value: &mut Value,
-    ) -> bool {
+    /// Sets `positions`, `older` and `anchor` on `value` for `sub`'s current window.
+    pub(super) fn window_fields(&self, sub: &str, lookup: &Lookup, e: &Engine, value: &mut Value) {
         let mut positions: Vec<_> = self
             .delivered
             .get(sub)
@@ -40,21 +34,15 @@ impl Session {
         }
         // Exhaustion is engine policy; a short local window says nothing about relay history.
         let older = self.view(sub, e).is_none_or(|v| !v.source_exhausted);
-        let positions = json!(positions);
-        let anchor = self.windows.get(sub).and_then(|(key, _, _)| key.as_deref());
-        if value["positions"] == positions
-            && value["older"] == older
-            && value["anchor"].as_str() == anchor
-        {
-            return false;
-        }
-        value["positions"] = positions;
+        value["positions"] = json!(positions);
         value["older"] = json!(older);
-        if let Some(key) = anchor {
-            value["anchor"] = json!(key);
-        } else if let Some(map) = value.as_object_mut() {
-            map.remove("anchor");
+        match self.windows.get(sub) {
+            Some((Some(key), _, _)) => value["anchor"] = json!(key),
+            _ => {
+                if let Some(map) = value.as_object_mut() {
+                    map.remove("anchor");
+                }
+            }
         }
-        true
     }
 }

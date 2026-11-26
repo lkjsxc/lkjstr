@@ -37,7 +37,6 @@ mod sources;
 use super::thread;
 mod timeline;
 mod timeline_answer;
-mod timeline_clock;
 mod timeline_days;
 mod timeline_projected;
 mod translate;

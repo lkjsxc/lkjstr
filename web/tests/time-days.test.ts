@@ -1,7 +1,7 @@
 // Finding a place's local day, the label's day text, and the keyboard's day and month steps (interface-time.md C3).
 import { describe, expect, it } from 'vitest';
 import { dayText, partOf, railDays, stepDay, stepMonth } from '../src/views/time-days.ts';
-import type { Day } from '../src/views/time-parts.ts';
+import type { Day } from '../src/views/time-marks.ts';
 import { timeScale } from '../src/views/time-scale.ts';
 
 const nov = Date.UTC(2026, 10);

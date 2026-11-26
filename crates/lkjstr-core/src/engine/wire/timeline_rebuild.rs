@@ -1,30 +1,7 @@
 //! Keep the previous map while its replacement is built, unless coverage shrank.
-use super::{Engine, Index, Session, Value, json};
+use super::{Index, json};
 
 impl Index {
-    /// Keep answering moved windows while a replacement builds. Window-only changes reuse the
-    /// retained calendar counts and lookup instead of rebuilding or cloning an unchanged answer.
-    pub(super) fn update_window(
-        &mut self,
-        session: &Session,
-        sub: &str,
-        engine: &Engine,
-        counted: bool,
-    ) -> Option<Value> {
-        let value = self
-            .last
-            .as_mut()
-            .filter(|v| counted || v["supported"] == true)?;
-        let lookup = if counted {
-            &self.positions
-        } else {
-            &self.prior
-        };
-        session
-            .window_fields(sub, lookup, engine, value)
-            .then(|| value.clone())
-    }
-
     pub(super) fn rebuild(&mut self, mut next: Self) -> Self {
         next.done = !next.supported;
         next.last = self.last.take();

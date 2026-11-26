@@ -1,11 +1,12 @@
 // Pure time-rail index for already-projected private DM lists (messages inbox and message timeline).
 // Private bodies never enter public caches; this maps only the current view's (key, at) rows.
 import type { Timeline } from '../engine/protocol.ts';
-import { localZone } from '../shared/format.ts';
+import { localDay, localZone } from '../shared/format.ts';
 import type { Keeper, Place } from './feed-place.ts';
-import { createTimeParts } from './time-parts.ts';
 
 export type DmRailRow = { readonly kind: 'dm'; readonly key: string; readonly at: number };
+
+const MAX_DAYS = 400;
 
 /** Builds a newest-first Timeline from already-projected DM rows, matching the engine's month/day rules. */
 export function dmTimeline(
@@ -15,7 +16,8 @@ export function dmTimeline(
 ): Timeline {
   const months = new Map<number, number>();
   const positions: { key: string; month: number; offset: number; at: number }[] = [];
-  const parts = createTimeParts();
+  const days: { at: number; month: number; offset: number; count: number }[] = [];
+  let occupied = 0;
   let previous = Number.POSITIVE_INFINITY;
   let newest = 0;
   let oldest = 0;
@@ -29,7 +31,15 @@ export function dmTimeline(
     const offset = months.get(month) ?? 0;
     months.set(month, offset + 1);
     positions.push({ key: item.key, month, offset, at: item.at });
-    parts.count(at, month, offset);
+    if (occupied <= MAX_DAYS) {
+      const day = localDay(at);
+      const part = days.at(-1);
+      if (part?.at === day && part.month === month) part.count++;
+      else {
+        if (part?.at !== day) occupied++;
+        if (occupied <= MAX_DAYS) days.push({ at: day, month, offset, count: 1 });
+      }
+    }
   }
   return {
     supported: true,
@@ -39,7 +49,7 @@ export function dmTimeline(
     positions,
     older,
     zone: localZone(),
-    ...parts.fields(),
+    ...(occupied <= MAX_DAYS ? { days } : {}),
   };
 }
 

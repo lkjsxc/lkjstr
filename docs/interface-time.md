@@ -40,7 +40,7 @@ One label per list, the existing `.scrub` element. It reads `yyyy/mm/dd hh:mm` f
   reader's when an input event came within the last 300ms or the label is already showing. It never appears for a
   scroll made by the list: restoring a tab, the keeper holding the anchor while notes arrive or media grows, a new
   note at the head, a tab opening or moving tiles.
-- **Gone.** 1000ms after the last scroll, unless a rail press is held or a jump is still loading (C3). Provisional labels stay until the counted map arrives.
+- **Gone.** 1000ms after the last scroll, unless a rail press is held or a jump is still loading (C3).
 - **Where.** Its vertical centre sits on the thumb's centre, clamped 4px inside the tile. In a rail list the thumb is
   the grip, and the label's right edge is 4px left of the rail (narrow and wide alike). In a list with a
   native scrollbar the label's right edge is 4px left of the scrollbar, and its centre is at
@@ -55,23 +55,31 @@ One label per list, the existing `.scrub` element. It reads `yyyy/mm/dd hh:mm` f
 
 ## C2 The wide scrubber
 
-A tile of 520px or more has a 56px ruler, 18px from the rail's right edge. It starts at the occupied years,
-with the oldest year first when labels compete for space. Each labelled span can show its next calendar unit:
-month, day, hour, quarter hour, then five minutes, as long as the rank map leaves 14px between label centres.
-A boundary marks the period's newest note. A child starting at the same boundary can use the next available line
-inside its span. Empty spans use no room. The year is an 11px major label and the current year uses `--fg`.
-Finer labels are 9px and quieter. A smaller tick can show the next unit when the label cannot fit.
+A tile of 520px or more keeps today's 56px rail. Its marks now come in three levels. Labels are 11px, right-aligned
+18px from the rail's right edge, in `--faint`; the current year stays `--fg`. Dots sit 5px from the right edge.
 
-- **Dates.** Year labels say `yyyy`, months say `mm/dd` of their newest day, days say `dd`, and clock labels
-  say `HH:mm` of the newest occupied five-minute part in that span. Where only UTC month totals are known,
-  the ruler shows the year and month dots.
-- **Hover (fine pointer, any rail width).** A 1px `--sep` line crosses the rail at the pointer. Its label shows
-  the full time if the note a press there would reach is loaded, or `yyyy/mm/dd` from the day counts when known.
-  Leaving the rail removes both. The line stays with a held mouse.
-- **Held.** Within 48px of the pointer a short second column shows the next finer available unit. It follows
-  the pointer and leaves the held time label in place. Snapping uses the resting labels.
-- **Narrow rail (under 520px).** Years show over the content on hover or hold, with dots at month starts
-  and a 28px touch area. Holding opens the same finer column.
+| Boundary | Label | Dot |
+| --- | --- | --- |
+| Local year | `yyyy` | 3px |
+| Local month | `mm`, or `mm/dd` (the day it stands at) when any day label is placed | 3px |
+| Local day | `dd` | 2px |
+
+- **Placement.** Use the existing greedy rule, extended. Place the oldest year label first, then the years newest
+  first, then months newest first, then days newest first. A label keeps 14px between centres from every label
+  already placed. Then dots go on in the same order, each keeping 2px from every placed dot (labels have their own
+  column). Labels and dots stay inside the rail as they do today. A boundary sits at its newest note: with newest
+  first, a label marks where its period begins as the reader scrolls down, and hangs below that line.
+- **A year's newest month** is named one line (14px) under the year, so the top of a year reads `2026`, then
+  `11/22`, then the days. (Built 2026-11-22: drawn at the same line, the year label hid that month from the reader.)
+- **Which boundaries.** With `days` (engine addition below), boundaries are local: a year or a month begins at its
+  newest occupied local day, which need not be the 1st. `mm/dd` keeps a month apart from a day in the one column.
+  Without `days`, the marks are today's UTC month marks, and only years are named. Past the days the engine
+  names (the bound below), older months are marked the same way: years named, months as dots.
+- **Hover (fine pointer, any rail width).** A 1px `--sep` line crosses the rail at the pointer, and the label
+  stands at the pointer: the full time if the note a press there would reach is loaded, otherwise `yyyy/mm/dd` from
+  `days`, otherwise nothing. Leaving the rail removes both. The line stays with a held mouse.
+- **Narrow rail (under 520px).** Unchanged: years over the content on hover or hold, dots at month starts (local
+  when `days` is known), a 28px touch area, the C1 label.
 
 ## C3 Jumps and loading
 
@@ -83,8 +91,8 @@ Mouse, pen and touch share one path: pointer events on the rail, with capture.
   Either way a thin return tick is left at the place the press started, and a press on the tick returns to the exact row
   and offset.
 - **Grip.** A 6x32px `--accent` pill appears with the first dated row. It is centred in the rail's rightmost 16px
-  and clamped 16px inside the tile. It starts at the share scrolled with the reading time and provisional marks
-  from the loaded rows. The counted map takes over when it arrives.
+  and clamped 16px inside the tile. It starts at the share scrolled with the reading time and provisional day
+  and hour marks from the loaded rows. The counted map takes over when it arrives.
   The whole rail accepts a press. Hover and hold highlight the grip. During a drag it follows the pointer with
   the time label beside it.
 - **Drag.** The label follows the pointer. Seeks run at most once per 80ms and one at a time: while one is out, only
@@ -131,11 +139,8 @@ seek input are unchanged: the UI never sends a day, only the existing `{ month, 
   `Intl.DateTimeFormat().resolvedOptions().timeZone`, read at most once a second. When it changes, or the local
   day of now does, the counts are rebuilt; that answer does not have to come quickly. The core has no zone data: the
   Worker supplies a `Calendar` (UTC in native code and tests).
-- `clock` counts occupied five-minute parts inside the named days. Each part holds the local start in
-  Unix milliseconds, UTC month, first ordinal and count. Of the newest 400 days, complete days with more notes
-  get priority within the 4096-part budget. The page combines these same counts into quarter hours and hours.
 - The UI compares `zone` with its own zone on load and when the page becomes visible. If they differ, it ignores
-  `days` and `clock` (C2 and C3 fall back as if absent) until an answer arrives with a matching zone. A wrong day is never drawn.
+  `days` (C2 and C3 fall back as if absent) until an answer arrives with a matching zone. A wrong day is never drawn.
 - Future timestamps join today's local day, matching the month rule. Epoch zero is the local day it falls on (a day
   start before the epoch is sent as 0).
 - Bound: past 400 occupied local days, `days` names only the newest 400, so a few old posts far below busy
