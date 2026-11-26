@@ -139,8 +139,8 @@ ten-minute duplicate bursts relative to each window's starting slice. A
 cache-wide ordinal index would weight spam bursts and expose spam by resetting
 window context at seek targets. A startup cache cut to the newest 2000 events,
 cache-queue loss or eviction can withhold exact counts. For rail sources the
-engine then requests a provisional rail with marks from the loaded rows and
-scroll-share navigation. The rail sends ordinal seeks only with exact counts.
+rail continues with marks from the loaded rows and scroll-share navigation.
+Exact counts enable ordinal seeks.
 Non-chronological views remain native: `bookmarks` (NIP-51
 list-owner order), `thread` (reply tree), `following` and `followers` (people
 lists), `channels` (channel directory), `media`, `compose`, `profile-edit`,

@@ -169,7 +169,6 @@ The bounded resolution and representative policy follow [interface-acts.md](inte
 - Protocol 15 Their Home uses `loading | partial | stalled | end` on both `timeWindow` edges for bounded relay reads.
 - Absolute-time windows carry optional `NoteRow.readingAt`, the verified slot time in Unix milliseconds, preserved through Show and Hide.
 - `Timeline.days` past 400 occupied days names the newest 400 instead of being left out; older notes have no part.
-- Optional `Timeline.provisional` asks for a loaded-row rail while retained counts are incomplete.
 - Optional `Timeline.clock` carries up to 4096 occupied local five-minute parts as `[at, month, offset, count]`.
 - Optional `Timeline.positions[].at` gives the timestamp of the original note or repost that placed the row at that ordinal.
 Mock-only `EngineConfig.mock`: `slow` signs a note late and delays its answers, `stress` makes relay text absurdly long; the real engine ignores it.

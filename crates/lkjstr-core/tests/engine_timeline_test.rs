@@ -201,7 +201,6 @@ fn incomplete_disk_history_and_hidden_clients_do_not_claim_a_full_rail() {
     );
     let limited = timeline(&mut s, &e, 1800000000000);
     assert_eq!(limited["supported"], false);
-    assert_eq!(limited["provisional"], true);
     assert_eq!(limited["months"], json!([]));
     accept(
         &mut s,

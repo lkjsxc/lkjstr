@@ -92,7 +92,7 @@ it('keeps a plain drag and its reading time when the first count arrives', () =>
 });
 
 it('shows a loaded-row rail when an incomplete cache cannot give a full rank map', () => {
-  const recovery = setup({ supported: false, provisional: true, months: [], positions: [] });
+  const recovery = setup({ supported: false, months: [], positions: [] });
   expect(recovery.track.hidden).toBe(false);
   expect(recovery.track.classList.contains('plain')).toBe(true);
   expect(recovery.track.querySelector('.time-year')).not.toBeNull();

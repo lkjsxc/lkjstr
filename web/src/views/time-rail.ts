@@ -148,7 +148,7 @@ export function mountTimeRail(o: {
     const view = el.clientHeight;
     if (!held) shape = data; // Freeze the map and scroll mode until release, even before the first count.
     const counted = Boolean(shape?.supported && shape.months.length);
-    const visible = available() && (data?.supported !== false || data.provisional === true);
+    const visible = available();
     el.classList.toggle('has-time-rail', visible);
     plain = !counted && visible;
     const rows = o.rows();
@@ -270,7 +270,7 @@ export function mountTimeRail(o: {
     },
     busy: () => Boolean(s.pending || s.inflight || held),
     timeline(next: Timeline) {
-      if (!next.supported && (!next.provisional || data?.supported)) stop(), (s.back = undefined);
+      if (!next.supported && data?.months.length) stop(), (s.back = undefined);
       data = next;
       placed = new Map(next.positions.map((p) => [p.key, p]));
       seeker.timeline(next);

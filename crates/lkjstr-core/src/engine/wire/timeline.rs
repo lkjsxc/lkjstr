@@ -65,11 +65,10 @@ pub fn month_start(seconds: u64) -> u64 {
     let day = doy - (153 * mp + 2) / 5 + 1;
     (days - (day as u64 - 1)) * 86400 * 1000
 }
-fn complete(e: &Engine) -> bool {
-    e.cached_history_complete && e.store.evictions() == 0
-}
-fn rail_source(q: &crate::engine::protocol::Query) -> bool {
-    matches!(
+fn eligible(q: &crate::engine::protocol::Query, e: &Engine) -> bool {
+    e.cached_history_complete
+        && e.store.evictions() == 0
+        && matches!(
             q.source,
             Source::Home
                 | Source::TheirHome
@@ -133,7 +132,7 @@ impl Session {
             || e.store.snapshot_revision() > index.revision
             || index.month != month
             || index.days.stale(&zone, today)
-            || (index.supported && !complete(e));
+            || (index.supported && !eligible(q, e));
         let counted = index.done && !stale;
         if stale {
             *index = index.rebuild(Index {
@@ -141,7 +140,7 @@ impl Session {
                 horizon,
                 month,
                 started: now,
-                supported: complete(e) && rail_source(q),
+                supported: eligible(q, e),
                 days: Days::new(zone, today),
                 ..Default::default()
             });
@@ -231,8 +230,6 @@ impl Session {
         self.window_fields(sub, &index.positions, e, &mut value);
         if index.supported {
             index.days.fields(&mut value);
-        } else if rail_source(q) && !complete(e) {
-            value["provisional"] = json!(true);
         }
         if index.last.as_ref() == Some(&value) {
             return None;

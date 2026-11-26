@@ -50,9 +50,10 @@ it('leaves Home and End with an open button-based popover, then resumes after cl
   expect(x.set).toHaveBeenCalled();
 });
 
-it('resets an unsupported answer when the chronological view opens again', () => {
+it('keeps the rail when an exact count is unavailable', () => {
   const x = setup({ supported: false, months: [], positions: [] });
-  expect(x.track.hidden).toBe(true);
+  expect(x.track.hidden).toBe(false);
+  expect(x.track.classList.contains('plain')).toBe(true);
   x.rail.reset();
   vi.advanceTimersByTime(16);
   expect(x.track.hidden).toBe(false);

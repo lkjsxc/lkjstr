@@ -1193,8 +1193,6 @@ export type Timeline = {
     readonly at?: Millis;
   }[];
   readonly supported: boolean;
-  /** The source has a rail based on its loaded rows while retained-cache counts are incomplete. */
-  readonly provisional?: true;
   readonly older: boolean;
   /** Local days of the engine's zone, newest first: one part per local day per UTC month, so a day that crosses a
    * UTC month has two parts with the same `at`, the newer first. `offset` is the ordinal of the part's newest note
