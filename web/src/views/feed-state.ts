@@ -84,7 +84,9 @@ export function feedState(
       : privatePhase && privatePhase !== 'ready'
         ? privatePhase === 'loading'
           ? 'feed.loading'
-          : 'feed.failed'
+          : phase === 'failed'
+            ? 'feed.failed'
+            : 'feed.privateFailed'
         : !empty
           ? bottom && rows.length > 8 && (zapPhase === undefined || zapPhase === 'ready')
             ? 'feed.end'

@@ -224,8 +224,9 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
   from the loaded rows. The counted rank map and its marks take over as counts arrive.
   Hover and hold highlight it. On a tile of 520px or more, the right-aligned ruler starts at local years.
   A gutter separates the labels from ticks on the grip axis. Each labelled span shows its next unit when
-  the rank map gives it room, from months and days through hours, quarter hours and five minutes. Coarse year marks are larger, the current year uses normal text colour,
-  and finer ticks can stand without a label. While held, a short column around the pointer shows one finer
+  the rank map gives it room, from months and days through hours, quarter hours and five minutes. Labels grow quieter with the unit, by colour and weight alone: years are
+  larger and 600 (the current year in text colour, others `--muted`), months `--muted`, days `--faint`, hours and
+  finer `--faint` toward `--paper` (owner, 2026-11-27). Finer ticks can stand without a label. While held, a short column around the pointer shows one finer
   unit with the reading time still beside the grip. A fine pointer draws a `--sep` line and the time under it.
   Pressed or dragged it goes to that time (near a label, to that period's newest note), says the day while it loads,
   and leaves a thin tick to come back by; `[` and `]` step a day, Backspace returns

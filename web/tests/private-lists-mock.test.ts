@@ -58,7 +58,15 @@ it('existing feed state never calls a pending or failed private dependency an em
       true,
       false,
     ).key,
-  ).toBe('feed.failed');
+  ).toBe('feed.privateFailed');
+  const live = { phase: 'live', relaysAsked: 2, relaysAnswered: 2 } as const;
+  const failed = { phase: 'failed', pending: 0, failed: 1, error: 'signer-refused' } as const;
+  expect(feedState([], { ...live, privateLists: failed }, true, false).key).toBe(
+    'feed.privateFailed',
+  );
+  expect(feedState([], { ...live, phase: 'failed', privateLists: failed }, true, false).key).toBe(
+    'feed.failed',
+  );
   expect(
     feedState([], { ...base, privateLists: { phase: 'ready', pending: 0, failed: 0 } }, true, false)
       .key,
