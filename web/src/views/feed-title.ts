@@ -1,5 +1,6 @@
 // The name of a feed's tab, from what it shows.
 import type { Row } from '../engine/protocol.ts';
+import { hostOf } from '../shared/address.ts';
 import { channelName } from './channel-parts.ts';
 import { plainName } from './parts.ts';
 import type { ViewEnv } from './registry.ts';
@@ -9,7 +10,7 @@ import type { ViewEnv } from './registry.ts';
 export function feedTitle(
   kind: string,
   rows: readonly Row[],
-  state: { tag?: string; text?: string; title?: string },
+  state: { tag?: string; relay?: string; text?: string; title?: string },
 ): string | undefined {
   const head = rows[0];
   if (head?.kind === 'profile') return plainName(head.author);
@@ -17,6 +18,7 @@ export function feedTitle(
   const focus = rows.find((r) => r.kind === 'note' && r.thread?.role === 'focus');
   if (focus?.kind === 'note') return plainName(focus.author);
   if (kind === 'hashtag') return `#${state.tag ?? ''}`;
+  if (kind === 'relay') return state.relay ? hostOf(state.relay) : state.title;
   return kind === 'search' && state.text ? state.text : state.title;
 }
 

@@ -109,7 +109,7 @@ Chronological lists using the time rail: `home` (note-only and Notifications:
 Show, including the default phone Home), `their-home`, `global` (signed in),
 `notifications`, `search` (chronological notes with bounded people header),
 `hashtag`, `profile` (`posts`, `replies`, `reposts`, `reactions`, `media`,
-`articles`, `lists`, `all`), `channel`, `messages` (DM inbox) and `message`
+`articles`, `lists`, `all`), `channel`, `relay`, `messages` (DM inbox) and `message`
 (DM conversation). In a note-only Home, the original or resolved repost that
 earns a row its place owns the ordinal and timestamp; unresolved wrappers are
 ignored. Neither native fallback nor metadata headers enter counts.

@@ -16,6 +16,7 @@ import { mountMedia } from './media.ts';
 import { mountMessage } from './message.ts';
 import { mountMessages } from './messages.ts';
 import { mountProfileEdit } from './profile-edit.ts';
+import { mountRelay } from './relay.ts';
 import { mountRelays } from './relays.ts';
 import { mountSettings } from './settings.ts';
 import { mountStats } from './stats.ts';
@@ -99,6 +100,7 @@ export const VIEWS: readonly ViewDef[] = [
   },
   feed('search', true, 'find 探す'),
   feed('hashtag', false),
+  { ...feed('relay', false), mount: mountRelay },
   feed('thread', false),
   feed('profile', false),
   {

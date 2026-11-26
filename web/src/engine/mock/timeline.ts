@@ -40,6 +40,7 @@ export function timeline(
       if (
         row.kind !== 'profile' &&
         row.kind !== 'channel' &&
+        row.kind !== 'relay' &&
         !(q.source === 'search' && row.kind === 'person')
       )
         supported = false;

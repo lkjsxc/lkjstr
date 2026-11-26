@@ -13,9 +13,8 @@ pub(super) fn relay_info(host: &Rc<RefCell<Host>>, url: String) {
             if h.stopped {
                 return;
             }
-            if let Some(response) = result.filter(|r| r.status == 200) {
-                h.engine.network.relay_information(&url, &response.body);
-            }
+            let body = result.filter(|r| r.status == 200).map(|r| r.body);
+            h.engine.relay_information(&url, body.as_deref());
         }
     });
 }

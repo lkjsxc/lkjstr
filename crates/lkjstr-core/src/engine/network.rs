@@ -119,6 +119,7 @@ pub struct Relay {
     pub single_filters: bool, // A rejected envelope disables capability inference.
     pub max_limit: u64,
     pub nip11: bool,
+    pub info: super::relay_browse::InfoState,
     pub next_req_at: u64,
     pub latency_ms: Option<u64>,
     pub first_event_ms: Option<u64>,

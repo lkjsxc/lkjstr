@@ -46,6 +46,7 @@ mod publication_routes;
 pub mod query;
 mod query_hidden;
 mod query_predicates;
+pub mod relay_browse;
 mod rich;
 mod row_media;
 mod row_model;

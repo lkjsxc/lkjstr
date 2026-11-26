@@ -255,17 +255,13 @@ export function createMockEngine(
         if (s.liveRange) return (liveWindow(s, post), core.timelines());
         if (s.live && s.fresh) (s.fresh = 0), post({ t: 'fresh', sub: s.id, count: 0 });
         const window = s.entries.slice(s.start, s.end);
-        if (
-          (s.query.source === 'profile' || s.query.source === 'channel') &&
-          s.start > 0 &&
-          s.entries[0]
-        )
+        if (['profile', 'channel', 'relay'].includes(s.query.source) && s.start > 0 && s.entries[0])
           window.unshift(s.entries[0]);
         post({
           t: 'rows',
           sub: s.id,
           rows: window.map((e) => e.row()),
-          atTop: s.start <= (s.query.source === 'profile' || s.query.source === 'channel' ? 1 : 0),
+          atTop: s.start <= (['profile', 'channel', 'relay'].includes(s.query.source) ? 1 : 0),
           atBottom: s.end === s.entries.length,
         });
         core.timelines();

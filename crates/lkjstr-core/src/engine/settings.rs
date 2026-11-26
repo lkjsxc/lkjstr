@@ -130,6 +130,10 @@ impl Engine {
             let subs=stat.and_then(|s|s["activeReqs"].as_u64()).unwrap_or(0);
             let mut row=json!({"kind":"relay","key":r.url,"url":r.url,"state":match relay {Some(s) if s.online=>"connected",Some(s) if s.connecting=>"connecting",Some(s) if s.failures>0=>"waiting",_=>"idle"},"inUse":subs>0,"why":if r.read||r.write {"yours"}else if r.search{"search"}else{"unused"},"read":r.read,"write":r.write,"subs":subs,"events":relay.map(|r|r.received).unwrap_or(0)});
             if let Some(ms)=relay.and_then(|r|r.latency_ms) { row["latencyMs"]=json!(ms); }
+            if let Some(super::relay_browse::InfoState::Ready(info))=relay.map(|r|&r.info) {
+                if let Some(name)=&info.name { row["name"]=json!(name); }
+                if let Some(software)=&info.software { row["software"]=json!(software); }
+            }
             row
         }).collect();
         rows.sort_by_key(|r| {

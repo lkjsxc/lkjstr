@@ -166,3 +166,44 @@ export function relays(w: World): RelayRow[] {
   const rank = (r: RelayRow): number => (r.read || r.write ? 0 : r.inUse ? 1 : 2);
   return [...known, ...added].sort((a, b) => rank(a) - rank(b));
 }
+
+const tally = (text: string): number =>
+  [...text].reduce((n, c) => (n * 31 + c.charCodeAt(0)) >>> 0, 7);
+/** The notes a relay served in the mock world: a fixed third of them, none from one that never answers. */
+export const servedBy = (url: string, id: string): boolean =>
+  answers(url) && (tally(url) + tally(id)) % 3 === 0;
+
+/** The head of a Relay tab (`relay` source): the row the Relays tab has, with what the relay says of itself. */
+export function relayHead(w: World, url: string, admin?: RelayRow['admin']): RelayRow {
+  const known = relays(w).find((r) => r.url === url);
+  const row: RelayRow = known ?? {
+    kind: 'relay',
+    key: url,
+    url,
+    state: answers(url) ? 'connected' : 'failed',
+    inUse: answers(url),
+    why: 'unused',
+    read: false,
+    write: false,
+    subs: 0,
+    events: 0,
+    latencyMs: answers(url) ? 140 : undefined,
+    error: answers(url) ? undefined : 'connection refused',
+  };
+  if (!answers(url)) return { ...row, key: `relay:${url}`, info: 'missing' };
+  return {
+    ...row,
+    key: `relay:${url}`,
+    info: 'ready',
+    name: row.name ?? 'Example community relay',
+    description:
+      'A public relay for notes in Japanese and English. Be kind; spam is removed.\nRetention: one year.',
+    software: row.software?.split(' ')[0] ?? 'git+https://github.com/example/relay.git',
+    version: row.software?.split(' ')[1] ?? '1.4.2',
+    contact: 'admin@example.jp',
+    admin,
+    nips: [1, 2, 4, 9, 11, 22, 28, 40, 42, 50, 70, 77],
+    limits: url.includes('paid') ? ['auth', 'payment'] : ['restricted'],
+    pow: url.includes('slow') ? 16 : undefined,
+  };
+}

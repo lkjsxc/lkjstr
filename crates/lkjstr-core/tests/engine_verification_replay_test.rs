@@ -1,4 +1,4 @@
-//! Pressure replay retains inclusive timestamp ties and releases on route/view removal.
+//! Pressure replay retains inclusive timestamp ties and releases on view removal.
 #![allow(clippy::expect_used)]
 #[path = "engine_verification_support/mod.rs"]
 mod support;
@@ -93,7 +93,7 @@ fn tied_page_replay_reacquires_the_gap_once_before_advancing() {
     assert_eq!(actual, expected);
 }
 #[test]
-fn abandoned_view_or_removed_route_releases_verification_retry() {
+fn abandoned_view_releases_verification_retry_on_or_off_the_list() {
     for remove_route in [false, true] {
         let (mut engine, req) = setup();
         fill_backlog(&mut engine, 4096);
@@ -104,10 +104,11 @@ fn abandoned_view_or_removed_route_releases_verification_retry() {
             NOW + 2,
         );
         if remove_route {
+            // A relay view keeps a reader of its own: leaving the list does not end it, closing the view does.
             engine.input(Input::Configure { relays: Vec::new() }, NOW + 3);
-        } else {
-            engine.input(Input::Close { sub: "feed".into() }, NOW + 3);
+            assert!(engine.network.relays.contains_key(RELAY));
         }
+        engine.input(Input::Close { sub: "feed".into() }, NOW + 3);
         assert_eq!(engine.network.request_progress("feed").0, 0);
         engine.tick(NOW + 2000);
         assert!(requests(&mut engine).is_empty());

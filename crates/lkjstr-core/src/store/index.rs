@@ -11,6 +11,16 @@ impl Store {
         }
     }
 
+    /// Records that `relay` served a held event again; true when that is new. Bound: six relays per event.
+    pub fn note_seen(&mut self, id: &str, relay: &str) -> bool {
+        let Some(id) = decode_id(id).filter(|id| self.events.contains_key(id)) else {
+            return false;
+        };
+        let before = self.seen_on.get(&id).map_or(0, Vec::len);
+        self.note_relay(id, relay);
+        self.seen_on.get(&id).map_or(0, Vec::len) > before
+    }
+
     pub(super) fn index(&mut self, event: Lease) {
         self.payload_bytes += event.wire_bytes;
         let key = OrderedEvent(event.clone());

@@ -4,8 +4,9 @@ use serde_json::Value;
 impl Network {
     pub fn relay_information(&mut self, relay: &str, json: &str) {
         let Ok(info) = lkjstr_nips::metadata::RelayInformation::parse(json, 65536) else {
-            return;
+            return self.record_information(relay, None);
         };
+        self.record_information(relay, Some(&info));
         let limits = info.limitation.as_ref();
         let setting = |key| limits.and_then(|limits| limits.get(key));
         if setting("auth_required").and_then(Value::as_bool) == Some(true) {

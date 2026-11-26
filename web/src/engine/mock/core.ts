@@ -102,7 +102,7 @@ export function createCore(post: (msg: FromEngine) => void, now: () => number) {
         const search = s.query.source === 'search';
         const at = search
           ? searchPrefix(s.entries)
-          : s.query.source === 'profile' || s.query.source === 'channel'
+          : ['profile', 'channel', 'relay'].includes(s.query.source)
             ? 1
             : 0;
         const e = entry(world, n, { me: me(), reposts: s.query.reposts });

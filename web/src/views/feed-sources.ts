@@ -1,10 +1,19 @@
 // Source capabilities shared by feed controls and chronological rendering.
-export const CHILD = new Set(['thread', 'profile', 'hashtag', 'following', 'followers', 'channel']);
+export const CHILD = new Set([
+  'thread',
+  'profile',
+  'hashtag',
+  'following',
+  'followers',
+  'channel',
+  'relay',
+]);
 export const FILTERED = new Set([
   'their-home',
   'home',
   'global',
   'hashtag',
+  'relay',
   'bookmarks',
   'search',
   'profile',

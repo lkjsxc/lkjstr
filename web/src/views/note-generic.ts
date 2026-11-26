@@ -3,7 +3,7 @@ import type { GenericRef, GenericTagLine, NoteRow } from '../engine/protocol.ts'
 import { h } from '../shared/h.ts';
 import { type Key, t } from '../shared/i18n.ts';
 import { readNoteState, writeNoteState } from '../shared/note-state.ts';
-import { segments } from './parts.ts';
+import { how, segments } from './parts.ts';
 import type { ViewEnv } from './registry.ts';
 
 function openReference(ref: GenericRef, env: ViewEnv, event: MouseEvent): void {
@@ -13,7 +13,7 @@ function openReference(ref: GenericRef, env: ViewEnv, event: MouseEvent): void {
   else if (ref.type === 'address')
     env.open('thread', { ref: `${ref.kind}:${ref.author}:${ref.d}` });
   else if (ref.type === 'link') window.open(ref.url, '_blank', 'noopener,noreferrer');
-  else if (ref.type === 'relay') void navigator.clipboard?.writeText(ref.url);
+  else if (ref.type === 'relay') env.open('relay', { relay: ref.url }, how(event));
   event.stopPropagation();
 }
 function tagLine(line: GenericTagLine, env: ViewEnv): HTMLElement {

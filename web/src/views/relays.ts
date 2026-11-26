@@ -1,13 +1,14 @@
 // The Relays tab shows state and changes nothing: one flat list of every relay the engine knows, in the engine's
 // order (the reader's own list first), each in the state it is really in, with what it is used for (read, write)
 // or, for a relay that is not on the reader's list, why it is there. The list itself is edited in Settings, one
-// press away from the tile's menu.
+// press away from the tile's menu. A press on a relay opens it in a Relay tab (`relay-head.ts`).
 import type { RelayRow, Row } from '../engine/protocol.ts';
 import { hostOf } from '../shared/address.ts';
 import { clockOf, countText, dayOf } from '../shared/format.ts';
 import { h } from '../shared/h.ts';
 import { getLang, t } from '../shared/i18n.ts';
 import { type Keyed, reconcile, watchList } from './lists.ts';
+import { how } from './parts.ts';
 import type { ViewEnv } from './registry.ts';
 
 export const listed = (r: RelayRow): boolean => r.read || r.write;
@@ -32,8 +33,13 @@ export function mountRelays(el: HTMLElement, env: ViewEnv): () => void {
   const edit = (): void => env.open('settings', { at: 'set.relayList' });
   const row = (r: RelayRow): HTMLElement =>
     h(
-      'div',
-      { class: `rrow s-${r.state}` },
+      'button',
+      {
+        class: `rrow s-${r.state}`,
+        title: t('relays.open'),
+        onclick: (e) =>
+          env.open('relay', { relay: r.url, title: hostOf(r.url) }, how(e as MouseEvent)),
+      },
       h('span', { class: 'rdot', 'aria-hidden': 'true' }),
       h(
         'div',
@@ -61,8 +67,15 @@ export function mountRelays(el: HTMLElement, env: ViewEnv): () => void {
   const cache: Keyed = new Map(); // bound: the relay rows
   const none = h('div', { class: 'fstate muted' });
   const toEdit = h('button', { class: 'lnk', onclick: edit }, t('relays.edit'));
+  let listedRows: RelayRow[] = [];
+  // One tab per relay of the reader's list, opened behind this one: each relay's own stream, live.
+  const openEach = (): void => {
+    for (const r of listedRows)
+      env.open('relay', { relay: r.url, title: hostOf(r.url) }, { background: true });
+  };
   const draw = (all: readonly Row[], loaded: boolean): void => {
     const rows = all.filter((r): r is RelayRow => r.kind === 'relay');
+    listedRows = rows.filter(listed);
     reconcile(list, cache, rows, row);
     const mine = rows.some(listed);
     none.replaceChildren(
@@ -75,6 +88,9 @@ export function mountRelays(el: HTMLElement, env: ViewEnv): () => void {
   el.tabIndex = -1;
   el.replaceChildren(none, list);
   env.menu(() => [
+    ...(listedRows.length
+      ? [{ label: t('relays.openEach', { n: listedRows.length }), run: openEach }]
+      : []),
     { label: t('relays.edit'), run: edit },
     { label: t('view.stats'), run: () => env.open('stats') },
   ]);

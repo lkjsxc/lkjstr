@@ -16,6 +16,7 @@ export type FeedState = BarState & {
   id?: string;
   ref?: string;
   tag?: string;
+  relay?: string;
   show?: string;
   pos?: Place;
   extent?: number;
@@ -71,7 +72,9 @@ export function feedState(
   searchHint: boolean,
   accountsUnavailable = false,
 ): { empty: boolean; key: Key | null } {
-  const empty = rows.every((r) => r.kind === 'profile' || r.kind === 'channel');
+  const empty = rows.every(
+    (r) => r.kind === 'profile' || r.kind === 'channel' || r.kind === 'relay',
+  );
   const phase = state?.phase ?? 'cache',
     privatePhase = state?.privateLists?.phase,
     zapPhase = state?.zapEvidence?.phase;

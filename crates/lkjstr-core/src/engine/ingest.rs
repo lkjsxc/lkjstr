@@ -26,6 +26,7 @@ impl Engine {
         if known {
             self.network
                 .observe_verified(&relay, &event, self.network.now);
+            self.relay_served(&relay, &event.id);
         }
         if known || self.queue.iter().any(|queued| queued.event == event) {
             self.network.repeated_deliveries = self

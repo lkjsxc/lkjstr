@@ -64,7 +64,7 @@ export type Source =
   | 'hashtag'
   | 'bookmarks'
   | 'list' // a NIP-51 people list or set, by `id`
-  | 'relay' // notes of one relay, by `relay`
+  | 'relay' // one `RelayRow` first (key `relay:<url>`), then the notes that relay itself served, by `relay`
   | 'followers' // person rows
   | 'following' // person rows
   | 'mutes' // mute rows: people, words, hashtags and threads the account muted
@@ -94,6 +94,7 @@ export type Query = {
   readonly ref?: string;
   /** `hashtag`: without `#`. `list`: the list's address. */
   readonly tag?: string;
+  /** `relay`: the relay's address (ws or wss); the engine normalizes it and refuses anything else. */
   readonly relay?: string;
   // Filters. They narrow any note source and are part of the query: changing one means `close` and `open`.
   /** Only notes by these people. */
@@ -499,6 +500,19 @@ export type RelayRow = {
   readonly name?: string;
   readonly software?: string;
   readonly authed?: boolean;
+  // The head of a `relay` source: what the relay says about itself (NIP-11), bounded plain text.
+  /** `unknown`: not asked or not answered yet; `missing`: asked, no readable document came. */
+  readonly info?: 'unknown' | 'missing' | 'ready';
+  readonly description?: string;
+  readonly version?: string;
+  readonly contact?: string;
+  /** The operator's key from the document, as a person. */
+  readonly admin?: Author;
+  /** Advertised NIP numbers, ascending; advertisement is not proof of support. */
+  readonly nips?: readonly number[];
+  readonly limits?: readonly ('auth' | 'payment' | 'restricted')[];
+  /** Minimum proof-of-work difficulty for writes. */
+  readonly pow?: number;
 };
 
 export type MuteTarget =

@@ -32,6 +32,9 @@ impl Query {
             .or(self.id.clone())
             .or(self.tag.clone())
             .or(self.relay.clone());
+        if source == p::Source::Relay {
+            target = Some(crate::engine::settings::strict_relay(target.as_deref()?)?);
+        }
         let reference = if source == p::Source::Channels {
             self.text.as_deref()
         } else {

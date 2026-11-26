@@ -1,7 +1,8 @@
 // What the New tab page offers: every view that can start empty (Documentation once), and for typed text the pages
-// of Documentation it names, a search, a hashtag, or the note or person a pasted Nostr address names. Matching uses
+// of Documentation it names, a search, a hashtag, the note or person a pasted Nostr address names, or a relay. Matching uses
 // both languages whatever the interface language.
 
+import { hostOf } from '../shared/address.ts';
 import { both, t } from '../shared/i18n.ts';
 import { knownPeople } from '../shared/people.ts';
 import { DOC_PAGES, docSearch } from '../views/docs.ts';
@@ -11,6 +12,7 @@ import { homeTitle } from '../views/their-home.ts';
 import { type Choice, matchesWords } from './launcher.ts';
 
 const REF = /^(npub1|nprofile1|note1|nevent1)[a-z0-9]+$/;
+const RELAY = /^wss?:\/\/[^\s/?#]+[^\s?#]*$/i;
 
 const choice = (kind: string, state?: object, title?: string): Choice => {
   const v = viewOf(kind);
@@ -28,6 +30,10 @@ export const CHOICES = {
   typed(text: string): Choice[] {
     const theirs = (ref: string, name: string) =>
       choice('their-home', { ref, title: homeTitle(name) }, homeTitle(name));
+    if (RELAY.test(text)) {
+      const host = hostOf(text);
+      return [choice('relay', { relay: text, title: host }, t('launcher.relay', { host }))];
+    }
     if (REF.test(text)) {
       const kind = text.startsWith('np') ? 'profile' : 'thread';
       return [

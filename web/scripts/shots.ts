@@ -1,5 +1,5 @@
 // Screenshots of the mock build for judging the look: ../tmp/screens/<name>-<width>-<theme>-<lang>.png.
-// Scenes: home, tiles (maximized, collapsed), quote (with a warning), profile, profile editing, thread, notifications, compose (with the emoji picker), media, settings, relays, accounts,
+// Scenes: home, tiles (maximized, collapsed), quote (with a warning), profile, profile editing, thread, notifications, compose (with the emoji picker), media, settings, relays, relay, accounts,
 // and a visitor's first run and sign-in (nobody signed in).
 // node scripts/shots.ts [--only=<width>-<theme>-<lang>] [--scenes=home,thread]
 import { spawn } from 'node:child_process';
@@ -17,6 +17,7 @@ import { keysShots } from './shots-keys.ts';
 import { looksShots } from './shots-looks.ts';
 import { profileEditShots } from './shots-profile-edit.ts';
 import { quoteShots } from './shots-quote.ts';
+import { openRelay } from './shots-relay.ts';
 import { sendingShots } from './shots-sending.ts';
 import { threadShots } from './shots-thread.ts';
 import { tilesShots } from './shots-tiles.ts';
@@ -249,7 +250,9 @@ try {
           );
         });
         await scene('settings', '/', launch(lang === 'ja' ? '設定' : 'Settings', 'settings'));
-        await scene('relays', '/', launch(lang === 'ja' ? 'リレー' : 'Relays', 'relays'));
+        const relays = launch(lang === 'ja' ? 'リレー' : 'Relays', 'relays');
+        await scene('relays', '/', relays);
+        await scene('relay', '/', async (page) => (await relays(page), await openRelay(page)));
         await scene('stats', '/', launch(lang === 'ja' ? '統計' : 'Stats', 'stats'));
         const channels = launch(lang === 'ja' ? 'チャンネル' : 'Channels', 'channels');
         await scene('channels', '/', async (page) => {

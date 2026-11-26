@@ -93,6 +93,7 @@ impl Session {
                         | "channel"
                         | "thread"
                         | "profile"
+                        | "relay"
                         | "followers"
                         | "following"
                         | "mutes"

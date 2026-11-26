@@ -59,6 +59,24 @@ export const en = {
   'view.bookmarks.hint': 'Notes you saved',
   'view.search': 'Search',
   'view.search.hint': 'Find notes and people',
+  'view.relay': 'Relay',
+  'view.relay.hint': 'The notes one relay serves',
+  'relay.head.copy': 'Copy the relay address',
+  'relay.head.asking': 'Asking the relay about itself…',
+  'relay.head.missing': 'This relay does not describe itself.',
+  'relay.head.yours': 'On your list: {use}',
+  'relay.head.notYours': 'Not on your list',
+  'relay.head.admin': 'Operator ',
+  'relay.head.contact': 'Contact ',
+  'relay.head.nips': 'NIPs',
+  'relay.head.nipsHint': 'What the relay says it supports',
+  'relay.limit.auth': 'Sign-in required',
+  'relay.limit.payment': 'Paid',
+  'relay.limit.restricted': 'Writing restricted',
+  'relay.limit.pow': 'Proof of work {n}',
+  'relays.open': 'See what this relay serves',
+  'relays.openEach': 'Open a tab for each of your relays ({n})',
+  'launcher.relay': 'Open the relay {host}',
   'view.hashtag': 'Hashtag',
   'view.hashtag.hint': 'Notes with one hashtag',
   'view.thread': 'Thread',
@@ -752,7 +770,7 @@ export const en = {
   'docs.keys.b':
     'A Nostr account is its key. Whoever holds the secret key (nsec) is the account; a lost key cannot be restored by anyone and a leaked one cannot be revoked.\n\n## Ways to sign in\n- Browser extension (NIP-07): the key stays in the extension and lkjstr only asks it to sign. The safest way.\n- Remote signer (bunker://, NIP-46): the key stays in another signing app and never reaches lkjstr.\n- A new account, or an nsec: the key is stored in this browser. Save it with “Back up key” as soon as it is created.\n- An npub: read-only. You cannot post or react.\n\n## What lkjstr does\nA typed key is never shown, leaves the field the moment it is sent, and appears in no message. A secret key is shown only inside “Back up key”, and is covered again when you leave the page.\n\n## What to watch\nOn a shared computer avoid the ways that store a key, and remove the account when you are done. Clearing the browser’s data also removes the keys stored on this device.\n\n## Password protection\nA key kept on this device can be protected with a password (NIP-49). It is then stored encrypted, and lkjstr asks for the password once each time it is opened. Reading works while it is locked; posting and private messages need it unlocked. A lost password cannot be recovered, so keep a backup. A password-protected copy (ncryptsec) can be made under "Back up key" and brought back by signing in with it.',
   'docs.relays.b':
-    'Nostr has no central server: notes live on servers called relays. lkjstr follows your relay list (NIP-65), reading from your read relays and publishing to your write relays.\n\n## Your relays\nEdit the list in Settings under “Relays: Your relays”: switch reading and writing, add, remove. The list is published as your relay list.\n\n## Other relays\nNotes of the people you follow are also fetched from the relays they write to. The Relays tab lists every relay lkjstr knows, with its state, why it is used and how fast it answers.\n\n## Signed out\nGlobal is read from a starting set of relays. That list can be changed in Settings too, and is kept on this device.',
+    'Nostr has no central server: notes live on servers called relays. lkjstr follows your relay list (NIP-65), reading from your read relays and publishing to your write relays.\n\n## Your relays\nEdit the list in Settings under “Relays: Your relays”: switch reading and writing, add, remove. The list is published as your relay list.\n\n## Other relays\nNotes of the people you follow are also fetched from the relays they write to. The Relays tab lists every relay lkjstr knows, with its state, why it is used and how fast it answers. Press one to open it in a tab of its own: what it says about itself and the notes it serves, apart from your own relays. A relay address typed into tab search opens one too.\n\n## Signed out\nGlobal is read from a starting set of relays. That list can be changed in Settings too, and is kept on this device.',
   'docs.filters.b':
     'The first row of a timeline and of Notifications narrows that list. A filter is saved with its tab, and the row scrolls away with the list. “/” puts the keyboard in its field. Whether the row is shown is the setting “Reading: Filter row”.',
   'docs.filters.plain':

@@ -24,6 +24,15 @@ impl Network {
         let mut weights = crate::engine::weights::PlanWeights::new(store, private);
         let mut desired = Desired::new();
         let mut primary_reads = BTreeMap::new();
+        // A relay opened on its own gets a reader of its own, released with the view like any other route.
+        for (_, _, q) in wants
+            .iter()
+            .filter(|(sub, _, q)| !sub.starts_with('~') && q.source == Source::Relay)
+        {
+            if let Some(url) = &q.target {
+                self.admit_reader(url, now);
+            }
+        }
         for (sub, f, q) in &wants {
             let time_owner =
                 crate::engine::time_window_relay::is_owner(sub).then_some(sub.as_str());

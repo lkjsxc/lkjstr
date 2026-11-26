@@ -12,6 +12,7 @@ import { bodySig, patchNote, renderNote } from './note.ts';
 import { disposeNoteAudio, reuseNoteAudio } from './note-audio.ts';
 import { createNoteFits } from './note-fold.ts';
 import type { ViewEnv } from './registry.ts';
+import { renderRelayHead } from './relay-head.ts';
 import { renderNotification, renderPerson, renderProfile } from './rows.ts';
 import type { ThreadPart } from './thread-plan.ts';
 
@@ -44,6 +45,7 @@ export function createRowList(
     if (row.kind === 'moment-part') return renderMoment(row, env);
     if (row.kind === 'note') return renderNote(row, env, dated, { previous, lazyFace });
     if (row.kind === 'profile') return renderProfile(row, env);
+    if (row.kind === 'relay') return renderRelayHead(row, env);
     if (row.kind === 'person') return renderPerson(row, env);
     if (row.kind === 'notification') return renderNotification(row, env);
     return null;

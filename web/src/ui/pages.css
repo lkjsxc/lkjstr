@@ -20,6 +20,9 @@
 .rtog.on { border-color: var(--accent); background: var(--wash); color: var(--accent); }
 .rrow > .x, .srow > .x { flex: none; width: 26px; height: 26px; font-size: 16px; }
 .rrow > .chip { flex: none; }
+/* A relay in the Relays tab is pressed to open its own tab. */
+button.rrow { width: 100%; color: inherit; font: inherit; text-align: left; }
+button.rrow:hover { background: var(--hover); }
 .relaysv > .fstate { padding: 0 0 10px; text-align: left; }
 .sbox { width: 100%; }
 .srow { display: flex; align-items: center; gap: 8px; min-height: 32px; border-bottom: 1px solid var(--line); }

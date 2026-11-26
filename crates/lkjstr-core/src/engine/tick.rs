@@ -73,6 +73,7 @@ impl Engine {
                 .is_some_and(|known| known.matches(&e))
             {
                 self.network.observe_verified(&relay, &e, now);
+                self.relay_served(&relay, &e.id);
                 continue;
             }
             if matches!(verify_event(&e), VerificationResult::Ok(_)) {

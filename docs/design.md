@@ -296,7 +296,9 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
 - Relays shows state and changes nothing: one flat list, the reader's own
   first, with state, latency, event counts and why each is there. The list
   is edited in Settings only (the tile menu leads to that entry, and to
-  Stats). Media servers offer a few choices with one press, Blossom first.
+  Stats). A press on a relay opens a Relay tab ([interface-relay.md](interface-relay.md)): that relay alone, apart
+  from the reader's relays, headed by what it says about itself (NIP-11), then the notes it served as a dated feed
+  with the time rail. It changes nothing either. Media servers offer a few choices with one press, Blossom first.
   A media server is marked as not answering only by a request an upload needs; a server not yet checked is not drawn as down.
 - Stats is numbers and quiet marks, no prose: five figures, then a sortable
   row per relay, trouble first; three publication columns group accepted/planned,

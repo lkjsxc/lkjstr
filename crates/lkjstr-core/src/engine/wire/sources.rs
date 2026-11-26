@@ -155,6 +155,9 @@ impl Session {
         if q.source == "profile" {
             out.insert(0, profile(e, target, q.account.as_deref()));
         }
+        if q.source == "relay" && !target.is_empty() {
+            out.insert(0, e.relay_head(target));
+        }
         if !windowed {
             return out;
         }
@@ -172,7 +175,7 @@ impl Session {
 }
 pub(super) fn pinned_header(rows: &[Value]) -> bool {
     rows.first()
-        .is_some_and(|row| matches!(row["kind"].as_str(), Some("profile" | "channel")))
+        .is_some_and(|row| matches!(row["kind"].as_str(), Some("profile" | "channel" | "relay")))
 }
 pub(super) fn person(e: &Engine, p: &str, account: Option<&str>, weight: u64) -> Value {
     let store = &e.store;

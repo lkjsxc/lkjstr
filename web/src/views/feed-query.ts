@@ -6,7 +6,7 @@ import { type BarState, typesQuery } from './feed-bar.ts';
 import { FILTERED } from './feed-sources.ts';
 import { filterQuery } from './filter-bar.ts';
 
-type FeedQueryState = BarState & Pick<Query, 'pubkey' | 'id' | 'ref' | 'tag'>;
+type FeedQueryState = BarState & Pick<Query, 'pubkey' | 'id' | 'ref' | 'tag' | 'relay'>;
 export function feedQuery(
   kind: string,
   account: string,
@@ -22,6 +22,7 @@ export function feedQuery(
     id: state.id,
     ref: state.ref,
     tag: state.tag,
+    relay: state.relay,
     ...(kind === 'search' ? { text: '' } : {}),
     ...(kind === 'notifications' ? { types: typesQuery(state.only) } : {}),
     ...(FILTERED.has(kind)

@@ -102,6 +102,9 @@ pub(super) fn accepts(
         && (q.source != Source::Channel
             || lkjstr_protocol::channel_id(e).as_ref() == q.target.as_ref())
         && authors.as_ref().is_none_or(|a| a.contains(&e.pubkey))
+        // One relay's notes are the ones it served, not every cached note it might hold.
+        && (q.source != Source::Relay
+            || q.target.as_ref().is_some_and(|r| store.seen_on(&e.id).contains(r)))
         && (q.source == Source::Bookmarks || lkjstr_protocol::matches_filter(e, f))
         && (q.source != Source::Profile
             || q.filters.show.as_deref() != Some("lists")

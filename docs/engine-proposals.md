@@ -196,5 +196,5 @@ Mock-only `EngineConfig.mock`: `slow` signs a note late and delays its answers, 
 - `Quote.previews?` carries at most two cards for a resolved quote; `preview.ids` also accepts delivered quote IDs.
 - `Quote.nextId?` carries the first nested quote's ID for a single-line reference.
 
-Diagnostics add cacheManagedBytes and pendingPersistenceOverheadBytes to distinguish managed allocations from eventPayloadBytes.
-- Debug cache diagnostics add pressureScratchBytes for separately bounded resident GDSF epoch allocations.
+- Diagnostics add cacheManagedBytes and pendingPersistenceOverheadBytes (managed vs eventPayloadBytes); debug adds pressureScratchBytes (GDSF epochs).
+- `relay` rows: a `RelayRow` head (`relay:<url>`), then notes that relay served; its NIP-11 fields are listed in interface-relay.md.

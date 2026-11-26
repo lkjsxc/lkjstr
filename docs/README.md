@@ -112,6 +112,7 @@ Engine (`crates/`):
 - [Account availability verification](engine-availability-verification.md): fixed boot failure, retained client state and current evidence.
 - [Engine capabilities awaiting interface specifications](interface-needs.md)
 - [interface-specs.md](interface-specs.md): surfaces to build, item by item, with their state.
+- [interface-relay.md](interface-relay.md): R1, the Relay tab: one relay, its NIP-11 head and the notes it served.
 - [interface-keys.md](interface-keys.md): password-protected keys: sign-in, lock, backup, protection.
 - [interface-dm.md](interface-dm.md): private messages: list, conversation, writing, inbox relays.
 - [interface-acts.md](interface-acts.md): reactions and reposts of reactions and reposts.
