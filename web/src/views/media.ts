@@ -8,6 +8,7 @@ import { h, replaceChildren } from '../shared/h.ts';
 import { t } from '../shared/i18n.ts';
 import { type IconName, icon } from '../shared/icons.ts';
 import { pressed } from '../shared/keys.ts';
+import { loadImage, mediaHost, mediaSource } from '../shared/media-source.ts';
 import { loadViewState, saveViewState } from '../shared/view-state.ts';
 import { copy } from './parts.ts';
 import { createPlayer, type Player } from './player.ts';
@@ -95,8 +96,23 @@ export function mountMedia(el: HTMLElement, env: ViewEnv): () => void {
     if (!m) return missing(t('media.gone'));
     stage.className = `mstage k-${m.type}`;
     stage.style.background = '';
-    if (m.type === 'image') {
-      const img = h('img', { src: m.url, alt: m.alt ?? '', draggable: false, decoding: 'async' });
+    const many = list.length > 1;
+    prev.hidden = next.hidden = count.hidden = !many;
+    prev.disabled = index === 0;
+    next.disabled = index === list.length - 1;
+    count.textContent = `${index + 1} / ${list.length}`;
+    alt.textContent = alt.title = m.alt ?? '';
+    scale.hidden = m.type !== 'image';
+    original.href = m.url;
+    const failed = (): void => {
+      zoom?.dispose();
+      zoom = undefined;
+      scale.hidden = true;
+      missing(m.type === 'image' ? mediaHost(m.url) : t('media.failed'), m);
+    };
+    if (!mediaSource(m.url)) failed();
+    else if (m.type === 'image') {
+      const img = h('img', { alt: m.alt ?? '', draggable: false, decoding: 'async' });
       replaceChildren(stage, img);
       const at = index; // the picture's own place, also when it is left for another
       zoom = zoomable(
@@ -113,6 +129,9 @@ export function mountMedia(el: HTMLElement, env: ViewEnv): () => void {
         },
         state.zoom?.[at],
       );
+      loadImage(img, m.url, () => {
+        if (img.parentElement === stage) failed();
+      });
     } else {
       player = createPlayer(m, {
         at: state.at,
@@ -122,18 +141,10 @@ export function mountMedia(el: HTMLElement, env: ViewEnv): () => void {
           state.at = seconds;
           saveViewState(env.instance, state);
         },
-        failed: () => list[index] === m && missing(t('media.failed'), m),
+        failed: () => list[index] === m && failed(),
       });
       replaceChildren(stage, player.el);
     }
-    const many = list.length > 1;
-    prev.hidden = next.hidden = count.hidden = !many;
-    prev.disabled = index === 0;
-    next.disabled = index === list.length - 1;
-    count.textContent = `${index + 1} / ${list.length}`;
-    alt.textContent = alt.title = m.alt ?? '';
-    scale.hidden = m.type !== 'image';
-    original.href = m.url;
     state.index = index;
     state.played = true;
     saveViewState(env.instance, state);

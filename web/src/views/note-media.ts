@@ -3,10 +3,10 @@
 // place and never moves what is being read. A press opens the media tab right after the one being read, in the same
 // tile; the address is still a real link, so a middle click opens the file itself.
 import type { Media } from '../engine/protocol.ts';
-import { hostOf } from '../shared/address.ts';
 import { h } from '../shared/h.ts';
 import { t } from '../shared/i18n.ts';
 import { icon } from '../shared/icons.ts';
+import { loadImage, loadPlayable, mediaHost, mediaSource } from '../shared/media-source.ts';
 import { readNoteState, writeNoteState } from '../shared/note-state.ts';
 import { learnMediaSize, mediaSize } from '../shared/public-media.ts';
 import { keepNoteAudio } from './note-audio.ts';
@@ -54,18 +54,6 @@ export function mediaGrid(
       });
       return show;
     }
-    if (m.type === 'audio') {
-      const audio = h('audio', {
-        src: m.url,
-        controls: true,
-        preload:
-          noteId && readNoteState(env.instance, noteId).audio?.[String(index)]
-            ? 'metadata'
-            : 'none',
-      });
-      if (noteId) keepNoteAudio(audio, env, noteId, String(index));
-      return h('div', { class: 'mbox audio' }, audio);
-    }
     // One picture keeps its own ratio (within reason) and is never drawn larger than it is; a picture of unknown
     // size gets a 3:2 box and is fitted into it whole. Several share a grid of squares.
     const size = m.w && m.h ? { w: m.w, h: m.h } : mediaSize(m.thumb ?? m.url);
@@ -90,35 +78,53 @@ export function mediaGrid(
       env.open('media', { media, index, title }, { split: e.shiftKey, from: box });
     });
     // A file that cannot be had leaves its box in place, saying where it would have come from.
-    const gone = (el: HTMLElement) => (): void => {
-      el.remove();
+    const gone = (): void => {
       box.classList.add('gone');
-      box.append(h('span', { class: 'mgone' }, hostOf(m.url).split('/')[0] ?? ''));
+      box.replaceChildren(h('span', { class: 'mgone' }, mediaHost(m.url)));
     };
-    if (m.type === 'image') {
+    if (!mediaSource(m.url)) {
+      gone();
+      return box;
+    }
+    if (m.type === 'audio') {
+      const audio = h('audio', {
+        controls: true,
+        preload:
+          noteId && readNoteState(env.instance, noteId).audio?.[String(index)]
+            ? 'metadata'
+            : 'none',
+      });
+      const wrap = h('div', { class: 'mbox audio' }, audio);
+      if (noteId) keepNoteAudio(audio, env, noteId, String(index));
+      loadPlayable(audio, m.url, () => {
+        gone();
+        wrap.replaceWith(box);
+      });
+      return wrap;
+    }
+    if (m.type === 'image' || m.thumb) {
       const img = h('img', {
         alt: m.alt ?? '',
         loading: 'lazy',
         fetchpriority: 'low',
         decoding: 'async',
       });
-      img.addEventListener('error', gone(img));
-      img.addEventListener('load', () => {
-        learnMediaSize(img.src, img.naturalWidth, img.naturalHeight);
-        if (one && !sized) settle(box, img);
-      });
-      img.src = m.thumb ?? m.url;
       box.append(img);
+      if (m.type === 'image') {
+        img.addEventListener('load', () => {
+          learnMediaSize(m.thumb ?? m.url, img.naturalWidth, img.naturalHeight);
+          if (one && !sized) settle(box, img);
+        });
+      } else box.append(h('span', { class: 'mplay' }, icon('play')));
+      loadImage(img, m.thumb ?? m.url, gone);
     } else {
       const video = h('video', {
-        src: m.url,
-        poster: m.thumb ?? null,
-        preload: m.thumb ? 'none' : 'metadata',
+        preload: 'metadata',
         muted: true,
         playsinline: true,
       });
-      video.addEventListener('error', gone(video));
       box.append(video, h('span', { class: 'mplay' }, icon('play')));
+      loadPlayable(video, m.url, gone);
     }
     return box;
   };

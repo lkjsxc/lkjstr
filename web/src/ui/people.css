@@ -1,6 +1,7 @@
 /* A profile's header (the first row of its list: it scrolls away with the notes), people in lists, notifications. */
 .profile { padding: 0 14px 12px; border-bottom: 1px solid var(--line); font-size: var(--text, 15px); line-height: 1.6; overflow-wrap: anywhere; }
-.banner { height: clamp(72px, 26cqw, 180px); margin: 0 -14px; background: var(--wash) center / cover no-repeat; }
+.banner { height: clamp(72px, 26cqw, 180px); margin: 0 -14px; background: var(--wash); }
+.banner > img { display: block; width: 100%; height: 100%; object-fit: cover; }
 .view { container-type: inline-size; }
 .phead { display: flex; align-items: flex-end; justify-content: space-between; gap: 8px; margin-top: -30px; min-height: 76px; }
 .pbtns { display: flex; align-items: center; flex-wrap: wrap; justify-content: flex-end; gap: 6px; padding-bottom: 4px; font-size: 13.5px; }

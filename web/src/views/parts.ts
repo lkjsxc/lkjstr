@@ -1,10 +1,11 @@
 // Small pieces every view draws people and text with.
-import { loadAvatar, retryAvatar } from '../engine/avatar-cache.ts';
+import { loadAvatar } from '../engine/avatar-cache.ts';
 import type { Author, Emoji, Segment } from '../engine/protocol.ts';
 import { emojiRuns } from '../shared/emoji-text.ts';
 import { type Child, h } from '../shared/h.ts';
 import { t } from '../shared/i18n.ts';
 import { icon } from '../shared/icons.ts';
+import { loadImage } from '../shared/media-source.ts';
 import { knownPerson, onPerson } from '../shared/people.ts';
 import { inlineEmoji } from './emoji-load.ts';
 import { UNDO_MS } from './held.ts';
@@ -38,7 +39,6 @@ const faceState = new WeakMap<
     options: FaceOptions;
     picture?: string;
     image?: HTMLImageElement;
-    revision?: string;
   }
 >();
 function drawFace(el: HTMLElement, a: Author): void {
@@ -46,13 +46,7 @@ function drawFace(el: HTMLElement, a: Author): void {
   if (!state) return;
   const initial = unnamed(a) ? '' : ([...a.name.replace(/:[a-z0-9_]+:/g, '').trim()][0] ?? '');
   if (state.letter.textContent !== initial) state.letter.textContent = initial;
-  const revised = state.revision !== a.profileId;
-  const retry = revised && state.image && state.image.parentElement !== el;
-  state.revision = a.profileId;
-  if (state.picture === a.picture && !retry) {
-    if (revised && state.image) retryAvatar(state.image);
-    return;
-  }
+  if (state.picture === a.picture) return;
   state.picture = a.picture;
   state.image?.remove();
   state.image = undefined;
@@ -91,6 +85,17 @@ export function avatar(a: Author, cls = 'av', options: FaceOptions = {}): HTMLEl
   faceState.set(el, { letter, options });
   drawFace(el, knownPerson(a.pubkey) ?? a);
   return el;
+}
+
+/** Profile and editor share the banner's quiet background when its picture is unavailable. */
+export function showBanner(el: HTMLElement, url: string | undefined): void {
+  const old = el.querySelector('img');
+  if (old?.dataset.picture === url) return;
+  el.replaceChildren();
+  if (!url) return;
+  const img = h('img', { alt: '', decoding: 'async', 'data-picture': url });
+  el.append(img);
+  loadImage(img, url, () => img.remove());
 }
 
 /** Unicode emoji in text, each one grapheme in an inline mark that wraps, selects and copies as the characters it

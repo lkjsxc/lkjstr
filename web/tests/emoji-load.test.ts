@@ -44,6 +44,8 @@ describe('custom emoji in text', () => {
     const view = inView();
     view.append(img);
     vi.advanceTimersByTime(1);
+    const ahead = watchers.find((w) => w.seen.has(img));
+    ahead?.calls([{ target: img, isIntersecting: true }]);
     img.dispatchEvent(new Event('error'));
     const text = view.querySelector<HTMLElement>('.efail');
     expect(text?.classList.contains('held')).toBe(true);

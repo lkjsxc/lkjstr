@@ -16,6 +16,7 @@ import {
   nameButton,
   plainName,
   segments,
+  showBanner,
   unnamed,
 } from './parts.ts';
 import { editable } from './profile-edit.ts';
@@ -67,13 +68,12 @@ export function renderProfile(row: ProfileRow, env: ViewEnv): HTMLElement {
       : h('span', { class: 'stat' }, inner);
   };
   const known = row.knownFollowers;
+  const banner = h('div', { class: 'banner' });
+  showBanner(banner, row.banner);
   return h(
     'section',
     { class: unnamed(a) ? 'profile pending' : 'profile' },
-    h('div', {
-      class: 'banner',
-      style: row.banner ? `background-image:url("${row.banner}")` : null,
-    }),
+    banner,
     h(
       'div',
       { class: 'phead' },

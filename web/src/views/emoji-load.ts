@@ -6,6 +6,7 @@
 // its box, or the code is drawn small inside it (whole in its tooltip). Above the reading place the anchor absorbs
 // the change; below it nobody sees it.
 import { h } from '../shared/h.ts';
+import { loadImage, mediaSource } from '../shared/media-source.ts';
 import { kv } from '../shared/storage.ts';
 
 const AHEAD = '150% 0px';
@@ -118,7 +119,7 @@ function start(img: HTMLImageElement): void {
   const src = img.dataset.src;
   if (!src) return;
   delete img.dataset.src;
-  img.src = src;
+  loadImage(img, src, () => fail(img));
 }
 /** `apply` at once when `el` is out of sight (or not in a scrolling view), otherwise when it leaves the view. */
 function whenOutOfSight(el: Element, apply: () => void): void {
@@ -135,6 +136,8 @@ function settle(): void {
 
 /** A custom emoji in text, `focusable` when it stands alone. A picture that cannot be had becomes its code. */
 export function inlineEmoji(code: string, url: string, focusable: boolean): HTMLElement {
+  if (!mediaSource(url))
+    return h('span', { class: 'emo efail', title: code, tabindex: focusable ? 0 : null }, code);
   const near = /^(data|blob):/.test(url);
   const img = h('img', {
     class: 'emo',
@@ -142,12 +145,12 @@ export function inlineEmoji(code: string, url: string, focusable: boolean): HTML
     tabindex: focusable ? 0 : null,
     draggable: false,
     // A picture already in the page (data:, blob:) costs nothing to show: only pictures from afar wait.
-    src: near ? url : BLANK,
+    src: near ? null : BLANK,
     'data-src': near ? null : url,
   });
   img.style.width = `${shapesNow().get(url) ?? SQUARE}em`;
   img.addEventListener('load', () => {
-    if (img.dataset.src) return; // the blank pixel
+    if (img.dataset.src || img.getAttribute('src') === BLANK) return;
     const width = widthOf(img);
     remember(url, width);
     if (`${width}em` !== img.style.width)
@@ -156,29 +159,30 @@ export function inlineEmoji(code: string, url: string, focusable: boolean): HTML
         img.dispatchEvent(new Event('note-geometry-changed', { bubbles: true }));
       });
   });
-  img.addEventListener('error', () => {
-    const box = Number.parseFloat(img.style.width) || SQUARE;
-    const text = h(
-      'span',
-      { class: 'emo efail held', title: code, tabindex: focusable ? 0 : null },
-      code,
-    );
-    text.style.width = `${box / SMALL}em`;
-    forget(img);
-    img.replaceWith(text);
-    whenOutOfSight(text, () => {
-      text.classList.remove('held');
-      text.style.width = '';
-      text.dispatchEvent(new Event('note-geometry-changed', { bubbles: true }));
-    });
-  });
-  if (near) return img;
-  if (typeof requestAnimationFrame === 'undefined') start(img);
+  if (near) loadImage(img, url, () => fail(img));
+  else if (typeof requestAnimationFrame === 'undefined') start(img);
   else {
     fresh.add(img);
     if (!queued) (queued = true), requestAnimationFrame(settle);
   }
   return img;
+}
+
+function fail(img: HTMLImageElement): void {
+  const box = Number.parseFloat(img.style.width) || SQUARE;
+  const text = h(
+    'span',
+    { class: 'emo efail held', title: img.alt, tabindex: img.getAttribute('tabindex') },
+    img.alt,
+  );
+  text.style.width = `${box / SMALL}em`;
+  forget(img);
+  img.replaceWith(text);
+  whenOutOfSight(text, () => {
+    text.classList.remove('held');
+    text.style.width = '';
+    text.dispatchEvent(new Event('note-geometry-changed', { bubbles: true }));
+  });
 }
 
 /** The picture's address, loaded or still waiting. */

@@ -31,7 +31,7 @@ export async function shellBrowser({ fixtureTls = false } = {}) {
       executablePath: chrome,
       args: [
         '--no-sandbox',
-        '--host-resolver-rules=MAP * ~NOTFOUND, EXCLUDE 127.0.0.1',
+        '--host-resolver-rules=MAP media-fixture.test 127.0.0.1, MAP * ~NOTFOUND, EXCLUDE 127.0.0.1',
         ...(fixtureTls ? ['--ignore-certificate-errors'] : []),
       ],
     });

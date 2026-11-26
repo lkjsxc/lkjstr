@@ -4,7 +4,7 @@ import { once } from 'node:events';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { createServer } from 'node:https';
 import { join } from 'node:path';
-import { transform } from 'esbuild';
+import { build } from 'esbuild';
 import { AVATAR_CACHE, AVATAR_FRAGMENT } from '../src/engine/avatar-cache.ts';
 import { shellFixture, waitFor } from './offline-fixture.mjs';
 import { shellWorker } from './shell-cache.ts';
@@ -65,7 +65,7 @@ async function avatarOrigins(bytes, run) {
       server.listen(0, '127.0.0.1');
       await once(server, 'listening');
     }
-    const origins = servers.map((s) => `https://127.0.0.1:${s.address().port}`);
+    const origins = servers.map((s) => `https://media-fixture.test:${s.address().port}`);
     await run({ cdn: origins[0], opaque: origins[1], requests });
   } finally {
     await Promise.all(
@@ -80,14 +80,20 @@ async function avatarOrigins(bytes, run) {
 
 export async function avatarCacheChecks() {
   const bytes = await readFile(new URL('../../static/icon-192.png', import.meta.url));
-  const source = await readFile(new URL('../src/engine/avatar-cache.ts', import.meta.url), 'utf8');
-  const { code } = await transform(source, { loader: 'ts' });
+  const {
+    outputFiles: [module],
+  } = await build({
+    entryPoints: [new URL('../src/engine/avatar-cache.ts', import.meta.url).pathname],
+    bundle: true,
+    write: false,
+    format: 'esm',
+  });
   await avatarOrigins(bytes, async ({ cdn, opaque, requests }) => {
     await shellFixture(
       shellWorker,
       async ({ page, context, origin }) => {
         await context.route(`${origin}/avatar-fixture.js`, (route) =>
-          route.fulfill({ contentType: 'text/javascript', body: code }),
+          route.fulfill({ contentType: 'text/javascript', body: module.text }),
         );
 
         const paint = (url, usingLoader = true) =>
@@ -194,20 +200,29 @@ export async function avatarCacheChecks() {
           document.body.append(img);
           loadAvatar(img, url, true);
         }, `${cdn}/transient.png`);
-        await waitFor(page, () => {
-          const img = document.querySelector('#transient-avatar');
-          return img?.dataset.failed && img.naturalWidth > 0 && !img.style.visibility;
-        });
+        await waitFor(page, () => document.querySelector('#transient-avatar')?.dataset.failed);
+        const transient = page.locator('#transient-avatar');
+        assert.equal(await transient.getAttribute('src'), null);
+        assert.equal(
+          await page.evaluate(async (url) => {
+            const { loadAvatar } = await import('/avatar-fixture.js');
+            const img = document.createElement('img');
+            document.body.append(img);
+            loadAvatar(img, url, true);
+            return img.isConnected;
+          }, `${cdn}/transient.png`),
+          false,
+        );
         assert.equal(
           requests.filter(
             (r) => r.path === '/transient.png' && r.headers['sec-fetch-mode'] === 'no-cors',
           ).length,
-          2,
-          'the visible image loaded on its second native request',
+          1,
+          'the failed native request was the only request',
         );
       },
       { fixtureTls: true },
     );
   });
-  console.log('ok avatar cache (public CORS copies, native fallback and retry, expiry and bound)');
+  console.log('ok avatar cache (public CORS copies, native fallback, expiry and bound)');
 }

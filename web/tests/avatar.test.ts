@@ -16,7 +16,7 @@ afterEach(async () => {
   vi.unstubAllGlobals();
 });
 
-it('retries a visible avatar after an image error without a profile refresh', async () => {
+it('keeps the initial after an image error across remounts', async () => {
   vi.useFakeTimers();
   const url = 'https://images.test/transient.png';
   const img = document.createElement('img');
@@ -26,12 +26,15 @@ it('retries a visible avatar after an image error without a profile refresh', as
   await vi.advanceTimersByTimeAsync(0);
   expect(source).toHaveBeenCalledExactlyOnceWith(url);
   img.dispatchEvent(new Event('error'));
-  await vi.advanceTimersByTimeAsync(999);
+  const replacement = document.createElement('img');
+  const remount = vi.spyOn(replacement, 'src', 'set');
+  document.body.append(replacement);
+  loadAvatar(replacement, url);
+  await vi.advanceTimersByTimeAsync(30000);
   expect(source).toHaveBeenCalledTimes(1);
-  await vi.advanceTimersByTimeAsync(1);
-  expect(source.mock.calls).toEqual([[url], [url]]);
-  img.dispatchEvent(new Event('load'));
-  expect(img.style.visibility).toBe('');
+  expect(remount).not.toHaveBeenCalled();
+  expect(replacement.isConnected).toBe(false);
+  expect(img.style.visibility).toBe('hidden');
 });
 
 it('lets a newly visible avatar run after stalled images release their slots', async () => {
@@ -75,7 +78,7 @@ it('lets a newly visible avatar run after stalled images release their slots', a
   expect(background.hasAttribute('src')).toBe(true);
   background.remove();
   await vi.advanceTimersByTimeAsync(0);
-  expect(background.hasAttribute('src')).toBe(false);
+  expect(background.hasAttribute('src')).toBe(true);
   document.body.append(background);
   await vi.advanceTimersByTimeAsync(0);
   setVisible(background, true);
@@ -139,7 +142,12 @@ it('loads the head eagerly and lets the browser schedule avatars farther down', 
   const f = vaultEnv();
   const rows = createRowList(f.el, f.env, false);
   try {
-    rows.draw(Array.from({ length: 8 }, (_, i) => note(String(i).repeat(64))));
+    rows.draw(
+      Array.from({ length: 8 }, (_, i) => {
+        const row = note(String(i).repeat(64));
+        return { ...row, author: { ...row.author, pubkey: 'c'.repeat(64) } };
+      }),
+    );
     const loading = [...f.el.querySelectorAll('.nrow > .avb img')].map((img) =>
       img.getAttribute('loading'),
     );

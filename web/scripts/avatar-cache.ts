@@ -10,8 +10,6 @@ const avatarTtlLimit = 60 * 60 * 1000;
 const avatarExpiry = 'x-lkjstr-avatar-expires';
 const avatarCopyTimeout = 2500;
 const avatarCopyLimit = 16;
-const avatarCopyAttempts = 3;
-const avatarNegativeTtl = 30000;
 const avatarLookupTimeout = 500;
 // A read index starts during navigation. Misses go straight to the browser's image loader.
 const storedAvatars = new Set();
@@ -29,9 +27,8 @@ function indexAvatars() {
 // At most 16 offered copies including the one active low-priority read.
 const avatarCopies = new Map();
 let activeAvatarCopy = null;
-let avatarCopyTimer;
-// At most 64 URLs that used all their copy attempts.
-const avatarCopyBackoff = new Map();
+// One entry per unavailable copy URL offered in this worker's lifetime.
+const unavailableAvatarCopies = new Set();
 
 async function avatarDeadline(work, ms) {
   const controller = new AbortController();
@@ -108,7 +105,7 @@ async function avatarBytes(response, mime, signal) {
 }
 
 async function copyAvatar(url, signal) {
-  if (await cachedAvatar(url)) return;
+  if (await cachedAvatar(url)) return true;
   signal.throwIfAborted();
   // Reuse a fresh HTTP entry when available. Opaque images still load natively.
   const response = await fetch(url, {
@@ -121,12 +118,11 @@ async function copyAvatar(url, signal) {
   if (response.type !== 'cors' || !response.ok || expires <= Date.now() ||
       !/^image\/(?:avif|gif|jpeg|png|webp)$/.test(mime)) {
     void response.body?.cancel().catch(() => {});
-    if (response.status === 429 || response.status >= 500) throw new Error('avatar host unavailable');
-    return;
+    return false;
   }
   const bytes = await avatarBytes(response, mime, signal);
   signal.throwIfAborted();
-  if (!bytes || expires <= Date.now()) return;
+  if (!bytes || expires <= Date.now()) return false;
   await self.navigator.locks.request(avatarCacheName, { signal }, async () => {
     const cache = await caches.open(avatarCacheName);
     if (await cachedAvatar(url)) return;
@@ -144,46 +140,33 @@ async function copyAvatar(url, signal) {
     }));
     storedAvatars.add(url);
   });
-}
-
-function retryAvatarCopy(job) {
-  if (job.attempts < avatarCopyAttempts) {
-    job.readyAt = Date.now() + 1000 * 2 ** (job.attempts - 1);
-    avatarCopies.set(job.url, job);
-    return;
-  }
-  avatarCopyBackoff.delete(job.url);
-  avatarCopyBackoff.set(job.url, Date.now() + avatarNegativeTtl);
-  if (avatarCopyBackoff.size > avatarLimit) avatarCopyBackoff.delete(avatarCopyBackoff.keys().next().value);
-  job.finish();
+  return true;
 }
 
 function drainAvatarCopies() {
   if (activeAvatarCopy) return;
-  clearTimeout(avatarCopyTimer);
-  const now = Date.now();
-  let next = Infinity;
   let ready;
   for (const job of avatarCopies.values()) {
-    if (job.readyAt > now) next = Math.min(next, job.readyAt);
-    else if (!ready || (!ready.visible && job.visible)) ready = job;
+    if (!ready || job.visible) ready = job;
+    if (job.visible) break;
   }
-  if (!ready) {
-    if (next < Infinity) avatarCopyTimer = setTimeout(drainAvatarCopies, next - now);
-    return;
-  }
+  if (!ready) return;
   avatarCopies.delete(ready.url);
   activeAvatarCopy = ready;
-  ready.attempts++;
   avatarDeadline((signal) => copyAvatar(ready.url, signal), avatarCopyTimeout)
-    .then(ready.finish, () => retryAvatarCopy(ready))
-    .finally(() => { activeAvatarCopy = null; drainAvatarCopies(); });
+    .catch(() => false)
+    .then((copied) => {
+      if (!copied) unavailableAvatarCopies.add(ready.url);
+      ready.finish();
+      activeAvatarCopy = null;
+      drainAvatarCopies();
+    });
 }
 
 self.addEventListener('message', (event) => {
   if (event.data?.k !== 'lkjstr-avatar-loaded' || event.source?.type !== 'window') return;
   const url = remoteAvatar(event.data.url);
-  if (!url || !self.navigator.locks || avatarCopyBackoff.get(url) > Date.now()) return;
+  if (!url || !self.navigator.locks || unavailableAvatarCopies.has(url)) return;
   const visible = event.data.visible === true;
   const pending = activeAvatarCopy?.url === url ? activeAvatarCopy : avatarCopies.get(url);
   if (pending) {
@@ -200,7 +183,7 @@ self.addEventListener('message', (event) => {
   }
   let finish;
   const done = new Promise((resolve) => { finish = resolve; });
-  avatarCopies.set(url, { url, visible, attempts: 0, readyAt: 0, finish, done });
+  avatarCopies.set(url, { url, visible, finish, done });
   event.waitUntil(done);
   drainAvatarCopies();
 });

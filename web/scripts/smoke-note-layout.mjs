@@ -1,5 +1,6 @@
 // Real Chromium layout-count regression. Only an owned loopback server is reachable.
 
+import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { mkdir, mkdtemp, readFile, writeFile } from 'node:fs/promises';
 import { createServer } from 'node:http';
@@ -174,6 +175,7 @@ try {
   const reservedMedia =
     (await page.locator('.fold').count()) === 1 && (await page.locator('.mbox').isVisible());
   report.threshold = { oneExtraLine, reservedMedia };
+  report.mediaRequests = await verifyMediaRequests(page, context);
   await cdp.detach();
   await context.close();
   report.complete =
@@ -229,4 +231,56 @@ try {
         ),
       }),
     );
+}
+
+async function verifyMediaRequests(page, context) {
+  const source = 'http://media-fixture.test/fail.png';
+  const upgraded = 'https://media-fixture.test/fail.png';
+  const blocked = [
+    { type: 'image', url: 'https://media-fixture.onion/photo.png' },
+    { type: 'video', url: 'https://media-fixture.i2p/movie.mp4' },
+    { type: 'audio', url: 'https://127.0.0.1/song.mp3' },
+  ];
+  const requests = [];
+  context.on('request', (request) => {
+    const url = request.url();
+    if (url === upgraded || url === source || blocked.some((media) => media.url === url))
+      requests.push(url);
+  });
+  const { promise, resolve: respond } = Promise.withResolvers();
+  await context.route(upgraded, async (route) => {
+    await promise;
+    await route.fulfill({ status: 503, headers: { 'cache-control': 'no-store' } });
+  });
+  try {
+    const first = page.waitForRequest(upgraded, { timeout: 8000 });
+    await page.evaluate(
+      (media) => globalThis.noteLayout.prepareMedia(media),
+      [{ type: 'image', url: source }, ...blocked],
+    );
+    await first;
+    await page.evaluate(() => globalThis.noteLayout.remountMedia());
+  } finally {
+    respond();
+  }
+  await page.waitForFunction(() => document.querySelectorAll('.mbox.gone').length === 8);
+  await page.evaluate(() => globalThis.noteLayout.remountMedia());
+  assert.deepEqual(
+    await page
+      .locator('.mbox.gone')
+      .evaluateAll((links) => links.map((link) => link.getAttribute('href'))),
+    Array(2)
+      .fill([source, ...blocked.map((media) => media.url)])
+      .flat(),
+  );
+  await page.evaluate(
+    (media) => globalThis.noteLayout.openMedia(media),
+    [{ type: 'image', url: source }, blocked[0]],
+  );
+  const original = page.locator('.mstage .fstate a');
+  assert.equal(await original.getAttribute('href'), source);
+  await page.locator('.mbar button[aria-label="Next"]').click();
+  assert.equal(await original.getAttribute('href'), blocked[0].url);
+  assert.deepEqual(requests, [upgraded]);
+  return requests;
 }

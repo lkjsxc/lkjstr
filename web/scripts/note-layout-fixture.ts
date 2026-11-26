@@ -1,13 +1,15 @@
 // Browser-only synthetic row-list fixture; it never opens an engine or relay.
 import { noteRow } from '../src/engine/mock/rows.ts';
 import { createWorld } from '../src/engine/mock/world.ts';
-import type { NoteRow } from '../src/engine/protocol.ts';
+import type { Media, NoteRow } from '../src/engine/protocol.ts';
 import { h } from '../src/shared/h.ts';
 import { setLang } from '../src/shared/i18n.ts';
 import { createSettings } from '../src/shared/settings.ts';
 import { createSignal } from '../src/shared/signal.ts';
+import { saveViewState } from '../src/shared/view-state.ts';
 import { createRowList, type RowList } from '../src/views/feed-draw.ts';
 import { disposeLinkCards } from '../src/views/link-cards.ts';
+import { mountMedia } from '../src/views/media.ts';
 import { renderNote } from '../src/views/note.ts';
 import { fitNotes } from '../src/views/note-fold.ts';
 import type { ViewEnv } from '../src/views/registry.ts';
@@ -145,6 +147,26 @@ const prepareThreshold = (withMedia: boolean): void => {
   ];
   draw();
 };
+const prepareMedia = (media: Media[]): void => {
+  prepare(2, 720);
+  rows = rows.map((row) => ({
+    ...row,
+    segments: [{ k: 'text', text: 'Media test' }],
+    media,
+  }));
+  draw();
+};
+const remountMedia = (): void => {
+  drawn?.draw([]);
+  draw();
+};
+const openMedia = (media: Media[]): void => {
+  const el = h('div');
+  view.append(el);
+  const instance = 'layout-media';
+  saveViewState(instance, { media });
+  mountMedia(el, { ...env, instance, visible: createSignal(true) });
+};
 Object.assign(globalThis, {
   noteLayout: {
     prepare,
@@ -157,5 +179,8 @@ Object.assign(globalThis, {
     prepareWrapping,
     resize,
     prepareThreshold,
+    prepareMedia,
+    remountMedia,
+    openMedia,
   },
 });

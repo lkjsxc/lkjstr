@@ -1,3 +1,5 @@
+import { loadImage, mediaSource } from '../shared/media-source.ts';
+
 export const AVATAR_FRAGMENT = '#lkjstr-avatar-v1';
 export const AVATAR_CACHE = 'lkjstr-avatar-v1';
 
@@ -23,7 +25,6 @@ export function publicAvatarUrl(value: string): URL | null {
 
 const IMAGE_SLOTS = 6;
 const IMAGE_TIMEOUT = 8_000;
-const RETRY_LIMIT = 30_000;
 const PENDING = 'data-avatar-pending';
 
 type AvatarJob = {
@@ -32,22 +33,18 @@ type AvatarJob = {
   offer?: (visible: boolean) => void;
   eager: boolean;
   visible: boolean;
-  delay: number;
-  retryAt: number;
-  stopAttempt?: () => void;
+  loading: boolean;
 };
 
 // At most one scheduled job per connected face. A detached tab can remount the same image later.
 const jobs = new Map<HTMLImageElement, AvatarJob>();
 const pendingImages = new WeakMap<HTMLImageElement, AvatarJob>();
 let activeImages = 0;
-let retryTimer: ReturnType<typeof setTimeout> | undefined;
 let visibility: IntersectionObserver | undefined;
 let mounts: MutationObserver | undefined;
 let drainQueued = false;
 
 function pauseImage(job: AvatarJob): void {
-  job.stopAttempt?.();
   visibility?.unobserve(job.img);
   jobs.delete(job.img);
 }
@@ -62,22 +59,16 @@ function scheduleImages(): void {
 }
 
 function drainImages(): void {
-  clearTimeout(retryTimer);
   if (!jobs.size) {
     visibility?.disconnect();
     visibility = undefined;
     return;
   }
-  const now = Date.now();
   const visible: AvatarJob[] = [];
   const eager: AvatarJob[] = [];
-  let next = Infinity;
   for (const job of jobs.values()) {
     if (!job.img.isConnected) pauseImage(job);
-    else if (!job.stopAttempt && (job.visible || job.eager)) {
-      if (job.retryAt > now) next = Math.min(next, job.retryAt);
-      else (job.visible ? visible : eager).push(job);
-    }
+    else if (!job.loading && (job.visible || job.eager)) (job.visible ? visible : eager).push(job);
   }
   for (const job of visible) {
     if (activeImages === IMAGE_SLOTS) break;
@@ -87,46 +78,35 @@ function drainImages(): void {
     if (activeImages >= 2) break;
     startImage(job);
   }
-  if (next < Infinity) retryTimer = setTimeout(drainImages, next - now);
   if (!jobs.size) scheduleImages();
 }
 
 function startImage(job: AvatarJob): void {
   const { img } = job;
   activeImages++;
+  job.loading = true;
   job.eager = false;
   const stop = () => {
-    clearTimeout(timer);
     img.removeEventListener('load', loaded);
-    img.removeEventListener('error', failed);
-    job.stopAttempt = undefined;
-    activeImages--;
-  };
-  const loaded = () => {
-    stop();
     pauseImage(job);
     pendingImages.delete(img);
     img.removeAttribute(PENDING);
-    img.style.visibility = '';
+    activeImages--;
     scheduleImages();
+  };
+  const loaded = () => {
+    stop();
+    img.style.visibility = '';
     if (img.isConnected) job.offer?.(job.visible);
   };
   const failed = () => {
-    job.stopAttempt?.();
-    job.retryAt = Date.now() + job.delay;
-    job.delay = Math.min(job.delay * 2, RETRY_LIMIT);
-    scheduleImages();
-  };
-  const timer = setTimeout(failed, IMAGE_TIMEOUT);
-  job.stopAttempt = () => {
     stop();
     img.removeAttribute('src');
   };
   img.addEventListener('load', loaded);
-  img.addEventListener('error', failed);
   // The visibility observer starts lazy faces, so the deadline measures an actual attempt.
   img.loading = 'eager';
-  img.src = job.src;
+  loadImage(img, job.src, failed, IMAGE_TIMEOUT);
 }
 
 function resumeImage(img: HTMLImageElement): void {
@@ -147,18 +127,14 @@ function resumeImage(img: HTMLImageElement): void {
   scheduleImages();
 }
 
-export function retryAvatar(img: HTMLImageElement): void {
-  const job = pendingImages.get(img);
-  if (!job?.retryAt || job.stopAttempt) return;
-  job.retryAt = 0;
-  job.delay = 1000;
-  if (jobs.has(img)) scheduleImages();
-}
-
 export function loadAvatar(img: HTMLImageElement, picture: string, cachePublic = false): void {
-  if (!/^https?:/i.test(picture)) {
-    img.addEventListener('error', () => img.remove(), { once: true });
-    img.src = picture;
+  const source = mediaSource(picture);
+  if (!source) {
+    img.remove();
+    return;
+  }
+  if (!/^https?:/i.test(source)) {
+    loadImage(img, picture, () => img.remove());
     return;
   }
   const url = cachePublic && navigator.serviceWorker?.controller && publicAvatarUrl(picture);
@@ -181,8 +157,7 @@ export function loadAvatar(img: HTMLImageElement, picture: string, cachePublic =
       : undefined,
     eager: img.loading !== 'lazy',
     visible: false,
-    delay: 1000,
-    retryAt: 0,
+    loading: false,
   };
   img.style.visibility = 'hidden';
   img.setAttribute(PENDING, '');

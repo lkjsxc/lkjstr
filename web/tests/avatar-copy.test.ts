@@ -78,7 +78,7 @@ it('frees a stuck copy under load and starts the visible offer ahead of the back
   expect(entries.has(stalled)).toBe(false);
 });
 
-it('backs off a failed copy while letting another URL on the same host finish', async () => {
+it('skips further offers for a failed copy while another URL on the same host finishes', async () => {
   vi.useFakeTimers();
   const { offer, fetch, entries } = fixture();
   const failed = 'https://images.test/failed.png';
@@ -91,16 +91,8 @@ it('backs off a failed copy while letting another URL on the same host finish', 
   expect(entries.has(healthy)).toBe(true);
   expect(entries.has(failed)).toBe(false);
 
-  fetch.mockRejectedValueOnce(new Error('unavailable'));
-  await vi.advanceTimersByTimeAsync(1000);
-  fetch.mockRejectedValueOnce(new Error('unavailable'));
-  await vi.advanceTimersByTimeAsync(2000);
-  expect(fetch.mock.calls.map(([url]) => url)).toEqual([failed, healthy, failed, failed]);
-  offer(failed);
-  await vi.advanceTimersByTimeAsync(29_999);
-  expect(fetch).toHaveBeenCalledTimes(4);
-  await vi.advanceTimersByTimeAsync(1);
+  await vi.advanceTimersByTimeAsync(33_000);
   offer(failed);
   await vi.advanceTimersByTimeAsync(0);
-  expect(entries.has(failed)).toBe(true);
+  expect(fetch.mock.calls.map(([url]) => url)).toEqual([failed, healthy]);
 });

@@ -1,6 +1,20 @@
 import { notesChecks } from './smoke-notes.ts';
 import { seedLayouts } from './smoke-seed.mjs';
 
+const mediaOrigin = 'https://media-fixture.test';
+
+/** Keep the signed embed public-shaped while all bytes come from this loopback fixture. */
+async function routeReader(context, base) {
+  await context.route('**/*', (route) =>
+    route.request().url().startsWith(`${base}/`) ? route.continue() : route.abort(),
+  );
+  await context.route(`${mediaOrigin}/*`, async (route) => {
+    const { pathname } = new URL(route.request().url());
+    if (pathname !== '/icon-192.png' && pathname !== '/__test_audio.wav') return route.abort();
+    await route.fulfill({ response: await route.fetch({ url: base + pathname }) });
+  });
+}
+
 export async function realReaderChecks({
   browser,
   base,
@@ -24,7 +38,7 @@ export async function realReaderChecks({
         (_, i) =>
           `Paragraph ${i + 1}: a quiet page for a patient reader, with something different to say.`,
       ).join('\n\n') +
-      `\nhttps://news.example/article\n${base}/icon-192.png\n${base}/__test_audio.wav`,
+      `\nhttps://news.example/article\n${mediaOrigin}/icon-192.png\n${mediaOrigin}/__test_audio.wav`,
   });
   fake.add(readingNote);
   const noteContext = await browser.newContext({
@@ -40,9 +54,7 @@ export async function realReaderChecks({
       ),
     relayUrl,
   );
-  await noteContext.route('**/*', (route) =>
-    route.request().url().startsWith(`${base}/`) ? route.continue() : route.abort(),
-  );
+  await routeReader(noteContext, base);
   const reader = await noteContext.newPage();
   onReader(reader);
   const before = await (await reader.request.get(`${base}/__test_preview_counts`)).json();
@@ -97,9 +109,7 @@ export async function realReaderChecks({
       },
       { url: relayUrl, mode },
     );
-    await ctx.route('**/*', (route) =>
-      route.request().url().startsWith(`${base}/`) ? route.continue() : route.abort(),
-    );
+    await routeReader(ctx, base);
     const p = await ctx.newPage();
     const baseline = await (await p.request.get(`${base}/__test_preview_counts`)).json();
     await p.goto(base);

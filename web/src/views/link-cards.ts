@@ -1,5 +1,6 @@
 import type { LinkPreview } from '../engine/protocol.ts';
 import { h } from '../shared/h.ts';
+import { loadImage } from '../shared/media-source.ts';
 
 const observers = new WeakMap<HTMLElement, ResizeObserver>();
 export const disposeLinkCards = (root: HTMLElement): void => {
@@ -28,7 +29,7 @@ export function linkCards(cards: readonly LinkPreview[] | undefined): HTMLElemen
       const title = card.title || `${url.host}${url.pathname === '/' ? '' : url.pathname}`;
       const heading = h('b', { class: 'lctitle' }, title);
       const description = h('span', { class: 'lcdesc' }, card.description ?? '');
-      const picture =
+      let picture =
         card.imageUrl && /^(https?:\/\/|data:image\/)/.test(card.imageUrl)
           ? h('img', {
               class: 'lcpicture',
@@ -37,10 +38,15 @@ export function linkCards(cards: readonly LinkPreview[] | undefined): HTMLElemen
               fetchpriority: 'low',
               decoding: 'async',
               referrerpolicy: 'no-referrer',
-              src: card.imageUrl,
             })
           : null;
-      picture?.addEventListener('error', () => picture.remove());
+      if (picture && card.imageUrl) {
+        const img = picture;
+        loadImage(img, card.imageUrl, () => {
+          picture = null;
+          img.remove();
+        });
+      }
       const link = h(
         'a',
         {

@@ -82,9 +82,10 @@ worker cannot recreate a deleted name.
 ## Public avatars
 
 Remote faces use up to six native image requests per page. Visible faces go
-first. An attempt times out after eight seconds and a visible face retries
-with an exponential delay capped at 30 seconds. Detached faces release their
-pending work. The letter stays in place while an image waits or retries.
+first. An attempt times out after eight seconds. Detached faces release their
+queued work, and an active request can finish for other faces waiting on the
+same picture. The letter stays in place while the image waits or after it fails.
+The page remembers the failure across face remounts until reload.
 
 The image loader can reuse a browser-local copy of a public note author's
 profile picture after reload. An image must first load successfully. In the
@@ -95,8 +96,8 @@ of at most 128 KiB each and evicts the oldest writes first.
 
 The worker accepts up to 16 copy jobs and runs one at a time, prioritizing
 visible offers. Each attempt has a 2.5-second deadline from cache lookup
-through decode and storage. Transient failures retry after one and two
-seconds, then suppress copies for that URL for up to 30 seconds.
+through decode and storage. If a URL cannot be copied, later offers for that
+URL are skipped for the lifetime of the service worker.
 
 URLs with credentials, a query or an existing fragment use the browser's image
 path, as do opaque responses and pictures from private-message views. Private

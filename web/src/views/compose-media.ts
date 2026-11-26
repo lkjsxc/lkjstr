@@ -4,6 +4,7 @@ import { hostOf } from '../shared/address.ts';
 import { h, replaceChildren } from '../shared/h.ts';
 import { type Key, t } from '../shared/i18n.ts';
 import { SERVER_CHOICES } from '../shared/media-servers.ts';
+import { loadImage } from '../shared/media-source.ts';
 import { failureText } from './can.ts';
 import { watchList } from './lists.ts';
 import type { ViewEnv } from './registry.ts';
@@ -13,6 +14,7 @@ type Item = {
   el: HTMLElement;
   busy: boolean;
   done?: Uploaded;
+  preview?: string;
   removed?: boolean;
   abort?: AbortController;
 };
@@ -80,6 +82,7 @@ export function createAttachments(
         onclick: () => {
           item.removed = true;
           item.abort?.abort();
+          if (item.preview) URL.revokeObjectURL(item.preview);
           items = items.filter((x) => x !== item);
           const picker = item.el.querySelector('select');
           if (picker) pickers.delete(picker);
@@ -150,8 +153,12 @@ export function createAttachments(
         item.done = result.uploaded;
         item.el.classList.add('done');
         status.textContent = hostOf(target);
-        if (result.uploaded.type === 'image')
-          item.el.prepend(h('img', { src: result.uploaded.url, alt: item.file.name }));
+        if (result.uploaded.type === 'image') {
+          item.preview = URL.createObjectURL(item.file);
+          const img = h('img', { alt: item.file.name });
+          item.el.prepend(img);
+          loadImage(img, item.preview, () => img.remove());
+        }
       }
     } catch (error) {
       showFailure(
@@ -251,6 +258,7 @@ export function createAttachments(
       for (const i of items) {
         i.removed = true;
         i.abort?.abort();
+        if (i.preview) URL.revokeObjectURL(i.preview);
       }
       items = [];
       pickers.clear();
@@ -258,7 +266,10 @@ export function createAttachments(
     },
     dispose(): void {
       disposed = true;
-      for (const i of items) i.abort?.abort();
+      for (const i of items) {
+        i.abort?.abort();
+        if (i.preview) URL.revokeObjectURL(i.preview);
+      }
       off?.();
       pickers.clear();
     },

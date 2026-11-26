@@ -5,6 +5,7 @@ import { toned } from '../shared/emoji-find.ts';
 import type { Picked } from '../shared/emoji-used.ts';
 import { h, replaceChildren } from '../shared/h.ts';
 import { getLang, t } from '../shared/i18n.ts';
+import { loadImage, mediaSource } from '../shared/media-source.ts';
 
 /** One choice of the picker: what it puts in, and what is known about it. */
 export type Item = {
@@ -23,15 +24,16 @@ export const glyphName = (g: Glyph): string => (getLang() === 'ja' && g.ja ? g.j
 
 /** A custom emoji's picture, held to its box; when it cannot be had, its code in small type. */
 export function emojiPicture(code: string, url: string, cls: string): HTMLElement {
+  const fallback = () => h('span', { class: `${cls} efail` }, code);
+  if (!mediaSource(url)) return fallback();
   const img = h('img', {
     class: cls,
-    src: url,
     alt: code,
     loading: 'lazy',
     decoding: 'async',
     draggable: false,
   });
-  img.addEventListener('error', () => img.replaceWith(h('span', { class: `${cls} efail` }, code)));
+  loadImage(img, url, () => img.replaceWith(fallback()));
   return img;
 }
 

@@ -10,7 +10,7 @@ import { type Key, t } from '../shared/i18n.ts';
 import type { Disposer } from '../shared/signal.ts';
 import { loadViewState, saveViewState } from '../shared/view-state.ts';
 import { ability, abilityText, failureText } from './can.ts';
-import { avatar, toast } from './parts.ts';
+import { avatar, showBanner, toast } from './parts.ts';
 import { createImageField, type ImageField } from './profile-edit-image.ts';
 import {
   FIELDS,
@@ -159,8 +159,7 @@ export function mountProfileEdit(el: HTMLElement, env: ViewEnv): Disposer {
       /^(https:|data:image\/|blob:)/.test(s.trim()) && URL.canParse(s.trim())
         ? s.trim()
         : undefined;
-    const bannerUrl = shown(v.banner);
-    banner.style.backgroundImage = bannerUrl ? `url("${bannerUrl.replace(/"/g, '%22')}")` : '';
+    showBanner(banner, shown(v.banner));
     replaceChildren(
       face,
       avatar({ pubkey, npub: '', name: v.name, picture: shown(v.picture) }, 'av xl'),

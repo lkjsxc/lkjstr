@@ -52,6 +52,11 @@ Seams worth knowing inside `src/views/`:
 - `note.ts` draws a note, `note-media.ts` its pictures, `note-actions.ts`
   its action row and menus, `held.ts` holds a like or repost back until its
   Undo has lapsed.
+- `shared/media-source.ts` keeps embedded requests off special-use domains
+  and private or loopback IP literals. Public HTTP addresses load over HTTPS,
+  while their original links remain available. Failed requests stay unavailable
+  across tiles and remounts until the page reloads. Profile faces use the
+  author's picture or the local initial.
 - `account.ts` is the Accounts tab, `account-add.ts` the ways to sign in,
   `account-key.ts` owns protected backup and its folded raw-key part. Password
   forms are disposable; account-vault.ts routes unlock, account-idle.ts locks idle

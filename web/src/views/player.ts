@@ -5,6 +5,7 @@ import type { Media } from '../engine/protocol.ts';
 import { h } from '../shared/h.ts';
 import { pressed } from '../shared/keys.ts';
 import { keepMediaPreferences } from '../shared/media-preferences.ts';
+import { loadImage, loadPlayable } from '../shared/media-source.ts';
 
 export type Player = {
   readonly el: HTMLMediaElement;
@@ -28,13 +29,19 @@ const REPORT_MS = 5000;
 
 export function createPlayer(m: Media, o: PlayerOpts): Player {
   const el: HTMLMediaElement = h(m.type === 'audio' ? 'audio' : 'video', {
-    src: m.url,
     controls: true,
     preload: 'metadata',
   });
   if (el instanceof HTMLVideoElement) {
     el.setAttribute('playsinline', '');
-    if (m.thumb) el.poster = m.thumb;
+    if (m.thumb) {
+      const poster = h('img', {
+        onload: () => {
+          if (!gone && el.readyState === 0) el.poster = poster.src;
+        },
+      });
+      loadImage(poster, m.thumb, () => {});
+    }
   }
   if (m.alt) el.setAttribute('aria-label', m.alt);
   const prefs = keepMediaPreferences(el);
@@ -56,7 +63,7 @@ export function createPlayer(m: Media, o: PlayerOpts): Player {
   on('pause', report);
   on('seeked', report);
   on('ended', report);
-  on('error', () => void (gone || o.failed()));
+  loadPlayable(el, m.url, () => void (gone || o.failed()));
   if (o.start) void el.play().catch(() => undefined); // refused by the browser: the controls are there
 
   const seek = (by: number): void => {

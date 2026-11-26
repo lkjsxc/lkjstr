@@ -172,7 +172,7 @@ it('keeps the draft in its field when durable storage fails', () => {
   off();
 });
 
-it('updates a remembered face in place and retries a failed URL when kind 0 changes', async () => {
+it('updates a remembered face without retrying the same failed picture', async () => {
   vi.stubGlobal('IntersectionObserver', undefined);
   const a = {
     ...person,
@@ -196,7 +196,10 @@ it('updates a remembered face in place and retries a failed URL when kind 0 chan
   expect(face.textContent).toBe('B');
   expect(face.querySelector('img')).toBe(image);
   await Promise.resolve();
-  expect(image.getAttribute('src')).toBe(a.picture);
+  expect(image.getAttribute('src')).toBeNull();
+  const next = 'https://example.test/b.png';
+  learnPerson({ ...a, profileId: 'next', name: 'Bea', picture: next });
+  await vi.waitFor(() => expect(face.querySelector('img')?.getAttribute('src')).toBe(next));
 });
 
 it('clears an earlier delivery result when a new post starts', async () => {
