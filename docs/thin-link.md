@@ -20,6 +20,9 @@ A cache mismatch permits one fresh reload, which must pass the same verification
 Mutable assets retain fresh fetches. A progressing transfer may exceed one minute;
 60-second inactivity and 15-minute transfer/install limits bound stalled work.
 An already-controlled page still checks for an update before engine readiness.
+First-install failures retry with bounded exponential delay through 30 seconds;
+online and visible resumption recover without a reload. Successful registration
+counts as the script check, avoiding an immediate second update fetch.
 
 ## Read planning
 

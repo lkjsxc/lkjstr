@@ -14,6 +14,11 @@ Installation requires a secure context, Service Worker, CacheStorage, SHA-256
 and Web Locks. Unsupported or denied capabilities leave the online app usable.
 Web Locks coordinates same-origin workers across generations; the lock name
 is stable across builds. The app has one root-scope registration per origin.
+Successful registration also counts as the initial script check, avoiding an
+immediate duplicate download. A rejected registration or failed first installer
+retries after 1, 2, 4, 8, 16 and then 30 seconds, with one attempt in flight.
+Hidden and retained-history pages pause retries; online, focus and restoration
+resume them. Permanent departure releases timers and owned listeners.
 The app checks for updates on boot, then every five minutes while visible.
 Returning to the tab or going online checks again when at least one minute
 has passed since the last check. The app offers a verified waiting worker

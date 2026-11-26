@@ -16,12 +16,19 @@ export function installShell(hasDraft: () => boolean, notice: () => void, ready:
   let pending = false;
   let notified = false;
   let reloading = false;
+  let disposed = false;
+  let paused = false;
+  let registering = false;
+  let failures = 0;
   let wake: ReturnType<typeof setTimeout> | undefined;
+  let retry: ReturnType<typeof setTimeout> | undefined;
   let periodic: ReturnType<typeof setInterval> | undefined;
-  const visible = () => document.visibilityState === 'visible';
+  let disposeReady: (() => void) | undefined;
+  let unwatch = (): void => {};
+  const active = () => !disposed && !paused && document.visibilityState === 'visible';
   const apply = (): void => {
     clearTimeout(wake);
-    if (!pending || !visible() || reloading) return;
+    if (!pending || !active() || reloading) return;
     const draft = hasDraft();
     if (draft && !notified) {
       notified = true;
@@ -39,80 +46,152 @@ export function installShell(hasDraft: () => boolean, notice: () => void, ready:
     location.reload();
   };
   const activated = (): void => {
+    if (disposed) return;
     const next = workers.controller;
     if (!next || next === controller) return;
     pending ||= Boolean(controller); // A first installation leaves the current document in place.
     controller = next;
+    failures = 0;
     apply();
   };
+  const retryLater = (): void => {
+    if (disposed) return;
+    failures = Math.min(failures + 1, 6);
+    clearTimeout(retry);
+    retry = undefined;
+    if (active()) retry = setTimeout(register, Math.min(1000 * 2 ** (failures - 1), 30_000));
+  };
+  const watch = (registered: ServiceWorkerRegistration): void => {
+    unwatch();
+    let installing: ServiceWorker | null = null;
+    const offer = (): void => {
+      if (!disposed) registered.waiting?.postMessage({ k: 'lkjstr-shell-takeover' });
+    };
+    const failed = (): void => {
+      if (disposed || registration !== registered || registered.active || registered.waiting)
+        return;
+      registration = undefined;
+      unwatch();
+      unwatch = () => {};
+      retryLater();
+    };
+    const changed = (): void => {
+      if (disposed || registration !== registered) return;
+      offer();
+      if (installing?.state === 'installed' || installing?.state === 'activated') failures = 0;
+      if (installing?.state === 'activated') controller ??= registered.active;
+      if (
+        installing?.state === 'redundant' &&
+        (!registered.installing || registered.installing === installing)
+      )
+        failed();
+    };
+    const updated = (): void => {
+      installing?.removeEventListener('statechange', changed);
+      installing = registered.installing;
+      installing?.addEventListener('statechange', changed);
+      changed();
+    };
+    registered.addEventListener('updatefound', updated);
+    unwatch = () => {
+      registered.removeEventListener('updatefound', updated);
+      installing?.removeEventListener('statechange', changed);
+    };
+    updated();
+    if (registered.active || registered.waiting) failures = 0;
+    else if (!registered.installing) failed();
+  };
+  const register = (): void => {
+    if (registration || registering || !active() || (!bootController && !ready.get())) return;
+    clearTimeout(retry);
+    retry = undefined;
+    registering = true;
+    void workers
+      .register('/sw.js', { scope: '/', updateViaCache: 'none' })
+      .then((registered) => {
+        if (disposed) return;
+        registration = registered;
+        // register() already checks the script: do not immediately download it again.
+        lastCheck = performance.now();
+        controller ??= registered.active;
+        watch(registered);
+      })
+      .catch(retryLater)
+      .finally(() => {
+        registering = false;
+      });
+  };
   const check = (): void => {
-    if (!registration || !visible() || performance.now() - lastCheck < CHECK_THROTTLE_MS) return;
+    if (
+      !registration ||
+      (!registration.active && !registration.waiting) ||
+      !active() ||
+      performance.now() - lastCheck < CHECK_THROTTLE_MS
+    )
+      return;
     lastCheck = performance.now();
     void registration.update().catch(() => {});
   };
   const resume = (): void => {
-    check();
+    if (!active()) {
+      clearTimeout(retry);
+      retry = undefined;
+      return;
+    }
+    if (registration) check();
+    else register();
     apply();
   };
   const activity = (event: Event): void => {
     if (event.type === 'pointermove' && !(event as PointerEvent).buttons) return;
     lastActivity = performance.now();
   };
-  for (const type of ['pointerdown', 'pointermove', 'keydown', 'input', 'wheel'])
-    window.addEventListener(type, activity, { capture: true, passive: true });
-  document.addEventListener('visibilitychange', resume);
-  window.addEventListener('focus', resume);
-  window.addEventListener('online', check);
+  const activities = ['pointerdown', 'pointermove', 'keydown', 'input', 'wheel'];
   const start = (): void => {
+    if (disposed) return;
+    paused = false;
     periodic ??= setInterval(resume, CHECK_INTERVAL_MS);
     resume();
   };
-  window.addEventListener('pageshow', start);
-  window.addEventListener('pagehide', () => {
+  const hide = (event: PageTransitionEvent): void => {
+    paused = true;
     clearInterval(periodic);
     clearTimeout(wake);
+    clearTimeout(retry);
     periodic = undefined;
-  });
-  workers.addEventListener('controllerchange', activated);
-  activated();
-  start();
-  const register = (): void => {
-    void workers
-      .register('/sw.js', { scope: '/', updateViaCache: 'none' })
-      .then((registered) => {
-        registration = registered;
-        // The first worker may leave this page uncontrolled until its next navigation.
-        controller ??= registered.active;
-        void workers.ready.then((ready) => {
-          controller ??= ready.active;
-        });
-        const offer = (): void => {
-          registered.waiting?.postMessage({ k: 'lkjstr-shell-takeover' });
-        };
-        registered.addEventListener('updatefound', () => {
-          registered.installing?.addEventListener('statechange', offer);
-        });
-        registered.installing?.addEventListener('statechange', offer);
-        offer();
-        check();
-      })
-      .catch(() => {});
+    retry = undefined;
+    if (event.persisted) return;
+    disposed = true;
+    disposeReady?.();
+    unwatch();
+    for (const type of activities) window.removeEventListener(type, activity, true);
+    document.removeEventListener('visibilitychange', resume);
+    window.removeEventListener('focus', resume);
+    window.removeEventListener('online', resume);
+    window.removeEventListener('pageshow', start);
+    window.removeEventListener('pagehide', hide);
+    workers.removeEventListener('controllerchange', activated);
   };
-  // Existing controlled clients must still discover updates if their old engine fails to boot.
-  if (bootController || ready.get()) register();
-  else {
-    const dispose = ready.subscribe((value) => {
+  for (const type of activities)
+    window.addEventListener(type, activity, { capture: true, passive: true });
+  document.addEventListener('visibilitychange', resume);
+  window.addEventListener('focus', resume);
+  window.addEventListener('online', resume);
+  window.addEventListener('pageshow', start);
+  window.addEventListener('pagehide', hide);
+  workers.addEventListener('controllerchange', activated);
+  // One unresolved ready observer per page, even across repeated registration failures.
+  void workers.ready.then((ready) => {
+    if (!disposed) controller ??= ready.active;
+  });
+  // Controlled clients can discover repair updates even if their old engine never becomes ready.
+  if (!bootController && !ready.get())
+    disposeReady = ready.subscribe((value) => {
       if (!value) return;
-      dispose();
-      window.removeEventListener('pagehide', abandoned);
+      disposeReady?.();
+      disposeReady = undefined;
       register();
     });
-    const abandoned = (event: PageTransitionEvent): void => {
-      if (!event.persisted) {
-        dispose();
-        window.removeEventListener('pagehide', abandoned);
-      }
-    };
-    window.addEventListener('pagehide', abandoned);
-  }
+  activated();
+  start();
 }
