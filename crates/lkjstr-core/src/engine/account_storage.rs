@@ -1,7 +1,7 @@
 //! Durable account authority: confirmed loads, checked revisions and no stale replay.
 use super::accounts::Accounts;
 
-pub const DATABASE_SCHEMA: u32 = 2;
+pub const DATABASE_SCHEMA: u32 = 3;
 pub const ACCOUNTS_KEY: &str = "engine-accounts";
 pub const REVISION_KEY: &str = "engine-accounts-cas-v2";
 

@@ -16,6 +16,9 @@ remain 16000/4000; the managed budget includes indexes, evidence and pending lea
 Real Worker warm-IDB testing passes 120/120 cases and all four paired timing gates against fixes-only. First-note DOM/rAF improves 16.8/14.2 ms
 for Home/Their Home; eight named rows improve 16.6/14.6 ms, with lower p95 in the same 30 alternating pairs/source. See the compact-store scope.
 
+[Durable GDSF](durable-cache.md) replaces timestamp pruning with bounded epochs, proof references, control recovery and schema-3 fencing.
+Signed authority survives retries; 20 fault checks, 52 reader assertions and all four warm-reload timing gates against b181f606 pass.
+
 ## Kind capabilities (2026-11-22)
 
 N1 centralizes kind policy and public ID/address access. Quotes carry their kind, optional previews and a one-line reference to their first quote.
@@ -101,7 +104,6 @@ Worker assets and verified offline shell; [engine-startup.md](engine-startup.md)
 comparison passed.
 
 ## Corrections to the handoff and older status
-
 Code wins over the handoff: pins have generic stored list data, but no dedicated engine discovery/projection/edit operation yet. Unavailable bookmark
 IDs are retained, but missing-note placeholder rows are not implemented. Person relay URLs and stored reaction/repost actors exist; their detail views
 still need Claude's design. These are not four equally complete engine surfaces. Own-note deletion, hashtag timelines, uploads, bunker signing, public
@@ -156,7 +158,6 @@ selection, bounded processing and aggregate deadlines preserve truthful outcomes
 [media-uploads.md](media-uploads.md).
 
 ## Mock answers not yet fully implemented
-
 These are concrete runtime limits, not permission to fake a successful answer.
 
 - Private lists: supported local/extension/bunker reads cover NIP-44 and older
@@ -175,7 +176,6 @@ These are concrete runtime limits, not permission to fake a successful answer.
   projection remain missing. Full inventory and new protocol families: parity.md.
 
 ## Verification and shipping
-
 Required gates are the root repo/native/WASM/verify commands and web check, build and smoke. Protocol conformance adds DM, vault and AUTH cases to the
 real Worker harness; native cases cover pure decisions and failure races. Public measurements retain UTC date, host load, selected relays and
 limitations. Earlier `541e4a1e` passed all required gates and 545 real interface checks. [interface-verification.md](interface-verification.md)

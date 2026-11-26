@@ -22,7 +22,7 @@ pub(super) fn begin(request: &IdbOpenDbRequest, old: f64) -> Result<Upgrade, JsV
         let events = db.create_object_store_with_optional_parameters("events", &options)?;
         events.create_index_with_str("created_at", "created_at")?;
         db.create_object_store("kv")?;
-    } else if old != 1.0 {
+    } else if old != 1.0 && old != 2.0 {
         return Err("unsupported database schema".into());
     }
     // Existing rows and indexes are never replaced, copied or cleared.
@@ -42,7 +42,11 @@ pub(super) fn begin(request: &IdbOpenDbRequest, old: f64) -> Result<Upgrade, JsV
                 .text()
                 .map_err(|_| JsValue::from_str("invalid revision value"))?;
             let initial = Revision::INITIAL.encoded();
-            let stamp = saved.as_deref().unwrap_or(&initial);
+            let stamp = match saved.as_deref() {
+                Some(stamp) => stamp,
+                None if old == 0.0 || old == 1.0 => &initial,
+                None => return Err("missing account revision".into()),
+            };
             account_storage::load(
                 raw.as_deref().map_or(Read::Absent, Read::Text),
                 Read::Text(stamp),

@@ -1,10 +1,10 @@
 use super::{Store, compact::CompactEvent, decode_id};
 use crate::optimizer::link::{LinkState, cost_ms};
-use lkjstr_protocol::{NostrEvent, is_addressable_kind, is_replaceable_kind};
+use lkjstr_protocol::{NostrEvent, is_addressable_kind};
 use std::collections::{BTreeMap, BTreeSet};
 
 pub(super) fn replaceable(kind: u64) -> bool {
-    is_replaceable_kind(kind) || is_addressable_kind(kind)
+    crate::optimizer::retention::replaceable(kind)
 }
 
 pub(super) fn identifier(event: &NostrEvent) -> Option<&str> {
@@ -16,13 +16,6 @@ pub(super) fn identifier(event: &NostrEvent) -> Option<&str> {
             .and_then(|tag| tag.get(1))
             .map_or("", String::as_str)
     })
-}
-
-struct Candidate {
-    pin: Option<&'static str>,
-    score: u64,
-    replaceable: bool,
-    id: String,
 }
 
 impl Store {
@@ -51,6 +44,50 @@ impl Store {
         }
     }
 
+    pub(crate) fn durable_access(
+        &self,
+        minute: u64,
+        own: BTreeSet<String>,
+        mut held: BTreeSet<String>,
+        weights: &BTreeMap<String, u64>,
+        first_ms: &BTreeMap<String, u64>,
+        link: LinkState,
+    ) -> crate::cache::durable::Access {
+        use crate::cache::durable::{Access, Observation};
+        held.extend(self.context_pins.iter().cloned());
+        let mut access = Access {
+            minute,
+            own,
+            held,
+            ..Default::default()
+        };
+        for event in self.events.values() {
+            let id = event.id_hex();
+            let author = event.pubkey_hex();
+            let weight = weights.get(&id).copied().unwrap_or(1);
+            let first = self
+                .seen_on
+                .get(event.id())
+                .into_iter()
+                .flatten()
+                .filter_map(|url| url.as_str().and_then(|url| first_ms.get(url)).copied())
+                .min()
+                .unwrap_or(1500);
+            let observation = Observation {
+                minute: self.access.get(event.id()).minute,
+                weight,
+                refetch: first + cost_ms(link, event.wire_bytes as u64, 0, 0, 0),
+            };
+            access
+                .authors
+                .entry(author)
+                .and_modify(|old| *old = (*old).max(weight))
+                .or_insert(weight);
+            access.events.insert(id, observation);
+        }
+        access
+    }
+
     pub fn ghost_hits(&self) -> u64 {
         self.ghost_hits
     }
@@ -71,99 +108,40 @@ impl Store {
         first_ms: &BTreeMap<String, u64>,
         link: LinkState,
     ) {
-        if !self.retention_needed() {
+        if self.pressure.is_none() && !self.retention_needed() {
             return;
         }
         if !self.weighted {
             self.evict();
             return;
         }
-        self.compact.reap();
-        let deletion_pins = self.deletion_pins();
-        let mut candidates: Vec<_> = self
-            .events
-            .values()
-            .map(|event| {
-                let bytes = event.resident_bytes()
-                    + 3 * std::mem::size_of::<super::Id>()
-                    + 8 * std::mem::size_of::<usize>()
-                    + event.tag_values("p").count() * 6 * std::mem::size_of::<usize>()
-                    + event.tag_values("e").chain(event.tag_values("q")).count()
-                        * std::mem::size_of::<super::Lease>();
-                let pin = self.pin(event, own, held, &deletion_pins);
-                let weight = weights.get(&event.id_hex()).copied().unwrap_or(1);
-                let first = self
-                    .seen_on
-                    .get(event.id())
-                    .into_iter()
-                    .flatten()
-                    .filter_map(|url| url.as_str().and_then(|url| first_ms.get(url)).copied())
-                    .min()
-                    .unwrap_or(1500);
-                let refetch = first + cost_ms(link, event.wire_bytes as u64, 0, 0, 0);
-                let stamp = self.access.get(event.id());
-                let minutes = (self.now_seconds / 60).saturating_sub(stamp.minute);
-                let score =
-                    self.keep
-                        .score(stamp.inflation, event.kind, weight, minutes, refetch, bytes);
-                Candidate {
-                    pin,
-                    score,
-                    replaceable: replaceable(event.kind),
-                    id: event.id_hex(),
-                }
-            })
-            .collect();
-        candidates.sort_unstable_by(|a, b| (a.score, &a.id).cmp(&(b.score, &b.id)));
-        let mut regular = self.events.len() - self.replaceable.len() - self.addressable.len();
-        let mut replaceable = self.replaceable.len() + self.addressable.len();
-        let target = |count, cap| if count > cap { cap * 95 / 100 } else { cap };
-        let reg_target = target(regular, self.cap);
-        let rep_target = target(replaceable, self.replaceable_cap);
-        let byte_target = target(self.managed_bytes(), self.byte_cap);
-        let mut last = None;
-        // Count pressure usually has ample byte headroom. It needs one accounting
-        // pass after removals, not a whole-store recount for every scored candidate.
-        for item in &candidates {
-            let (count, limit) = if item.replaceable {
-                (&mut replaceable, rep_target)
-            } else {
-                (&mut regular, reg_target)
-            };
-            if item.pin.is_none() && *count > limit {
-                self.evict_one(&item.id);
-                *count -= 1;
-                last = Some(last.unwrap_or(0_u64).max(item.score));
-            }
+        let mut epoch = self.pressure.take().unwrap_or_else(|| {
+            self.compact.reap();
+            self.pressure_start(weights, first_ms, link)
+        });
+        if epoch.scanning {
+            self.pressure_scan(&mut epoch);
         }
-        self.compact.reap();
-        let mut charged = self.managed_bytes();
-        for item in &candidates {
-            if charged <= byte_target {
-                break;
-            }
-            if item.pin.is_none() && self.lease(&item.id).is_some() {
-                self.evict_one(&item.id);
-                // Symbols are charged until this sweep actually releases them.
-                self.compact.reap();
-                charged = self.managed_bytes();
-                last = Some(last.unwrap_or(0_u64).max(item.score));
-            }
+        if !epoch.scanning {
+            self.pressure_apply(&mut epoch, own, held);
         }
-        if let Some(score) = last {
-            self.keep.advance(score);
+        if epoch.scanning || (!epoch.candidates.is_empty() && !epoch.target.satisfied(self.usage()))
+        {
+            self.pressure = Some(epoch);
+        } else {
+            self.compact.reap();
         }
+        self.refresh_pressure();
     }
 
-    fn pin(
+    pub(super) fn pin(
         &self,
         event: &CompactEvent,
         own: &BTreeSet<String>,
         held: &BTreeSet<String>,
         deletion_pins: &BTreeSet<String>,
     ) -> Option<&'static str> {
-        if own.contains(&event.pubkey_hex())
-            && matches!(event.kind, 0 | 3 | 10000 | 10002 | 10030 | 10063 | 30030)
+        if own.contains(&event.pubkey_hex()) && crate::optimizer::retention::own_policy(event.kind)
         {
             return Some("own");
         }

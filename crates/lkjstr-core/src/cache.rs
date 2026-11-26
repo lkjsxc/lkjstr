@@ -7,6 +7,8 @@ use sha2::{Digest, Sha256};
 
 #[path = "cache_context.rs"]
 pub mod context;
+#[path = "cache_durable.rs"]
+pub mod durable;
 #[path = "cache_metadata.rs"]
 mod metadata;
 #[path = "cache_validate.rs"]
@@ -15,8 +17,9 @@ pub use validate::{validate_metadata, validate_public_reference};
 #[path = "cache_zaps.rs"]
 pub mod zaps;
 pub use metadata::{
-    METADATA_BYTES, METADATA_EVENTS, METADATA_KEY, MetadataAccess, merge_metadata,
-    merge_metadata_with_access, metadata_rows,
+    METADATA_BYTES, METADATA_EVENTS, METADATA_KEY, MetadataAccess, MetadataCommit, Required,
+    merge_metadata, merge_metadata_with_access, metadata_inline, metadata_references,
+    metadata_rows, recover_metadata, resolve_metadata,
 };
 
 const RECEIPT: &str = "lkjstr-verified-1:";
@@ -58,7 +61,10 @@ impl Record {
         if self.id == event.id
             && self.created_at == event.created_at
             && self.kind == Some(event.kind)
-            && self.receipt.as_deref() == Some(receipt(&self.raw).as_str())
+            && self
+                .receipt
+                .as_deref()
+                .is_some_and(|stored| matches_receipt(&self.raw, stored))
         {
             Ok(Restored::Verified(event))
         } else {
@@ -77,4 +83,21 @@ fn receipt(raw: &str) -> String {
         "{RECEIPT}{}",
         lkjstr_protocol::bytes_to_hex(&Sha256::digest(raw.as_bytes()))
     )
+}
+
+// Compare the exact lowercase receipt encoding without allocating an expected String.
+fn matches_receipt(raw: &str, stored: &str) -> bool {
+    let Some(encoded) = stored
+        .strip_prefix(RECEIPT)
+        .filter(|value| value.len() == 64)
+    else {
+        return false;
+    };
+    const HEX: &[u8] = b"0123456789abcdef";
+    Sha256::digest(raw.as_bytes())
+        .iter()
+        .zip(encoded.as_bytes().as_chunks::<2>().0)
+        .all(|(byte, pair)| {
+            pair[0] == HEX[(byte >> 4) as usize] && pair[1] == HEX[(byte & 15) as usize]
+        })
 }

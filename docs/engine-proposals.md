@@ -197,3 +197,4 @@ Mock-only `EngineConfig.mock`: `slow` signs a note late and delays its answers, 
 - `Quote.nextId?` carries the first nested quote's ID for a single-line reference.
 
 Diagnostics add cacheManagedBytes and pendingPersistenceOverheadBytes to distinguish managed allocations from eventPayloadBytes.
+- Debug cache diagnostics add pressureScratchBytes for separately bounded resident GDSF epoch allocations.

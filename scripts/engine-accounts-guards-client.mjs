@@ -116,7 +116,7 @@ export async function accountsGuardsClient(context, origin) {
         check('successful handshake omits account error', e.accountReadyClean === e.ready);
         check('fresh account creation succeeds', (await action(e, { a: 'account.add', how: 'create' })).ok === true); await healthy(e, check);
       } else if (/^v[12]-/.test(kind) || kind === 'shared-failure') {
-        const version = kind.startsWith('v1-') ? 1 : 2; await seed(version === 1 ? 'legacy' : 'current'); await close('seed');
+        const version = kind.startsWith('v1-') ? 1 : 3; await seed(version === 1 ? 'legacy' : 'current'); await close('seed');
         const key = kind.endsWith('revision') ? REVISION : ACCOUNT;
         if (kind !== 'v2-read-error') await kv(true, store => { store.put(kind.includes('malformed') ? '{invalid' : undefined, key); });
         const before = await snapshot(), e = await start('failed', 'current', kind === 'v2-read-error' ? 'read-error' : '', kind === 'shared-failure', kind !== 'shared-failure');
@@ -136,7 +136,7 @@ export async function accountsGuardsClient(context, origin) {
         const after = await snapshot(), observed = await audit(e);
         check('late upgrade aborts without adopting or changing rows', observed.upgrades === 1 && observed.successes === 0 && after.version === 1 && same(before, after) && (kind !== 'stopped-blocked' || e.ready === 0));
         const fresh = await start('fresh'); await until(() => fresh.ready && fresh.listed, 'owned fresh migration deadline');
-        const migrated = await snapshot(); check('fresh opener migrates and preserves all prior rows', migrated.version === 2 && same(before, migrated, [REVISION]) && fresh.accounts.some(a => a.author.pubkey === account));
+        const migrated = await snapshot(); check('fresh opener migrates and preserves all prior rows', migrated.version === 3 && same(before, migrated, [REVISION]) && fresh.accounts.some(a => a.author.pubkey === account));
         let denied = false; try { const old = await db(1); old.close(); } catch (error) { denied = error.message === 'VersionError'; }
         check('old explicit schema is fenced', denied); await healthy(e, check); await healthy(fresh, check);
       } else if (kind === 'stopped-success' || kind === 'timeout-success') {

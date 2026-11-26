@@ -99,7 +99,7 @@ fn exact_encoded_byte_and_event_budgets_bound_the_checkpoint() -> Result {
 #[test]
 fn malformed_oversized_or_newer_checkpoint_formats_are_not_silently_trusted() {
     assert!(metadata_rows(Some("{")).is_err());
-    assert!(metadata_rows(Some(r#"{"version":2,"rows":[]}"#)).is_err());
+    assert!(metadata_rows(Some(r#"{"version":3,"rows":[]}"#)).is_err());
     assert!(metadata_rows(Some(&" ".repeat(METADATA_BYTES + 1))).is_err());
 }
 

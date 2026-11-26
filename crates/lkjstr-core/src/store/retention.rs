@@ -23,7 +23,7 @@ impl Store {
         for target in tag_values(deletion, "e") {
             if self
                 .lease(&target)
-                .is_some_and(|e| e.pubkey_hex() != deletion.pubkey)
+                .is_some_and(|e| e.kind == 5 || e.pubkey_hex() != deletion.pubkey)
             {
                 continue;
             }

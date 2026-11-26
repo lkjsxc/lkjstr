@@ -101,7 +101,8 @@ fn deletion_of_deletion_and_late_original_keep_the_original_fence() {
     let mut second = event(9, 2, 5, 0);
     second.tags.push(vec!["e".into(), deletion.id.clone()]);
     store.insert_deferred(second, None);
-    assert!(store.get(&deletion.id).is_none());
+    // NIP-09 has no undo: the signed witness remains available across reload.
+    assert!(store.get(&deletion.id).is_some());
     assert_eq!(store.insert_deferred(target, None), Inserted::Deleted);
 }
 

@@ -52,12 +52,13 @@ Bounds, scorecards and deferred work are in
 
 ## Bounds and storage
 
-The schema-2 Worker database is lkjstr-wasm. Verified compact event bytes carry
+The schema-3 Worker database is lkjstr-wasm. Verified compact event bytes carry
 format-tagged receipts; older or mismatched rows still pass ordinary verification.
 Startup restores a bounded metadata/deletion checkpoint before the newest 2000
 event rows and before opening views. The checkpoint adds at most 4000 records
 and 4 MiB of encoded bytes, including duplicates of event-store bodies.
-Physical event pruning keeps the newest 20000 rows. Memory targets 16000 regular
+Shared [durable GDSF](durable-cache.md) bounds disk rows and recovers required proofs.
+Memory targets 16000 regular
 and 4000 replaceable events and 64 MiB of managed allocation using [weighted retention](orchestration-optimizer.md).
 The [compact resident store](compact-event-store.md) shares binary payloads with pending persistence.
 See [cache-bootstrap.md](cache-bootstrap.md) for storage and verification bounds.

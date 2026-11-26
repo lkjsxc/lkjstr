@@ -52,7 +52,9 @@ impl Store {
         author: Id,
         relay: Option<&str>,
     ) -> Inserted {
-        if self.was_deleted(&event.id, &event.pubkey) || self.address_deletions.covers(event) {
+        if event.kind != 5
+            && (self.was_deleted(&event.id, &event.pubkey) || self.address_was_deleted(event))
+        {
             self.apply_verified_deletion(&event.id);
             return Inserted::Deleted;
         }

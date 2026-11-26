@@ -102,7 +102,7 @@ impl Network {
 }
 
 pub(in crate::engine) fn publication_kind_is_public(kind: u64) -> bool {
-    crate::kinds::policy(kind).retained && !matches!(kind, 10050)
+    crate::optimizer::retention::public_kind(kind)
 }
 
 pub(super) fn public_filter(filter: &NostrFilter) -> bool {

@@ -26,7 +26,7 @@ impl Engine {
             self.outgoing.push(Output::Diagnostics {
                 sub: sub.into(),
                 data: serde_json::json!({
-                    "storedEvents": self.store.len(),"eventPayloadBytes":self.store.payload_bytes(),"verifyQueueBytes":self.queue_bytes, "verifyQueue": self.queue.len(),
+                    "storedEvents": self.store.len(),"pressureScratchBytes":self.store.pressure_scratch_bytes(),"eventPayloadBytes":self.store.payload_bytes(),"verifyQueueBytes":self.queue_bytes, "verifyQueue": self.queue.len(),
                     "verified": self.verified, "rejected": self.rejected, "dropped": self.dropped,
                     "metrics":self.metrics,"persistenceQueue":self.pending.len(),
                     "relays": self.network.stats(), "views": self.views.len()

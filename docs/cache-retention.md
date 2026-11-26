@@ -25,17 +25,19 @@ reuse only; they cannot grant signature verification or deletion authority.
 Each ordinary event/context transaction merges current visible metadata and account/read
 dependencies with the existing checkpoint. NIP-01 revision order and author-bound signed
 deletions precede reuse selection. Stale writers cannot replace newer metadata. Required
-deletion evidence and verified dependencies are never silently dropped: if they alone
-exceed the checkpoint budget, that transaction aborts and the prior checkpoint survives.
+deletion evidence and verified dependencies are never silently dropped. If their bodies
+exceed the inline budget, the transaction uses exact verified body references within the
+durable budget. A genuine total proof floor preserves committed authority and backpressures.
 
 The proof set keeps the newest sufficient signed witness per event target and possible
 deleting author, or valid author/address coordinate. Unknown targets can still name old
 disk rows, so they remain relevant. Empty or proven-foreign controls do not consume this
 proof set. Access hints cover retained metadata authors, not entire absent follow graphs.
 
-Startup still restores the checkpoint before the newest 2000 event rows and view opens.
-Physical event-row pruning remains the existing 20000-row policy until durable GDSF and
-page storage are implemented. This change does not claim unified durable event retention.
+Startup restores the complete checkpoint, including required references, before the
+newest 2000 event rows and view opens. [Durable GDSF](durable-cache.md) now uses the shared
+resident planner, bounded pressure epochs and transactional victim/inflation commits.
+Independent 20000-row timestamp pruning has been removed.
 
 ## Qualification
 

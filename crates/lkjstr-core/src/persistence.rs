@@ -6,13 +6,14 @@ use crate::store::{
 use lkjstr_protocol::NostrEvent;
 use std::collections::{HashMap, HashSet, VecDeque};
 
-/// At most 20,000 leases / 64 MiB conservatively attributed payload bytes,
+/// At most 20,000 leases / 64 MiB, with a 32-control / 4 MiB recovery reserve,
 /// plus one 500-pointer transaction batch. Required evidence is never displaced.
 #[derive(Default)]
 pub struct PendingEvents {
     events: VecDeque<Lease>,
     reserved: HashMap<crate::store::compact::Id, Lease>,
     policy: usize,
+    recovery_cursor: usize,
     bytes: usize,
     // Used only by standalone producers; Engine ingress shares the Store pool.
     pool: Pool,
@@ -20,6 +21,15 @@ pub struct PendingEvents {
 const CAP: usize = 20_000;
 const BATCH: usize = 500;
 const BYTES: usize = 64 * 1024 * 1024;
+const CONTROL_BYTES: usize = 4 * 1024 * 1024;
+const CONTROL_EVENTS: usize = 32;
+fn limits(kind: u64) -> (usize, usize) {
+    if kind == 5 {
+        (CAP + CONTROL_EVENTS, BYTES + CONTROL_BYTES)
+    } else {
+        (CAP, BYTES)
+    }
+}
 fn policy(kind: u64) -> bool {
     matches!(kind, 0 | 3 | 5 | 10000..=19999)
 }
@@ -48,13 +58,15 @@ impl PendingEvents {
     /// Backpressure before consuming verified ingress; failed storage cannot grow
     /// an unbounded queue or evict an older required policy/deletion witness.
     pub fn can_admit(&self, event: &NostrEvent) -> bool {
-        self.events.len() + self.reserved.len() < CAP
-            && self.bytes.saturating_add(admission_bytes(event)) <= BYTES
+        let (count, bytes) = limits(event.kind);
+        self.events.len() + self.reserved.len() < count
+            && self.bytes.saturating_add(admission_bytes(event)) <= bytes
     }
     pub fn push_lease(&mut self, event: Lease) -> bool {
         let charge = event.managed_bytes();
-        if self.events.len() + self.reserved.len() >= CAP
-            || self.bytes.saturating_add(charge) > BYTES
+        let (count, bytes) = limits(event.kind);
+        if self.events.len() + self.reserved.len() >= count
+            || self.bytes.saturating_add(charge) > bytes
         {
             return false;
         }
@@ -69,8 +81,9 @@ impl PendingEvents {
             return true;
         }
         let charge = event.managed_bytes();
-        if self.events.len() + self.reserved.len() >= CAP
-            || self.bytes.saturating_add(charge) > BYTES
+        let (count, bytes) = limits(event.kind);
+        if self.events.len() + self.reserved.len() >= count
+            || self.bytes.saturating_add(charge) > bytes
         {
             return false;
         }
@@ -98,6 +111,23 @@ impl PendingEvents {
     pub fn batch(&self) -> Vec<Lease> {
         self.events.iter().take(BATCH).cloned().collect()
     }
+    /// Scan a bounded rotating window so a compact superseding deletion can
+    /// release a true proof floor even when it sits behind a blocked FIFO batch.
+    pub fn recovery_batch(&mut self) -> Vec<Lease> {
+        let count = self.events.len();
+        if count == 0 {
+            return Vec::new();
+        }
+        for _ in 0..count.min(256) {
+            let index = self.recovery_cursor % count;
+            self.recovery_cursor = (index + 1) % count;
+            if let Some(event) = self.events.get(index).filter(|event| event.kind == 5) {
+                return vec![event.clone()];
+            }
+        }
+        Vec::new()
+    }
+
     pub(crate) fn discard_expired(&mut self, store: &Store) {
         self.events
             .retain(|event| !store.verified_expired(&event.id_hex()));

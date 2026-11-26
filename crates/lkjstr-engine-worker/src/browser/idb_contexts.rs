@@ -1,100 +1,82 @@
-//! Event rows, metadata fences and read contexts share one serialized transaction.
-use super::{idb, idb_commit, idb_events};
+//! Event bodies, required proofs, read contexts and retention generation commit together.
+use super::{idb, idb_commit, idb_metadata, idb_retention};
 use lkjstr_core::cache::{
     self, Record,
     context::{self, Context, Limits},
 };
-use std::{
-    cell::{Cell, RefCell},
-    rc::Rc,
-};
-use wasm_bindgen::{JsCast, JsValue, closure::Closure};
+use std::{cell::RefCell, rc::Rc};
+use wasm_bindgen::JsValue;
 use web_sys::IdbDatabase;
 
 pub async fn read(db: &IdbDatabase) -> Result<Vec<Context>, String> {
     let raw = idb::kv_get(db, context::CONTEXT_KEY).await?;
     context::read_contexts(raw.as_deref()).map_err(str::to_owned)
 }
-fn string(value: JsValue) -> Result<Option<String>, JsValue> {
-    if value.is_undefined() || value.is_null() {
-        return Ok(None);
-    }
-    value
-        .as_string()
-        .map(Some)
-        .ok_or_else(|| "Invalid public cache value".into())
-}
 pub async fn put(
     db: &IdbDatabase,
     rows: &[Record],
     contexts: &[Context],
     access: &cache::MetadataAccess,
+    durable: &cache::durable::Access,
 ) -> Result<Option<Vec<Context>>, String> {
-    if contexts.is_empty() && !rows.iter().any(|row| row.kind == Some(5)) {
-        return idb_events::put_with_access(db, rows, access)
-            .await
-            .map(|()| None);
-    }
-    let seed = lkjstr_protocol::bytes_to_hex(&super::random_bytes::<32>().map_err(str::to_owned)?);
     let metadata: Vec<_> = rows
         .iter()
         .filter(|row| row.is_checkpoint())
         .cloned()
         .collect();
-    let deletions: Vec<_> = rows
-        .iter()
-        .filter(|row| row.kind == Some(5))
-        .cloned()
-        .collect();
-    let metadata = Rc::new(metadata);
-    let deletions = Rc::new(deletions);
-    let contexts = Rc::new(contexts.to_vec());
-    let access = Rc::new(access.clone());
+    let needs_context = !contexts.is_empty() || rows.iter().any(|row| row.kind == Some(5));
+    let seed = if needs_context {
+        lkjstr_protocol::bytes_to_hex(&super::random_bytes::<32>().map_err(str::to_owned)?)
+    } else {
+        String::new()
+    };
+    let contexts = contexts.to_vec();
+    let access = access.clone();
+    let reads = Rc::new(RefCell::new(idb_metadata::Reads::default()));
     let output = Rc::new(RefCell::new(None));
-    let mut requests = Vec::new();
-    let mut handlers = Vec::new();
+    let writes = Rc::new(RefCell::new(Vec::new()));
     let result = idb_commit::commit_stores(db, &["events", "kv"], |tx| {
-        let events = tx.object_store("events")?;
-        for row in rows {
-            idb_events::write(&events, row)?;
-        }
+        writes
+            .borrow_mut()
+            .push(idb_retention::write(tx, rows, durable)?);
         let kv = tx.object_store("kv")?;
-        let metadata_request = kv.get(&cache::METADATA_KEY.into())?;
-        let context_request = kv.get(&context::CONTEXT_KEY.into())?;
-        let left = Rc::new(Cell::new(2_u8));
-        for request in [&metadata_request, &context_request] {
-            let metadata_request = metadata_request.clone();
-            let context_request = context_request.clone();
-            let metadata = metadata.clone();
-            let deletions = deletions.clone();
-            let contexts = contexts.clone();
-            let access = access.clone();
-            let kv = kv.clone();
-            let tx = tx.clone();
-            let left = left.clone();
-            let output = output.clone();
-            let seed = seed.clone();
-            let handler = Closure::<dyn FnMut(web_sys::Event)>::new(move |_| {
-                left.set(left.get().saturating_sub(1));
-                if left.get() != 0 {
-                    return;
+        let context_request = needs_context
+            .then(|| kv.get(&context::CONTEXT_KEY.into()))
+            .transpose()?;
+        let transaction = tx.clone();
+        let writes = writes.clone();
+        let durable = durable.clone();
+        let output = output.clone();
+        idb_metadata::load(
+            tx,
+            &reads,
+            Rc::new(move |previous, resolved| {
+                let merged =
+                    cache::recover_metadata(previous.as_deref(), &resolved, &metadata, &access)
+                        .map_err(|error| JsValue::from_str(&error.to_string()))?;
+                // A checkpoint-only legacy body may already have left the events store.
+                // Install every referenced body before publishing its reference.
+                if !merged.required.is_empty() {
+                    writes.borrow_mut().push(idb_retention::write(
+                        &transaction,
+                        &merged.required,
+                        &durable,
+                    )?);
                 }
-                let write = || -> Result<(), JsValue> {
-                    let old_metadata = metadata_request.result()?.as_string();
-                    let merged_metadata = cache::merge_metadata_with_access(
-                        old_metadata.as_deref(),
-                        &metadata,
-                        &access,
-                    )
-                    .map_err(|_| JsValue::from_str("Public metadata encoding failed"))?;
-                    let mut fences =
-                        cache::metadata_rows(Some(&merged_metadata)).map_err(JsValue::from_str)?;
-                    fences.retain(|row| row.kind == Some(5));
-                    fences.extend(deletions.iter().cloned());
-                    let old_contexts = string(context_request.result()?)
-                        .unwrap_or_else(|_| Some("invalid read context value".into()));
+                if previous.as_deref() != Some(merged.encoded.as_str()) {
+                    kv.put_with_key(&merged.encoded.as_str().into(), &cache::METADATA_KEY.into())?;
+                }
+                if let Some(request) = &context_request {
+                    let value = request.result()?;
+                    let old = value.as_string();
+                    let fences = cache::resolve_metadata(Some(&merged.encoded), &merged.required)
+                        .map_err(JsValue::from_str)?;
+                    let fences: Vec<_> = fences
+                        .into_iter()
+                        .filter(|row| row.kind == Some(5))
+                        .collect();
                     let merged = context::recover_contexts(
-                        old_contexts.as_deref(),
+                        old.as_deref(),
                         &contexts,
                         &fences,
                         &seed,
@@ -102,32 +84,16 @@ pub async fn put(
                     )
                     .map_err(JsValue::from_str)?;
                     let next = context::read_contexts(Some(&merged)).map_err(JsValue::from_str)?;
-                    if !metadata.is_empty() {
-                        kv.put_with_key(&merged_metadata.into(), &cache::METADATA_KEY.into())?;
-                    }
                     kv.put_with_key(&merged.into(), &context::CONTEXT_KEY.into())?;
                     *output.borrow_mut() = Some(next);
-                    Ok(())
-                };
-                if write().is_err() {
-                    let _ = tx.abort();
                 }
-            });
-            request.set_onsuccess(Some(handler.as_ref().unchecked_ref()));
-            requests.push(request.clone());
-            handlers.push(handler);
-        }
-        Ok(())
+                Ok(())
+            }),
+        )
     })
     .await;
-    for request in requests {
-        request.set_onsuccess(None);
-    }
-    drop(handlers);
+    drop(writes);
+    drop(reads);
     result?;
-    let next = output
-        .borrow_mut()
-        .take()
-        .ok_or("Read context commit did not complete")?;
-    Ok(Some(next))
+    Ok(output.borrow_mut().take())
 }

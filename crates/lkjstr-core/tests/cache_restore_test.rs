@@ -81,13 +81,24 @@ fn changed_compact_bytes_cannot_keep_the_old_verification_receipt() -> Result {
 #[test]
 fn mismatched_record_headers_and_unknown_receipts_use_verification() -> Result {
     let note = event(1, 100, "headers");
-    for change in 0..5 {
+    for change in 0..8 {
         let mut row = Record::verified(&note)?;
         match change {
             0 => row.id = "0".repeat(64),
             1 => row.created_at += 1,
             2 => row.kind = Some(0),
             3 => row.receipt = Some("lkjstr-verified-999:unknown".into()),
+            4 => {
+                let receipt = row.receipt.as_ref().expect("verified receipt");
+                let hex = receipt.rsplit(':').next().expect("digest").to_uppercase();
+                let changed = format!("lkjstr-verified-1:{hex}");
+                assert_ne!(&changed, receipt);
+                row.receipt = Some(changed);
+            }
+            5 => {
+                row.receipt.as_mut().expect("verified receipt").pop();
+            }
+            6 => row.receipt.as_mut().expect("verified receipt").push('0'),
             _ => row.receipt = None,
         }
         assert!(matches!(row.restore()?, Restored::Verify(_)));

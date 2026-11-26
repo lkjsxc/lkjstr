@@ -15,6 +15,7 @@ mod eviction_fences;
 mod expiration;
 mod identity;
 mod index;
+mod pressure;
 mod profile;
 mod query;
 mod retention;
@@ -100,6 +101,8 @@ pub struct Store {
     payload_bytes: usize,
     byte_cap: usize,
     persistence_overhead: usize,
+    pressure: Option<pressure::Epoch>,
+    pressure_blocked: bool,
 }
 
 impl Store {
@@ -149,6 +152,8 @@ impl Store {
             payload_bytes: 0,
             byte_cap: 64 * 1024 * 1024,
             persistence_overhead: 0,
+            pressure: None,
+            pressure_blocked: false,
         }
     }
 

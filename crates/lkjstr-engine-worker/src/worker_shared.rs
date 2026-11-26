@@ -113,6 +113,7 @@ pub fn start_shared() -> Result<SharedWorkerHandle, JsValue> {
         db: None,
         next_persist: 0,
         flushing: false,
+        retention_due: true,
         publication_persisted: 0,
         quality_persisted: 0,
         stopped: false,
@@ -181,7 +182,6 @@ fn attach(host: &Rc<RefCell<Host>>, port: web_sys::MessagePort) {
     });
     port.set_onmessage(Some(handler.as_ref().unchecked_ref()));
     port.start();
-
     host.borrow_mut().sessions.insert(id, RefCell::default());
     if let Sink::Shared { peers, .. } = &mut host.borrow_mut().scope {
         peers.insert(

@@ -1,7 +1,7 @@
 //! Bounded NIP-09 address cutoffs survive removal of the deleting event.
-use super::{Event, MAX_DELETED, Store, weighted::identifier};
+use super::{MAX_DELETED, Store, weighted::identifier};
 use lkjstr_nips::address::Coordinate;
-use lkjstr_protocol::{NostrEvent, compare_events_desc, tags::tag_values};
+use lkjstr_protocol::{NostrEvent, tags::tag_values};
 use std::collections::{BTreeMap, BTreeSet};
 
 type Address = (String, u64, String);
@@ -40,15 +40,6 @@ impl DeletionAddresses {
                 .get(&key(event))
                 .is_some_and(|cutoff| *cutoff >= event.created_at)
     }
-
-    pub fn holds(&self, deletion: &NostrEvent, address: &Coordinate) -> bool {
-        address.pubkey == deletion.pubkey
-            && self.cutoffs.contains_key(&(
-                address.pubkey.clone(),
-                address.kind.into(),
-                address.identifier.clone(),
-            ))
-    }
 }
 
 impl Store {
@@ -75,53 +66,87 @@ impl Store {
         }
     }
 
-    /// Keep one signed witness per held or fenced target. Redundant copies
-    /// cannot consume the entire retention floor.
+    /// Unknown targets still have possible author-bound authority after the
+    /// bounded tombstone indexes fill. Keep one sufficient witness per target.
     pub(super) fn deletion_pins(&self) -> BTreeSet<String> {
-        let mut witnesses: BTreeMap<(String, String, String), Event> = BTreeMap::new();
-        for event in self
-            .events
-            .values()
-            .filter(|event| event.kind == 5)
-            .map(|event| event.materialize())
-        {
-            for tag in &event.tags {
-                let [kind, target, ..] = tag.as_slice() else {
-                    continue;
-                };
-                let protected = match kind.as_str() {
-                    "e" => {
-                        self.lease(target)
-                            .is_some_and(|e| e.pubkey_hex() == event.pubkey)
-                            || self
-                                .evicted
-                                .get(target)
-                                .is_some_and(|fence| fence.author == event.pubkey)
-                            || self
-                                .deleted
-                                .contains(&(target.clone(), event.pubkey.clone()))
-                    }
-                    "a" => Coordinate::parse(target)
-                        .is_ok_and(|address| self.address_deletions.holds(&event, &address)),
-                    _ => false,
-                };
-                if protected {
-                    let current = witnesses
-                        .entry((kind.clone(), target.clone(), event.pubkey.clone()))
-                        .or_insert_with(|| event.clone());
-                    if compare_events_desc(&event, current).is_lt() {
-                        *current = event.clone();
+        let mut witnesses: BTreeMap<(String, String, String), &super::Lease> = BTreeMap::new();
+        for event in self.events.values().filter(|event| event.kind == 5) {
+            let author = event.pubkey_hex();
+            for kind in ["e", "a"] {
+                for target in event.tag_values(kind) {
+                    let key = match kind {
+                        "e" if lkjstr_protocol::is_event_id(&target)
+                            && self.lease(&target).is_none_or(|body| {
+                                body.kind != 5 && body.pubkey_hex() == author
+                            }) =>
+                        {
+                            target.into_owned()
+                        }
+                        "a" => {
+                            let Ok(address) = Coordinate::parse(&target) else {
+                                continue;
+                            };
+                            if address.pubkey != author {
+                                continue;
+                            }
+                            address.to_string()
+                        }
+                        _ => continue,
+                    };
+                    let witness = witnesses
+                        .entry((kind.into(), key, author.clone()))
+                        .or_insert(event);
+                    if event.order > witness.order {
+                        *witness = event;
                     }
                 }
             }
         }
         witnesses
             .into_values()
-            .map(|event| event.id.clone())
+            .map(|event| event.id_hex())
             .collect()
     }
 
+    pub(super) fn address_was_deleted(&self, event: &NostrEvent) -> bool {
+        if self.address_deletions.covers(event) {
+            return true;
+        }
+        if self.address_deletions.cutoffs.len() < MAX_DELETED
+            || !super::weighted::replaceable(event.kind)
+        {
+            return false;
+        }
+        let Some(author) = super::decode_id(&event.pubkey) else {
+            return false;
+        };
+        let coordinate = format!(
+            "{}:{}:{}",
+            event.kind,
+            event.pubkey,
+            identifier(event).unwrap_or("")
+        );
+        self.by_author
+            .get(&author)
+            .into_iter()
+            .flatten()
+            .any(|ordered| {
+                let deletion = &ordered.0;
+                deletion.kind == 5
+                    && deletion.order.0 >= event.created_at
+                    && deletion.tag_values("a").any(|raw| {
+                        Coordinate::parse(&raw).is_ok_and(|address| {
+                            address.pubkey == event.pubkey && address.to_string() == coordinate
+                        })
+                    })
+            })
+    }
+
     pub(super) fn apply_verified_deletion(&mut self, id: &str) {
+        // NIP-09 deletion of a deletion request has no effect.
+        if self.lease(id).is_some_and(|event| event.kind == 5) {
+            return;
+        }
         self.confirm_verified_deletion(id);
         self.resolve_eviction(id, false);
         self.remove(id);

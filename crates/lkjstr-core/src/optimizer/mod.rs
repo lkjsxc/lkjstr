@@ -3,6 +3,7 @@ pub mod features;
 pub mod keep_policy;
 pub mod link;
 pub mod plan_policy;
+pub mod retention;
 mod rng;
 
 use features::{Features, Route};

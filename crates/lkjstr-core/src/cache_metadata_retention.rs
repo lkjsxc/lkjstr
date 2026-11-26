@@ -1,6 +1,10 @@
 //! Metadata uses the resident GDSF scorer; access hints never grant verification.
+use super::reference::{self, MetadataCommit, Required};
 use super::{Checkpoint, METADATA_BYTES, METADATA_EVENTS, Record};
-use crate::optimizer::keep_policy::KeepScorer;
+use crate::optimizer::{
+    keep_policy::KeepScorer,
+    retention::{Candidate, Candidates},
+};
 use lkjstr_protocol::NostrEvent;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
@@ -34,7 +38,8 @@ pub(super) fn select(
     access: &MetadataAccess,
     inflation: u64,
     witnesses: BTreeSet<String>,
-) -> Result<String, serde_json::Error> {
+    recover: bool,
+) -> Result<MetadataCommit, serde_json::Error> {
     let mut scorer = KeepScorer::default();
     scorer.advance(inflation);
     let mut cost = Vec::with_capacity(entries.len());
@@ -67,21 +72,87 @@ pub(super) fn select(
         rows: vec![],
         access: vec![],
         inflation: u64::MAX,
+        required: vec![],
     })?
     .len();
-    let mut count = entries.len();
-    let mut bytes = envelope + cost.iter().sum::<usize>() + count.saturating_sub(1) * 2;
-    let mut order: Vec<_> = (0..entries.len()).collect();
-    order.sort_unstable_by(|a, b| {
-        (scores[*a], &entries[*a].event.id).cmp(&(scores[*b], &entries[*b].event.id))
-    });
-    let mut kept = vec![true; count];
-    for index in order {
-        if count <= METADATA_EVENTS && bytes <= METADATA_BYTES {
+    let protected = |entry: &Entry| {
+        witnesses.contains(&entry.event.id) || access.pinned.contains(&entry.event.id)
+    };
+    let floor: Vec<_> = entries
+        .iter()
+        .enumerate()
+        .filter(|(_, entry)| protected(entry))
+        .map(|(i, _)| i)
+        .collect();
+    let floor_bytes = floor.iter().map(|i| cost[*i] + 2).sum::<usize>();
+    let overflow =
+        recover && (floor.len() > METADATA_EVENTS || floor_bytes + envelope > METADATA_BYTES);
+    if recover
+        && (floor.len() > reference::REQUIRED_EVENTS
+            || floor
+                .iter()
+                .map(|i| crate::cache::durable::charge(&entries[*i].row))
+                .sum::<usize>()
+                > reference::REQUIRED_BYTES)
+    {
+        return Err(reference::error("required evidence exceeds durable budget"));
+    }
+    let mut required = Vec::new();
+    let mut references = Vec::new();
+    let mut referenced = vec![false; entries.len()];
+    if overflow {
+        for index in floor {
+            let row = &entries[index].row;
+            let receipt = row
+                .receipt
+                .clone()
+                .ok_or_else(|| reference::error("required receipt missing"))?;
+            references.push(Required {
+                id: row.id.clone(),
+                receipt,
+            });
+            required.push(row.clone());
+            referenced[index] = true;
+        }
+    }
+    let reference_bytes = if references.is_empty() {
+        0
+    } else {
+        serde_json::to_string(&references)?.len() + 12
+    };
+    let mut count = entries.len() - references.len();
+    let mut bytes = envelope
+        + reference_bytes
+        + cost
+            .iter()
+            .enumerate()
+            .filter(|(index, _)| !referenced[*index])
+            .map(|(_, bytes)| bytes)
+            .sum::<usize>()
+        + count.saturating_sub(1) * 2;
+    let mut order = Candidates::default();
+    for (index, entry) in entries.iter().enumerate() {
+        if !referenced[index] {
+            order.push(Candidate {
+                score: scores[index],
+                id: entry.event.id.clone(),
+                replaceable: true,
+                generation: index as u64,
+                bytes: cost[index],
+            });
+        }
+    }
+    let mut kept = referenced.iter().map(|value| !value).collect::<Vec<_>>();
+    while let Some(candidate) = order.pop() {
+        let index = candidate.generation as usize;
+        if count <= METADATA_EVENTS
+            && count + references.len() <= reference::REQUIRED_EVENTS
+            && bytes <= METADATA_BYTES
+        {
             break;
         }
         let entry = &entries[index];
-        if witnesses.contains(&entry.event.id) || access.pinned.contains(&entry.event.id) {
+        if protected(entry) {
             continue;
         }
         bytes = bytes.saturating_sub(cost[index] + usize::from(count > 1) * 2);
@@ -89,7 +160,10 @@ pub(super) fn select(
         kept[index] = false;
         scorer.advance(scores[index]);
     }
-    if count > METADATA_EVENTS || bytes > METADATA_BYTES {
+    if count > METADATA_EVENTS
+        || count + references.len() > reference::REQUIRED_EVENTS
+        || bytes > METADATA_BYTES
+    {
         // Abort this cache transaction. Required evidence is never silently discarded
         // to admit optional data, and the previous valid checkpoint remains committed.
         return Err(serde_json::Error::io(std::io::Error::other(
@@ -103,7 +177,8 @@ pub(super) fn select(
         .collect();
     selected.sort_by_key(|entry| std::cmp::Reverse(entry.order));
     let mut checkpoint = Checkpoint {
-        version: 1,
+        version: if references.is_empty() { 1 } else { 2 },
+        required: references,
         rows: Vec::with_capacity(selected.len()),
         access: Vec::with_capacity(selected.len()),
         inflation: scorer.inflation(),
@@ -112,5 +187,9 @@ pub(super) fn select(
         checkpoint.rows.push(entry.row);
         checkpoint.access.push(entry.stamp);
     }
-    serde_json::to_string(&checkpoint)
+    let encoded = serde_json::to_string(&checkpoint)?;
+    if encoded.len() > METADATA_BYTES {
+        return Err(reference::error("metadata reference budget exceeded"));
+    }
+    Ok(MetadataCommit { encoded, required })
 }

@@ -39,11 +39,6 @@ pub(super) fn load(host: &Rc<RefCell<Host>>) {
             db.close();
             return;
         }
-        let metadata = crate::browser::idb_public::metadata(&db, &signal).await;
-        if signal.aborted() {
-            db.close();
-            return;
-        }
         let contexts = idb::read_contexts(&db).await;
         if signal.aborted() {
             db.close();
@@ -58,6 +53,22 @@ pub(super) fn load(host: &Rc<RefCell<Host>>) {
             (Ok(rows), Ok(count)) => count as usize <= rows.len(),
             _ => false,
         };
+        // Capture bodies first, then read authority at least as new as that snapshot.
+        // Restore order below remains proofs, contexts, bodies.
+        let metadata = crate::browser::idb_public::metadata(&db, &signal).await;
+        if signal.aborted() {
+            db.close();
+            return;
+        }
+        // An unresolved signed proof cannot be treated as an empty cache.
+        // Keep all body/context restoration and ingress behind the boot boundary.
+        if metadata.is_err() {
+            db.close();
+            if let Some(host) = weak.upgrade() {
+                account_failure::fail(&mut host.borrow_mut());
+            }
+            return;
+        }
         let loaded = match idb_accounts::run(&db, Change::Load, &signal).await {
             Ok(Reply::Loaded(value)) => value,
             _ => {

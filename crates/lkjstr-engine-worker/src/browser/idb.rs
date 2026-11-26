@@ -13,6 +13,7 @@ pub use super::idb_commit::kv_commit;
 pub use super::idb_contexts::{put as put_read_contexts, read as read_contexts};
 pub use super::idb_events::metadata;
 pub use super::idb_open::open;
+pub use super::idb_retention::run as retain;
 
 type Step = Closure<dyn FnMut(web_sys::Event)>;
 
@@ -65,6 +66,14 @@ pub async fn kv_put(db: &IdbDatabase, key: &str, value: &str) -> Result<(), Stri
 
 /// Bounded stored records, newest first; old rows carry no trusted receipt.
 pub async fn newest_events(db: &IdbDatabase, limit: usize) -> Result<Vec<Record>, String> {
+    if let Some(rows) = super::idb_events::newest(db, limit).await? {
+        return Ok(rows);
+    }
+    newest_cursor(db, limit).await
+}
+
+// Capability and malformed-row fallback retains the exact valid-row cursor limit.
+async fn newest_cursor(db: &IdbDatabase, limit: usize) -> Result<Vec<Record>, String> {
     let tx = db.transaction_with_str("events").map_err(err)?;
     let index = tx
         .object_store("events")
@@ -110,48 +119,8 @@ pub async fn newest_events(db: &IdbDatabase, limit: usize) -> Result<Vec<Record>
     request.set_onsuccess(None);
     slot.borrow_mut().take();
     result.map_err(err)?;
-    let out = rows.borrow().clone();
+    let out = std::mem::take(&mut *rows.borrow_mut());
     Ok(out)
-}
-
-/// Deletes the `count` oldest event rows (by `created_at`).
-pub async fn delete_oldest(db: &IdbDatabase, count: u32) -> Result<(), String> {
-    let mut handler = None;
-    let mut cursor_request = None;
-    let result = super::idb_commit::commit(db, "events", |tx| {
-        let request = tx
-            .object_store("events")?
-            .index("created_at")?
-            .open_cursor()?;
-        let cursor = request.clone();
-        let tx = tx.clone();
-        let mut left = count;
-        let step = Step::new(move |_| {
-            let advance = || -> Result<(), JsValue> {
-                let value = cursor.result()?;
-                if value.is_null() || left == 0 {
-                    return Ok(());
-                }
-                let value: web_sys::IdbCursorWithValue = value.unchecked_into();
-                value.delete()?;
-                value.continue_()
-            };
-            if advance().is_err() {
-                let _ = tx.abort();
-            }
-            left = left.saturating_sub(1);
-        });
-        request.set_onsuccess(Some(step.as_ref().unchecked_ref()));
-        cursor_request = Some(request);
-        handler = Some(step);
-        Ok(())
-    })
-    .await;
-    if let Some(request) = cursor_request {
-        request.set_onsuccess(None);
-    }
-    drop(handler);
-    result
 }
 
 /// Total rows in the events store.

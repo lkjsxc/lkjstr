@@ -49,6 +49,7 @@ Engine (`crates/`):
 - [relay-orchestration-20261119.md](relay-orchestration-20261119.md): progressive reads, cache gaps, NIP-65 and bounded prefetch.
 - [architecture.md](architecture.md): crates, runtime, orchestration, storage.
 - [cache-retention.md](cache-retention.md): Home parity and weighted metadata checkpoints.
+- [durable-cache.md](durable-cache.md): shared durable GDSF epochs, proof recovery and bounds.
 - [compact-event-store.md](compact-event-store.md): binary resident payloads, leases and memory qualification.
 - [cache-bootstrap.md](cache-bootstrap.md): verified public restore, metadata checkpoints, bounds and proof.
 - [cache-repeat.md](cache-repeat.md): repeated public cache reads and measurement.

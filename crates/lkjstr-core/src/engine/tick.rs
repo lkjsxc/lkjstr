@@ -8,6 +8,26 @@ pub enum TickPhase {
     Render,
 }
 impl Engine {
+    fn pressure_control(&mut self) -> Option<usize> {
+        let count = self.queue.len();
+        if count == 0 {
+            return None;
+        }
+        let mut selected = None;
+        for _ in 0..count.min(256) {
+            let index = self.pressure_cursor % count;
+            self.pressure_cursor = (index + 1) % count;
+            if self
+                .queue
+                .get(index)
+                .is_some_and(|entry| entry.event.kind == 5 && self.pending.can_admit(&entry.event))
+            {
+                selected = Some(index);
+                break;
+            }
+        }
+        selected
+    }
     /// Called away from socket callbacks. At most 32 verifications per slice.
     pub fn tick(&mut self, now: u64) {
         self.tick_observed(now, |_| {});
@@ -17,20 +37,30 @@ impl Engine {
         let revision = self.store.revision();
         self.advance_visibility_clock(now);
         let was_verifying = self.network.verifying;
-        for _ in 0..VERIFY_SLICE_LIMIT {
-            if self
-                .queue
-                .front()
-                .is_some_and(|entry| !self.pending.can_admit(&entry.event))
-            {
-                break;
-            }
+        let pressured = self.store.pressure_admission_paused();
+        for attempt in 0..VERIFY_SLICE_LIMIT {
+            let blocked = pressured
+                || self
+                    .queue
+                    .front()
+                    .is_some_and(|entry| !self.pending.can_admit(&entry.event));
+            let index = if blocked {
+                if attempt != 0 {
+                    break;
+                }
+                let Some(index) = self.pressure_control() else {
+                    break;
+                };
+                index
+            } else {
+                0
+            };
             let Some(ingest::QueuedEvent {
                 relay,
                 event: e,
                 wire,
                 sequence,
-            }) = self.queue.pop_front()
+            }) = self.queue.remove(index)
             else {
                 break;
             };
@@ -136,3 +166,7 @@ impl Engine {
         }
     }
 }
+
+#[cfg(test)]
+#[path = "pressure_recovery_test.rs"]
+mod tests;

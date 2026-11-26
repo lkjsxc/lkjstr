@@ -1,7 +1,7 @@
 //! Projection stamps and score generations, removed with the held event.
 use std::collections::HashMap;
 
-#[derive(Default)]
+#[derive(Clone, Default)]
 pub(super) struct Access {
     // One stamp for each retained event, capped by the event store itself.
     stamps: HashMap<super::Id, Stamp>,

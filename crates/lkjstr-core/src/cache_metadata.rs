@@ -1,4 +1,4 @@
-//! A bounded metadata checkpoint survives timestamp-based event pruning.
+//! A bounded metadata checkpoint retains verified evidence before event replay.
 //! Verified replacement/deletion rules precede shared GDSF reuse selection.
 use super::{Record, Restored};
 use serde::{Deserialize, Serialize};
@@ -7,8 +7,13 @@ use std::collections::{HashMap, HashSet};
 mod retention;
 pub use retention::MetadataAccess;
 use retention::{Entry, Stamp};
+#[path = "cache_metadata_reference.rs"]
+mod reference;
 #[path = "cache_metadata_witness.rs"]
 mod witness;
+pub use reference::{
+    MetadataCommit, Required, references as metadata_references, resolve as resolve_metadata,
+};
 
 pub const METADATA_KEY: &str = "verified-public-metadata-v1";
 pub const METADATA_EVENTS: usize = 4000;
@@ -22,6 +27,8 @@ struct Checkpoint {
     access: Vec<Stamp>,
     #[serde(default)]
     inflation: u64,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    required: Vec<Required>,
 }
 
 fn checkpoint(raw: &str) -> Result<Checkpoint, &'static str> {
@@ -29,16 +36,26 @@ fn checkpoint(raw: &str) -> Result<Checkpoint, &'static str> {
         return Err("metadata cache exceeds byte budget");
     }
     let data: Checkpoint = serde_json::from_str(raw).map_err(|_| "invalid metadata cache")?;
-    if data.version != 1 || data.rows.len() > METADATA_EVENTS {
+    if !matches!(data.version, 1 | 2)
+        || data.rows.len() > METADATA_EVENTS
+        || data.required.len() + data.rows.len() > reference::REQUIRED_EVENTS
+        || (data.version == 1 && !data.required.is_empty())
+    {
         return Err("unsupported metadata cache");
     }
     Ok(data)
 }
 
+/// Parse the common inline checkpoint only once on ordinary warm startup.
+pub fn metadata_inline(raw: Option<&str>) -> Result<Option<Vec<Record>>, &'static str> {
+    let Some(data) = raw.map(checkpoint).transpose()? else {
+        return Ok(Some(Vec::new()));
+    };
+    Ok(data.required.is_empty().then_some(data.rows))
+}
+
 pub fn metadata_rows(raw: Option<&str>) -> Result<Vec<Record>, &'static str> {
-    raw.map(checkpoint)
-        .transpose()
-        .map(|data| data.map_or_else(Vec::new, |data| data.rows))
+    resolve_metadata(raw, &[])
 }
 
 pub fn merge_metadata(
@@ -53,8 +70,44 @@ pub fn merge_metadata_with_access(
     incoming: &[Record],
     access: &MetadataAccess,
 ) -> Result<String, serde_json::Error> {
-    // Unverified rows and corrupt checkpoints cannot become receipt authority.
-    let existing = previous.and_then(|raw| checkpoint(raw).ok());
+    let previous = previous.and_then(|raw| checkpoint(raw).ok());
+    if previous
+        .as_ref()
+        .is_some_and(|data| !data.required.is_empty())
+    {
+        return Err(reference::error(
+            "required metadata needs transactional resolution",
+        ));
+    }
+    merge(previous, incoming, access, false).map(|commit| commit.encoded)
+}
+
+/// Recovery never forgets a referenced proof. Resolution is from the same
+/// serialized event/checkpoint transaction, including any prior required body.
+pub fn recover_metadata(
+    previous: Option<&str>,
+    resolved: &[Record],
+    incoming: &[Record],
+    access: &MetadataAccess,
+) -> Result<MetadataCommit, serde_json::Error> {
+    let mut existing = previous
+        .map(checkpoint)
+        .transpose()
+        .map_err(reference::error)?;
+    if let Some(data) = &mut existing {
+        data.rows = resolve_metadata(previous, resolved).map_err(reference::error)?;
+        data.required.clear();
+    }
+    merge(existing, incoming, access, true)
+}
+
+fn merge(
+    existing: Option<Checkpoint>,
+    incoming: &[Record],
+    access: &MetadataAccess,
+    recover: bool,
+) -> Result<MetadataCommit, serde_json::Error> {
+    // Only exact receipt-bearing public rows can establish checkpoint authority.
     let inflation = existing.as_ref().map_or(0, |data| data.inflation);
     let stamps: HashMap<_, _> = existing
         .as_ref()
@@ -130,5 +183,5 @@ pub fn merge_metadata_with_access(
                 .filter(|entry| witnesses.contains(&entry.event.id)),
         )
         .collect();
-    retention::select(entries, access, inflation, witnesses)
+    retention::select(entries, access, inflation, witnesses, recover)
 }

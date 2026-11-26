@@ -85,7 +85,9 @@ impl Engine {
             return;
         }
         verified();
-        if !self.pending.can_admit(&event) {
+        if !self.pending.can_admit(&event)
+            || (self.store.pressure_admission_paused() && event.kind != 5)
+        {
             self.error(Some(req), "storage-write-failed");
             return;
         }

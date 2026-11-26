@@ -66,19 +66,24 @@ impl Store {
     /// Retained signed fences remain effective even when the ordinary tombstone
     /// index is full. A different author's deletion cannot suppress the event.
     pub fn was_deleted(&self, id: &str, author: &str) -> bool {
-        self.deleted.contains(&(id.to_owned(), author.to_owned()))
-            || self
-                .context_deleted
-                .contains(&(id.to_owned(), author.to_owned()))
-            || decode_id(id)
-                .and_then(|id| self.by_tag_e.get(&id))
-                .into_iter()
-                .flatten()
-                .any(|event| {
-                    event.kind == 5
-                        && event.pubkey_hex() == author
-                        && event.tag_values("e").any(|target| target == id)
-                })
+        // Empty evidence indexes need no owned lookup keys or identity decoding.
+        let deleted = (!self.deleted.is_empty()
+            && self.deleted.contains(&(id.to_owned(), author.to_owned())))
+            || (!self.context_deleted.is_empty()
+                && self
+                    .context_deleted
+                    .contains(&(id.to_owned(), author.to_owned())))
+            || (!self.by_tag_e.is_empty()
+                && decode_id(id)
+                    .and_then(|id| self.by_tag_e.get(&id))
+                    .into_iter()
+                    .flatten()
+                    .any(|event| {
+                        event.kind == 5
+                            && event.pubkey_hex() == author
+                            && event.tag_values("e").any(|target| target == id)
+                    }));
+        deleted && self.lease(id).is_none_or(|event| event.kind != 5)
     }
 }
 

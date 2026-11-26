@@ -39,7 +39,8 @@ A 500-event transaction batch clones handles, not bodies. Evicted payloads remai
 and charged until outstanding leases are released. Cache rows are encoded at the Worker
 transaction boundary; failures leave the pending leases available for retry.
 
-The queue is bounded by 20000 entries and 64 MiB of conservatively attributed payload.
+The ordinary queue is bounded by 20000 entries and 64 MiB of attributed payload.
+A separately bounded 32-deletion/4-MiB recovery reserve can release a protected floor.
 Verification pauses before consuming more ingress when capacity is unavailable. A
 new optional row cannot silently discard an older policy/deletion witness. Staged own
 notes reserve capacity before publication but enter a persistence batch only after a
@@ -73,9 +74,10 @@ Protected account policies, held rows and required evidence remain above utility
 The count caps remain 16000 regular and 4000 replaceable events. The managed allocation
 target remains 64 MiB. Required evidence and pending persistence can prevent immediate
 reclamation; their bytes are never reported as freed before their references disappear.
-Count pressure uses one accounting pass after the batch. True byte pressure rechecks
-allocation after each actual victim and symbol sweep. Incremental pressure epochs are
-still a subsequent performance slice.
+Count pressure uses one accounting pass after a batch. True byte pressure rechecks
+allocation after actual victims and symbol sweeps. Shared incremental pressure epochs
+bound candidate work and expose their separate scratch reservation; see
+[durable retention and recovery](durable-cache.md).
 
 ## Frozen native qualification
 
@@ -118,11 +120,8 @@ failed cohorts, exact artifacts and confidence intervals remain in the private h
 
 ## Remaining slices
 
-1. Unify durable GDSF with resident retention, bounded pressure epochs and required
-   evidence recovery. The current 20000-row disk pruning policy remains in place
-   until that coordinator is qualified.
-2. Introduce raw persistent columnar pages, a directory, integrity receipts and
+1. Introduce raw persistent columnar pages, a directory, integrity receipts and
    resumable migration. Qualify cold compression with raw fallback separately;
    preserve account/private/outbox and receipt/context transaction boundaries.
-3. Add a small local predictor in shadow mode, validate it against the heuristic and
+2. Add a small local predictor in shadow mode, validate it against the heuristic and
    shuffled controls, then qualify local prefetch and bounded reuse weights separately.

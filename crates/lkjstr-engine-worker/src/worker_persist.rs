@@ -8,7 +8,8 @@ pub(super) fn persist(host: &Rc<RefCell<Host>>) {
             || (h.engine.pending.is_empty()
                 && h.publication_persisted == h.engine.network.publication_revision
                 && h.quality_persisted == h.engine.network.quality_revision
-                && !h.engine.read_contexts.pending())
+                && !h.engine.read_contexts.pending()
+                && !h.retention_due)
             || now() < h.next_persist
         {
             return;
@@ -18,17 +19,32 @@ pub(super) fn persist(host: &Rc<RefCell<Host>>) {
         };
         h.flushing = true;
         h.next_persist = now() + 1500;
-        let batch = h.engine.pending.batch();
+        let batch = if h.retention_due {
+            h.engine.pending.recovery_batch()
+        } else {
+            h.engine.pending.batch()
+        };
         let mut rows = batch
             .iter()
             .filter_map(|e| lkjstr_core::cache::Record::verified(&e.to_nostr()).ok())
             .collect::<Vec<_>>();
-        let (access, metadata) = h.engine.cache_metadata_observation(h.time());
+        let contexts = h
+            .engine
+            .read_contexts
+            .batch(&h.engine.store, &h.engine.zaps.receipts);
+        // Clean startup maintenance needs no synchronous metadata or graph census.
+        let (access, metadata) =
+            if h.retention_due && batch.is_empty() && contexts.contexts.is_empty() {
+                (lkjstr_core::cache::MetadataAccess::default(), Vec::new())
+            } else {
+                h.engine.cache_metadata_observation(h.time())
+            };
         let mut ids: std::collections::BTreeSet<_> =
             rows.iter().map(|row| row.id.clone()).collect();
         rows.extend(
             metadata
                 .into_iter()
+                .filter(|_| !batch.is_empty() || !h.retention_due)
                 .filter(|row| ids.insert(row.id.clone())),
         );
         let routes = h.engine.network.publication_routes_json();
@@ -41,9 +57,7 @@ pub(super) fn persist(host: &Rc<RefCell<Host>>) {
             revision,
             h.engine.network.quality_json(h.time()),
             h.engine.network.quality_revision,
-            h.engine
-                .read_contexts
-                .batch(&h.engine.store, &h.engine.zaps.receipts),
+            contexts,
             access,
         )
     };
@@ -52,21 +66,36 @@ pub(super) fn persist(host: &Rc<RefCell<Host>>) {
         let begin = crate::measure::now();
         let result = match idb::kv_put(&work.0, "publication-routes-v1", &work.3).await {
             Ok(()) => match idb::kv_put(&work.0, "relay-quality-v1", &work.5).await {
-                Ok(()) => idb::put_read_contexts(&work.0, &work.1, &work.7.contexts, &work.8).await,
+                Ok(()) => {
+                    if work.1.is_empty() && work.7.contexts.is_empty() {
+                        Ok(None)
+                    } else {
+                        // Observe only actual cache writes, after the asynchronous IDB boundary.
+                        // This also captures newly opened windows before their bodies are scored.
+                        if let Some(durable) = observation(&weak, &Default::default()) {
+                            idb::put_read_contexts(
+                                &work.0,
+                                &work.1,
+                                &work.7.contexts,
+                                &work.8,
+                                &durable,
+                            )
+                            .await
+                        } else {
+                            Err("persistence stopped".into())
+                        }
+                    }
+                }
                 Err(error) => Err(error),
             },
             Err(error) => Err(error),
         };
-        // Event-row retention bound: keep the newest 20000 after a committed batch.
-        if result.is_ok()
-            && let Ok(count) = idb::count_events(&work.0).await
-            && count > 20000
-        {
-            let _ = idb::delete_oldest(&work.0, count - 20000).await;
-        }
+        let pin_host = weak.clone();
+        let retention = idb::retain(&work.0, move |authors| observation(&pin_host, authors)).await;
         if let Some(h) = weak.upgrade() {
             let mut h = h.borrow_mut();
             h.flushing = false;
+            h.retention_due = retention.unwrap_or(true) || result.is_err();
             h.sign_trace.span(sign_trace::Activity::Idb, begin);
             if let Ok(contexts) = result {
                 if h.engine.contexts_committed(&work.7, contexts).is_err() {
@@ -98,4 +127,13 @@ pub(super) fn persist(host: &Rc<RefCell<Host>>) {
             }
         }
     });
+}
+
+fn observation(
+    weak: &std::rc::Weak<RefCell<Host>>,
+    authors: &std::collections::BTreeSet<String>,
+) -> Option<lkjstr_core::cache::durable::Access> {
+    let host = weak.upgrade()?;
+    let h = host.borrow();
+    (!h.stopped).then(|| h.engine.durable_retention_for_authors(h.time(), authors))
 }

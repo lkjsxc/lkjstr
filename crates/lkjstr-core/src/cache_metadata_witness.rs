@@ -20,6 +20,7 @@ pub(super) fn select(
             };
             let target = match kind.as_str() {
                 "e" if is_event_id(target)
+                    && !fences.contains_key(target)
                     && known
                         .get(target)
                         .is_none_or(|author| author == &entry.event.pubkey) =>

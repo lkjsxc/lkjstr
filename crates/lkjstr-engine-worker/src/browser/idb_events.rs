@@ -1,11 +1,10 @@
 //! Verified public rows and their metadata checkpoint share one transaction.
-use super::{idb, idb_commit};
 use js_sys::{Object, Reflect};
 use lkjstr_core::cache::{self, Record};
-use wasm_bindgen::{JsCast, JsValue, closure::Closure};
-use web_sys::{IdbDatabase, IdbObjectStore};
+use wasm_bindgen::JsValue;
+use web_sys::IdbDatabase;
 
-pub(super) fn write(store: &IdbObjectStore, record: &Record) -> Result<(), JsValue> {
+pub(super) fn value(record: &Record) -> Result<Object, JsValue> {
     let row = Object::new();
     Reflect::set(&row, &"id".into(), &record.id.as_str().into())?;
     Reflect::set(
@@ -20,8 +19,7 @@ pub(super) fn write(store: &IdbObjectStore, record: &Record) -> Result<(), JsVal
     if let Some(receipt) = &record.receipt {
         Reflect::set(&row, &"receipt".into(), &receipt.as_str().into())?;
     }
-    store.put(&row)?;
-    Ok(())
+    Ok(row)
 }
 
 pub(super) fn read(row: JsValue) -> Option<Record> {
@@ -49,59 +47,59 @@ pub async fn put_with_access(
     rows: &[Record],
     access: &cache::MetadataAccess,
 ) -> Result<(), String> {
-    let metadata: Vec<_> = rows
-        .iter()
-        .filter(|row| row.is_checkpoint())
-        .cloned()
-        .collect();
-    let stores: &[&str] = if metadata.is_empty() {
-        &["events"]
-    } else {
-        &["events", "kv"]
-    };
-    let mut cursor = None;
-    let mut handler = None;
-    let result = idb_commit::commit_stores(db, stores, |tx| {
-        let events = tx.object_store("events")?;
-        for row in rows {
-            write(&events, row)?;
-        }
-        if metadata.is_empty() {
-            return Ok(());
-        }
-        let kv = tx.object_store("kv")?;
-        let request = kv.get(&cache::METADATA_KEY.into())?;
-        let current = request.clone();
-        let transaction = tx.clone();
-        let metadata = metadata.clone();
-        let access = access.clone();
-        let step = Closure::<dyn FnMut(web_sys::Event)>::new(move |_| {
-            let save = || -> Result<(), JsValue> {
-                let previous = current.result()?.as_string();
-                let merged =
-                    cache::merge_metadata_with_access(previous.as_deref(), &metadata, &access)
-                        .map_err(|_| JsValue::from_str("metadata cache encoding failed"))?;
-                kv.put_with_key(&merged.into(), &cache::METADATA_KEY.into())?;
-                Ok(())
-            };
-            if save().is_err() {
-                let _ = transaction.abort();
-            }
-        });
-        request.set_onsuccess(Some(step.as_ref().unchecked_ref()));
-        cursor = Some(request);
-        handler = Some(step);
-        Ok(())
-    })
-    .await;
-    if let Some(request) = cursor {
-        request.set_onsuccess(None);
-    }
-    drop(handler);
-    result
+    super::idb_contexts::put(db, rows, &[], access, &cache::durable::Access::default())
+        .await
+        .map(|_| ())
 }
 
 pub async fn metadata(db: &IdbDatabase) -> Result<Vec<Record>, String> {
-    let raw = idb::kv_get(db, cache::METADATA_KEY).await?;
-    cache::metadata_rows(raw.as_deref()).map_err(str::to_owned)
+    super::idb_metadata::read(db).await
+}
+
+/// Reverse bulk reads preserve the cursor's timestamp/primary-key order and cap.
+/// Unsupported option dictionaries and malformed rows use the existing cursor.
+pub(super) async fn newest(db: &IdbDatabase, limit: usize) -> Result<Option<Vec<Record>>, String> {
+    if limit == 0 {
+        return Ok(Some(Vec::new()));
+    }
+    let count = u32::try_from(limit).map_err(|_| "Invalid cache read limit")?;
+    let tx = db
+        .transaction_with_str("events")
+        .map_err(|_| "Cache read transaction failed")?;
+    let index = tx
+        .object_store("events")
+        .and_then(|store| store.index("created_at"))
+        .map_err(|_| "Cache read index missing")?;
+    // IndexedDB 3 getAll(queryOrOptions). Older engines reject the dictionary.
+    let options = Object::new();
+    Reflect::set(&options, &"count".into(), &count.into())
+        .and_then(|_| Reflect::set(&options, &"direction".into(), &"prev".into()))
+        .map_err(|_| "Cache read options failed")?;
+    let request = match index.get_all_with_key(&options) {
+        Ok(request) => request,
+        Err(error)
+            if Reflect::get(&error, &"name".into())
+                .ok()
+                .and_then(|name| name.as_string())
+                .is_some_and(|name| matches!(name.as_str(), "DataError" | "TypeError")) =>
+        {
+            return Ok(None);
+        }
+        Err(_) => return Err("Cache bulk request failed".into()),
+    };
+    let value = super::promise::bounded(
+        super::idb::settle(&request),
+        15,
+        "Local cache did not answer. Reload to try again.",
+        move || {
+            let _ = tx.abort();
+        },
+    )
+    .await
+    .map_err(|_| "Cache bulk read failed")?;
+    if !js_sys::Array::is_array(&value) {
+        return Err("Invalid cache bulk response".into());
+    }
+    // A malformed raw field must not silently consume one of the valid-row slots.
+    Ok(js_sys::Array::from(&value).iter().map(read).collect())
 }
