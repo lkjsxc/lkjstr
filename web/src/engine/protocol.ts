@@ -1201,7 +1201,10 @@ export type Timeline = {
     readonly offset: number;
     readonly count: number;
   }[];
-  /** The IANA zone `days` are in; the interface ignores them unless it is the page's own. */
+  /** Complete occupied local five-minute buckets for the densest named days, newest first.
+   * A local bucket can be split across UTC months. Entries are [start, month, first ordinal, count]. */
+  readonly clock?: readonly (readonly [Millis, Millis, number, number])[];
+  /** The IANA zone for days and clock; the interface uses them only in the page's own zone. */
   readonly zone?: string;
 };
 export type FromEngine =

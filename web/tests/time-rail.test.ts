@@ -166,7 +166,11 @@ it('draws a hover line and label for a fine pointer, and keeps marks still while
   expect(line.hidden).toBe(true);
   expect(label.hidden).toBe(true);
   const marks = x.el.querySelector<HTMLElement>('.time-marks')!;
+  const lens = x.el.querySelector('.time-lens')!;
+  expect(lens.children).toHaveLength(0);
   x.pointer(x.track, 'pointerdown', 20);
+  expect(lens.querySelector('.time-month')).not.toBeNull();
+  expect(label.hidden).toBe(false);
   const before = marks.innerHTML;
   const old = Date.UTC(2020, 0);
   x.rail.timeline({
@@ -179,6 +183,7 @@ it('draws a hover line and label for a fine pointer, and keeps marks still while
   expect(marks.innerHTML).toBe(before);
   x.pointer(x.track, 'pointerup', 20);
   expect(marks.innerHTML).not.toBe(before);
+  expect(lens.children).toHaveLength(0);
 });
 
 it('keeps the grip visible at rest, under a held finger and after the jump label fades', () => {

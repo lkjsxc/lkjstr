@@ -4,6 +4,7 @@
 //! Bound: the newest `MAX_DAYS` occupied days plus one part per month. Older notes have no day
 //! parts: a few old posts far below busy recent weeks keep the recent days named, and the rail
 //! marks the older months by their UTC month bands.
+use super::timeline_clock::Clock;
 use crate::calendar::Calendar;
 use serde_json::{Value, json};
 
@@ -18,6 +19,7 @@ pub(super) struct Days {
     parts: Vec<(u64, u64, usize, usize)>,
     occupied: usize,
     over: bool,
+    clock: Clock,
 }
 
 impl Days {
@@ -55,9 +57,11 @@ impl Days {
                 self.parts.push((day, month, offset, 1));
             }
         }
+        self.clock.count(self.occupied, calendar, at, month, offset);
     }
     /// The `days` and `zone` fields of a Timeline answer; past the bound, the newest days only.
-    pub(super) fn fields(&self, value: &mut Value) {
+    pub(super) fn fields(&mut self, value: &mut Value) {
+        self.clock.finish(value);
         value["zone"] = json!(self.zone);
         value["days"] = self
             .parts

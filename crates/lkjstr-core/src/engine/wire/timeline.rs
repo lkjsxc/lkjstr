@@ -127,13 +127,14 @@ impl Session {
         let horizon = self.history_horizon(sub, e);
         let month = month_start(now / 1000);
         let (zone, today) = (e.calendar.zone(), e.calendar.day_start(now));
-        if (index.done && (index.revision != revision || index.horizon != horizon))
+        let stale = (index.done && (index.revision != revision || index.horizon != horizon))
             || horizon > index.horizon
             || e.store.snapshot_revision() > index.revision
             || index.month != month
             || index.days.stale(&zone, today)
-            || (index.supported && !eligible(q, e))
-        {
+            || (index.supported && !eligible(q, e));
+        let counted = index.done && !stale;
+        if stale {
             *index = index.rebuild(Index {
                 revision,
                 horizon,
@@ -216,15 +217,8 @@ impl Session {
                 index.done = true;
             }
         }
-        if !index.done {
-            // A moved window still lands while the replacement builds: the prior answer, placed again.
-            let mut value = index.last.clone().filter(|v| v["supported"] == true)?;
-            self.window_fields(sub, &index.prior, e, &mut value);
-            if index.last.as_ref() == Some(&value) {
-                return None;
-            }
-            index.last = Some(value.clone());
-            return Some(value);
+        if counted || !index.done {
+            return index.update_window(self, sub, e, counted);
         }
         index.prior = Lookup::new();
         let months: Vec<_> = index
