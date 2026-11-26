@@ -17,10 +17,23 @@ export async function shellHandoff() {
       `
       ${client}
       const field = document.querySelector('textarea');
+      const register = ServiceWorkerContainer.prototype.register;
       const update = ServiceWorkerRegistration.prototype.update;
       window.fixtureChecks = 0;
+      window.fixtureRegisters = 0;
+      window.fixtureUpdates = 0;
+      window.fixtureRegistered = false;
+      ServiceWorkerContainer.prototype.register = function (...args) {
+        window.fixtureChecks++;
+        window.fixtureRegisters++;
+        return register.apply(this, args).then((registration) => {
+          window.fixtureRegistered = true;
+          return registration;
+        });
+      };
       ServiceWorkerRegistration.prototype.update = function () {
         window.fixtureChecks++;
+        window.fixtureUpdates++;
         return update.call(this);
       };
       window.fixtureVisible = true;
@@ -69,12 +82,22 @@ export async function shellHandoff() {
     const first = await context.newPage();
     await first.goto(origin);
     await waitFor(first, () => navigator.serviceWorker.ready.then(() => true));
-    await waitFor(first, () => window.fixtureChecks === 1);
+    await waitFor(first, () => window.fixtureChecks === 1 && window.fixtureRegistered);
+    assert.deepEqual(
+      await first.evaluate(() => [window.fixtureRegisters, window.fixtureUpdates]),
+      [1, 0],
+      'first installation checks through register without an immediate duplicate update',
+    );
     await first.locator('textarea').fill('Keep my unsent text');
     const reading = await context.newPage();
     await reading.clock.install();
     await reading.goto(origin);
-    await waitFor(reading, () => window.fixtureChecks === 1);
+    await waitFor(reading, () => window.fixtureChecks === 1 && window.fixtureRegistered);
+    assert.deepEqual(
+      await reading.evaluate(() => [window.fixtureRegisters, window.fixtureUpdates]),
+      [1, 0],
+      'a controlled page also starts with one registration check',
+    );
     await reading.evaluate(() => {
       document.dispatchEvent(new Event('visibilitychange'));
       window.dispatchEvent(new Event('focus'));
@@ -95,6 +118,11 @@ export async function shellHandoff() {
       document.dispatchEvent(new Event('visibilitychange'));
     });
     await waitFor(reading, () => window.fixtureChecks === 2);
+    assert.deepEqual(
+      await reading.evaluate(() => [window.fixtureRegisters, window.fixtureUpdates]),
+      [1, 1],
+      'resuming after the freshness interval performs one explicit update',
+    );
     await first.getByRole('status').filter({ hasText: 'A new version is ready.' }).waitFor();
     assert.equal(await reading.title(), 'shell a', 'a hidden client keeps its running document');
     assert.equal(await first.title(), 'shell a', 'a draft keeps its running document');
@@ -110,7 +138,7 @@ export async function shellHandoff() {
     });
     await reading.locator('html[data-ready="b"]').waitFor({ state: 'attached' });
     assert.equal(await reading.evaluate(() => sessionStorage.getItem('fixture-loads')), '2');
-    await waitFor(reading, () => window.fixtureChecks === 1);
+    await waitFor(reading, () => window.fixtureChecks === 1 && window.fixtureRegistered);
     await first.locator('textarea').clear();
     await first.locator('textarea').blur();
     await first.locator('html[data-ready="b"]').waitFor({ state: 'attached' });
