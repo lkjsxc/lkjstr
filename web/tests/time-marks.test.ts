@@ -49,7 +49,7 @@ it('keeps the two occurrences of the repeated local hour in a fall-back day', ()
   const daily = children(children(years));
   expect(daily).toHaveLength(1);
   const hours = children(daily);
-  expect(hours.map((h) => h.text)).toEqual(['01:00', '01:00']);
+  expect(hours.map((h) => h.text)).toEqual(['01:40', '01:40']);
   expect(hours[0]!.key - hours[1]!.key).toBe(H);
 });
 
@@ -64,6 +64,8 @@ it('recurses through a dense local day to hours, quarters and five-minute marks 
   expect(levels).toEqual(new Set(['year', 'month', 'day', 'hour', 'quarter', 'five']));
   expect(plan.labels.filter((l) => l.major).map((l) => l.text)).toEqual(['2026']);
   expect(plan.labels.filter((l) => l.level === 'five').every((l) => l.y < 760)).toBe(true);
+  const clockLabels = plan.labels.map((l) => l.text).filter((text) => /^\d\d:\d\d$/.test(text));
+  expect(clockLabels).toEqual([...new Set(clockLabels)].sort().reverse());
   for (let i = 1; i < plan.labels.length; i++)
     expect(plan.labels[i]!.centre - plan.labels[i - 1]!.centre).toBeGreaterThanOrEqual(14);
   for (let i = 1; i < plan.dots.length; i++) {

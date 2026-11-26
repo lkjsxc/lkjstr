@@ -63,7 +63,8 @@ inside its span. Empty spans use no room. The year is an 11px major label and th
 Finer labels are 9px and quieter. A smaller tick can show the next unit when the label cannot fit.
 
 - **Dates.** Year labels say `yyyy`, months say `mm/dd` of their newest day, days say `dd`, and clock labels
-  say `HH:mm`. Where only UTC month totals are known, the ruler shows the year and month dots.
+  say `HH:mm` of the newest occupied five-minute part in that span. Where only UTC month totals are known,
+  the ruler shows the year and month dots.
 - **Hover (fine pointer, any rail width).** A 1px `--sep` line crosses the rail at the pointer. Its label shows
   the full time if the note a press there would reach is loaded, or `yyyy/mm/dd` from the day counts when known.
   Leaving the rail removes both. The line stays with a held mouse.

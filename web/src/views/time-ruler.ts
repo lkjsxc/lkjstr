@@ -88,26 +88,19 @@ export function rulerSpans(
       const hour = date.getHours();
       const min = date.getMinutes();
       const quarter = min - (min % 15);
+      const text = clockText(hour, min);
       // Use the absolute instant as the key, preserving both occurrences of a repeated hour.
-      const hours = append(
-        daily.children,
-        'hour',
-        at - min * minute,
-        clockText(hour, 0),
-        band,
-        start,
-        notes,
-      );
+      const hours = append(daily.children, 'hour', at - min * minute, text, band, start, notes);
       const quarters = append(
         hours.children,
         'quarter',
         at - (min - quarter) * minute,
-        clockText(hour, quarter),
+        text,
         band,
         start,
         notes,
       );
-      append(quarters.children, 'five', at, clockText(hour, min), band, start, notes);
+      append(quarters.children, 'five', at, text, band, start, notes);
     }
   }
   for (const band of bands) {
