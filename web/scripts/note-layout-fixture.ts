@@ -132,19 +132,33 @@ const prepareWrapping = (): void => {
 const resize = (width: number): void => {
   view.style.width = `${width}px`;
 };
-const prepareThreshold = (withMedia: boolean): void => {
-  prepare(1, 720);
-  const row = rows[0];
-  if (!row) throw new Error('threshold fixture note');
-  rows = [
-    {
-      ...row,
-      segments: [{ k: 'text', text: Array.from({ length: 13 }, () => 'One line').join('\n') }],
-      media: withMedia
-        ? [{ type: 'image', url: 'https://fixture.invalid/image.png', w: 240, h: 160 }]
+const prepareBodies = (width: number): void => {
+  prepare(3, width, true);
+  view.style.height = '600px';
+  rows = rows.map((row, n) => ({
+    ...row,
+    replyTo: undefined,
+    segments: [
+      {
+        k: 'text',
+        text:
+          n === 0
+            ? 'Four photos from a walk.'
+            : n === 1
+              ? 'A short note.'
+              : Array.from({ length: 13 }, (_, i) => `Line ${i + 1} of a long note.`).join('\n'),
+      },
+    ],
+    media:
+      n === 0
+        ? Array.from({ length: 4 }, (_, i) => ({
+            type: 'image',
+            url: `/fold-image-${i}.svg?width=${width}`,
+            w: 280,
+            h: 480,
+          }))
         : [],
-    },
-  ];
+  }));
   draw();
 };
 const prepareMedia = (media: Media[]): void => {
@@ -178,7 +192,7 @@ Object.assign(globalThis, {
     boundary,
     prepareWrapping,
     resize,
-    prepareThreshold,
+    prepareBodies,
     prepareMedia,
     remountMedia,
     openMedia,

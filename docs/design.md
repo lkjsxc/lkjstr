@@ -153,9 +153,10 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
 - Above the header, in `--faint`: who reposted, or what is replied to.
 - Text, then media (one picture keeps its ratio up to the media height; two
   to four share a grid), then quoted notes as cards with their own text, media and
-  links. A further quote is a link line. Long notes fold by rendered height in
-  the tile, counting the reserved media size and revealing at least two lines'
-  worth. Media grids stay whole. Content warnings cover until pressed. A quoted
+  links. A further quote is a link line. One height limit covers the whole
+  rendered body, including reserved media boxes, quotes and link cards. The
+  limit is measured in note line heights. Show more opens the body in place.
+  Content warnings cover until pressed. A quoted
   note that cannot be shown is one quiet sentence in the same card.
 - Until it arrives, the short npub is muted at weight 500. The name that replaces it fades in once (0.24s, from
   0.35 opacity) in every tile drawing it then; later redraws and reduced motion draw it plainly. Each tile lays out
@@ -166,7 +167,7 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
   (88x88 below 440px of tile), cover, absent when unknown. Site is faint 12.5px;
   title 600, two lines; muted description two lines, omitted for two-line titles.
   One accessible link opens a browser tab with noopener; no players or frames.
-  Cards fold with long text. Covered notes fetch nothing until opened. Link
+  Cards count toward the note's height. Covered notes fetch nothing until opened. Link
   previews are on by default, off with data saver, and disclose the service.
 - A press on a picture opens the note's pictures as a new tab right after the one being read, in the same tile;
   Escape or the tab's × closes it and brings that tab back where it was. A picture handles like a map (owner,

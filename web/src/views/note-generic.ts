@@ -3,6 +3,7 @@ import type { GenericRef, GenericTagLine, NoteRow } from '../engine/protocol.ts'
 import { h } from '../shared/h.ts';
 import { type Key, t } from '../shared/i18n.ts';
 import { readNoteState, writeNoteState } from '../shared/note-state.ts';
+import { createNoteBody } from './note-fold.ts';
 import { how, segments } from './parts.ts';
 import type { ViewEnv } from './registry.ts';
 
@@ -90,16 +91,7 @@ export function genericBody(row: NoteRow, env: ViewEnv, allowFold: boolean): HTM
     { class: 'content generic-face' },
     face.alt ? h('div', { class: 'generic-alt' }, face.alt) : null,
     content
-      ? h(
-          'div',
-          {
-            class: 'content',
-            'data-fold': allowFold,
-            'data-unfolded': state.unfolded === true,
-            style: data ? '--fold:3' : null,
-          },
-          content,
-        )
+      ? createNoteBody(allowFold, state.unfolded === true, [content], data)
       : !face.alt
         ? h('div', { class: 'quiet' }, t('generic.empty'))
         : null,

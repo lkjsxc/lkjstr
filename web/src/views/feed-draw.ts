@@ -36,7 +36,7 @@ export function createRowList(
   dates: boolean | (() => boolean),
   part?: (p: ThreadPart) => HTMLElement,
 ): RowList {
-  const folds = createNoteFits(list);
+  const folds = createNoteFits(list, env.settings);
   let dated = typeof dates === 'function' ? dates() : dates;
   const nodes = new Map<string, { el: HTMLElement; sig: string; body?: string }>(); // bound: rows of the window plus day dividers
   let shown: readonly ListRow[] = [];

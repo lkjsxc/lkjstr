@@ -49,14 +49,10 @@ Seams worth knowing inside `src/views/`:
 - `thread.ts` is a thread tab's own part of `feed.ts`: `thread-plan.ts` arranges its rows (compact notes above,
   folds, the room of a missing note, grouped replies), `thread-parts.ts` draws what is not a note, the reply
   field is the composer under `:say`, and `note-thread.ts` is what a note in a thread draws differently.
-- `note.ts` draws a note, `note-media.ts` its pictures, `note-actions.ts`
-  its action row and menus, `held.ts` holds a like or repost back until its
-  Undo has lapsed.
-- `shared/media-source.ts` keeps embedded requests off special-use domains
-  and private or loopback IP literals. Public HTTP addresses load over HTTPS,
-  while their original links remain available. Failed requests stay unavailable
-  across tiles and remounts until the page reloads. Profile faces use the
-  author's picture or the local initial.
+- `note.ts` draws the note, `note-media.ts` reserves its media boxes, and `note-actions.ts` draws its actions and menus.
+  `held.ts` holds likes and reposts through Undo. `shared/media-source.ts` blocks special-use domains and private
+  or loopback IP literals. Public HTTP loads over HTTPS while original links stay available.
+  Failed requests stay unavailable across tiles and remounts until reload. A face uses the author's picture or local initial.
 - `account.ts` is the Accounts tab, `account-add.ts` the ways to sign in,
   `account-key.ts` owns protected backup and its folded raw-key part. Password
   forms are disposable; account-vault.ts routes unlock, account-idle.ts locks idle
@@ -186,8 +182,7 @@ and wire ID succession are diagnostic. Ownership attribution needs a causal witn
 
 ## Product boundary
 
-web/ is the only interface. The Rust Worker lives in
-crates/lkjstr-engine-worker; the root Cargo.toml is a virtual workspace.
+web/ is the only interface. The Rust Worker lives in crates/lkjstr-engine-worker, and Cargo.toml is a virtual workspace.
 Root pnpm build and quiet release gates build this frontend with that Worker.
 workspace.md describes historical layout behavior; design.md describes web/.
 

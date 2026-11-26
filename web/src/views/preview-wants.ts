@@ -16,6 +16,8 @@ export function createPreviewWants(
         const id = n.dataset.previews;
         if (!id || ids.has(id) || (n.matches('.note') && !n.querySelector('.content'))) continue;
         const rect = n.getBoundingClientRect();
+        const fold = n.closest('.content.folded');
+        if (fold && rect.top >= fold.getBoundingClientRect().bottom) continue;
         if (rect.height > 0 && rect.bottom >= bounds.top - 400 && rect.top <= bounds.bottom + 400)
           ids.add(id);
         if (ids.size === 32) break;

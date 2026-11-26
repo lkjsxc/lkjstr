@@ -9,6 +9,7 @@ import { join, resolve } from 'node:path';
 import { build } from 'esbuild';
 import { chromium } from 'playwright-core';
 import { browserTmp } from './browser-tmp.ts';
+import { checkNoteBodies } from './smoke-note-bodies.mjs';
 
 const root = resolve(new URL('../..', import.meta.url).pathname);
 const option = (key, fallback) =>
@@ -152,7 +153,7 @@ try {
   await page.locator('.fold').waitFor();
   const narrow = await page.locator('.fold').count();
   const shownLines = await page
-    .locator('.text')
+    .locator('.content[data-fold]')
     .evaluate(
       (el) =>
         el.getBoundingClientRect().height / Number.parseFloat(getComputedStyle(el).lineHeight),
@@ -169,12 +170,7 @@ try {
     shownLines,
     unfolded: await page.locator('.text.open').count(),
   };
-  await page.evaluate(() => globalThis.noteLayout.prepareThreshold(false));
-  const oneExtraLine = await page.locator('.fold').count();
-  await page.evaluate(() => globalThis.noteLayout.prepareThreshold(true));
-  const reservedMedia =
-    (await page.locator('.fold').count()) === 1 && (await page.locator('.mbox').isVisible());
-  report.threshold = { oneExtraLine, reservedMedia };
+  report.bodies = await checkNoteBodies(page);
   report.mediaRequests = await verifyMediaRequests(page, context);
   await cdp.detach();
   await context.close();
@@ -184,8 +180,6 @@ try {
     narrow === 1 &&
     Math.abs(shownLines - 12) < 0.05 &&
     report.wrapping.unfolded === 1 &&
-    oneExtraLine === 0 &&
-    reservedMedia &&
     report.boundaries.every(
       (x) =>
         x.before.scrollHeight > x.before.viewportHeight &&
@@ -218,6 +212,7 @@ try {
       JSON.stringify({
         directory,
         failure: report.failure,
+        bodies: report.bodies,
         boundaries: report.boundaries,
         cases: report.cases.map(
           ({ mode, width, layoutCount, folds, notes, unchangedLayoutCount }) => ({

@@ -8,7 +8,7 @@ import { readNoteState } from '../shared/note-state.ts';
 import { patchActContext } from './act-context.ts';
 import { linkCards } from './link-cards.ts';
 import { actionRow, reactionChips } from './note-actions.ts';
-import { fitNote } from './note-fold.ts';
+import { createNoteBody, fitNote } from './note-fold.ts';
 import { genericBody } from './note-generic.ts';
 import { hiddenRow, shownLine, warned } from './note-hidden.ts';
 import { mediaGrid } from './note-media.ts';
@@ -128,16 +128,14 @@ export function renderNote(
     row.cw !== undefined && !env.settings.get().showSensitive && !state.warning && !look?.compact;
   const makeContent = (): HTMLElement => {
     const { unfolded } = readNoteState(env.instance, row.id);
-    return h(
-      'div',
-      { class: 'content', 'data-fold': allowFold, 'data-unfolded': unfolded === true },
+    return createNoteBody(allowFold, unfolded === true, [
       row.segments.length
         ? h('div', { class: unfolded ? 'text open' : 'text' }, segments(row.segments, env))
         : null,
       mediaGrid(row.media, env, plainName(row.author), row.id),
       row.quotes.map((q) => quoteCard(q, env, row.id)),
       env.settings.get().linkPreviews ? linkCards(row.previews) : null,
-    );
+    ]);
   };
   const warningChanged = (open: boolean): void => {
     if (open) fitNote(el);

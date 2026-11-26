@@ -13,7 +13,7 @@ export const DEFAULT_SETTINGS = {
   textSize: 15, // px, note text
   avatarSize: 36, // px, avatars in lists
   mediaHeight: 320, // px, the tallest a picture is drawn in a list
-  foldLines: 12, // lines of a note shown before it folds (0 = never fold)
+  foldLines: 12, // note line heights of body content shown before it folds (0 = never fold)
   relativeTime: false, // "3m" instead of the time of day
   showFilters: true, // the filter row at the top of timelines and notifications
   showRelayCount: false, // connected relays in the top bar

@@ -1,68 +1,70 @@
-import { h } from '../shared/h.ts';
+import { type Child, h } from '../shared/h.ts';
 import { t } from '../shared/i18n.ts';
 import { writeNoteState } from '../shared/note-state.ts';
+import type { SettingsStore } from '../shared/settings.ts';
 import { stableNoteWidths } from './note-fit-geometry.ts';
 
 type Fold = {
-  readonly lines?: number;
-  readonly tail: readonly HTMLElement[];
+  readonly height: number;
+  readonly hiddenControls: ReadonlySet<HTMLElement>;
 };
+
+export function createNoteBody(
+  allowFold: boolean,
+  unfolded: boolean,
+  children: readonly Child[],
+  data = false,
+): HTMLElement {
+  const body = h(
+    'div',
+    { class: 'content', 'data-fold': allowFold, 'data-unfolded': unfolded, 'data-fold-data': data },
+    children,
+  );
+  return allowFold ? h('div', { class: 'fold-wrap' }, body) : body;
+}
 
 const bodyOf = (el: HTMLElement): HTMLElement | null =>
   el.querySelector<HTMLElement>('.content[data-fold]:not([data-unfolded])');
 const moreOf = (body: HTMLElement): HTMLButtonElement | null =>
-  body.querySelector<HTMLButtonElement>(':scope > .fold');
+  body.parentElement?.querySelector<HTMLButtonElement>(':scope > .fold') ?? null;
 
-/** Read the natural body, with reserved media sizes and complete blocks after the text. */
+/** The body keeps its natural scroll height when clipped, including the reserved media boxes. */
 function measure(body: HTMLElement): Fold | undefined {
   const style = getComputedStyle(body);
-  const lines = Math.round(Number.parseFloat(style.getPropertyValue('--fold') || '12'));
-  if (!lines) return;
-  const first = body.firstElementChild;
-  const text = first instanceof HTMLElement && first.matches('.text') ? first : undefined;
-  const line = Number.parseFloat(text ? getComputedStyle(text).lineHeight : style.lineHeight);
-  const budget = lines * line;
+  const limit = Math.round(Number.parseFloat(style.getPropertyValue('--fold') || '12'));
+  if (!limit) return;
+  const data = body.hasAttribute('data-fold-data') ? body.firstElementChild : null;
+  const line = data ? getComputedStyle(data).lineHeight : style.lineHeight;
+  const height = (data ? 3 : limit) * Number.parseFloat(line);
   const bounds = body.getBoundingClientRect();
-  if (!(bounds.width > 0 && bounds.height >= budget + 2 * line - 0.5)) return;
-  const blocks = [...body.children].filter(
-    (el): el is HTMLElement => el instanceof HTMLElement && !el.classList.contains('fold'),
-  );
-  const media = blocks.find((block) => block.classList.contains('media'));
-  if (text) {
-    const textBounds = text.getBoundingClientRect();
-    const mediaRoom = media ? media.getBoundingClientRect().bottom - textBounds.bottom : 0;
-    const textLines = Math.max(1, Math.floor((budget - mediaRoom + 0.5) / line));
-    const textRoom = textLines * line;
-    if (
-      textBounds.height > textRoom + 0.5 &&
-      bounds.height - textRoom - mediaRoom >= 2 * line - 0.5
-    )
-      return { lines: textLines, tail: blocks.slice(1).filter((block) => block !== media) };
+  const naturalHeight = body.classList.contains('folded') ? body.scrollHeight : bounds.height;
+  if (!(bounds.width > 0 && Math.round(naturalHeight) > Math.round(height))) return;
+  const bottom = bounds.top + height;
+  const hiddenControls = new Set<HTMLElement>();
+  for (const control of body.querySelectorAll<HTMLElement>(
+    'a, button, [tabindex], audio[controls], video[controls]',
+  )) {
+    if (control.getBoundingClientRect().top >= bottom - 0.5) hiddenControls.add(control);
   }
-
-  // Keep the note's media grid whole, including when the media alone exceeds the budget.
-  const keepThrough = media ? blocks.indexOf(media) : 0;
-  const cut = blocks.findIndex(
-    (block, i) =>
-      i > keepThrough && block.getBoundingClientRect().bottom > bounds.top + budget + 0.5,
-  );
-  const last = blocks[cut - 1];
-  if (!last || bounds.bottom - last.getBoundingClientRect().bottom < 2 * line - 0.5) return;
-  return { tail: blocks.slice(cut) };
+  return { height, hiddenControls };
 }
 
 function apply(body: HTMLElement, fit: Fold | undefined): void {
   const more = moreOf(body);
-  for (const block of body.querySelectorAll(':scope > .fold-tail'))
-    block.classList.remove('fold-tail');
-  body.style.removeProperty('--shown-lines');
+  for (const control of body.querySelectorAll<HTMLElement>('[inert]'))
+    if (!fit?.hiddenControls.has(control)) control.inert = false;
+  for (const control of fit?.hiddenControls ?? []) if (!control.inert) control.inert = true;
+  body.classList.toggle('folded', fit !== undefined);
   if (!fit) {
+    body.style.removeProperty('--fold-height');
+    if (more && document.activeElement === more) {
+      body.tabIndex = -1;
+      body.focus({ preventScroll: true });
+    }
     more?.remove();
     return;
   }
-  if (fit.lines) body.style.setProperty('--shown-lines', String(fit.lines));
-  for (const block of fit.tail) block.classList.add('fold-tail');
-  body.classList.add('folded');
+  body.style.setProperty('--fold-height', `${fit.height}px`);
   if (more) return;
   const button = h('button', { class: 'lnk fold' }, t('note.more'));
   button.addEventListener('click', (e) => {
@@ -71,11 +73,10 @@ function apply(body: HTMLElement, fit: Fold | undefined): void {
     if (instance && note) writeNoteState(instance, note, { unfolded: true });
     body.dataset.unfolded = '';
     body.querySelector(':scope > .text')?.classList.add('open');
-    body.classList.remove('folded');
     apply(body, undefined);
     body.dispatchEvent(new Event('note-content-changed', { bubbles: true }));
   });
-  body.append(button);
+  body.after(button);
 }
 
 /** Read each batch before changing its height, where a scrollbar cannot change the line width. */
@@ -83,12 +84,8 @@ export function fitNotes(elements: readonly HTMLElement[]): void {
   if (!elements.length) return;
   const fitBatch = (batch: readonly HTMLElement[]): void => {
     const bodies = batch.map(bodyOf).filter((body) => body !== null);
-    const focus = document.activeElement;
-    for (const body of bodies) body.classList.remove('folded');
     const fits = bodies.map(measure);
     bodies.forEach((body, i) => apply(body, fits[i]));
-    if (focus instanceof HTMLButtonElement && focus.classList.contains('fold') && focus.isConnected)
-      focus.focus({ preventScroll: true });
   };
   if (stableNoteWidths(elements)) fitBatch(elements);
   else for (const el of elements) fitBatch([el]);
@@ -97,7 +94,7 @@ export function fitNotes(elements: readonly HTMLElement[]): void {
 export const fitNote = (el: HTMLElement): void => fitNotes([el]);
 
 /** One width observer for the row list, with font and emoji changes coalesced into the same pass. */
-export function createNoteFits(list: HTMLElement) {
+export function createNoteFits(list: HTMLElement, settings: SettingsStore) {
   let width: number | undefined;
   let frame = 0;
   let all = false;
@@ -120,6 +117,16 @@ export function createNoteFits(list: HTMLElement) {
     all = true;
     queue();
   };
+  let reading = settings.get();
+  const unwatchSettings = settings.subscribe((next) => {
+    if (
+      reading.foldLines !== next.foldLines ||
+      reading.textSize !== next.textSize ||
+      reading.mediaHeight !== next.mediaHeight
+    )
+      refit();
+    reading = next;
+  });
   const sizes = new ResizeObserver(([entry]) => {
     if (!entry || width === entry.contentRect.width) return;
     width = entry.contentRect.width;
@@ -128,12 +135,13 @@ export function createNoteFits(list: HTMLElement) {
   sizes.observe(list);
   const changed = (e: Event): void => {
     const row = (e.target as Element).closest<HTMLElement>('.note');
-    if (row?.parentElement === list) {
+    if (row?.parentElement === list && bodyOf(row)) {
       dirty.add(row);
       queue();
     }
   };
   list.addEventListener('note-geometry-changed', changed);
+  list.addEventListener('note-content-changed', changed);
   document.fonts?.addEventListener('loadingdone', refit);
   return {
     fit(elements: readonly HTMLElement[]) {
@@ -146,8 +154,10 @@ export function createNoteFits(list: HTMLElement) {
     dispose() {
       cancelAnimationFrame(frame);
       sizes.disconnect();
+      unwatchSettings();
       document.fonts?.removeEventListener('loadingdone', refit);
       list.removeEventListener('note-geometry-changed', changed);
+      list.removeEventListener('note-content-changed', changed);
     },
   };
 }
