@@ -190,8 +190,8 @@ Scenes: `article-card`, and `article-read` (picture, headings, a list, code, a q
 
 ## N7 Deep links and copying for every kind
 
-As in N2: `/n/` and `/a/` resolve every kind, and Copy link gives the matching address. An event that cannot be
-found is shown in the existing availability state. Scene: `link-any-kind` (a `/n/` link to a 30311, signed out).
+Bare NIP-19 paths and pasted links open the existing public views. Copy lkjstr link in More shares the exact event with available relay hints.
+See [public deep links](public-deep-links.md) for routes and availability. Scene: `link-any-kind` (a `/n/` link to a 30311, signed out).
 
 ## Not in this batch
 

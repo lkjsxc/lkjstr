@@ -184,6 +184,7 @@ export const ja: Record<keyof typeof en, string> = {
   'act.more': 'その他',
   'menu.copyText': '本文をコピー',
   'menu.copyLink': 'リンクをコピー',
+  'menu.copyLkjstrLink': 'lkjstrのリンクをコピー',
   'menu.copyId': 'ノートIDをコピー',
   'menu.mutePerson': '{name} をミュート',
   'menu.muteThread': 'このスレッドをミュート',

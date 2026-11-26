@@ -7,7 +7,15 @@ import { HANDLERS } from './client-handlers.ts';
 import type { Core } from './engine.ts';
 import { FILLER } from './fixtures-notes.ts';
 import { revealMockNote } from './hidden.ts';
-import { byHandle, byPubkey, byRef, type Person, SELF, saveProfile } from './people.ts';
+import {
+  byHandle,
+  byPubkey,
+  byRef,
+  isMockProfileRef,
+  type Person,
+  SELF,
+  saveProfile,
+} from './people.ts';
 import { retryLists } from './private-lists.ts';
 import { createDelivery } from './publication.ts';
 import { addReaction, removeReaction } from './reactions.ts';
@@ -73,7 +81,9 @@ export function createActions(core: Core) {
     if (a.a === 'link.check') {
       // Mock screenshots and smoke use fixture handles and synthetic note references.
       const found =
-        a.route === 'p' ? byRef(a.ref) : a.route === 'n' && /^note1[0-9a-f]{58}$/.test(a.ref);
+        a.route === 'p'
+          ? byRef(a.ref) || isMockProfileRef(a.ref)
+          : a.route === 'n' && /^note1[0-9a-f]{58}$/.test(a.ref);
       return found ? done(req) : fail(req, 'rejected');
     }
     if (a.a === 'client.info') {

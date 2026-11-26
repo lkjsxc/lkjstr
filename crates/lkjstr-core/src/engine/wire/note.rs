@@ -138,6 +138,9 @@ pub(super) fn note(row: &Row, store: &Store, account: Option<&str>) -> Value {
         if let Some((route, reference)) = super::generic_face::copy_reference(&event) {
             v["copyLink"] = json!(format!("/{route}/{reference}"));
         }
+        if let Some(reference) = super::deep_links::share_event(&event, store) {
+            v["shareEvent"] = json!(reference);
+        }
         if matches!(
             crate::kinds::policy(event.kind).face,
             crate::kinds::Face::Generic | crate::kinds::Face::List

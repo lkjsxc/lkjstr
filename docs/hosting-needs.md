@@ -28,8 +28,8 @@ The site is served from the root of its origin (`/`), over HTTPS.
 
 - A path that names an existing file serves that file.
 - A missing path without a dot serves `index.html` with status 200. This
-  includes direct navigation to `/n/<bech32>`, `/p/<bech32>` and
-  `/a/<bech32>`. Keep the original path in the browser until the app opens it.
+  includes `/<bech32>`, `/nostr:<bech32>` and the `/n/`, `/p/` and `/a/`
+  deep links. Keep the original path in the browser until the app opens it.
   The app then replaces the address with `/`.
 - A missing path with a dot is a 404, so a stale hashed file never comes back
   as HTML.

@@ -7,6 +7,7 @@ import { countText } from '../shared/format.ts';
 import { h } from '../shared/h.ts';
 import { getLang, type Key, t } from '../shared/i18n.ts';
 import { type IconName, icon } from '../shared/icons.ts';
+import { LKJSTR_ORIGIN } from '../shared/nostr-link.ts';
 import { groupReactions } from '../shared/reactions.ts';
 import { type MenuItem, openMenu } from '../wm/menus.ts';
 import { ability, abilityText, able } from './can.ts';
@@ -230,6 +231,14 @@ export function actionRow(row: NoteRow, env: ViewEnv, chips = true): HTMLElement
         label: t('menu.copyLink'),
         run: () => void copy(env, `${location.origin}${row.copyLink ?? `/n/${row.bech32}`}`),
       },
+      ...(row.shareEvent
+        ? [
+            {
+              label: t('menu.copyLkjstrLink'),
+              run: () => void copy(env, `${LKJSTR_ORIGIN}/${row.shareEvent}`),
+            },
+          ]
+        : []),
       { label: t('menu.copyId'), run: () => void copy(env, row.bech32) },
       {
         label: t('menu.mutePerson', { name: plainName(row.author) }),

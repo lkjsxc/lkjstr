@@ -1,3 +1,5 @@
+import { checkNostrLink } from '../shared/incoming-link.ts';
+import { toast } from '../views/parts.ts';
 import { kindOf, type OpenOpts, viewOf } from '../views/registry.ts';
 import { CHOICES } from './choices.ts';
 import { type ClosedTab, createClosed } from './closed.ts';
@@ -101,9 +103,15 @@ export function createWmController(
     (kind: string, state?: object, opts?: OpenOpts): void =>
       opener.from(from)(kind, state, opts);
 
+  const reportLink = (text: string): void => void toast(host.layer, text);
   const launcher = (tab: string) => ({
     ...CHOICES,
-    pick: (c: Choice) => set(L.replaceView(root, tab, own.fresh(c.kind, used(), c.state))),
+    async pick(c: Choice) {
+      const mounted = own.el(tab);
+      if (c.link && !(await checkNostrLink(env.engine, c.link, reportLink))) return;
+      if (!disposed && L.paneOfView(root, tab) && own.el(tab) === mounted)
+        set(L.replaceView(root, tab, own.fresh(c.kind, used(), c.state)));
+    },
     close: () => close(tab),
   });
   const own = createOwnViews(
@@ -212,7 +220,11 @@ export function createWmController(
       ...(other?.tabs() ?? []),
     ],
     show: (tab, workspace) => (workspace ? other?.show(tab, workspace) : show(tab)),
-    open: (kind, state) => openFrom(cur()?.active ?? '')(kind, state),
+    async open(kind, state, link) {
+      const from = cur()?.active ?? '';
+      if (link && !(await checkNostrLink(env.engine, link, reportLink))) return;
+      if (!disposed) openFrom(from)(kind, state);
+    },
     front: () => own.el(cur()?.active ?? ''),
   };
   const compose = (): void => goCompose(finder, env.settings.get().composeNew);

@@ -181,6 +181,7 @@ export const en = {
   'act.more': 'More',
   'menu.copyText': 'Copy text',
   'menu.copyLink': 'Copy link',
+  'menu.copyLkjstrLink': 'Copy lkjstr link',
   'menu.copyId': 'Copy note ID',
   'menu.mutePerson': 'Mute {name}',
   'menu.muteThread': 'Mute this thread',

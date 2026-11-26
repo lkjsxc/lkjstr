@@ -4,6 +4,7 @@
 import { h, replaceChildren } from '../shared/h.ts';
 import { t } from '../shared/i18n.ts';
 import { pressed } from '../shared/keys.ts';
+import type { NostrLink } from '../shared/nostr-link.ts';
 import { loadViewState, saveViewState } from '../shared/view-state.ts';
 
 export const NEW_TAB = 'new';
@@ -15,6 +16,7 @@ export type Choice = {
   readonly search: string;
   /** State the opened tab starts with (a typed hashtag, search words, a reference). */
   readonly state?: object;
+  readonly link?: NostrLink;
 };
 export type LauncherApi = {
   choices(): readonly Choice[];

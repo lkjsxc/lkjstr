@@ -83,7 +83,6 @@ const store = createWmStore();
 let ctl: Wm | undefined;
 let shown = 0; // the workspace `ctl` shows
 let picked: number | undefined; // this browser tab's workspace, once it chose one
-let incoming: (() => void) | undefined; // opens the tab of an incoming link (until the engine has spoken)
 let family = ''; // the layout family `ctl` shows: the reader's own, or the visitor's while signed out
 const active = (): number => picked ?? parseActive(store.get(spacesKey(FAMILY)));
 // This workspace goes back with Undo. Every layout: each workspace of both families first sends the tabs its default
@@ -143,14 +142,11 @@ update();
 // Signing in brings the reader's own layout, signing out the visitor's. A key that still has to be saved keeps
 // its tab through the change.
 engine.accounts.subscribe(() => {
-  const arrive = incoming; // the engine's first word: a link that came in goes where the reader ends up
-  incoming = undefined;
   if (familyOf(Boolean(engine.me())) === family) return;
   // The visitor's layout is left as it was read in: the tab that signed in has done its work.
   if (engine.me()) ctl?.drop('account');
   update();
   if (backupPending()) ctl?.open('account');
-  arrive?.();
 });
 
 let taggedAccount = settingsAccount;
@@ -195,7 +191,7 @@ window.addEventListener(
 
 void openIncomingLink(
   engine,
-  (kind, ref) => (incoming = () => ctl?.open(kind, { ref }))(),
+  (kind, ref) => ctl?.open(kind, { ref }),
   (text) => toast(host.layer, text),
 );
 

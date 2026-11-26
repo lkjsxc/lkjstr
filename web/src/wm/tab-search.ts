@@ -7,6 +7,7 @@ import type { Engine, Subscription } from '../engine/client.ts';
 import type { Author } from '../engine/protocol.ts';
 import { h, replaceChildren } from '../shared/h.ts';
 import { both, t } from '../shared/i18n.ts';
+import type { NostrLink } from '../shared/nostr-link.ts';
 import { plainName } from '../views/parts.ts';
 import { kindOf, viewOf } from '../views/registry.ts';
 import { homeTitle } from '../views/their-home.ts';
@@ -22,7 +23,7 @@ export type TabFinder = {
   tabs(): readonly { tab: string; title: string; here?: boolean; workspace?: number }[];
   show(tab: string, workspace?: number): void;
   /** A new tab in the current tile, in front. */
-  open(kind: string, state?: object): void;
+  open(kind: string, state?: object, link?: NostrLink): void;
   /** The element of the tab in front of the current tile. */
   front(): HTMLElement | undefined;
 };
@@ -44,7 +45,7 @@ export function tabHits(api: Pick<TabFinder, 'tabs' | 'show' | 'open'>, typed: s
     title: c.title,
     hint: c.hint,
     open: false,
-    go: () => api.open(c.kind, c.state),
+    go: () => (c.link ? api.open(c.kind, c.state, c.link) : api.open(c.kind, c.state)),
   });
   const tabs = api
     .tabs()

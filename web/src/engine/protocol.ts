@@ -321,6 +321,8 @@ export type GenericFace = {
 export type NoteRow = {
   readonly face?: GenericFace;
   readonly copyLink?: string;
+  /** Exact public event as an nevent, with observed relay hints when available. */
+  readonly shareEvent?: string;
   /** The event kind, absent for notes (1) and channel messages (42). */
   readonly eventKind?: number;
   /** Profile Reactions/Reposts only: the selected person's act, which also supplies this row's time. */

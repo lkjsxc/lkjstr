@@ -65,7 +65,8 @@ fn generic_face_is_classified_and_bounded_without_reordering_tags() {
     for (i, (content, form)) in cases.iter().enumerate() {
         let event = signed(&key, 100 + i as u64, 30311, content, alt.clone());
         let mut engine = Engine::new();
-        engine.store.insert(event.clone(), None);
+        let relay = "wss://relay.example/";
+        engine.store.insert(event.clone(), Some(relay));
         let found = rows(&mut engine, "thread", &event.id, None);
         let row = found.iter().find(|v| v["id"] == event.id).expect("focus");
         assert_eq!(row["face"]["type"], "generic");
@@ -91,6 +92,10 @@ fn generic_face_is_classified_and_bounded_without_reordering_tags() {
         assert!(
             matches!(decode_nip19(encoded), Some(NostrEntity::Naddr(p)) if p.kind == 30311 && p.pubkey == event.pubkey)
         );
+        let shared = row["shareEvent"].as_str().expect("shared event");
+        assert!(matches!(decode_nip19(shared), Some(NostrEntity::Nevent(p))
+            if p.id == event.id && p.kind == Some(30311) && p.author == Some(event.pubkey.clone())
+                && p.relays.as_deref() == Some(&[relay.to_owned()])));
     }
 }
 #[test]

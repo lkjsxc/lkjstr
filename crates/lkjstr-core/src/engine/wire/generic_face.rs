@@ -27,16 +27,18 @@ pub(super) fn copy_reference(event: &NostrEvent) -> Option<(String, String)> {
             .ok()
             .map(|reference| ("a".into(), reference))
     } else {
-        let pointer = EventPointer {
-            id: event.id.clone(),
-            author: Some(event.pubkey.clone()),
-            kind: Some(event.kind),
-            relays: None,
-        };
-        encode_nevent(&pointer)
-            .ok()
-            .map(|reference| ("n".into(), reference))
+        event_reference(event, None).map(|reference| ("n".into(), reference))
     }
+}
+
+pub(super) fn event_reference(event: &NostrEvent, relays: Option<Vec<String>>) -> Option<String> {
+    encode_nevent(&EventPointer {
+        id: event.id.clone(),
+        author: Some(event.pubkey.clone()),
+        kind: Some(event.kind),
+        relays,
+    })
+    .ok()
 }
 
 fn meaning(name: &str) -> Option<&'static str> {

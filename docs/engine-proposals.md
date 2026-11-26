@@ -2,9 +2,9 @@
 ## Purpose
 Additive protocol ledger under the 2026-11-16 owner delegation. See status.md and parity.md for current behavior and limits.
 See [history](engine-proposals-history.md), [emoji](engine-proposals-emoji.md), and [optimizer](orchestration-optimizer.md#scheduler-hints).
-- Protocol 17 (S4): `NoteRow.face?` provides bounded public `{type:'generic', alt?, form, tags, moreTags}`; typed
-  `GenericTagLine.ref?` carries event/address/person/topic/link/relay identities on policy-authorized public rows.
+- Protocol 17 (S4): `NoteRow.face?` carries bounded `{type:'generic', alt?, form, tags, moreTags}`. `GenericTagLine.ref?` carries typed public references.
 - Protocol 17 (S4): `NoteRow.copyLink?` carries the canonical path `/n/nevent` (kind/author) or `/a/naddr` (exact address); `bech32` and Copy ID are unchanged.
+- `NoteRow.shareEvent?` carries an exact public nevent with the author, kind and up to three observed relay hints for sharing.
 - Protocol 17 (S4): `Query.show` adds profile `articles`, `lists`, `all`; signed-in and signed-out public snapshot boundaries and source filters remain.
 ## Protocol 6 engine additions (2026-11-16, owner authorized)
 - `ToEngine.dm.open {sub,query:DmQuery}` adds an explicit private subscription.

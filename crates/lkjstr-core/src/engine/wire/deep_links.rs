@@ -1,5 +1,20 @@
 use super::{Output, Session};
-use lkjstr_protocol::{NostrEntity, decode_nip19};
+use crate::store::Store;
+use lkjstr_protocol::{NostrEntity, NostrEvent, decode_nip19};
+
+pub(super) fn share_event(event: &NostrEvent, store: &Store) -> Option<String> {
+    if !crate::kinds::policy(event.kind).openable {
+        return None;
+    }
+    let relays = store
+        .seen_on(&event.id)
+        .into_iter()
+        .filter_map(|url| crate::engine::settings::strict_relay(&url))
+        .filter(|url| url.len() <= usize::from(u8::MAX))
+        .take(3)
+        .collect();
+    super::generic_face::event_reference(event, Some(relays))
+}
 
 impl Session {
     pub fn check_link(req: String, route: &str, reference: &str) -> Output {

@@ -4,6 +4,7 @@
 
 import { hostOf } from '../shared/address.ts';
 import { both, t } from '../shared/i18n.ts';
+import { pastedNostrLink } from '../shared/nostr-link.ts';
 import { knownPeople } from '../shared/people.ts';
 import { DOC_PAGES, docSearch } from '../views/docs.ts';
 import { plainName } from '../views/parts.ts';
@@ -11,7 +12,6 @@ import { offered, serves, VIEWS, viewOf } from '../views/registry.ts';
 import { homeTitle } from '../views/their-home.ts';
 import { type Choice, matchesWords } from './launcher.ts';
 
-const REF = /^(npub1|nprofile1|note1|nevent1)[a-z0-9]+$/;
 const RELAY = /^wss?:\/\/[^\s/?#]+[^\s?#]*$/i;
 
 const choice = (kind: string, state?: object, title?: string): Choice => {
@@ -34,11 +34,15 @@ export const CHOICES = {
       const host = hostOf(text);
       return [choice('relay', { relay: text, title: host }, t('launcher.relay', { host }))];
     }
-    if (REF.test(text)) {
-      const kind = text.startsWith('np') ? 'profile' : 'thread';
+    const link = pastedNostrLink(text);
+    if (link) {
+      const { ref, route } = link;
+      const kind = route === 'p' ? 'profile' : 'thread';
       return [
-        choice(kind, { ref: text }, t('launcher.open', { what: `${text.slice(0, 14)}…` })),
-        ...(kind === 'profile' && serves(5) ? [theirs(text, `${text.slice(0, 10)}…`)] : []),
+        { ...choice(kind, { ref }, t('launcher.open', { what: `${ref.slice(0, 14)}…` })), link },
+        ...(kind === 'profile' && serves(5)
+          ? [{ ...theirs(ref, `${ref.slice(0, 10)}…`), link }]
+          : []),
       ];
     }
     // Each page of Documentation is gone to by its own name once something is typed ("shortcuts", "terms").

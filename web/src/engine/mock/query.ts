@@ -4,7 +4,7 @@ import { stranger } from './accounts.ts';
 import { channelHeader, channelList, channelOf } from './channels.ts';
 import { profileAct } from './fixtures-acts.ts';
 import { finite, notifications } from './lists.ts';
-import { byPubkey, byRef, FOLLOWERS, PEOPLE, type Person } from './people.ts';
+import { byPubkey, byRef, FOLLOWERS, isMockProfileRef, PEOPLE, type Person } from './people.ts';
 import { relayHead, servedBy } from './relays.ts';
 import { noteRow, pendingProfile, personRow, profileRow, type RowOpts } from './rows.ts';
 import { matchesLanguage, searchPeople } from './search.ts';
@@ -265,7 +265,7 @@ export function select(w: World, q: Query, me: string, profileWritable = false):
       ];
     // A key nobody here knows: the header as it is before any metadata has arrived.
     const named = q.pubkey ?? q.ref ?? '';
-    const unknown = /^([0-9a-f]{64}|npub1[a-z0-9]{20,})$/.test(named) ? stranger(named) : undefined;
+    const unknown = isMockProfileRef(named) ? stranger(named) : undefined;
     return unknown ? [fixed(pendingProfile(unknown))] : [];
   }
   if (q.source === 'relay' && q.relay) {

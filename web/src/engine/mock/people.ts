@@ -180,6 +180,9 @@ export const byPubkey = (pubkey: string): Person | undefined =>
 /** Resolves a reference as an address carries it: an npub, a handle or a NIP-05 name. */
 export const byRef = (ref: string): Person | undefined =>
   PEOPLE.find((p) => p.author.npub === ref || p.handle === ref || p.author.nip05 === ref);
+/** A fixture key for a profile whose metadata has not arrived. */
+export const isMockProfileRef = (ref: string): boolean =>
+  /^(?:[0-9a-f]{64}|npub1[a-z0-9]{20,})$/.test(ref);
 
 export const SELF = byHandle('komorebi');
 export const SECOND = byHandle('komorebi-dev');

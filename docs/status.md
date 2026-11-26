@@ -1,7 +1,7 @@
 # Status
 ## Purpose
 
-Current limits: [parity.md](parity.md), [engine-performance.md](engine-performance.md). [Public deep links](public-deep-links.md) work signed out.
+[Parity](parity.md), [performance](engine-performance.md) and [public deep links](public-deep-links.md). New tab opens links and notes share exact events.
 Claude owns the interface. Account-safe and A1/A2 (972ef776) are live. [Emoji sets](emoji-sets.md) support shared shortcodes across sources.
 [Q1](engine-q1-progress.md) passed public scoring. Worker, ship and Q2-Q5 remain. [Stage 1 orchestration](orchestration-optimizer.md) adds weighted retention.
 
