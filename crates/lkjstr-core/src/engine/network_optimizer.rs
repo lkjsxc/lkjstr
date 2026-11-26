@@ -95,8 +95,10 @@ impl Network {
         if r.asked {
             return fixed.min(r.page_limit as u64);
         }
-        // Explicit IDs, account metadata and side-window cursor work keep their quotas.
-        if !stats_relay::public_filter(&r.filter)
+        // Inclusive history must retain its quota: a full tied page cannot advance.
+        // Explicit IDs, account metadata and side-window cursor work also keep theirs.
+        if r.page_filter.until.is_some()
+            || !stats_relay::public_filter(&r.filter)
             || r.filter.ids.is_some()
             || !r.owns_time(None)
             || r.verification_retry

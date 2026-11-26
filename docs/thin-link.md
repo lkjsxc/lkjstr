@@ -38,10 +38,11 @@ Hints never count as measured throughput, verification, freshness or absence.
 Resident and durable retention costs use observation-only link state.
 Four qualifying traffic observations replace the throughput prior. Sparse traffic
 without a qualifying backlog does not independently establish link capacity.
-Very thin public note requests start with eight records, using ordinary inclusive
-pagination; other adaptive pages retain their minimum of 20. Asked quotas stay
-fixed, including a later hint change. Explicit IDs, metadata, verification retries
-and time-window work retain their existing quotas and bounded author buckets.
+Very thin public note head requests start with eight records; other adaptive
+heads retain their minimum of 20. Historical continuations retain their existing
+quotas so inclusive timestamp ties preserve the prior progress bound. Asked quotas
+stay fixed, including a later hint change. Explicit IDs, metadata, verification
+retries and time-window work retain their existing quotas and bounded author buckets.
 
 Two ordinary complete-filter primary routes remain. At the 2g prior the no-data
 hedge waits three seconds. Learned thin hedges cap at four seconds and soft

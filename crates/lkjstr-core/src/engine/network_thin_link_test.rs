@@ -161,7 +161,7 @@ fn asked_quota_and_full_tied_frontier_survive_link_changes() {
         .find(|(_, frame)| frame[0] == "REQ" && frame[2]["until"] == 187)
         .expect("inclusive tied continuation")
         .1;
-    assert_eq!(continuation[2]["limit"], 8);
+    assert_eq!(continuation[2]["limit"], 200);
     assert!(!network.page_exhausted(&next));
 }
 
