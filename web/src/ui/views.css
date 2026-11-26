@@ -148,12 +148,15 @@
   .time-rail .time-label { opacity: 1; }
   .time-rail::before { left: 0; } /* the whole 56px is the target */
 }
-.time-marks { position: absolute; top: 0; bottom: 0; right: 0; left: -40px; pointer-events: none; }
+.time-marks, .time-lens { position: absolute; top: 0; bottom: 0; right: 0; left: -40px; pointer-events: none; }
 .time-dot { position: absolute; right: 5px; width: 3px; height: 3px; border-radius: 50%; background: var(--faint); transform: translateY(-50%); pointer-events: none; }
 .time-dot.fine { right: 5.5px; width: 2px; height: 2px; }
 /* Years, months and days: one right-aligned column; a narrow rail shows its years over the notes on hover or hold. */
 .time-label { position: absolute; right: 18px; color: var(--faint); font-size: 11px; line-height: 12px; font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; transform: translateY(-50%); pointer-events: none; opacity: 0; }
 .time-rail:hover .time-label, .time-rail.held .time-label { opacity: 1; }
+.time-minor { font-size: 9px; opacity: 0.8; }
+.time-rail .time-minor { color: color-mix(in srgb, var(--faint) 85%, var(--paper)); }
+.time-lens .time-label { right: calc(var(--rail-size) + 4px); }
 .time-year.current { color: var(--fg); }
 .time-hover { position: absolute; left: 0; right: 0; height: 1px; background: var(--sep); pointer-events: none; }
 .time-hover[hidden] { display: none; }

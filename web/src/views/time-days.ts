@@ -2,7 +2,7 @@
 // tested. Places are the engine's note ordinals within UTC months; days only group them.
 import type { Timeline } from '../engine/protocol.ts';
 import { dayOf } from '../shared/format.ts';
-import type { Day } from './time-marks.ts';
+import type { Day } from './time-parts.ts';
 import type { TimeBand, TimePlace } from './time-scale.ts';
 
 /** The engine's days when they are in the page's zone; otherwise none, and the rail falls back without them. */

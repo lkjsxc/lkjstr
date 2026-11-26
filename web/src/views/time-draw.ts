@@ -1,21 +1,24 @@
 // Drawing the rail's marks from a plan (docs/interface-time.md C2), apart from its input and seeks.
 import { h } from '../shared/h.ts';
 import { centred } from './feed-scrub.ts';
-import { boundaries, type Day, type Label, planMarks } from './time-marks.ts';
+import { type Label, lensMarks, type MarkPlan, planMarks } from './time-marks.ts';
+import type { ClockPart, Day } from './time-parts.ts';
+import { rulerSpans } from './time-ruler.ts';
 import type { TimeBand } from './time-scale.ts';
 
 export function createTimeRailNodes(el: HTMLElement) {
   const rail = h('div', { class: 'time-rail', hidden: true, 'aria-hidden': 'true' });
   const marks = h('div', { class: 'time-marks' });
+  const lens = h('div', { class: 'time-lens' });
   const grip = h('div', { class: 'time-grip' });
   const hoverLine = h('div', { class: 'time-hover', hidden: true });
   const tick = h('div', { class: 'time-return', hidden: true });
   const label = h('div', { class: 'scrub', hidden: true });
   const live = h('div', { class: 'vh', 'aria-live': 'polite' });
-  rail.append(marks, hoverLine, grip, tick, label);
+  rail.append(marks, lens, hoverLine, grip, tick, label);
   const pin = h('div', { class: 'time-pin' }, rail, live);
   el.prepend(pin);
-  return { rail, marks, grip, hoverLine, tick, label, live, pin };
+  return { rail, marks, lens, grip, hoverLine, tick, label, live, pin };
 }
 
 export const loadingText = (time: string, waiting: boolean): string =>
@@ -35,26 +38,60 @@ export function drawCurrentYear(marks: HTMLElement, at: number, local: boolean):
     number.classList.toggle('current', number.textContent === year);
 }
 
-/** Replaces the marks and returns the labels a press can snap to. */
-export function drawMarks(
-  marks: HTMLElement,
-  bands: readonly TimeBand[],
-  days: readonly Day[] | undefined,
-  height: number,
-  wide: boolean,
-  hours?: readonly Day[],
-): readonly Label[] {
-  const plan = planMarks(boundaries(bands, days, hours), height, wide);
-  const top = (y: number): string => `top: ${y + 8}px`;
-  marks.replaceChildren(
-    ...plan.dots.map((d) =>
-      h('span', { class: d.size === 2 ? 'time-dot fine' : 'time-dot', style: top(d.y) }),
-    ),
-    ...plan.labels.map((l) =>
-      h('span', { class: `time-label time-${l.level}`, style: top(l.centre) }, l.text),
-    ),
+const top = (y: number): string => `top: ${y + 8}px`;
+const labelNode = (l: Label): HTMLElement =>
+  h(
+    'span',
+    {
+      class: `time-label time-${l.level} ${l.major ? 'time-major' : 'time-minor'}`,
+      style: top(l.centre),
+    },
+    l.text,
   );
-  return plan.labels;
+
+export function createMarkPainter(marks: HTMLElement, lens: HTMLElement) {
+  let plan: MarkPlan = { labels: [], dots: [], frontier: [] };
+  let source: unknown;
+  let key = '';
+  let lensKey = '';
+  return {
+    draw(
+      bands: readonly TimeBand[],
+      shape: { days?: readonly Day[]; clock?: readonly ClockPart[] } | undefined,
+      height: number,
+      wide: boolean,
+      zone: string,
+      calendar: boolean,
+    ) {
+      const next = `${height}:${wide}:${zone}:${calendar}`;
+      if (source !== shape || key !== next) {
+        [source, key] = [shape, next];
+        plan = planMarks(
+          rulerSpans(
+            bands,
+            calendar ? shape?.days : undefined,
+            calendar ? shape?.clock : undefined,
+          ),
+          height,
+          wide,
+        );
+        marks.replaceChildren(
+          ...plan.dots.map((d) =>
+            h('span', { class: d.size === 2 ? 'time-dot fine' : 'time-dot', style: top(d.y) }),
+          ),
+          ...plan.labels.map(labelNode),
+        );
+      }
+      return plan.labels;
+    },
+    lens(y: number | undefined, height: number) {
+      const labels = y === undefined ? [] : lensMarks(plan, y, height);
+      const key = labels.map((l) => `${l.level}:${l.text}:${l.centre}`).join('|');
+      if (key === lensKey) return;
+      lensKey = key;
+      lens.replaceChildren(...labels.map(labelNode));
+    },
+  };
 }
 
 /** Where the grip stands for a list the engine has not counted yet: the share of the list scrolled. */

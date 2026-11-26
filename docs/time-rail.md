@@ -16,8 +16,13 @@ the bottom instead of halving the room of the weeks being read: 3000 and 800
 notes over 36 one-to-three-note months on 800px got 413px under the former
 sqrt weighting and get 711px now. Within a month, notes occupy equal ordinal
 slots, newest first. Empty months have no interval. Future timestamps join the current UTC month;
-epoch zero remains January 1970. Marks are planned in `time-marks.ts`: the
-oldest year label first, then years, months and days newest first, then dots.
+epoch zero remains January 1970. Occupied local spans in `time-ruler.ts` use the
+same rank map. `time-marks.ts` starts at years and opens each labelled stretch to
+months, days, hours, quarter hours and five minutes whenever another label fits.
+Dense stretches get finer marks because they have more pixels. The year is the
+major mark. Finer labels are smaller, and a tick can mark the next unit where
+its label would collide. A held grip opens a short column one unit finer around
+the pointer while the full reading-time label stays beside the grip.
 
 `time-rail.ts` uses this map for marks, pointer targets, the grip and
 the return tick. The engine supplies positions for the current window.
@@ -44,7 +49,7 @@ list fits in the tile. Hover and hold highlight it, and it follows the held
 pointer (interface-time.md C3). A jump leaves a thin return tick. The rail is
 aria-hidden and the original list shows focus for keyboard input. With its room
 reserved and nothing counted yet, the rail shows the grip at the share scrolled with
-the top row's date and time. The loaded rows supply provisional day and hour marks
+the top row's date and time. The loaded rows supply provisional ruler marks
 that the counted map replaces when it arrives. A plain drag scrolls by share and shows the top row's time
 until release, when any new count takes effect. A top row the engine has not
 counted yet (`time-near.ts`) places the grip at its nearest counted row,
@@ -60,16 +65,18 @@ leaves its unanswered interval owed. Older events stay in the store, and
 refill works from the visible end. See [fetch orchestration](fetch-orchestrator.md).
 Search, profile lists and explicit Moment windows keep their own paging rules.
 
-## Local days
+## Local calendar counts
 
 The same scan also builds `days` (`wire/timeline_days.rs`): one part per local day per UTC month,
 newest first, from the page's own calendar (the Worker's `Date`; UTC natively). A changed zone or
 local date rebuilds the index. Past 400 occupied days the answer names only the newest 400; older
 months are marked from their UTC bands (years labelled, months as dots; `[` `]` step by month
-there), so a sparse old tail never takes the recent days' names away. The interface uses
-them only in its own zone: `time-marks.ts` plans labels and dots, `time-days.ts` finds a place's
-day and the `[` `]` steps, `time-seek.ts` keeps one seek out at a time, `time-input.ts` reads the
-pointer and keys. Narrow rails name only years.
+there), so a sparse old tail never takes the recent days' names away. The same scan counts occupied
+five-minute parts in those days (`wire/timeline_clock.rs`). It retains at most one part per
+counted row until the scan finishes. A reply carries at most 4096 parts, choosing complete
+days by note count, newest first on ties. The UI combines these into local hours and quarter
+hours. Both fields are used only in the page's zone. Day and month keyboard steps still use
+the day and month counts. Narrow rails name years at rest and add finer marks during a hold.
 
 ## Engine and bounds
 
@@ -91,8 +98,8 @@ There are at most 128 queries per client and 32 clients. Each query retains
 at most two store-sized key maps and two store-sized ordinal lookups. A prior
 finished map and lookup remain seekable while the replacement is built
 (`wire/timeline_answer.rs`): a window that moves then (older history or live
-notes arrived, a seek landed) is answered at once with the prior months, days
-and positions, so a drag never waits a whole rebuild for its landing. A deeper
+notes arrived, a seek landed) is answered at once with the prior months, days, clock
+parts and positions, so a drag never waits a whole rebuild for its landing. A deeper
 history horizon joins the next scan. A newer horizon invalidates a prior map
 whose older positions fall outside it. The
 prior lookup is released when the build finishes. The actual

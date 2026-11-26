@@ -56,12 +56,12 @@ fn rail_publishes_a_covered_map_while_the_horizon_continues_to_move() {
     let map = session.timeline_tick(&engine, now + 100);
     assert!(map.iter().any(
         |output| matches!(output, super::Output::Timeline { timeline, .. }
-        if timeline["oldest"] == 2000 && timeline["months"][0]["count"] == 1)
+        if timeline["oldest"] == 2000 && timeline["months"][0]["count"] == 1 && timeline["clock"][0][3] == 1)
     ));
     session.timeline_tick(&engine, now + 125);
     let map = session.timeline_tick(&engine, now + 225);
     assert!(map.iter().any(
         |output| matches!(output, super::Output::Timeline { timeline, .. }
-        if timeline["oldest"] == 1000 && timeline["months"][0]["count"] == 2)
+        if timeline["oldest"] == 1000 && timeline["months"][0]["count"] == 2 && timeline["clock"][0][3] == 2)
     ));
 }

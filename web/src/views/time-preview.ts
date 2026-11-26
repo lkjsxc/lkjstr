@@ -1,6 +1,5 @@
-import { localDay } from '../shared/format.ts';
 import { type RailRow, rowTime } from './feed-scrub.ts';
-import type { Day } from './time-marks.ts';
+import { createTimeParts } from './time-parts.ts';
 import { monthOf } from './time-scale.ts';
 
 export const dated = (r: RailRow): boolean =>
@@ -9,8 +8,7 @@ export const dated = (r: RailRow): boolean =>
 /** Provisional marks from the rows already delivered, in their reading order. */
 export function timePreview(rows: readonly RailRow[], now = Date.now()) {
   const months = new Map<number, number>();
-  const days: Day[] = [];
-  const hours: Day[] = [];
+  const parts = createTimeParts();
   let previous = now;
   for (const row of rows) {
     if (!dated(row)) continue;
@@ -19,18 +17,9 @@ export function timePreview(rows: readonly RailRow[], now = Date.now()) {
     const month = monthOf(at, now);
     const offset = months.get(month) ?? 0;
     months.set(month, offset + 1);
-    const d = new Date(at);
-    for (const [parts, start] of [
-      [days, localDay(at)],
-      [hours, at - ((d.getMinutes() * 60 + d.getSeconds()) * 1000 + d.getMilliseconds())],
-    ] as const) {
-      const last = parts.at(-1);
-      if (last?.at === start && last.month === month)
-        parts[parts.length - 1] = { ...last, count: last.count + 1 };
-      else parts.push({ at: start, month, count: 1, offset });
-    }
+    parts.count(at, month, offset);
   }
-  return { months: [...months].map(([at, count]) => ({ at, count })), days, hours };
+  return { months: [...months].map(([at, count]) => ({ at, count })), ...parts.fields() };
 }
 
 export function createTimePreview() {

@@ -130,7 +130,7 @@ from a completed absence. Named-list queries and profile hydration include cache
 other readers keep public tags. The reproduced isolation fix is documented in [private-list-scope.md](private-list-scope.md).
 
 Window sides cap at 800 rows; retainAbove caps at 6000. Returning to the newest rows retains the loaded tail within the 6800-row bound.
-Older pages start two and a half pane heights from the end with a 60-row buffer. See [live-feed.md](live-feed.md). Time rails use retained cache.
+[Older paging](live-feed.md) starts 2.5 pane heights early with a 60-row buffer. The [time rail](time-rail.md) counts down to five-minute parts.
 Visitor Global covers repeats and author bursts. Missing profile metadata never excludes a valid post. See [note visibility](hidden-note-visibility.md).
 [Absolute windows](absolute-time-window.md) provide bounded relay coverage on both sides for Their Home and keep covered reposts at their verified reading time.
 Notes project client names and valid NIP-89 handler coordinates. Explicit presses resolve verified app metadata; signing honors the account preference.
