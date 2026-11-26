@@ -1,4 +1,5 @@
 // Frontend Transport interface. No relay, event parsing or secret handling here.
+const HEARTBEAT_INTERVAL_MS = 20_000, HEARTBEAT_TIMEOUT_MS = 60_000;
 const publicSigningActions = new Set([
   'publish', 'follow', 'mute', 'bookmark', 'profile.save', 'relays.save',
   'servers.save', 'channel.join', 'channel.save',
@@ -53,7 +54,8 @@ export function workerTransport(options = {}) {
   const message = async (msg, generation = connection) => {
     const live = () => !closed && generation === connection;
     if (!live()) return;
-    lastAlive=performance.now();
+    heartbeatDeadline = performance.now() + HEARTBEAT_TIMEOUT_MS;
+    probingAfterPause = false;
     if (msg.t === 'heartbeat') return;
     if (msg.t === 'reconnect') {
       if (!channel) { port.close(); connectShared(); }
@@ -93,7 +95,7 @@ export function workerTransport(options = {}) {
   };
   const url = (name) => new URL(name, import.meta.url);
   let channel, peers, attachLocal, restartLeader, greet;
-  let lastAlive=performance.now();
+  let lastPoll = performance.now(), heartbeatDeadline = lastPoll + HEARTBEAT_TIMEOUT_MS, probingAfterPause = false;
   const connectShared = () => {
     const generation = ++connection;
     const current = new SharedWorker(url('shared.js'), { type: 'module', name: namespace });
@@ -187,14 +189,27 @@ export function workerTransport(options = {}) {
     if (!worker) greet();
   }
   const heartbeat = setInterval(() => {
-    if(performance.now()-lastAlive>60_000) {
-      lastAlive=performance.now();
-      if(restartLeader)restartLeader();
-      else void message({t:'reconnect'});
+    const now = performance.now();
+    // Give a delayed page one fresh probe even if its previous deadline passed.
+    if (now - lastPoll >= HEARTBEAT_TIMEOUT_MS && !probingAfterPause) {
+      heartbeatDeadline = now + HEARTBEAT_TIMEOUT_MS;
+      probingAfterPause = true;
     }
-    send({t:'heartbeat'});
-  },20_000);
-  const resume = () => { if (document.visibilityState === 'visible') { send({ t: 'heartbeat' }); if (channel && !worker) greet(); } };
+    lastPoll = now;
+    if (now > heartbeatDeadline) {
+      heartbeatDeadline = now + HEARTBEAT_TIMEOUT_MS;
+      probingAfterPause = false;
+      if (restartLeader) restartLeader();
+      else void message({ t: 'reconnect' });
+    }
+    send({ t: 'heartbeat' });
+  }, HEARTBEAT_INTERVAL_MS);
+  const resume = () => {
+    if (document.visibilityState !== 'visible') return;
+    heartbeatDeadline = performance.now() + HEARTBEAT_TIMEOUT_MS;
+    send({ t: 'heartbeat' });
+    if (channel && !worker) greet();
+  };
   document.addEventListener('visibilitychange', resume);
   const close = () => {
     if (closed) return;

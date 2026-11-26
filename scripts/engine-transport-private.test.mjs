@@ -120,8 +120,10 @@ test('a retired leader port cannot label its queued output with the replacement 
     const channel = state.channels[0];
     deliver(channel, { hello: true, from: 'other-page', join: 'other-join' });
     const retired = state.pairs[1].port1.onmessage;
-    state.now = 61000;
-    state.tick();
+    for (const now of [20_000, 40_000, 61_000]) {
+      state.now = now;
+      state.tick();
+    }
     const count = channel.sent.length;
     retired({ data: { t: 'dm.flush', req: 'old', account: query.account, phase: 'release' } });
     assert.equal(channel.sent.length, count);

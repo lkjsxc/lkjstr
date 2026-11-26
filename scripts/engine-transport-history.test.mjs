@@ -186,6 +186,39 @@ test('public signing preserves enqueue time across boot and identifies a restart
   });
 });
 
+for (const fallback of [false, true]) {
+  const route = fallback ? 'dedicated' : 'shared';
+  for (const timerFirst of [false, true]) {
+    const first = timerFirst ? 'heartbeat timer' : 'visibility event';
+    test(`resuming probes the live ${route} route when the ${first} runs first`, () => {
+      fixture((transport, shared, state) => {
+        if (fallback) state.lead();
+        const port = fallback ? state.pairs[0].port1 : shared;
+        const received = [];
+        transport.listen((message) => received.push(message));
+        deliver(port, ready);
+        transport.post(editor('in-flight'));
+        globalThis.document.visibilityState = 'hidden';
+        state.document('visibilitychange');
+
+        // A suspended page cannot deliver a reply or run its heartbeat timer.
+        state.now = 125_000;
+        if (timerFirst) state.tick();
+        globalThis.document.visibilityState = 'visible';
+        state.document('visibilitychange');
+        if (!timerFirst) state.tick();
+        assert.equal(state.workers.length, 1);
+        assert.equal(port.closed === true, false);
+        assert.deepEqual(port.sent.at(-1), { t: 'heartbeat' });
+        deliver(port, { t: 'heartbeat' });
+        const result = { t: 'result', req: 'in-flight', ok: true };
+        deliver(port, result);
+        assert.deepEqual(received, [ready, result]);
+      }, fallback);
+    });
+  }
+}
+
 for (const fallback of [false, true]) test(`running ${fallback ? 'dedicated' : 'shared'} worker still expires without heartbeats`, () => {
   fixture((_transport, shared, state) => {
     if (fallback) state.lead();
@@ -195,10 +228,23 @@ for (const fallback of [false, true]) test(`running ${fallback ? 'dedicated' : '
     deliver(port, { t: 'heartbeat' });
     state.tick();
     assert.equal(state.workers.length, 1);
-    state.now = 119_001;
-    state.tick();
+    for (const now of [79_000, 99_000, 119_001]) {
+      state.now = now;
+      state.tick();
+    }
     assert.equal(state.workers.length, 2);
     if (fallback) assert.equal(state.workers[0].terminated, true);
     else assert.equal(port.closed, true);
   }, fallback);
 });
+
+test('repeatedly throttled polls still replace a Worker that does not answer', () =>
+  fixture((_transport, port, state) => {
+    deliver(port, ready);
+    state.now = 61_000;
+    state.tick();
+    assert.equal(state.workers.length, 1);
+    state.now = 122_000;
+    state.tick();
+    assert.equal(state.workers.length, 2);
+  }));

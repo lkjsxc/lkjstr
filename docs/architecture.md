@@ -34,6 +34,7 @@ the existing transport contract does not need to change with the crate name.
    replans and emits row patches. Cached profiles are part of the first rows.
 6. The Worker persists committed event batches and dispatches results by client.
    Hiding/closing views releases their wants; heartbeat expiry releases clients.
+   A returning page probes its Worker and gives it time to answer before replacing the connection.
 7. The main thread renders finished rows without parsing events or opening relays.
 
 ## Relay decisions
