@@ -1,6 +1,8 @@
 use std::path::Path;
 
-use crate::quiet_steps::{Step, build_steps, run_quiet_step, rust_steps, test_steps};
+use crate::quiet_steps::{
+    Step, build_steps, presence_step, run_quiet_step, rust_steps, test_steps,
+};
 
 /// Quiet gates print one `ok <target>` line on success and a bounded tail on failure.
 pub fn quiet(root: &Path, target: &str) -> Result<(), String> {
@@ -32,7 +34,8 @@ pub fn quiet(root: &Path, target: &str) -> Result<(), String> {
 fn repo_checks(root: &Path) -> Result<(), String> {
     crate::doc_check::check(root)?;
     crate::line_check::check(root)?;
-    crate::rust_style::check(root)
+    crate::rust_style::check(root)?;
+    run_quiet_step(root, &presence_step())
 }
 
 fn run_steps(root: &Path, steps: Vec<Step>) -> Result<(), String> {

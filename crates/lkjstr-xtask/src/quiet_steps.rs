@@ -47,18 +47,27 @@ pub fn rust_steps() -> Vec<Step> {
 
 pub fn test_steps() -> Vec<Step> {
     let mut steps = rust_steps();
-    // Node expands the quoted glob itself, so the Nostr queue tests need no shell.
+    // Node expands the quoted glob itself, so the script tests need no shell.
     steps.push(step(
-        "ship wrapper and Nostr queue tests",
+        "feature presence, ship wrapper and Nostr queue tests",
         OsString::from("node"),
         &[
             "--test",
             "--test-concurrency=2",
+            "scripts/check-feature-presence.test.mjs",
             "scripts/ship.test.mjs",
             "scripts/nostr/*.test.mjs",
         ],
     ));
     steps
+}
+
+pub fn presence_step() -> Step {
+    step(
+        "frontend feature presence",
+        OsString::from("node"),
+        &["scripts/check-feature-presence.mjs"],
+    )
 }
 
 /// Build the sole frontend together with the real Worker package.

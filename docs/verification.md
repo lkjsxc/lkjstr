@@ -9,7 +9,7 @@ Each root gate prints one ok line on success and a bounded tail on failure. Ship
 
 | Command | Runs |
 | --- | --- |
-| pnpm check:repo | doc topology, line caps and Rust style rules |
+| pnpm check:repo | doc topology, line caps, Rust style and frontend feature-presence rules |
 | pnpm test:quiet | fmt, native/WASM clippy, cargo test --workspace, ship wrapper tests |
 | pnpm rust-wasm:quiet | Rust gates, real frontend/Worker build, dist check |
 | pnpm verify:quiet | repo checks, test gate, real frontend/Worker build, dist check |
