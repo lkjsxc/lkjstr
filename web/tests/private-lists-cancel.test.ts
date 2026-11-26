@@ -4,7 +4,10 @@ import { createPrivateListClient } from '../src/engine/client-private-lists.ts';
 import type { FromEngine, ToEngine } from '../src/engine/protocol.ts';
 import { account, deferred, PUBKEY, tick } from './vault-ui-fixture.ts';
 
-beforeEach(() => localStorage.clear());
+beforeEach(() => {
+  localStorage.clear();
+  vi.useFakeTimers();
+});
 afterEach(() => {
   delete (window as { nostr?: unknown }).nostr;
   vi.useRealTimers();
@@ -30,6 +33,53 @@ function fixture() {
   lists.visible('list', true);
   return { out, access, who, lists };
 }
+async function paint(): Promise<void> {
+  vi.advanceTimersToNextFrame();
+  vi.advanceTimersToNextFrame();
+  await tick();
+}
+it('gives public rows a paint before calling the signer and checks identity again after decrypt', async () => {
+  const { out, access, lists } = fixture();
+  const getPublicKey = vi
+    .fn<() => Promise<string>>()
+    .mockResolvedValueOnce(PUBKEY)
+    .mockResolvedValueOnce('b'.repeat(64));
+  const decrypt = vi.fn(async () => 'private plaintext');
+  (window as { nostr?: unknown }).nostr = { getPublicKey, nip44: { decrypt } };
+  try {
+    const pending = lists.crypt(request('initial'));
+    await tick();
+    expect(getPublicKey).not.toHaveBeenCalled();
+    vi.advanceTimersToNextFrame();
+    await tick();
+    expect(getPublicKey).not.toHaveBeenCalled();
+    vi.advanceTimersToNextFrame();
+    await pending;
+    expect(decrypt).toHaveBeenCalledTimes(1);
+    expect(getPublicKey).toHaveBeenCalledTimes(2);
+    expect(out).toEqual([{ t: 'crypted', req: 'initial', error: 'signer-refused' }]);
+  } finally {
+    lists.dispose();
+    access.dispose();
+  }
+});
+it('hiding before the paint cancels the scheduled signer call', async () => {
+  const { out, access, lists } = fixture();
+  const getPublicKey = vi.fn(async () => PUBKEY);
+  (window as { nostr?: unknown }).nostr = { getPublicKey };
+  try {
+    const pending = lists.crypt(request('initial'));
+    vi.advanceTimersToNextFrame();
+    lists.visible('list', false);
+    await pending;
+    await paint();
+    expect(getPublicKey).not.toHaveBeenCalled();
+    expect(out).toEqual([]);
+  } finally {
+    lists.dispose();
+    access.dispose();
+  }
+});
 it.each(['hide', 'close', 'worker', 'lock', 'remove', 'dispose'] as const)(
   '%s during a public-key prompt cannot start a later private decrypt',
   async (stop) => {
@@ -40,7 +90,7 @@ it.each(['hide', 'close', 'worker', 'lock', 'remove', 'dispose'] as const)(
     (window as { nostr?: unknown }).nostr = { getPublicKey, nip44: { decrypt } };
     try {
       const pending = lists.crypt(request('old'));
-      await tick();
+      await paint();
       expect(getPublicKey).toHaveBeenCalledTimes(1);
       if (stop === 'hide') lists.visible('list', false);
       else if (stop === 'close') lists.close('list');
@@ -70,7 +120,7 @@ it('cancelling a pending decrypt also prevents its later public-key recheck', as
   (window as { nostr?: unknown }).nostr = { getPublicKey, nip44: { decrypt } };
   try {
     const pending = lists.crypt(request('old'));
-    await tick();
+    await paint();
     expect(decrypt).toHaveBeenCalledTimes(1);
     lists.cancel('old');
     await pending;
@@ -85,7 +135,6 @@ it('cancelling a pending decrypt also prevents its later public-key recheck', as
   }
 });
 it('a timed-out key prompt cannot decrypt later or block the next Messages operation', async () => {
-  vi.useFakeTimers();
   const { out, access, who, lists } = fixture();
   const key = deferred<string>();
   const getPublicKey = vi.fn(() => key.promise);
@@ -93,7 +142,7 @@ it('a timed-out key prompt cannot decrypt later or block the next Messages opera
   (window as { nostr?: unknown }).nostr = { getPublicKey, nip44: { decrypt } };
   try {
     const pending = lists.crypt(request('deadline'));
-    await tick();
+    await paint();
     await vi.advanceTimersByTimeAsync(60_000);
     await pending;
     expect(out).toEqual([{ t: 'crypted', req: 'deadline', error: 'signer-timeout' }]);

@@ -80,9 +80,12 @@ export function createKeeper(o: {
     dirty = true;
     timer ??= setTimeout(flush, SAVE_MS);
   };
-  /** The rows from the first one on screen, at most `n` (rows are in order, so the first is found by halving). */
-  const onScreen = (n: number): { key: string; top: number }[] => {
-    const top = el.getBoundingClientRect().top;
+  /** Rows from the top of the viewport, including all visible candidates when holding a redraw. */
+  const onScreen = (
+    n: number,
+    holding = false,
+  ): { key: string; top: number; covered: boolean }[] => {
+    const { top, bottom } = el.getBoundingClientRect();
     const kids = list.children;
     let lo = 0;
     let hi = kids.length;
@@ -91,11 +94,18 @@ export function createKeeper(o: {
       if ((kids[mid] as Element).getBoundingClientRect().bottom > top + 1) hi = mid;
       else lo = mid + 1;
     }
-    const out: { key: string; top: number }[] = [];
-    for (let i = lo; i < kids.length && out.length < n; i++) {
-      const key = (kids[i] as HTMLElement).dataset.key;
+    const out: ReturnType<typeof onScreen> = [];
+    for (let i = lo; i < kids.length; i++) {
+      const child = kids[i] as HTMLElement;
+      const row = child.getBoundingClientRect();
+      if (out.length >= n && (!holding || row.top >= bottom)) break;
+      const key = child.dataset.key;
       if (key && o.anchors(key))
-        out.push({ key, top: (kids[i] as Element).getBoundingClientRect().top - top });
+        out.push({
+          key,
+          top: row.top - top,
+          covered: child.classList.contains('hid'),
+        });
     }
     return out;
   };
@@ -168,17 +178,26 @@ export function createKeeper(o: {
     hold(preferred) {
       if (!o.active()) return () => undefined;
       // Several rows, because the first may be the one that goes away.
-      const held = place || el.scrollTop >= TOP_PX ? onScreen(6) : [];
+      const held = place || el.scrollTop >= TOP_PX ? onScreen(6, true) : [];
       const node = preferred && o.node(preferred);
       if (node) {
         const row = node.getBoundingClientRect();
         const view = el.getBoundingClientRect();
         if (row.bottom > view.top && row.top < view.bottom)
-          held.unshift({ key: preferred, top: row.top - view.top });
+          held.unshift({
+            key: preferred,
+            top: row.top - view.top,
+            covered: node.classList.contains('hid'),
+          });
       }
       return () => {
         coasting = moving();
-        const kept = held.some((r) => moveTo(r.key, r.top, r.key === preferred));
+        // A note just covered by a mute has lost its body. Keep the next surviving anchor.
+        const kept = held.some(
+          (r) =>
+            (r.covered || !o.node(r.key)?.classList.contains('hid')) &&
+            moveTo(r.key, r.top, r.key === preferred),
+        );
         coasting = false;
         if (kept) read();
         else put();

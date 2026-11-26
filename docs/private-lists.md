@@ -27,6 +27,10 @@ algorithm. There is no production NIP-04 encryption operation.
 optional stable error code. These counts describe list containers, not tags.
 Relay EOSE does not complete private decryption. Existing loading/failure
 nodes show private dependency state; available public rows stay available.
+The extension bridge gives already delivered public rows a paint opportunity
+before calling the signer. Both identity checks still bound the decrypt.
+When private mutes land, the Worker replaces affected notes with their covered
+rows, and the feed keeps the reader's surviving row at its previous offset.
 Dependency-only updates retain the last relay phase and counters actually
 observed for this query. Both private-list and zap evidence are projected
 from current engine state at emission. Opening a replacement query clears

@@ -138,3 +138,49 @@ it('puts a stale place back once the list is still', () => {
     view.remove();
   }
 });
+
+it('holds the next visible note when private mutes cover the reading anchor', () => {
+  const view = document.createElement('div');
+  const list = document.createElement('div');
+  const muted = document.createElement('article');
+  const visible = document.createElement('article');
+  muted.dataset.key = 'muted';
+  visible.dataset.key = 'visible';
+  list.append(muted, visible);
+  view.append(list);
+  document.body.append(view);
+  let scroll = 600;
+  let mutedHeight = 110;
+  Object.defineProperty(view, 'scrollTop', {
+    get: () => scroll,
+    set: (value: number) => void (scroll = value),
+  });
+  vi.spyOn(view, 'getBoundingClientRect').mockReturnValue(new DOMRect(0, 0, 390, 600));
+  vi.spyOn(muted, 'getBoundingClientRect').mockImplementation(
+    () => new DOMRect(0, 580 - scroll, 390, mutedHeight),
+  );
+  vi.spyOn(visible, 'getBoundingClientRect').mockImplementation(
+    () => new DOMRect(0, 580 + mutedHeight - scroll, 390, 100),
+  );
+  const keeper = createKeeper({
+    el: view,
+    list,
+    saved: undefined,
+    active: () => true,
+    node: (key) => (key === 'muted' ? muted : visible),
+    anchors: () => true,
+    save: () => {},
+  });
+  try {
+    keeper.read();
+    const before = visible.getBoundingClientRect().top;
+    const restore = keeper.hold('muted');
+    muted.classList.add('hid');
+    mutedHeight = 28;
+    restore();
+    expect(visible.getBoundingClientRect().top).toBe(before);
+  } finally {
+    keeper.dispose();
+    view.remove();
+  }
+});

@@ -4,7 +4,10 @@ import { createPrivateListClient } from '../src/engine/client-private-lists.ts';
 import type { FromEngine, ToEngine } from '../src/engine/protocol.ts';
 import { account, deferred, PUBKEY, tick } from './vault-ui-fixture.ts';
 
-beforeEach(() => localStorage.clear());
+beforeEach(() => {
+  localStorage.clear();
+  vi.useFakeTimers();
+});
 afterEach(() => {
   delete (window as { nostr?: unknown }).nostr;
   vi.useRealTimers();
@@ -28,6 +31,11 @@ function fixture() {
   const lists = createPrivateListClient(access, (m) => out.push(m));
   return { out, access, who, lists };
 }
+async function paint(): Promise<void> {
+  vi.advanceTimersToNextFrame();
+  vi.advanceTimersToNextFrame();
+  await tick();
+}
 it('private lists require an opted-in visible view and never read or write DM consent', async () => {
   const { out, access, who, lists } = fixture();
   const decrypt = vi.fn(async () => '[["word","private"]]');
@@ -42,7 +50,9 @@ it('private lists require an opted-in visible view and never read or write DM co
   await tick();
   expect(decrypt).not.toHaveBeenCalled();
   lists.visible('list', true);
-  await lists.crypt(request('visible'));
+  const pending = lists.crypt(request('visible'));
+  await paint();
+  await pending;
   expect(decrypt).toHaveBeenCalledTimes(1);
   expect(out).toContainEqual({ t: 'crypted', req: 'visible', value: '[["word","private"]]' });
   expect(access.status(who)).toBe('ask');
@@ -81,13 +91,15 @@ it('hide cancels active and queued list prompts and ignores late plaintext after
   lists.visible('list', true);
   const old = lists.crypt(request('old')),
     queued = lists.crypt(request('queued'));
-  await tick();
+  await paint();
   expect(decrypt).toHaveBeenCalledTimes(1);
   lists.visible('list', false);
   await Promise.all([old, queued]);
   lists.visible('list', true);
   decrypt.mockResolvedValue('current');
-  await lists.crypt(request('new'));
+  const current = lists.crypt(request('new'));
+  await paint();
+  await current;
   expect(decrypt).toHaveBeenCalledTimes(2);
   late.resolve('stale private text');
   await tick();
@@ -104,11 +116,11 @@ it('explicit worker cancellation and account revocation consume old list answers
   lists.open('list', { source: 'mutes', account: PUBKEY, privateLists: true });
   lists.visible('list', true);
   lists.crypt(request('cancelled'));
-  await tick();
+  await paint();
   lists.cancel('cancelled');
   await tick();
   lists.crypt(request('locked'));
-  await tick();
+  await paint();
   access.accounts([account({ signer: 'extension', locked: true })]);
   late.resolve('late');
   await tick();
@@ -117,7 +129,6 @@ it('explicit worker cancellation and account revocation consume old list answers
   access.dispose();
 });
 it('list signer timeout releases the shared queue without changing DM consent or refusal', async () => {
-  vi.useFakeTimers();
   const { out, access, who } = fixture();
   const late = deferred<string>(),
     decrypt = vi.fn(() => late.promise);
@@ -145,7 +156,7 @@ it('duplicate requests cannot remove ownership of the original hidden-view cance
   lists.open('list', { source: 'mutes', account: PUBKEY, privateLists: true });
   lists.visible('list', true);
   const original = lists.crypt(request('same'));
-  await tick();
+  await paint();
   await lists.crypt(request('same'));
   lists.visible('list', false);
   await original;
