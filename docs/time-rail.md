@@ -24,7 +24,7 @@ the return tick. The engine supplies positions for the current window.
 Loaded targets scroll normally; other targets use the existing window input
 with a month and note ordinal. The existing keeper restores anchors and
 relative offsets. A jump leaves one return place; returning consumes it.
-Home/End address the newest/oldest cached notes. The held label uses actual
+Home/End address the newest/oldest indexed notes. The held label uses actual
 finished row times and the existing scrub wording after the target arrives.
 Loaded and unloaded jumps both retain the original row and offset. Home/End
 belong to an open popover until it closes.
@@ -51,18 +51,14 @@ counted yet (`time-near.ts`) places the grip at its nearest counted row,
 older first, with the share scrolled as a fallback. Unexhausted relay history fades the lower marks. Scrolling to
 the local end keeps the existing history path.
 
-Home, Their Home, Global, hashtag, search, Channel and Notifications share
-the same history horizon between the list and the rail. Each expected route
-contributes its oldest covered time, and the newest of those times is the
-inclusive lower bound. Newest-first pages can expose the verified prefix
-while streaming. A short completed page releases that route. An unanswered
-page has four seconds from admission to answer, then releases its hold for
-that page. The cached head and its connected repair share route coverage.
-Cached notes from the feed owner use the same bound as other notes. The
-ordinary feed can refill at its visible end even when more rows are cached.
-A new route can hold the next extension of the timeline, while the part
-already covered stays available to the reader.
-Profile lists and explicit Moment windows keep their own paging rules.
+Home, Their Home, Global, hashtag, Channel and Notifications use
+the same admitted chronology for list rows and rail ordinals. A 24-hour
+preview keeps recent cached and live notes available. Older rows join through
+settled relay evidence. Home with three or more eligible follows requires three
+distinct non-owner contributors in each admitted extension. A timed-out route
+leaves its unanswered interval owed. Older events stay in the store, and
+refill works from the visible end. See [fetch orchestration](fetch-orchestrator.md).
+Search, profile lists and explicit Moment windows keep their own paging rules.
 
 ## Local days
 

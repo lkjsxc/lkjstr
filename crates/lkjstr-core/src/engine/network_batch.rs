@@ -37,7 +37,13 @@ impl Network {
                     }
             })
             .collect();
-        candidates.sort_by_key(|(key, r)| (r.priority, std::cmp::Reverse(r.weight), *key));
+        candidates.sort_by_key(|(key, r)| {
+            (
+                r.priority,
+                std::cmp::Reverse(self.fetch_weight(r, now)),
+                *key,
+            )
+        });
         ids.extend(
             candidates
                 .into_iter()

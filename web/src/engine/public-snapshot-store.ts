@@ -7,11 +7,13 @@ const MAX_BYTES = 2 * 1024 * 1024;
 const MAX_ENTRY_BYTES = 192 * 1024;
 export const SNAPSHOT_ROWS = 64;
 
+export type SnapshotWindow = { readonly maxAgeMs: number; readonly through?: number };
 export type PublicSnapshot = {
   readonly rows: readonly Row[];
   readonly anchor: string;
   readonly atTop: boolean;
   readonly atBottom: boolean;
+  readonly window?: SnapshotWindow;
 };
 type Envelope = { version: 2; seen: number; body: string; check: number };
 const rowKinds = new Set(['note', 'notification', 'profile', 'person', 'channel', 'mute', 'emoji']);
@@ -51,7 +53,7 @@ export const snapshotIdentity = (
     canonical(query),
     // Earlier Their Home entries can hold Moment order without any row marker.
     ...(query.source === 'their-home' ? ['ordinary'] : []),
-    ...(mergedHistory.has(query.source) ? ['even-history'] : []),
+    ...(mergedHistory.has(query.source) ? ['covered-history'] : []),
   ]);
 
 export const hasAbsoluteReadingTime = (row: Row): boolean =>
@@ -90,6 +92,11 @@ function decode(raw: string | null): PublicSnapshot | undefined {
       typeof body.anchor !== 'string' ||
       typeof body.atTop !== 'boolean' ||
       typeof body.atBottom !== 'boolean' ||
+      (body.window !== undefined &&
+        (!body.window ||
+          !Number.isSafeInteger(body.window.maxAgeMs) ||
+          body.window.maxAgeMs <= 0 ||
+          (body.window.through !== undefined && !Number.isSafeInteger(body.window.through)))) ||
       !body.rows.every(
         (row) =>
           row &&
@@ -102,10 +109,23 @@ function decode(raw: string | null): PublicSnapshot | undefined {
       !body.rows.some((row) => row.key === body.anchor)
     )
       return;
-    return body;
+    if (!body.window) return body;
+    const eligible = snapshotRows(body.rows, body.window);
+    const keys = new Set(eligible.map((row) => row.key));
+    const removed = new Set(body.rows.filter((row) => !keys.has(row.key)).map((row) => row.key));
+    return removed.size ? withoutPublicRows({ ...body, atBottom: false }, removed) : body;
   } catch {
     return;
   }
+}
+
+export function snapshotRows(rows: readonly Row[], window?: SnapshotWindow): readonly Row[] {
+  if (!window) return rows;
+  const floor = Math.min(Date.now(), window.through ?? Infinity) - window.maxAgeMs;
+  const eligible = rows.filter(
+    (row) => (row.kind !== 'note' && row.kind !== 'notification') || row.at >= floor,
+  );
+  return eligible.some((row) => row.kind === 'note' || row.kind === 'notification') ? eligible : [];
 }
 
 export function readPublicSnapshot(identity: string, anchor: Anchor): PublicSnapshot | undefined {

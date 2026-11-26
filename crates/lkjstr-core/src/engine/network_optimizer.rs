@@ -4,6 +4,8 @@ use crate::optimizer::{
     features::{Features, Route},
     plan_policy::hedge_delay,
 };
+#[path = "network_fetch_weight.rs"]
+mod fetch_weight;
 
 const SECONDS: usize = 60;
 

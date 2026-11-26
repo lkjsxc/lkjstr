@@ -11,10 +11,6 @@ impl Engine {
         self.network.reset_observation(&sub);
         self.outgoing
             .retain(|out| !matches!(out, Output::Status { sub: old, .. } | Output::TimeWindow { sub: old, .. } if old == &sub));
-        self.metrics.served_from_cache +=
-            super::list_events::events(&self.store, &query, &self.private_lists)
-                .len()
-                .min(50) as u64;
         self.views.insert(
             sub.clone(),
             View {
@@ -34,12 +30,15 @@ impl Engine {
                 history: None,
                 notification_history: None,
                 history_horizon: None,
-                oldest_history_shown: None,
+                history_scope: None,
                 at_bottom: false,
                 source_exhausted: false,
             },
         );
         self.replan(now);
         self.render(&sub, true);
+        if let Some(view) = self.views.get(&sub) {
+            self.metrics.served_from_cache += view.rows.len().min(50) as u64;
+        }
     }
 }

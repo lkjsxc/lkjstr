@@ -1208,7 +1208,12 @@ export type Timeline = {
 };
 export type FromEngine =
   | PublicCacheReconcile
-  | { readonly t: 'cache.policy'; readonly sub: SubId; readonly allow: boolean }
+  | {
+      readonly t: 'cache.policy';
+      readonly sub: SubId;
+      readonly allow: boolean;
+      readonly snapshotWindow?: { readonly maxAgeMs: Millis; readonly through?: Millis };
+    }
   | { readonly t: 'storage'; readonly req: ReqId; readonly report: StorageReport }
   | ({ readonly t: 'signer.auth' } & SignerAuthorization)
   | { readonly t: 'signer.auth.clear'; readonly id: string }

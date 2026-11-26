@@ -1,6 +1,22 @@
 //! Queue pressure revokes raw-page evidence; replay remains owned by the request.
 use super::*;
 impl Network {
+    pub(in crate::engine) fn confirm_page_event(
+        &mut self,
+        relay: &str,
+        wire: &str,
+        event: &NostrEvent,
+    ) {
+        for r in self.requests.values_mut().filter(|r| {
+            r.relay == relay
+                && r.wire_id == wire
+                && r.received.contains(&event.id)
+                && lkjstr_protocol::matches_filter(event, &r.filter)
+        }) {
+            r.received.confirm(&event.id, event.created_at);
+        }
+    }
+
     pub(in crate::engine) fn verification_dropped(&mut self, relay: &str, event: &NostrEvent) {
         let wires: BTreeSet<_> = self
             .requests

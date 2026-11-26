@@ -34,6 +34,10 @@ impl Store {
 
     /// Newest-first events matching `query`; decode only selected results.
     pub fn feed(&self, query: &Query) -> Vec<Event> {
+        self.feed_since(query, None)
+    }
+
+    pub(crate) fn feed_since(&self, query: &Query, since: Option<u64>) -> Vec<Event> {
         let source: Box<dyn Iterator<Item = &OrderedEvent>> = match &query.mention {
             Some(pubkey) => match decode_id(pubkey).and_then(|key| self.by_tag_p.get(&key)) {
                 Some(set) => Box::new(set.iter().rev()),
@@ -53,6 +57,7 @@ impl Store {
         let excluded = query.exclude_author.as_deref().and_then(decode_id);
         source
             .map(|key| &key.0)
+            .take_while(|event| since.is_none_or(|since| event.order.0 >= since))
             .filter(|event| query.until.is_none_or(|until| event.order.0 <= until))
             .filter(|event| query.kinds.is_empty() || query.kinds.contains(&event.kind))
             .filter(|event| {

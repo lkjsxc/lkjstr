@@ -25,7 +25,8 @@ fn pressure(source: Source) {
     let mut engine = Engine::new();
     engine.store = Store::with_caps(8, 3).weight_retention();
     let profile = event(1, 7, 0);
-    let note = event(20, 7, 1);
+    let mut note = event(20, 7, 1);
+    note.created_at = 1_799_999_999;
     let mut follows = event(30, 8, 3);
     follows.tags = vec![vec!["p".into(), note.pubkey.clone()]];
     for event in [&profile, &note, &follows] {
@@ -46,6 +47,12 @@ fn pressure(source: Source) {
             },
         },
         1_800_000_000_000,
+    );
+    assert!(
+        engine.views["visible"]
+            .rows
+            .iter()
+            .any(|row| row.id == note.id)
     );
     engine.store.insert_deferred(event(10, 11, 0), None);
     engine.store.insert_deferred(event(11, 12, 0), None);

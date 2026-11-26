@@ -5,7 +5,7 @@ use std::collections::BTreeMap;
 #[derive(Clone, Default)]
 pub(in crate::engine) struct PageFrontier {
     // At most the transmitted page limit (relay max_limit is clamped to 200).
-    times: BTreeMap<String, u64>,
+    times: BTreeMap<String, (u64, bool)>,
     oldest: Option<u64>,
 }
 impl PageFrontier {
@@ -22,7 +22,17 @@ impl PageFrontier {
         self.times.keys()
     }
     pub(super) fn timestamp(&self, id: &str) -> Option<u64> {
-        self.times.get(id).copied()
+        self.times.get(id).map(|&(at, _)| at)
+    }
+    pub(super) fn confirm(&mut self, id: &str, at: u64) {
+        if let Some((time, verified)) = self.times.get_mut(id)
+            && *time == at
+        {
+            *verified = true;
+        }
+    }
+    pub(super) fn verified(&self) -> bool {
+        self.times.values().all(|&(_, verified)| verified)
     }
     pub(in crate::engine) fn clear(&mut self) {
         self.times.clear();
@@ -37,7 +47,7 @@ impl PageFrontier {
             return self.oldest;
         }
         if self.times.len() < limit {
-            self.times.insert(id.to_owned(), at);
+            self.times.insert(id.to_owned(), (at, false));
             self.oldest = Some(self.oldest.map_or(at, |oldest| oldest.min(at)));
             return self.oldest;
         }
@@ -49,13 +59,13 @@ impl PageFrontier {
         let victim = self
             .times
             .iter()
-            .find(|(_, timestamp)| Some(**timestamp) == self.oldest)
+            .find(|(_, (timestamp, _))| Some(*timestamp) == self.oldest)
             .map(|(id, _)| id.clone());
         if let Some(victim) = victim {
             self.times.remove(&victim);
         }
-        self.times.insert(id.to_owned(), at);
-        self.oldest = self.times.values().copied().min();
+        self.times.insert(id.to_owned(), (at, false));
+        self.oldest = self.times.values().map(|&(at, _)| at).min();
         self.oldest
     }
 }

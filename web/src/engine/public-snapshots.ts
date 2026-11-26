@@ -102,6 +102,7 @@ export function publicSnapshots(inner: Transport): Transport {
         view.dirty = false;
       } else if (view.allow !== true) view.rows = [];
       view.allow = message.allow;
+      view.snapshotWindow = message.snapshotWindow;
       receive(message);
       return;
     }

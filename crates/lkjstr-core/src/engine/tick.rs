@@ -38,6 +38,7 @@ impl Engine {
         self.advance_visibility_clock(now);
         let was_verifying = self.network.verifying;
         let pressured = self.store.pressure_admission_paused();
+        let mut new_preview_note = false;
         for attempt in 0..VERIFY_SLICE_LIMIT {
             let blocked = pressured
                 || self
@@ -60,30 +61,42 @@ impl Engine {
                 event: e,
                 wire,
                 sequence,
+                copies,
+                bytes,
             }) = self.queue.remove(index)
             else {
                 break;
             };
-            self.queue_bytes = self
-                .queue_bytes
-                .saturating_sub(crate::store::event_payload_bytes(&e));
+            self.queue_bytes = self.queue_bytes.saturating_sub(bytes);
+            let confirm = |network: &mut network::Network| {
+                if let Some(wire) = &wire {
+                    network.confirm_page_event(&relay, wire, &e);
+                }
+                for (relay, wire) in &copies {
+                    network.confirm_page_event(relay, wire, &e);
+                }
+            };
             if self
                 .store
                 .lease(&e.id)
                 .is_some_and(|known| known.matches(&e))
             {
+                confirm(&mut self.network);
                 self.network.observe_verified(&relay, &e, now);
                 self.relay_served(&relay, &e.id);
                 continue;
             }
             if matches!(verify_event(&e), VerificationResult::Ok(_)) {
                 self.verified += 1;
+                confirm(&mut self.network);
                 self.network.event(&relay, &e, now);
                 if let Some(nested) = lkjstr_protocol::verified_nested_repost(&e) {
                     self.insert_verified(nested, Some(&relay));
                 }
                 self.read_contexts.changed(&e);
+                let timeline_note = matches!(e.kind, 1 | 6 | 42);
                 let (outcome, lease) = self.store.insert_leased(e, Some(&relay));
+                new_preview_note |= timeline_note && lease.is_some();
                 if matches!(
                     outcome,
                     crate::store::Inserted::InvalidExpiration
@@ -158,10 +171,22 @@ impl Engine {
         observe(TickPhase::Plan);
         if flush {
             self.last_flush = now;
+        }
+        if flush || new_preview_note {
             let subs: Vec<_> = self
                 .views
                 .iter()
-                .filter(|(_, v)| v.visible && v.dirty)
+                .filter(|(_, v)| {
+                    v.visible
+                        && v.dirty
+                        && (flush
+                            || v.rows.is_empty()
+                                && v.time_window.is_none()
+                                && matches!(
+                                    v.query.source,
+                                    protocol::Source::Home | protocol::Source::TheirHome
+                                ))
+                })
                 .map(|(id, _)| id.clone())
                 .collect();
             for sub in subs {
@@ -175,3 +200,7 @@ impl Engine {
 #[cfg(test)]
 #[path = "pressure_recovery_test.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "tick_preview_test.rs"]
+mod preview_tests;

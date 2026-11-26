@@ -10,8 +10,8 @@ export async function railSmoke(
 ): Promise<void> {
   const feed = '.view[data-kind="home"]';
   const rail = page.locator(`${feed} .time-rail`);
-  // The plain grip appears before the first count. This drag exercises the indexed rail.
-  await page.locator(`${feed} .time-rail:not(.plain) .time-year`).last().waitFor();
+  // The preview can have one year before the fixture's historical page settles.
+  await page.locator(`${feed} .time-rail:not(.plain) .time-year`).nth(1).waitFor();
   check('Home has a time rail', await rail.isVisible());
   const grip = rail.locator('.time-grip');
   const geometry = () =>

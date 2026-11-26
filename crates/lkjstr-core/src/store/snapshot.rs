@@ -13,6 +13,10 @@ impl Store {
         self.snapshot_revision
     }
 
+    pub(crate) fn history_removals(&self) -> u64 {
+        self.history_removals
+    }
+
     pub(crate) fn existed_at(&self, id: &str, revision: u64) -> bool {
         super::decode_id(id)
             .and_then(|id| self.generations.get(&id))

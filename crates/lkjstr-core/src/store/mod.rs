@@ -88,6 +88,7 @@ pub struct Store {
     // One generation per retained event; removed together with its event.
     generations: HashMap<Id, u64>,
     snapshot_revision: u64,
+    history_removals: u64,
     evictions: u64,
     // At most MAX_DELETED recent evictions, with verified IDs only.
     evicted: BTreeMap<String, eviction_fences::Fence>,
@@ -141,6 +142,7 @@ impl Store {
             revision: 0,
             generations: HashMap::new(),
             snapshot_revision: 0,
+            history_removals: 0,
             evictions: 0,
             evicted: BTreeMap::new(),
             evicted_order: BTreeSet::new(),
@@ -197,8 +199,13 @@ impl Store {
     }
 
     pub fn replaceable(&self, pubkey: &str, kind: u64) -> Option<Event> {
+        self.replaceable_lease(pubkey, kind)
+            .map(|event| event.materialize())
+    }
+
+    pub(crate) fn replaceable_lease(&self, pubkey: &str, kind: u64) -> Option<&Lease> {
         let id = self.replaceable.get(&(decode_id(pubkey)?, kind))?;
-        self.events.get(id).map(|event| event.materialize())
+        self.events.get(id)
     }
 }
 

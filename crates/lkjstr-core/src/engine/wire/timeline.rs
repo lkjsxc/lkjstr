@@ -1,4 +1,4 @@
-//! Incremental cache-only time index. One 256-event slice per client tick, round robin across
+//! Incremental time index. One 256-row slice per client tick, round robin across
 //! at most 128 subscriptions. Current/prior key maps and the ordinal lookup each
 //! retain at most one store-capacity snapshot; close releases all three. Local days
 //! (timeline_days.rs) come from the same scan. Grouped and activity lists index their own
@@ -147,14 +147,13 @@ impl Session {
         // A deeper horizon joins the next bounded scan. The current map stays
         // within the covered part and can finish while relay pages stream in.
         let horizon = index.horizon;
-        if !index.done && now.saturating_sub(index.started) >= 100 && projected::projected(q) {
-            if index.rows.is_none() {
-                let mut rows = projected::rows(&self.project_source(sub, e, false));
-                if let Some(at) = horizon {
-                    rows.retain(|(_, time)| time / 1000 >= at);
-                }
-                index.rows = Some(rows);
-            }
+        if !index.done
+            && now.saturating_sub(index.started) >= 100
+            && (horizon.is_some() || projected::projected(q))
+        {
+            index
+                .rows
+                .get_or_insert_with(|| projected::subscription_rows(self, sub, e, q, horizon));
             projected::slice(index, &*e.calendar, now);
         } else if !index.done && now.saturating_sub(index.started) >= 100 {
             let filter = query::filter(&e.store, q);

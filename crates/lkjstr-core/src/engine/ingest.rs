@@ -4,6 +4,7 @@
 // far more wire bandwidth than retaining that burst until verification runs.
 pub(super) const MAX_VERIFY_QUEUE: usize = 4096;
 pub(super) const MAX_VERIFY_QUEUE_BYTES: usize = 32 * 1024 * 1024;
+const MAX_PAGE_COPIES: usize = 4;
 use super::*;
 
 pub(super) struct QueuedEvent {
@@ -11,6 +12,8 @@ pub(super) struct QueuedEvent {
     pub(super) event: NostrEvent,
     pub(super) wire: Option<String>,
     pub(super) sequence: u64,
+    pub(super) copies: Vec<(String, String)>,
+    pub(super) bytes: usize,
 }
 impl Engine {
     pub fn enqueue(&mut self, relay: String, event: NostrEvent) {
@@ -24,11 +27,34 @@ impl Engine {
             .lease(&event.id)
             .is_some_and(|known| known.matches(&event));
         if known {
+            if let Some((_, wire)) = &delivery {
+                self.network.confirm_page_event(&relay, wire, &event);
+            }
             self.network
                 .observe_verified(&relay, &event, self.network.now);
             self.relay_served(&relay, &event.id);
         }
-        if known || self.queue.iter().any(|queued| queued.event == event) {
+        let duplicate = if known {
+            None
+        } else {
+            self.queue.iter_mut().find(|queued| queued.event == event)
+        };
+        if known || duplicate.is_some() {
+            if let (Some(queued), Some(delivery)) = (duplicate, delivery) {
+                let bytes = std::mem::size_of::<(String, String)>()
+                    + delivery.0.capacity()
+                    + delivery.1.capacity();
+                if queued.copies.len() < MAX_PAGE_COPIES
+                    && self.queue_bytes.saturating_add(bytes) <= MAX_VERIFY_QUEUE_BYTES
+                    && !(queued.relay == delivery.0 && queued.wire.as_ref() == Some(&delivery.1))
+                    && !queued.copies.contains(&delivery)
+                {
+                    queued.copies.reserve_exact(1);
+                    queued.copies.push(delivery);
+                    queued.bytes += bytes;
+                    self.queue_bytes += bytes;
+                }
+            }
             self.network.repeated_deliveries = self
                 .network
                 .repeated_deliveries
@@ -56,6 +82,8 @@ impl Engine {
             event,
             wire: delivery.map(|(_, wire)| wire),
             sequence: self.delivery_sequence,
+            copies: Vec::new(),
+            bytes,
         };
         // Profiles requested for visible authors precede bulk note verification.
         if entry.event.kind == 0 {

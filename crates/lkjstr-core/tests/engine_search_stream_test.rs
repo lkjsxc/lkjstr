@@ -66,6 +66,7 @@ fn an_unavailable_repost_does_not_consume_the_ordinary_note_window() {
             newest.clone(),
             orphan,
         ]);
+        f.now = 1_700_000_004_000;
         f.input(json!({"t":"open","sub":"s","query":{
             "source":source,"account":pubkey(2),
             "text":if source == "search" { Some("alice blue") } else { None }

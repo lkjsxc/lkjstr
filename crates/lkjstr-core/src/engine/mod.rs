@@ -94,7 +94,7 @@ pub struct View {
     history: Option<lkjstr_protocol::NostrFilter>, // One per view; released on hide/close.
     notification_history: Option<lkjstr_protocol::NostrFilter>,
     history_horizon: Option<u64>,
-    oldest_history_shown: Option<u64>,
+    history_scope: Option<even_history::ProofScope>,
     at_bottom: bool,
     source_exhausted: bool,
 }

@@ -145,3 +145,20 @@ fn verification_loss_clears_each_frontier_and_replays_the_original_span() {
             .all(|request| { request.received.is_empty() && request.oldest.is_none() })
     );
 }
+
+#[test]
+fn confirmation_requires_the_admitted_timestamp_and_is_cleared_on_replay() {
+    let mut page = PageFrontier::default();
+    page.record("first", 11, 2);
+    page.record("second", 10, 2);
+    page.confirm("first", 11);
+    page.confirm("second", 9);
+    assert!(!page.verified());
+    page.confirm("second", 10);
+    assert!(page.verified());
+    page.record("newer", 12, 2);
+    assert!(!page.verified());
+    page.clear();
+    page.record("first", 11, 2);
+    assert!(!page.verified());
+}

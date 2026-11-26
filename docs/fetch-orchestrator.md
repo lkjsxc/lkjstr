@@ -1,5 +1,7 @@
 # Fetch orchestration for chronological views
 
+## Purpose
+
 Home can receive a recent page from one relay while another is still connecting.
 Older cached rows, including the account's own history, can then look like the
 whole feed. The list and time rail need one chronological index whose extent is
@@ -39,17 +41,18 @@ content for diversity and the filter's actor for route accounting.
 
 ## What the reader can see
 
-Advance a single contiguous historical boundary from the head. Coverage for an
-older range requires enough independent settled sources or author-group answers
-and evidence spread through the range. A Stage 1 Home with three or more other
-eligible follows requires three distinct non-owner contributors in each daily
-band containing follow posts, using settled answers. Full route answers still
-owe the older portion of that band. A continuously complete set of sources can
-bridge an empty band. Stage 2 can distinguish verified narrow activity from a
-sampling failure using author-targeted negative evidence. For a deliberately
-small follow graph, require every other eligible follow to be accounted for.
-Owner-only subscriptions follow their explicit scope once the follow list is
-known. Pending follow discovery cannot silently turn Home into that scope.
+Advance a single contiguous historical boundary from the head. In Stage 1 a
+settled page must meet the current boundary, and the next extension spans at
+most 24 hours. Home with three or more other eligible follows requires three
+distinct non-owner signers of matching notes in that extension. A smaller
+graph with other eligible follows needs each of them. Historic admission stops
+at the oldest contributing note. Owner-only subscriptions can use the settled
+interval once the follow list is known. Pending follow discovery keeps Home
+in its recent preview. Other broad merged queries use three distinct
+contributors where their scope allows them. A channel or inbox can use
+a settled answer to its specific filter, even when few authors match.
+Search keeps direct access to matching cached notes. Stage 2 adds author-group
+answers and empty gap repair.
 
 Take the deepest contiguous range that meets the policy. A deeper isolated
 success stays behind a gap. Owner and prolific authors can appear in covered
@@ -61,13 +64,14 @@ same admitted chronology as windows. If the shared index changes while a drag
 is in progress, retain the existing drag-map behavior. A published map cannot
 offer anchors beyond its admitted span.
 
-Settle a display decision after four seconds of unanswered work. Stop blocking
-the recent preview and release the waiting source's slot, keeping the old range
-owed. A time limit cannot create historical evidence. Later successful work can
+Keep the 24-hour preview open while answers arrive and apply the existing
+bounded request waits. Render the first verified Home preview immediately and
+batch later arrivals. Four seconds of unanswered work no longer exposes a
+cached tail. A timeout leaves the old range owed, and later successful work can
 extend the span. Hold already shown, still-valid rows across route rotations.
-Follow/mute changes, signed deletions, retention holes and identity changes can
-invalidate covered rows. Snapshot replay must use the same policy version and
-must not restore an unknown historical tail from an earlier session.
+Follow or mute changes and event removals can invalidate covered rows.
+Snapshot replay uses the same policy identity and the preview age supplied by
+the engine, so it cannot reintroduce unknown history on reload.
 
 ## Spending connection and bandwidth budgets
 
@@ -107,8 +111,8 @@ must be measured separately from answer coverage.
    from `engine/network_horizon.rs` and its page frontiers. Keep the existing
    selector in `engine/read_plan.rs`, physical limits in `engine/network_tick.rs`
    and link sizing in `engine/network_optimizer.rs`. Rank the ready public page
-   candidates with deterministic class and source weights, leaving a pure input
-   for additional author-group weighting. Prove a delayed-source replay keeps an
+   candidates with explicit author groups using deterministic class and source
+   weights. Prove a delayed-source replay keeps an
    older owner-only cohort out of both projections and admits a diverse page
    when settled. Record oldest-15 author shares, first note time, and list/rail
    anchor agreement. Check warm replay on the same fixture.

@@ -114,6 +114,22 @@ pub fn events(store: &Store, q: &Query) -> Vec<Event> {
     select(store, q, true)
 }
 pub(super) fn select(store: &Store, q: &Query, collapse_acts: bool) -> Vec<Event> {
+    select_projected(store, q, collapse_acts, |event, _| event)
+}
+pub(super) fn events_with_placement(store: &Store, q: &Query) -> Vec<(Event, u64)> {
+    select_projected(store, q, true, |event, at| (event, at))
+}
+
+fn select_projected<T>(
+    store: &Store,
+    q: &Query,
+    collapse_acts: bool,
+    project: impl Fn(Event, u64) -> T,
+) -> Vec<T> {
+    let authored = |event: Event| {
+        let at = event.created_at;
+        project(event, at)
+    };
     if signed_out(q) {
         return vec![];
     }
@@ -136,20 +152,24 @@ pub(super) fn select(store: &Store, q: &Query, collapse_acts: bool) -> Vec<Event
                         .as_ref()
                         .is_none_or(|a| a.contains(&e.pubkey))
             })
+            .map(authored)
             .collect();
     }
     let f = filter(store, q);
     let mut events = if q.source == Source::Channel {
         store.referencing(q.target.as_deref().unwrap_or(""))
     } else {
-        store.feed(&StoreQuery {
-            kinds: f.kinds.clone().unwrap_or_default(),
-            authors: f.authors.clone().map(|a| a.into_iter().collect()),
-            mention: f.tags.get("p").and_then(|v| v.first()).cloned(),
-            until: f.until,
-            limit: store.len(),
-            ..Default::default()
-        })
+        store.feed_since(
+            &StoreQuery {
+                kinds: f.kinds.clone().unwrap_or_default(),
+                authors: f.authors.clone().map(|a| a.into_iter().collect()),
+                mention: f.tags.get("p").and_then(|v| v.first()).cloned(),
+                until: f.until,
+                limit: store.len(),
+                ..Default::default()
+            },
+            f.since,
+        )
     };
     if q.source == Source::Bookmarks {
         events = q
@@ -180,16 +200,24 @@ pub(super) fn select(store: &Store, q: &Query, collapse_acts: bool) -> Vec<Event
         return events
             .into_iter()
             .filter(|e| policy(e.kind).openable)
+            .map(authored)
             .collect();
     }
     if collapse_acts && super::acts::activity(q) {
-        return super::acts::representatives(store, events);
+        return super::acts::representatives(store, events)
+            .into_iter()
+            .map(authored)
+            .collect();
     }
     let mut seen = std::collections::HashSet::new();
     events
         .into_iter()
-        .filter_map(|event| collapse_repost(store, q, event))
-        .filter(|e| policy(e.kind).openable && seen.insert(e.id.clone()))
+        .filter_map(|event| {
+            let at = event.created_at;
+            let event = collapse_repost(store, q, event)?;
+            (policy(event.kind).openable && seen.insert(event.id.clone()))
+                .then(|| project(event, at))
+        })
         .collect()
 }
 
@@ -219,5 +247,4 @@ pub(super) fn collapse_repost(store: &Store, q: &Query, event: Event) -> Option<
 }
 pub(super) use super::query_hidden::matches_note;
 pub use super::query_hidden::{hidden, hidden_with_lists};
-
 pub(super) use super::query_predicates::accepts;

@@ -175,3 +175,31 @@ it('rejects legacy merged history and keeps unchanged profile snapshots', async 
   home.transport.close();
   profile.transport.close();
 });
+
+it('captures the preview and expires it on same-query replay', async () => {
+  vi.setSystemTime(100_000);
+  const recent = { ...newer, at: 99_000 };
+  const aged = { ...repost, at: 90_000 };
+  const h = harness();
+  openAt(h, 'top');
+  h.emit({
+    t: 'cache.policy',
+    sub: 'one',
+    allow: true,
+    snapshotWindow: { maxAgeMs: 5_000 },
+  });
+  h.rows([recent, aged]);
+  await vi.advanceTimersByTimeAsync(201);
+  h.transport.close();
+  const warm = harness();
+  openAt(warm, 'top');
+  await vi.advanceTimersByTimeAsync(0);
+  expect(painted(warm)).toMatchObject([{ rows: [recent] }]);
+  warm.transport.close();
+  vi.setSystemTime(106_000);
+  const expired = harness();
+  openAt(expired, 'top');
+  await vi.advanceTimersByTimeAsync(0);
+  expect(painted(expired)).toEqual([]);
+  expired.transport.close();
+});

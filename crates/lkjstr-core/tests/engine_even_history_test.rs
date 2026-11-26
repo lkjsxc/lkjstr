@@ -9,7 +9,6 @@ const A: &str = "wss://fast.test/";
 const B: &str = "wss://slow.test/";
 const C: &str = "wss://replacement.test/";
 const NOW: u64 = 1_800_000_000_000;
-
 fn home_wires(engine: &mut Engine, now: u64) -> [String; 2] {
     let mut wires = [String::new(), String::new()];
     for i in 0..20 {
@@ -19,7 +18,7 @@ fn home_wires(engine: &mut Engine, now: u64) -> [String; 2] {
                 let frame: Vec<Value> = serde_json::from_str(&text).expect("relay frame");
                 if frame[0] == "REQ"
                     && frame.iter().skip(2).any(|f| {
-                        f["authors"].as_array().is_some_and(|a| a.len() == 2)
+                        f["authors"].as_array().is_some_and(|a| a.len() == 4)
                             && f["kinds"].as_array().is_some_and(|k| k.contains(&json!(1)))
                     })
                 {
@@ -37,7 +36,6 @@ fn home_wires(engine: &mut Engine, now: u64) -> [String; 2] {
     );
     wires
 }
-
 fn message(engine: &mut Engine, relay: &str, frame: Value, now: u64) {
     if let Some(event) = engine.network.message(relay, &frame.to_string(), now) {
         engine.enqueue(relay.into(), event);
@@ -67,7 +65,6 @@ fn rail(session: &mut Session, engine: &Engine, now: u64) -> Value {
         .expect("Home timeline")["timeline"]
         .clone()
 }
-
 fn ids(window: &Value) -> Vec<&str> {
     window["rows"]
         .as_array()
@@ -79,7 +76,11 @@ fn ids(window: &Value) -> Vec<&str> {
 
 fn scenario(timeout: bool) {
     let owner = generate_secret_key();
-    let follower = generate_secret_key();
+    let followers = [
+        generate_secret_key(),
+        generate_secret_key(),
+        generate_secret_key(),
+    ];
     let sign = |key, at, kind, tags| -> NostrEvent {
         finalize_event(
             &EventTemplate {
@@ -93,14 +94,20 @@ fn scenario(timeout: bool) {
         )
         .expect("signed fixture")
     };
-    let recent = sign(&follower, 1_799_999_997, 1, vec![]);
-    let middle = sign(&follower, 1_797_000_000, 1, vec![]);
-    let old = sign(&owner, 1_750_000_000, 1, vec![]);
+    let recent = sign(&followers[0], NOW / 1000 - 3, 1, vec![]);
+    let aged: Vec<_> = followers
+        .iter()
+        .enumerate()
+        .map(|(i, key)| sign(key, NOW / 1000 - 90_000 - i as u64 * 100, 1, vec![]))
+        .collect();
+    let old = sign(&owner, NOW / 1000 - 95_000, 1, vec![]);
     let follow = sign(
         &owner,
         1_700_000_000,
         3,
-        vec![vec!["p".into(), recent.pubkey.clone()]],
+        aged.iter()
+            .map(|note| vec!["p".into(), note.pubkey.clone()])
+            .collect(),
     );
     let mut engine = Engine::new();
     let mut session = Session::default();
@@ -121,9 +128,14 @@ fn scenario(timeout: bool) {
     engine.network.connected(B, NOW + 1);
     let [fast, slow] = home_wires(&mut engine, NOW + 10);
     engine.store.insert(old.clone(), None);
+    engine.store.insert(aged[2].clone(), None);
     message(&mut engine, A, json!(["EVENT", fast, recent]), NOW + 2_050);
+    message(&mut engine, A, json!(["EVENT", fast, old]), NOW + 2_050);
+    message(&mut engine, A, json!(["EVENT", fast, aged[0]]), NOW + 2_050);
     message(&mut engine, A, json!(["EOSE", fast]), NOW + 2_051);
-    message(&mut engine, B, json!(["EVENT", slow, recent]), NOW + 2_052);
+    if !timeout {
+        message(&mut engine, B, json!(["EVENT", slow, recent]), NOW + 2_052);
+    }
     engine.tick(NOW + 2_100);
     let limited = rows(&mut session, &mut engine, NOW + 2_101);
     assert_eq!(ids(&limited), [recent.id.as_str()]);
@@ -148,7 +160,7 @@ fn scenario(timeout: bool) {
     if timeout {
         engine.tick(NOW + 4_001);
         let expired = rows(&mut session, &mut engine, NOW + 4_002);
-        assert_eq!(ids(&expired), [recent.id.as_str(), old.id.as_str()]);
+        assert_eq!(ids(&expired), [recent.id.as_str()]);
         assert_eq!(expired["atBottom"], false);
         engine.input(
             Input::Configure {
@@ -164,24 +176,40 @@ fn scenario(timeout: bool) {
                 .any(|effect| { matches!(effect, Effect::Connect(relay) if relay == C) })
         );
         let replaced = rows(&mut session, &mut engine, NOW + 4_101);
-        assert_eq!(ids(&replaced), [recent.id.as_str(), old.id.as_str()]);
+        assert_eq!(ids(&replaced), [recent.id.as_str()]);
         assert_eq!(replaced["atBottom"], false);
     } else {
-        message(&mut engine, B, json!(["EVENT", slow, middle]), NOW + 2_650);
+        for (i, note) in aged.iter().enumerate() {
+            message(
+                &mut engine,
+                B,
+                json!(["EVENT", slow, note]),
+                NOW + 2_650 + i as u64,
+            );
+        }
         engine.tick(NOW + 2_700);
         assert_eq!(
             ids(&rows(&mut session, &mut engine, NOW + 2_701)),
-            [recent.id.as_str(), middle.id.as_str()]
+            [recent.id.as_str()]
         );
         message(&mut engine, B, json!(["EOSE", slow]), NOW + 2_750);
         engine.tick(NOW + 2_800);
+        let expected: Vec<_> = std::iter::once(recent.id.as_str())
+            .chain(aged.iter().map(|note| note.id.as_str()))
+            .collect();
+        assert_eq!(ids(&rows(&mut session, &mut engine, NOW + 2_801)), expected);
+        let map = rail(&mut session, &engine, NOW + 2_900);
+        assert_eq!(map["oldest"], aged[2].created_at * 1000);
         assert_eq!(
-            ids(&rows(&mut session, &mut engine, NOW + 2_801)),
-            [recent.id.as_str(), middle.id.as_str(), old.id.as_str()]
+            map["positions"].as_array().expect("positions").len(),
+            expected.len()
         );
-        assert_eq!(
-            rail(&mut session, &engine, NOW + 2_900)["oldest"],
-            old.created_at * 1000
+        assert!(
+            map["positions"]
+                .as_array()
+                .expect("positions")
+                .iter()
+                .all(|position| expected.contains(&position["key"].as_str().expect("key")))
         );
     }
 }
@@ -192,10 +220,9 @@ fn slow_home_route_releases_older_rows_and_rail_together() {
 }
 
 #[test]
-fn silent_tail_releases_after_four_seconds_without_claiming_exhaustion() {
+fn silent_tail_stays_owed_after_four_seconds() {
     scenario(true);
 }
-
 #[test]
 fn home_waiting_for_follows_does_not_open_with_only_its_owners_cached_history() {
     let own = engine_review_support::event(1_750_000_000, 1, "owner's retained note", vec![]);

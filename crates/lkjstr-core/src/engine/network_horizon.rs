@@ -1,115 +1,110 @@
-//! Route-local lower bounds for a merged chronological view.
+//! Historical evidence from the actual filter sent on an answered relay request.
 use super::*;
-use crate::store::Store;
+use crate::engine::even_history::Scope;
+use std::ops::Range;
 
-const HISTORY_WAIT_MS: u64 = 4_000;
+const BAND_SECONDS: u64 = 86_400;
+const BANDS_PER_PASS: usize = 8;
 
 impl Request {
-    fn history_floor(&self, store: &Store, now: u64) -> Option<u64> {
-        let deadline = self.created_at.saturating_add(HISTORY_WAIT_MS);
-        if self.page_eose && self.page_answered_at.is_some_and(|at| at < deadline) {
-            return if self.received.len() >= self.page_limit {
-                self.oldest
-            } else {
-                self.cached_until
-            };
-        }
-        if self.complete && !self.page_eose || now >= deadline {
+    fn answered_range(&self) -> Option<Range<u64>> {
+        if !self.asked
+            || !self.page_eose
+            || self.page_answered_at.is_none()
+            || self.sent_at == 0
+            || self.verification_retry
+            || !self.received.verified()
+        {
             return None;
         }
-        // NIP-01 orders the initial results newest first. Follow the streamed
-        // page while it arrives, then use the completed page's actual limit.
-        let oldest_verified = self
-            .received
-            .iter()
-            .filter_map(|id| {
-                self.received
-                    .timestamp(id)
-                    .filter(|at| store.lease(id).is_some_and(|event| event.order.0 == *at))
-            })
-            .min();
-        Some(oldest_verified.unwrap_or_else(|| self.filter.until.unwrap_or(self.created_at / 1000)))
+        let high = self
+            .filter
+            .until
+            .unwrap_or(self.created_at / 1000)
+            .saturating_add(1);
+        let since = self.filter.since.unwrap_or(0);
+        let low = if self.received.len() >= self.page_limit {
+            since.max(self.oldest?.saturating_add(1))
+        } else {
+            since
+        };
+        (low < high).then_some(low..high)
     }
 }
 
 impl Network {
-    pub(in crate::engine) fn history_horizon(
-        &self,
-        store: &Store,
-        sub: &str,
-        head: NostrFilter,
-        active: Option<&NostrFilter>,
-    ) -> Option<u64> {
-        let head = crate::engine::filter_identity::canonical(head);
-        let active = active
-            .filter(|page| {
-                let mut family = (*page).clone();
-                family.until = head.until;
-                want_key::same(&family, &head)
-            })
-            .cloned()
-            .map(crate::engine::filter_identity::canonical);
-        let repair_owner = format!("~repair:{sub}");
-        let pages: BTreeMap<_, _> = self
-            .requests
-            .values()
-            .filter(|r| r.owns_time(None) && r.members.contains(sub))
-            .filter(|r| active.as_ref() == Some(&r.page_filter))
-            .map(|r| (r.relay.as_str(), r))
-            .collect();
-        self.requests
-            .values()
-            .filter(|r| r.owns_time(None) && r.members.contains(sub) && r.page_filter == head)
-            .filter_map(|r| {
-                let floor = r.history_floor(store, self.now)?;
-                if !r.page_eose || r.page_answered_at.is_none() {
-                    return Some(floor);
-                }
-                if let Some(page) = pages
-                    .get(r.relay.as_str())
-                    .filter(|p| p.created_at >= r.created_at)
-                {
-                    return page.history_floor(store, self.now);
-                }
-                if let Some(boundary) = r.cached_until.filter(|boundary| *boundary >= floor) {
-                    let mut repair = head.clone();
-                    repair.until = Some(boundary);
-                    if let Some(page) = self.requests.values().find(|p| {
-                        p.relay == r.relay
-                            && p.members.contains(&repair_owner)
-                            && p.page_filter == repair
-                    }) {
-                        return page.history_floor(store, self.now);
-                    }
-                }
-                Some(floor)
-            })
-            .chain(pages.values().filter_map(|page| {
-                // An older read may keep a permitted route after its live slot
-                // rotates. Its local continuation still contributes coverage.
-                (!self.requests.values().any(|r| {
-                    r.relay == page.relay && r.page_filter == head && r.members.contains(sub)
-                }))
-                .then(|| page.history_floor(store, self.now))
-                .flatten()
-            }))
-            .max()
-    }
-
-    pub(in crate::engine) fn waiting_for_follows(
-        &self,
-        store: &Store,
-        sub: &str,
-        owner: &str,
-    ) -> bool {
+    pub(in crate::engine) fn has_history_answer(&self, sub: &str) -> bool {
+        let repair = format!("~repair:{sub}");
         self.requests.values().any(|r| {
-            r.members.contains(sub)
-                && r.page_filter
-                    .authors
-                    .as_ref()
-                    .is_some_and(|a| a.len() == 1 && a[0] == owner)
-                && r.page_filter.kinds.as_ref().is_some_and(|k| k.contains(&3))
-                && r.history_floor(store, self.now).is_some()
+            r.page_eose
+                && r.page_answered_at.is_some()
+                && r.sent_at != 0
+                && r.owns_time(None)
+                && (r.members.contains(sub) || r.members.contains(&repair))
         })
     }
+
+    /// Start at the existing boundary and extend only through adjoining evidence.
+    /// Scratch is one interval per existing request and at most three signers per band.
+    pub(in crate::engine) fn history_boundary(
+        &self,
+        sub: &str,
+        filter: &NostrFilter,
+        scope: &Scope<'_>,
+        edge: u64,
+    ) -> u64 {
+        let repair = format!("~repair:{sub}");
+        let pages: Vec<_> = self
+            .requests
+            .values()
+            .filter(|r| {
+                r.owns_time(None) && (r.members.contains(sub) || r.members.contains(&repair))
+            })
+            .filter_map(|r| Some((r, r.answered_range()?)))
+            .filter(|(r, _)| {
+                let mut family = r.page_filter.clone();
+                family.until = filter.until;
+                want_key::same(&family, filter)
+            })
+            .collect();
+        extend(&pages, scope, edge)
+    }
+}
+
+fn extend(pages: &[(&Request, Range<u64>)], scope: &Scope<'_>, mut edge: u64) -> u64 {
+    for _ in 0..BANDS_PER_PASS {
+        let pages = pages
+            .iter()
+            .filter(|(_, span)| span.start < edge && edge <= span.end);
+        let Some(floor) = pages.clone().map(|(_, span)| span.start).min() else {
+            break;
+        };
+        if scope.required == 0 {
+            return floor;
+        }
+        let floor = floor.max(edge.saturating_sub(BAND_SECONDS));
+        let mut authors = BTreeSet::new();
+        let mut oldest = edge;
+        for (page, span) in pages {
+            for id in page.received.iter() {
+                let Some(at) = page.received.timestamp(id) else {
+                    continue;
+                };
+                if at < floor.max(span.start) || at >= edge {
+                    continue;
+                }
+                if let Some(author) = scope.contributor(id) {
+                    if authors.len() < scope.required {
+                        authors.insert(author);
+                    }
+                    oldest = oldest.min(at);
+                }
+            }
+        }
+        if authors.len() < scope.required {
+            break;
+        }
+        edge = oldest;
+    }
+    edge
 }

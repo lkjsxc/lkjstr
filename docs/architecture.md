@@ -50,11 +50,10 @@ authorless routes skip graph construction. Device refresh uses per-kind requests
 Bounds, scorecards and deferred work are in
 [orchestration.md](orchestration.md) and [outbox.md](outbox.md).
 
-Merged chronological queries use the shallowest expected route's history
-coverage for both the window and its rail. Completed short pages discharge a
-route. A page without an answer drops out after four seconds. Verified initial
-events can extend the visible head while the page streams. Older rows stay in
-the store, and refill works from the visible end. See [time-rail.md](time-rail.md).
+Merged chronological queries share a recent preview and an admitted history
+boundary for windows, refill and rail ordinals. Verified route pages can extend
+history. The follow graph and distinct non-owner signers govern Home of either
+owner. A silent relay leaves its range owed. See [fetch orchestration](fetch-orchestrator.md).
 
 ## Bounds and storage
 

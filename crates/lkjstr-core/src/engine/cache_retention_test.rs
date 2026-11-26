@@ -24,7 +24,8 @@ fn metadata_observations_exclude_absent_follow_graph_authors() {
     let mut engine = Engine::new();
     engine.store = Store::new(16);
     let profile = event(1, 1, 0);
-    let note = event(2, 1, 1);
+    let mut note = event(2, 1, 1);
+    note.created_at = 1_799_999_999;
     let mut follows = event(3, 6000, 3);
     follows.tags = (1..=5000)
         .map(|author| vec!["p".into(), format!("{author:064x}")])
@@ -42,6 +43,12 @@ fn metadata_observations_exclude_absent_follow_graph_authors() {
             },
         },
         1_800_000_000_000,
+    );
+    assert!(
+        engine.views["their"]
+            .rows
+            .iter()
+            .any(|row| row.id == note.id)
     );
     let (access, rows) = engine.cache_metadata_observation(1_800_000_000_000);
     assert_eq!(

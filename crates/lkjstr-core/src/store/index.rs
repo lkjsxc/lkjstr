@@ -70,6 +70,9 @@ impl Store {
                 .remove(&(*event.pubkey(), event.kind, d.into_owned()));
         }
         self.snapshot_revision = self.revision;
+        if crate::kinds::policy(event.kind).openable {
+            self.history_removals = self.history_removals.wrapping_add(1);
+        }
         self.payload_bytes = self.payload_bytes.saturating_sub(event.wire_bytes);
         if is_replaceable_kind(event.kind) {
             self.replaceable.remove(&(*event.pubkey(), event.kind));

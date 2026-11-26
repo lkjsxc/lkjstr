@@ -25,6 +25,47 @@ pub(super) fn rows(projection: &[Value]) -> Vec<(String, u64)> {
         .collect()
 }
 
+pub(super) fn subscription_rows(
+    session: &super::Session,
+    sub: &str,
+    engine: &crate::engine::Engine,
+    query: &Query,
+    horizon: Option<u64>,
+) -> Vec<(String, u64)> {
+    let mut chronology = if session.projects_source(sub) || projected(query) {
+        rows(&session.project_source(sub, engine, false))
+    } else {
+        session.view(sub, engine).map_or_else(Vec::new, |view| {
+            covered_rows(view, engine, horizon.max(view.history_horizon))
+        })
+    };
+    chronology.retain(|(_, time)| horizon.is_none_or(|at| time / 1000 >= at));
+    chronology
+}
+
+fn covered_rows(
+    view: &crate::engine::View,
+    engine: &crate::engine::Engine,
+    horizon: Option<u64>,
+) -> Vec<(String, u64)> {
+    use crate::engine::{even_history, global, query, windows};
+    let bounded = even_history::bounded_query(&view.query, horizon);
+    query::events_with_placement(&engine.store, &bounded)
+        .into_iter()
+        .filter(|(event, _)| {
+            !matches!(event.kind, 6 | 16)
+                && horizon.is_none_or(|at| event.created_at >= at)
+                && global::has_slot(windows::reason(
+                    &engine.store,
+                    view,
+                    event,
+                    &engine.private_lists,
+                ))
+        })
+        .map(|(event, placement)| (event.id.clone(), placement.saturating_mul(1000)))
+        .collect()
+}
+
 pub(super) fn slice(index: &mut Index, calendar: &dyn Calendar, now: u64) {
     let Some(rows) = index.rows.as_ref() else {
         return;

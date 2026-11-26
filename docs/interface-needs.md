@@ -109,3 +109,11 @@ failed loading still have no specified surface. No automatic alert, toast,
 new control or popup is added; an attempted action keeps its existing failure.
 The user needs to distinguish unavailable account storage from a loaded empty
 account set and recover without discarding unsaved editors or retained keys.
+
+## Merged chronological history
+
+The engine now limits the list and rail to the recent preview and settled
+history. A later coverage-state surface needs to distinguish the newest
+provisional rows, settled history, an owed interval, and an unavailable
+interval at the older edge. Use the same interval for scroll and rail status.
+The current protocol still uses the existing row and rail bounds.

@@ -16,6 +16,8 @@ pub enum Output {
     CachePolicy {
         sub: String,
         allow: bool,
+        #[serde(rename = "snapshotWindow", skip_serializing_if = "Option::is_none")]
+        snapshot_window: Option<super::cache_policy::SnapshotWindow>,
     },
     Storage {
         req: String,

@@ -52,7 +52,7 @@ impl Network {
                         0
                     },
                 counts_filter(&r.filter),
-                std::cmp::Reverse(r.weight),
+                std::cmp::Reverse(self.fetch_weight(r, now)),
                 id.clone(),
             )
         });

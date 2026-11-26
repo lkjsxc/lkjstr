@@ -12,6 +12,8 @@ import {
   forgetPublicSnapshot,
   hasAbsoluteReadingTime,
   type PublicSnapshot,
+  type SnapshotWindow,
+  snapshotRows,
   writePublicSnapshot,
 } from './public-snapshot-store.ts';
 
@@ -21,6 +23,7 @@ export type PublicView = {
   identity: string;
   rows: readonly Row[];
   allow?: boolean;
+  snapshotWindow?: SnapshotWindow;
   atTop: boolean;
   atBottom: boolean;
   initial: boolean;
@@ -105,9 +108,21 @@ export function flushPublicView(view: PublicView): void {
   if (!view.dirty || view.allow !== true || view.held || view.suspended || view.windowScope) return;
   view.dirty = false;
   rememberPublicCounts(view.rows, view.counts);
+  const rows = snapshotRows(view.rows, view.snapshotWindow);
   const capture = (reading?: string): PublicSnapshot | undefined => {
-    const window = capturePublicWindow(view.rows, reading, view.atTop, view.atBottom);
-    return window ? { ...window, rows: durablePublicRows(window.rows, view.counts) } : undefined;
+    const window = capturePublicWindow(
+      rows,
+      reading,
+      view.atTop,
+      view.atBottom && rows.length === view.rows.length,
+    );
+    return window
+      ? {
+          ...window,
+          rows: durablePublicRows(window.rows, view.counts),
+          window: view.snapshotWindow,
+        }
+      : undefined;
   };
   const snapshot = capture(view.reading);
   if (!snapshot) {
