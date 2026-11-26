@@ -8,6 +8,7 @@ import { channelScenarios } from './smoke-channels.mjs';
 import { createCheckInventory } from './smoke-check-inventory.mjs';
 import { deepLinkChecks } from './smoke-deep-links.mjs';
 import { emojiRealChecks, seedEmoji } from './smoke-emoji-real.mjs';
+import { livedInChecks } from './smoke-lived-in.mjs';
 import { smokePath } from './smoke-output.ts';
 import { realReaderChecks } from './smoke-reader.mjs';
 import { realSmokeChecks } from './smoke-real-checks.mjs';
@@ -123,6 +124,7 @@ try {
   check('home renders signed-in notes');
   await railSmoke(page, check, shots);
   await warmRailChecks({ ...scenario, railFake, observe });
+  await livedInChecks({ ...scenario, peer: actor.pubkey, observe });
   check(
     'signing in brings the ordinary layout',
     (await page.locator('.pane').count()) === 4 &&

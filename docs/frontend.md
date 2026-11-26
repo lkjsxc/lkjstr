@@ -145,7 +145,7 @@ pnpm build          # mock ../dist, prints "ok build"
 pnpm build:real     # Rust package plus real-engine ../dist
 pnpm smoke:real     # real app against loopback fixtures only
 pnpm package        # pack current dist into ../tmp/lkjstr-dist.tar.gz
-pnpm smoke          # mock UI, then real-engine loopback uploads; prints ok lines
+pnpm smoke          # mock UI, then fresh and lived-in loopback stores; prints ok lines
 pnpm shots          # screenshots to ../tmp/screens (all sizes, themes, languages)
 pnpm vitest run tests/undo.test.ts   # one test file
 pnpm fix            # biome --write

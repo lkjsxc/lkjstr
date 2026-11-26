@@ -35,9 +35,10 @@ const bech32 = (hrp, hex) => {
 };
 const npub = bech32('npub', '79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798');
 
-async function installExtension(ctx, relayUrl, pubkey, errors) {
+async function installExtension(ctx, relayUrl, pubkey, errors, fixtureCrypto) {
+  if (fixtureCrypto) await ctx.exposeFunction('fixtureCrypto', fixtureCrypto);
   await ctx.addInitScript(
-    ({ relayUrl, pubkey }) => {
+    ({ relayUrl, pubkey, canCrypt }) => {
       if (location.protocol !== 'http:') return;
       if (!localStorage.getItem(`lkjstr:relays:${pubkey}`))
         localStorage.setItem(
@@ -52,9 +53,17 @@ async function installExtension(ctx, relayUrl, pubkey, errors) {
       globalThis.nostr = {
         getPublicKey: async () => pubkey,
         signEvent: (event) => globalThis.fixtureSign(event),
+        ...(canCrypt
+          ? {
+              nip44: {
+                encrypt: (peer, data) => globalThis.fixtureCrypto('nip44_encrypt', peer, data),
+                decrypt: (peer, data) => globalThis.fixtureCrypto('nip44_decrypt', peer, data),
+              },
+            }
+          : {}),
       };
     },
-    { relayUrl, pubkey: pubkey },
+    { relayUrl, pubkey, canCrypt: Boolean(fixtureCrypto) },
   );
   ctx.on('page', (page) => page.on('pageerror', (error) => errors.push(String(error))));
 }

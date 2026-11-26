@@ -1,4 +1,5 @@
 // Expected passing checks from smoke-real and its main-page, audit and reader scenarios.
+import { livedInCheckNames } from './smoke-lived-in.mjs';
 import { realStartChecks } from './smoke-real-start-checks.mjs';
 import { uploadSmokeChecks } from './smoke-upload-checks.mjs';
 
@@ -54,6 +55,7 @@ const main = [
   'Home has a time rail',
   'signed-in Home rail stays visible on cold, warm and tab revisits at 390px',
   'signed-in Home rail stays visible on cold, warm and tab revisits at 1440px',
+  ...livedInCheckNames,
   'Home shows a resting grip within a wide tile',
   'hover highlights the visible grip',
   'drag keeps the grip under the pointer without horizontal overflow',

@@ -11,8 +11,9 @@ return tick. Index and rules: [interface-specs.md](interface-specs.md). The look
 ## Reach
 
 Home can show the rail with reposts and with Notifications set to Show, including the phone default. Each note uses
-the time of the original or repost that places it in that view. A cut-short cache keeps a scroll-share rail with
-marks from the loaded rows. See the fallbacks in [time-rail.md](time-rail.md).
+the time of the original or repost that places it in that view. A cut-short cache keeps the rail, grip and marks
+from the loaded rows, with scroll-share input. Exact counts and ordinal seeks wait for complete data. See
+the supported scope in [time-rail.md](time-rail.md).
 
 ## Shared rules
 
@@ -97,9 +98,9 @@ Mouse, pen and touch share one path: pointer events on the rail, with capture.
   `yyyy/mm/dd` from `days`, never blank and never an invented minute. If the target is still not shown 500ms after
   the last seek, a thin space and an ellipsis (U+2009 U+2026) are appended. When the window arrives the label shows the real
   full time of the row now at the top, then goes 1000ms later. If the answer lacks the target (evicted in the
-  meantime), the keeper lands on the nearest row and the label tells that row's time. If the engine refuses the
-  rail mid-drag, the hold ends and the list stays where it is (as today). Without `days` and with the target not
-  loaded, the label waits for the row, as today.
+  meantime), the keeper lands on the nearest row and the label tells that row's time. If exact counts become
+  unavailable mid-drag, the ordinal hold ends at the current row and the rail continues with loaded rows.
+  Without `days` and with the target not loaded, the label waits for the row.
 - **Touch.** The whole 56px rail is the target on wide tiles. On narrow ones the 16px rail plus 12px to its left is
   the target (today's 28px). A touch grabs at once, because the rail sets `touch-action: none`. While a coarse
   pointer holds the rail, the label's right edge moves 24px left of the rail, so the thumb does not cover it. A tap

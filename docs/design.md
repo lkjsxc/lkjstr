@@ -226,8 +226,9 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
   and leaves a thin tick to come back by; `[` and `]` step a day, Backspace returns
   ([interface-time.md](interface-time.md) C2, C3). The tile's own width decides the rail (56px from 520px, else 16px
   with years shown on hover) and other tile-width layouts (link-card pictures, the folded action row) from the first
-  frame. The rail keeps its track while empty and draws the range already loaded as it grows. Other views keep a
-  14px scrollbar with a slim thumb that widens under the pointer.
+  frame. An eligible view keeps the track while empty and shows its grip, marks and scroll-share navigation
+  as soon as it has dated rows. Partial, late or unexpected data can delay exact counts and ordinal seeks.
+  Views outside the supported scope keep a 14px scrollbar with a slim thumb that widens under the pointer.
 - Home and other merged chronological lists end at the time their expected
   sources have reached. The rail ends at the same place. Older notes appear
   in order as pages arrive, with the usual quiet loading end in the meantime.

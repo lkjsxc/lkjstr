@@ -9,7 +9,7 @@
     "serve": "node scripts/serve.ts",
     "check": "node scripts/check.ts",
     "package": "node scripts/package.ts",
-    "smoke": "node scripts/build.ts && node scripts/smoke.ts && node scripts/smoke-note-layout.mjs && pnpm build:real && PATH=\"$HOME/.cargo/bin:$PATH\" node scripts/smoke-upload.mjs && node scripts/smoke-offline.mjs",
+    "smoke": "node scripts/build.ts && node scripts/smoke.ts && node scripts/smoke-note-layout.mjs && pnpm build:real && PATH=\"$HOME/.cargo/bin:$PATH\" node scripts/smoke-upload.mjs && node scripts/smoke-offline.mjs && pnpm smoke:lived-in",
     "shots": "node scripts/build.ts && node scripts/shots.ts",
     "test": "vitest run",
     "fix": "biome check --write .",
@@ -17,6 +17,7 @@
     "smoke:real": "pnpm build:real && LKJSTR_SMOKE_DIST=\"$PWD/../dist\" pnpm smoke:served",
     "smoke:served": "cd .. && PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_BUILD_JOBS=4 RUST_TEST_THREADS=4 CARGO_HOME=\"${CARGO_HOME:-$PWD/tmp/cargo-home}\" XDG_CACHE_HOME=\"${XDG_CACHE_HOME:-$PWD/tmp/cache}\" TMPDIR=\"${LKJSTR_ENGINE_TMPDIR:-${TMPDIR:-$PWD/tmp/temp}}\" node web/scripts/smoke-real.mjs",
     "smoke:offline": "node scripts/smoke-offline.mjs",
+    "smoke:lived-in": "cd .. && PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_BUILD_JOBS=4 RUST_TEST_THREADS=4 CARGO_HOME=\"${CARGO_HOME:-$PWD/tmp/cargo-home}\" LKJSTR_SMOKE_DIST=\"$PWD/dist\" node web/scripts/smoke-lived-in.mjs",
     "smoke:public-cache": "node scripts/smoke-public-cache.mjs"
   },
   "devDependencies": {

@@ -45,17 +45,26 @@ export async function createRealFixture() {
   // The archive/audit can fill one 1000-event store; reader arrivals get their own bounded fixture.
   const readerFake = fakeRelay();
   const railFake = fakeRelay({ maxEvents: 20 });
+  const livedInFake = fakeRelay();
   const deepLinkFake = fakeRelay();
   const bunker = await fakeBunker();
   const media = await fakeMediaSet();
   for (const event of [fixture.note, ...fixture.events]) {
     fake.add(event);
     readerFake.add(event);
+    livedInFake.add(event);
     deepLinkFake.add(event);
   }
   const relay = createServer();
   const ws = new bundle.wsServer({ server: relay });
-  const socketSharing = attachSmokeRelay(ws, { fake, readerFake, deepLinkFake, railFake, bunker });
+  const socketSharing = attachSmokeRelay(ws, {
+    fake,
+    readerFake,
+    deepLinkFake,
+    railFake,
+    livedInFake,
+    bunker,
+  });
   await new Promise((done) => relay.listen(0, '127.0.0.1', done));
   const relayUrl = `ws://127.0.0.1:${relay.address().port}`;
   signer.stdin.write(
@@ -98,8 +107,17 @@ export async function createRealFixture() {
   };
 }
 
-export function attachSmokeRelay(ws, { fake, readerFake, deepLinkFake, railFake, bunker }) {
+export function attachSmokeRelay(
+  ws,
+  { fake, readerFake, deepLinkFake, railFake, livedInFake, bunker },
+) {
   const trace = createSocketTrace();
+  const fixtureByPath = new Map([
+    ['/deep-links', deepLinkFake],
+    ['/reader', readerFake],
+    ['/rail-visibility', railFake],
+    ['/lived-in', livedInFake],
+  ]);
   const activePaths = new Map(); // all isolated test contexts share the loopback server
   const mainSockets = new Set(); // tagged context, excluding readers and signer routes
   const mainPathsSeen = new Set();
@@ -124,14 +142,7 @@ export function attachSmokeRelay(ws, { fake, readerFake, deepLinkFake, railFake,
         trace.close(socket);
       }
     });
-    const fixtureRelay =
-      req.url === '/deep-links'
-        ? deepLinkFake
-        : req.url === '/reader'
-          ? readerFake
-          : req.url === '/rail-visibility'
-            ? railFake
-            : fake;
+    const fixtureRelay = fixtureByPath.get(req.url) ?? fake;
     fixtureRelay.route({
       send: (text) => socket.send(text),
       onMessage: (fn) => socket.on('message', fn),

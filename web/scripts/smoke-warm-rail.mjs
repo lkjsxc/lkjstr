@@ -1,7 +1,7 @@
 // Rail visibility on a signed-in Home across cold opens, tab switches and a cut-short warm restore.
-import { createHash } from 'node:crypto';
 import { writeFile } from 'node:fs/promises';
 import { smokePath } from './smoke-output.ts';
+import { commitRailHistory, verifiedRecord } from './smoke-rail-history.mjs';
 import { installExtension } from './smoke-visitors.mjs';
 
 const RUNS = 3;
@@ -21,46 +21,10 @@ async function warmRecords(sign, pubkey) {
       content: `Warm rail fixture ${i}`,
     });
     if (i < TINY) arrivals.push(event);
-    const raw = JSON.stringify([
-      1,
-      event.id,
-      event.pubkey,
-      event.created_at,
-      event.kind,
-      event.tags,
-      event.content,
-      event.sig,
-    ]);
-    const receipt = `lkjstr-verified-1:${createHash('sha256').update(raw).digest('hex')}`;
-    records.push({ id: event.id, created_at: event.created_at, kind: event.kind, raw, receipt });
+    records.push(verifiedRecord(event));
   }
   return { records, arrivals };
 }
-
-const writeHistory = (page, records) =>
-  page.evaluate(
-    (history) =>
-      new Promise((resolve, reject) => {
-        const open = indexedDB.open('lkjstr-wasm');
-        open.onerror = () => reject(open.error);
-        open.onsuccess = () => {
-          const db = open.result;
-          const transaction = db.transaction('events', 'readwrite');
-          const store = transaction.objectStore('events');
-          for (const record of history) store.put(record);
-          const count = store.count();
-          transaction.oncomplete = () => {
-            db.close();
-            resolve(count.result);
-          };
-          transaction.onerror = () => {
-            db.close();
-            reject(transaction.error);
-          };
-        };
-      }),
-    records,
-  );
 
 async function checkRail(page, width, phase, measurements) {
   const feed = page.locator('.feed[data-kind="home"]:visible');
@@ -162,7 +126,7 @@ async function runLoad({
     await page.reload();
     await checkRail(page, width, `tiny warm reload ${run}`, measurements);
 
-    const committed = await writeHistory(page, records);
+    const { committed } = await commitRailHistory(page, records);
     measurements.push({
       phase: `committed history ${run}`,
       width,

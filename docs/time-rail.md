@@ -122,25 +122,47 @@ bound; a rail seek requests 60 rows on each side. Transport reconnect waits
 for the rebuilt index before replaying an ordinal window. There is one
 window renderer and history scheduler, not a second feed implementation.
 
-## Supported tabs and deliberate native fallbacks
+## Supported tabs
 
-Chronological lists using the time rail: `home` (note-only and Notifications:
-Show, including the default phone Home), `their-home`, `global` (signed in),
-`notifications`, `search` (chronological notes with bounded people header),
-`hashtag`, `profile` (`posts`, `replies`, `reposts`, `reactions`, `media`,
-`articles`, `lists`, `all`), `channel`, `relay`, `messages` (DM inbox) and `message`
-(DM conversation). In a note-only Home, the original or resolved repost that
+| Tab | Where the time rail applies |
+| --- | --- |
+| `home` | Home with Notifications set to Hide |
+| `home~news` | Home with Notifications set to Show, including the phone default |
+| `their-home` | Another account's Home |
+| `global` | Signed-in Global |
+| `notifications` | The signed-in account's Notifications tab |
+| `search` | Chronological note matches with a bounded people header |
+| `hashtag` | Chronological notes for a tag |
+| `profile~posts` | Profile Posts |
+| `profile~replies` | Profile Replies |
+| `profile~reposts` | Profile Reposts |
+| `profile~reactions` | Profile Reactions |
+| `profile~media` | Profile Media |
+| `profile~articles` | Profile Articles |
+| `profile~lists` | Profile Lists |
+| `profile~all` | Profile All |
+| `channel` | Channel timeline |
+| `relay` | A relay's chronological feed |
+| `messages` | DM inbox with reading access |
+| `message` | DM conversation with reading access |
+
+The lived-in browser smoke reads this table. Document where a new feature
+applies in the same table and exercise its presence there.
+
+In a note-only Home, the original or resolved repost that
 earns a row its place owns the ordinal and timestamp; unresolved wrappers are
 ignored. Neither native fallback nor metadata headers enter counts.
+
+## Deliberate native fallbacks
 
 Signed-out `global` retains native scrolling: its contextual spam policy
 (`global.rs` `classify_window`) caps each author at three rows and folds
 ten-minute duplicate bursts relative to each window's starting slice. A
 cache-wide ordinal index would weight spam bursts and expose spam by resetting
 window context at seek targets. A startup cache cut to the newest 2000 events,
-cache-queue loss or eviction can withhold exact counts. For rail sources the
-rail continues with marks from the loaded rows and scroll-share navigation.
-Exact counts enable ordinal seeks.
+cache-queue loss or eviction can withhold exact counts and ordinal seeks. An
+eligible view always keeps its track, with a grip, marks and scroll-share
+navigation as soon as rows arrive. It refines the map when exact data arrives.
 Non-chronological views remain native: `bookmarks` (NIP-51
 list-owner order), `thread` (reply tree), `following` and `followers` (people
 lists), `channels` (channel directory), `media`, `compose`, `profile-edit`,
@@ -152,10 +174,12 @@ advertise an approximate count or offer unsupported seeks.
 Unit cases cover monotonicity, ordinal round trips, busy/quiet months, one
 month, small floor allocation, epoch/future timestamps and mark collisions.
 Native and mock tests cover cache-wide counts, tied ordinals, seeking beyond
-the current window, invalidation, close and native fallbacks. The Worker
-conformance and both browser smokes exercise protocol 5. Home smoke checks
+the current window, invalidation, close and native fallbacks. Home smoke checks
 drag to the oldest year and return to the exact original row. Optional
 captures are rail-1440-dark, rail-1440-light and rail-390-dark in tmp/screens.
+Both browser smoke commands exercise the supported tabs on a signed-in store
+with over 2500 committed mixed-kind events, a sparse old tail and a removed
+range. Every listed tab keeps a visible rail on reload and after a tab switch.
 
 The browser WASM benchmark over 100000 synthetic stored notes measured
 88.9ms total CPU across 395 slices, with a 0.9ms maximum slice. These are
@@ -163,25 +187,7 @@ count-index timings, not elapsed time between scheduled Worker turns. The
 ordered lookup avoids a whole-map rehash during a slice. The report is
 `tmp/engine-harness/wasm-benchmark.json`.
 
-Frontend check/build and mock smoke pass (197 checks).
-The four quiet gates pass; Worker conformance is 216/216 without page errors.
-Six native timeline regressions include a 7000-note retained-store seek,
-continued seeks during rebuild, and tracking a return ordinal after arrival.
-Screenshot review includes dark/light desktop and single-tile phone Home.
-Two consecutive `LKJSTR_SHOTS=1 pnpm --dir web smoke:real` runs pass 92/92
-each, without page errors, including all signer scenarios, rail drag/return,
-fade-container bounds and narrow-label hover. Reports are saved separately
-as `tmp/real-smoke-1-report.json` and `tmp/real-smoke-2-report.json`.
-Docker is excluded by the worktree-only write rule. No CI, deployment,
-production access, commit or existing-service changes were made. Source
-changes remain uncommitted, so the worktree is intentionally modified.
-
-Review follow-up adds three native regressions for continuous live/backfilled
-ingestion, deletion/mute invalidation and late repost resolution. Five UI cases
-cover loaded click/drag and Home/End returns with the original offset, plus
-popover keyboard ownership. All four quiet gates and frontend check/build/smoke
-pass; the Home screenshot was reviewed. Worker conformance passes 216/216 and
-the delayed profile probe passes. Real UI smoke passes 86/86 on an isolated
-retry with no page errors; the first run timed out on a detached account-removal
-button after its rail checks passed. Logs: tmp/review-real-smoke.log and
-tmp/review-real-smoke-retry.log. Docker remains excluded by the worktree rule.
+Targeted regressions cover a 7000-note retained-store seek, seeks during
+rebuild, return ordinals after arrival, live and backfilled ingestion,
+deletion and mute invalidation, late repost resolution, original offsets
+after Home/End and popover keyboard ownership.
