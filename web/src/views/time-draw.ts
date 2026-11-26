@@ -21,6 +21,14 @@ export function createTimeRailNodes(el: HTMLElement) {
   return { rail, marks, lens, grip, hoverLine, tick, label, live, pin };
 }
 
+// The 32px grip has 4px of breathing room at both ends of a normal tile.
+export function fitTimeRail(rail: HTMLElement, view: number) {
+  const inset = Math.min(20, Math.max(0, (view - 1) / 2));
+  rail.style.height = `${view}px`;
+  rail.style.setProperty('--time-inset', `${inset}px`);
+  return { inset, height: Math.max(1, view - 2 * inset) };
+}
+
 export const loadingText = (time: string, waiting: boolean): string =>
   waiting ? (time ? `${time} …` : '…') : time;
 
@@ -38,7 +46,7 @@ export function drawCurrentYear(marks: HTMLElement, at: number, local: boolean):
     number.classList.toggle('current', number.textContent === year);
 }
 
-const top = (y: number): string => `top: ${y + 8}px`;
+const top = (y: number): string => `top: ${y}px`;
 const labelNode = (l: Label): HTMLElement =>
   h(
     'span',

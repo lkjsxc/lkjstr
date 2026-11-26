@@ -11,6 +11,7 @@ import {
   createTimeRailNodes,
   drawCurrentYear,
   drawLabel,
+  fitTimeRail,
   loadingText,
   scrolledY,
   scrollShare,
@@ -50,7 +51,7 @@ export function mountTimeRail(o: {
   let shape: Timeline | undefined; // what the map is drawn from; frozen while a press is held
   let zone = localZone();
   let bands = timeScale([], 0);
-  let height = 0;
+  let axis = { inset: 0, height: 1 };
   let labels: readonly Label[] = [];
   const preview = createTimePreview();
   let frame = 0;
@@ -136,12 +137,12 @@ export function mountTimeRail(o: {
     if (held) {
       const at = plain ? readingAt(row) : 0;
       text = under ? textFor(under) : at ? timeText(at) : '';
-      y = pointerY + 8;
+      y = pointerY + axis.inset;
     } else if (target) {
       text = loadingText(textFor(target), late || Boolean(s.waiting));
-      y = 8 + noteToPlace(bands, target);
+      y = axis.inset + noteToPlace(bands, target);
     } else if (telling || landed || (plain && row)) text = timeText(readingAt(row));
-    else if (hoverY !== undefined) (text = textFor(at(hoverY))), (y = hoverY + 8);
+    else if (hoverY !== undefined) (text = textFor(at(hoverY))), (y = hoverY + axis.inset);
     if (landed && speak && text) (speak = false), (live.textContent = text);
     drawLabel(label, text, y, el.clientHeight);
   };
@@ -156,10 +157,10 @@ export function mountTimeRail(o: {
     const needsGrip = rows.some(dated) || el.scrollHeight > view + 1;
     rail.hidden = !view || !(counted || plain) || !needsGrip;
     rail.classList.toggle('plain', plain);
-    height = Math.max(1, view - 16);
-    bands = timeScale(plain ? [] : (shape?.months ?? []), height);
     if (rail.hidden) return;
-    rail.style.height = `${view}px`;
+    axis = fitTimeRail(rail, view);
+    const { height, inset } = axis;
+    bands = timeScale(plain ? [] : (shape?.months ?? []), height);
     rail.classList.toggle('open-end', data?.older === true);
     const wide = rail.offsetWidth > 16;
     const loaded = plain ? preview.read(rows, zone, held) : undefined;
@@ -178,21 +179,21 @@ export function mountTimeRail(o: {
     const p = near(row);
     drawCurrentYear(marks, local ? readingAt(row) : (p?.month ?? data?.months[0]?.at ?? 0), local);
     const y = held ? pointerY : p && !plain ? noteToPlace(bands, p) : scrolledY(el, height);
-    const centre = Math.min(view - 16, Math.max(16, y + 8));
+    const centre = Math.min(view - inset, Math.max(inset, y + inset));
     grip.style.top = `${centre}px`;
     tell(centre, row);
     tick.hidden = !s.back;
-    if (s.back) tick.style.top = `${8 + noteToPlace(bands, s.back.time)}px`;
+    if (s.back) tick.style.top = `${inset + noteToPlace(bands, s.back.time)}px`;
     const pointed = held ? pointerY : hoverY;
     hoverLine.hidden = pointed === undefined || rail.classList.contains('touch');
-    hoverLine.style.top = `${8 + (pointed ?? 0)}px`;
+    hoverLine.style.top = `${inset + (pointed ?? 0)}px`;
   };
   const sync = (): void => {
     if (!frame) frame = requestAnimationFrame(paint);
   };
   const drag = (y: number): void => {
     pointerY = y;
-    if (plain) return void (scrollShare(el, y / height), sync());
+    if (plain) return void (scrollShare(el, y / axis.height), sync());
     under = at(y);
     seeker.queue(under);
     sync();
@@ -211,7 +212,8 @@ export function mountTimeRail(o: {
     el,
     rail,
     tick,
-    y: (e) => Math.max(0, Math.min(height, e.clientY - rail.getBoundingClientRect().top - 8)),
+    y: (e) =>
+      Math.max(0, Math.min(axis.height, e.clientY - rail.getBoundingClientRect().top - axis.inset)),
     press(y, touch) {
       s.back = undefined;
       s.returning = false;

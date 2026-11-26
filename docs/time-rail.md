@@ -11,10 +11,11 @@ Counts come from retained rows. Automated verification uses loopback relays.
 `web/src/views/time-scale.ts` is the pure shared map. An occupied month gets
 min(3px, H/(10M)) plus its share of the remaining height by note count, so the
 map is by rank, like a native scrollbar, and all floors take at most a tenth.
-A few old posts years below busy recent weeks (a sparse tail) stay short at
-the bottom instead of halving the room of the weeks being read: 3000 and 800
-notes over 36 one-to-three-note months on 800px got 413px under the former
-sqrt weighting and get 711px now. Within a month, notes occupy equal ordinal
+An isolated old tail shares at most 9% of the rail or 72px, whichever is less.
+It has up to three notes per month and a fifth of the total, with at least
+two empty months and 60 readable notes above it. Each old ordinal stays
+reachable. An 800px example with 400 recent notes and 80 isolated monthly
+notes now leaves 728px for the recent notes, up from 602px. Within a month, notes occupy equal ordinal
 slots, newest first. Empty months have no interval. Future timestamps join the current UTC month;
 epoch zero remains January 1970. Occupied local spans in `time-ruler.ts` use the
 same rank map. `time-marks.ts` starts at years and opens each labelled stretch to
@@ -45,8 +46,9 @@ this device (`lkjstr:rails`), so a refused list starts at native width. A
 refusal holds for the page's session; an acceptance without months is no
 answer. Narrow year labels appear over content on hover or hold. Touch has a
 28px hit area. The grip pill appears with the first dated row, even while the
-list fits in the tile. Hover and hold highlight it, and it follows the held
-pointer (interface-time.md C3). A jump leaves a thin return tick. The rail is
+list fits in the tile. The same vertical inset seats marks, the grip and pointer
+targets, with 4px of room beyond the grip at both ends. Hover and hold highlight it,
+and it follows the held pointer (interface-time.md C3). A jump leaves a thin return tick. The rail is
 aria-hidden and the original list shows focus for keyboard input. With its room
 reserved and nothing counted yet, the rail shows the grip at the share scrolled with
 the top row's date and time. The loaded rows supply provisional ruler marks

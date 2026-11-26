@@ -41,6 +41,26 @@ describe('compressive month map', () => {
     // Within the dense part, one note is about as tall as any other: the scale is by rank, not by month.
     expect((b[0]?.h ?? 0) / 3000 / ((b[1]?.h ?? 0) / 800)).toBeCloseTo(1, 1);
   });
+  it('fits an isolated old tail into a short end band and keeps every month reachable', () => {
+    const old = Array.from({ length: 80 }, (_, i) => ({
+      at: Date.UTC(2024, 11 - i, 1),
+      count: 1,
+    }));
+    const bands = timeScale([...months([300, 100]), ...old], 800);
+    const tail = bands.slice(2);
+    expect(tail.reduce((h, band) => h + band.h, 0)).toBeLessThanOrEqual(72.01);
+    expect(bands[2]?.y).toBeGreaterThanOrEqual(727.99);
+    for (const { at, y, h } of tail)
+      expect(placeToNote(bands, y + h / 2)).toEqual({ month: at, offset: 0 });
+    expect(placeToNote(bands, 800)?.month).toBe(old.at(-1)?.at);
+  });
+  it('keeps the ordinary rank scale for substantial history across a calendar gap', () => {
+    const regular = months([200, 100]);
+    const separated = [regular[0]!, { ...regular[1]!, at: Date.UTC(2014, 0) }];
+    expect(timeScale(separated, 800).map((m) => m.h)).toEqual(
+      timeScale(regular, 800).map((m) => m.h),
+    );
+  });
   it('ignores empty months, clamps future dates, retains epoch zero', () => {
     expect(timeScale(months([0, 2, 0]), 100)).toHaveLength(1);
     expect(timeScale([], 100)).toEqual([]);

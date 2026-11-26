@@ -213,11 +213,13 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
   the scrollbar keeps its span. A list in time order has a time rail
   instead: it spans the notes available to read by rank, as a native scrollbar
   would, so busy weeks keep their room over a few short old posts; a quiet month stays reachable and empty time
-  takes none. A 6x32px accent grip in the rightmost 16px marks the reading place and stays whole at the ends.
-  It appears with the first dated row at the share scrolled, beside the reading time and provisional marks from the loaded rows. The counted rank map and its marks take over as counts arrive.
+  takes none. An isolated stretch of sparse old notes shares a short end band, with every note still reachable.
+  A 6x32px accent grip in the rightmost 16px marks the reading place, with 4px beyond it at both ends.
+  It appears with the first dated row at the share scrolled, beside the reading time and provisional marks
+  from the loaded rows. The counted rank map and its marks take over as counts arrive.
   Hover and hold highlight it. On a tile of 520px or more, the right-aligned ruler starts at local years.
-  Each labelled span shows its next unit when the rank map gives it room, from months and days through hours,
-  quarter hours and five minutes. Coarse year marks are larger, the current year uses normal text colour,
+  A gutter separates the labels from ticks on the grip axis. Each labelled span shows its next unit when
+  the rank map gives it room, from months and days through hours, quarter hours and five minutes. Coarse year marks are larger, the current year uses normal text colour,
   and finer ticks can stand without a label. While held, a short column around the pointer shows one finer
   unit with the reading time still beside the grip. A fine pointer draws a `--sep` line and the time under it.
   Pressed or dragged it goes to that time (near a label, to that period's newest note), says the day while it loads,

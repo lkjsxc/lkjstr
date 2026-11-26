@@ -55,7 +55,8 @@ One label per list, the existing `.scrub` element. It reads `yyyy/mm/dd hh:mm` f
 
 ## C2 The wide scrubber
 
-A tile of 520px or more has a 56px ruler, 18px from the rail's right edge. It starts at the occupied years,
+A tile of 520px or more has a 56px ruler with labels 20px from the rail's right edge and ticks centred on the grip.
+It starts at the occupied years,
 with the oldest year first when labels compete for space. Each labelled span can show its next calendar unit:
 month, day, hour, quarter hour, then five minutes, as long as the rank map leaves 14px between label centres.
 A boundary marks the period's newest note. A child starting at the same boundary can use the next available line
@@ -83,7 +84,7 @@ Mouse, pen and touch share one path: pointer events on the rail, with capture.
   Either way a thin return tick is left at the place the press started, and a press on the tick returns to the exact row
   and offset.
 - **Grip.** A 6x32px `--accent` pill appears with the first dated row. It is centred in the rail's rightmost 16px
-  and clamped 16px inside the tile. It starts at the share scrolled with the reading time and provisional marks
+  and rests 4px inside the tile at either end. It starts at the share scrolled with the reading time and provisional marks
   from the loaded rows. The counted map takes over when it arrives.
   The whole rail accepts a press. Hover and hold highlight the grip. During a drag it follows the pointer with
   the time label beside it.

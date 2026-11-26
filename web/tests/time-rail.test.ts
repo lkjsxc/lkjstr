@@ -195,7 +195,7 @@ it('keeps the grip visible at rest, under a held finger and after the jump label
   expect(grip.style.top).toBe('100px');
   expect(x.track.classList.contains('held')).toBe(true);
   x.pointer(x.track, 'pointermove', 2, 'touch');
-  expect(grip.style.top).toBe('16px');
+  expect(grip.style.top).toBe('20px');
   x.pointer(x.track, 'pointerup', 2, 'touch');
   expect(grip.hidden).toBe(false);
   vi.advanceTimersByTime(1000);

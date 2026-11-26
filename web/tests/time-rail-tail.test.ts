@@ -9,7 +9,7 @@ it('paints the grip with the first rows before a timeline or local overflow', ()
   x.showRows();
   expect(x.track.hidden).toBe(false);
   expect(x.track.classList.contains('plain')).toBe(true);
-  expect(x.track.querySelector<HTMLElement>('.time-grip')?.style.top).toBe('16px');
+  expect(x.track.querySelector<HTMLElement>('.time-grip')?.style.top).toBe('20px');
   expect(x.track.querySelector('.time-marks .time-year')).not.toBeNull();
   expect(x.track.querySelector<HTMLElement>('.scrub')?.hidden).toBe(false);
   expect(x.track.querySelector('.scrub')?.textContent).toBe(timeText(month + 1));
@@ -39,8 +39,8 @@ it('keeps the grip beside an uncounted top row instead of at the top', () => {
     ],
   });
   const grip = x.el.querySelector<HTMLElement>('.time-grip')!;
-  // n2, the nearest counted row below, stands in: two thirds down the 184px map.
-  expect(Number.parseFloat(grip.style.top)).toBeCloseTo(8 + (2 / 3) * 184);
+  // n2, the nearest counted row below, stands in: two thirds down the 160px map.
+  expect(Number.parseFloat(grip.style.top)).toBeCloseTo(20 + (2 / 3) * 160);
 });
 
 it('is never empty while its room is reserved and nothing is counted yet', () => {
@@ -49,14 +49,14 @@ it('is never empty while its room is reserved and nothing is counted yet', () =>
   expect(x.track.hidden).toBe(false);
   expect(x.track.classList.contains('plain')).toBe(true);
   expect(x.el.classList.contains('has-time-rail')).toBe(true);
-  expect(grip.style.top).toBe('16px');
+  expect(grip.style.top).toBe('20px');
   x.el.scrollTop = 200;
   x.el.dispatchEvent(new Event('scroll'));
   vi.advanceTimersByTime(16);
-  expect(Number.parseFloat(grip.style.top)).toBeCloseTo(8 + 92);
+  expect(Number.parseFloat(grip.style.top)).toBeCloseTo(100);
   // A drag scrolls by share, with no seek: there is no count to seek in.
-  x.pointer(x.track, 'pointerdown', 8 + 184);
-  x.pointer(x.track, 'pointerup', 8 + 184);
+  x.pointer(x.track, 'pointerdown', 180);
+  x.pointer(x.track, 'pointerup', 180);
   expect(x.el.scrollTop).toBe(400);
   expect(x.seek).not.toHaveBeenCalled();
   expect(x.set).not.toHaveBeenCalled();
@@ -77,12 +77,12 @@ it('keeps a plain drag and its reading time when the first count arrives', () =>
     older: false,
   });
   vi.advanceTimersByTime(16);
-  x.pointer(x.track, 'pointermove', 8 + 184);
+  x.pointer(x.track, 'pointermove', 180);
   expect.soft(x.track.classList.contains('plain')).toBe(true);
   expect.soft(x.el.scrollTop).toBe(400);
   expect.soft(label.hidden).toBe(false);
   expect.soft(label.textContent).toBe(timeText(month + 1));
-  x.pointer(x.track, 'pointerup', 8 + 184);
+  x.pointer(x.track, 'pointerup', 180);
   expect(x.track.classList.contains('plain')).toBe(false);
   expect(x.seek).not.toHaveBeenCalled();
 });

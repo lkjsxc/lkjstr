@@ -71,7 +71,7 @@ export async function railSmoke(
     held.cursor === 'grabbing' &&
       held.opacity === 1 &&
       held.overflow === 0 &&
-      Math.abs(held.center - (box.y + box.height - held.height / 2)) < 1,
+      Math.abs(held.center - (box.y + box.height - held.height / 2 - 4)) < 1,
   );
   const [heldTime] = await rail.locator('.scrub:visible').allTextContents();
   await page.mouse.up();
