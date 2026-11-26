@@ -161,8 +161,7 @@ pub(super) struct Request {
     pub list_watch: bool, // Visible TheirHome watch, even when shared with account discovery.
     pub asked: bool,
     pub ready_at: u64,
-    // At most the transmitted page limit (<= 200) distinct IDs.
-    pub received: PageFrontier,
+    pub received: PageFrontier, // At most the transmitted page limit (<= 200) distinct IDs.
     pub page_limit: usize,
     time_pages: Option<time_window::TimePages>,
     pub oldest: Option<u64>,
@@ -236,14 +235,12 @@ pub struct Network {
     next: u64,
     pub(super) profiles_changed: bool,
     pub verifying: bool,
-    // One most recent socket admission. Ingest consumes it synchronously.
-    pub(super) delivery_wire: Option<(String, String)>,
+    pub(super) delivery_wire: Option<(String, String)>, // Latest socket admission, consumed synchronously.
     pub(super) invalid_frames: u64,
     pub(super) unmatched_frames: u64,
     pub(super) repeated_deliveries: u64,
     pub(super) reported: BTreeMap<String, String>,
-    // At most 4096 active foreground observations; pruned on plan and reset on Open.
-    read_starts: BTreeMap<String, startup::ReadStart>,
+    read_starts: BTreeMap<String, startup::ReadStart>, // Up to 4096 foreground observations, pruned on plan and reset on Open.
 }
 #[cfg(test)]
 #[path = "network_thin_link_test.rs"]
