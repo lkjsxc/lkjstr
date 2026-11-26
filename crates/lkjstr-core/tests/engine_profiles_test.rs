@@ -65,7 +65,8 @@ fn cached_name_is_inline_and_needs_no_duplicate_metadata_request() {
         finalize_event(
             &EventTemplate {
                 pubkey: None,
-                created_at: 100,
+                // This cached note sits in the initial head while relays connect.
+                created_at: BASE_MS / 1000,
                 kind,
                 content: content.into(),
                 tags: vec![],

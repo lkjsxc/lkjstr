@@ -54,6 +54,7 @@ pub const PROTOCOL_VERSION: u32 = 17;
 /// Adapter state is per transport client; the engine remains independent of pixels.
 #[derive(Default)]
 pub struct Session {
+    client_scope: Option<u64>,
     // At most one permission per owned subscription, removed on close/reopen.
     cache_policies: std::collections::BTreeMap<String, bool>,
     cache_held: std::collections::BTreeMap<String, cache_hold::Held>,
@@ -80,6 +81,24 @@ pub struct Session {
     pub(super) delivered: std::collections::BTreeMap<String, Vec<serde_json::Value>>,
 }
 impl Session {
+    pub fn shared(client: u64) -> Self {
+        Self {
+            client_scope: Some(client),
+            ..Self::default()
+        }
+    }
+
+    fn view<'a>(&self, sub: &str, engine: &'a super::Engine) -> Option<&'a super::View> {
+        match self.client_scope {
+            Some(client) => engine.views.get(&format!("{client}:{sub}")),
+            None => engine.views.get(sub),
+        }
+    }
+
+    fn history_horizon(&self, sub: &str, engine: &super::Engine) -> Option<u64> {
+        self.view(sub, engine)?.history_horizon
+    }
+
     pub fn ready(shared: bool) -> Output {
         Self::ready_with_account_error(shared, None)
     }

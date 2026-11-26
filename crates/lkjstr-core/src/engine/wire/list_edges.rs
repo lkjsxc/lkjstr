@@ -61,10 +61,8 @@ impl Session {
         };
         let all = self.project_source(sub, e, false);
         let header = usize::from(pinned_header(&all));
-        let count = all
-            .iter()
-            .position(|r| r["key"].as_str() == Some(anchor))
-            .unwrap_or(0)
+        let count = self
+            .source_position(sub, e, &all, anchor)
             .saturating_sub(*before)
             .saturating_sub(header);
         let own_head = count > 0
@@ -75,7 +73,7 @@ impl Session {
     }
     pub(super) fn source_edges(&self, sub: &str, e: &Engine) -> (bool, bool) {
         let all = self.project_source(sub, e, false);
-        let (start, end) = self.source_range(sub, &all);
+        let (start, end) = self.source_range(sub, e, &all);
         (
             start <= usize::from(pinned_header(&all)),
             end >= all.len() && super::list_edges::settled(self.queries.get(sub), e),

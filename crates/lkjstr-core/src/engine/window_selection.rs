@@ -17,6 +17,9 @@ fn plan(store: &Store, v: &View, events: &[Event]) -> (usize, usize) {
             events
                 .iter()
                 .position(|e| rich::anchored(store, e, id, &v.query))
+                .or_else(|| {
+                    crate::engine::even_history::holds_anchor(store, v, id).then_some(events.len())
+                })
         })
         .unwrap_or(0);
     let mut start = at;

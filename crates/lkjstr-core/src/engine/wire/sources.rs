@@ -15,17 +15,14 @@ impl Session {
         let Some(anchor) = anchor else {
             return 0;
         };
-        self.project_source(sub, e, false)
-            .iter()
-            .position(|r| r["key"].as_str() == Some(anchor))
-            .map(|at| before.min(at))
-            .unwrap_or(0)
+        before.min(self.source_position(sub, e, &self.project_source(sub, e, false), anchor))
     }
     pub(super) fn project_source(&self, sub: &str, e: &Engine, windowed: bool) -> Vec<Value> {
         let Some(q) = self.queries.get(sub) else {
             return vec![];
         };
         let store = &e.store;
+        let horizon = self.history_horizon(sub, e);
         let weights =
             crate::engine::weights::Weights::new(store, &e.private_lists, q.account.as_deref());
         let converted = q.convert();
@@ -55,14 +52,15 @@ impl Session {
             }
             "media-servers"=>q.account.as_deref().map(|a|e.upload_servers(a).into_iter().map(|url|e.server_row(&url)).collect()).unwrap_or_default(),
             "emoji"=>crate::engine::emoji::rows(store,q.account.as_deref()).into_iter().map(super::emoji::entry).collect(),
-            "notifications"=>super::notifications::notifications(q,e),
+            "notifications"=>super::notifications::visible(q,e,horizon),
             "profile" if converted.as_ref().is_some_and(crate::engine::acts::activity) => super::acts::profile(self,sub,q,e),
             "bookmarks"=>converted.as_ref().map(|q|crate::engine::list_events::events(store,q,&e.private_lists).iter().filter(|event|crate::kinds::policy(event.kind).openable).map(|event|self.project_event(sub,e,q,event,None)).collect()).unwrap_or_default(),
             "list"=>{
                 q.convert().map(|converted|query::events(store,&converted).into_iter().next().map(|event|crate::engine::settings::list_tags_for(&event,&e.private_lists,q.account.as_deref()).iter().filter(|t|t.first().is_some_and(|k|k=="p")).filter_map(|t|t.get(1)).filter(|p|lkjstr_protocol::is_pubkey(p)).map(|p|person(e,p,q.account.as_deref(), weights.person(p))).collect()).unwrap_or_default()).unwrap_or_default()
             }
             _ => converted.as_ref().map(|converted| {
-                query::events(store, converted).into_iter()
+                let bounded = crate::engine::even_history::bounded_query(converted, horizon);
+                query::events(store, &bounded).into_iter()
                     .filter(|event| crate::kinds::policy(event.kind).openable)
                     .filter_map(|event| {
                         let position = match &thread {
@@ -103,7 +101,7 @@ impl Session {
             let mut news = q.clone();
             news.source = "notifications".into();
             news.notifications = None;
-            for row in super::notifications::notifications(&news, e) {
+            for row in super::notifications::visible(&news, e, horizon) {
                 if row["note"]["id"].is_string() && out.iter().any(|r| r["id"] == row["note"]["id"])
                 {
                     continue;
@@ -111,6 +109,9 @@ impl Session {
                 out.push(row);
             }
             out.sort_by(|a, b| b["at"].as_u64().cmp(&a["at"].as_u64()));
+        }
+        if let Some(at) = horizon {
+            out.retain(|row| row["at"].as_u64().is_none_or(|time| time / 1000 >= at));
         }
         for row in &mut out {
             super::quote_state::settle(row, e, q.account.as_deref());
@@ -162,7 +163,7 @@ impl Session {
             return out;
         }
         let header = pinned_header(&out).then(|| out[0].clone());
-        let (start, end) = self.source_range(sub, &out);
+        let (start, end) = self.source_range(sub, e, &out);
         let end = end.min(out.len());
         out = out[start.min(end)..end].to_vec();
         if let Some(header) = header

@@ -93,5 +93,6 @@ impl Engine {
         }
         self.network
             .plan_with_lists(wants, &self.store, &self.private_lists, now);
+        self.refresh_history_horizons();
     }
 }

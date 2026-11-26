@@ -4,7 +4,7 @@
 
 Protocol 5 replaces native scrollbars in supported chronological note lists
 with a cache-wide month rail. The reference is the owner's image01.png.
-No relay counts are estimated. Automated verification uses loopback relays.
+Counts come from retained rows. Automated verification uses loopback relays.
 
 ## Map and input
 
@@ -48,6 +48,19 @@ counted yet (`time-near.ts`) places the grip at its nearest counted row,
 older first, with the share scrolled as a fallback. Unexhausted relay history fades the lower marks. Scrolling to
 the local end keeps the existing history path.
 
+Home, Their Home, Global, hashtag, search, Channel and Notifications share
+the same history horizon between the list and the rail. Each expected route
+contributes its oldest covered time, and the newest of those times is the
+inclusive lower bound. Newest-first pages can expose the verified prefix
+while streaming. A short completed page releases that route. An unanswered
+page has four seconds from admission to answer, then releases its hold for
+that page. The cached head and its connected repair share route coverage.
+Cached notes from the feed owner use the same bound as other notes. The
+ordinary feed can refill at its visible end even when more rows are cached.
+A new route can hold the next extension of the timeline, while the part
+already covered stays available to the reader.
+Profile lists and explicit Moment windows keep their own paging rules.
+
 ## Local days
 
 The same scan also builds `days` (`wire/timeline_days.rs`): one part per local day per UTC month,
@@ -80,7 +93,9 @@ at most two store-sized key maps and two store-sized ordinal lookups. A prior
 finished map and lookup remain seekable while the replacement is built
 (`wire/timeline_answer.rs`): a window that moves then (older history or live
 notes arrived, a seek landed) is answered at once with the prior months, days
-and positions, so a drag never waits a whole rebuild for its landing. The
+and positions, so a drag never waits a whole rebuild for its landing. A deeper
+history horizon joins the next scan. A newer horizon invalidates a prior map
+whose older positions fall outside it. The
 prior lookup is released when the build finishes. The actual
 store remains bounded at 16000 regular plus 4000 replaceable events.
 The shared store retains one generation per event, released on removal;

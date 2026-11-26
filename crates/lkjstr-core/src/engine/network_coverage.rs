@@ -89,6 +89,7 @@ mod tests {
             sent: false,
             eose: true,
             page_eose: true,
+            page_answered_at: Some(at),
             deadline: at,
             initial_deadline: at,
             last_event: None,

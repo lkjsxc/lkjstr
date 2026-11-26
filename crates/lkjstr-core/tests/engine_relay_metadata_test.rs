@@ -11,11 +11,17 @@ use serde_json::{Value, json};
 const BASE: u64 = 200_000;
 const FALLBACK: &str = "wss://fallback.test/";
 const WRITER: &str = "wss://writer.test/";
-fn sign(key: &SecretKeyBytes, kind: u64, content: &str, tags: Vec<Vec<String>>) -> NostrEvent {
+fn sign(
+    key: &SecretKeyBytes,
+    at: u64,
+    kind: u64,
+    content: &str,
+    tags: Vec<Vec<String>>,
+) -> NostrEvent {
     finalize_event(
         &EventTemplate {
             pubkey: None,
-            created_at: 100,
+            created_at: at,
             kind,
             content: content.into(),
             tags,
@@ -52,10 +58,10 @@ fn requests(engine: &mut Engine) -> Vec<(String, Value)> {
 fn stale_cached_names_render_immediately_and_revalidate_once_in_background() {
     let mut engine = engine();
     let key = generate_secret_key();
-    let note = sign(&key, 1, "cached note", vec![]);
+    let note = sign(&key, BASE / 1000, 1, "cached note", vec![]);
     engine.store.insert(note.clone(), Some("cache"));
     engine.store.insert(
-        sign(&key, 0, r#"{"name":"cached-name"}"#, vec![]),
+        sign(&key, 100, 0, r#"{"name":"cached-name"}"#, vec![]),
         Some("cache"),
     );
     engine.input(
@@ -94,11 +100,12 @@ fn stale_cached_names_render_immediately_and_revalidate_once_in_background() {
 fn visible_profiles_reuse_an_already_open_delivering_outbox() {
     let mut engine = engine();
     let key = generate_secret_key();
-    let note = sign(&key, 1, "outbox note", vec![]);
+    let note = sign(&key, 100, 1, "outbox note", vec![]);
     engine.store.insert(note.clone(), Some(WRITER));
     engine.store.insert(
         sign(
             &key,
+            100,
             10002,
             "",
             vec![vec!["r".into(), WRITER.into(), "write".into()]],

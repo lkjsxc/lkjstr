@@ -85,6 +85,9 @@ impl Network {
                     self.profiles_changed = true;
                     self.quality_revision = self.quality_revision.wrapping_add(1);
                     r.eose = true;
+                    if !r.page_eose {
+                        r.page_answered_at = (!self.verifying).then_some(now);
+                    }
                     r.page_eose = true;
                     r.last_rx = now;
                     first_latency.get_or_insert(now.saturating_sub(r.sent_at));

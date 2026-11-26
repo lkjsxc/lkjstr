@@ -50,6 +50,12 @@ authorless routes skip graph construction. Device refresh uses per-kind requests
 Bounds, scorecards and deferred work are in
 [orchestration.md](orchestration.md) and [outbox.md](outbox.md).
 
+Merged chronological queries use the shallowest expected route's history
+coverage for both the window and its rail. Completed short pages discharge a
+route. A page without an answer drops out after four seconds. Verified initial
+events can extend the visible head while the page streams. Older rows stay in
+the store, and refill works from the visible end. See [time-rail.md](time-rail.md).
+
 ## Bounds and storage
 
 The schema-3 Worker database is lkjstr-wasm. Verified compact event bytes carry

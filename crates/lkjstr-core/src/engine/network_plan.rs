@@ -203,6 +203,7 @@ impl Network {
                         sent: false,
                         eose: exhausted,
                         page_eose: exhausted,
+                        page_answered_at: exhausted.then_some(now),
                         deadline: previous.map_or(u64::MAX, |r| r.deadline),
                         initial_deadline: previous.map_or(u64::MAX, |r| r.initial_deadline),
                         last_event: None,

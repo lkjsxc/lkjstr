@@ -103,7 +103,7 @@ impl Session {
                 Some(
                     self.timelines
                         .get(&sub)
-                        .and_then(|i| i.key(month, offset))
+                        .and_then(|i| i.key(month, offset, self.history_horizon(&sub, engine)))
                         .ok_or((None, "timeline-unavailable"))?,
                 )
             }
@@ -153,7 +153,27 @@ impl Session {
         }])
     }
 
-    pub(super) fn source_range(&self, sub: &str, rows: &[Value]) -> (usize, usize) {
+    pub(super) fn source_position(
+        &self,
+        sub: &str,
+        e: &Engine,
+        rows: &[Value],
+        key: &str,
+    ) -> usize {
+        rows.iter()
+            .position(|row| row["key"].as_str() == Some(key))
+            .unwrap_or_else(|| {
+                if self.view(sub, e).is_some_and(|view| {
+                    crate::engine::even_history::holds_anchor(&e.store, view, key)
+                }) {
+                    rows.len()
+                } else {
+                    0
+                }
+            })
+    }
+
+    pub(super) fn source_range(&self, sub: &str, e: &Engine, rows: &[Value]) -> (usize, usize) {
         let Some((anchor, before, after)) = self.windows.get(sub) else {
             return (0, 50);
         };
@@ -162,7 +182,9 @@ impl Session {
             let through = position(tail).map_or(0, |i| i + 1);
             return (0, (*after).max(through).min(HEAD_ROWS));
         }
-        let at = anchor.as_deref().and_then(position).unwrap_or(0);
+        let at = anchor
+            .as_deref()
+            .map_or(0, |key| self.source_position(sub, e, rows, key));
         (at.saturating_sub(*before), at.saturating_add(*after))
     }
 }

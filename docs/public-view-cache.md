@@ -22,6 +22,9 @@ Only permitted row snapshots are persisted, with their complete query and
 render configuration identity. An update preserves this independent
 row format. The event database and encrypted account/archive stores are not
 opened by the main-thread cache.
+Merged chronological lists use a new snapshot identity for windows produced
+with the [history horizon](time-rail.md). Ordinary windows can still replay
+their previously displayed rows. Moment windows remain transient.
 
 ## Bounds and reconciliation
 

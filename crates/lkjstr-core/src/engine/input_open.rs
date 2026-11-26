@@ -26,17 +26,20 @@ impl Engine {
                 before: 0,
                 after: 50,
                 rows: vec![],
+                opened_at: now,
                 opened_after: self.delivery_sequence,
                 invalid_deliveries: 0,
                 visible,
                 dirty: true,
                 history: None,
                 notification_history: None,
+                history_horizon: None,
+                oldest_history_shown: None,
                 at_bottom: false,
                 source_exhausted: false,
             },
         );
-        self.render(&sub, true);
         self.replan(now);
+        self.render(&sub, true);
     }
 }

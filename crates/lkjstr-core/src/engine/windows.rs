@@ -151,6 +151,13 @@ impl Engine {
             pivot.report(sub, &items, follow_list, edges, full, &mut self.outgoing);
         }
         v.at_bottom = at_bottom;
+        if v.visible
+            && super::even_history::merged(v)
+            && let Some(at) = items.iter().map(|row| row.created_at).min()
+        {
+            v.oldest_history_shown =
+                Some(v.oldest_history_shown.map_or(at, |oldest| oldest.min(at)));
+        }
         if v.visible {
             for row in &items {
                 if row.hidden_reason.is_none() {

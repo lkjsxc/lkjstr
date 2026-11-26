@@ -134,6 +134,10 @@ impl Engine {
             }
         }
         self.settle_client_info(now);
+        let flush = now.saturating_sub(self.last_flush) >= 75;
+        if flush {
+            self.refresh_history_horizons();
+        }
         self.refill_history(now);
         self.zap_tick(now);
         for v in self.views.values_mut() {
@@ -152,7 +156,7 @@ impl Engine {
             self.error(Some(req), "signer-timeout");
         }
         observe(TickPhase::Plan);
-        if now.saturating_sub(self.last_flush) >= 75 {
+        if flush {
             self.last_flush = now;
             let subs: Vec<_> = self
                 .views

@@ -18,14 +18,7 @@ fn position(lookup: &Lookup, key: &str) -> Option<Value> {
 
 impl Session {
     /// Sets `positions`, `older` and `anchor` on `value` for `sub`'s current window.
-    pub(super) fn window_fields(
-        &self,
-        sub: &str,
-        q: &crate::engine::protocol::Query,
-        lookup: &Lookup,
-        e: &Engine,
-        value: &mut Value,
-    ) {
+    pub(super) fn window_fields(&self, sub: &str, lookup: &Lookup, e: &Engine, value: &mut Value) {
         let mut positions: Vec<_> = self
             .delivered
             .get(sub)
@@ -40,11 +33,7 @@ impl Session {
             positions.push(p);
         }
         // Exhaustion is engine policy; a short local window says nothing about relay history.
-        let older = !e
-            .views
-            .values()
-            .filter(|v| v.query == *q)
-            .any(|v| v.source_exhausted);
+        let older = self.view(sub, e).is_none_or(|v| !v.source_exhausted);
         value["positions"] = json!(positions);
         value["older"] = json!(older);
         match self.windows.get(sub) {

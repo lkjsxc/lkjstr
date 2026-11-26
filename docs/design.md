@@ -210,7 +210,7 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
   closes it, a failure stays in words under the buttons ([interface-profile.md](interface-profile.md)).
 - A list keeps what was read (up to 800 rows): nothing vanishes above and
   the scrollbar keeps its span. A list in time order has a time rail
-  instead: it spans every note known for the list by rank, as a native scrollbar
+  instead: it spans the notes available to read by rank, as a native scrollbar
   would, so busy weeks keep their room over a few short old posts; a quiet month stays reachable and empty time
   takes none. A 6x32px accent grip in the rightmost 16px marks the reading place and stays whole at the ends.
   It appears with the first dated row at the share scrolled, then uses the rank map as counts arrive.
@@ -224,6 +224,10 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
   layouts (link-card pictures, the folded action row) from the first frame; a list the engine refused
   last time on this device starts without the rail's room, so its notes never widen after a second. Other views keep
   a 14px scrollbar with a slim thumb that widens under the pointer.
+- Home and other merged chronological lists end at the time their expected
+  sources have reached. The rail ends at the same place. Older notes appear
+  in order as pages arrive, with the usual quiet loading end in the meantime.
+  A source at its end or without a page answer after four seconds releases its hold.
 - While the reader scrolls a list in time order (wheel, touch, keys, a dragged thumb or rail), a small label beside
   the rail grip or native thumb says `yyyy/mm/dd HH:mm` of the row at the top, kept 4px
   inside the tile, and goes a second after the last scroll; a scroll the list makes itself shows nothing

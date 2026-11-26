@@ -10,9 +10,15 @@ use super::{Output, Session};
 use crate::engine::{Engine, protocol::Source, query};
 use serde_json::{Value, json};
 use std::collections::BTreeMap;
+#[cfg(test)]
+#[path = "timeline_horizon_test.rs"]
+mod horizon_tests;
+#[path = "timeline_rebuild.rs"]
+mod rebuild;
 #[derive(Default)]
 pub(super) struct Index {
     pub(super) revision: u64,
+    horizon: Option<u64>,
     started: u64,
     month: u64,
     cursor: Option<(u64, String)>,
@@ -33,7 +39,10 @@ pub(super) struct Index {
     pub(super) next: usize,
 }
 impl Index {
-    pub(super) fn key(&self, month: u64, offset: usize) -> Option<String> {
+    pub(super) fn key(&self, month: u64, offset: usize, horizon: Option<u64>) -> Option<String> {
+        if horizon > self.horizon {
+            return None;
+        }
         let keys = if self.done {
             &self.keys
         } else {
@@ -115,42 +124,36 @@ impl Session {
         now: u64,
     ) -> Option<Value> {
         let revision = e.store.revision();
+        let horizon = self.history_horizon(sub, e);
         let month = month_start(now / 1000);
         let (zone, today) = (e.calendar.zone(), e.calendar.day_start(now));
-        if (index.done && index.revision != revision)
+        if (index.done && (index.revision != revision || index.horizon != horizon))
+            || horizon > index.horizon
             || e.store.snapshot_revision() > index.revision
             || index.month != month
             || index.days.stale(&zone, today)
             || (index.supported && !eligible(q, e))
         {
-            let last = index.last.take();
-            let (previous, prior) = if index.done {
-                (
-                    std::mem::take(&mut index.keys),
-                    std::mem::take(&mut index.positions),
-                )
-            } else {
-                (
-                    std::mem::take(&mut index.previous),
-                    std::mem::take(&mut index.prior),
-                )
-            };
-            *index = Index {
+            *index = index.rebuild(Index {
                 revision,
-                previous,
-                prior,
+                horizon,
                 month,
                 started: now,
                 supported: eligible(q, e),
-                last,
                 days: Days::new(zone, today),
                 ..Default::default()
-            };
-            index.done = !index.supported;
+            });
         }
+        // A deeper horizon joins the next bounded scan. The current map stays
+        // within the covered part and can finish while relay pages stream in.
+        let horizon = index.horizon;
         if !index.done && now.saturating_sub(index.started) >= 100 && projected::projected(q) {
             if index.rows.is_none() {
-                index.rows = Some(projected::rows(&self.project_source(sub, e, false)));
+                let mut rows = projected::rows(&self.project_source(sub, e, false));
+                if let Some(at) = horizon {
+                    rows.retain(|(_, time)| time / 1000 >= at);
+                }
+                index.rows = Some(rows);
             }
             projected::slice(index, &*e.calendar, now);
         } else if !index.done && now.saturating_sub(index.started) >= 100 {
@@ -165,6 +168,10 @@ impl Session {
                     Some("articles" | "lists" | "all")
                 );
             for event in &batch {
+                if horizon.is_some_and(|at| event.created_at < at) {
+                    index.done = true;
+                    break;
+                }
                 index.cursor = Some((event.created_at, event.id.clone()));
                 if !e.store.existed_at(&event.id, index.revision)
                     || query::signed_out(q)
@@ -181,6 +188,7 @@ impl Session {
                 };
                 // The first matching original or wrapper owns the row, in the same order as the window.
                 if (!profile_all && event.kind == 6 && row.id == event.id)
+                    || horizon.is_some_and(|at| row.created_at < at)
                     || index.positions.contains_key(&row.id)
                 {
                     continue;
@@ -211,7 +219,7 @@ impl Session {
         if !index.done {
             // A moved window still lands while the replacement builds: the prior answer, placed again.
             let mut value = index.last.clone().filter(|v| v["supported"] == true)?;
-            self.window_fields(sub, q, &index.prior, e, &mut value);
+            self.window_fields(sub, &index.prior, e, &mut value);
             if index.last.as_ref() == Some(&value) {
                 return None;
             }
@@ -226,7 +234,7 @@ impl Session {
             .map(|(at, keys)| json!({"at":at,"count":keys.len()}))
             .collect();
         let mut value = json!({"newest":index.newest.unwrap_or(0),"oldest":index.oldest,"supported":index.supported,"months":if index.supported {months} else {vec![]}});
-        self.window_fields(sub, q, &index.positions, e, &mut value);
+        self.window_fields(sub, &index.positions, e, &mut value);
         if index.supported {
             index.days.fields(&mut value);
         }

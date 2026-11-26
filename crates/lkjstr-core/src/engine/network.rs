@@ -24,6 +24,8 @@ mod delivery;
 mod eviction;
 #[path = "network_frontier.rs"]
 mod frontier;
+#[path = "network_horizon.rs"]
+mod horizon;
 #[path = "network_publish_slots.rs"]
 mod publish_slots;
 use frontier::PageFrontier;
@@ -145,6 +147,7 @@ pub(super) struct Request {
     pub sent: bool,
     pub eose: bool,
     pub page_eose: bool, // Historical completion survives live resubscription.
+    pub page_answered_at: Option<u64>, // EOSE after queued deliveries have been checked.
     pub deadline: u64,
     pub initial_deadline: u64, // Count deferral ends even if the page keeps retrying.
     pub last_event: Option<u64>,

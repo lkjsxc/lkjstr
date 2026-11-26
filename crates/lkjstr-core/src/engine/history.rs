@@ -2,6 +2,13 @@
 use super::{Engine, View, network::Network, protocol::Source, query, windows};
 use crate::store::Store;
 
+fn waiting_for_anchor(store: &Store, v: &View) -> bool {
+    v.anchor
+        .as_ref()
+        .or(v.head_through.as_ref())
+        .is_some_and(|id| super::even_history::holds_anchor(store, v, id))
+}
+
 fn paged(v: &View) -> bool {
     v.time_window.is_none()
         && matches!(
@@ -23,7 +30,8 @@ pub(super) fn notification_filter(
     store: &Store,
     q: &super::Query,
 ) -> Option<lkjstr_protocol::NostrFilter> {
-    if q.filters.notifications != Some(true)
+    if q.account.is_none()
+        || q.filters.notifications != Some(true)
         || !matches!(q.source, Source::Home | Source::Global | Source::TheirHome)
     {
         return None;
@@ -38,9 +46,10 @@ pub(super) fn exhausted(network: &Network, store: &Store, v: &View) -> bool {
     }
     query::signed_out(&v.query)
         || !paged(v)
-        || (store
-            .eviction_gap(&query::filter(store, &v.query))
-            .is_none()
+        || (v.history_horizon.is_none()
+            && store
+                .eviction_gap(&query::filter(store, &v.query))
+                .is_none()
             && !network.verifying
             && network.page_exhausted(
                 v.history
@@ -71,17 +80,18 @@ impl Engine {
         {
             return false;
         }
-        let events = super::list_events::events(&self.store, &v.query, &self.private_lists);
-        if windows::selection(
-            &self.store,
-            &self.network,
-            v,
-            self.signed_out_global_filter,
-            &events,
-            &self.private_lists,
-        )
-        .raw
-        .end < events.len()
+        let events = super::time_window::events(&self.store, v, &self.private_lists);
+        if !waiting_for_anchor(&self.store, v)
+            && windows::selection(
+                &self.store,
+                &self.network,
+                v,
+                self.signed_out_global_filter,
+                &events,
+                &self.private_lists,
+            )
+            .raw
+            .end < events.len()
         {
             return false;
         }
@@ -143,7 +153,7 @@ impl Engine {
                     )
             })
             .filter_map(|(sub, v)| {
-                let events = super::list_events::events(&self.store, &v.query, &self.private_lists);
+                let events = super::time_window::events(&self.store, v, &self.private_lists);
                 let selected = windows::selection(
                     &self.store,
                     &self.network,
@@ -172,7 +182,8 @@ impl Engine {
                         .filter(|h| super::global::has_slot(**h))
                         .count()
                         < selected.quota;
-                (selected.raw.end == events.len() && (events.len() < needed || filtered))
+                (waiting_for_anchor(&self.store, v)
+                    || selected.raw.end == events.len() && (events.len() < needed || filtered))
                     .then(|| sub.clone())
             })
             .collect();

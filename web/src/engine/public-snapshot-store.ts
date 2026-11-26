@@ -29,6 +29,15 @@ const backend = (): Storage | undefined => {
 };
 const canonical = (query: Query): string =>
   JSON.stringify(Object.fromEntries(Object.entries(query).sort(([a], [b]) => a.localeCompare(b))));
+const mergedHistory = new Set([
+  'home',
+  'their-home',
+  'global',
+  'hashtag',
+  'search',
+  'channel',
+  'notifications',
+]);
 export const snapshotIdentity = (
   query: Query,
   language: string,
@@ -42,6 +51,7 @@ export const snapshotIdentity = (
     canonical(query),
     // Earlier Their Home entries can hold Moment order without any row marker.
     ...(query.source === 'their-home' ? ['ordinary'] : []),
+    ...(mergedHistory.has(query.source) ? ['even-history'] : []),
   ]);
 
 export const hasAbsoluteReadingTime = (row: Row): boolean =>

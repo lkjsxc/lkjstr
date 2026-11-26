@@ -129,7 +129,7 @@ fn signed_reply_renders_before_any_relay_answer_and_confirms_in_place() {
     assert!(signed.iter().any(|m| m["sub"] == "home"
         && (m["rows"][0]["id"] == note.id
             || m["ops"].as_array().into_iter().flatten().any(|op| {
-                op["op"] == "insert" && op["before"] == root.id && op["rows"][0]["id"] == note.id
+                op["op"] == "insert" && op["before"].is_null() && op["rows"][0]["id"] == note.id
             }))));
 
     engine.network.connected(RELAY, 2002);

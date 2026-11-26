@@ -157,6 +157,8 @@ impl Session {
             } => {
                 let ops = self.settled_quote_patch(&sub, engine);
                 let answered = answered_relays;
+                let waiting_for_history = self.history_horizon(&sub, engine).is_some()
+                    && self.delivered.get(&sub).is_none_or(Vec::is_empty);
                 let empty_profile = self
                     .queries
                     .get(&sub)
@@ -175,7 +177,7 @@ impl Session {
                 });
                 let mut out = vec![Output::State {
                     sub: sub.clone(),
-                    state: json!({"phase":match state.as_str(){"pending"=>"cache","data"=>if self.queries.get(&sub).is_some_and(|q| q.source=="channels") || empty_profile {"done"} else {"live"},"not-found"=>if known_channel {"live"} else {"done"},_=>"failed"},"relaysAsked":asked_relays,"relaysAnswered":answered}),
+                    state: json!({"phase":match state.as_str(){"pending"=>"cache","data" | "not-found" if waiting_for_history=>"cache","data"=>if self.queries.get(&sub).is_some_and(|q| q.source=="channels") || empty_profile {"done"} else {"live"},"not-found"=>if known_channel {"live"} else {"done"},_=>"failed"},"relaysAsked":asked_relays,"relaysAnswered":answered}),
                 }];
                 if !ops.is_empty() {
                     out.push(Output::Patch { sub, ops });

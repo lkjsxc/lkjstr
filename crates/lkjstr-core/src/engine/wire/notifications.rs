@@ -4,6 +4,10 @@ use crate::engine::{Engine, query, rows};
 use lkjstr_protocol as p;
 use serde_json::{Value, json};
 pub(super) fn notifications(q: &Query, e: &Engine) -> Vec<Value> {
+    visible(q, e, None)
+}
+
+pub(super) fn visible(q: &Query, e: &Engine, horizon: Option<u64>) -> Vec<Value> {
     let Some(account) = q.account.as_deref() else {
         return vec![];
     };
@@ -13,7 +17,8 @@ pub(super) fn notifications(q: &Query, e: &Engine) -> Vec<Value> {
     let seen = e.seen.get(account).copied().unwrap_or(0);
     let aliases = super::notification_read::aliases(e, account);
     let mut groups: Vec<Value> = vec![];
-    for event in query::events(&e.store, &converted) {
+    let bounded = crate::engine::even_history::bounded_query(&converted, horizon);
+    for event in query::events(&e.store, &bounded) {
         let Some(subject) = super::notification_subject::subject(e, &converted, &event, account)
         else {
             continue;

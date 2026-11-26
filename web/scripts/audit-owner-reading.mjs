@@ -92,6 +92,15 @@ export async function auditReading({ page, find, fact, view, peopleToken, messag
       return Math.abs(e.getBoundingClientRect().width - width) < 2;
     }),
   );
+  await page.waitForFunction(() => {
+    const feed = [...document.querySelectorAll('.view[data-kind="global"]')].find(
+      (view) => view.clientHeight > 0,
+    );
+    const bar = feed?.querySelector('.fbar');
+    if (!bar || !feed.clientHeight) return false;
+    const distance = bar.getBoundingClientRect().bottom - feed.getBoundingClientRect().top;
+    return feed.scrollHeight - feed.clientHeight > distance + feed.scrollTop;
+  });
   await global.evaluate((e) => {
     e.scrollTop = 500;
   });

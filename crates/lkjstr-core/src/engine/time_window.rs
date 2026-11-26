@@ -140,7 +140,11 @@ pub(super) fn follow_list(store: &Store, query: &Query) -> Option<FollowList> {
 }
 
 pub(super) fn events(store: &Store, view: &View, private: &PrivateLists) -> Vec<Event> {
-    let mut events = super::list_events::events(store, &view.query, private);
+    let query = super::even_history::bounded_query(&view.query, view.history_horizon);
+    let mut events = super::list_events::events(store, &query, private);
+    if let Some(at) = view.history_horizon {
+        events.retain(|event| event.created_at >= at);
+    }
     if view.time_window.is_some() {
         let order = Order::new(store, &view.query);
         events.sort_by_cached_key(|event| Reverse((order.at(event), event.id.clone())));

@@ -141,7 +141,7 @@ it.each(['read', 'top'] as const)(
   },
 );
 
-it('rejects unmarked Moment order at the old Their Home key while other sources still replay', async () => {
+it('rejects legacy merged history and keeps unchanged profile snapshots', async () => {
   const oldIdentity = JSON.stringify([
     'en',
     true,
@@ -151,15 +151,27 @@ it('rejects unmarked Moment order at the old Their Home key while other sources 
   seedSnapshot(storageKey('read', oldIdentity), [repost, newer]);
   const oldHomeIdentity = JSON.stringify(['en', true, true, '{"source":"home"}']);
   seedSnapshot(storageKey('top', oldHomeIdentity), ordinary);
+  const profileQuery: Query = { source: 'profile', pubkey: query.pubkey };
+  const oldProfileIdentity = JSON.stringify([
+    'en',
+    true,
+    true,
+    JSON.stringify({ pubkey: query.pubkey, source: 'profile' }),
+  ]);
+  seedSnapshot(storageKey('top', oldProfileIdentity), ordinary);
 
   const theirs = harness();
   openAt(theirs, { key: newer.key });
   const home = harness();
   home.open({ source: 'home' });
+  const profile = harness();
+  profile.open(profileQuery);
   await vi.advanceTimersByTimeAsync(0);
   expect(painted(theirs)).toEqual([]);
   expect(theirs.post.mock.calls.some(([message]) => message.t === 'cache.hold')).toBe(false);
-  expect(painted(home)).toMatchObject([{ rows: ordinary }]);
+  expect(painted(home)).toEqual([]);
+  expect(painted(profile)).toMatchObject([{ rows: ordinary }]);
   theirs.transport.close();
   home.transport.close();
+  profile.transport.close();
 });

@@ -1,6 +1,6 @@
 //! Same engine host with namespaced MessagePorts for one engine per origin.
 use super::*;
-use lkjstr_core::engine::clients::Clients;
+use lkjstr_core::engine::{clients::Clients, wire::Session};
 use serde::Serialize;
 pub(super) struct Peer {
     port: web_sys::MessagePort,
@@ -19,7 +19,7 @@ impl Sink {
         &self,
         out: &Output,
         engine: &Engine,
-        sessions: &BTreeMap<u64, RefCell<lkjstr_core::engine::wire::Session>>,
+        sessions: &BTreeMap<u64, RefCell<Session>>,
     ) {
         match self {
             Self::Closed => {}
@@ -182,7 +182,8 @@ fn attach(host: &Rc<RefCell<Host>>, port: web_sys::MessagePort) {
     });
     port.set_onmessage(Some(handler.as_ref().unchecked_ref()));
     port.start();
-    host.borrow_mut().sessions.insert(id, RefCell::default());
+    let session = RefCell::new(Session::shared(id));
+    host.borrow_mut().sessions.insert(id, session);
     if let Sink::Shared { peers, .. } = &mut host.borrow_mut().scope {
         peers.insert(
             id,
@@ -196,7 +197,6 @@ fn attach(host: &Rc<RefCell<Host>>, port: web_sys::MessagePort) {
 }
 #[path = "worker_shared_handle.rs"]
 mod handle;
-
 fn send(target: &JsValue, out: &lkjstr_core::engine::wire::Output) {
     if let Ok(value) = out.serialize(&serde_wasm_bindgen::Serializer::json_compatible())
         && let Ok(post) = js_sys::Reflect::get(target, &"postMessage".into())

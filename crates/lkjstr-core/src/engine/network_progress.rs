@@ -65,6 +65,11 @@ impl Network {
         }
     }
     pub(super) fn settle_reads(&mut self, now: u64) {
+        if !self.verifying {
+            for r in self.requests.values_mut().filter(|r| r.page_eose) {
+                r.page_answered_at.get_or_insert(now);
+            }
+        }
         let subs: BTreeSet<_> = self
             .requests
             .values()

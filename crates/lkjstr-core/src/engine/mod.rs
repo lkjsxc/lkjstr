@@ -17,6 +17,7 @@ pub mod discovery;
 pub mod dm;
 mod dm_network;
 mod emoji;
+mod even_history;
 pub mod feedback;
 mod filter_identity;
 pub mod global;
@@ -85,12 +86,15 @@ pub struct View {
     before: usize,
     after: usize,
     rows: Vec<Row>,
+    opened_at: u64,
     opened_after: u64,
     invalid_deliveries: u64,
     visible: bool,
     dirty: bool,
     history: Option<lkjstr_protocol::NostrFilter>, // One per view; released on hide/close.
     notification_history: Option<lkjstr_protocol::NostrFilter>,
+    history_horizon: Option<u64>,
+    oldest_history_shown: Option<u64>,
     at_bottom: bool,
     source_exhausted: bool,
 }

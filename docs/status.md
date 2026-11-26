@@ -10,8 +10,8 @@ Claude owns the interface. Account-safe and A1/A2 (972ef776) are live. [Emoji se
 Home and Their Home both include the feed owner's posts. Visible Their Home follows and author metadata use the same GDSF reuse weights;
 its public follow list is a read dependency, without granting account or mute authority. The bounded metadata checkpoint now uses the resident
 scorer and durable access hints, retaining signed deletion evidence ahead of optional cache entries. See [cache-retention.md](cache-retention.md).
-
-The [compact event store](compact-event-store.md) now uses binary identities, shared dictionaries and pointer-only persistence batches. Count caps
+Merged feeds and rails use route-local coverage with a four-second page wait. The [compact event store](compact-event-store.md) uses
+binary identities, shared dictionaries and pointer-only persistence batches. Count caps
 remain 16000/4000; the managed budget includes indexes, evidence and pending leases. Native allocation density improved 2.51x on the frozen fixture.
 Real Worker warm-IDB testing passes 120/120 cases and all four paired timing gates against fixes-only. First-note DOM/rAF improves 16.8/14.2 ms
 for Home/Their Home; eight named rows improve 16.6/14.6 ms, with lower p95 in the same 30 alternating pairs/source. See the compact-store scope.
