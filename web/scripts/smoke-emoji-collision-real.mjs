@@ -8,28 +8,12 @@ export const alternateSetOf = (owner) => `30030:${owner}:lkjstr-smoke-alternate`
 const group = (id) => `.epick .egroup[data-section="${id}"]`;
 const cell = (id) => `${group(id)} .ecell[aria-label^=":pien:"]`;
 
-// Preserve the actual rendered URL on its fixture cell before the image becomes fallback text.
-export async function rememberEmojiPictures(page) {
-  return page.evaluateHandle(() => {
-    const remember = () => {
-      for (const image of document.querySelectorAll('.epick .ecell img[src]')) {
-        const cell = image.closest('.ecell');
-        if (cell) cell.setAttribute('data-smoke-emoji-url', image.getAttribute('src'));
-      }
-    };
-    const observer = new MutationObserver(remember);
-    observer.observe(document.body, { childList: true, subtree: true });
-    remember();
-    return observer;
-  });
-}
-
 export const emojiCell = (page, source, code, url) =>
   page.locator(
     group(source) +
       ' .ecell[aria-label^=' +
       JSON.stringify(`:${code}:`) +
-      '][data-smoke-emoji-url=' +
+      '][data-emoji-url=' +
       JSON.stringify(url) +
       ']',
   );

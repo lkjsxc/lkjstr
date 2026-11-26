@@ -57,6 +57,7 @@ export function createGrid(hooks: Hooks) {
       {
         class: 'ecell',
         'data-i': i,
+        'data-emoji-url': it.picked.url ?? null,
         tabindex: i === current ? 0 : -1,
         'aria-label': label(it),
       },
