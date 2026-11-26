@@ -2,7 +2,7 @@
 use lkjstr_core::{
     engine::{
         network::{Effect, Network},
-        protocol::{Output, Query},
+        protocol::{Output, Query, Source},
     },
     store::Store,
 };
@@ -185,4 +185,39 @@ fn private_read_startup_keeps_its_existing_fifteen_second_bound() {
     assert!(states(&mut network).is_empty());
     network.tick(NOW + 15_000);
     assert_eq!(states(&mut network), ["error"]);
+}
+
+#[test]
+fn a_connected_relay_cannot_leave_a_public_profile_read_loading_forever() {
+    for source in [Source::Profile, Source::TheirHome] {
+        let mut network = Network::default();
+        let note = event();
+        network.configure(vec![A.into()], NOW);
+        network
+            .relays
+            .get_mut(A)
+            .expect("configured relay")
+            .next_req_at = NOW + 11_000;
+        network.plan(
+            vec![(
+                "feed".into(),
+                filter(&note),
+                Query {
+                    source,
+                    ..Default::default()
+                },
+            )],
+            &Store::new(100),
+            NOW,
+        );
+        network.connected(A, NOW + 100);
+        network.tick(NOW + 9_999);
+        assert!(states(&mut network).is_empty());
+        network.tick(NOW + 10_000);
+        assert_eq!(states(&mut network), ["error"], "{source:?}");
+        network.tick(NOW + 11_000);
+        assert!(states(&mut network).is_empty(), "no new loading phase");
+        receive(&mut network, note, NOW + 11_010);
+        assert_eq!(states(&mut network), ["data"]);
+    }
 }

@@ -108,7 +108,12 @@ export function createOwnViews(
           const made: Mounted = { el, dispose: () => undefined, visible, top: 0 };
           const dispose = def?.mount(el, {
             ...env,
-            engine: { ...env.engine, open: (q, handlers) => env.engine.open(q, handlers, el) },
+            engine: {
+              ...env.engine,
+              // People lookups supply names and suggestions for the view's main subscription.
+              open: (q, handlers) =>
+                env.engine.open(q, handlers, q.source === 'people' ? undefined : el),
+            },
             instance: instance(tab),
             setTitle,
             visible,

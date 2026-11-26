@@ -1,4 +1,4 @@
-//! A missing bootstrap configuration is not evidence that a relay failed.
+//! Bound startup observations while allowing late answers to recover.
 use super::*;
 const STARTUP_MS: u64 = 10_000;
 const MAX_OBSERVATIONS: usize = 4096;
@@ -7,12 +7,13 @@ pub(super) struct ReadStart {
     at: u64,
     wait: u64,
     connected: bool,
+    public_profile: bool,
 }
 
 impl Network {
     pub(super) fn observe_read_starts(&mut self, wants: &[(String, NostrFilter, Query)], now: u64) {
-        let mut active = BTreeMap::<String, u64>::new();
-        for (sub, filter, _) in wants.iter().filter(|(sub, _, _)| !sub.starts_with('~')) {
+        let mut active = BTreeMap::<String, (u64, bool)>::new();
+        for (sub, filter, query) in wants.iter().filter(|(sub, _, _)| !sub.starts_with('~')) {
             if active.len() == MAX_OBSERVATIONS && !active.contains_key(sub) {
                 continue;
             }
@@ -25,20 +26,21 @@ impl Network {
             } else {
                 STARTUP_MS
             };
-            active
-                .entry(sub.clone())
-                .and_modify(|old| *old = (*old).max(wait))
-                .or_insert(wait);
+            let (longest_wait, public_profile) = active.entry(sub.clone()).or_default();
+            *longest_wait = (*longest_wait).max(wait);
+            *public_profile |= matches!(query.source, Source::Profile | Source::TheirHome);
         }
         self.read_starts.retain(|sub, _| active.contains_key(sub));
-        for (sub, wait) in active {
+        for (sub, (wait, public_profile)) in active {
             let start = self.read_starts.entry(sub).or_insert(ReadStart {
                 at: now,
                 wait,
                 connected: false,
+                public_profile,
             });
             start.wait = wait;
-            if self.relays.is_empty() && start.connected {
+            start.public_profile = public_profile;
+            if self.relays.is_empty() && start.connected && !public_profile {
                 start.at = now;
                 start.connected = false;
             }
@@ -48,7 +50,7 @@ impl Network {
     pub(super) fn read_startup_wakeup(&self, now: u64) -> Option<u64> {
         self.read_starts
             .values()
-            .filter(|start| !start.connected)
+            .filter(|start| !start.connected || start.public_profile)
             .map(|start| start.at.saturating_add(start.wait))
             .filter(|at| *at > now)
             .min()
@@ -86,16 +88,19 @@ impl Network {
                 continue;
             };
             start.connected |= online;
+            let reported = self.reported.get(&sub);
             let state = if has_data || !pending {
                 continue;
-            } else if !start.connected && now.saturating_sub(start.at) >= start.wait {
+            } else if (!start.connected || (start.public_profile && reported.is_none()))
+                && now.saturating_sub(start.at) >= start.wait
+            {
                 "error"
-            } else if inflight && self.reported.get(&sub).is_some_and(|s| s == "error") {
+            } else if inflight && !start.public_profile && reported.is_some_and(|s| s == "error") {
                 "pending"
             } else {
                 continue;
             };
-            if self.reported.get(&sub).is_some_and(|old| old == state) {
+            if reported.is_some_and(|old| old == state) {
                 continue;
             }
             let (asked_relays, answered_relays) = self.request_progress(&sub);

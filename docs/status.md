@@ -17,8 +17,8 @@ Real Worker warm-IDB testing passes 120/120 cases and all four paired timing gat
 for Home/Their Home; eight named rows improve 16.6/14.6 ms, with lower p95 in the same 30 alternating pairs/source. See the compact-store scope.
 
 [Durable GDSF](durable-cache.md) bounds disk pressure and proof recovery; its fault, reader and warm-reload controls pass.
-[Thin-link support](thin-link.md) adds bounded startup liveness, verified HTTP asset reuse and advisory read budgets.
-
+[Thin-link support](thin-link.md) adds startup bounds, HTTP asset reuse and read budgets. Focused feeds get relay priority.
+Profile and Their Home stop showing the initial loading state after ten seconds without a relay result.
 ## Kind capabilities (2026-11-22)
 
 N1 centralizes kind policy and public ID/address access. Quotes carry their kind, optional previews and a one-line reference to their first quote.

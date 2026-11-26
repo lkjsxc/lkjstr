@@ -10,6 +10,7 @@ import { deepLinkChecks } from './smoke-deep-links.mjs';
 import { emojiRealChecks, seedEmoji } from './smoke-emoji-real.mjs';
 import { livedInChecks } from './smoke-lived-in.mjs';
 import { smokePath } from './smoke-output.ts';
+import { personReferenceChecks } from './smoke-person-references.mjs';
 import { realReaderChecks } from './smoke-reader.mjs';
 import { realSmokeChecks } from './smoke-real-checks.mjs';
 import { finishAccounts, reviewSettings, seedRailArchive } from './smoke-real-finish.mjs';
@@ -99,17 +100,18 @@ try {
   await page.locator('.view[data-kind="global"] .note').first().waitFor();
   check('global renders verified fixture notes');
   await visitorChecks({ page, browser, base, relayUrl, errors, shots, shot, check });
-  await deepLinkChecks({
+  const personRefs = {
     browser,
     base,
     relayUrl: `${relayUrl}/deep-links`,
     fixture,
-    otherAuthor: actor.pubkey,
     sign: fixtureSign,
     add: deepLinkFake.add,
     errors,
     check,
-  });
+  };
+  await deepLinkChecks({ ...personRefs, otherAuthor: actor.pubkey });
+  await personReferenceChecks(personRefs);
   await openKeyField(page);
   await page.locator(`${accounts} input`).fill('not a key');
   await page.locator(`${accounts} input`).press('Enter');

@@ -10,6 +10,12 @@ const encode = (prefix, fields) => {
   return bech32(prefix, bytes.toString('hex'));
 };
 
+export const profilePointer = (pubkey, relayUrl) =>
+  encode('nprofile', [
+    [0, Buffer.from(pubkey, 'hex')],
+    [1, Buffer.from(relayUrl)],
+  ]);
+
 const kindBytes = (kind) => {
   const bytes = Buffer.alloc(4);
   bytes.writeUInt32BE(kind);
@@ -104,10 +110,7 @@ export async function deepLinkChecks({
       [3, kindBytes(kind)],
     ]);
   const npub = bech32('npub', pubkey);
-  const nprofile = encode('nprofile', [
-    [0, Buffer.from(pubkey, 'hex')],
-    [1, Buffer.from(relayUrl)],
-  ]);
+  const nprofile = profilePointer(pubkey, relayUrl);
   const naddr = articlePointer(pubkey, identifier);
   const global = '.tab.active[data-view="global"]';
   const noteRow = (id) => `.view[data-kind="thread"] [data-note="${id}"]:visible`;
