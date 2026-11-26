@@ -7,6 +7,7 @@ import type { Place } from './feed-place.ts';
 import type { TimePlace } from './time-scale.ts';
 
 const SEEK_MS = 80;
+const REPLY_MS = 2000;
 
 export type Back = { place: Place; time: TimePlace };
 export type Seeker = ReturnType<typeof createSeeker>;
@@ -21,6 +22,7 @@ export function createSeeker(o: {
   sent(): void;
   /** A jump arrived where it was going. */
   landed(): void;
+  expired(): void;
   sync(): void;
 }) {
   const s = {
@@ -40,17 +42,27 @@ export function createSeeker(o: {
   let pendingVersion = 0;
   let seekingReturn = false;
   let timer: ReturnType<typeof setTimeout> | undefined;
+  let reply: ReturnType<typeof setTimeout> | undefined;
   let queued: { target: TimePlace; remember: boolean } | undefined;
+  const release = (): void => {
+    clearTimeout(reply);
+    reply = undefined;
+    s.inflight = false;
+    s.pending = undefined;
+  };
   const send = (p: TimePlace, anchor: Anchor, returning = false): void => {
     s.pending = p;
     s.inflight = true;
     seekingReturn = returning;
     sent = performance.now();
     pendingVersion = windowVersion;
+    reply = setTimeout(expire, REPLY_MS);
     o.sent();
     o.seek(anchor);
   };
   const go = (p: TimePlace, remember = true): void => {
+    clearTimeout(timer);
+    timer = queued = undefined;
     if (remember && !s.returning) s.back = s.origin ?? o.current();
     if (s.inflight) return void ((s.waiting = p), o.sync());
     if (o.scrollTo(p)) (s.pending = undefined), o.landed();
@@ -79,6 +91,18 @@ export function createSeeker(o: {
       send(back.time, { key: back.place.key }, true);
     }
   };
+  const expire = (): void => {
+    release();
+    o.expired();
+    if (s.returning && !seekingReturn) returnTo();
+    else {
+      s.returning = false;
+      const next = queued?.target ?? s.waiting;
+      s.waiting = undefined;
+      if (next) go(next, false);
+    }
+    o.sync();
+  };
   return {
     s,
     go,
@@ -100,12 +124,12 @@ export function createSeeker(o: {
       if (s.returning && s.inflight && !seekingReturn) {
         // Finish receiving the drag window before asking for the return row.
         if (applied) {
-          s.inflight = false;
+          release();
           returnTo();
         }
         return;
       }
-      if (s.pending) {
+      if (s.pending && (!applied || data?.anchor)) {
         const requested = applied && data?.positions.find((p) => p.key === data?.anchor);
         // Evicted meanwhile: the window's anchor is the nearest row, and that is where it lands.
         const target =
@@ -117,7 +141,8 @@ export function createSeeker(o: {
         }
       }
       if (s.inflight && applied) {
-        s.inflight = false;
+        if (s.pending) return expire();
+        release();
         // A target the drag queued since is newer than the one that waited: it goes instead.
         if (s.waiting)
           queue(queued?.target ?? s.waiting, sent + SEEK_MS - performance.now(), false);
@@ -134,8 +159,9 @@ export function createSeeker(o: {
     },
     stop(): void {
       clearTimeout(timer);
-      timer = queued = s.waiting = s.pending = undefined;
-      s.inflight = seekingReturn = false;
+      timer = queued = s.waiting = undefined;
+      release();
+      s.returning = seekingReturn = false;
     },
   };
 }

@@ -29,7 +29,6 @@ import type { ViewEnv } from './registry.ts';
 import { watchHomeTitle } from './their-home.ts';
 import { mountThread } from './thread.ts';
 import { mountTimeRail } from './time-rail.ts';
-
 export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => void {
   const state: FeedState = loadViewState<FeedState>(env.instance);
   const save = (): void => saveViewState(env.instance, state);
@@ -53,7 +52,7 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
   let mode: 'top' | 'held-head' | 'page' = 'top';
   let outside = { count: 0, own: false };
   let outsideBaseline: number | undefined;
-  let waiting = false;
+  let waiting: boolean | 'rail' = false;
   let sstate: SubState | undefined;
   let account = env.engine.me();
   let can = ability(env.engine);
@@ -240,7 +239,9 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
     active: () => env.visible.get() && Boolean(el.closest('.pane.cur')),
     seek(anchor) {
       keys.clear(), (mode = 'page'), paging.reset(), request(anchor, PAGE, PAGE);
+      if (waiting) waiting = 'rail';
     },
+    seekExpired: () => void (waiting === 'rail' && ((waiting = false), paging.schedule())),
   });
   const offInfo = env.engine.info.subscribe(rail.sync);
   const scrub = mountScrub({ el, pin, list, row: (key) => drawn.row(key) });

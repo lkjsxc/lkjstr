@@ -213,7 +213,8 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
   instead: it spans the notes available to read by rank, as a native scrollbar
   would, so busy weeks keep their room over a few short old posts; a quiet month stays reachable and empty time
   takes none. A 6x32px accent grip in the rightmost 16px marks the reading place and stays whole at the ends.
-  It appears with the first dated row at the share scrolled, then uses the rank map as counts arrive.
+  It appears with the first dated row at the share scrolled, beside the reading time and provisional day and
+  hour marks from the loaded rows. The counted rank map and its marks take over as counts arrive.
   Hover and hold highlight it. During a drag it follows the pointer or finger with the time beside it. On a tile of 520px or more one right-aligned column names local years, months and days
   where each begins (a year's newest month one line under it, a month as `mm/dd` once days are named), with dots
   beside them; the current year uses normal text colour. A fine pointer draws a `--sep` line and the time under it.

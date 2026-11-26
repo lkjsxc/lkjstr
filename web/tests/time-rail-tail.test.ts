@@ -10,6 +10,9 @@ it('paints the grip with the first rows before a timeline or local overflow', ()
   expect(x.track.hidden).toBe(false);
   expect(x.track.classList.contains('plain')).toBe(true);
   expect(x.track.querySelector<HTMLElement>('.time-grip')?.style.top).toBe('16px');
+  expect(x.track.querySelector('.time-marks .time-year')).not.toBeNull();
+  expect(x.track.querySelector<HTMLElement>('.scrub')?.hidden).toBe(false);
+  expect(x.track.querySelector('.scrub')?.textContent).toBe(timeText(month + 1));
 });
 
 it('keeps the plain grip when a header overflows before dated rows arrive', () => {

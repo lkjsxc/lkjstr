@@ -91,12 +91,13 @@ Mouse, pen and touch share one path: pointer events on the rail, with capture.
   Either way a thin return tick is left at the place the press started, and a press on the tick returns to the exact row
   and offset.
 - **Grip.** A 6x32px `--accent` pill appears with the first dated row. It is centred in the rail's rightmost 16px
-  and clamped 16px inside the tile. It starts at the share scrolled and takes its place on the map when counts arrive.
+  and clamped 16px inside the tile. It starts at the share scrolled with the reading time and provisional day
+  and hour marks from the loaded rows. The counted map takes over when it arrives.
   The whole rail accepts a press. Hover and hold highlight the grip. During a drag it follows the pointer with
   the time label beside it.
 - **Drag.** The label follows the pointer. Seeks run at most once per 80ms and one at a time: while one is out, only
-  the latest target waits, and it is sent once the answer is drawn. So a target that arrives late never pulls the list
-  back to an earlier one. While a press is held the bands and marks stay frozen, so a Timeline answer that arrives
+  the latest target waits, with an ellipsis at its place. It is sent once the answer is drawn or after two seconds
+  if the seek expires. While a press is held the bands and marks stay frozen, so a Timeline answer that arrives
   mid-drag is applied only on release.
 - **Label while held or loading.** If the target note is loaded, the label shows the full time. Otherwise it shows
   `yyyy/mm/dd` from `days`, never blank and never an invented minute. If the target is still not shown 500ms after

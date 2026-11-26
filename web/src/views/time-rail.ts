@@ -1,25 +1,29 @@
-// The rail owns only pixels and input. Membership, note ordinals and local days come from the engine
-// (docs/interface-time.md: C1 the label while scrolling, C2 the marks and hover, C3 jumps and their loading).
+// Time rail input and drawing. See docs/interface-time.md.
 import type { Anchor, Timeline } from '../engine/protocol.ts';
 import { localZone } from '../shared/format.ts';
-import { h } from '../shared/h.ts';
 import type { Keeper, Place } from './feed-place.ts';
-import { centred, type RailRow, rowTime, timeText, topRow } from './feed-scrub.ts';
+import { type RailRow, rowTime, timeText, topRow } from './feed-scrub.ts';
 import { railGuess, railSaid } from './rail-guess.ts';
 import { scrollIntent } from './scroll-intent.ts';
 import { dayText, railDays } from './time-days.ts';
-import { drawMarks, scrolledY, scrollShare } from './time-draw.ts';
+import {
+  createTimeRailNodes,
+  drawCurrentYear,
+  drawLabel,
+  drawMarks,
+  loadingText,
+  scrolledY,
+  scrollShare,
+} from './time-draw.ts';
 import { railInput } from './time-input.ts';
 import { type Label, snap } from './time-marks.ts';
 import { nearPlace } from './time-near.ts';
+import { createTimePreview, dated, type timePreview } from './time-preview.ts';
 import { noteToPlace, placeToNote, type TimePlace, timeScale } from './time-scale.ts';
 import { createSeeker } from './time-seek.ts';
 
-const LATE_MS = 500; // a jump still loading this long after its seek says so
-const LANDED_MS = 1000; // the label stays this long after a jump lands
-const timed = (r: RailRow): boolean =>
-  r.kind === 'note' || r.kind === 'notification' || r.kind === 'dm';
-
+const LATE_MS = 500;
+const LANDED_MS = 1000;
 export function mountTimeRail(o: {
   candidate: boolean;
   version(): number;
@@ -31,19 +35,11 @@ export function mountTimeRail(o: {
   rows(): readonly RailRow[];
   ensure?(key: string): void;
   seek(anchor: Anchor): void;
+  seekExpired?(): void;
   active(): boolean;
 }) {
   const { el, list, keeper } = o;
-  const rail = h('div', { class: 'time-rail', hidden: true, 'aria-hidden': 'true' });
-  const marks = h('div', { class: 'time-marks' });
-  const grip = h('div', { class: 'time-grip' });
-  const hoverLine = h('div', { class: 'time-hover', hidden: true });
-  const tick = h('div', { class: 'time-return', hidden: true });
-  const label = h('div', { class: 'scrub', hidden: true });
-  const live = h('div', { class: 'vh', 'aria-live': 'polite' }); // where a key jump landed
-  rail.append(marks, hoverLine, grip, tick, label);
-  const pin = h('div', { class: 'time-pin' }, rail, live);
-  el.prepend(pin);
+  const { rail, marks, grip, hoverLine, tick, label, live, pin } = createTimeRailNodes(el);
   let telling = false; // the reader is scrolling (C1)
   const intent = scrollIntent(el, () => ((telling = false), sync()));
   const kind = (): string => o.key(el.dataset.kind ?? '');
@@ -55,7 +51,9 @@ export function mountTimeRail(o: {
   let bands = timeScale([], 0);
   let height = 0;
   let labels: readonly Label[] = [];
-  let drawn: { shape?: Timeline; key: string } = { key: '' };
+  const preview = createTimePreview();
+  let markSource: Timeline | ReturnType<typeof timePreview> | undefined;
+  let markKey = '';
   let frame = 0;
   let hadRows = false;
   let held = false;
@@ -69,7 +67,7 @@ export function mountTimeRail(o: {
   let lateTimer: ReturnType<typeof setTimeout> | undefined;
   let landTimer: ReturnType<typeof setTimeout> | undefined;
   const first = (): RailRow | undefined =>
-    topRow(el, list, (key) => o.rows().find((r) => r.key === key)) ?? o.rows().findLast(timed);
+    topRow(el, list, (key) => o.rows().find((r) => r.key === key)) ?? o.rows().findLast(dated);
   let placed = new Map<string, Timeline['positions'][number]>();
   const position = (key: string | undefined) => (key === undefined ? undefined : placed.get(key));
   const near = (row: RailRow | undefined) => nearPlace(o.rows(), row?.key, position);
@@ -109,6 +107,11 @@ export function mountTimeRail(o: {
       lateTimer = setTimeout(() => ((late = true), sync()), LATE_MS);
     },
     landed: () => land(),
+    expired() {
+      clearTimeout(lateTimer);
+      late = speak = false;
+      o.seekExpired?.();
+    },
     sync: () => sync(),
   });
   const { s } = seeker;
@@ -128,23 +131,20 @@ export function mountTimeRail(o: {
   const at = (y: number): TimePlace =>
     snap(labels, y)?.place ?? placeToNote(bands, y) ?? { month: 0, offset: 0 };
   const tell = (lineY: number, row: RailRow | undefined): void => {
+    const target = s.waiting ?? s.pending;
     let text = '';
     let y = lineY;
     if (held) {
       const at = plain ? readingAt(row) : 0;
       text = under ? textFor(under) : at ? timeText(at) : '';
       y = pointerY + 8;
-    } else if (s.pending) {
-      const day = textFor(s.pending);
-      text = day && `${day}${late ? ' …' : ''}`;
-      y = 8 + noteToPlace(bands, s.pending);
-    } else if (telling || landed) text = timeText(readingAt(row));
+    } else if (target) {
+      text = loadingText(textFor(target), late || Boolean(s.waiting));
+      y = 8 + noteToPlace(bands, target);
+    } else if (telling || landed || (plain && row)) text = timeText(readingAt(row));
     else if (hoverY !== undefined) (text = textFor(at(hoverY))), (y = hoverY + 8);
     if (landed && speak && text) (speak = false), (live.textContent = text);
-    label.hidden = !text;
-    if (!text) return;
-    label.textContent = text;
-    label.style.top = `${centred(label, y, el.clientHeight)}px`;
+    drawLabel(label, text, y, el.clientHeight);
   };
   const paint = (): void => {
     frame = 0;
@@ -155,7 +155,8 @@ export function mountTimeRail(o: {
     const said = data && (!data.supported || data.months.length) ? data.supported : undefined;
     el.classList.toggle('has-time-rail', said ?? guess());
     plain = !counted && el.classList.contains('has-time-rail');
-    const needsGrip = o.rows().some(timed) || el.scrollHeight > view + 1;
+    const rows = o.rows();
+    const needsGrip = rows.some(dated) || el.scrollHeight > view + 1;
     rail.hidden = !view || !(counted || plain) || !needsGrip;
     rail.classList.toggle('plain', plain);
     height = Math.max(1, view - 16);
@@ -164,20 +165,19 @@ export function mountTimeRail(o: {
     rail.style.height = `${view}px`;
     rail.classList.toggle('open-end', data?.older === true);
     const wide = rail.offsetWidth > 16;
-    const local = days();
+    const loaded = plain ? preview.read(rows, zone, held) : undefined;
+    const source = loaded ?? shape;
     const key = `${height}:${wide}:${zone}:${plain}`;
-    if (shape !== drawn.shape || key !== drawn.key) {
-      drawn = { shape, key };
-      labels = drawMarks(marks, bands, plain ? undefined : local, height, wide);
+    if (source !== markSource || key !== markKey) {
+      [markSource, markKey] = [source, key];
+      const map = loaded ? timeScale(loaded.months, height) : bands;
+      labels = drawMarks(marks, map, loaded?.days ?? days(), height, wide, loaded?.hours);
     }
     seeker.settle(data);
     const row = first();
     const p = near(row);
-    const year = local
-      ? new Date(readingAt(row)).getFullYear()
-      : new Date(p?.month ?? data?.months[0]?.at ?? 0).getUTCFullYear();
-    for (const number of marks.querySelectorAll('.time-year'))
-      number.classList.toggle('current', number.textContent === String(year));
+    const local = Boolean(loaded || days());
+    drawCurrentYear(marks, local ? readingAt(row) : (p?.month ?? data?.months[0]?.at ?? 0), local);
     const y = held ? pointerY : p && !plain ? noteToPlace(bands, p) : scrolledY(el, height);
     const centre = Math.min(view - 16, Math.max(16, y + 8));
     grip.style.top = `${centre}px`;
@@ -239,7 +239,6 @@ export function mountTimeRail(o: {
   });
   const zoned = (): void => void ((zone = localZone()), sync());
   document.addEventListener('visibilitychange', zoned);
-  window.addEventListener('blur', end);
   const scrolled = (): void => {
     if (intent.telling()) telling = true;
     sync();
@@ -251,13 +250,12 @@ export function mountTimeRail(o: {
   const stop = (): void => {
     seeker.stop(), clearTimeout(lateTimer), clearTimeout(landTimer);
     late = landed = speak = false;
-    end();
+    input.cancel();
   };
   return {
     sync,
     rowsChanged() {
-      // Paint the first grip with the drawn rows, after the keeper has restored their scroll.
-      const hasRows = o.candidate && o.rows().some(timed);
+      const hasRows = o.candidate && o.rows().some(dated);
       const firstRows = hasRows && (!hadRows || rail.hidden);
       hadRows = hasRows;
       if (!firstRows) return sync();
@@ -280,6 +278,7 @@ export function mountTimeRail(o: {
     reset() {
       stop();
       (data = shape = s.back = undefined), (placed = new Map());
+      preview.clear();
       o.tail.style.height = '';
       sync();
     },
@@ -288,12 +287,11 @@ export function mountTimeRail(o: {
       cancelAnimationFrame(frame);
       watch.disconnect();
       intent.dispose();
-      input();
+      input.dispose();
       pin.remove();
       el.classList.remove('has-time-rail');
       el.removeEventListener('scroll', scrolled);
       document.removeEventListener('visibilitychange', zoned);
-      window.removeEventListener('blur', end);
     },
   };
 }

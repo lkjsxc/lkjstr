@@ -42,7 +42,7 @@ export function railInput(o: {
   usable(): boolean;
   /** Jumps to where `to` says (from the place being read); false when it says nowhere. */
   jump(to: Step): boolean;
-}): () => void {
+}) {
   const { el, rail } = o;
   let pointer: number | undefined;
   const clearPointerFocus = (): void => el.classList.remove('time-pointer-focus');
@@ -67,6 +67,13 @@ export function railInput(o: {
     o.release();
   };
   const leave = (): void => o.hover(undefined);
+  const cancel = (): void => {
+    const captured = pointer;
+    pointer = undefined;
+    if (captured !== undefined && rail.hasPointerCapture(captured))
+      rail.releasePointerCapture(captured);
+    o.release();
+  };
   const key = (e: KeyboardEvent): void => {
     clearPointerFocus();
     if (!o.usable() || popoverOpen() || typing(e) || e.defaultPrevented || e.altKey || e.metaKey)
@@ -88,9 +95,11 @@ export function railInput(o: {
   rail.addEventListener('lostpointercapture', up);
   rail.addEventListener('pointerleave', leave);
   el.addEventListener('blur', clearPointerFocus);
+  window.addEventListener('blur', cancel);
   // Capture runs before the list's own Home (to its head) and the note keys.
   window.addEventListener('keydown', key, true);
-  return () => {
+  const dispose = (): void => {
+    window.removeEventListener('blur', cancel);
     window.removeEventListener('keydown', key, true);
     el.removeEventListener('blur', clearPointerFocus);
     clearPointerFocus();
@@ -104,4 +113,5 @@ export function railInput(o: {
     ] as const)
       rail.removeEventListener(type, fn as EventListener);
   };
+  return { cancel, dispose };
 }

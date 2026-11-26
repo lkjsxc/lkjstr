@@ -22,6 +22,7 @@ function harness(drawn: number[]) {
     current: () => ({ time: at(reading), place: { key: `n${reading}`, off: -12 } }),
     sent: () => undefined,
     landed: () => void landed++,
+    expired: () => undefined,
     sync: () => undefined,
   });
   /** The engine answers the last seek with a window around `offset` (an evicted target: around `nearest`). */
@@ -173,4 +174,53 @@ it('returns after an in-flight drag seek and drops the other drag targets', () =
   expect(x.seeks).toHaveLength(2);
   expect(x.scrolled).toEqual([{ key: 'n1', off: -12 }]);
   expect(x.seeker.s.back).toBeUndefined();
+});
+
+it('sends the latest waiting press when the engine never answers the first seek', () => {
+  const x = harness([1]);
+  x.seeker.go(at(40));
+  x.seeker.go(at(50));
+  x.seeker.go(at(60));
+  vi.advanceTimersByTime(1999);
+  expect(x.seeks).toHaveLength(1);
+  vi.advanceTimersByTime(1);
+  expect(x.seeks.at(-1)?.anchor).toEqual({ month, offset: 60, returnKey: 'n1' });
+  x.answer(60);
+  expect(x.scrolled).toEqual(['n60']);
+});
+
+it('drops a missing seek or return reply and accepts another press', () => {
+  const x = harness([1, 2]);
+  x.seeker.go(at(40));
+  vi.advanceTimersByTime(2000);
+  expect(x.seeker.s.pending).toBeUndefined();
+  expect(x.seeker.s.inflight).toBe(false);
+  x.seeker.go(at(40));
+  x.answer(40);
+  expect(x.seeker.ret()).toBe(true);
+  vi.advanceTimersByTime(2000);
+  expect(x.seeker.s.returning).toBe(false);
+  expect(x.seeker.s.back?.place.key).toBe('n1');
+  x.seeker.go(at(41));
+  expect(x.scrolled.at(-1)).toBe('n41');
+});
+
+it('releases a replied window that did not supply a drawable target', () => {
+  const x = harness([1]);
+  x.seeker.go(at(40));
+  const empty = {
+    supported: true,
+    months: [],
+    positions: [],
+    newest: 0,
+    oldest: 0,
+    older: false,
+  } satisfies Timeline;
+  x.seeker.window();
+  x.seeker.timeline(empty);
+  x.seeker.settle(empty);
+  expect(x.seeker.s.pending).toBeUndefined();
+  expect(x.seeker.s.inflight).toBe(false);
+  x.seeker.go(at(60));
+  expect(x.seeks.at(-1)?.anchor).toMatchObject(at(60));
 });

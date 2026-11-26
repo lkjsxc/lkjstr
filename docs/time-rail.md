@@ -30,6 +30,8 @@ Loaded and unloaded jumps both retain the original row and offset. Home/End
 belong to an open popover until it closes.
 The last seek can finish after release and still leaves the original return
 point. A return pressed during a seek waits for that window and clears the drag queue.
+The latest waiting press shows its place with an ellipsis. A seek has two
+seconds to answer. At expiry the rail releases it and handles the waiting press or return.
 
 The sticky holder moves with its view when the WM reparents tiles. Width
 is reserved before marks arrive: 56px at 520px tile width, otherwise 16px.
@@ -41,8 +43,9 @@ answer. Narrow year labels appear over content on hover or hold. Touch has a
 list fits in the tile. Hover and hold highlight it, and it follows the held
 pointer (interface-time.md C3). A jump leaves a thin return tick. The rail is
 aria-hidden and the original list shows focus for keyboard input. With its room
-reserved and nothing counted yet, the rail shows the grip at the share scrolled.
-Marks appear as soon as counts arrive. A plain drag scrolls by share and shows the top row's time
+reserved and nothing counted yet, the rail shows the grip at the share scrolled with
+the top row's date and time. The loaded rows supply provisional day and hour marks
+that the counted map replaces when it arrives. A plain drag scrolls by share and shows the top row's time
 until release, when any new count takes effect. A top row the engine has not
 counted yet (`time-near.ts`) places the grip at its nearest counted row,
 older first, with the share scrolled as a fallback. Unexhausted relay history fades the lower marks. Scrolling to

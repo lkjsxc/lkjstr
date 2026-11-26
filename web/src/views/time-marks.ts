@@ -9,7 +9,7 @@ import type { Timeline } from '../engine/protocol.ts';
 import { noteToPlace, type TimeBand, type TimePlace } from './time-scale.ts';
 
 export type Day = NonNullable<Timeline['days']>[number];
-export type Level = 'year' | 'month' | 'day';
+export type Level = 'year' | 'month' | 'day' | 'hour';
 export type Boundary = {
   readonly level: Level;
   /** Px from the top of the rail's map. */
@@ -19,6 +19,7 @@ export type Boundary = {
   readonly year: number;
   readonly month: number; // 1 to 12
   readonly day: number; // 1 to 31
+  readonly hour?: number;
   /** A year's newest month: its label stands one line under the year's. */
   readonly stacked?: boolean;
   /** A UTC month past the engine's days (a sparse old tail): a dot, never a label, since its day is not known. */
@@ -34,7 +35,11 @@ const SNAP = 6; // a press this near a label's centre goes to its period
 const pad = (n: number): string => String(n).padStart(2, '0');
 
 /** The boundaries, newest first. `days` must already be in the page's zone (`railDays`). */
-export function boundaries(bands: readonly TimeBand[], days?: readonly Day[]): Boundary[] {
+export function boundaries(
+  bands: readonly TimeBand[],
+  days?: readonly Day[],
+  hours?: readonly Day[],
+): Boundary[] {
   const out: Boundary[] = [];
   if (days?.length) {
     let last: Date | undefined;
@@ -57,7 +62,20 @@ export function boundaries(bands: readonly TimeBand[], days?: readonly Day[]): B
     }
     // The engine names the newest 400 occupied days; older months are marked by their UTC month bands.
     const end = days.at(-1)?.month ?? 0;
+    const fine = hours?.map((part): Boundary => {
+      const d = new Date(part.at);
+      return {
+        level: 'hour',
+        y: noteToPlace(bands, part),
+        place: part,
+        year: d.getFullYear(),
+        month: d.getMonth() + 1,
+        day: d.getDate(),
+        hour: d.getHours(),
+      };
+    });
     return out.concat(
+      fine ?? [],
       monthMarks(
         bands.filter((b) => b.at < end),
         last?.getFullYear(),
@@ -96,7 +114,7 @@ export function planMarks(
   wide: boolean,
 ): { labels: Label[]; dots: Dot[] } {
   if (all.length < 2) return { labels: [], dots: [] };
-  const shown = all.filter((b) => wide || b.level !== 'day');
+  const shown = all.filter((b) => wide || b.level === 'year' || b.level === 'month');
   const years = shown.filter((b) => b.level === 'year');
   const oldest = years.at(-1);
   const order = [
@@ -104,6 +122,7 @@ export function planMarks(
     ...years.slice(0, -1),
     ...shown.filter((b) => b.level === 'month'),
     ...shown.filter((b) => b.level === 'day'),
+    ...shown.filter((b) => b.level === 'hour'),
   ];
   const local = all.some((b) => b.level === 'day');
   const labels: Label[] = [];
@@ -121,12 +140,14 @@ export function planMarks(
       ? String(b.year)
       : b.level === 'day'
         ? pad(b.day)
-        : dated
-          ? `${pad(b.month)}/${pad(b.day)}`
-          : pad(b.month);
+        : b.level === 'hour'
+          ? `${pad(b.hour ?? 0)}:00`
+          : dated
+            ? `${pad(b.month)}/${pad(b.day)}`
+            : pad(b.month);
   const dots: Dot[] = [];
   for (const b of order) {
-    const size = b.level === 'day' ? 2 : 3;
+    const size = b.level === 'day' || b.level === 'hour' ? 2 : 3;
     if (dots.every((d) => Math.abs(d.y - b.y) >= (d.size + size) / 2 + DOT_GAP))
       dots.push({ y: b.y, size });
   }
