@@ -8,7 +8,7 @@ import { chromium } from 'playwright-core';
 import bundle from 'playwright-core/lib/utilsBundle';
 import { fakeBunker } from '../../scripts/browser-bunker.mjs';
 import { fakeMediaSet } from '../../scripts/browser-media.mjs';
-import { fakeRelay } from '../../scripts/browser-relay.mjs';
+import { fakeRelay, recentFixtureNote } from '../../scripts/browser-relay.mjs';
 import { browserTmp } from './browser-tmp.ts';
 import { createCheckInventory } from './smoke-check-inventory.mjs';
 import { uploadSmokeChecks } from './smoke-upload-checks.mjs';
@@ -46,6 +46,7 @@ const sign = (event) => {
   chain = work.then(() => {});
   return work;
 };
+fixture.note = await recentFixtureNote(fixture.note, sign);
 const fake = fakeRelay(),
   bunker = await fakeBunker(),
   media = await fakeMediaSet();

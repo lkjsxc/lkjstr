@@ -20,6 +20,10 @@ export async function fixtures(root, published = []) {
   });
 }
 
+export function recentFixtureNote({ pubkey, kind, tags, content }, sign) {
+  return sign({ pubkey, kind, tags, content, created_at: Math.floor(Date.now() / 1000) - 60 });
+}
+
 const matches = (e, f) =>
   (!f.ids || f.ids.includes(e.id)) &&
   (!f.authors || f.authors.includes(e.pubkey)) &&

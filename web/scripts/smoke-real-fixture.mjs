@@ -6,7 +6,7 @@ import { createInterface } from 'node:readline';
 import bundle from 'playwright-core/lib/utilsBundle';
 import { fakeBunker } from '../../scripts/browser-bunker.mjs';
 import { fakeMediaSet } from '../../scripts/browser-media.mjs';
-import { fakeRelay } from '../../scripts/browser-relay.mjs';
+import { fakeRelay, recentFixtureNote } from '../../scripts/browser-relay.mjs';
 import { browserTmp } from './browser-tmp.ts';
 import { createSocketTrace } from './smoke-socket-trace.mjs';
 
@@ -30,6 +30,16 @@ export async function createRealFixture() {
   signer.stderr.resume();
   const lines = createInterface({ input: signer.stdout })[Symbol.asyncIterator]();
   const fixture = JSON.parse((await lines.next()).value);
+  let signing = Promise.resolve();
+  const fixtureSign = (event) => {
+    const task = signing.then(async () => {
+      signer.stdin.write(`${JSON.stringify(event)}\n`);
+      return JSON.parse((await lines.next()).value);
+    });
+    signing = task.then(() => undefined);
+    return task;
+  };
+  fixture.note = await recentFixtureNote(fixture.note, fixtureSign);
   // Combined wishes, archive and owner-audit data retain at most 2000 loopback events.
   const fake = fakeRelay({ maxEvents: 2000 });
   // The archive/audit can fill one 1000-event store; reader arrivals get their own bounded fixture.
@@ -43,7 +53,6 @@ export async function createRealFixture() {
     readerFake.add(event);
     deepLinkFake.add(event);
   }
-  let signing = Promise.resolve();
   const relay = createServer();
   const ws = new bundle.wsServer({ server: relay });
   const socketSharing = attachSmokeRelay(ws, { fake, readerFake, deepLinkFake, railFake, bunker });
@@ -65,14 +74,6 @@ export async function createRealFixture() {
     ],
     { stdio: ['ignore', 'pipe', 'pipe'] },
   );
-  const fixtureSign = (event) => {
-    const task = signing.then(async () => {
-      signer.stdin.write(`${JSON.stringify(event)}\n`);
-      return JSON.parse((await lines.next()).value);
-    });
-    signing = task.then(() => undefined);
-    return task;
-  };
   const close = async () => {
     server.kill();
     signer.stdin.end();
