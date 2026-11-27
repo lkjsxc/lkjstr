@@ -1,16 +1,21 @@
 // Delayed loopback-only profile regression. Reports note-to-named-row latency.
 import { createServer } from 'node:http';
 import { readFile, readdir, mkdir, writeFile } from 'node:fs/promises';
-import { spawn } from 'node:child_process';
+import { fixtureProcess } from './engine-fixture-process.mjs';
 import { createInterface } from 'node:readline';
 import { chromium } from 'playwright-core';
 import bundle from 'playwright-core/lib/utilsBundle';
 const delayMs = 240;
-const signer = spawn('cargo', ['run', '-q', '-p', 'lkjstr-core', '--example', 'engine-fixtures'], {stdio:['pipe','pipe','pipe']});
+const signer = fixtureProcess('engine-fixtures', {stdio:['pipe','pipe','pipe']});
 signer.stderr.resume();
 const lines = createInterface({input:signer.stdout})[Symbol.asyncIterator]();
 const data = JSON.parse((await lines.next()).value);
-const note = data.note, profile = data.events.find(e=>e.kind===0);
+const profile = data.events.find(e=>e.kind===0);
+// Signed-in Global admits a live 24-hour preview. Keep the shared historical
+// fixture unchanged and sign a recent note from the same profile author.
+const { pubkey, kind, content, tags } = data.note;
+signer.stdin.write(`${JSON.stringify({pubkey,kind,content,tags,created_at:Math.floor(Date.now()/1000)-60})}\n`);
+const note = JSON.parse((await lines.next()).value);
 const server = createServer(async (req,res)=>{
   if(req.url==='/')return res.writeHead(200,{'content-type':'text/html'}).end('<!doctype html><title>Profile timing</title>');
   if(req.url==='/worker.js')return res.writeHead(200,{'content-type':'text/javascript'}).end("import init,{start} from './lkjstr_engine.js';const q=[];self.onmessage=e=>q.push(e);await init();const h=start();const f=self.onmessage;self.onmessage=e=>e.data.t==='test.relays'?h.set_test_relays(e.data.relays):f(e);q.forEach(e=>self.onmessage(e));");
@@ -50,6 +55,7 @@ try {
         window.worker.postMessage({t:'open',sub:'timing',query:{source:'global',account}});
         for(let i=0;i<6;i++)window.worker.postMessage({t:'open',sub:`background${i}`,query:{source:'search',text:`background${i}`}});
       }
+      if(m.sub!=='timing')return;
       const rows=[...(m.rows??[]),...(m.ops??[]).flatMap(op=>op.row?[op.row]:op.rows??[])];
       for(const row of rows)if(row.id===id){
         if(window.timing.note===undefined){
