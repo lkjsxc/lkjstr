@@ -108,6 +108,26 @@ body retention under GDSF. If reclamation invalidates covered rows, feed the
 existing eviction fence back into the gap queue. Bytes or profile retention
 must be measured separately from answer coverage.
 
+## Inline feed images
+
+The browser owns this lane because it can see image box geometry and issue
+native image requests to public media hosts. The lane schedules up to four
+active inline image loads per page, independent of the Worker relay slots.
+It admits boxes within 1.5 viewport heights, nearest first. Fast scrolling
+pauses admission until movement slows or the viewport has rested for 140 ms.
+
+The native loader shares attempts across tiles. Leaving 2.5 viewport heights
+cancels pending demand, and the last consumer releases the browser request.
+A row redraw gives the replacement boxes a short window to take over a request.
+Loaded images beyond 4.5 viewport heights are released after 240 ms. Hiding or
+closing a feed drops its demand and mounted images. The original link and
+reserved box stay in place. A request deadline keeps a stalled host from
+holding a slot indefinitely.
+
+Project lesson (frontend media maintainer): compare settled renderer private
+memory on the same scroll and cache policy. Fewer image elements or smaller
+image cache counters can coincide with more process memory.
+
 ## Implementation and release steps
 
 1. **Use one covered chronology and fixed weights.** `engine/even_history.rs`

@@ -20,6 +20,7 @@ let disposeImages: (() => void) | undefined;
 let list: HTMLElement;
 let view: HTMLElement;
 let env: ViewEnv;
+let visible = createSignal(true);
 let rows: NoteRow[];
 const world = createWorld(1794000000000);
 const source = world.notes[0];
@@ -37,10 +38,11 @@ const prepare = (count: number, width: number, native = false, lazy = false): vo
   view.style.width = `${width}px`;
   view.style.height = '800px';
   document.body.replaceChildren(view);
+  visible = createSignal(true);
   env = {
     instance: 'layout-browser',
     settings: createSettings(),
-    visible: createSignal(true),
+    visible,
     engine: { accounts: createSignal({ accounts: [] }) },
   } as unknown as ViewEnv;
   const images = lazy ? createNoteImageQueue(view, env.visible) : undefined;
@@ -180,12 +182,21 @@ const prepareMedia = (media: Media[]): void => {
   }));
   draw();
 };
-const prepareLazyMedia = (count: number): void => {
+const prepareLazyMedia = (count: number, duplicates = true): void => {
   prepare(count, 480, true, true);
   rows = rows.map((row, index) => ({
     ...row,
     segments: [{ k: 'text', text: `Note ${index}` }],
-    media: [{ type: 'image', url: `/lazy-fixture-${Math.floor(index / 2)}.svg`, w: 480, h: 320 }],
+    media: [
+      {
+        type: 'image',
+        url: duplicates
+          ? `/lazy-fixture-${Math.floor(index / 2)}.svg`
+          : `/cancel-fixture-${index}.svg`,
+        w: 480,
+        h: 320,
+      },
+    ],
   }));
   draw();
 };
@@ -215,6 +226,7 @@ Object.assign(globalThis, {
     prepareBodies,
     prepareMedia,
     prepareLazyMedia,
+    showMediaFeed: (show: boolean) => visible.set(show),
     remountMedia,
     openMedia,
   },

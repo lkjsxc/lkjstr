@@ -6,7 +6,13 @@ import type { Media } from '../engine/protocol.ts';
 import { h } from '../shared/h.ts';
 import { t } from '../shared/i18n.ts';
 import { icon } from '../shared/icons.ts';
-import { loadImage, loadPlayable, mediaHost, mediaSource } from '../shared/media-source.ts';
+import {
+  type ImageRelease,
+  loadImage,
+  loadPlayable,
+  mediaHost,
+  mediaSource,
+} from '../shared/media-source.ts';
 import { readNoteState, writeNoteState } from '../shared/note-state.ts';
 import { learnMediaSize, mediaSize } from '../shared/public-media.ts';
 import { keepNoteAudio } from './note-audio.ts';
@@ -105,7 +111,7 @@ export function mediaGrid(
       return wrap;
     }
     if (m.type === 'image' || m.thumb) {
-      const load = (): void => {
+      const load = (done?: () => void): ImageRelease => {
         const img = h('img', {
           alt: m.alt ?? '',
           loading: queueImage ? 'eager' : 'lazy',
@@ -115,11 +121,26 @@ export function mediaGrid(
         box.prepend(img);
         if (m.type === 'image') {
           img.addEventListener('load', () => {
+            if (img.parentElement !== box) return;
             learnMediaSize(m.thumb ?? m.url, img.naturalWidth, img.naturalHeight);
             if (one && !sized) settle(box, img);
           });
         }
-        loadImage(img, m.thumb ?? m.url, gone);
+        if (done) img.addEventListener('load', done, { once: true });
+        const cancel = loadImage(
+          img,
+          m.thumb ?? m.url,
+          () => {
+            gone();
+            box.removeAttribute('data-feed-image');
+            done?.();
+          },
+          done ? 20_000 : undefined,
+        );
+        return (handoff) => {
+          cancel(handoff);
+          img.remove();
+        };
       };
       if (m.type !== 'image') box.append(h('span', { class: 'mplay' }, icon('play')));
       if (queueImage) queueImage(box, load);

@@ -62,7 +62,14 @@ export function mediaSource(value: string): string | undefined {
   return src && !failed.has(requestKey(src)) ? src : undefined;
 }
 
-type ImageAttempt = { img: HTMLImageElement; wait: ((ok: boolean) => void)[] };
+type ImageWait = (ok: boolean) => void;
+export type ImageRelease = (handoff?: boolean) => void;
+const REDRAW_HANDOFF_MS = 100;
+type ImageAttempt = {
+  img: HTMLImageElement;
+  wait: Set<ImageWait>;
+  abort: ImageRelease;
+};
 // Bound by in-flight image URLs. A detached lazy image can be collected before it starts.
 const images = new Map<string, WeakRef<ImageAttempt>>();
 const collected = new FinalizationRegistry<string>((key) => {
@@ -75,25 +82,11 @@ export function loadImage(
   value: string,
   onError: () => void,
   timeout?: number,
-): void {
+): ImageRelease {
   const src = mediaSource(value);
-  if (!src) {
-    onError();
-    return;
-  }
-  if (!src.startsWith('http')) {
-    img.addEventListener(
-      'error',
-      () => {
-        failed.add(requestKey(src));
-        onError();
-      },
-      { once: true },
-    );
-    img.src = src;
-    return;
-  }
-  assignImage(img, src, onError, timeout);
+  if (src) return assignImage(img, src, onError, timeout);
+  onError();
+  return () => {};
 }
 
 function assignImage(
@@ -101,41 +94,76 @@ function assignImage(
   src: string,
   onError: () => void,
   timeout?: number,
-): void {
+): ImageRelease {
   const key = requestKey(src);
-  if (failed.has(key)) return onError();
-  const pending = images.get(key)?.deref();
+  const shared = src.startsWith('http');
+  const pending = shared ? images.get(key)?.deref() : undefined;
   if (pending) {
-    pending.wait.push((ok) => {
-      if (ok) assignImage(img, src, onError, timeout);
+    let release: ImageRelease | undefined;
+    const next: ImageWait = (ok) => {
+      if (ok) release = assignImage(img, src, onError, timeout);
       else onError();
-    });
+    };
+    pending.wait.add(next);
     // A duplicate in another tile can be visible while the original lazy image is offscreen.
     pending.img.loading = 'eager';
-    return;
+    return (handoff) => {
+      if (pending.wait.delete(next) && !pending.wait.size) pending.abort(handoff);
+      release?.(handoff);
+    };
   }
-  const attempt: ImageAttempt = { img, wait: [] };
-  images.set(key, new WeakRef(attempt));
-  collected.register(attempt, key, attempt);
+  const owner: ImageWait = (ok) => {
+    if (!ok) onError();
+  };
   let timer: ReturnType<typeof setTimeout> | undefined;
-  const finish = (ok: boolean): void => {
+  let unowned: ReturnType<typeof setTimeout> | undefined;
+  const attempt: ImageAttempt = {
+    img,
+    wait: new Set([owner]),
+    abort(handoff) {
+      if (!handoff || !shared) return detach();
+      // A row redraw can replace every consumer before its new boxes get observed.
+      clearTimeout(unowned);
+      unowned = setTimeout(() => {
+        if (!attempt.wait.size) detach();
+      }, REDRAW_HANDOFF_MS);
+    },
+  };
+  const detach = (): void => {
     clearTimeout(timer);
+    clearTimeout(unowned);
     img.removeEventListener('load', loaded);
     img.removeEventListener('error', rejected);
-    images.delete(key);
-    collected.unregister(attempt);
+    if (shared) {
+      images.delete(key);
+      collected.unregister(attempt);
+    }
+    if (!attempt.wait.has(owner)) img.removeAttribute('src');
+  };
+  const finish = (ok: boolean): void => {
+    detach();
     if (!ok) {
+      img.removeAttribute('src');
       failed.add(key);
-      onError();
     }
     for (const next of attempt.wait) next(ok);
+    attempt.wait.clear();
   };
   const loaded = () => finish(true);
   const rejected = () => finish(false);
+  if (shared) {
+    images.set(key, new WeakRef(attempt));
+    collected.register(attempt, key, attempt);
+  }
   img.addEventListener('load', loaded);
   img.addEventListener('error', rejected);
   if (timeout !== undefined) timer = setTimeout(rejected, timeout);
   img.src = src;
+  return (handoff) => {
+    const removed = attempt.wait.delete(owner);
+    if (removed && !attempt.wait.size) attempt.abort(handoff);
+    if (!removed) img.removeAttribute('src');
+  };
 }
 
 /** Native audio and video retain range requests and their existing preload policies. */

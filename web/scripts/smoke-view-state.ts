@@ -15,7 +15,7 @@ export async function prepareViewChecks(page: Page, check: Check): Promise<() =>
   await front('profile').getByRole('tab', { name: 'Replies', exact: true }).click();
   const profileTab = await page.locator('.pane.cur .tab.active').getAttribute('data-view');
   await go('Global');
-  const picture = global.locator('.media a.mbox:is([data-pending-image], :has(img))').first();
+  const picture = global.locator('.media a.mbox:is([data-feed-image], :has(img))').first();
   const tabsHere = () =>
     page
       .locator('.pane.cur .tab')
