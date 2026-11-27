@@ -8,7 +8,7 @@ export const DEFAULT_SETTINGS = {
   theme: 'system' as 'system' | 'light' | 'dark',
   uiScale: 1, // 1.00 = normal size
   tabScale: 1.2, // tab bars, on top of uiScale
-  tabWidth: 136, // px, before the tab scale; 0 fits each tab to its title
+  tabWidth: 95, // px, before the tab scale; 0 fits each tab to its title
   closeClicks: 1, // clicks on × that close a tab (1 = at once)
   textSize: 15, // px, note text
   avatarSize: 36, // px, avatars in lists

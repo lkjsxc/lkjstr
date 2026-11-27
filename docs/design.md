@@ -67,7 +67,7 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
 - Tab bars are 1.2 times the interface scale by default. The active tab has
   an indigo underline; every tab shows its close button; middle click closes.
   A full bar scrolls its tabs with the wheel or a finger, fades them toward the side that hides more
-  and keeps the tab in front in view; the tile's four buttons never scroll (owner, 2026-11-22). Every tab has one width (136px before the tab scale, a setting; 0 fits each
+  and keeps the tab in front in view; the tile's four buttons never scroll (owner, 2026-11-22). Every tab has one width (95px before the tab scale, a setting; 0 fits each
   to its title): a long title ends in an ellipsis and its tooltip is the whole title. On a phone a full bar narrows
   every tab alike, to 88px, before it scrolls.
 - A tile's bar starts with "…" (its menu: the tab's own items, split, reopen, close tile), then two quiet icons,
