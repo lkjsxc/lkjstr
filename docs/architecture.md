@@ -32,6 +32,10 @@ the existing transport contract does not need to change with the crate name.
    parse frames through the protocol layer and enqueue events for verification.
 5. Engine::tick verifies at most 32 events per slice, updates the bounded store,
    replans and emits row patches. Cached profiles are part of the first rows.
+   Inputs can advance the next Worker turn to 25 ms. Runnable verification
+   yields for 4 ms between slices, while proof recovery and timeline work use
+   25 ms turns. A settled host checks relay, expiry and persistence deadlines
+   every 500 ms.
 6. The Worker persists committed event batches and dispatches results by client.
    Hiding/closing views releases their wants; heartbeat expiry releases clients.
    A returning page probes its Worker and gives it time to answer before replacing the connection.

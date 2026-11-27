@@ -110,6 +110,9 @@ pub(super) fn persist(host: &Rc<RefCell<Host>>) {
                 h.engine.public_policy_leases_committed(&work.2);
                 let policy_was_pending = h.engine.pending.public_policy_pending();
                 h.engine.pending.committed(&work.2);
+                if !work.2.is_empty() {
+                    h.wake();
+                }
                 if policy_was_pending && !h.engine.pending.public_policy_pending() {
                     h.engine.invalidate();
                 }

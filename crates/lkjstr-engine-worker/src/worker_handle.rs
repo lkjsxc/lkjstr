@@ -27,6 +27,10 @@ impl Host {
 #[cfg(feature = "harness")]
 #[wasm_bindgen]
 impl WorkerHandle {
+    pub fn tick_count(&self) -> f64 {
+        self.host.borrow().engine.metrics.ticks as f64
+    }
+
     pub fn advance_time(&mut self, ms: u32) {
         {
             let mut h = self.host.borrow_mut();
@@ -46,6 +50,7 @@ impl WorkerHandle {
             let mut h = self.host.borrow_mut();
             let at = h.time();
             h.engine.input(Input::Configure { relays }, at);
+            h.wake();
         }
     }
 }

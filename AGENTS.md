@@ -72,6 +72,7 @@ Engine work:
   Membership checks must not materialize payloads; remeasure startup after storage changes.
   Profile the shipped Worker and inspect committed row overlap before adding boot shortcuts.
   Proof-floor recovery needs a bounded control lane; recheck live pins inside the final durable transaction.
+- Worker scheduler owner: measure settled timer turns on a quiet connected relay and verify fresh delivery after idle.
 - Transport owner: distinguish loading liveness from runtime readiness. Qualify thin links with one
   measured aggregate byte budget across page, Worker and offline-shell traffic; per-target caps can multiply it.
   Verify an unanswered signer with a real read window and DOM paint before its reply.

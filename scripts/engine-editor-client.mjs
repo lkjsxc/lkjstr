@@ -1,7 +1,10 @@
 // A real port-host Worker with disposable local accounts; sockets are blocked before WASM starts.
 export const editorBoot = `
 import init,{start_port_host} from './lkjstr_engine.js';
-const realNow=Date.now.bind(Date);let offset=0;Date.now=()=>realNow()+offset;
+const realNow = performance.now.bind(performance);
+let offset = 0;
+// The Worker derives its epoch clock from the monotonic browser clock.
+Object.defineProperty(performance, 'now', { value: () => realNow() + offset });
 const Socket=globalThis.WebSocket;
 globalThis.WebSocket=class extends Socket{constructor(){throw new Error('private editor fixture blocks every socket');}};
 const queued=[];self.onmessage=e=>queued.push(e);await init();

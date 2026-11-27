@@ -130,6 +130,7 @@ pub(super) fn pump(host: &Rc<RefCell<Host>>) {
                 }
             }
             h.dm.next_emit = 0;
+            h.wake();
         });
     }
 }

@@ -27,8 +27,8 @@ interception. Relays use only loopback fixtures. `engine:check` runs [mention](m
 Ship builds and packages once. It sets `LKJSTR_SMOKE_DIST` to the extracted archive for `LKJSTR_SHOTS=1 pnpm smoke:served` ([receipts](engine-shipping.md)).
 
 The Worker harness validates replies against this worktree's protocol.ts and drives every mock message kind, action name and query source. It includes
-cache restart, signer validation, uploads, visibility release, shared clients, leader loss and a simulated idle clock. The optional cold-start benchmark is
-separate. Reports live under tmp/engine-harness/ and tmp/smoke-real/.
+cache restart, signer validation, uploads, visibility release, shared clients, leader loss, hidden Worker turns and an idle clock. The cold-start benchmark
+is separate. Reports live under tmp/engine-harness/ and tmp/smoke-real/.
 
 ## Manual public sample
 

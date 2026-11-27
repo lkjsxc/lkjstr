@@ -60,6 +60,7 @@ pub(super) fn pump_previews(host: &Rc<RefCell<Host>>) {
             let mut h = host.borrow_mut();
             h.preview_busy = false;
             h.engine.previews.finish(&url, answer);
+            h.wake();
             refresh(&h);
         }
     });

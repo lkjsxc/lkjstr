@@ -15,6 +15,7 @@ pub(super) fn relay_info(host: &Rc<RefCell<Host>>, url: String) {
             }
             let body = result.filter(|r| r.status == 200).map(|r| r.body);
             h.engine.relay_information(&url, body.as_deref());
+            h.wake();
         }
     });
 }

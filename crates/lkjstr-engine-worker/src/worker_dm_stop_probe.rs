@@ -145,7 +145,7 @@ pub(in crate::worker) fn counts(h: &Host, account: &str) -> Result<JsValue, JsVa
         "queuedAccountActions": h.account_tasks.len(), "startupInputs": h.startup.len(),
         "privateLists": h.engine.private_lists.len(), "clientSessions": h.sessions.len(),
         "clientQueries": h.sessions.values().map(|s| s.borrow().queries.len()).sum::<usize>(),
-        "timer": usize::from(h.timer.is_some()), "sockets": h.sockets.len(),
+        "timer": usize::from(h.schedule.is_armed()), "sockets": h.sockets.len(),
     });
     value
         .serialize(&serde_wasm_bindgen::Serializer::json_compatible())

@@ -26,6 +26,7 @@ pub(super) fn start(host: &Rc<RefCell<Host>>, job: InvoiceWork) {
         {
             h.engine.zaps.jobs.fail_invoice(job.token, error);
         }
+        h.wake();
     });
 }
 fn eligible(h: &Host, job: &InvoiceWork, signal: &web_sys::AbortSignal) -> Result<(), Failure> {

@@ -72,6 +72,7 @@ pub(super) fn process(host: &Rc<RefCell<Host>>, o: &Output) -> bool {
                 let mut h = host.borrow_mut();
                 if !h.stopped && h.engine.signing_deadline(&req, &event) == Some(deadline) {
                     if let Err(code) = signed {
+                        h.wake();
                         h.engine.refuse_sign(req, code);
                         return;
                     }
@@ -122,6 +123,7 @@ impl Host {
         event: Option<lkjstr_protocol::NostrEvent>,
         error: Option<String>,
     ) {
+        self.wake();
         self.sign_trace.response(&req);
         let mut verified = None;
         self.engine

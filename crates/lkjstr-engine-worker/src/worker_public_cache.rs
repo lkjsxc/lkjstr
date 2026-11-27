@@ -71,6 +71,7 @@ pub(super) fn pump(host: &Rc<RefCell<Host>>) {
         match result {
             Ok((rows, scanned)) => {
                 h.engine.restore_cache(&rows);
+                h.wake();
                 for (id, session) in &h.sessions {
                     let mut session = session.borrow_mut();
                     session.cache_mark_loaded(&scanned);

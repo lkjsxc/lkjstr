@@ -44,7 +44,10 @@ export async function conformance({page,send,wait,check,note,signer,lines,origin
   await send({t:'relays',relays:[{url:origin.replace('http:','ws:'),read:true,write:true,search:true}]});
   for (const source of sourceKinds) {
     const sub=`source-${source}`;
-    await send({t:'open',sub,query:{source,account:note.pubkey,pubkey:note.pubkey,id:note.id,tag:'test',relay:origin.replace('http:','ws:')}});
+    const query = source === 'relay'
+      ? { source, account: note.pubkey, relay: origin.replace('http:', 'ws:') }
+      : { source, account: note.pubkey, pubkey: note.pubkey, id: note.id, tag: 'test' };
+    await send({ t: 'open', sub, query });
     await send({t:'window',sub,anchor:'top',before:0,after:20});
     await wait((s)=>window.messages.some((m)=>m.t==='rows'&&m.sub===s),sub);
     await page.waitForTimeout(150);

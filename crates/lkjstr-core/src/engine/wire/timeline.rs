@@ -84,7 +84,7 @@ fn eligible(q: &crate::engine::protocol::Query, e: &Engine) -> bool {
         && !(q.source == Source::Global && q.account.is_none())
 }
 impl Session {
-    /// Called once per 25ms Worker turn; never scans more than 256 retained events per client.
+    /// Never scans more than 256 retained events per client per Worker turn.
     /// Results debounce for 100ms and are resent only when counts, window positions or ends change.
     pub fn timeline_tick(&mut self, e: &Engine, now: u64) -> Vec<Output> {
         let subs: Vec<_> = self

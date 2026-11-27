@@ -174,6 +174,7 @@ pub(in crate::worker) fn pump_accounts(host: &Rc<RefCell<Host>>) {
                     private_cache::revoke(&mut h, private_revoked);
                     h.account_revision = u64::MAX;
                     h.engine.invalidate();
+                    h.wake();
                     h.apply_relay_owner(false);
                     if refresh && let Some(account) = h.accounts.active.clone() {
                         let at = h.time();

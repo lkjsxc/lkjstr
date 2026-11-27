@@ -79,6 +79,7 @@ pub(super) fn pump(host: &Rc<RefCell<Host>>) {
                 if h.stopped {
                     return Err("offline");
                 }
+                h.wake();
                 delivery::begin(&mut h, client, req.clone(), account, epoch, rumor, packages)
             });
             if let Err(code) = outcome {

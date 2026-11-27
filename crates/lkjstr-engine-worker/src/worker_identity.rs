@@ -44,6 +44,7 @@ pub(super) fn identities(host: &Rc<RefCell<Host>>) {
                     && let Some(response) = response
                 {
                     h.engine.identity_result(&key, &name, response);
+                    h.wake();
                 }
             }
         });

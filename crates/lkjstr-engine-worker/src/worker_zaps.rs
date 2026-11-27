@@ -135,6 +135,7 @@ fn provider(host: &Rc<RefCell<Host>>, job: policy::Discovery) {
             let at = h.time() / 1000;
             let Engine { store, zaps, .. } = &mut h.engine;
             zaps.provider_response(store, &job, result, at);
+            h.wake();
         }
     });
 }

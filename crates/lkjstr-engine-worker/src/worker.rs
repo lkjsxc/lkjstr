@@ -1,5 +1,5 @@
 //! Dedicated Worker entry. The handle owns every socket, callback and timer.
-use crate::browser::{idb, socket::Socket, timer::Timer};
+use crate::browser::{idb, socket::Socket};
 #[cfg(feature = "harness")]
 use lkjstr_core::engine::protocol::Input;
 use lkjstr_core::engine::{Engine, protocol::Output};
@@ -64,6 +64,8 @@ mod value_boundary;
 #[path = "worker_zaps.rs"]
 mod zaps;
 use effects::pump;
+#[path = "worker_schedule.rs"]
+mod scheduler;
 struct Host {
     preview_probed: bool,
     preview_busy: bool,
@@ -97,7 +99,7 @@ struct Host {
     sessions: BTreeMap<u64, RefCell<lkjstr_core::engine::wire::Session>>,
     scope: Sink,
     sockets: BTreeMap<String, Socket>,
-    timer: Option<Timer>,
+    schedule: scheduler::Schedule,
     db: Option<web_sys::IdbDatabase>,
     next_persist: u64,
     publication_persisted: u64,
@@ -151,7 +153,7 @@ pub fn start() -> Result<WorkerHandle, JsValue> {
         sessions: [(0, RefCell::default())].into_iter().collect(),
         scope: Sink::Dedicated(scope.clone()),
         sockets: BTreeMap::new(),
-        timer: None,
+        schedule: scheduler::Schedule::default(),
         db: None,
         next_persist: 0,
         publication_persisted: 0,
@@ -173,62 +175,13 @@ pub fn start() -> Result<WorkerHandle, JsValue> {
         }
     });
     scope.set_onmessage(Some(message.as_ref().unchecked_ref()));
-    schedule(&host);
+    scheduler::start(&host);
     load(&host);
 
     Ok(WorkerHandle { host, message })
 }
 fn post(host: &Host, out: &Output) {
     host.scope.post(out, &host.engine, &host.sessions);
-}
-fn schedule(host: &Rc<RefCell<Host>>) {
-    let delay_ms = {
-        let host = host.borrow();
-        if host.stopped {
-            return;
-        }
-        // Yield between 32-event slices so commands and socket callbacks can run.
-        if host.engine.verification_ready() {
-            4
-        } else {
-            25
-        }
-    };
-    let weak = Rc::downgrade(host);
-    let timer = Timer::after(delay_ms, move || {
-        if let Some(h) = weak.upgrade() {
-            {
-                let mut h = h.borrow_mut();
-                let at = h.time();
-                let begin = crate::measure::now();
-                let mut phase_begin = begin;
-                let h = &mut *h;
-                h.engine.tick_observed(at, |phase| {
-                    use lkjstr_core::engine::TickPhase;
-                    let activity = match phase {
-                        TickPhase::Verify => sign_trace::Activity::Verify,
-                        TickPhase::Plan => sign_trace::Activity::Plan,
-                        TickPhase::Render => sign_trace::Activity::Render,
-                    };
-                    h.sign_trace.span(activity, phase_begin);
-                    phase_begin = crate::measure::now();
-                });
-                for (id, session) in &h.sessions {
-                    for out in session.borrow_mut().timeline_tick(&h.engine, at) {
-                        h.scope.direct(*id, &out);
-                    }
-                }
-                h.sign_trace
-                    .span(sign_trace::Activity::Timeline, phase_begin);
-                let elapsed = crate::measure::now() - begin;
-                h.engine.metrics.tick(elapsed);
-            }
-            pump(&h);
-            schedule(&h);
-        }
-    })
-    .ok();
-    host.borrow_mut().timer = timer;
 }
 #[path = "worker_handle.rs"]
 mod handle;

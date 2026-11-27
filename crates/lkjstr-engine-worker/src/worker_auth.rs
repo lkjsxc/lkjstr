@@ -106,6 +106,7 @@ pub(super) fn pump_auth(host: &Rc<RefCell<Host>>) {
             let at = h.time();
             let result = h.accounts.require_signer(&job.event.pubkey).and(result);
             h.engine.network.auth_signed(&job, result, at);
+            h.wake();
         });
     }
 }

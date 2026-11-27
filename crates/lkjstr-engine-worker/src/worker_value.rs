@@ -44,6 +44,9 @@ impl Host {
             } else {
                 sign_trace::Stamp::default()
             };
+            if !matches!(input, W::Heartbeat | W::Stats { .. } | W::RowAtTime { .. }) {
+                self.wake();
+            }
             self.receive(id, input, stamp);
         }
     }

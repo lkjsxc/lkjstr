@@ -119,6 +119,7 @@ pub(super) fn output(host: &Rc<RefCell<Host>>, output: &Output) -> bool {
         if let Some(rumor) = send.rumor {
             let _ = h.dm.inbox.insert(&send.account, rumor);
         }
+        h.wake();
         for event in send.cache {
             h.engine.enqueue("dm-local".into(), event);
         }

@@ -46,3 +46,19 @@ impl Index {
         next
     }
 }
+
+impl Session {
+    /// A visible index can need more slices after a query, cache or coverage change.
+    pub fn timeline_pending(&self, e: &Engine) -> bool {
+        self.queries.keys().any(|sub| {
+            self.timeline_visible
+                .as_ref()
+                .is_none_or(|visible| visible.contains(sub))
+                && self.timelines.get(sub).is_none_or(|index| {
+                    !index.done
+                        || index.revision != e.store.revision()
+                        || index.horizon != self.history_horizon(sub, e)
+                })
+        })
+    }
+}

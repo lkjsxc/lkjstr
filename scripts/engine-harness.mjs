@@ -22,7 +22,7 @@ import bundle from 'playwright-core/lib/utilsBundle';
 import { fakeRelay } from './browser-relay.mjs';
 import { fakeBunker } from './browser-bunker.mjs';
 import { createInterface } from 'node:readline';
-import { workerBoot } from './engine-harness-boot.mjs';
+import { checkIdleTicks, workerBoot } from './engine-harness-boot.mjs';
 const root = resolve(process.env.LKJSTR_ENGINE_PKG ?? 'tmp/engine-pkg'), out = resolve(process.env.LKJSTR_ENGINE_REPORT ?? 'tmp/engine-harness');
 const run = { startedAt: new Date().toISOString(), loadStart: loadavg(), package: root, diagnosticFixtureClock: process.env.LKJSTR_CONTINUITY_DIAGNOSTIC==='1', wasmSha256: createHash('sha256').update(await readFile(join(root, 'lkjstr_engine_bg.wasm'))).digest('hex') };let continuityEvidence;
 await mkdir(out, { recursive: true });
@@ -124,6 +124,7 @@ try {
   await send({t:'hint',hint:{visibleSubs:[],pageHidden:true,idle:false,saveData:false}});
   await page.waitForTimeout(150);
   check('hidden views release sockets',fake.connections()===0);
+  await checkIdleTicks(page,check);
   await send({t:'hint',hint:{visibleSubs:['global','same'],pageHidden:false,idle:false,saveData:false}});
   for(let n=0;n<100&&fake.opened()<2;n++)await page.waitForTimeout(25);
   check('showing views resumes traffic',fake.opened()>=2);
@@ -238,8 +239,7 @@ try {
   checks.shared=await Promise.all(context.pages().map(p=>p.evaluate(()=>window.sharedMessages?.filter(m=>m.t==='state').slice(-12))));
   checks.history=historyRequests;checks.debug=await page.evaluate(()=>window.messages.map(m=>m.key?{...m,key:'[redacted]'}:m)).catch(()=>[]);
   checks.relay={opened:fake.opened(),connections:fake.connections()};
-}
-finally {
+} finally {
   run.finishedAt=new Date().toISOString();run.loadEnd=loadavg();
   await writeFile(join(out,'report.json'),JSON.stringify({checks,errors,run},null,2));
   if(history.length)await writeFile(join(out,'continuity.json'),JSON.stringify({run,observation:continuityEvidence,relay:historyTrace.snapshot(),fixtures:history},null,2));

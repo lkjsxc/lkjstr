@@ -24,6 +24,7 @@ pub(super) fn start(host: &Rc<RefCell<Host>>, job: Job, data: String) {
         {
             engine.private_lists.insert(job.event, tags);
             private_cache::revoke(&mut h, true);
+            h.wake();
         }
     });
 }

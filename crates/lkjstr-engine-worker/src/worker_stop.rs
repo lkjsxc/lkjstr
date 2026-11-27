@@ -22,7 +22,7 @@ pub(super) fn stop(h: &mut Host) {
     h.engine = Engine::new();
     h.sessions.clear();
     h.loaded = false;
-    h.timer.take();
+    h.schedule.cancel();
     h.sockets.clear();
     if let Some(db) = h.db.take() {
         db.close();

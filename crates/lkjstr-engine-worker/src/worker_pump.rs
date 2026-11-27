@@ -44,6 +44,7 @@ pub(super) fn pump(host: &Rc<RefCell<Host>>) {
                     if let Some(h) = weak.upgrade() {
                         {
                             let mut h = h.borrow_mut();
+                            h.wake();
                             match event {
                                 SocketEvent::Open => {
                                     let at = h.time();

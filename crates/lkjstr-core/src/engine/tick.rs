@@ -39,7 +39,8 @@ impl Engine {
     pub fn tick(&mut self, now: u64) {
         self.tick_observed(now, |_| {});
     }
-    pub fn tick_observed(&mut self, now: u64, mut observe: impl FnMut(TickPhase)) {
+    /// Return whether verification recovery or rendering still needs another short turn.
+    pub fn tick_observed(&mut self, now: u64, mut observe: impl FnMut(TickPhase)) -> bool {
         self.previews.tick(now);
         let revision = self.store.revision();
         self.advance_visibility_clock(now);
@@ -201,6 +202,7 @@ impl Engine {
                 observe(TickPhase::Render);
             }
         }
+        !self.queue.is_empty() || self.views.values().any(|view| view.visible && view.dirty)
     }
 }
 

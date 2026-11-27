@@ -122,6 +122,7 @@ pub(super) fn load(host: &Rc<RefCell<Host>>) {
             Err(_) => h.engine.cached_history_complete = false,
         }
         h.loaded = true;
+        h.wake();
         for id in h.sessions.keys().copied().collect::<Vec<_>>() {
             let shared = matches!(h.scope, Sink::Shared { .. });
             accounts::ready(&mut h, id, shared);

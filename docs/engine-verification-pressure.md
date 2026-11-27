@@ -27,7 +27,7 @@ the verification queue. A separately forced queue rejection could nevertheless
 make that page appear exhausted. The queue holds at most 4096 events or 32 MiB.
 Verification consumes at most 32 per engine tick. The Worker requests a 4 ms
 timer between slices when the head can enter persistence and resident pressure
-permits admission. Empty and blocked queues use the 25 ms timer. Additional
+permits admission. Blocked queues use 25 ms turns for proof recovery. A settled host checks deadlines every 500 ms. Additional
 pages wait for pending verification.
 
 The engine runtime maintainer measures signature throughput and relay-to-store

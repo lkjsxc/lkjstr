@@ -18,7 +18,7 @@ for Home/Their Home; eight named rows improve 16.6/14.6 ms, with lower p95 in th
 
 [Durable GDSF](durable-cache.md) bounds disk pressure and proof recovery; its fault, reader and warm-reload controls pass.
 [Thin-link support](thin-link.md) adds startup bounds, HTTP asset reuse and read budgets. Focused feeds get relay priority.
-Profile and Their Home stop showing the initial loading state after ten seconds without a relay result.
+Profile and Their Home stop initial loading after ten seconds without a relay result. Settled Worker maintenance checks deadlines every 500 ms.
 ## Kind capabilities (2026-11-22)
 
 N1 centralizes kind policy and public ID/address access. Quotes carry their kind, optional previews and a one-line reference to their first quote.

@@ -109,7 +109,7 @@ pub fn start_shared() -> Result<SharedWorkerHandle, JsValue> {
             peers: BTreeMap::new(),
         },
         sockets: BTreeMap::new(),
-        timer: None,
+        schedule: scheduler::Schedule::default(),
         db: None,
         next_persist: 0,
         flushing: false,
@@ -135,7 +135,7 @@ pub fn start_shared() -> Result<SharedWorkerHandle, JsValue> {
         }
     });
     scope.set_onconnect(Some(connect.as_ref().unchecked_ref()));
-    schedule(&host);
+    scheduler::start(&host);
     load(&host);
     Ok(SharedWorkerHandle {
         host,
