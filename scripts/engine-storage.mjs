@@ -5,6 +5,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { loadavg } from 'node:os';
 import { join, resolve } from 'node:path';
 import { chromium } from 'playwright-core';
+import { browserTmp } from '../web/scripts/browser-tmp.ts';
 import { validateReplies } from './engine-contract.mjs';
 import { storageBoot } from './engine-storage-boot.mjs';
 import { storageClient } from './engine-storage-client.mjs';
@@ -12,8 +13,7 @@ import { storageCases } from './engine-storage-cases.mjs';
 const pkg=resolve(process.env.LKJSTR_ENGINE_PKG??'tmp/engine-pkg');
 const output=resolve(process.env.LKJSTR_ENGINE_REPORT??'tmp/engine-storage');
 await mkdir(output,{recursive:true});
-process.env.TMPDIR=process.env.LKJSTR_TEST_TMPDIR??join(resolve(process.env.CARGO_TARGET_DIR??'target','..'),'tmp');
-await mkdir(process.env.TMPDIR,{recursive:true});
+process.env.TMPDIR=browserTmp(resolve(process.env.LKJSTR_TEST_TMPDIR??join(resolve(process.env.CARGO_TARGET_DIR??'target','..'),'tmp')));
 const report={startedAt:new Date().toISOString(),loadStart:loadavg(),package:pkg,virtualDeadline:true,
   wasmSha256:createHash('sha256').update(await readFile(join(pkg,'lkjstr_engine_bg.wasm'))).digest('hex'),checks:[]};
 const check=(name,ok,evidence)=>{report.checks.push({name,ok:!!ok,...(evidence?{evidence}:{})});console.log((ok?'ok ':'FAIL ')+name);};

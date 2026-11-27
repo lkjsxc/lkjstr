@@ -23,7 +23,7 @@ Place CARGO_HOME, XDG_CACHE_HOME, XDG_CONFIG_HOME, XDG_DATA_HOME and TMPDIR unde
 In web/, run pnpm check, pnpm build and pnpm smoke (mock UI plus real loopback uploads). Then run pnpm smoke:real to build and check the real
 engine. The real check covers Global/Home, clean note/profile/article paths while signed out, search, compose/sign/publish, reactions, relay settings
 across reload and two tabs. All browser servers bind fresh loopback ports and use fresh local data. HTTP uses loopback TLS media fixtures or
-interception. Relays use only loopback fixtures. `engine:check` runs the [mention witness](mention-verification.md).
+interception. Relays use only loopback fixtures. `engine:check` runs [mention](mention-verification.md) and [storage](storage-inspection.md) witnesses.
 Ship builds and packages once. It sets `LKJSTR_SMOKE_DIST` to the extracted archive for `LKJSTR_SHOTS=1 pnpm smoke:served` ([receipts](engine-shipping.md)).
 
 The Worker harness validates replies against this worktree's protocol.ts and drives every mock message kind, action name and query source. It includes

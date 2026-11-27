@@ -1,8 +1,7 @@
 // Actual transactions plus explicitly virtual deadline/callback-order controls.
 export async function storageCases(c,check) {
   // Ready precedes the ordinary DM marks transaction; attribute only this inspection's reads.
-  await c.traceUntil(t=>t.marksReady);
-  const startup=await c.control('fixture.trace');
+  const startup=await c.traceUntil(t=>t.marksReady);
   check('normal startup marks transaction finishes before inspection',startup.reads.some(read=>read.startupMarks),{reads:startup.reads});
   await c.control('fixture.reset');
   await c.send(0,{t:'storage.inspect',req:'base'});const base=await c.result('base');

@@ -122,6 +122,9 @@ that known startup transaction before resetting the trace. The original exact
 one events-store count/no KV-or-body-read assertion is unchanged. Product Rust/WASM did
 not change. The bounded diagnostic retains store/method/role, never key values
 or stored bodies. Both failed attempts remain under tmp/storage-focused-try1/2.
+The current fixture uses valid event IDs with malformed payloads so metadata
+migration can boot without hydrating any event. It checks account readiness
+before waiting for DM marks to distinguish a boot failure from a missed effect.
 
 The corrected fixture passed 19/19 checks on the same production bytes at
 20:18:03 UTC in 0.763 seconds, load 4.28 / 2.45 / 2.29. Its two MessagePorts
