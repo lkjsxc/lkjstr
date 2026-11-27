@@ -1,7 +1,9 @@
 // Draw-only face ownership: no fetch, readback, encoder or durable cache on the page.
+import { loadAvatar } from '../engine/avatar-cache.ts';
 import type { AvatarClient, AvatarValue } from '../engine/client-avatars.ts';
 import { h } from '../shared/h.ts';
-import { avatarModel, observeAvatar } from './avatars.ts';
+import { mediaSource } from '../shared/media-source.ts';
+import { avatarModel, avatarOptions, observeAvatar } from './avatars.ts';
 
 export function createAvatarDraw(el: HTMLElement, client: AvatarClient, reduced: () => boolean) {
   let active = false,
@@ -9,10 +11,15 @@ export function createAvatarDraw(el: HTMLElement, client: AvatarClient, reduced:
     key: string | undefined;
   let lease: (() => void) | undefined, image: HTMLImageElement | undefined;
   let canvas: HTMLCanvasElement | undefined;
+  let releaseImage: (() => void) | undefined;
   const clearImage = (): void => {
+    const native = releaseImage;
+    releaseImage = undefined;
+    native?.();
     if (image) {
       image.onload = image.onerror = null;
-      image.removeAttribute('src');
+      // The native lane can still need this element for other waiting faces.
+      if (!native) image.removeAttribute('src');
       image.remove();
       image = undefined;
     }
@@ -30,13 +37,22 @@ export function createAvatarDraw(el: HTMLElement, client: AvatarClient, reduced:
     lease = undefined;
     release?.();
   };
-  const show = (url: string, freeze: boolean, token: number): void => {
+  const show = (url: string, freeze: boolean, token: number, derived = false): void => {
     clearImage();
-    const img = h('img', { alt: '', decoding: 'async', draggable: false });
+    const img = h('img', {
+      alt: '',
+      width: 36,
+      height: 36,
+      loading: 'eager',
+      fetchpriority: 'high',
+      decoding: 'async',
+      draggable: false,
+      referrerpolicy: 'no-referrer',
+    });
     image = img;
     const live = (): boolean => active && generation === token && image === img;
     img.onerror = () => {
-      if (live()) clearImage();
+      if (live() && derived) clearImage();
     };
     if (freeze) {
       img.onload = () => {
@@ -73,22 +89,41 @@ export function createAvatarDraw(el: HTMLElement, client: AvatarClient, reduced:
         image = undefined;
       };
     } else el.append(img);
-    img.src = url;
+    if (derived) img.src = url;
+    else {
+      const model = avatarModel(el);
+      releaseImage = loadAvatar(
+        img,
+        url,
+        !!(avatarOptions(el).cachePublic && model?.profileId),
+        true,
+      );
+    }
   };
   const update = (): void => {
-    const url = avatarModel(el)?.picture;
+    const picture = avatarModel(el)?.picture;
     const motion = reduced(),
+      preview = avatarOptions(el).preview,
       original = el.classList.contains('xl') && !motion;
-    const next = JSON.stringify([url, motion, original]);
+    const next = JSON.stringify([picture, motion, original]);
     if (!active || key === next) return;
     stop();
     key = next;
-    if (!url) return;
+    if (!picture) return;
+    // Preserve live media safety and HTTPS upgrading; keep exact HTTPS identity for leases.
+    const source = mediaSource(picture);
+    if (!source) return;
+    const url = picture.startsWith('https://') ? picture : source;
     const token = generation;
+    if (preview) {
+      show(url, motion, token);
+      return;
+    }
     if (original) return show(url, false, token);
+    if (!url.startsWith('https://') && !url.startsWith('data:')) return show(url, motion, token);
     const receive = (value: AvatarValue): void => {
       if (!active || generation !== token) return;
-      if (value.kind === 'ready') show(value.url, false, token);
+      if (value.kind === 'ready') show(value.url, false, token, true);
       else if (value.kind === 'fallback') {
         if (motion && value.uniform) clearImage();
         else show(url, motion, token);

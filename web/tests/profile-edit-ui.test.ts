@@ -5,9 +5,11 @@ import { setLang } from '../src/shared/i18n.ts';
 import { loadViewState, saveViewState } from '../src/shared/view-state.ts';
 import { mountProfileEdit } from '../src/views/profile-edit.ts';
 import { problems, valuesOf } from '../src/views/profile-edit-model.ts';
+import { avatarFixture, resetAvatarFixtures } from './avatar-support.ts';
 import { author, flush, ME, row, setup } from './profile-edit-fixture.ts';
 
 afterEach(() => {
+  resetAvatarFixtures();
   document.body.replaceChildren();
   localStorage.clear();
   setLang('en');
@@ -125,7 +127,8 @@ it('refuses addresses that are not ones, under their fields, and keeps an unchan
 
 it('uploads a picture file into its field with progress, and says why one fails', async () => {
   const x = setup();
-  document.body.append(x.el);
+  const faces = avatarFixture();
+  faces.root.append(x.el);
   mountProfileEdit(x.el, x.env);
   x.handlers().rows([row()], true, true);
   let finish: (r: ActResult) => void = () => {};
@@ -167,6 +170,7 @@ it('uploads a picture file into its field with progress, and says why one fails'
   expect(x.el.querySelector('.peface img')?.getAttribute('src')).toBe(
     'https://media.example.jp/new.png',
   );
+  expect(faces.wants()).toHaveLength(0);
   expect(x.field('save').disabled).toBe(false);
 
   choose(new File(['x'], 'notes.txt', { type: 'text/plain' }));

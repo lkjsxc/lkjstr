@@ -3,7 +3,7 @@ import type { Author } from '../engine/protocol.ts';
 import { h } from '../shared/h.ts';
 import { knownPerson } from '../shared/people.ts';
 
-export type FaceOptions = { cachePublic?: boolean; lazy?: boolean };
+export type FaceOptions = { cachePublic?: boolean; lazy?: boolean; preview?: boolean };
 type Face = { author: Author; options: FaceOptions; letter: HTMLElement; changed?: () => void };
 const faces = new WeakMap<HTMLElement, Face>(); // Model index only; avatar-owner owns every live lease.
 const letterOf = (a: Author): string =>
@@ -14,7 +14,8 @@ export const avatarOptions = (el: HTMLElement): FaceOptions => faces.get(el)?.op
 export const avatarModel = (el: HTMLElement): Author | undefined => faces.get(el)?.author;
 export function updateAvatar(el: HTMLElement, author: Author): void {
   const face = faces.get(el);
-  if (!face || JSON.stringify(face.author) === JSON.stringify(author)) return;
+  if (!face || face.options.preview || JSON.stringify(face.author) === JSON.stringify(author))
+    return;
   face.author = author;
   const letter = letterOf(author);
   if (face.letter.textContent !== letter) face.letter.textContent = letter;
@@ -39,7 +40,7 @@ export function reuseAvatar(el: HTMLElement, fresh: HTMLElement): void {
   if (author) updateAvatar(el, author);
 }
 export function avatar(a: Author, cls = 'av', options: FaceOptions = {}): HTMLElement {
-  const author = knownPerson(a.pubkey) ?? a;
+  const author = options.preview ? a : (knownPerson(a.pubkey) ?? a);
   const hue = Number.parseInt(a.pubkey.slice(0, 4), 16) % 360;
   const letter = h('span', { class: 'faceletter' }, letterOf(author));
   const el = h(

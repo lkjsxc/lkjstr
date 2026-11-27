@@ -81,13 +81,13 @@ worker cannot recreate a deleted name.
 
 ## Public avatars
 
-Remote faces use up to six native image requests per page. Visible faces go
+Original-image faces use up to six native image requests per page. Derived list faces use the [Worker avatar cache](avatars.md). Visible faces go
 first. An attempt times out after eight seconds. Detached faces release their
 queued work, and an active request can finish for other faces waiting on the
 same picture. The letter stays in place while the image waits or after it fails.
 The page remembers the failure across face remounts until reload.
 
-The image loader can reuse a browser-local copy of a public note author's
+The previous image loader can reuse a browser-local copy of a public note author's
 profile picture after reload. An image must first load successfully. In the
 background the service worker checks an anonymous, CORS-readable copy of the
 same HTTPS address. It stores only decodable raster images with a positive
@@ -99,11 +99,14 @@ visible offers. Each attempt has a 2.5-second deadline from cache lookup
 through decode and storage. If a URL cannot be copied, later offers for that
 URL are skipped for the lifetime of the service worker.
 
-URLs with credentials, a query or an existing fragment use the browser's image
-path, as do opaque responses and pictures from private-message views. Private
-and no-store responses, accounts, events, keys, uploads and timeline media
-stay out of the avatar cache. Missing or expired copies fall through to normal
-image loading. Denied storage leaves the online path available.
+The previous copy path excludes URLs with credentials, a query or a fragment,
+opaque/private/no-store responses, accounts, events, keys, uploads and timeline
+media. Its eligibility and bounds are unchanged for old pages and the focused
+SW fixture. New page owners do not offer copies: derived cache misses can
+read a fresh previous copy in the Worker, and eligible original fallbacks can
+read it through the image marker. Neither creates a second original copy.
+The derived cache has its own policy and limits. Missing or expired copies
+fall through to normal loading. Denied storage leaves the online path available.
 
 ## Regression evidence
 

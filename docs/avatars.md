@@ -14,7 +14,19 @@ A read-only advertisement does not supply an author's profile. Already known nam
 The core owns avatar admission, scheduling, expiry, negative backoff and persistent LRU plans.
 The Worker owns anonymous CORS fetch, body limits, bitmap derivation, encoding and IndexedDB transactions.
 The page draws the result and owns only live face leases and object URLs. It does not fetch or retain originals
-for the derived cache. Plain-image fallback remains the browser's ordinary image/HTTP-cache path.
+for the derived cache. Plain-image fallback remains the browser's ordinary image/HTTP-cache path, with the live six-slot native lane
+and eight-second attempt deadline. Visible faces release queued and active work on detach, hide or replacement.
+An original-only editor preview does not acquire a derived lease or publish a copy offer.
+
+The previous service-worker CacheStorage cache (64 originals, 128 KiB each, one-hour TTL) and the derived
+IndexedDB database share a historical name but are different storage APIs. On an IDB miss the Worker can read a
+fresh previous original by exact URL (no query or fragment), with bounded lookup/body time and size checks; it
+does not create or write that cache. If missing or expired, the Worker does one anonymous CORS fetch. The new
+page's eligible verified-note fallback may read the existing SW original via its marker but never offers a
+second copy. Previous clients retain their bounded copy path until they update. A successful derived face uses
+only the delivered Blob and never loads the original through the SW. Uniform/unsupported or non-CORS fallback
+can still need a native original request after the CORS attempt; an ordinary large header intentionally needs
+the original. Neither requests a redundant background SW copy in the new page.
 
 ## Finite channel
 
@@ -91,7 +103,7 @@ can cause a later fetch. Structural metadata, MIME and actual Blob-size checks r
 Native tests cover routing, stable batching, role/read opt-outs, actual-byte LRU plans, owner limits and cancellation.
 Focused page and transport tests cover shared object URLs, stale replies, visibility, fallback and bounded replay.
 Original-source and mutation controls prove the routing, LRU, queued-body and retiring-permit assertions can fail.
-Production-Worker controls cover concurrent IDB writers, both cache caps, cancellation, real bitmap closure,
+Earlier private-branch production-Worker controls cover concurrent IDB writers, both cache caps, cancellation, real bitmap closure,
 actual Blob delivery through both transports, page disposal and full-process cache reuse. A separate real quota
 denial/restoration control observes usable ephemeral Blobs and write backoff. Failed fixture attempts remain recorded.
 The controls do not establish indefinite leak freedom, physical database limits, or storage recovery after backoff expiry.

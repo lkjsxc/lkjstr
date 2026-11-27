@@ -186,17 +186,14 @@ Mock-only `EngineConfig.mock`: `slow` signs a note late and delays its answers, 
 - `relay` rows: a `RelayRow` head (`relay:<url>`), then notes that relay served; its NIP-11 fields are listed in interface-relay.md.
 - `open.window?` carries a keyed initial window and its usual row bounds for atomic reopening.
 - Optional `EngineStats.extensionSigner` adds availability, pending requests, median method latency, calls per minute and timeouts.
-
 - Optional `Publish.noteKey` binds a persisted composer draft to its signed note across Worker lifetimes.
 - `note.outbox {keys}` queries up to 128 composer keys for their signed delivery state.
 - `note.outbox {keys,statuses}` reports each retained note ID, phase, attempt count and relay deliveries.
 - `note.discard {key}` cancels retries for a queued signed note.
 - `note.wake` wakes queued notes when the page returns or the browser comes online.
-
 - P2: `signed` and `publicKey` accept `error: 'cancelled'`; the action returns the same failure code without publication.
 
 ## Avatar lease additions (2026-11-22)
-
 - `ToEngine.avatar.want {req,url}` requests a finite exact-URL image owned by the originating client.
 - `ToEngine.avatar.close {req}` releases that client's pending request; hide/detach releases the client.
 - `FromEngine.avatar {req,result,blob?,image?}` returns ready/fallback/deferred/rejected; ready uses an actual structured-cloned Blob.

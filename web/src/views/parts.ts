@@ -6,8 +6,10 @@ import { t } from '../shared/i18n.ts';
 import { icon } from '../shared/icons.ts';
 import { loadImage } from '../shared/media-source.ts';
 import { knownPerson } from '../shared/people.ts';
-import { avatar, updateAvatar, type FaceOptions } from './avatars.ts';
+import { avatar, type FaceOptions, updateAvatar } from './avatars.ts';
+
 export { avatar } from './avatars.ts';
+
 import { inlineEmoji } from './emoji-load.ts';
 import { UNDO_MS } from './held.ts';
 import { nameState } from './name-arrival.ts';

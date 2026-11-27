@@ -162,7 +162,9 @@ export function mountProfileEdit(el: HTMLElement, env: ViewEnv): Disposer {
     showBanner(banner, shown(v.banner));
     replaceChildren(
       face,
-      avatar({ pubkey, npub: '', name: v.name, picture: shown(v.picture) }, 'av xl'),
+      avatar({ pubkey, npub: '', name: v.name, picture: shown(v.picture) }, 'av xl', {
+        preview: true,
+      }),
     );
     shownName.textContent = v.name.trim();
   };

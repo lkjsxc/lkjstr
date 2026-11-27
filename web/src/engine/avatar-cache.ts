@@ -34,6 +34,8 @@ type AvatarJob = {
   eager: boolean;
   visible: boolean;
   loading: boolean;
+  owned: boolean;
+  cancel?: () => void;
 };
 
 // At most one scheduled job per connected face. A detached tab can remount the same image later.
@@ -67,7 +69,7 @@ function drainImages(): void {
   const visible: AvatarJob[] = [];
   const eager: AvatarJob[] = [];
   for (const job of jobs.values()) {
-    if (!job.img.isConnected) pauseImage(job);
+    if (!job.img.isConnected && !job.owned) pauseImage(job);
     else if (!job.loading && (job.visible || job.eager)) (job.visible ? visible : eager).push(job);
   }
   for (const job of visible) {
@@ -87,6 +89,9 @@ function startImage(job: AvatarJob): void {
   job.loading = true;
   job.eager = false;
   const stop = () => {
+    if (!job.loading) return;
+    job.loading = false;
+    job.cancel = undefined;
     img.removeEventListener('load', loaded);
     pauseImage(job);
     pendingImages.delete(img);
@@ -106,14 +111,19 @@ function startImage(job: AvatarJob): void {
   img.addEventListener('load', loaded);
   // The visibility observer starts lazy faces, so the deadline measures an actual attempt.
   img.loading = 'eager';
-  loadImage(img, job.src, failed, IMAGE_TIMEOUT);
+  const release = loadImage(img, job.src, failed, IMAGE_TIMEOUT);
+  if (job.loading)
+    job.cancel = () => {
+      stop();
+      release();
+    };
 }
 
 function resumeImage(img: HTMLImageElement): void {
   const job = pendingImages.get(img);
-  if (!job || !img.isConnected || jobs.has(img)) return;
+  if (!job || (!img.isConnected && !job.owned) || jobs.has(img)) return;
   jobs.set(img, job);
-  job.visible = typeof IntersectionObserver === 'undefined';
+  job.visible = job.owned || typeof IntersectionObserver === 'undefined';
   if (!job.visible) {
     visibility ??= new IntersectionObserver((entries) => {
       for (const entry of entries) {
@@ -127,42 +137,52 @@ function resumeImage(img: HTMLImageElement): void {
   scheduleImages();
 }
 
-export function loadAvatar(img: HTMLImageElement, picture: string, cachePublic = false): void {
+/** An owned face is already visibility-checked. It may read a legacy SW copy but
+ * never offers another original copy after Worker derivation. Release cancels
+ * queued or active work (including the detached reduced-motion image). */
+export function loadAvatar(
+  img: HTMLImageElement,
+  picture: string,
+  cachePublic = false,
+  owned = false,
+): () => void {
   const source = mediaSource(picture);
   if (!source) {
     img.remove();
-    return;
+    return () => {};
   }
   if (!/^https?:/i.test(source)) {
-    loadImage(img, picture, () => img.remove());
-    return;
+    return loadImage(img, picture, () => img.remove(), IMAGE_TIMEOUT);
   }
   const url = cachePublic && navigator.serviceWorker?.controller && publicAvatarUrl(picture);
   const remote = url && url.origin !== location.origin ? url.href : null;
   const job: AvatarJob = {
     img,
     src: remote ? remote + AVATAR_FRAGMENT : picture,
-    offer: remote
-      ? (visible) => {
-          try {
-            navigator.serviceWorker.controller?.postMessage({
-              k: 'lkjstr-avatar-loaded',
-              url: remote,
-              visible,
-            });
-          } catch {
-            // The service worker can retire during a page update.
+    offer:
+      remote && !owned
+        ? (visible) => {
+            try {
+              navigator.serviceWorker.controller?.postMessage({
+                k: 'lkjstr-avatar-loaded',
+                url: remote,
+                visible,
+              });
+            } catch {
+              // The service worker can retire during a page update.
+            }
           }
-        }
-      : undefined,
+        : undefined,
     eager: img.loading !== 'lazy',
     visible: false,
     loading: false,
+    owned,
   };
   img.style.visibility = 'hidden';
   img.setAttribute(PENDING, '');
   pendingImages.set(img, job);
   resumeImage(img);
+  if (owned) drainImages();
 
   // One observer for the page. It holds no references to detached views or their images.
   if (!mounts) {
@@ -180,4 +200,15 @@ export function loadAvatar(img: HTMLImageElement, picture: string, cachePublic =
     });
     mounts.observe(document, { childList: true, subtree: true });
   }
+  return () => {
+    if (pendingImages.get(img) !== job) {
+      img.removeAttribute('src');
+      return;
+    }
+    job.cancel?.();
+    pauseImage(job);
+    pendingImages.delete(img);
+    img.removeAttribute(PENDING);
+    scheduleImages();
+  };
 }

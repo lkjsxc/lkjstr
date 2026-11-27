@@ -37,11 +37,6 @@ test double. The Rust/WASM engine replaces it at build time with
 
 Seams worth knowing inside `src/views/`:
 
-- `avatars.ts` makes inert face models; `avatar-owner.ts` owns connected faces under `host.app`, including overlays.
-  `avatar-visible.ts` checks current geometry; `avatar-draw.ts` draws stills/fallbacks. Detached candidates acquire
-  nothing; hidden/offscreen/disposed faces release. Same-URL replacements share ownership; the last owner revokes
-  its object URL. Worker cache policy and exact bounds are in [avatars.md](avatars.md).
-
 - `feed.ts` is every list of rows (home, global, hashtag, search, bookmarks,
   thread, profile, people, notifications). It decides which window of rows to
   ask for. `feed-draw.ts` keeps unchanged rows mounted while replacing stale rows; `feed-place.ts` keeps the
@@ -61,7 +56,7 @@ Seams worth knowing inside `src/views/`:
   or loopback IP literals. Public HTTP loads over HTTPS while original links stay available.
   The [inline image lane](fetch-orchestrator.md#inline-feed-images) shares a page budget,
   keeps boxes in place, and releases images as the reader moves on. Failed requests stay
-  unavailable across tiles and remounts until reload. A face uses the author's picture or local initial.
+  unavailable across tiles and remounts until reload. [Avatar owners](avatars.md) use visible leases and one still.
 - `account.ts` is the Accounts tab, `account-add.ts` the ways to sign in,
   `account-key.ts` owns protected backup and its folded raw-key part. Password
   forms are disposable; account-vault.ts routes unlock, account-idle.ts locks idle

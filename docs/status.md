@@ -3,11 +3,10 @@
 [Parity](parity.md), [performance](engine-performance.md) and [public deep links](public-deep-links.md). New tab opens links and notes share exact events.
 Claude owns the interface. Account-safe and A1/A2 (972ef776) are live. [Emoji sets](emoji-sets.md) support shared shortcodes across sources.
 [Q1](engine-q1-progress.md) passed public scoring. Worker, ship and Q2-Q5 remain. [Stage 1 orchestration](orchestration-optimizer.md) adds weighted retention.
-
-[Avatars](avatars.md) use bounded Worker derivation and persistence; visible-profile write routing has native tests.
+[Avatars](avatars.md) use bounded Worker derivation and persistence; verified-writer routing has native tests.
+Earlier private-branch measurements leave the one-second cold-name target and public-host CORS coverage open.
 
 ## Pinned notes (2026-11-27)
-
 Protocol 18 adds [public pins](pinned-notes.md), live profile/account list reads, missing-note hydration and
 serialized one-member edits preserving unknown tags and opaque content. Pin/Unpin offers inverse Undo; a stale
 signing base is rejected. Profile keeps a separate finite section and preserves its chronological anchors/rail.

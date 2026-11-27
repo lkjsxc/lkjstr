@@ -2,12 +2,19 @@ import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { loadAvatar, publicAvatarUrl } from '../src/engine/avatar-cache.ts';
 import { learnPerson } from '../src/shared/people.ts';
 import { createRowList } from '../src/views/feed-draw.ts';
+import {
+  avatarFixture,
+  avatarIntersection,
+  resetAvatarFixtures,
+  settleAvatars,
+} from './avatar-support.ts';
 import { note } from './public-snapshots-support.ts';
 import { vaultEnv } from './vault-ui-fixture.ts';
 
 beforeEach(() => vi.stubGlobal('IntersectionObserver', undefined));
 
 afterEach(async () => {
+  resetAvatarFixtures();
   document.body.replaceChildren();
   localStorage.clear();
   await Promise.resolve();
@@ -87,18 +94,23 @@ it('lets a newly visible avatar run after stalled images release their slots', a
 });
 
 it('keeps each tile’s avatar through metadata changes and a note body redraw', async () => {
+  const x = avatarFixture();
   const a = vaultEnv();
   const b = vaultEnv();
   const left = createRowList(a.el, a.env, false);
   const right = createRowList(b.el, b.env, false);
-  document.body.append(a.el, b.el);
+  x.root.append(a.el, b.el);
   try {
     const row = note();
     left.draw([row]);
     right.draw([row]);
+    await settleAvatars();
+    expect(x.wants()).toHaveLength(1);
+    x.reply(x.wants()[0]!.req, { status: 'ready', retained: true });
     const button = a.el.querySelector<HTMLButtonElement>('.nrow > .avb')!;
     const image = button.querySelector<HTMLImageElement>('img')!;
-    await vi.waitFor(() => expect(image.getAttribute('src')).toBe(row.author.picture));
+    const source = image.getAttribute('src');
+    expect(source).toMatch(/^blob:avatar-/);
     const other = b.el.querySelector('.nrow > .avb img');
     expect(other).not.toBe(image);
     expect(image.getAttribute('loading')).toBe('eager');
@@ -118,11 +130,16 @@ it('keeps each tile’s avatar through metadata changes and a note body redraw',
     left.draw([{ ...row, author, segments: [{ k: 'text', text: 'A redraw' }] }]);
     expect(left.node(row.key)).not.toBe(oldRow);
     expect(a.el.querySelector('.nrow > .avb img')).toBe(image);
-    expect(image.getAttribute('src')).toBe(row.author.picture);
+    expect(image.getAttribute('src')).toBe(source);
+    expect(x.wants()).toHaveLength(1);
 
     learnPerson({ ...author, picture: 'https://images.test/revised.png' });
+    expect(x.wants().at(-1)?.url).toBe('https://images.test/revised.png');
+    x.reply(x.wants().at(-1)!.req, { status: 'fallback', uniform: false });
     const revised = button.querySelector<HTMLImageElement>('img')!;
     expect(revised).not.toBe(image);
+    const otherRevised = b.el.querySelector<HTMLImageElement>('.nrow > .avb img')!;
+    if (!revised.hasAttribute('src')) otherRevised.dispatchEvent(new Event('load'));
     await vi.waitFor(() =>
       expect(revised.getAttribute('src')).toBe('https://images.test/revised.png'),
     );
@@ -138,20 +155,41 @@ it('keeps each tile’s avatar through metadata changes and a note body redraw',
   }
 });
 
-it('loads the head eagerly and lets the browser schedule avatars farther down', () => {
+it('acquires visible head faces in order and defers the offscreen tail until it enters', async () => {
+  const x = avatarFixture();
   const f = vaultEnv();
   const rows = createRowList(f.el, f.env, false);
   try {
     rows.draw(
       Array.from({ length: 8 }, (_, i) => {
         const row = note(String(i).repeat(64));
-        return { ...row, author: { ...row.author, pubkey: 'c'.repeat(64) } };
+        return {
+          ...row,
+          author: { ...x.author(`https://images.test/head-${i}.png`), profileId: 'verified' },
+        };
       }),
     );
-    const loading = [...f.el.querySelectorAll('.nrow > .avb img')].map((img) =>
-      img.getAttribute('loading'),
+    expect(x.wants()).toHaveLength(0);
+    const faces = [...f.el.querySelectorAll<HTMLElement>('.nrow > .avb [data-face]')];
+    expect(faces).toHaveLength(8);
+    for (const face of faces.slice(6)) face.dataset.x = '5000';
+    x.root.append(f.el);
+    await settleAvatars();
+    expect(x.wants().map((m) => m.url)).toEqual(
+      Array.from({ length: 6 }, (_, i) => `https://images.test/head-${i}.png`),
     );
-    expect(loading).toEqual([...Array(6).fill('eager'), 'lazy', 'lazy']);
+    for (const want of x.wants()) x.reply(want.req, { status: 'ready', retained: true });
+    expect(faces.slice(0, 6).every((face) => face.querySelector('img')?.loading === 'eager')).toBe(
+      true,
+    );
+    expect(faces.slice(6).every((face) => !face.querySelector('img'))).toBe(true);
+    for (const face of faces.slice(6)) {
+      face.dataset.x = '20';
+      x.intersections[0]!([avatarIntersection(face, true)], {} as IntersectionObserver);
+    }
+    expect(x.wants().map((m) => m.url)).toEqual(
+      Array.from({ length: 8 }, (_, i) => `https://images.test/head-${i}.png`),
+    );
   } finally {
     rows.dispose();
     f.dispose();
@@ -166,4 +204,30 @@ it.each([
   'data:image/png;base64,AA==',
 ])('leaves %s on the ordinary image path', (url) => {
   expect(publicAvatarUrl(url)).toBeNull();
+});
+
+it('keeps a shared native fallback alive for its remaining owner without offering another SW copy', async () => {
+  const postMessage = vi.fn();
+  vi.stubGlobal('navigator', { serviceWorker: { controller: { postMessage } } });
+  const url = 'https://images.test/shared-owned.png';
+  const first = document.createElement('img');
+  const second = document.createElement('img');
+  document.body.append(first, second);
+  const releaseFirst = loadAvatar(first, url, true, true);
+  const releaseSecond = loadAvatar(second, url, true, true);
+  try {
+    expect(first.getAttribute('src')).toBe(url + '#lkjstr-avatar-v1');
+    expect(second.getAttribute('src')).toBeNull();
+    releaseFirst();
+    first.remove();
+    expect(first.getAttribute('src')).toBe(url + '#lkjstr-avatar-v1');
+    first.dispatchEvent(new Event('load'));
+    expect(second.getAttribute('src')).toBe(url + '#lkjstr-avatar-v1');
+    second.dispatchEvent(new Event('load'));
+    expect(second.style.visibility).toBe('');
+    expect(postMessage).not.toHaveBeenCalled();
+  } finally {
+    releaseSecond();
+    second.remove();
+  }
 });

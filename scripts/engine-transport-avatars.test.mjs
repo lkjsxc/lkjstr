@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { deliver, fixture, welcome } from './engine-transport-fixture.mjs';
+import { deliver, fixture, hello, welcome } from './engine-transport-fixture.mjs';
 const ready = { t: 'ready', engine: 'rust-wasm', version: 9 };
 const want = (req, url = 'https://avatars.test/one') => ({ t: 'avatar.want', req, url });
 test('replays a wanted avatar before ready and removes it on the typed Blob reply', () => fixture((transport, port) => {
@@ -25,15 +25,22 @@ test('retains finite avatar work across dedicated leader election and fences an 
   transport.listen((message) => received.push(message));
   transport.post(want('a'));
   assert.equal(channel.sent.filter((m) => m.msg?.t === 'avatar.want').length, 0);
+  const target = hello(channel).from;
   welcome(channel, 'first');
-  assert.equal(channel.sent.filter((m) => m.msg?.t === 'avatar.want').length, 1);
-  const target = channel.sent.find((m) => m.msg?.t === 'avatar.want').from;
+  // The live transport waits for ready, not just an epoch handshake.
+  assert.equal(channel.sent.filter((m) => m.msg?.t === 'avatar.want').length, 0);
   deliver(channel, { to: target, epoch: 'stale', msg: { t: 'avatar', req: 'a', result: { status: 'rejected' } } });
   assert.equal(received.some((m) => m.t === 'avatar'), false);
   deliver(channel, { to: target, epoch: 'first', msg: ready });
+  assert.equal(channel.sent.filter((m) => m.msg?.t === 'avatar.want').length, 1);
+  deliver(channel, { leader: true, epoch: 'second' });
+  welcome(channel, 'second');
+  deliver(channel, { to: target, epoch: 'first', msg: { t: 'avatar', req: 'a', result: { status: 'rejected' } } });
+  assert.equal(received.some((m) => m.t === 'avatar'), false);
+  deliver(channel, { to: target, epoch: 'second', msg: ready });
   assert.equal(channel.sent.filter((m) => m.msg?.t === 'avatar.want').length, 2);
   transport.post({ t: 'avatar.close', req: 'a' });
-  deliver(channel, { to: target, epoch: 'first', msg: ready });
+  deliver(channel, { to: target, epoch: 'second', msg: ready });
   assert.equal(channel.sent.filter((m) => m.msg?.t === 'avatar.want').length, 2);
 }, true));
 test('does not replay a hidden page or a cancelled avatar lease', () => fixture((transport, port) => {
