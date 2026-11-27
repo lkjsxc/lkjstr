@@ -52,6 +52,7 @@ mod input_types;
 mod output_types;
 pub use input_types::Input;
 pub use output_types::{AccountError, CryptContext, Failure, Output};
+pub use window::Request as WindowRequest;
 pub const PROTOCOL_VERSION: u32 = 17;
 /// Adapter state is per transport client; the engine remains independent of pixels.
 #[derive(Default)]

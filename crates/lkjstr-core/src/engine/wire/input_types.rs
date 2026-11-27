@@ -116,6 +116,7 @@ pub enum Input {
         sub: String,
         query: Box<Query>,
         visible: Option<bool>,
+        window: Option<Box<super::WindowRequest>>,
     },
     Close {
         sub: String,

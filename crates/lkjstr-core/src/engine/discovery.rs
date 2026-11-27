@@ -28,9 +28,6 @@ impl Engine {
         if self.discovery_accounts == accounts && self.discovery_relays == relays {
             return;
         }
-        if self.discovery_accounts != accounts {
-            self.discovery_paused = false;
-        }
         self.discovery_accounts = accounts;
         self.discovery_relays = relays;
         let urls = self
@@ -87,7 +84,7 @@ impl Engine {
         self.replan(now);
     }
     pub(super) fn discovery_wants(&self) -> Vec<(String, NostrFilter, Query)> {
-        if self.discovery_paused {
+        if self.network.optimizer.hidden {
             return vec![];
         }
         self.discovery_accounts

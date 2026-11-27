@@ -8,6 +8,12 @@ pub use delivery::Delivery;
 use lkjstr_protocol::NostrEvent;
 use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct InitialWindow {
+    pub anchor: Option<String>,
+    pub before: usize,
+    pub after: usize,
+}
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "camelCase")]
 pub enum Input {
     DeliveryWatch {
@@ -21,6 +27,7 @@ pub enum Input {
         sub: String,
         query: Query,
         visible: bool,
+        window: Option<InitialWindow>,
     },
     Close {
         sub: String,

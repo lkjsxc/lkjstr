@@ -85,6 +85,7 @@ impl Session {
                 sub,
                 query,
                 visible,
+                window,
             } => {
                 if self.queries.len() >= 128 && !self.queries.contains_key(&sub) {
                     return Err((None, "subscription-limit"));
@@ -109,11 +110,14 @@ impl Session {
                 self.visibility_navigation.remove(&sub);
                 self.head_tails.remove(&sub);
                 self.delivered.remove(&sub);
+                self.windows.remove(&sub);
                 self.queries.insert(sub.clone(), *query);
+                let window = self.initial_window(&sub, window.map(|request| *request), engine)?;
                 vec![p::Input::OpenVisible {
                     sub,
                     query: converted,
                     visible,
+                    window,
                 }]
             }
             Input::Close { sub } => {

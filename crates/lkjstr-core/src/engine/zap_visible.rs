@@ -28,7 +28,7 @@ impl Engine {
         {
             views.swap(0, at);
         }
-        let badges = if self.discovery_paused {
+        let badges = if self.network.optimizer.hidden {
             vec![]
         } else {
             self.discovery_accounts

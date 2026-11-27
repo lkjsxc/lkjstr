@@ -35,6 +35,7 @@ the existing transport contract does not need to change with the crate name.
 6. The Worker persists committed event batches and dispatches results by client.
    Hiding/closing views releases their wants; heartbeat expiry releases clients.
    A returning page probes its Worker and gives it time to answer before replacing the connection.
+   An expired client's keyed reading window reopens with that window as its first snapshot.
 7. The main thread renders finished rows without parsing events or opening relays.
 
 ## Relay decisions

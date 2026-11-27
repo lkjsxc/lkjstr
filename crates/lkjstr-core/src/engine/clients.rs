@@ -65,6 +65,7 @@ impl Clients {
                 sub,
                 query,
                 visible,
+                window,
             } => {
                 let sub = ns(sub);
                 let visible = visible && !c.page_hidden;
@@ -78,6 +79,7 @@ impl Clients {
                     sub,
                     query,
                     visible,
+                    window,
                 }
             }
             Input::Close { sub } => {

@@ -22,17 +22,19 @@ export function workerTransport(options = {}) {
   const pending = new Set(); // bounded by engine's action limit
   const send = (msg, transfer=[]) => port?.postMessage(msg,transfer);
   const replay = () => {
-    if (config) send(config);
-    if (relays) send(relays);
     // Read the actual document too: a frozen page may retain its last visible hint.
     const hidden = document.visibilityState === 'hidden' || hint?.hint.pageHidden;
     const restoredHint = hidden ? { t: 'hint', hint: { visibleSubs: [], idle: false, saveData: false, ...hint?.hint, pageHidden: true } } : hint;
     if (restoredHint) send(restoredHint);
+    if (config) send(config);
+    if (relays) send(relays);
     for (const state of subs.values()) {
       const visible = !hidden && (hint ? hint.hint.visibleSubs.includes(state.open.sub) : state.open.visible ?? true);
-      send(state.open.query.privateLists ? { ...state.open, visible } : state.open);
-      state.seekPending = state.window?.anchor?.month !== undefined;
-      if (state.window && !state.seekPending) send(state.window);
+      const open = !visible || state.open.query.privateLists ? { ...state.open, visible } : state.open;
+      const window = state.window;
+      state.seekPending = window?.anchor?.month !== undefined;
+      send(window?.anchor?.key !== undefined ? { ...open, window } : open);
+      if (window && window.anchor?.key === undefined && !state.seekPending) send(window);
     }
     if (restoredHint && subs.size) send(restoredHint); // reopened subscriptions now exist for focus routing
     // Direct-message opens retain the same atomic visibility boundary.
@@ -49,7 +51,6 @@ export function workerTransport(options = {}) {
     for (const req of started ? pending : []) receive({ t: 'result', req, ok: false, error: { code: 'offline' } });
     if(started)pending.clear();
     receive({ t: 'reconnect' });
-    replay();
   };
   const message = async (msg, generation = connection) => {
     const live = () => !closed && generation === connection;
@@ -93,12 +94,11 @@ export function workerTransport(options = {}) {
     if (msg.t === 'zap.quote' && msg.quote.phase !== 'loading' || msg.t === 'zap.receipts' && msg.page.phase !== 'loading') zapReads.delete(msg.req);
     receive(msg);
   };
-  const url = (name) => new URL(name, import.meta.url);
   let channel, peers, attachLocal, restartLeader, greet;
   let lastPoll = performance.now(), heartbeatDeadline = lastPoll + HEARTBEAT_TIMEOUT_MS, probingAfterPause = false;
   const connectShared = () => {
     const generation = ++connection;
-    const current = new SharedWorker(url('shared.js'), { type: 'module', name: namespace });
+    const current = new SharedWorker(new URL('shared.js', import.meta.url), { type: 'module', name: namespace });
     const currentPort = current.port;
     worker = current; port = currentPort;
     currentPort.onmessage = (e) => void message(e.data, generation);
@@ -178,7 +178,7 @@ export function workerTransport(options = {}) {
         for(const peer of peers.values())peer.close();
         peers.clear();
         epoch=crypto.randomUUID(); join=undefined;
-        worker=new Worker(url('worker.js'),{type:'module'});
+        worker=new Worker(new URL('worker.js', import.meta.url),{type:'module'});
         attachLocal();
         channel.postMessage({leader:true,epoch});
         reconnect();

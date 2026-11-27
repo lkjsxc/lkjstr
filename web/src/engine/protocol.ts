@@ -1028,7 +1028,20 @@ export type ToEngine =
       readonly error?: 'signer-missing' | 'signer-refused';
     }
   | { readonly t: 'hint'; readonly hint: Hint }
-  | { readonly t: 'open'; readonly sub: SubId; readonly query: Query; readonly visible?: boolean }
+  | {
+      readonly t: 'open';
+      readonly sub: SubId;
+      readonly query: Query;
+      readonly visible?: boolean;
+      /** The transport restores this keyed window as the first snapshot on a replacement port. */
+      readonly window?: {
+        readonly anchor: { readonly key: RowKey };
+        readonly before: number;
+        readonly after: number;
+        readonly retainAbove?: boolean;
+        readonly liveAbove?: boolean;
+      };
+    }
   | { readonly t: 'close'; readonly sub: SubId }
   /** Asks for the rows around `anchor`: up to `before` rows above it and `after` rows from it downwards (the
    * anchor row itself counts as the first of `after`). Answered by `rows`; replaces any earlier window. */

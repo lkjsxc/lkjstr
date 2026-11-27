@@ -197,3 +197,4 @@ Mock-only `EngineConfig.mock`: `slow` signs a note late and delays its answers, 
 - `cache.policy.snapshotWindow?` supplies `{maxAgeMs,through?}` in milliseconds for capture and replay of merged previews.
 - Diagnostics add cacheManagedBytes and pendingPersistenceOverheadBytes (managed vs eventPayloadBytes); debug adds pressureScratchBytes (GDSF epochs).
 - `relay` rows: a `RelayRow` head (`relay:<url>`), then notes that relay served; its NIP-11 fields are listed in interface-relay.md.
+- `open.window?` carries a keyed initial window and its usual row bounds for atomic reopening.

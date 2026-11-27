@@ -36,8 +36,8 @@ editor prevents lock. The durable archive, signer and editor bounds are document
 The 468 required width/theme/language captures were generated and reviewed. Fresh real-Worker UI checks passed 13 key and 16 message assertions,
 including stable inbox discovery across relay-slot rotation. All seven required gates passed; evidence and limits are in
 [interface-verification.md](interface-verification.md). Persisted browser-history pages now keep their editor lease and probe the connection on
-resume. Background timer gaps give the existing Worker time to answer a fresh probe. Completed empty inbox evidence survives relay-slot rotation. Explicit stop revokes
-private rows, key/startup queues and projections, and closes all entry paths.
+resume. Returning pages probe before replacing their Worker, and expired sessions restore the keyed reading window in one snapshot.
+Completed empty inbox evidence survives relay-slot rotation. Explicit stop revokes private rows, key/startup queues and projections, and closes all entry paths.
 
 ## Follow-up lifetime fixes (2026-11-16)
 

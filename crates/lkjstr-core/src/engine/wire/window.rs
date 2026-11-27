@@ -1,18 +1,51 @@
 //! Translate window intents and keep projected edges consistent with their rows.
 use super::{Anchor, Query, Session};
-use crate::engine::{Engine, protocol::Input, windows::HEAD_ROWS};
+use crate::engine::{Engine, protocol::InitialWindow, protocol::Input, windows::HEAD_ROWS};
+use serde::Deserialize;
 use serde_json::Value;
 
-pub(super) struct Request {
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Request {
     pub anchor: Anchor,
     pub before: usize,
     pub after: usize,
+    #[serde(default)]
     pub retain_above: bool,
+    #[serde(default)]
     pub live_above: bool,
     pub head_through: Option<String>,
 }
 
 impl Session {
+    pub(super) fn initial_window(
+        &mut self,
+        sub: &str,
+        request: Option<Request>,
+        engine: &Engine,
+    ) -> Result<Option<InitialWindow>, (Option<String>, &'static str)> {
+        let Some(request) = request.filter(|request| matches!(request.anchor, Anchor::Key { .. }))
+        else {
+            return Ok(None);
+        };
+        Ok(self
+            .window(sub.to_owned(), request, engine)?
+            .into_iter()
+            .find_map(|input| match input {
+                Input::Window {
+                    anchor,
+                    before,
+                    after,
+                    ..
+                } => Some(InitialWindow {
+                    anchor,
+                    before,
+                    after,
+                }),
+                _ => None,
+            }))
+    }
+
     pub(super) fn window(
         &mut self,
         sub: String,

@@ -11,12 +11,13 @@ impl Engine {
     pub fn input(&mut self, input: Input, now: u64) {
         self.advance_visibility_clock(now);
         match input {
-            Input::Open { sub, query } => self.open_view(sub, query, true, now),
+            Input::Open { sub, query } => self.open_view(sub, query, true, None, now),
             Input::OpenVisible {
                 sub,
                 query,
                 visible,
-            } => self.open_view(sub, query, visible, now),
+                window,
+            } => self.open_view(sub, query, visible, window, now),
             Input::Close { sub } => {
                 self.release_cache_references(&sub);
                 self.release_local_read_owner(&sub, now);
@@ -108,7 +109,6 @@ impl Engine {
                 save_data,
                 ..
             } => {
-                self.discovery_paused = page_hidden;
                 self.network.optimizer.hidden = page_hidden;
                 self.network.optimizer.save_data = save_data;
                 self.network.focused_sub =
