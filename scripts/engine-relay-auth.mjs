@@ -11,8 +11,11 @@ export async function relayAuth({page,send,wait,check,origin,account,signer,line
       &&JSON.parse(m.event).tags.some(t=>t[0]==='relay'&&t[1]===url)),url);
     const request=await page.evaluate(url=>window.messages.find(m=>m.t==='sign'&&JSON.parse(m.event).kind===22242
       &&JSON.parse(m.event).tags.some(t=>t[0]==='relay'&&t[1]===url)),url);
-    assertOwnership('auth-visible',request,{req:request.req,runtime:true});
-    check('native relay AUTH ownership fixture matches Worker',true);
+    // The first blocked read can be bootstrap history or the visible view. Both are
+    // page-lifetime reads; require one exact native shape, never a write priority.
+    const scenario=request.weight===4?'auth-visible':'auth-background';
+    assertOwnership(scenario,request,{req:request.req,runtime:true});
+    check('native relay AUTH read ownership fixture matches Worker',true);
     signer.stdin.write(request.event+'\n');
     const signed=JSON.parse((await lines.next()).value);
     await send({t:'signed',req:request.req,event:JSON.stringify(signed)});

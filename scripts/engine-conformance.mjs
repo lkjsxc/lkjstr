@@ -98,7 +98,6 @@ export async function conformance({page,send,wait,check,note,signer,lines,origin
   const tag = ['emoji',custom.code,custom.url,custom.address];
   const tagged = await act({a:'publish',as:note.pubkey,what:{k:'note',draft:{text:token,emoji:[custom]}}},true);
   check('custom emoji note is accepted by the fixture relay',tagged.ok);
-  check('pin own note signs a kind 10001 membership',(await act({a:'pin',as:note.pubkey,id:tagged.id,on:true},true)).ok);
   check('signed note preserves the set coordinate',JSON.parse((await messages()).filter(m=>m.t==='sign').at(-1).event)
     .tags.some(t=>JSON.stringify(t)===JSON.stringify(tag)));
   const reacted = await act({a:'publish',as:note.pubkey,what:{k:'reaction',id:tagged.id,emoji:token,url:custom.url,address:custom.address}},true);
@@ -109,6 +108,9 @@ export async function conformance({page,send,wait,check,note,signer,lines,origin
   check('client tag can be disabled',(await act({a:'publish',as:note.pubkey,what:{k:'note',draft:{text:'untagged'}}},true)).ok);
   check('disabled client tag is absent',!JSON.parse((await messages()).filter(m=>m.t==='sign').at(-1).event).tags.some(t=>t[0]==='client'));
   await send({t:'configure',config:{language:'en',heuristics:true,prefetch:false}});
+  const pinned = await act({a:'pin',as:note.pubkey,id:tagged.id,on:true},true);
+  const pinEvent = JSON.parse((await messages()).filter(m=>m.t==='sign').at(-1).event);
+  check('pin own note signs a kind 10001 membership',pinned.ok && pinEvent.kind===10001 && pinEvent.tags.some(t=>t[0]==='e'&&t[1]===tagged.id));
   const req='upload-contract'; kinds.add('upload');
   const uploadHandled=(await messages()).filter(m=>m.t==='sign').map(m=>m.req);
   await page.evaluate(({req,key})=>window.worker.postMessage({t:'act',req,action:{a:'upload',as:key,name:'fixture.png',mime:'image/png',bytes:new Uint8Array([1,2,3,4]).buffer}}),{req,key:note.pubkey});
