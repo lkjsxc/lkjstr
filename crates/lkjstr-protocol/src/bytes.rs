@@ -2,12 +2,12 @@ use crate::ProtocolError;
 
 pub fn bytes_to_hex(bytes: &[u8]) -> String {
     const DIGITS: &[u8; 16] = b"0123456789abcdef";
-    let mut out = String::with_capacity(bytes.len() * 2);
-    for byte in bytes {
-        out.push(char::from(DIGITS[usize::from(byte >> 4)]));
-        out.push(char::from(DIGITS[usize::from(byte & 15)]));
+    let mut out = vec![0; bytes.len() * 2];
+    for (pair, byte) in out.as_chunks_mut::<2>().0.iter_mut().zip(bytes) {
+        pair[0] = DIGITS[usize::from(byte >> 4)];
+        pair[1] = DIGITS[usize::from(byte & 15)];
     }
-    out
+    String::from_utf8(out).unwrap_or_else(|_| unreachable!("hex digits are always ASCII"))
 }
 
 pub fn hex_to_bytes(hex: &str) -> Result<Vec<u8>, ProtocolError> {

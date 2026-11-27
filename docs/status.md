@@ -14,7 +14,7 @@ Merged feeds and rails share an admitted chronology and keep unanswered history 
 The [compact event store](compact-event-store.md) uses binary identities, shared dictionaries and pointer-only persistence batches. Count caps
 remain 16000/4000; the managed budget includes indexes, evidence and pending leases. Native allocation density improved 2.51x on the frozen fixture.
 Real Worker warm-IDB testing passes 120/120 cases and all four paired timing gates against fixes-only. First-note DOM/rAF improves 16.8/14.2 ms
-for Home/Their Home; eight named rows improve 16.6/14.6 ms, with lower p95 in the same 30 alternating pairs/source. See the compact-store scope.
+for Home/Their Home; eight named rows improve 16.6/14.6 ms, with lower p95 in the same 30 pairs/source. See [Home catch-up](engine-performance.md).
 
 [Durable GDSF](durable-cache.md) bounds disk pressure and proof recovery; its fault, reader and warm-reload controls pass.
 [Thin-link support](thin-link.md) adds startup bounds, HTTP asset reuse and read budgets. Focused feeds get relay priority.

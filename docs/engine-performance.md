@@ -5,6 +5,13 @@
 Record runtime measurements and reproducible workloads. Synthetic index fixtures never enter the product or a public relay. Timing is elapsed wall
 time on this shared Linux host, not a throughput promise for another device.
 
+## Home Worker catch-up (2026-11-27)
+
+A signed-in loopback Home restored 2,000 of 5,001 durable events with zero signature checks. Exact relay copies also bypassed verification.
+Three alternating Chromium pairs on the `9fe85aa4` Worker reduced median catch-up for 384 arrivals from 750 to 564 ms. Lowercase hex formatting
+in compact event projection fell from 153 to 20 ms of sampled Worker time after writing two ASCII digits per input byte. The same 384 new signatures
+were checked in every run. Median first warm notes appeared at 95 and 100 ms. The existing byte-domain test checks the complete lowercase encoding.
+
 ## Ninth-landing hour (2026-11-16)
 
 The frozen build ran 21:47:53.562-22:47:53.670 UTC, 3600.108 seconds, with 451 distinct followed authors including self. The archive reached
