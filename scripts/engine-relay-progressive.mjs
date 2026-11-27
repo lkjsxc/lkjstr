@@ -21,6 +21,8 @@ const check = (name, ok, observed) => {
   console.log((ok ? 'ok ' : 'FAIL ') + name);
 };
 const delay = ms => new Promise(done => setTimeout(done, ms));
+// worker_schedule.rs checks deadlines on 500ms settled turns.
+const quietTurnMs = 500, deliveryToleranceMs = 50;
 async function wait(test, ms = 5000) {
   const end = Date.now() + ms;
   while (Date.now() < end) { if (await test()) return true; await delay(25); }
@@ -140,8 +142,13 @@ try {
   const c = heads.find(r => r.route === '/c'), first = Math.min(...heads.map(r => r.at));
   check('silent primary routes trigger the timed third route', c && c.at - first >= 300 && c.at - first < 1200, c && c.at - first);
   check('verified rows and ready state arrive without a head EOSE', early && heads.every(r => r.eoseAt === null) && report.timing.ready - report.timing.open < 1500, report.timing);
-  await delay(Math.max(0, first + 5600 - Date.now()));
-  check('unanswered primary requests close at the five-second bound', heads.filter(r => ['/a','/b'].includes(r.route)).every(r => r.closes === 1 && r.closedAt - r.at <= 5400), heads);
+  const primaryHeads = heads.filter(r => ['/a','/b'].includes(r.route));
+  const closeBudget = 5000 + quietTurnMs + deliveryToleranceMs;
+  await delay(Math.max(0, Math.max(first, ...primaryHeads.map(r => r.at)) + closeBudget + deliveryToleranceMs - Date.now()));
+  check('unanswered primary requests close at the five-second deadline',
+    new Set(primaryHeads.map(r => r.route)).size === 2 &&
+    primaryHeads.every(r => r.closes === 1 && r.closedAt >= r.at && r.closedAt - r.at <= closeBudget),
+    { closeBudget, heads });
   const partial = await page.evaluate(id => ({ copies: window.rows.feed.filter(r => r.id === id).length, states: window.messages.filter(m => m.t === 'state' && m.sub === 'feed').map(m => ({ at: m.at, state: m.state })), ready: window.first.ready }), note.id);
   check('partial success survives the other route deadlines without duplicate rows', partial.copies === 1 && !partial.states.some(m => m.at > partial.ready && m.state.phase === 'failed'), partial);
   await page.evaluate(() => window.worker.postMessage({ t: 'stats', req: 'probe-stats' }));
@@ -181,7 +188,7 @@ try {
   const firstFastHead = Math.min(...fastHeads.map(r => r.at));
   // The native test pins readiness at 299/300ms. The quiet Worker evaluates
   // deadlines every 500ms; bound delivery from the actual first head REQ.
-  const readyBudget = 300 + 500 + 50; // core deadline + housekeeping + delivery tolerance
+  const readyBudget = 300 + quietTurnMs + deliveryToleranceMs;
   check('early verified partial data becomes ready on the 300ms deadline without EOSE',
     fastReady && report.fastTiming.note - report.fastTiming.open < 250 && elapsed >= 260 &&
     Number.isFinite(firstFastHead) && report.fastTiming.ready - firstFastHead < readyBudget &&
