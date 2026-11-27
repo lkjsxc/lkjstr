@@ -10,6 +10,7 @@ import { loadImage, loadPlayable, mediaHost, mediaSource } from '../shared/media
 import { readNoteState, writeNoteState } from '../shared/note-state.ts';
 import { learnMediaSize, mediaSize } from '../shared/public-media.ts';
 import { keepNoteAudio } from './note-audio.ts';
+import type { NoteImageQueue } from './note-image-queue.ts';
 import type { ViewEnv } from './registry.ts';
 
 /** A picture of unknown size has loaded into its 3:2 box. The box keeps its height, so nothing below moves: a
@@ -32,6 +33,7 @@ export function mediaGrid(
   env: ViewEnv,
   title: string,
   noteId?: string,
+  queueImage?: NoteImageQueue,
 ): HTMLElement | null {
   if (!media.length) return null;
   const one = media.length === 1;
@@ -103,20 +105,25 @@ export function mediaGrid(
       return wrap;
     }
     if (m.type === 'image' || m.thumb) {
-      const img = h('img', {
-        alt: m.alt ?? '',
-        loading: 'lazy',
-        fetchpriority: 'low',
-        decoding: 'async',
-      });
-      box.append(img);
-      if (m.type === 'image') {
-        img.addEventListener('load', () => {
-          learnMediaSize(m.thumb ?? m.url, img.naturalWidth, img.naturalHeight);
-          if (one && !sized) settle(box, img);
+      const load = (): void => {
+        const img = h('img', {
+          alt: m.alt ?? '',
+          loading: queueImage ? 'eager' : 'lazy',
+          fetchpriority: 'low',
+          decoding: 'async',
         });
-      } else box.append(h('span', { class: 'mplay' }, icon('play')));
-      loadImage(img, m.thumb ?? m.url, gone);
+        box.prepend(img);
+        if (m.type === 'image') {
+          img.addEventListener('load', () => {
+            learnMediaSize(m.thumb ?? m.url, img.naturalWidth, img.naturalHeight);
+            if (one && !sized) settle(box, img);
+          });
+        }
+        loadImage(img, m.thumb ?? m.url, gone);
+      };
+      if (m.type !== 'image') box.append(h('span', { class: 'mplay' }, icon('play')));
+      if (queueImage) queueImage(box, load);
+      else load();
     } else {
       const video = h('video', {
         preload: 'metadata',

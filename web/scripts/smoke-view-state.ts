@@ -15,12 +15,14 @@ export async function prepareViewChecks(page: Page, check: Check): Promise<() =>
   await front('profile').getByRole('tab', { name: 'Replies', exact: true }).click();
   const profileTab = await page.locator('.pane.cur .tab.active').getAttribute('data-view');
   await go('Global');
-  const picture = global.locator('.media a.mbox:has(img)').first();
+  const picture = global.locator('.media a.mbox:is([data-pending-image], :has(img))').first();
   const tabsHere = () =>
     page
       .locator('.pane.cur .tab')
       .evaluateAll((els) => els.map((e) => e.getAttribute('data-view') ?? ''));
   await picture.waitFor({ state: 'visible', timeout: 15_000 });
+  await picture.scrollIntoViewIfNeeded();
+  await picture.locator('img').waitFor({ state: 'visible', timeout: 15_000 });
   const source = (await page.locator('.pane.cur .tab.active').getAttribute('data-view')) ?? '';
   const before = await tabsHere();
   await picture.click();

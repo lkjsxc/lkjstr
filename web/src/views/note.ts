@@ -11,6 +11,7 @@ import { actionRow, reactionChips } from './note-actions.ts';
 import { createNoteBody, fitNote } from './note-fold.ts';
 import { genericBody } from './note-generic.ts';
 import { hiddenRow, shownLine, warned } from './note-hidden.ts';
+import type { NoteImageQueue } from './note-image-queue.ts';
 import { mediaGrid } from './note-media.ts';
 import { quoteCard } from './note-quote.ts';
 import { compactBody, lookOf, threadClass, threadMark } from './note-thread.ts';
@@ -43,7 +44,7 @@ export function renderNote(
   row: NoteRow,
   env: ViewEnv,
   dated = false,
-  options?: { previous?: HTMLElement; lazyFace?: boolean },
+  options?: { previous?: HTMLElement; lazyFace?: boolean; queueImage?: NoteImageQueue },
 ): HTMLElement {
   const state = readNoteState(env.instance, row.id);
   if (row.hidden) return hiddenRow(row, env);
@@ -132,7 +133,7 @@ export function renderNote(
       row.segments.length
         ? h('div', { class: unfolded ? 'text open' : 'text' }, segments(row.segments, env))
         : null,
-      mediaGrid(row.media, env, plainName(row.author), row.id),
+      mediaGrid(row.media, env, plainName(row.author), row.id, options?.queueImage),
       row.quotes.map((q) => quoteCard(q, env, row.id)),
       env.settings.get().linkPreviews ? linkCards(row.previews) : null,
     ]);

@@ -21,6 +21,7 @@ import { feedWindow, heldFresh, isOwnNote } from './feed-window.ts';
 import { onHeld } from './held.ts';
 import { mountHomeDrafts } from './home-drafts.ts';
 import { pauseNoteAudio } from './note-audio.ts';
+import { createNoteImageQueue } from './note-image-queue.ts';
 import { onOwnPublished } from './own-published.ts';
 import { createPreviewWants } from './preview-wants.ts';
 import { mountProfileKinds } from './profile-kinds.ts';
@@ -41,7 +42,8 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
   const thread =
     kind === 'thread' ? mountThread({ el, env, state, save, redraw: () => sync() }) : null;
   const dates = (): boolean => hasDaySeparators(kind, state.show);
-  const drawn = createRowList(list, thread?.env ?? env, dates, thread?.part);
+  const images = createNoteImageQueue(el, env.visible);
+  const drawn = createRowList(list, thread?.env ?? env, dates, thread?.part, images.add);
   let rows: Row[] = [];
   let shown: readonly ListRow[] = [];
   let sub: Subscription | undefined;
@@ -283,7 +285,7 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
   });
   const offSettings = env.settings.subscribe(() => (drawn.clear(), sync()));
   return () => {
-    paging.dispose(), offDrafts?.(), offAccountState?.();
+    paging.dispose(), images.dispose(), offDrafts?.(), offAccountState?.();
     for (const off of [offVisible, offInfo, offAccounts, offSettings, offHeld, offOwnPost, bar])
       off();
     kinds?.dispose();

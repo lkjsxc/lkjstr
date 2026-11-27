@@ -646,7 +646,9 @@ async function filtering(browser: Browser, still: Record<string, unknown>): Prom
     notes.map((n) => ({
       covered: n.classList.contains('hid') || Boolean(n.querySelector('.nrow > .nmain > .cw')),
       body: Boolean(n.querySelector('.nrow > .nmain > .content')),
-      image: Boolean(n.querySelector('.mbox img, .mgrid img, .media img')),
+      image: Boolean(
+        n.querySelector('.mbox[data-pending-image], .mbox img, .mgrid img, .media img'),
+      ),
       fog: n.textContent?.includes('霧'),
     })),
   );

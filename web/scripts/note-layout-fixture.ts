@@ -12,9 +12,11 @@ import { disposeLinkCards } from '../src/views/link-cards.ts';
 import { mountMedia } from '../src/views/media.ts';
 import { renderNote } from '../src/views/note.ts';
 import { fitNotes } from '../src/views/note-fold.ts';
+import { createNoteImageQueue } from '../src/views/note-image-queue.ts';
 import type { ViewEnv } from '../src/views/registry.ts';
 
 let drawn: RowList | undefined;
+let disposeImages: (() => void) | undefined;
 let list: HTMLElement;
 let view: HTMLElement;
 let env: ViewEnv;
@@ -23,7 +25,8 @@ const world = createWorld(1794000000000);
 const source = world.notes[0];
 if (!source) throw new Error('synthetic note fixture');
 const base = noteRow(world, source, { me: '' });
-const prepare = (count: number, width: number, native = false): void => {
+const prepare = (count: number, width: number, native = false, lazy = false): void => {
+  disposeImages?.();
   drawn?.dispose();
   if (list) disposeLinkCards(list);
   localStorage.clear();
@@ -37,9 +40,12 @@ const prepare = (count: number, width: number, native = false): void => {
   env = {
     instance: 'layout-browser',
     settings: createSettings(),
+    visible: createSignal(true),
     engine: { accounts: createSignal({ accounts: [] }) },
   } as unknown as ViewEnv;
-  drawn = createRowList(list, env, false);
+  const images = lazy ? createNoteImageQueue(view, env.visible) : undefined;
+  disposeImages = images?.dispose;
+  drawn = createRowList(list, env, false, undefined, images?.add);
   rows = Array.from(
     { length: count },
     (_, n): NoteRow => ({
@@ -166,11 +172,20 @@ const prepareBodies = (width: number): void => {
   draw();
 };
 const prepareMedia = (media: Media[]): void => {
-  prepare(2, 720);
+  prepare(2, 720, false, true);
   rows = rows.map((row) => ({
     ...row,
     segments: [{ k: 'text', text: 'Media test' }],
     media,
+  }));
+  draw();
+};
+const prepareLazyMedia = (count: number): void => {
+  prepare(count, 480, true, true);
+  rows = rows.map((row, index) => ({
+    ...row,
+    segments: [{ k: 'text', text: `Note ${index}` }],
+    media: [{ type: 'image', url: `/lazy-fixture-${Math.floor(index / 2)}.svg`, w: 480, h: 320 }],
   }));
   draw();
 };
@@ -199,6 +214,7 @@ Object.assign(globalThis, {
     resize,
     prepareBodies,
     prepareMedia,
+    prepareLazyMedia,
     remountMedia,
     openMedia,
   },

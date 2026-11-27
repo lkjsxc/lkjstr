@@ -52,6 +52,7 @@ Seams worth knowing inside `src/views/`:
 - `note.ts` draws the note, `note-media.ts` reserves its media boxes, and `note-actions.ts` draws its actions and menus.
   `held.ts` holds likes and reposts through Undo. `shared/media-source.ts` blocks special-use domains and private
   or loopback IP literals. Public HTTP loads over HTTPS while original links stay available.
+  Inline images in feeds join shared requests when their own boxes are near the viewport.
   Failed requests stay unavailable across tiles and remounts until reload. A face uses the author's picture or local initial.
 - `account.ts` is the Accounts tab, `account-add.ts` the ways to sign in,
   `account-key.ts` owns protected backup and its folded raw-key part. Password

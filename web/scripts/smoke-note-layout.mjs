@@ -10,6 +10,7 @@ import { build } from 'esbuild';
 import { chromium } from 'playwright-core';
 import { browserTmp } from './browser-tmp.ts';
 import { checkNoteBodies } from './smoke-note-bodies.mjs';
+import { checkLazyMedia } from './smoke-note-lazy-media.mjs';
 
 const root = resolve(new URL('../..', import.meta.url).pathname);
 const option = (key, fallback) =>
@@ -172,6 +173,7 @@ try {
   };
   report.bodies = await checkNoteBodies(page);
   report.mediaRequests = await verifyMediaRequests(page, context);
+  report.lazyMedia = await checkLazyMedia(page, context);
   await cdp.detach();
   await context.close();
   report.complete =

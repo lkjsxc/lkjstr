@@ -11,6 +11,7 @@ import { disposeLinkCards } from './link-cards.ts';
 import { bodySig, patchNote, renderNote } from './note.ts';
 import { disposeNoteAudio, reuseNoteAudio } from './note-audio.ts';
 import { createNoteFits } from './note-fold.ts';
+import type { NoteImageQueue } from './note-image-queue.ts';
 import type { ViewEnv } from './registry.ts';
 import { renderRelayHead } from './relay-head.ts';
 import { renderNotification, renderPerson, renderProfile } from './rows.ts';
@@ -35,6 +36,7 @@ export function createRowList(
   env: ViewEnv,
   dates: boolean | (() => boolean),
   part?: (p: ThreadPart) => HTMLElement,
+  queueImage?: NoteImageQueue,
 ): RowList {
   const folds = createNoteFits(list, env.settings);
   let dated = typeof dates === 'function' ? dates() : dates;
@@ -43,7 +45,7 @@ export function createRowList(
   const render = (row: ListRow, previous?: HTMLElement, lazyFace?: boolean): HTMLElement | null => {
     if (row.kind === 'thread-part') return part?.(row) ?? null;
     if (row.kind === 'moment-part') return renderMoment(row, env);
-    if (row.kind === 'note') return renderNote(row, env, dated, { previous, lazyFace });
+    if (row.kind === 'note') return renderNote(row, env, dated, { previous, lazyFace, queueImage });
     if (row.kind === 'profile') return renderProfile(row, env);
     if (row.kind === 'relay') return renderRelayHead(row, env);
     if (row.kind === 'person') return renderPerson(row, env);
