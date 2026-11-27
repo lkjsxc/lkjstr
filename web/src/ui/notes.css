@@ -50,10 +50,13 @@
 .ctx > .rdid { flex: none; margin-left: -6px; white-space: pre; }
 .text { white-space: pre-wrap; }
 .content[data-fold] { display: flow-root; }
-.content.folded { max-height: var(--fold-height); overflow: clip; }
+/* A folded body fades out over its last lines (a mask, so it works on any row, quote or selection tint) and a quiet
+   centred pill opens it below. Both exist only while note-fold.ts finds the body taller than its limit. */
+.content.folded { max-height: var(--fold-height); overflow: clip; -webkit-mask-image: linear-gradient(#000 max(50%, calc(100% - 3em)), transparent); mask-image: linear-gradient(#000 max(50%, calc(100% - 3em)), transparent); }
 .lnk { display: inline; padding: 0; color: var(--accent); text-align: left; }
 .lnk:hover { text-decoration: underline; }
-.fold { display: block; font-size: 13px; }
+.fold { display: flex; align-items: center; width: fit-content; min-height: 32px; margin: 2px auto 4px; padding: 0 16px; border: 1px solid var(--sep); border-radius: 999px; color: var(--muted); font-size: 13px; line-height: 1.2; }
+.fold:hover { background: var(--hover); color: var(--fg); }
 /* Shown, a warning stays above its body as a quiet line with Hide. */
 .nmain > .cwline { margin: 2px 0 0; }
 .cw { display: flex; flex-wrap: wrap; gap: 4px 10px; width: 100%; margin: 4px 0; padding: 8px 10px; border: 1px dashed var(--sep); border-radius: 8px; color: var(--muted); font-size: 13px; text-align: left; }

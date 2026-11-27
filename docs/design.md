@@ -157,7 +157,9 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
   to four share a grid), then quoted notes as cards with their own text, media and
   links. A further quote is a link line. One height limit covers the whole
   rendered body, including reserved media boxes, quotes and link cards. The
-  limit is measured in note line heights. Show more opens the body in place.
+  limit is measured in note line heights. A folded body fades out over its
+  last lines above a quiet centred Show more pill, which opens the body in
+  place; a body within the limit has neither.
   Content warnings cover until pressed. A quoted
   note that cannot be shown is one quiet sentence in the same card.
 - Until it arrives, the short npub is muted at weight 500. The name that replaces it fades in once (0.24s, from

@@ -66,7 +66,7 @@ function apply(body: HTMLElement, fit: Fold | undefined): void {
   }
   body.style.setProperty('--fold-height', `${fit.height}px`);
   if (more) return;
-  const button = h('button', { class: 'lnk fold' }, t('note.more'));
+  const button = h('button', { class: 'fold', type: 'button' }, t('note.more'));
   button.addEventListener('click', (e) => {
     e.stopPropagation();
     const { instance, note } = body.closest<HTMLElement>('[data-note]')?.dataset ?? {};

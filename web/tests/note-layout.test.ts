@@ -85,6 +85,22 @@ it('keeps short, unfolded and already fitted notes unchanged through later batch
   expect(measured).toHaveLength(1);
 });
 
+it('fades and offers Show more only on a body actually taller than its limit', () => {
+  const { rows, list, drawn } = setup(2);
+  const first = rows[0];
+  if (!first) throw new Error('first note');
+  rows[0] = { ...first, segments: [{ k: 'text', text: 'short' }] };
+  drawn.draw(rows);
+  const [short, long] = [...list.children] as HTMLElement[];
+  expect(short?.querySelector('.content.folded')).toBeNull();
+  expect(short?.querySelector('.fold')).toBeNull();
+  expect(long?.querySelector('.content.folded')).not.toBeNull();
+  expect(long?.querySelectorAll('.fold-wrap > .fold')).toHaveLength(1);
+  long?.querySelector<HTMLButtonElement>('.fold')?.click();
+  expect(long?.querySelector('.content.folded')).toBeNull();
+  expect(long?.querySelector('.fold')).toBeNull();
+});
+
 it('keeps the thread focus and opened ancestors whole', () => {
   const { rows, list, drawn } = setup(3);
   drawn.draw(
