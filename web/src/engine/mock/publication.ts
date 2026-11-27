@@ -20,7 +20,7 @@ export function createDelivery({ post, later }: Core) {
   return (
     req: string,
     extra: { id?: string } = {},
-    after?: () => void,
+    after?: (relays: readonly Delivery[]) => void,
     late = 0,
     outcome: 'normal' | 'unanswered' | 'refused' = 'normal',
   ): void => {
@@ -30,7 +30,7 @@ export function createDelivery({ post, later }: Core) {
     let settled = false;
     const settle = (result: Partial<Extract<FromEngine, { t: 'result' }>> = {}): void => {
       settled = true;
-      after?.();
+      after?.(relays);
       post({ t: 'result', req, ok: true, delivery: [...relays], ...extra, ...result });
     };
     post({ t: 'delivery', req, relays: [...relays] });

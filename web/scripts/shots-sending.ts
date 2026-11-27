@@ -42,7 +42,7 @@ export async function sendingShots(scene: Scene): Promise<void> {
     '{"live":false,"slow":{"when":"short","sign":5,"relays":2200}}',
   );
   await scene('send-sent', '/', exercise('A short note about today.', 'sent'));
-  await scene('send-unconfirmed', '/', exercise('An unanswered note.', 'unconfirmed'));
+  await scene('send-retrying', '/', exercise('An unanswered note.', 'retrying'));
   await scene('send-refused', '/', exercise('Today all relays refuse this note.', 'refused'));
   await scene(
     'send-extension',

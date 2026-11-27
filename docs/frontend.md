@@ -87,12 +87,9 @@ Seams worth knowing inside `src/views/`:
   from the interface; `rows`, batched `patch`, `fresh` and `state` back. A row
   is a finished view model; the interface virtualises and never reorders
   (a thread groups replies under what they answer for drawing; paging keeps the engine's order).
-- `act {req, action}` with a `result`, `publish.signed` for the signed note id, and
-  `progress` or per-relay `delivery`. A publication result can settle before
-  the remaining relay answers. The composer retains delivery callbacks while its
-  result is displayed; unsettled sends can survive a remount. When the last send
-  settles without a mounted composer, the current delivery watch is released.
-  Optional `hint.deliveryWatches` names retained action requests, at most 128 per client.
+- `act {req, action}` returns `result`, `progress` and per-relay `delivery`. `publish.signed` carries the signed note ID.
+  A result can settle before the remaining answers. `hint.deliveryWatches` retains displayed delivery watches, up to 128 per client.
+  `note.outbox` follows the durable Worker record by the draft's key across reloads. `note.discard` cancels its retries.
 - `sign` from the engine when the account uses a browser extension, answered
   with `signed` (NIP-07 exists only on the main thread). `getPublicKey` is
   answered by the real transport itself, and by `client.ts` for the mock.
@@ -120,8 +117,7 @@ Seams worth knowing inside `src/views/`:
 
 Rules:
 
-- The engine side proposes protocol changes in `docs/engine-proposals.md`;
-  `protocol.ts` changes only on the frontend side.
+- Engine proposals go in `docs/engine-proposals.md`. `protocol.ts` changes only on the frontend side.
 - The interface keeps on this device, in `localStorage` under `lkjstr:`, only
   what is its own: settings, layouts, each tab's state and reading position,
   closed tabs, the active account's pubkey and face (name, picture, kind of

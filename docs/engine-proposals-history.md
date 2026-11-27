@@ -95,3 +95,12 @@ and [interface-needs.md](interface-needs.md) for contracts and remaining design.
 Successful lock/remove commits clear unauthorized decrypted list policy and replace
 derived row caches before account/result output. Other authorized accounts and
 query/window intent remain.
+
+## Extension signing admission
+
+- Optional `sign.expiresAt` gives extension signing its Worker deadline in epoch milliseconds.
+- Optional `getPublicKey.expiresAt` gives extension discovery its Worker deadline in epoch milliseconds.
+- Optional `crypt.expiresAt` gives extension crypto its Worker deadline in epoch milliseconds.
+- Optional `sign.weight` selects the engine-assigned class for extension signing.
+- Optional `crypt.weight` selects the engine-assigned class for extension crypto.
+- `sign.cancel {req}` releases an auxiliary signer request when its Worker demand or deadline ends.

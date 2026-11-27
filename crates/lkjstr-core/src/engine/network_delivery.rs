@@ -1,5 +1,5 @@
 //! Sent-route receipts survive the send deadline. No event bodies are retained.
-use super::*;
+use super::{publications::NOTE_ACK_WAIT_MS, *};
 use crate::engine::protocol::Delivery;
 pub(super) struct Receipt {
     pub req: String,
@@ -131,6 +131,7 @@ impl Network {
             .collect::<Vec<_>>();
         self.update_publication(&id, &all);
         let deliveries = p.delivery();
+        self.note_outbox.finished(&id, &deliveries, &all, now);
         self.output.push(Output::Delivery {
             req: p.req.clone(),
             deliveries: deliveries.clone(),
@@ -187,6 +188,9 @@ impl Network {
                 }
             }
             let deliveries = p.delivery();
+            if !accepted && self.note_outbox.pending(id) && message.starts_with("invalid:") {
+                p.deadline = now;
+            }
             if accepted && !p.reported_success {
                 p.reported_success = true;
                 self.output.push(Output::Result {
@@ -212,6 +216,7 @@ impl Network {
             None
         };
         if let Some((req, deliveries)) = update {
+            self.note_outbox.accepted(id, &deliveries, now);
             self.update_publication(id, &deliveries);
             self.output.push(Output::Delivery { req, deliveries });
             let check = self

@@ -53,6 +53,19 @@ mod output_types;
 pub use input_types::Input;
 pub use output_types::{AccountError, CryptContext, Failure, Output};
 pub use window::Request as WindowRequest;
+impl Session {
+    pub fn note_outbox(
+        keys: Vec<String>,
+        entries: Vec<super::network::note_outbox::Status>,
+    ) -> Output {
+        let statuses = entries.into_iter().map(|entry| serde_json::json!({
+            "key": entry.key, "id": entry.id, "phase": entry.phase, "attempts": entry.attempts,
+            "delivery": entry.deliveries.into_iter().map(delivery::value).collect::<Vec<_>>(),
+        })).collect();
+        Output::NoteOutbox { keys, statuses }
+    }
+}
+
 pub const PROTOCOL_VERSION: u32 = 17;
 /// Adapter state is per transport client; the engine remains independent of pixels.
 #[derive(Default)]

@@ -47,7 +47,10 @@ the existing transport contract does not need to change with the crate name.
 publication_plan.rs makes explicit kind-aware delivery plans; publication_discovery
 fills missing inbox lists while writes proceed. Network batches new write sockets
 independently of reads and resolves public notes on their first matching positive
-OK. Later answers use the bounded Stats receipts and durable deletion-route ledger.
+OK. Kind-1 notes checkpoint the signed event before sending. The Worker keeps up
+to 64 pending bodies and the last 64 settled statuses in per-account IndexedDB rows.
+Retries reuse that identity with jittered backoff. The relay scheduler bounds each send and late answer window.
+Later answers use bounded Stats receipts and the durable deletion-route ledger.
 read_plan.rs ranks configured fallback and bounded verified NIP-65 routes by
 coverage and measured first-event/EOSE quality without changing chronological
 feeds. Progressive readiness does not wait for all EOSE. Route-local cursors

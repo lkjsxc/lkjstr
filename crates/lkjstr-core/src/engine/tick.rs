@@ -143,6 +143,7 @@ impl Engine {
         if self.reconcile_local_reads(now) || self.store.revision() != revision {
             self.replan(now);
         }
+        self.resume_signed_notes(now);
         self.network.tick(now);
         self.resume_channel_actions(now);
         let delivery_changed = self.network.update_note_connection_phases(now)

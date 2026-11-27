@@ -101,6 +101,8 @@ export function createMockEngine(
       if (authorization.handle(msg)) return;
       if (zaps.handle(msg)) return;
       if (dm.handle(msg)) return;
+      if (msg.t === 'note.outbox') return act.notes.query(msg.keys);
+      if (msg.t === 'note.discard') return act.notes.discard(msg.key);
       if (msg.t === 'upload.cancel') return act.cancelUpload(msg.req);
       if (msg.t === 'stats') post({ t: 'stats', req: msg.req, stats: stats() });
       else if (msg.t === 'cache.hold') {

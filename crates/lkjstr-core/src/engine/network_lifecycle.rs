@@ -7,6 +7,7 @@ impl Network {
             r.connecting = false;
             r.last_rx = now;
         }
+        self.note_outbox.ready(Some(relay), now);
         self.tick(now);
     }
     pub fn disconnected(&mut self, relay: &str, now: u64) {

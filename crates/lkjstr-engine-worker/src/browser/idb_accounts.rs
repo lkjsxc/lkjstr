@@ -10,6 +10,10 @@ type Handler = Closure<dyn FnMut(web_sys::Event)>;
 
 pub enum Change {
     Load,
+    NoteOutbox {
+        expected: Revision,
+        rows: Vec<(String, String)>,
+    },
     Commit {
         expected: Revision,
         saved: Option<SecretText>,
@@ -19,6 +23,7 @@ pub enum Change {
 pub enum Reply {
     Loaded(Loaded),
     Committed(Revision),
+    NoteOutbox(Vec<lkjstr_core::engine::network::note_outbox::Status>),
 }
 struct Cleanup {
     tx: IdbTransaction,
@@ -55,6 +60,17 @@ pub async fn run(db: &IdbDatabase, change: Change, signal: &AbortSignal) -> Resu
         .transaction_with_str_and_mode("kv", mode)
         .map_err(|_| Failure::Unavailable)?;
     let store = tx.object_store("kv").map_err(|_| Failure::Unavailable)?;
+    let note_rows = match &change {
+        Change::NoteOutbox { rows, .. } => rows
+            .iter()
+            .map(|(key, _)| {
+                store
+                    .get(&key.as_str().into())
+                    .map_err(|_| Failure::Unavailable)
+            })
+            .collect::<Result<Vec<_>, _>>()?,
+        _ => vec![],
+    };
     let accounts = super::idb_account_value::Record::read(&store, account_storage::ACCOUNTS_KEY)?;
     let revision = super::idb_account_value::Record::read(&store, account_storage::REVISION_KEY)?;
     let request = revision.key.clone();
@@ -82,6 +98,27 @@ pub async fn run(db: &IdbDatabase, change: Change, signal: &AbortSignal) -> Resu
             let loaded = load(&accounts, &revision)?;
             match &change {
                 Change::Load => Ok(Reply::Loaded(loaded)),
+                Change::NoteOutbox { expected, rows } => {
+                    expected.compare(loaded.revision, false)?;
+                    let mut settled = vec![];
+                    for ((key, update), request) in rows.iter().zip(&note_rows) {
+                        let value = request.result().map_err(|_| Failure::Unavailable)?;
+                        let current = value.as_string();
+                        if !value.is_undefined() && current.is_none() {
+                            return Err(Failure::Unavailable);
+                        }
+                        let merged = lkjstr_core::engine::network::note_outbox::merge(
+                            current.as_deref(),
+                            update,
+                        )
+                        .ok_or(Failure::Unavailable)?;
+                        store
+                            .put_with_key(&merged.raw.into(), &key.as_str().into())
+                            .map_err(|_| Failure::Unavailable)?;
+                        settled.extend(merged.settled);
+                    }
+                    Ok(Reply::NoteOutbox(settled))
+                }
                 Change::Commit {
                     expected,
                     saved,

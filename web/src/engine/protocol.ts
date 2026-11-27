@@ -680,7 +680,7 @@ export type Draft = {
 };
 
 export type Publish =
-  | { readonly k: 'note'; readonly draft: Draft }
+  | { readonly k: 'note'; readonly draft: Draft; readonly noteKey?: string }
   | { readonly k: 'repost'; readonly id: string }
   /** `emoji`: Unicode, or `:code:` with `url`. */
   | {
@@ -827,6 +827,14 @@ export type Delivery = {
   readonly message?: string;
 };
 
+export type NoteOutboxStatus = {
+  readonly key: string;
+  readonly id: string;
+  readonly phase: 'sending' | 'retrying' | 'refused' | 'sent' | 'discarded';
+  readonly attempts: number;
+  readonly delivery: readonly Delivery[];
+};
+
 export type Failure = {
   /** Stable code the interface words; `message` carries detail from outside (a relay, a server, the signer). */
   readonly code:
@@ -965,6 +973,9 @@ export type PublicCacheReconcile = {
 };
 
 export type ToEngine =
+  | { readonly t: 'note.outbox'; readonly keys: readonly string[] }
+  | { readonly t: 'note.discard'; readonly key: string }
+  | { readonly t: 'note.wake' }
   | { readonly t: 'cache.hold'; readonly sub: SubId; readonly rows: readonly PublicCacheHoldRow[] }
   | { readonly t: 'storage.inspect'; readonly req: ReqId }
   | { readonly t: 'storage.close'; readonly req: ReqId }
@@ -1232,6 +1243,11 @@ export type Timeline = {
 };
 export type SignerWeight = 1 | 2 | 4 | 8 | 16;
 export type FromEngine =
+  | {
+      readonly t: 'note.outbox';
+      readonly keys: readonly string[];
+      readonly statuses: readonly NoteOutboxStatus[];
+    }
   | PublicCacheReconcile
   | {
       readonly t: 'cache.policy';

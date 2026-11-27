@@ -1,6 +1,7 @@
 //! Publication sockets have their own bounded slots and rotate across jobs.
-use super::*;
+use super::{publications::PUBLICATION_WAIT_MS, *};
 
+const NOTE_CONNECT_WAIT_MS: u64 = 10_000;
 const PUBLISH_SLOTS: usize = 12;
 
 impl Publication {

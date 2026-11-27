@@ -24,7 +24,7 @@ impl Host {
             }
             return;
         }
-        if bunker::input(self, id, &input) {
+        if note_outbox::input(self, id, &input) || bunker::input(self, id, &input) {
             return;
         }
         let Some(input) = keys::receive(self, id, input) else {
@@ -210,6 +210,7 @@ impl Host {
             _ => None,
         };
         let refresh_previews = matches!(&input, W::Configure { .. } | W::Hint { .. });
+        let note_key = note_outbox::key(&input);
         let translated = self
             .sessions
             .get(&id)
@@ -224,7 +225,7 @@ impl Host {
                         vec![input]
                     };
                     for input in inputs {
-                        self.sign_input(input, stamp);
+                        note_outbox::sign_input(self, input, stamp, note_key.as_deref());
                     }
                 }
             }

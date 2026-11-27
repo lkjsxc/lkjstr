@@ -192,9 +192,9 @@ Mock-only `EngineConfig.mock`: `slow` signs a note late and delays its answers, 
 - `relay` rows: a `RelayRow` head (`relay:<url>`), then notes that relay served; its NIP-11 fields are listed in interface-relay.md.
 - `open.window?` carries a keyed initial window and its usual row bounds for atomic reopening.
 - Optional `EngineStats.extensionSigner` adds availability, pending requests, median method latency, calls per minute and timeouts.
-- Optional `sign.expiresAt` gives extension signing its Worker deadline in epoch milliseconds.
-- Optional `getPublicKey.expiresAt` gives extension discovery its Worker deadline in epoch milliseconds.
-- Optional `crypt.expiresAt` gives extension crypto its Worker deadline in epoch milliseconds.
-- Optional `sign.weight` selects the engine-assigned class for extension signing.
-- Optional `crypt.weight` selects the engine-assigned class for extension crypto.
-- `sign.cancel {req}` releases an auxiliary signer request when its Worker demand or deadline ends.
+
+- Optional `Publish.noteKey` binds a persisted composer draft to its signed note across Worker lifetimes.
+- `note.outbox {keys}` queries up to 128 composer keys for their signed delivery state.
+- `note.outbox {keys,statuses}` reports each retained note ID, phase, attempt count and relay deliveries.
+- `note.discard {key}` cancels retries for a queued signed note.
+- `note.wake` wakes queued notes when the page returns or the browser comes online.

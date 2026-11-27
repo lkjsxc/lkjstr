@@ -5,7 +5,7 @@ use lkjstr_protocol::{
 };
 pub(super) fn publish(what: P, engine: &Engine, account: &str) -> Result<p::Action, &'static str> {
     let (kind, content, target, tags) = match what {
-        P::Note { draft } => {
+        P::Note { draft, .. } => {
             let mut text = super::mentions::expand(&draft.text, draft.mentions.unwrap_or_default());
             let mut tags = vec![];
             if let Some(form) = &draft.long_form {

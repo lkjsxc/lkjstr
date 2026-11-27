@@ -1,9 +1,11 @@
 // Expected passing checks from smoke-real and its main-page, audit and reader scenarios.
 import { livedInCheckNames } from './smoke-lived-in.mjs';
+import { noteRetryCheckNames } from './smoke-note-retry.mjs';
 import { realStartChecks } from './smoke-real-start-checks.mjs';
 import { uploadSmokeChecks } from './smoke-upload-checks.mjs';
 
 const main = [
+  ...noteRetryCheckNames,
   'global renders verified fixture notes',
   'signed-out first run is readable, with no empty tile',
   'sign-in offers the extension and a key field that never echoes; no account is created without a way to its key',

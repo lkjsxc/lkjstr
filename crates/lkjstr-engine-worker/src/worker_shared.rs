@@ -1,5 +1,6 @@
 //! Same engine host with namespaced MessagePorts for one engine per origin.
 use super::*;
+use lkjstr_core::engine::wire::Output as WireOutput;
 use lkjstr_core::engine::{clients::Clients, wire::Session};
 use serde::Serialize;
 pub(super) struct Peer {
@@ -41,7 +42,7 @@ impl Sink {
             }
         }
     }
-    pub(super) fn direct(&self, id: u64, out: &lkjstr_core::engine::wire::Output) {
+    pub(super) fn direct(&self, id: u64, out: &WireOutput) {
         match self {
             Self::Closed => {}
             Self::Dedicated(scope) => send(scope.as_ref(), out),
@@ -115,6 +116,7 @@ pub fn start_shared() -> Result<SharedWorkerHandle, JsValue> {
         flushing: false,
         retention_due: true,
         publication_persisted: 0,
+        note_outbox: Default::default(),
         quality_persisted: 0,
         stopped: false,
         clock_offset: 0,
@@ -197,7 +199,7 @@ fn attach(host: &Rc<RefCell<Host>>, port: web_sys::MessagePort) {
 }
 #[path = "worker_shared_handle.rs"]
 mod handle;
-fn send(target: &JsValue, out: &lkjstr_core::engine::wire::Output) {
+fn send(target: &JsValue, out: &WireOutput) {
     if let Ok(value) = out.serialize(&serde_wasm_bindgen::Serializer::json_compatible())
         && let Ok(post) = js_sys::Reflect::get(target, &"postMessage".into())
         && let Some(post) = post.dyn_ref::<js_sys::Function>()
@@ -229,10 +231,7 @@ pub(super) fn detach(h: &mut Host, id: u64) {
     if let Sink::Shared { clients, peers } = &mut h.scope {
         let inputs = clients.disconnect(id);
         if let Some(peer) = peers.remove(&id) {
-            send(
-                peer.port.as_ref(),
-                &lkjstr_core::engine::wire::Output::Reconnect,
-            );
+            send(peer.port.as_ref(), &WireOutput::Reconnect);
             peer.port.set_onmessage(None);
             peer.port.close();
         }

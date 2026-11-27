@@ -79,6 +79,7 @@ pub(super) fn load(host: &Rc<RefCell<Host>>) {
                 return;
             }
         };
+        let note_rows = note_outbox::read(&db, &loaded.accounts, &signal).await;
         let Some(host) = weak.upgrade() else {
             db.close();
             return;
@@ -88,6 +89,11 @@ pub(super) fn load(host: &Rc<RefCell<Host>>) {
             db.close();
             return;
         }
+        let Ok(note_rows) = note_rows else {
+            db.close();
+            account_failure::fail(&mut h);
+            return;
+        };
         h.db = Some(db);
         h.account_store.opening = None;
         h.account_store.state = account_storage::State::Ready(loaded.revision);
@@ -120,6 +126,10 @@ pub(super) fn load(host: &Rc<RefCell<Host>>) {
         match cached {
             Ok(rows) => h.engine.restore_cache(&rows),
             Err(_) => h.engine.cached_history_complete = false,
+        }
+        h.engine.network.note_outbox.enabled = true;
+        for (account, raw) in note_rows {
+            cache_failed |= !h.engine.network.note_outbox.restore(&account, &raw);
         }
         h.loaded = true;
         h.wake();

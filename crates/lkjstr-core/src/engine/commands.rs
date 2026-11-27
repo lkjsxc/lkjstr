@@ -47,6 +47,7 @@ impl Engine {
                         event: event.clone(),
                         deadline,
                         profile_base_id,
+                        note_key: None,
                     },
                 );
                 self.outgoing.push(Output::Sign {

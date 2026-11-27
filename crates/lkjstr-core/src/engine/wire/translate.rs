@@ -8,6 +8,7 @@ impl Session {
         engine: &Engine,
     ) -> Result<Vec<p::Input>, (Option<String>, &'static str)> {
         Ok(match input {
+            Input::NoteOutbox { .. } | Input::NoteDiscard { .. } | Input::NoteWake => vec![],
             Input::CacheHold { sub, rows } => {
                 self.cache_hold(sub, rows, engine);
                 vec![]

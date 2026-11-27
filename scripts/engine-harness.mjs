@@ -22,7 +22,7 @@ import bundle from 'playwright-core/lib/utilsBundle';
 import { fakeRelay } from './browser-relay.mjs';
 import { fakeBunker } from './browser-bunker.mjs';
 import { createInterface } from 'node:readline';
-import { checkIdleTicks, workerBoot } from './engine-harness-boot.mjs';
+import { checkIdleTicks, noteOutboxProtocol, workerBoot } from './engine-harness-boot.mjs';
 const root = resolve(process.env.LKJSTR_ENGINE_PKG ?? 'tmp/engine-pkg'), out = resolve(process.env.LKJSTR_ENGINE_REPORT ?? 'tmp/engine-harness');
 const run = { startedAt: new Date().toISOString(), loadStart: loadavg(), package: root, diagnosticFixtureClock: process.env.LKJSTR_CONTINUITY_DIAGNOSTIC==='1', wasmSha256: createHash('sha256').update(await readFile(join(root, 'lkjstr_engine_bg.wasm'))).digest('hex') };let continuityEvidence;
 await mkdir(out, { recursive: true });
@@ -107,7 +107,7 @@ try {
   all.forEach((e)=>fake.add(e));
   await send({t:'test.relays',relays:[origin.replace('http:','ws:')]});
   await absoluteTimeWindow({page,send,wait,check,note,signer,lines,fake,timeRelay,origin});
-  await send({t:'heartbeat'});
+  await send({t:'heartbeat'});await noteOutboxProtocol(send,wait);
   await send({t:'preview',sub:'global',ids:[]});
   await wait(()=>window.messages.some(m=>m.t==='heartbeat'));
   check('heartbeat is acknowledged by the Worker',true);

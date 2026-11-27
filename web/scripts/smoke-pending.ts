@@ -173,15 +173,16 @@ export async function pendingChecks(open: Open, check: Check): Promise<void> {
       ),
   );
   await post('An unanswered note');
-  const unanswered = page.locator(`${COMPOSE} .cdraft[data-phase=unconfirmed]`);
+  const unanswered = page.locator(`${COMPOSE} .cdraft[data-phase=retrying]`);
   await unanswered.waitFor();
   check(
-    'pending: without an OK the draft and Home mark are unconfirmed and Retry stays available',
-    (await unanswered.innerText()).includes('No relay has confirmed it yet.') &&
-      (await unanswered.getByRole('button', { name: 'Retry' }).isEnabled()) &&
+    'pending: without an OK the signed draft retries quietly and can be discarded',
+    (await unanswered.innerText()).includes('Retrying… (attempt 1)') &&
+      (await unanswered.getByRole('button', { name: 'Retry', exact: true }).count()) === 0 &&
+      (await unanswered.getByRole('button', { name: 'Remove', exact: true }).isEnabled()) &&
       (await sent.count()) === 0 &&
       (await page
-        .locator(`${HOME} [data-send=unconfirmed]`)
+        .locator(`${HOME} [data-send=sending]`)
         .filter({ hasText: 'An unanswered note' })
         .count()) > 0,
   );

@@ -7,6 +7,7 @@ import { HANDLERS } from './client-handlers.ts';
 import type { Core } from './engine.ts';
 import { FILLER } from './fixtures-notes.ts';
 import { revealMockNote } from './hidden.ts';
+import { createMockNoteOutbox } from './note-outbox.ts';
 import {
   byHandle,
   byPubkey,
@@ -29,8 +30,8 @@ export function createActions(core: Core) {
     post({ t: 'result', req, ok: true, ...extra });
   const fail = (req: string, code: Failure['code'], message?: string): void =>
     post({ t: 'result', req, ok: false, error: { code, message } });
-
   const deliver = createDelivery(core);
+  const notes = createMockNoteOutbox(core);
   const uploads = createUploads(core);
   /** Signs a note (it arrives, pending, in the reader's lists) and sends it. */
   function sign(
@@ -55,6 +56,8 @@ export function createActions(core: Core) {
         alt: m.alt,
       })),
     });
+    const key = !n.channel ? w.noteKey : undefined;
+    if (key) notes.set({ key, id: n.id, phase: 'sending', attempts: 1, delivery: [] });
     if (!n.channel) post({ t: 'publish.signed', req, id: n.id });
     core.arrived(n);
     if (n.re) core.changed(n.re);
@@ -67,16 +70,16 @@ export function createActions(core: Core) {
     deliver(
       req,
       { id: n.id },
-      () => {
-        n.pending = false;
-        if (outcome !== 'normal' && !n.channel) n.unconfirmed = true;
+      (relays) => {
+        if (!notes.finish(key, n.id, outcome, relays)) return;
+        n.pending = !!key && outcome === 'unanswered';
+        if (outcome !== 'normal' && !n.channel && !n.pending) n.unconfirmed = true;
         core.changed(n.id);
       },
       late,
       outcome,
     );
   }
-
   function run(req: string, a: Action): void {
     if (a.a === 'link.check') {
       // Mock screenshots and smoke use fixture handles and synthetic note references.
@@ -276,7 +279,7 @@ export function createActions(core: Core) {
     core.resync((q) => q.source === 'notifications', true);
   }
 
-  return { run, tick, publicKey, cancelUpload: uploads.cancel, dispose: uploads.dispose };
+  return { run, tick, publicKey, cancelUpload: uploads.cancel, dispose: uploads.dispose, notes };
 }
 
 function expandMentions(draft: Draft): string {

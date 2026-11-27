@@ -125,6 +125,17 @@ impl Host {
     ) {
         self.wake();
         self.sign_trace.response(&req);
+        if event.as_ref().is_some_and(|event| {
+            event.kind == 1
+                && !self
+                    .accounts
+                    .entries
+                    .iter()
+                    .any(|account| account.pubkey == event.pubkey)
+        }) {
+            self.engine.refuse_sign(req, "signed-out");
+            return;
+        }
         let mut verified = None;
         self.engine
             .accept_signature(req.clone(), event, error, self.time(), || {

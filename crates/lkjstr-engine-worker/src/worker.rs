@@ -19,6 +19,8 @@ mod persistence;
 use persistence::persist;
 #[path = "worker_account_boot.rs"]
 mod account_boot;
+#[path = "worker_note_outbox.rs"]
+mod note_outbox;
 use account_boot::load;
 #[path = "worker_account_failure.rs"]
 mod account_failure;
@@ -103,6 +105,7 @@ struct Host {
     db: Option<web_sys::IdbDatabase>,
     next_persist: u64,
     publication_persisted: u64,
+    note_outbox: note_outbox::Writer,
     quality_persisted: u64,
     flushing: bool,
     retention_due: bool,
@@ -157,6 +160,7 @@ pub fn start() -> Result<WorkerHandle, JsValue> {
         db: None,
         next_persist: 0,
         publication_persisted: 0,
+        note_outbox: Default::default(),
         quality_persisted: 0,
         flushing: false,
         retention_due: true,

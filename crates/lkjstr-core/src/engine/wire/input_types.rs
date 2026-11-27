@@ -7,6 +7,16 @@ use serde::Deserialize;
 #[derive(Deserialize)]
 #[serde(tag = "t", rename_all = "camelCase")]
 pub enum Input {
+    #[serde(rename = "note.outbox")]
+    NoteOutbox {
+        keys: Vec<String>,
+    },
+    #[serde(rename = "note.discard")]
+    NoteDiscard {
+        key: String,
+    },
+    #[serde(rename = "note.wake")]
+    NoteWake,
     #[serde(rename = "cache.hold")]
     CacheHold {
         sub: String,

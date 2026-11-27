@@ -15,7 +15,12 @@ pub(super) async fn commit(
         let nonce = lkjstr_nips::hex(
             &crate::browser::random_bytes::<16>().map_err(|_| Failure::Unavailable)?,
         );
-        drafts::removal_rows(account, nonce).map_err(|_| Failure::Unavailable)?
+        let mut rows = drafts::removal_rows(account, nonce).map_err(|_| Failure::Unavailable)?;
+        rows.push((
+            lkjstr_core::engine::network::note_outbox::storage_key(account),
+            None,
+        ));
+        rows
     } else {
         vec![]
     };

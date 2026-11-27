@@ -197,10 +197,11 @@ export function mountCompose(
     error?: Failure,
     id?: string,
     ms?: number,
+    retrying?: number,
   ): void {
     if (error) return replaceChildren(result, h('div', { class: 'error' }, failureText(error)));
-    if (!relays.length) return replaceChildren(result);
-    replaceChildren(result, sendLine(relays, final, id, ms));
+    if (!relays.length && retrying === undefined) return replaceChildren(result);
+    replaceChildren(result, sendLine(relays, final, id, ms, retrying));
   }
   function send(byKey = false): void {
     ready();

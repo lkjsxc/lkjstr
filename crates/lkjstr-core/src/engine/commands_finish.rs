@@ -91,7 +91,11 @@ impl Engine {
             self.error(Some(req), "storage-write-failed");
             return;
         }
-        if matches!(event.kind, 1 | 7) && !self.network.can_stage_publication(&event.id) {
+        if (matches!(event.kind, 1 | 7) && !self.network.can_stage_publication(&event.id))
+            || (event.kind == 1
+                && (self.network.note_outbox.pending(&event.id)
+                    || !self.network.note_outbox.admit(&event)))
+        {
             self.error(Some(req), "publication-limit");
             return;
         }
@@ -168,6 +172,9 @@ impl Engine {
                 req: req.clone(),
                 id: id.clone(),
             });
+            self.network
+                .note_outbox
+                .stage(&event, pending.note_key, &routes, now);
             self.network
                 .stage_publication(req, event, routes, now, author.clone());
             self.network.track_note_routes(

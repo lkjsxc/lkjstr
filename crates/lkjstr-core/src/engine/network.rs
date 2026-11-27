@@ -3,9 +3,6 @@ use super::protocol::{Output, Query, Source};
 use lkjstr_protocol::{NostrEvent, NostrFilter, filter_to_value, normalize_relay_url};
 use serde_json::{Value, json};
 use std::collections::{BTreeMap, BTreeSet};
-pub(super) const NOTE_CONNECT_WAIT_MS: u64 = 10_000;
-pub(super) const NOTE_ACK_WAIT_MS: u64 = 8_000;
-const PUBLICATION_WAIT_MS: u64 = 30_000;
 #[path = "network_auth.rs"]
 pub mod auth;
 #[path = "network_batch.rs"]
@@ -43,6 +40,8 @@ mod messages;
 mod metadata;
 #[path = "network_note_delivery.rs"]
 mod note_delivery;
+#[path = "network_note_outbox.rs"]
+pub mod note_outbox;
 #[path = "network_stats.rs"]
 mod observations;
 #[path = "network_optimizer.rs"]
@@ -218,6 +217,7 @@ pub struct Network {
     pub(super) requests: BTreeMap<String, Request>,
     pub(super) effects: Vec<Effect>,
     pub(super) output: Vec<Output>,
+    pub note_outbox: note_outbox::NoteOutbox,
     pub(super) publications: BTreeMap<String, Publication>,
     publish_cursor: Option<String>, // Last publication to take a transient slot.
     // Last 32 receipts plus results still displayed (<= 128 per client, 32 clients).

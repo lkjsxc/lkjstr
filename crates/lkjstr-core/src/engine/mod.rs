@@ -34,6 +34,7 @@ pub mod metrics;
 mod nearby;
 pub mod network;
 mod network_limits;
+mod note_retry;
 mod note_routes;
 mod outbox_discovery;
 pub mod preview;
@@ -103,6 +104,7 @@ struct Signing {
     event: UnsignedNostrEvent,
     deadline: u64,
     profile_base_id: Option<String>,
+    note_key: Option<String>,
 }
 pub struct Engine {
     local_reads: local_reads::State,
@@ -217,6 +219,7 @@ impl Engine {
                 error,
                 ..
             } = output
+                && !self.network.note_outbox.pending(id)
                 && self.tentative_notes.remove(id)
             {
                 self.pending.cancel_reservation(id);

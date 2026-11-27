@@ -1,4 +1,6 @@
 use super::*;
+pub(super) const NOTE_ACK_WAIT_MS: u64 = 8_000;
+pub(super) const PUBLICATION_WAIT_MS: u64 = 30_000;
 
 impl Publication {
     pub(in crate::engine) fn delivery_until(&self) -> u64 {
@@ -11,9 +13,11 @@ impl Publication {
 }
 impl Network {
     pub fn pending_event(&self, id: &str) -> bool {
-        self.publications
-            .get(id)
-            .is_some_and(|p| !p.reported_success)
+        self.note_outbox.pending(id)
+            || self
+                .publications
+                .get(id)
+                .is_some_and(|p| !p.reported_success)
     }
     pub(in crate::engine) fn can_stage_publication(&self, id: &str) -> bool {
         self.publications.len() < 64 && !self.publications.contains_key(id)
@@ -101,10 +105,17 @@ impl Network {
         for p in self
             .publications
             .values_mut()
-            .filter(|p| now < p.delivery_until())
+            .filter(|p| now < p.delivery_until() && !self.note_outbox.needs_checkpoint(&p.event.id))
         {
             let before = p.attempted.len();
             for (relay, (_, ack)) in &mut p.route_deadlines {
+                let durable = p.event.kind == 1 && self.note_outbox.enabled;
+                if durable
+                    && p.attempted.contains(relay)
+                    && (p.sent.contains_key(relay) || p.reported_success)
+                {
+                    continue;
+                }
                 if p.deliveries.get(relay).is_some_and(|s| s == "pending")
                     && p.sent
                         .get(relay)
@@ -165,6 +176,7 @@ impl Network {
         let ids: Vec<_> = self
             .publications
             .iter()
+            .filter(|(id, _)| !self.note_outbox.needs_checkpoint(id))
             .filter(|(_, p)| {
                 now >= p.delivery_until()
                     || ((!p.discovery_pending || now >= p.deadline)

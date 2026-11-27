@@ -5,6 +5,8 @@ use serde::Deserialize;
 pub enum Publish {
     Note {
         draft: Box<Draft>,
+        #[serde(rename = "noteKey")]
+        note_key: Option<String>,
     },
     Repost {
         id: String,

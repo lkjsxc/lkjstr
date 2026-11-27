@@ -6,7 +6,14 @@ import { h } from '../shared/h.ts';
 import { type Key, t } from '../shared/i18n.ts';
 import { failureText } from './can.ts';
 
-export type SendPhase = 'signing' | 'sending' | 'sent' | 'unconfirmed' | 'refused' | 'failed';
+export type SendPhase =
+  | 'signing'
+  | 'sending'
+  | 'sent'
+  | 'retrying'
+  | 'unconfirmed'
+  | 'refused'
+  | 'failed';
 /** A signer the reader may have to answer. */
 export type Asking = 'extension' | 'remote';
 
@@ -38,6 +45,7 @@ export function sendWords(
   relays: readonly Delivery[] = [],
   error?: Failure,
   wait?: Key,
+  attempts = 1,
 ): string {
   const counts = { ok: relays.filter((r) => r.state === 'ok').length, all: relays.length };
   // Before the signature nothing has left the browser: 'posting', not 'sending' (owner, 2026-11-26).
@@ -45,6 +53,7 @@ export function sendWords(
   if (phase === 'sending')
     return relays.length ? t('compose.sending', counts) : t('compose.pending');
   if (phase === 'sent') return t('compose.sent', counts);
+  if (phase === 'retrying') return t('compose.retrying', { n: attempts });
   if (phase === 'unconfirmed') return t('compose.unconfirmed');
   if (phase === 'refused') return t('compose.refused');
   return error ? failureText(error) : t('compose.retained');
@@ -80,8 +89,9 @@ export function sendLine(
   final: boolean,
   id?: string,
   ms?: number,
+  retrying?: number,
 ): HTMLElement[] {
-  const phase = sendPhase(!final, id, relays);
+  const phase = retrying !== undefined ? 'retrying' : sendPhase(!final, id, relays);
   const ok = relays.filter((r) => r.state === 'ok').length;
   return [
     h(
@@ -94,7 +104,7 @@ export function sendLine(
         'data-all': String(relays.length),
         'data-ms': phase === 'sent' && ms !== undefined ? String(Math.round(ms)) : null,
       },
-      sendWords(phase, relays),
+      sendWords(phase, relays, undefined, undefined, retrying),
     ),
     ...relayLines(relays),
   ];

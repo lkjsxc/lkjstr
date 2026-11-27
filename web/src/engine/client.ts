@@ -6,6 +6,7 @@ import type { AccountState, Accounts, Engine, SubHandlers } from './client-api.t
 import { createDeliveryWatches } from './client-delivery.ts';
 import { createDmClient } from './client-dm.ts';
 import { createExtensionClient } from './client-extension.ts';
+import { createNoteOutbox } from './client-note-outbox.ts';
 import { createPrivateListClient } from './client-private-lists.ts';
 import { createSignerAuthClient } from './client-signer-auth.ts';
 import { createStorageClient } from './client-storage.ts';
@@ -26,6 +27,7 @@ export function createEngine(transport: Transport): Engine {
   const signerAuth = createSignerAuthClient(transport);
   const zaps = createZapClient(transport);
   const storage = createStorageClient(transport);
+  const noteOutbox = createNoteOutbox(transport);
   storage.visible(document.visibilityState !== 'hidden');
   const lists = createPrivateListClient(dm.access, (message) => transport.post(message));
   const subs = new Map<string, SubHandlers>(); // bound: open subscriptions (one per mounted list)
@@ -41,7 +43,6 @@ export function createEngine(transport: Transport): Engine {
   let idle = false;
   let idleTimer: ReturnType<typeof setTimeout> | undefined;
   let hintQueued = false;
-
   const hint = (): void => {
     if (hintQueued) return;
     hintQueued = true;
@@ -90,7 +91,6 @@ export function createEngine(transport: Transport): Engine {
   window.addEventListener('pointerdown', active, { passive: true, capture: true });
   window.addEventListener('keydown', active, { passive: true, capture: true });
   active();
-
   const offPeople = onPerson((author) => {
     const value = accounts.get();
     if (
@@ -109,6 +109,7 @@ export function createEngine(transport: Transport): Engine {
   });
   transport.listen((msg) => {
     if (
+      noteOutbox.receive(msg) ||
       storage.receive(msg) ||
       signerAuth.receive(msg) ||
       extension.receive(msg, actions.wantsSign)
@@ -173,6 +174,7 @@ export function createEngine(transport: Transport): Engine {
     signerAuth,
     storage,
     zaps,
+    noteOutbox,
     accounts,
     accountState,
     status,
@@ -283,7 +285,7 @@ export function createEngine(transport: Transport): Engine {
       clearTimeout(idleTimer);
       offPeople();
       privateRows.clear();
-      storage.dispose();
+      for (const client of [storage, noteOutbox]) client.dispose();
       signerAuth.dispose();
       lists.dispose();
       extension.orchestrator.reset();

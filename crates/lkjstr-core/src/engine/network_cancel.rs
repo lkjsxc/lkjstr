@@ -12,6 +12,7 @@ impl Network {
     }
 
     pub(in crate::engine) fn cancel_publication(&mut self, id: &str) {
+        self.note_outbox.discard_id(id, self.now);
         if let Some(r) = self.receipts.remove(id) {
             for (url, (wire, _)) in r.checks {
                 self.send(&url, json!(["CLOSE", wire]));

@@ -58,6 +58,7 @@ export type AccountState =
   | { readonly phase: 'loading' | 'ready' }
   | { readonly phase: 'failed'; readonly error: { readonly code: 'internal' } };
 export type Engine = {
+  readonly noteOutbox?: ReturnType<typeof import('./client-note-outbox.ts').createNoteOutbox>;
   readonly posting?: Pick<Signal<boolean>, 'get' | 'subscribe'>;
   readonly dm?: ReturnType<typeof createDmClient>;
   readonly zaps?: ReturnType<typeof createZapClient>;

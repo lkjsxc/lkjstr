@@ -53,8 +53,8 @@ export function draftBody(draft: Draft, env: ViewEnv): HTMLElement[] {
 
 export function draftButtons(
   busy: boolean,
-  retry: () => void,
-  edit: () => void,
+  retry: (() => void) | undefined,
+  edit: (() => void) | undefined,
   discard: () => void,
 ): HTMLElement {
   const button = (key: Key, run: () => void): HTMLElement =>
@@ -62,8 +62,8 @@ export function draftButtons(
   return h(
     'div',
     { class: 'actions' },
-    button('compose.retry', retry),
-    button('compose.edit', edit),
+    retry ? button('compose.retry', retry) : null,
+    edit ? button('compose.edit', edit) : null,
     button('compose.drop', discard),
   );
 }

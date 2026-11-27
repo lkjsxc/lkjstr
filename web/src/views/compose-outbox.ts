@@ -1,63 +1,23 @@
 // At most 20 pending or failed drafts per composer, persisted independently of the input.
 import type { Delivery, Draft, Failure } from '../engine/protocol.ts';
 import { h } from '../shared/h.ts';
-import { t } from '../shared/i18n.ts';
 import { kv } from '../shared/storage.ts';
 import { loadViewState } from '../shared/view-state.ts';
-import { draftButtons, draftMedia, draftText } from './draft-row.ts';
+import {
+  announceDefaults,
+  boxes,
+  type ChannelDraft,
+  followSignedNote,
+  outboxRow,
+  type Watch,
+} from './compose-outbox-state.ts';
 import { type HomeDraft, hasHomeDraft, removeHomeDraft, showHomeDraft } from './home-drafts.ts';
 import { ownPublished } from './own-published.ts';
-import { toast } from './parts.ts';
 import type { ViewEnv } from './registry.ts';
-import { asking, sendClass, sendPhase, sendWords, waitKey } from './send-state.ts';
+import { asking, waitKey } from './send-state.ts';
 
-export type ChannelDraft = {
-  as: string;
-  draft: Draft;
-  error?: Failure;
-  delivery?: readonly Delivery[];
-  /** The signed note's id, once the engine has it; a retry signs anew. */
-  signed?: string;
-  homeKey?: string;
-  homeAt?: number;
-};
-type Watch = {
-  draw(): void;
-  delivery(
-    relays: readonly Delivery[],
-    final: boolean,
-    error?: Failure,
-    id?: string,
-    ms?: number,
-  ): void;
-};
-type Box = {
-  id: string;
-  drafts: ChannelDraft[];
-  busy: Set<ChannelDraft>;
-  /** Sends whose extension or remote signer has kept the reader waiting ten seconds (bound: `busy`). */
-  waiting: Set<ChannelDraft>;
-  listeners: Set<Watch>;
-  /** Each send follows its own late answers (bound: the drafts here, plus the latest once settled). */
-  watches: Map<ChannelDraft, AbortController>;
-  /** The send the composer's result line follows. */
-  latest?: ChannelDraft;
-};
-// One entry per mounted composer or unsettled send; released when both are gone.
-const boxes = new Map<string, Box>();
-let defaultNoticeShown = false;
-function announceDefaults(env: ViewEnv): void {
-  if (defaultNoticeShown) return;
-  defaultNoticeShown = true;
-  try {
-    const key = 'lkjstr:default-relays-notice';
-    if (sessionStorage.getItem(key)) return;
-    sessionStorage.setItem(key, '1');
-  } catch {
-    // Keep the notice once per document when storage is denied.
-  }
-  toast(env.layer, t('compose.defaultRelays'));
-}
+export type { ChannelDraft } from './compose-outbox-state.ts';
+
 export function createChannelOutbox(
   env: ViewEnv,
   legacy: ChannelDraft[],
@@ -76,6 +36,7 @@ export function createChannelOutbox(
       waiting: new Set(),
       listeners: new Set(),
       watches: new Map(),
+      noteWatches: new Map(),
     };
     boxes.set(key, box);
     kv.set(`view:${key}`, { id: box.id, drafts: box.drafts });
@@ -84,6 +45,8 @@ export function createChannelOutbox(
   const { id, drafts, busy, waiting, listeners } = currentBox;
   const release = (): void => {
     if (busy.size || listeners.size || drafts.some((item) => hasHomeDraft(item.homeKey))) return;
+    for (const watch of currentBox.noteWatches.values()) watch();
+    currentBox.noteWatches.clear();
     for (const watch of currentBox.watches.values()) watch.abort();
     currentBox.watches.clear();
     if (boxes.get(key) === box) boxes.delete(key);
@@ -101,30 +64,29 @@ export function createChannelOutbox(
   const remove = (item: ChannelDraft): void => {
     const index = drafts.indexOf(item);
     if (index >= 0) drafts.splice(index, 1);
+    currentBox.noteWatches.get(item)?.();
+    currentBox.noteWatches.delete(item);
     removeHomeDraft(item.homeKey);
     notify();
+  };
+  const discard = (item: ChannelDraft): void => {
+    if (item.noteKey && item.notePhase !== 'refused' && currentBox.noteWatches.has(item)) {
+      item.discarding = true;
+      env.engine.noteOutbox?.discard(item.noteKey);
+    } else remove(item);
   };
   const draw = (): void => {
     el.replaceChildren(
       ...drafts.map((item) => {
         const pending = busy.has(item);
-        const phase = sendPhase(pending, item.signed, item.delivery);
         const who = waiting.has(item) ? waitKey(asking(signerOf(item))) : undefined;
-        return h(
-          'div',
-          { class: 'cresult cdraft', 'data-phase': phase, 'data-event': item.signed ?? null },
-          draftText(item.draft, env),
-          ...draftMedia(item.draft),
-          h('div', { class: sendClass(phase) }, sendWords(phase, item.delivery, item.error, who)),
-          draftButtons(
-            pending,
-            () => void send(item),
-            () => {
-              if (edit(item.draft)) remove(item);
-            },
-            () => remove(item),
-          ),
-        );
+        return outboxRow(item, env, pending, who, {
+          retry: () => void send(item),
+          edit: () => {
+            if (edit(item.draft)) remove(item);
+          },
+          discard: () => discard(item),
+        });
       }),
     );
     changed();
@@ -147,8 +109,18 @@ export function createChannelOutbox(
     };
   };
   async function send(item: ChannelDraft): Promise<void> {
-    if (busy.has(item)) return;
+    if (busy.has(item) || item.noteKey) return;
+    if (!item.draft.channel && !item.draft.longForm && env.engine.noteOutbox) {
+      item.noteKey = crypto.randomUUID();
+      if (!kv.persist(`view:${key}`, { id, drafts })) {
+        item.noteKey = undefined;
+        item.error = { code: 'internal' };
+        notify();
+        return;
+      }
+    }
     busy.add(item);
+    followSignedNote(item, currentBox, env, { remove, notify, delivered });
     // Another post while this one is unsettled keeps both counts current; settled ones nobody shows are let go.
     for (const [settled, old] of currentBox.watches)
       if (settled === item || !drafts.includes(settled))
@@ -180,7 +152,7 @@ export function createChannelOutbox(
     show([], false);
     notify();
     const r = await env.engine.act(
-      { a: 'publish', as: item.as, what: { k: 'note', draft: item.draft } },
+      { a: 'publish', as: item.as, what: { k: 'note', draft: item.draft, noteKey: item.noteKey } },
       {
         signed(id) {
           clearTimeout(asks);
@@ -196,8 +168,11 @@ export function createChannelOutbox(
         delivery: (relays) => {
           if (watch.signal.aborted) return;
           item.delivery = relays;
-          show(relays, final);
-          if (final && relays.some((r) => r.state === 'ok')) remove(item);
+          if (!item.noteKey || !final || relays.some((r) => r.state === 'ok')) show(relays, final);
+          if (final && relays.some((r) => r.state === 'ok')) {
+            if (!item.draft.channel) ownPublished(item.as);
+            remove(item);
+          }
           notify();
         },
       },
@@ -205,7 +180,25 @@ export function createChannelOutbox(
     clearTimeout(asks);
     busy.delete(item);
     waiting.delete(item);
+    const durable = item.noteKey && item.signed;
     item.signed ??= r.id;
+    if (!drafts.includes(item)) return;
+    if (durable && !r.ok) {
+      item.notePhase ??= 'retrying';
+      if (item.notePhase === 'sending') item.notePhase = 'retrying';
+      item.delivery = r.delivery;
+      final = true;
+      removeHomeDraft(item.homeKey);
+      if (currentBox.latest === item)
+        delivered(r.delivery ?? [], true, undefined, item.signed, undefined, item.attempts ?? 1);
+      notify();
+      return;
+    }
+    if (item.noteKey && !durable && r.error?.code !== 'offline') {
+      currentBox.noteWatches.get(item)?.();
+      currentBox.noteWatches.delete(item);
+      item.noteKey = undefined;
+    }
     if (
       entry &&
       r.error &&
@@ -232,7 +225,9 @@ export function createChannelOutbox(
   const watch = { draw, delivery };
   listeners.add(watch);
   for (const item of drafts) {
-    if (busy.has(item) || !item.homeKey || !item.error || item.delivery?.length) continue;
+    followSignedNote(item, currentBox, env, { remove, notify, delivered });
+    if (busy.has(item) || item.signed || !item.homeKey || !item.error || item.delivery?.length)
+      continue;
     const entry = homeEntry(item);
     if (entry) showHomeDraft({ ...entry, failure: item.error });
   }

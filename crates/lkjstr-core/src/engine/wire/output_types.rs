@@ -2,6 +2,11 @@ use serde::Serialize;
 #[derive(Serialize)]
 #[serde(tag = "t", rename_all = "camelCase")]
 pub enum Output {
+    #[serde(rename = "note.outbox")]
+    NoteOutbox {
+        keys: Vec<String>,
+        statuses: Vec<serde_json::Value>,
+    },
     #[serde(rename = "cache.reconcile")]
     CacheReconcile {
         sub: String,

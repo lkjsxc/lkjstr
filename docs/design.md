@@ -290,7 +290,8 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
   is one quiet line and Enter stays a new line. Chosen people are chips under the field, and a waiting or failed draft
   already shows them as the links the published note will have.
 - Sent appears on the first accepting relay answer. Each post keeps its own count as later answers arrive. The composer lists at most five
-  refused or unanswered relays and points to the remaining count. Without any acceptance, the unconfirmed draft keeps Retry, Edit and Remove.
+  refused or unanswered relays and points to the remaining count. A signed note keeps retrying quietly with its attempt count and a Remove
+  control. The same event resumes on reconnect, network return, tab return and reload. A hard refusal leaves Edit and Remove.
 - Pressing Post empties the field and leaves the caret in it at once, whatever the signer; what is being sent is shown below, and a failure keeps its text.
   On a touch screen a tap on Post puts the on-screen keyboard away instead (owner, 2026-11-25); the send key keeps the caret.
 - At Post, Home shows the retained draft at once with the Posting mark and the room of an action row, as a signed note: a slow

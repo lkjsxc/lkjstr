@@ -8,6 +8,7 @@ import { fakeBunker } from '../../scripts/browser-bunker.mjs';
 import { fakeMediaSet } from '../../scripts/browser-media.mjs';
 import { fakeRelay, recentFixtureNote } from '../../scripts/browser-relay.mjs';
 import { browserTmp } from './browser-tmp.ts';
+import { retryRelay } from './smoke-note-retry.mjs';
 import { createSocketTrace } from './smoke-socket-trace.mjs';
 
 export async function createRealFixture() {
@@ -48,6 +49,7 @@ export async function createRealFixture() {
   const slowSignerFake = fakeRelay({ maxEvents: 130 });
   const livedInFake = fakeRelay();
   const deepLinkFake = fakeRelay();
+  const retry = retryRelay(fixture.note);
   const bunker = await fakeBunker();
   const media = await fakeMediaSet();
   for (const event of [fixture.note, ...fixture.events]) {
@@ -65,6 +67,7 @@ export async function createRealFixture() {
     railFake,
     slowSignerFake,
     livedInFake,
+    retryFake: retry.relay,
     bunker,
   });
   await new Promise((done) => relay.listen(0, '127.0.0.1', done));
@@ -101,6 +104,7 @@ export async function createRealFixture() {
     deepLinkFake,
     railFake,
     slowSignerFake,
+    retry,
     bunker,
     media,
     socketSharing,
@@ -112,7 +116,7 @@ export async function createRealFixture() {
 
 export function attachSmokeRelay(
   ws,
-  { fake, readerFake, deepLinkFake, railFake, slowSignerFake, livedInFake, bunker },
+  { fake, readerFake, deepLinkFake, railFake, slowSignerFake, livedInFake, retryFake, bunker },
 ) {
   const trace = createSocketTrace();
   const fixtureByPath = new Map([
@@ -121,6 +125,7 @@ export function attachSmokeRelay(
     ['/slow-signer', slowSignerFake],
     ['/rail-visibility', railFake],
     ['/lived-in', livedInFake],
+    ['/post-retry', retryFake],
   ]);
   const activePaths = new Map(); // all isolated test contexts share the loopback server
   const mainSockets = new Set(); // tagged context, excluding readers and signer routes
@@ -151,6 +156,7 @@ export function attachSmokeRelay(
       send: (text) => socket.send(text),
       onMessage: (fn) => socket.on('message', fn),
       onClose: (fn) => socket.on('close', fn),
+      drop: () => socket.terminate(),
     });
   });
   return {

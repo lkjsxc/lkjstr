@@ -55,3 +55,11 @@ export async function checkIdleTicks(page, check) {
   const turnsPerSecond = (end - start) * 1000 / elapsed;
   check('a hidden Worker uses at most four turns per second', turnsPerSecond <= 4);
 }
+
+export async function noteOutboxProtocol(send, wait) {
+  const key = '01423456-1234-1234-1234-123456789abc';
+  await send({t:'note.outbox',keys:[key]});
+  await wait(key=>window.messages.some(m=>m.t==='note.outbox'&&m.keys.includes(key)&&m.statuses.length===0),key);
+  await send({t:'note.discard',key});
+  await send({t:'note.wake'});
+}

@@ -68,6 +68,7 @@ export function fakeRelay(options = {}) {
           ws.send(JSON.stringify(['OK', msg[1].id, false, 'blocked: local fixture recipient']));
           return;
         }
+        if (options.publish?.(ws, msg[1], add)) return;
         add(msg[1]);
         ws.send(JSON.stringify(['OK', msg[1].id, true, '']));
       } else if (msg[0] === 'REQ') {

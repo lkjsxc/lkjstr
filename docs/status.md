@@ -146,12 +146,12 @@ Every saved account refreshes profile/follow/relay/mute/server records without a
 indexer/hint lookups and kind-3 JSON fallback. Search-only relay routes remain independent. NIP-11 documents constrain filters, page limits and
 subscription counts. SharedWorker and Web Locks/BroadcastChannel share visible wants; hidden/detached views release bounded cache and relay work.
 [Relay orchestration](relay-orchestration-20261119.md) adds progressive reads, gap repair, NIP-65 routes and a ten-second startup soft bound.
-
 Stats shows relay data; [Relay tabs](interface-relay.md) follow one relay live. [Public writes](orchestration.md) resolve on the first matching positive OK.
-Signed text notes appear in Home, Profile and Thread before any relay reply. Cached write lists and connected write-enabled relays send while discovery runs.
-Note destinations get ten seconds to connect and five seconds after the first frame; late confirmations remain available. Passive inbox checks yield to writing.
-Persisted receipts help route deletes. Lists wait for initial lookup, retain opaque content and reject unsupported private removals.
-Public wire patches retain rows that only moved. Signed reactions share the next planning pass. [Signing measurements](signing-latency.md).
+Signed notes appear in Home, Profile and Thread before any relay reply. Cached write lists and connected write relays send while discovery runs.
+The note outbox commits before sending and retries with jittered 2-60 second backoff until relay OK, hard refusal or discard.
+Routes get ten seconds to connect and eight after the first frame. Inbox checks yield to writes. Receipts route deletes. Lists retain opaque fields.
+Lists wait for lookup and reject unsupported private removals. Row patches retain moved rows. Signed reactions share the next planning pass.
+[Signing measurements](signing-latency.md).
 
 Blossom honors kind 10063; NIP-96 is the fallback. All signer kinds support upload authorization. Required-response evidence, explicit server
 selection, bounded processing and aggregate deadlines preserve truthful outcomes. Optional BUD-06 failure stays unknown. See
