@@ -113,6 +113,7 @@ export function noteRow(w: World, n: MNote, o: RowOpts): NoteRow {
     mine: {
       reposted: n.mineReposted,
       bookmarked: w.state.bookmarks.has(n.id),
+      pinned: w.state.pins.get(o.me)?.has(n.id) ?? false,
       own: n.by.author.pubkey === o.me,
     },
     ...hiddenOf(n.hidden),

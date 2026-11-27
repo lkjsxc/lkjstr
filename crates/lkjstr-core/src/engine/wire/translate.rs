@@ -102,6 +102,7 @@ impl Session {
                     visible_subs.remove(&sub);
                 }
                 self.timelines.remove(&sub);
+                self.pins_states.remove(&sub);
                 self.notification_states.remove(&sub);
                 self.private_states.remove(&sub);
                 self.cache_release(&sub);
@@ -122,6 +123,7 @@ impl Session {
                 }]
             }
             Input::Close { sub } => {
+                self.pins_states.remove(&sub);
                 self.notification_states.remove(&sub);
                 self.queries.remove(&sub);
                 self.private_states.remove(&sub);
@@ -206,6 +208,7 @@ impl Session {
                     A::Bookmark { account, id, on } => {
                         (account, p::Action::Bookmark { id, value: on })
                     }
+                    A::Pin { account, id, on } => (account, p::Action::Pin { id, value: on }),
                     A::ProfileSave { account, profile } => (
                         account,
                         p::Action::ProfileSave {

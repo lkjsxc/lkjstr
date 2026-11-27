@@ -116,6 +116,7 @@ impl Engine {
                     v.query.source,
                     Source::Thread
                         | Source::Bookmarks
+            | Source::Pins
                         | Source::Channels
                         | Source::Channel
                         | Source::Profile

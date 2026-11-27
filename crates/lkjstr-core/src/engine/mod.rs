@@ -37,6 +37,7 @@ mod network_limits;
 mod note_retry;
 mod note_routes;
 mod outbox_discovery;
+mod pins;
 pub mod preview;
 mod private_cache;
 pub mod private_lists;
@@ -103,7 +104,7 @@ pub struct View {
 struct Signing {
     event: UnsignedNostrEvent,
     deadline: u64,
-    profile_base_id: Option<String>,
+    replaceable_base_id: Option<String>,
     note_key: Option<String>,
 }
 pub struct Engine {

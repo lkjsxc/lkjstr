@@ -71,7 +71,13 @@ export type Engine = {
   readonly info: Signal<{ engine: string; version: number } | null>;
   /** The active account's pubkey ('' when signed out). */
   me(): Pubkey;
-  open(query: Query, handlers: SubHandlers, owner?: HTMLElement): Subscription;
+  /** Atomic initial visibility until the view calls visible(); omission keeps the existing public default. */
+  open(
+    query: Query,
+    handlers: SubHandlers,
+    owner?: HTMLElement,
+    options?: { visible?: boolean },
+  ): Subscription;
   act(action: Action, watch?: ActWatch): Promise<ActResult>;
   /** Shows (or hides again) a hidden note in the subscription that owns `from` (interface-hidden.md H3). */
   reveal?(from: Element, key: string, on: boolean): Promise<boolean>;

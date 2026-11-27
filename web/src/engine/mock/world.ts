@@ -228,10 +228,10 @@ export function createWorld(now: number) {
   });
   addGenericFixtures(base, MIN, idOf, make, add);
   notes.sort((a, b) => b.at - a.at);
-
   const state = {
     notificationSeen: base - 60 * MIN,
     following: new Set(FOLLOWING),
+    pins: new Map<string, Set<string>>(), // bound: fixture authors and their note IDs
     bookmarks: new Set(
       [tags.get('nip11'), tags.get('river'), tags.get('lint')].filter(Boolean) as string[],
     ),

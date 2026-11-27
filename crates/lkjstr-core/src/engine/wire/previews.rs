@@ -10,7 +10,11 @@ impl Session {
             unavailable_reposts,
         } = out
         {
-            return self.update_visibility(sub, invalid_deliveries, unavailable_reposts);
+            let mut output =
+                self.update_visibility(sub.clone(), invalid_deliveries, unavailable_reposts);
+            self.pins_state(Some(&sub), &mut output, engine);
+            self.visibility_state(&mut output);
+            return output;
         }
         let sub = match &out {
             p::Output::Rows { sub, .. }
@@ -25,6 +29,7 @@ impl Session {
             self.search_after(context, &mut output, engine);
         }
         self.notification_state(sub.as_deref(), &mut output, engine);
+        self.pins_state(sub.as_deref(), &mut output, engine);
         self.visibility_state(&mut output);
         for out in &mut output {
             self.preview_output(out, engine);

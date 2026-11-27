@@ -6,9 +6,11 @@ use lkjstr_protocol::{EventTemplate, NostrEvent, finalize_event, generate_secret
 use serde_json::{Value, json};
 use std::collections::BTreeSet;
 
+const OWNER_KINDS: [u64; 6] = [0, 3, 10000, 10001, 10002, 10063];
+
 fn records(at: u64) -> Vec<NostrEvent> {
     let key = generate_secret_key();
-    [0, 3, 10000, 10002, 10063]
+    OWNER_KINDS
         .into_iter()
         .map(|kind| {
             finalize_event(
@@ -54,7 +56,7 @@ fn every_cached_device_owner_refreshes_each_kind_on_a_single_slot() {
     e.discover_accounts(accounts, vec![], 0);
     e.network.connected(RELAY, 1);
     let mut fetched = BTreeSet::new();
-    for index in 0..10 {
+    for index in 0..events.len() as u64 {
         let now = index * 200 + 1;
         e.network.tick(now);
         let batch = requests(&mut e);
@@ -70,11 +72,13 @@ fn every_cached_device_owner_refreshes_each_kind_on_a_single_slot() {
         assert!(fetched.insert((event.pubkey.clone(), event.kind)));
         finish(&mut e, req, event, now + 1);
     }
-    assert_eq!(fetched.len(), 10);
-    // Explicit sign-in drops the old cursor and fetches all five records again.
-    e.refresh_account(&events[0].pubkey, 2101);
-    for index in 0..5 {
-        let now = 2101 + index * 200;
+    assert_eq!(fetched.len(), events.len());
+    // Explicit sign-in drops the old cursor and fetches every owner record again.
+    let refresh_at = events.len() as u64 * 200 + 101;
+    e.refresh_account(&events[0].pubkey, refresh_at);
+    let mut refreshed = BTreeSet::new();
+    for index in 0..OWNER_KINDS.len() as u64 {
+        let now = refresh_at + index * 200;
         e.network.tick(now);
         let batch = requests(&mut e);
         assert_eq!(batch.len(), 1);
@@ -85,8 +89,10 @@ fn every_cached_device_owner_refreshes_each_kind_on_a_single_slot() {
             .iter()
             .find(|event| req[2]["kinds"][0] == event.kind)
             .expect("refreshed kind");
+        assert!(refreshed.insert(event.kind));
         finish(&mut e, req, event, now + 1);
     }
+    assert_eq!(refreshed, OWNER_KINDS.into_iter().collect());
 }
 
 #[test]

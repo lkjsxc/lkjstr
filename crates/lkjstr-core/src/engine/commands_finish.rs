@@ -73,15 +73,22 @@ impl Engine {
             self.error(Some(req), "signer-timeout");
             return;
         }
-        if event.kind == 0
+        if matches!(event.kind, 0 | 10001)
             && self
                 .store
-                .replaceable(&event.pubkey, 0)
+                .replaceable(&event.pubkey, event.kind)
                 .as_ref()
                 .map(|current| current.id.as_str())
-                != pending.profile_base_id.as_deref()
+                != pending.replaceable_base_id.as_deref()
         {
-            self.error(Some(req), "stale-profile");
+            self.error(
+                Some(req),
+                if event.kind == 0 {
+                    "stale-profile"
+                } else {
+                    "stale-list"
+                },
+            );
             return;
         }
         verified();
@@ -126,7 +133,7 @@ impl Engine {
             self.tentative_notes.insert(event.id.clone());
         }
         let (inserted, lease) = self.store.insert_leased(event.clone(), None);
-        if event.kind == 0
+        if matches!(event.kind, 0 | 10001)
             && !matches!(
                 inserted,
                 crate::store::Inserted::New | crate::store::Inserted::Replaced

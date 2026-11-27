@@ -9,6 +9,7 @@ impl Session {
             fields.remove("privateLists");
             fields.remove("zapEvidence");
             fields.remove("unshown");
+            fields.remove("pins");
         }
         base
     }
@@ -30,6 +31,7 @@ impl Session {
             "event-too-large" => "too-large",
             "invalid-account" => "signed-out",
             "no-relays" => "no-relays",
+            "stale-list" | "list-edit-pending" => code,
             "invalid-relay"
             | "invalid-server"
             | "invalid-profile"
@@ -100,6 +102,7 @@ impl Session {
                         | "list"
                         | "notifications"
                         | "bookmarks"
+                        | "pins"
                         | "relays"
                         | "media-servers"
                         | "emoji"

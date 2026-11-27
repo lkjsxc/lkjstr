@@ -58,10 +58,15 @@ impl Engine {
             for row in &view.rows {
                 authors(row, &mut visible);
             }
-            if matches!(view.query.source, Source::Profile | Source::TheirHome)
-                && let Some(target) = &view.query.target
+            if matches!(
+                view.query.source,
+                Source::Profile | Source::TheirHome | Source::Pins
+            ) && let Some(target) = &view.query.target
             {
                 visible.insert(target.clone());
+                if let Some(list) = self.store.replaceable(target, 10001) {
+                    held.insert(list.id.clone());
+                }
             }
             if view.query.source == Source::TheirHome
                 && let Some(target) = &view.query.target
@@ -128,7 +133,7 @@ impl Engine {
                     access.authors.entry(author).or_insert(32);
                 }
             }
-            for kind in [0, 3, 10000, 10002, 10030, 10063] {
+            for kind in [0, 3, 10000, 10001, 10002, 10030, 10063] {
                 if let Some(event) = self.store.replaceable(owner, kind) {
                     access.pinned.insert(event.id.clone());
                 }
@@ -144,7 +149,7 @@ impl Engine {
         }
         for id in input.held {
             if let Some(event) = self.store.get(&id)
-                && matches!(event.kind, 3 | 10000)
+                && matches!(event.kind, 3 | 10000 | 10001)
             {
                 access.pinned.insert(id.clone());
                 if let Ok(row) = Record::verified(&event) {

@@ -127,7 +127,7 @@ New written Claude specifications take priority when present.
 | Content warnings | done | Engine projection, covered media and composer warning; P/nip36.rs, V/note.ts, V/compose.ts. |
 | Public bookmarks | done | Add/remove, list membership and fetched-note paging; E/list_events.rs, V/note-actions.ts, V/registry.ts. |
 | Unavailable bookmark placeholders | partial | IDs persist and fetch; projection skips missing target events. No placeholder Row variant; E/wire/sources.rs. |
-| Pinned notes | partial | Generic kind-10001/list storage exists; no dedicated discovery/projection/edit action. This is less than a completed engine operation. |
+| Pinned notes | implemented; review pending | Public kind-10001 discovery/hydration, guarded latest-list Pin/Unpin and inverse Undo, and a finite Profile section. Native/UI checks and real build pass; browser/Claude review remains. See [pinned-notes.md](pinned-notes.md). |
 | Publish long-form articles | engine ready, no surface | `Draft.longForm` emits kind 30023; E/wire/publish.rs. No composer control sends it. |
 | Read long-form articles | missing | No parsed document row or article reader; ordinary feeds request kinds 1/6. |
 | Delete own notes/reactions/reposts | done | Existing menu and author check create kind 5; E/wire/publish.rs, E/commands.rs, V/note-actions.ts. |

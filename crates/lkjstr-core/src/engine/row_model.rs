@@ -93,6 +93,8 @@ pub struct Reaction {
 pub struct Own {
     pub reposted: bool,
     pub bookmarked: bool,
+    #[serde(default)]
+    pub pinned: bool,
     pub muted: bool,
 }
 

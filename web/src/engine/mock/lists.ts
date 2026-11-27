@@ -2,7 +2,7 @@
 import type { NotificationRow, Query, Row } from '../protocol.ts';
 import { PROTOCOL_VERSION } from '../protocol.ts';
 import { actNotifications } from './fixtures-acts.ts';
-import { byHandle, byPubkey, EMOJI, EMOJI_SETS, emojiKey, emojiOfSet } from './people.ts';
+import { byHandle, byPubkey, byRef, EMOJI, EMOJI_SETS, emojiKey, emojiOfSet } from './people.ts';
 import { relays } from './relays.ts';
 import { ME, noteExcerpt, noteRow } from './rows.ts';
 import type { World } from './world.ts';
@@ -130,6 +130,15 @@ export function notifications(w: World, q: Query): NotificationRow[] {
 
 export function finite(w: World, q: Query): Row[] | undefined {
   switch (q.source) {
+    case 'pins':
+      return [
+        ...(w.state.pins.get(q.pubkey ?? byRef(q.ref ?? '')?.author.pubkey ?? '') ?? []),
+      ].flatMap((id) => {
+        const note = w.byId.get(id);
+        return note
+          ? [{ ...noteRow(w, note, { me: q.account ?? '', reposts: false }), pinned: true }]
+          : [];
+      });
     case 'notifications':
       return notifications(w, q);
     case 'relays':

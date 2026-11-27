@@ -7,6 +7,9 @@ use super::{
 use crate::store::{Event, Store};
 use std::collections::BTreeSet;
 pub(super) fn events(store: &Store, q: &Query, private: &PrivateLists) -> Vec<Event> {
+    if q.source == Source::Pins {
+        return super::pins::events(store, q);
+    }
     if q.source != Source::Bookmarks {
         return super::query::events(store, q);
     }

@@ -4,6 +4,14 @@
 Claude owns the interface. Account-safe and A1/A2 (972ef776) are live. [Emoji sets](emoji-sets.md) support shared shortcodes across sources.
 [Q1](engine-q1-progress.md) passed public scoring. Worker, ship and Q2-Q5 remain. [Stage 1 orchestration](orchestration-optimizer.md) adds weighted retention.
 
+## Pinned notes (2026-11-27)
+
+Protocol 18 adds [public pins](pinned-notes.md), live profile/account list reads, missing-note hydration and
+serialized one-member edits preserving unknown tags and opaque content. Pin/Unpin offers inverse Undo; a stale
+signing base is rejected. Profile keeps a separate finite section and preserves its chronological anchors/rail.
+The restrained [P3 surface](interface-profile.md#p3-pinned-notes) has paired English/Japanese strings and explicit
+pending/unavailable states. Local repository, native/Worker and frontend gates plus the real build pass; browser/Claude review remains.
+
 ## Cache reload and Home parity (2026-11-26)
 
 Home and Their Home both include the feed owner's posts. Visible Their Home follows and author metadata use the same GDSF reuse weights;
@@ -25,19 +33,7 @@ N1 centralizes kind policy and public ID/address access. Quotes carry their kind
 Shipped S4 [N2/N7](interface-view.md) adds generic/list faces and profile Articles/Lists/All; private/ephemeral events stay out. Act actions await S6.
 Lists use finite kinds. Profile Posts includes kind 6 and 16 reposts by default and saves its Show/Hide choice. All uses authored time without repost context.
 
-## Specified keys and messages (2026-11-16)
-
-Protocol 8 implements Claude's K1-K4, M1-M6 and D1 specifications with the existing paired strings and design tokens. Conversation lists, older
-private messages, one-to-one/group text, inbox settings and encrypted draft/failed-send recovery are reachable. Private bodies never enter public row
-caches or ordinary layout storage. Lock coordinates registered editors across clients before revoking plaintext; an unresponsive or expired unresolved
-editor prevents lock. The durable archive, signer and editor bounds are documented in [dm-drafts.md](dm-drafts.md), [dm-signers.md](dm-signers.md) and
-[dm-editor-locks.md](dm-editor-locks.md). No group-subject/file/reaction/delete surface was added. Strict per-page unlocking remains a recorded K2 difference.
-
-The 468 required width/theme/language captures were generated and reviewed. Fresh real-Worker UI checks passed 13 key and 16 message assertions,
-including stable inbox discovery across relay-slot rotation. All seven required gates passed; evidence and limits are in
-[interface-verification.md](interface-verification.md). Persisted browser-history pages now keep their editor lease and probe the connection on
-resume. Returning pages probe before replacing their Worker, and expired sessions restore the keyed reading window in one snapshot.
-Completed empty inbox evidence survives relay-slot rotation. Explicit stop revokes private rows, key/startup queues and projections, and closes all entry paths.
+The detailed [2026-11-16 keys/messages implementation and verification](status-messages.md) is retained separately.
 
 ## Follow-up lifetime fixes (2026-11-16)
 

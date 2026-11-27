@@ -135,6 +135,7 @@ pub(super) fn note(row: &Row, store: &Store, account: Option<&str>) -> Value {
         "counts":super::counts::note(row,store),
         "reactions":row.reactions.iter().map(super::emoji::chip).collect::<Vec<_>>(),
         "mine":{"reposted":row.own.reposted,"bookmarked":row.own.bookmarked,"own":Some(row.author.pubkey.as_str())==account}});
+    v["mine"]["pinned"] = json!(row.own.pinned);
     event_kind(&mut v, row.kind);
     if let Some(event) = store.get(&row.id) {
         if let Some((route, reference)) = super::generic_face::copy_reference(&event) {

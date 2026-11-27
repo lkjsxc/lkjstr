@@ -17,6 +17,7 @@ import {
   SELF,
   saveProfile,
 } from './people.ts';
+import { pin } from './pins.ts';
 import { retryLists } from './private-lists.ts';
 import { createDelivery } from './publication.ts';
 import { addReaction, removeReaction } from './reactions.ts';
@@ -156,6 +157,10 @@ export function createActions(core: Core) {
         if (a.on) world.state.mutes.unshift(a.target);
         core.resync(undefined, a.target.k === 'person');
         return deliver(req);
+      }
+      case 'pin': {
+        const error = pin(core, a);
+        return error ? fail(req, error) : deliver(req);
       }
       case 'bookmark':
         if (a.on) world.state.bookmarks.add(a.id);

@@ -256,7 +256,7 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
   });
   const kinds =
     kind === 'profile'
-      ? mountProfileKinds({ env, state, save, reopen: () => open() })
+      ? mountProfileKinds({ env, keeper, state, save, reopen: () => open() })
       : kind === 'channel'
         ? mountChannelDesk({ env, slot: barSlot })
         : undefined;

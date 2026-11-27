@@ -57,6 +57,7 @@ impl Session {
             "profile" if converted.as_ref().is_some_and(query::profile_posts) => {
                 converted.as_ref().map_or_else(Vec::new, |q| super::profile_posts::rows(self, sub, e, q))
             }
+            "pins"=>converted.as_ref().map(|q|crate::engine::pins::events(store,q).iter().map(|event|{let mut row=self.project_event(sub,e,q,event,None);row["pinned"]=json!(true);row}).collect()).unwrap_or_default(),
             "bookmarks"=>converted.as_ref().map(|q|crate::engine::list_events::events(store,q,&e.private_lists).iter().filter(|event|crate::kinds::policy(event.kind).openable).map(|event|self.project_event(sub,e,q,event,None)).collect()).unwrap_or_default(),
             "list"=>{
                 q.convert().map(|converted|query::events(store,&converted).into_iter().next().map(|event|crate::engine::settings::list_tags_for(&event,&e.private_lists,q.account.as_deref()).iter().filter(|t|t.first().is_some_and(|k|k=="p")).filter_map(|t|t.get(1)).filter(|p|lkjstr_protocol::is_pubkey(p)).map(|p|person(e,p,q.account.as_deref(), weights.person(p))).collect()).unwrap_or_default()).unwrap_or_default()

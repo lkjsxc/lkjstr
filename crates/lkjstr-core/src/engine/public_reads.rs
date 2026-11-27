@@ -17,6 +17,7 @@ pub fn allowed(store: &Store, private: &PrivateLists, query: &Query) -> bool {
             | Source::Search
             | Source::Hashtag
             | Source::Bookmarks
+            | Source::Pins
             | Source::List
             | Source::Relay
             | Source::Followers

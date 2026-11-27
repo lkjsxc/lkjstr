@@ -23,6 +23,7 @@ mod output_diff;
 mod output_helpers;
 mod output_patch;
 mod people;
+mod pins_state;
 mod previews;
 mod private_cache;
 mod private_lists;
@@ -66,7 +67,7 @@ impl Session {
     }
 }
 
-pub const PROTOCOL_VERSION: u32 = 17;
+pub const PROTOCOL_VERSION: u32 = 18;
 /// Adapter state is per transport client; the engine remains independent of pixels.
 #[derive(Default)]
 pub struct Session {
@@ -82,6 +83,7 @@ pub struct Session {
     pub config: Config,
     notification_states: std::collections::BTreeMap<String, notification_evidence::Cached>,
     private_states: std::collections::BTreeMap<String, private_lists::Cached>,
+    pins_states: std::collections::BTreeMap<String, pins_state::Cached>,
     searches: std::collections::BTreeMap<String, search::Cached>,
     timelines: std::collections::BTreeMap<String, timeline::Index>,
     timeline_turn: usize,

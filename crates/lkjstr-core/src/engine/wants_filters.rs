@@ -39,6 +39,7 @@ pub(super) fn requests(
         result.extend(engine::thread::comment_filters(store, q));
     }
     if let Some(account) = &q.account {
+        result.push(engine::pins::filter(account));
         let kinds: Vec<_> = [0, 3, 10000, 10003, 10002, 10030, 10063]
             .into_iter()
             .filter(|k| store.replaceable(account, *k).is_none())
@@ -108,6 +109,7 @@ pub(super) fn requests(
                 ..Default::default()
             });
         }
+        result.push(engine::pins::filter(p));
         let mut followers = NostrFilter {
             kinds: Some(vec![3]),
             limit: Some(200),
@@ -156,6 +158,17 @@ pub(super) fn requests(
                 .filter(|t| t.first().is_some_and(|k| k == "e"))
                 .filter_map(|t| t.get(1).cloned())
                 .filter(|id| lkjstr_protocol::is_event_id(id) && store.get(id).is_none()),
+        );
+    }
+    if q.source == Source::Pins {
+        ids.extend(
+            engine::pins::ids(store, q.target.as_deref())
+                .into_iter()
+                .filter(|id| {
+                    store.lease(id).is_none()
+                        && !store.verified_deleted(id)
+                        && !store.verified_expired(id)
+                }),
         );
     }
     ids.sort();

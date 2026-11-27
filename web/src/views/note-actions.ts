@@ -14,6 +14,7 @@ import { ability, abilityText, able } from './can.ts';
 import type { Quoted } from './compose-context.ts';
 import { openEmojiPicker } from './emoji-picker.ts';
 import { type HeldWhat, hold, unhold } from './held.ts';
+import { pinItems } from './note-pins.ts';
 import { copy, emojiImg, nameText, plainName, toast, unicodeEmoji } from './parts.ts';
 import type { ViewEnv } from './registry.ts';
 
@@ -262,6 +263,9 @@ export function actionRow(row: NoteRow, env: ViewEnv, chips = true): HTMLElement
             on: true,
           })),
       },
+      ...(!off
+        ? pinItems(row, env, (on) => act(env, (as) => ({ a: 'pin', as, id: row.id, on })))
+        : []),
       ...(row.mine.own && !off
         ? [{ label: t('menu.delete'), danger: true, run: publish({ k: 'delete', id: row.id }) }]
         : []),

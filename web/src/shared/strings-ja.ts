@@ -1,7 +1,20 @@
 // 日本語。英語からの逐語訳ではなく、日本語として書く。キーは strings-en.ts と同じ。
+
 import type { en } from './strings-en.ts';
 
 export const ja: Record<keyof typeof en, string> = {
+  'pins.loading': '固定された投稿を読み込み中…',
+  'pins.failed': '固定された投稿を読み込めませんでした。',
+  'pins.unavailable': '一部の固定された投稿を表示できません。',
+  'act.pin': '固定する',
+  'act.unpin': '固定を解除',
+  'note.pinned': '固定された投稿',
+  'undo.pinned': '投稿を固定しました',
+  'undo.unpinned': '固定を解除しました',
+  'pins.previous': '前の固定投稿',
+  'pins.next': '次の固定投稿',
+  'error.stale-list': '固定した投稿の一覧が更新されました。もう一度お試しください。',
+  'error.list-edit-pending': '一覧の変更への署名を待っています。',
   'compose.uploadWait': '添付ファイルのアップロードが終わるまでお待ちください。',
   'compose.uploadQueued': '添付ファイルのアップロード完了後に投稿します…',
   'compose.uploadPostFailed':

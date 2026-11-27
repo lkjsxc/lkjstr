@@ -63,6 +63,7 @@ export function renderNote(
             t(hasKey(kindKey) ? kindKey : 'kind.other', { n: row.eventKind }),
           ),
         ];
+  if (row.pinned) context.unshift(h('div', { class: 'ctx pinmark' }, t('note.pinned')));
   // In a thread what a note answers is in view, and a repost says nothing about the conversation.
   if (row.repostedBy && !(row.act && row.actOn) && !row.thread) {
     const { actors, others } = row.repostedBy;

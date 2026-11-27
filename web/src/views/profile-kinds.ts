@@ -4,6 +4,8 @@ import type { Query, Row } from '../engine/protocol.ts';
 import { h } from '../shared/h.ts';
 import { t } from '../shared/i18n.ts';
 import { rich } from './can.ts';
+import type { Keeper } from './feed-place.ts';
+import { mountProfilePins } from './profile-pins.ts';
 import type { ViewEnv } from './registry.ts';
 
 export const PROFILE_KINDS = [
@@ -22,6 +24,7 @@ const kindOf = (show: string | undefined): ProfileKind =>
 
 export function mountProfileKinds(o: {
   env: ViewEnv;
+  keeper: Keeper;
   state: { show?: string; profileReposts?: boolean };
   save(): void;
   reopen(): void;
@@ -31,6 +34,7 @@ export function mountProfileKinds(o: {
   query(): Partial<Query>;
   dispose(): void;
 } {
+  const pins = mountProfilePins(o.env, o.keeper);
   const bar = h('div', { class: 'pkinds', role: 'tablist' });
   const includesReposts = (): boolean => o.state.profileReposts !== false;
   const repostButtons = [true, false].map((value) =>
@@ -134,7 +138,11 @@ export function mountProfileKinds(o: {
     o.reopen();
   });
   return {
-    remember,
+    remember() {
+      remember();
+      // Outer profile redraws dispose their descendants; the pin view owns these nodes.
+      pins.detach();
+    },
     seat(header, row) {
       if (!on || !header || row?.kind !== 'profile') {
         reposts.remove();
@@ -147,6 +155,7 @@ export function mountProfileKinds(o: {
         position();
       }
       seatReposts();
+      pins.seat(header, row);
       if (reveal || restore) schedule();
     },
     query: () => {
@@ -155,6 +164,7 @@ export function mountProfileKinds(o: {
     },
     dispose() {
       off();
+      pins.dispose();
       resized.disconnect();
       bar.removeEventListener('scroll', remember);
       if (frame) cancelAnimationFrame(frame);

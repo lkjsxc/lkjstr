@@ -139,7 +139,7 @@ impl Network {
             && requests.iter().all(|r| {
                 r.asked
                     // Live inbox/joined-list rotation keeps completed absence evidence.
-                    && (r.eose || (matches!(kind, 10005 | 10050) && r.page_eose))
+                    && (r.eose || (matches!(kind, 10001 | 10005 | 10050) && r.page_eose))
                     && r.received.len() < r.page_limit
                     && r.received.iter().all(|id| {
                         store

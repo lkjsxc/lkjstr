@@ -180,7 +180,7 @@ export function createEngine(transport: Transport): Engine {
     status,
     info,
     me: () => accounts.get().active ?? '',
-    open(query, handlers, owner) {
+    open(query, handlers, owner, options) {
       const id = `s${++serial}`;
       let reading: string | null | undefined;
       subs.set(id, handlers);
@@ -190,7 +190,7 @@ export function createEngine(transport: Transport): Engine {
         t: 'open',
         sub: id,
         query,
-        ...(query.privateLists ? { visible: false } : {}),
+        ...((options?.visible ?? !query.privateLists) ? {} : { visible: false }),
       });
       return {
         id,

@@ -13,7 +13,7 @@ impl Network {
                 let q = queries.get(member);
                 let own = member == "~account-discovery"
                     || member.starts_with("~publication:")
-                    || member.starts_with("~channel-action:")
+                    || member.starts_with("~list-action:")
                     || member.starts_with("~dm-list:")
                     || q.and_then(|q| q.account.as_ref()).is_some_and(|account| {
                         r.filter.authors.as_deref() == Some(std::slice::from_ref(account))
@@ -21,7 +21,14 @@ impl Network {
                                 ks.iter().all(|k| {
                                     matches!(
                                         k,
-                                        0 | 3 | 10000 | 10002 | 10003 | 10005 | 10030 | 10063
+                                        0 | 3
+                                            | 10000
+                                            | 10001
+                                            | 10002
+                                            | 10003
+                                            | 10005
+                                            | 10030
+                                            | 10063
                                     )
                                 })
                             })

@@ -15,6 +15,7 @@ impl Query {
             "search" => p::Source::Search,
             "hashtag" => p::Source::Hashtag,
             "bookmarks" => p::Source::Bookmarks,
+            "pins" => p::Source::Pins,
             "list" => p::Source::List,
             "relay" => p::Source::Relay,
             "followers" => p::Source::Followers,
@@ -51,6 +52,9 @@ impl Query {
             } else {
                 resolved.as_ref()?.0.clone()
             });
+        }
+        if source == p::Source::Pins && !target.as_deref().is_some_and(lkjstr_protocol::is_pubkey) {
+            return None;
         }
         Some(p::Query {
             source,
@@ -113,7 +117,9 @@ fn resolve_reference(raw: &str, source: p::Source) -> Option<(String, Vec<String
         NostrEntity::Npub(pubkey) => (pubkey, None),
         NostrEntity::Nprofile(pointer) => (
             pointer.pubkey,
-            pointer.relays.filter(|_| source == p::Source::Profile),
+            pointer
+                .relays
+                .filter(|_| matches!(source, p::Source::Profile | p::Source::Pins)),
         ),
         NostrEntity::Note(id) => (id, None),
         NostrEntity::Nevent(pointer) => {

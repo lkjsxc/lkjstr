@@ -1,4 +1,4 @@
-//! Explicit channel edits own their lookup until ready or the 20-second deadline.
+//! Explicit list edits own their lookup until ready or the 20-second deadline.
 use super::{
     Engine,
     protocol::{Action, Query, Source},
@@ -8,6 +8,15 @@ pub(super) struct Pending {
     account: String,
     action: Action,
     deadline: u64,
+}
+impl Pending {
+    fn kind(&self) -> u64 {
+        if matches!(self.action, Action::Pin { .. }) {
+            10001
+        } else {
+            10005
+        }
+    }
 }
 impl Engine {
     pub(super) fn defer_channel_action(
@@ -35,21 +44,26 @@ impl Engine {
         let accounts = self
             .channel_pending
             .values()
-            .map(|p| p.account.clone())
+            .map(|p| (p.account.clone(), p.kind()))
             .collect::<std::collections::BTreeSet<_>>();
         accounts
             .into_iter()
-            .map(|account| {
+            .map(|(account, kind)| {
                 (
-                    format!("~channel-action:{account}"),
+                    format!("~list-action:{kind}:{account}"),
                     NostrFilter {
                         authors: Some(vec![account.clone()]),
-                        kinds: Some(vec![10005]),
+                        kinds: Some(vec![kind]),
                         limit: Some(1),
                         ..Default::default()
                     },
                     Query {
-                        source: Source::Channels,
+                        source: if kind == 10001 {
+                            Source::Pins
+                        } else {
+                            Source::Channels
+                        },
+                        target: Some(account.clone()),
                         account: Some(account),
                         ..Default::default()
                     },
@@ -63,8 +77,8 @@ impl Engine {
             .iter()
             .filter(|(_, p)| {
                 now >= p.deadline
-                    || self.store.replaceable(&p.account, 10005).is_some()
-                    || self.network.list_loaded(&self.store, &p.account, 10005)
+                    || self.store.replaceable(&p.account, p.kind()).is_some()
+                    || self.network.list_loaded(&self.store, &p.account, p.kind())
             })
             .map(|(req, _)| req.clone())
             .collect::<Vec<_>>();

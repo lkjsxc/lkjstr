@@ -4,15 +4,18 @@ import type { Subscription } from '../engine/client.ts';
 export function createPreviewWants(
   el: HTMLElement,
   sub: () => Pick<Subscription, 'id' | 'near'> | undefined,
+  viewport: HTMLElement = el,
 ): { sync(): void; dispose(): void } {
+  el.dataset.previewScope = 'true';
   let frame = 0;
   let previous = '';
   const read = (): void => {
     frame = 0;
-    const bounds = el.getBoundingClientRect();
+    const bounds = viewport.getBoundingClientRect();
     const ids = new Set<string>(); // bound: the engine accepts at most 32 near IDs per view
     if (bounds.height)
       for (const n of el.querySelectorAll<HTMLElement>('[data-previews]')) {
+        if (n.closest('[data-preview-scope]') !== el) continue;
         const id = n.dataset.previews;
         if (!id || ids.has(id) || (n.matches('.note') && !n.querySelector('.content'))) continue;
         const rect = n.getBoundingClientRect();
@@ -33,16 +36,18 @@ export function createPreviewWants(
   const sync = (): void => {
     if (!frame) frame = requestAnimationFrame(read);
   };
-  el.addEventListener('scroll', sync, { passive: true });
+  viewport.addEventListener('scroll', sync, { passive: true });
   el.addEventListener('note-content-changed', sync);
   const sizes = new ResizeObserver(sync);
   sizes.observe(el);
+  if (viewport !== el) sizes.observe(viewport);
   return {
     sync,
     dispose: () => {
       cancelAnimationFrame(frame);
       sizes.disconnect();
-      el.removeEventListener('scroll', sync);
+      viewport.removeEventListener('scroll', sync);
+      delete el.dataset.previewScope;
       el.removeEventListener('note-content-changed', sync);
       sub()?.near([]);
     },

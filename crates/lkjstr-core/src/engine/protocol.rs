@@ -120,6 +120,7 @@ pub enum Source {
     Search,
     Hashtag,
     Bookmarks,
+    Pins,
     List,
     Relay,
     Followers,
@@ -188,6 +189,10 @@ pub enum Action {
         value: bool,
     },
     Bookmark {
+        id: String,
+        value: bool,
+    },
+    Pin {
         id: String,
         value: bool,
     },

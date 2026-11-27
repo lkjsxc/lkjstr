@@ -52,6 +52,14 @@ impl Engine {
                     q.filters.relay_hints.dedup();
                     q.filters.relay_hints.truncate(8);
                 }
+                if q.source == Source::Pins && f.ids.is_some() {
+                    q.filters
+                        .relay_hints
+                        .extend(super::pins::relays(&self.store, q.target.as_deref()));
+                    q.filters.relay_hints.sort();
+                    q.filters.relay_hints.dedup();
+                    q.filters.relay_hints.truncate(8);
+                }
                 let owner = if f.kinds.as_deref() == Some(&[5])
                     || (q.source != Source::Thread
                         && f.tags.contains_key("e")

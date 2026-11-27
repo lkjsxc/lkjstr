@@ -25,7 +25,7 @@ impl Engine {
             return;
         }
         match self.build(&account, action.clone(), now / 1000) {
-            Ok((event, profile_base_id)) => {
+            Ok((event, replaceable_base_id)) => {
                 if crate::kinds::policy(event.kind).serialized_write
                     && self
                         .signing
@@ -46,7 +46,7 @@ impl Engine {
                     Signing {
                         event: event.clone(),
                         deadline,
-                        profile_base_id,
+                        replaceable_base_id,
                         note_key: None,
                     },
                 );
@@ -60,7 +60,9 @@ impl Engine {
             Err("list-not-loaded")
                 if matches!(
                     action,
-                    Action::ChannelJoin { .. } | Action::ChannelSave { id: None, .. }
+                    Action::ChannelJoin { .. }
+                        | Action::ChannelSave { id: None, .. }
+                        | Action::Pin { .. }
                 ) =>
             {
                 self.defer_channel_action(req, account, action, now);
@@ -173,6 +175,10 @@ impl Engine {
                 e.kind = 10003;
                 self.edit_list(&mut e, "e", id, value)?;
             }
+            Action::Pin { id, value } => {
+                profile_base = self.store.replaceable(account, 10001);
+                super::pins::edit(self, &mut e, &id, value)?;
+            }
             Action::ProfileSave { content } => {
                 e.kind = 0;
                 profile_base = self.store.replaceable(account, e.kind);
@@ -220,7 +226,7 @@ impl Engine {
                 .clone()
                 .or_else(|| self.store.replaceable(account, e.kind))
         {
-            if e.kind == 0 && previous.created_at == u64::MAX {
+            if matches!(e.kind, 0 | 10001) && previous.created_at == u64::MAX {
                 return Err("rejected");
             }
             e.created_at = e.created_at.max(previous.created_at.saturating_add(1));

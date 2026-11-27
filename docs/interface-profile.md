@@ -1,4 +1,4 @@
-# Profile editing
+# Profile
 
 ## Purpose
 
@@ -77,3 +77,41 @@ Posts includes the person's kind 6 and 16 reposts by default. One copy of the or
 matching placement, with the same repost context as Home and the original as the target of note actions.
 Posts keeps its own Reposts Show/Hide choice, drawn with the existing filter segments above the kind tabs.
 The choice is saved with the profile tab. The existing Reposts tab still lists the person's repost activity.
+
+## P3 Pinned notes
+
+State: local gates and real build pass; lead-owned browser/Claude review pending. The 2026-11-27
+pinned-notes assignment authorizes this restrained surface. Protocol details are in [pinned-notes.md](pinned-notes.md).
+
+### Placement and controls
+
+- Profile keeps a separate finite pins section at the end of its scrolling header, below the kind tabs and
+  above chronological notes. Use the ordinary note face, a thin separator, and the quiet `note.pinned` context
+  line. No new colour, shadow, floating header or rail.
+- The section reads the profile owner's public list, including on another person's profile or while signed
+  out. It starts with 20 notes in list order; `pins.previous` and `pins.next` page through bounded windows with
+  one boundary note. The chronological feed and its reading position keep their existing ordering.
+- In an active writable account's own kind-1 note More menu, `act.pin` becomes `act.unpin` when
+  `mine.pinned` is true. Other events and other people's notes do not offer Pin. Engines below protocol 18
+  receive neither the action nor the paired pins query.
+- A successful action uses the existing Undo toast, `undo.pinned` or `undo.unpinned`. Undo sends the inverse
+  action for the captured account and is inert after switching accounts. A failure uses the existing action
+  error treatment; `error.stale-list` invites a fresh try and `error.list-edit-pending` names the signature wait.
+
+### Read states and lifetime
+
+- Unknown or pending references: `pins.loading`, even after the list itself made the relay phase live.
+- Unavailable references after lookup: `pins.unavailable`, alongside any notes that did resolve.
+- Failed list read: `pins.failed`. A settled empty list takes no room.
+- Every key is present in English and Japanese. Use the paired string tables, including the section's
+  accessible `note.pinned` name, instead of literal visible text.
+- Header redraws preserve the intact nested note bodies and controls. The paired query opens hidden and is
+  activated only for a visible profile. Hiding pauses audio and releases its read ownership; account changes
+  reopen it; unmounting closes it. Pin placement is excluded from
+  persisted public windows, while ordinary note membership updates with fresh engine rows.
+
+### Review scenes
+
+Own profile with two pins out of chronological order, another person's pins, Pin and Unpin menus, success
+with Undo, delayed references, partial unavailable references, failed list read and settled empty list. The
+lead's later browser and Claude review covers 1440 dark and 390 light; no captures are claimed here.

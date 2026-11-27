@@ -166,7 +166,7 @@ pub const fn policy(kind: u64) -> KindPolicy {
             // Existing account/list metadata does not acquire wall-clock expiry.
             p.expires = false;
             p.monotonic_write = true;
-            p.serialized_write = matches!(kind, 10000 | 10003 | 10005);
+            p.serialized_write = matches!(kind, 10000 | 10001 | 10003 | 10005);
             p.feeds = match kind {
                 10000 => Feed::Mutes as u16,
                 10003 => Feed::Bookmarks as u16,

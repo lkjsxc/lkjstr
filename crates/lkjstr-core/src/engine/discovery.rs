@@ -1,4 +1,4 @@
-//! Five independent records per device account and route; at most 32 accounts.
+//! Six independent records per device account and route; at most 32 accounts.
 use super::{
     Engine,
     protocol::{Query, Source},
@@ -91,7 +91,7 @@ impl Engine {
             .iter()
             .flat_map(|account| {
                 self.network.relay_order.iter().flat_map(move |relay| {
-                    [0, 3, 10000, 10002, 10063].map(|kind| {
+                    [0, 3, 10000, 10001, 10002, 10063].map(|kind| {
                         (
                             "~account-discovery".into(),
                             NostrFilter {

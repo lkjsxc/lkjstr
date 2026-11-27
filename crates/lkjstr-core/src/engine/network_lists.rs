@@ -1,4 +1,4 @@
-//! A visible owner's Home watches its public follows/mutes; other list lookups stay finite.
+//! Their Home follows and mutes, and explicit pin watches, stay live while owned.
 use super::*;
 pub(super) fn views(wants: &[(String, NostrFilter, Query)]) -> BTreeMap<String, String> {
     // Bound: the engine's at most 128 visible views, with no account authority.
@@ -13,10 +13,16 @@ pub(super) fn watch(
     members: &BTreeSet<String>,
     views: &BTreeMap<String, String>,
 ) -> bool {
-    matches!(f.kinds.as_deref(), Some([3] | [10000]))
-        && f.authors.as_deref().is_some_and(|authors| {
+    match f.kinds.as_deref() {
+        // Account discovery already owns a live tail and keeps its quiet settled-slot policy.
+        Some([10001]) if f.since.is_none() && f.until.is_none() => members
+            .iter()
+            .any(|sub| !sub.starts_with('~') || sub.starts_with("~list-action:")),
+        Some([3] | [10000]) => f.authors.as_deref().is_some_and(|authors| {
             authors.len() == 1 && members.iter().any(|sub| views.get(sub) == authors.first())
-        })
+        }),
+        _ => false,
+    }
 }
 impl Request {
     pub(super) fn watch_list(&mut self, live: bool, now: u64) -> bool {

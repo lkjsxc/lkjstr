@@ -98,6 +98,12 @@ pub enum Action {
         id: String,
         on: bool,
     },
+    Pin {
+        #[serde(rename = "as")]
+        account: String,
+        id: String,
+        on: bool,
+    },
     #[serde(rename = "profile.save")]
     ProfileSave {
         #[serde(rename = "as")]

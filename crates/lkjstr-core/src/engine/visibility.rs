@@ -62,6 +62,7 @@ pub(super) fn covered_row(store: &Store, event: &NostrEvent, reason: Reason) -> 
         own: rows::Own {
             reposted: false,
             bookmarked: false,
+            pinned: false,
             muted: false,
         },
         hidden_reason: Some(reason),
@@ -129,6 +130,7 @@ pub(super) fn deletion_filter(
             | Source::Thread
             | Source::Channel
             | Source::Bookmarks
+            | Source::Pins
             | Source::Profile
     ) {
         return None;

@@ -69,7 +69,9 @@ export function snapshotSafe(row: Row): boolean {
     return row.expiresAt === undefined && (!row.note || snapshotSafe(row.note));
   return (
     row.kind !== 'note' ||
-    (!hasAbsoluteReadingTime(row) &&
+    // Pin placement is authoritative list state, never a retained chronological reading anchor.
+    (!row.pinned &&
+      !hasAbsoluteReadingTime(row) &&
       !row.revealed &&
       !row.hidden?.detail &&
       row.expiresAt === undefined)

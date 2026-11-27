@@ -35,7 +35,8 @@
 /** 13: engine-authorized public rendering snapshots, independent of the protected event store. */
 /** 14: bounded act chains, profile act context and unresolved notification states. */
 /** 15: bounded absolute cache windows and current follow-list provenance. */
-export const PROTOCOL_VERSION = 17;
+/** 18: public NIP-51 pins, merge-safe own-note pin actions, and per-row pin state. */
+export const PROTOCOL_VERSION = 18;
 
 /** Chosen by the interface, unique among its open subscriptions. */
 export type SubId = string;
@@ -63,6 +64,7 @@ export type Source =
   | 'search' // `text` is the search; note rows, with matching people first as person rows
   | 'hashtag'
   | 'bookmarks'
+  | 'pins' // public kind-10001 e tags for pubkey/ref, in list order; separate from chronology
   | 'list' // a NIP-51 people list or set, by `id`
   | 'relay' // one `RelayRow` first (key `relay:<url>`), then the notes that relay itself served, by `relay`
   | 'followers' // person rows
@@ -357,10 +359,13 @@ export type NoteRow = {
   readonly cw?: string;
   readonly counts: Counts;
   readonly reactions: readonly Reaction[];
+  /** This row is in a profile's separate pinned section. */
+  readonly pinned?: boolean;
   /** The reader's own state. */
   readonly mine: {
     readonly reposted: boolean;
     readonly bookmarked: boolean;
+    readonly pinned?: boolean;
     /** The reader wrote it (delete is offered). */
     readonly own: boolean;
   };
@@ -626,6 +631,8 @@ export type SubState = {
   }[];
   /** Receipt/read evidence is independent of the relay lifecycle below. */
   readonly zapEvidence?: ZapEvidence;
+  /** Public pin references still resolving, or resolved without a displayable event. Independent of relay phase. */
+  readonly pins?: { readonly pending: number; readonly unavailable: number };
   readonly privateLists?: {
     readonly phase: 'loading' | 'ready' | 'failed' | 'unsupported';
     readonly pending: number;
@@ -775,6 +782,8 @@ export type Action =
   /** `on: false` takes a mute back. Either way the `mutes` rows and every open list are patched at once. */
   | { readonly a: 'mute'; readonly as: Pubkey; readonly target: MuteTarget; readonly on: boolean }
   | { readonly a: 'bookmark'; readonly as: Pubkey; readonly id: string; readonly on: boolean }
+  /** Change one public pin in the latest verified own list; Undo sends its inverse. */
+  | { readonly a: 'pin'; readonly as: Pubkey; readonly id: string; readonly on: boolean }
   /** `bytes` is transferred, not copied. Answered by `progress` messages and a `result` with `uploaded`. */
   | {
       readonly a: 'upload';
@@ -849,6 +858,8 @@ export type Failure = {
     | 'no-relays'
     | 'relay-unreachable'
     | 'rejected'
+    | 'stale-list'
+    | 'list-edit-pending'
     | 'too-large'
     | 'unsupported'
     | 'offline'

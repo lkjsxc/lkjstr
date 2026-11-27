@@ -2,6 +2,21 @@
 ## Purpose
 Additive protocol ledger under the 2026-11-16 owner delegation. See status.md and parity.md for current behavior and limits.
 See [history](engine-proposals-history.md), [emoji](engine-proposals-emoji.md), and [optimizer](orchestration-optimizer.md#scheduler-hints).
+## Protocol 18 pinned notes (2026-11-27, assignment authorized)
+
+- `Query.source: 'pins'` reads public kind-10001 `e` members for `pubkey/ref` in list order, separately from Profile chronology.
+- `Action.pin {as,id,on}` edits one own-list membership; Undo applies its inverse to the latest verified list.
+- `NoteRow.pinned?` marks a row's finite pins-section placement and excludes that placement from persisted snapshots.
+- `NoteRow.mine.pinned?` carries the active account's public pin membership on ordinary and pinned rows.
+- `SubState.pins? {pending,unavailable}` reports unresolved or unusable public references independently of relay phase.
+- `Failure.code: stale-list` rejects a signature prepared against a replaced or removed kind-10001 base.
+- `Failure.code: list-edit-pending` reports another serialized list edit awaiting its signer.
+- `Engine.open(query,receive,owner?,{visible?})` supplies initial visibility atomically through the existing protocol-10 `open.visible` field.
+
+See [pinned-notes.md](pinned-notes.md) for merge preservation, ownership, bounds and local validation scope.
+
+## Protocol 17 generic public views
+
 - Protocol 17 (S4): `NoteRow.face?` carries bounded `{type:'generic', alt?, form, tags, moreTags}`. `GenericTagLine.ref?` carries typed public references.
 - Protocol 17 (S4): `NoteRow.copyLink?` carries the canonical path `/n/nevent` (kind/author) or `/a/naddr` (exact address); `bech32` and Copy ID are unchanged.
 - `NoteRow.shareEvent?` carries an exact public nevent with the author, kind and up to three observed relay hints for sharing.
@@ -9,29 +24,8 @@ See [history](engine-proposals-history.md), [emoji](engine-proposals-emoji.md), 
 - `NoteRow.hidden.reason` and `revealed.reason` add `their-muted-person`, `their-muted-thread`, `their-muted-word`, `their-muted-hashtag`.
   These name the viewed Home owner's public policy and remain distinct from viewer reasons.
 - `Quote.reason?` carries the same scoped hidden reason when `state:'muted'`; no body is included.
-## Protocol 6 engine additions (2026-11-16, owner authorized)
-- `ToEngine.dm.open {sub,query:DmQuery}` adds an explicit private subscription.
-- `ToEngine.dm.close {sub}` releases a private subscription and its wants.
-- `ToEngine.dm.visible {sub,visible}` controls private work while preserving the displayed query anchor.
-- `ToEngine.dm.more {sub}` advances encrypted history on the existing private query.
-- `ToEngine.crypted {req,value?,error?}` answers correlated signer crypto without event parsing.
-- `FromEngine.dm {sub,snapshot:DmSnapshot}` delivers private data outside public rows.
-- `FromEngine.crypt {req,pubkey,peer,operation,data}` requests NIP-44 encrypt/decrypt or NIP-04 decrypt.
-- `Action.dm.send {as,draft:DmDraft}` prepares and routes one encrypted wrap per participant.
-- `Action.dm.seen {as,conversation}` durably records local conversation read state.
-- `Action.dm.relays.save {as,relays}` publishes the account's DM inbox relay list.
-- `DmQuery {account,conversation?,before?,limit?}` defines private account and cursor selection.
-- `DmDraft {recipients,text,replyTo?,subject?}` defines private text without public mention parsing.
-- `DmMessage {id,conversation,author,participants,at,text,replyTo,subject,legacy,unread}` supplies finished text and milliseconds.
-- `DmConversation {key,participants,last,unread}` summarizes locally observed private messages.
-- `DmSnapshot {account,conversations,messages,more,undecryptable,phase,error?}` carries bounded rows and honest private read state.
-- `Action.account.importEncrypted {key,password}` imports an ncryptsec into ciphertext-only storage.
-- `Action.account.unlock {pubkey,password}` unlocks a local encrypted key for this Worker session.
-- `Action.account.lock {pubkey}` drops the unlocked key and decrypted private-message memory.
-- `Action.account.exportEncrypted {pubkey,password,logN?}` explicitly creates an ncryptsec backup.
-- `Result.encryptedKey?` carries only the explicitly requested encrypted backup.
-- `Account.encrypted?` identifies ciphertext-backed local storage.
-- `Account.locked?` identifies an account requiring session unlock.
+
+Protocol 6 private-message, signer and account additions are retained in [the early DM ledger](engine-proposals-dm.md).
 ## Protocol 7 lifetime additions (2026-11-16, owner authorized)
 - `ToEngine.dm.open.visible?` supplies initial private visibility atomically; omission keeps the existing visible default.
 - `ToEngine.upload.cancel {req}` cancels only that client's pending upload request and its authorization, HTTP and processing waits.

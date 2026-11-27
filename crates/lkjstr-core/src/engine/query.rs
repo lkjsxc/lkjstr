@@ -45,6 +45,7 @@ pub fn filter(store: &Store, q: &Query) -> NostrFilter {
             authors.dedup();
             f.authors = Some(authors);
         }
+        Source::Pins => return super::pins::filter(&target),
         Source::Profile => {
             f.authors = Some(vec![target]);
             f.kinds = Some(match q.filters.show.as_deref() {
@@ -159,6 +160,12 @@ fn select_projected<T>(
     let authored = |event: Event| project(event, None);
     if signed_out(q) {
         return vec![];
+    }
+    if q.source == Source::Pins {
+        return super::pins::events(store, q)
+            .into_iter()
+            .map(authored)
+            .collect();
     }
     if matches!(q.source, Source::Channels | Source::People) {
         return vec![];

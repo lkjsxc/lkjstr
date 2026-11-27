@@ -1,11 +1,14 @@
 import { afterEach, expect, it, vi } from 'vitest';
 import type { Row } from '../src/engine/protocol.ts';
 import { setLang } from '../src/shared/i18n.ts';
-import { createSignal } from '../src/shared/signal.ts';
+import type { Keeper } from '../src/views/feed-place.ts';
 import { mountProfileKinds } from '../src/views/profile-kinds.ts';
-import type { ViewEnv } from '../src/views/registry.ts';
+import { account, vaultEnv } from './vault-ui-fixture.ts';
+
+const cleanup: (() => void)[] = [];
 
 afterEach(() => {
+  for (const dispose of cleanup.splice(0)) dispose();
   document.body.replaceChildren();
   vi.unstubAllGlobals();
   setLang('en');
@@ -34,11 +37,12 @@ function fixture(attached = true) {
   );
   let header = document.createElement('section');
   if (attached) document.body.append(header);
-  const row = { kind: 'profile' } as Row;
+  const row = { kind: 'profile', author: account().author } as Row;
   const state = { show: 'all' };
-  const env = {
-    engine: { info: createSignal({ engine: 'test', version: 3 }) },
-  } as unknown as ViewEnv;
+  const fixture = vaultEnv({}, 3);
+  cleanup.push(fixture.dispose);
+  const env = fixture.env;
+  const keeper = { set() {} } as unknown as Keeper;
   let bar: HTMLElement;
   const buttons = (): void => {
     for (const [i, button] of [...bar.querySelectorAll<HTMLElement>('.pkind')].entries()) {
@@ -46,7 +50,7 @@ function fixture(attached = true) {
       button.getBoundingClientRect = () => new DOMRect(10 + i * 70 - bar.scrollLeft, 0, 70, 30);
     }
   };
-  const kinds = mountProfileKinds({ env, state, save() {}, reopen: buttons });
+  const kinds = mountProfileKinds({ env, keeper, state, save() {}, reopen: buttons });
   kinds.seat(header, row);
   bar = header.querySelector<HTMLElement>('.pkinds')!;
   let left = 0;

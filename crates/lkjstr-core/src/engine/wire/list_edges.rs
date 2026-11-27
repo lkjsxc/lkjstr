@@ -10,6 +10,7 @@ pub(super) fn finite(source: Option<Source>) -> bool {
                 | Source::List
                 | Source::People
                 | Source::Bookmarks
+                | Source::Pins
                 | Source::MediaServers
                 | Source::Emoji
                 | Source::Relays
@@ -33,6 +34,20 @@ pub(super) fn projected(source: Source) -> bool {
 pub(super) fn settled(q: Option<&super::Query>, e: &crate::engine::Engine) -> bool {
     if let Some(q) = q.filter(|q| q.source == "emoji") {
         return crate::engine::emoji::settled(e, q.account.as_deref());
+    }
+    if let Some(q) = q.filter(|q| q.source == "pins") {
+        return crate::engine::pins::ids(
+            &e.store,
+            q.convert().as_ref().and_then(|q| q.target.as_deref()),
+        )
+        .iter()
+        .all(|id| {
+            e.store.lease(id).is_some()
+                || e.store.verified_deleted(id)
+                || e.store.verified_expired(id)
+                || e.network.lookup_complete(id)
+                || e.network.lookup_failed(id)
+        });
     }
     let Some(q) = q.filter(|q| q.source == "bookmarks") else {
         return true;

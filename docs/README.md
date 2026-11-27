@@ -28,12 +28,14 @@ Engine (`crates/`):
 - [media-uploads.md](media-uploads.md): destinations, failure/retry, bounds and proof.
 - [client-attribution.md](client-attribution.md) explains note tags, app information and opt-out.
 - [channels.md](channels.md): NIP-28 sources, actions, bounds and verification.
+- [pinned-notes.md](pinned-notes.md): public pin lists, safe edits, Profile placement and read ownership.
 - [zaps.md](zaps.md): provider-authorized receipts, unpaid invoice intents, lifetime and bounds.
 - [engine-zap-verification.md](engine-zap-verification.md): zap integration gates and runtime regressions.
 - [protocol3.md](protocol3.md): rich filters, notifications, profile kinds and gates.
 - [search.md](search.md): retained people, note-only windows, language arrays and verification.
 - [unavailable-reposts.md](unavailable-reposts.md): note quota, Fresh and owned target hydration evidence.
 - [status.md](status.md): what works, what does not, next steps in order.
+- [status-messages.md](status-messages.md): preserved 2026-11-16 keys and messages status.
 - [outbox.md](outbox.md): read cursors, durable quality, focus, weights and purposes.
 - [cover.md](cover.md): hydration traffic, duplicate resumption, public medians and gaps.
 - [engine-q1-progress.md](engine-q1-progress.md): exact sharing, finite page correctness and read-plan evidence.
@@ -86,6 +88,7 @@ Engine (`crates/`):
 - [engine-retained-diff.md](engine-retained-diff.md): retained-window diff cost and bounded key lookup.
 - [engine-thread-order.md](engine-thread-order.md): relationship order across timestamp ties and clock skew.
 - [engine-proposals.md](engine-proposals.md): protocol proposals and their outcome.
+- [engine-proposals-dm.md](engine-proposals-dm.md): preserved Protocol 6 private-message additions.
 - [engine-proposals-emoji.md](engine-proposals-emoji.md): private emoji collision fields and provenance.
 - [signing-latency.md](signing-latency.md): public signing timings and Worker contention.
 - [engine-proposals-history.md](engine-proposals-history.md): preserved earlier protocol additions.

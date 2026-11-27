@@ -1,5 +1,17 @@
 // English. The keys of this table are the keys of every language.
 export const en = {
+  'pins.loading': 'Loading pinned notes…',
+  'pins.failed': 'Pinned notes could not be loaded.',
+  'pins.unavailable': 'Some pinned notes are unavailable.',
+  'act.pin': 'Pin',
+  'act.unpin': 'Unpin',
+  'note.pinned': 'Pinned',
+  'undo.pinned': 'Note pinned',
+  'undo.unpinned': 'Note unpinned',
+  'pins.previous': 'Previous pinned notes',
+  'pins.next': 'Next pinned notes',
+  'error.stale-list': 'The pinned list changed. Try again.',
+  'error.list-edit-pending': 'A list change is still waiting for a signature.',
   'compose.uploadWait': 'Wait for the attachments to finish uploading.',
   'compose.uploadQueued': 'Posting once attachments finish uploading…',
   'compose.uploadPostFailed': 'Post canceled because an attachment failed or was removed.',
