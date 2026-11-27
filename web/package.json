@@ -9,7 +9,7 @@
     "serve": "node scripts/serve.ts",
     "check": "node scripts/check.ts",
     "package": "node scripts/package.ts",
-    "smoke": "node scripts/build.ts && node scripts/smoke-phone-fields.ts && node scripts/smoke.ts && node scripts/smoke-note-layout.mjs && pnpm build:real && PATH=\"$HOME/.cargo/bin:$PATH\" node scripts/smoke-upload.mjs && node scripts/smoke-offline.mjs && pnpm smoke:lived-in",
+    "smoke": "node scripts/build.ts && node scripts/smoke-phone-fields.ts && node scripts/smoke-feed-overlap.ts && node scripts/smoke.ts && node scripts/smoke-note-layout.mjs && pnpm build:real && PATH=\"$HOME/.cargo/bin:$PATH\" node scripts/smoke-upload.mjs && node scripts/smoke-offline.mjs && pnpm smoke:lived-in",
     "shots": "node scripts/build.ts && node scripts/shots.ts",
     "test": "vitest run",
     "fix": "biome check --write .",

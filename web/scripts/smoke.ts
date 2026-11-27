@@ -1970,13 +1970,10 @@ async function pages(browser: Browser, still: Record<string, unknown>): Promise<
   // Settings: the lists, each removal undoable.
   await menu('Settings');
   const set = '.view[data-kind="settings"]';
-  await page.locator(`${set} .srow`).first().waitFor();
-  const srows = (): Promise<number> => count(page, `${set} .srow:not(.rrow)`);
-  fact(
-    'settings: muted people, words, hashtags and the media servers',
-    (await srows()) === 5,
-    await srows(),
-  );
+  const settingsRows = page.locator(`${set} .srow:not(.rrow)`);
+  await settingsRows.nth(4).waitFor();
+  const liveRows = await settingsRows.count();
+  fact('settings: muted people, words, hashtags and the media servers', liveRows === 5, liveRows);
   await page.locator(`${set} .ssearch input`).fill('ミュート');
   fact(
     'settings: the lists are found in either language',

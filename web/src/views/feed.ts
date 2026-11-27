@@ -62,6 +62,7 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
   const keeper = createKeeper({
     el,
     list,
+    translate: (px) => el.style.setProperty('--feed-shift', px ? `${px}px` : ''),
     stretch: kind === 'thread' ? undefined : tail,
     saved: state.pos,
     active: () => el.isConnected && env.visible.get(),
@@ -224,9 +225,9 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
     moved: () => (keeper.read(), follow()),
     top: () => (moment ? void (el.scrollTop = 0) : toTop()), // a moment's top: its first drawn row
   });
-  el.classList.add('feed');
   const pin = h('div', { class: 'fpin' }, fresh.el);
-  el.replaceChildren(barSlot, pin, ...(drafts ? [drafts.el] : []), list, status, tail);
+  const content = h('div', { class: 'feed-content' }, barSlot, pin, drafts?.el, list);
+  el.classList.add('feed'), el.replaceChildren(content, status, tail);
   const rail = mountTimeRail({
     candidate: () => RAILED.has(kind) && !moment && (kind !== 'global' || Boolean(account)),
     version: () => env.engine.info.get()?.version ?? 5,

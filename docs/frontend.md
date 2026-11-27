@@ -46,6 +46,8 @@ Seams worth knowing inside `src/views/`:
   profile kinds and records pending scroll before redraw. `docs.ts` is one Documentation page with contents first,
   shortcuts and release facts from `pages.ts`. `wm/tab-search.ts` finds
   a tab. `media.ts` is a picture tab: `zoom.ts` its map-like gestures, `zoom-handle.ts` the percentage handle.
+- The feed maintainer checks the filter, rows, new-notes pill and time rail together during rapid scrolling. The
+  overlap smoke drives a prepend, pane resize and window trim in desktop Chromium and iPhone WebKit emulation.
 - `thread.ts` is a thread tab's own part of `feed.ts`: `thread-plan.ts` arranges its rows (compact notes above,
   folds, the room of a missing note, grouped replies), `thread-parts.ts` draws what is not a note, the reply
   field is the composer under `:say`, and `note-thread.ts` is what a note in a thread draws differently.

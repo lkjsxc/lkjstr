@@ -200,8 +200,8 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
 - The reading position is an anchor note plus offset: it survives reload,
   another tile width, a moved or reopened tab, late media.
   While the reader moves the list (a finger on it, or a scroll in the last 150ms), nothing writes the scroll, so a
-  fling coasts on (owner, 2026-11-25): rows above that change height shift the list instead, and the shift goes into
-  the scroll once the list rests (owner, 2026-11-26).
+  fling coasts on (owner, 2026-11-25). Anchor corrections move the filter and rows together. The new-notes pill and
+  time rail stay pinned, and the shift goes into the scroll once the list rests (owner, 2026-11-26).
 - For 0.4s after rows move under the finger (a reaction, an arrival at the top, a row that grows), a tap on a moved
   note, notification, or one of its controls is ignored. The reply form remains usable while it grows (owner, 2026-11-26).
 - A thread ([interface-thread.md](interface-thread.md)) opens on its focused note about a third down the tile, with

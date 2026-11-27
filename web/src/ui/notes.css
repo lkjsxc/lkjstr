@@ -139,7 +139,7 @@ img.emo:focus-visible, .uemo:focus-visible { outline: 2px solid var(--accent); o
 .vinfo .vname { font-weight: 600; overflow-wrap: anywhere; }
 .vinfo .vsaid { color: var(--faint); font-size: 12.5px; }
 /* A moment tab: no filter row; the moment line is a day divider made stronger, the end lines are quiet. */
-.moment-tab > .fslot { display: none; }
+.moment-tab > .feed-content > .fslot { display: none; }
 .moment { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 0 6px; padding: 5px 12px; border-top: 1px solid var(--sep); border-bottom: 1px solid var(--sep); background: var(--paper); font-variant-numeric: tabular-nums; text-align: center; }
 .moment .mwhen { display: inline-flex; align-items: center; gap: 6px; }
 .moment .av.mface { width: 16px; height: 16px; font-size: 8px; }

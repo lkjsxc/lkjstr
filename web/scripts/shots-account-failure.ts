@@ -10,7 +10,7 @@ type Scene = (
   act: (page: Page) => Promise<void>,
   mock?: string,
 ) => Promise<void>;
-const notes = '.view[data-kind="home"] > .list > .note';
+const notes = '.view[data-kind="home"] .list > .note';
 const assert = (ok: boolean, why: string): void => {
   if (!ok) throw new Error(why);
 };
@@ -72,7 +72,7 @@ export function createAccountFailureShots() {
       const words = lang === 'ja' ? ja : en;
       await scene('account-failure-populated', '/', async (page) => {
         await home(page);
-        await page.locator('.view[data-kind="home"] > .list > .note').first().waitFor();
+        await page.locator(notes).first().waitFor();
         const retained = await page.evaluateHandle(
           (selector) => [...document.querySelectorAll(selector)],
           notes,
@@ -101,10 +101,7 @@ export function createAccountFailureShots() {
           await home(page);
           const state = page.locator('.view[data-kind="home"]:visible > .fstate');
           await state.getByRole('button', { name: words['bar.signedOut'], exact: true }).waitFor();
-          assert(
-            (await page.locator('.view[data-kind="home"] > .list > .note').count()) === 0,
-            'guest Home starts empty',
-          );
+          assert((await page.locator(notes).count()) === 0, 'guest Home starts empty');
           // Inactive tabs unmount their view; this empty Home owns only its status node.
           const retained = await state.elementHandle();
           if (!retained) throw new Error('guest Home status premise');

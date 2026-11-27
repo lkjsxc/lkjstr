@@ -8,7 +8,7 @@ export function stableNoteWidths(elements: readonly HTMLElement[]): boolean {
     if (!view.isConnected || !(height > 0)) return false;
     let floor = 0;
     for (const avatar of view.querySelectorAll<HTMLElement>(
-      ':scope > .list > .note > .nrow > .avb',
+      ':scope .list > .note > .nrow > .avb',
     )) {
       floor += avatar.getBoundingClientRect().height;
       if (floor > height + 1) break;
