@@ -141,10 +141,13 @@ it('shares a pending decrypt until the last authorized consumer cancels', async 
 it('does not send a discovery reply across a Worker restart', async () => {
   const sent: ToEngine[] = [];
   const key = deferred<string>();
-  (window as { nostr?: unknown }).nostr = { getPublicKey: () => key.promise };
+  const getPublicKey = vi.fn(() => key.promise);
+  (window as { nostr?: unknown }).nostr = { getPublicKey };
   const ext = createExtensionClient((message) => sent.push(message));
-  ext.receive({ t: 'getPublicKey', req: 'old' }, () => false);
+  ext.receive({ t: 'getPublicKey', req: 'old' }, (req) => req === 'old');
   await tick();
+  expect(getPublicKey).toHaveBeenCalledTimes(1);
+  expect(sent).toEqual([]);
   ext.receive({ t: 'reconnect' }, () => false);
   key.resolve('old key');
   await tick();
