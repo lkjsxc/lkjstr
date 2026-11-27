@@ -11,7 +11,7 @@ follow-list owner, independently of the acting `account`. The engine requests
 that owner's kind 3 and maintains a feed of those follows. An empty or unknown
 list cannot widen into Global. It works signed out and uses ordinary filters.
 Its owner profile is requested separately to keep the tab title current. The
-kind-3 watch remains live after EOSE while that Home is visible; it reopens a
+kind-3 and kind-10000 watches remain live after EOSE while that Home is visible; each reopens a
 previously completed lookup and releases on hide/close. On constrained relays,
 it shares slots with live feeds after EOSE using the channel rotation cooldown,
 including when its filter is shared with account discovery. Finite timeline

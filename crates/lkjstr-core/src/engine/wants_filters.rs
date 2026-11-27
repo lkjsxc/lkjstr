@@ -15,13 +15,18 @@ pub(super) fn requests(
         return engine::hydration::people(store, q, private);
     }
     let mut result = engine::time_window::head(store, v);
-    if q.source == Source::TheirHome {
-        result.push(NostrFilter {
-            kinds: Some(vec![3]),
-            authors: q.target.clone().map(|p| vec![p]),
-            limit: Some(1),
-            ..Default::default()
-        });
+    if q.source == Source::TheirHome
+        && let Some(target) = &q.target
+    {
+        // Separate filters preserve each replaceable kind's one-result budget.
+        for kind in [3, 10000] {
+            result.push(NostrFilter {
+                kinds: Some(vec![kind]),
+                authors: Some(vec![target.clone()]),
+                limit: Some(1),
+                ..Default::default()
+            });
+        }
     }
     result.extend(engine::channels::wants(store, q));
     result.extend(v.history.clone());

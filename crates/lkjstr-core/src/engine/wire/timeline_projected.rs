@@ -53,7 +53,7 @@ fn covered_rows(
     query::events_with_placement(&engine.store, &bounded)
         .into_iter()
         .filter(|(event, _)| {
-            !matches!(event.kind, 6 | 16)
+            (!matches!(event.kind, 6 | 16) || query::their_repost(&engine.store, &bounded, event))
                 && horizon.is_none_or(|at| event.created_at >= at)
                 && global::has_slot(windows::reason(
                     &engine.store,

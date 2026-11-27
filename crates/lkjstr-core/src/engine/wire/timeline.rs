@@ -188,17 +188,18 @@ impl Session {
                 }) else {
                     continue;
                 };
-                // The first matching original or wrapper owns the row, in the same order as the window.
+                let covered_repost = query::their_repost(&e.store, q, &row);
                 if (!profile_all
                     && (event.kind == 6
                         || (profile_posts && crate::engine::acts::is_repost(event.kind)))
-                    && row.id == event.id)
+                    && row.id == event.id
+                    && !covered_repost)
                     || horizon.is_some_and(|at| row.created_at < at)
                     || index.positions.contains_key(&row.id)
                 {
                     continue;
                 }
-                if if openable {
+                if if openable || covered_repost {
                     !crate::kinds::policy(row.kind).openable
                 } else {
                     !matches!(row.kind, 1 | 42)

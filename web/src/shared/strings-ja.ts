@@ -116,6 +116,17 @@ export const ja: Record<keyof typeof en, string> = {
   'note.posting': '投稿中…',
   'nip05.ok': 'この名前は確認済みで、この鍵のものです',
   'nip05.unchecked': 'この名前は確認できていません',
+  'hidden.their-muted-person': 'このユーザーがミュートした人の投稿です。',
+  'hidden.their-muted-thread': 'このユーザーがミュートしたスレッドです。',
+  'hidden.their-muted-word': 'このユーザーがミュートした言葉を含みます。',
+  'hidden.their-muted-hashtag': 'このユーザーがミュートしたハッシュタグを含みます。',
+  'hidden.why.their-muted-person':
+    'このホームの持ち主の公開ミュートリストに、投稿者が含まれています。',
+  'hidden.why.their-muted-thread':
+    'このホームの持ち主の公開ミュートリストに、この投稿かスレッドが含まれています。',
+  'hidden.why.their-muted-word': 'このホームの持ち主の公開ミュートリストにある言葉を含む投稿です。',
+  'hidden.why.their-muted-hashtag':
+    'このホームの持ち主の公開ミュートリストにあるハッシュタグを含む投稿です。',
   'hidden.muted-person': 'ミュートした人のノートです。',
   'hidden.muted-thread': 'ミュートしたスレッドのノートです。',
   'hidden.muted-word': 'ミュートした語を含みます。',

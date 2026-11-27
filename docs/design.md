@@ -266,7 +266,8 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
   Retry, Edit and discard for failures, preserving attachments across reload. Elsewhere a message says `# name` above it.
 - What the engine cannot serve (protocol below 3; channels: 4) is not drawn.
 - Loading, empty, failed and end-of-list are one quiet centred line (a thread holds skeletons instead).
-- A profile offers its owner's Home: the notes of the people they follow, as a tab of its own.
+- A profile offers its owner's Home: the notes of the people they follow, as a tab of its own. Their public mutes
+  apply there with distinct hidden reasons and the same Why/Show/Hide; these reasons offer no reader mute settings.
 - A note's time opens that Home around the note's moment ([interface-moment.md](interface-moment.md)): a tab of its
   own, `name yyyy/mm/dd hh:mm`, with no live head and no filter row. A moment line where the time falls carries the
   author's face, the time, the follow list's own date and "From this device only" while that is true; each end says

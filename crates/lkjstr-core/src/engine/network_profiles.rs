@@ -65,7 +65,7 @@ impl Network {
     pub(super) fn stabilize_profiles(
         &mut self,
         desired: &mut Desired,
-        live_lists: &BTreeSet<String>,
+        live_lists: &BTreeMap<String, String>,
     ) {
         // Bounded by visible wants (128 views x 6000 authors), released on hiding.
         let mut pending: BTreeMap<(String, u8), BTreeMap<String, BTreeSet<String>>> =

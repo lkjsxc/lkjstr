@@ -20,6 +20,10 @@ and plain facts when it cannot. Content warnings stay ordinary rows. Index and r
 | `muted-thread` | In a thread you muted. | yes |
 | `muted-word` | Has a word you muted. | yes |
 | `muted-hashtag` | Has a hashtag you muted. | yes |
+| `their-muted-person` | From someone this account muted. | yes |
+| `their-muted-thread` | In a thread this account muted. | yes |
+| `their-muted-word` | Has a word this account muted. | yes |
+| `their-muted-hashtag` | Has a hashtag this account muted. | yes |
 | `repeated-content` | Repeats a note already shown. | yes |
 | `author-limit` | One of many notes from this person in this list. | yes |
 | `machine-payload` | Looks like machine data, not a post. | yes |
@@ -49,6 +53,9 @@ and plain facts when it cannot. Content warnings stay ordinary rows. Index and r
   - machine payload: only the fact, with no setting;
   - deleted: "Its author asked for it to be deleted. It cannot be shown." Nothing else;
   - expired: "Its author set it to expire. It cannot be shown." Nothing else.
+- Their Home's `their-muted-*` reasons refer to its owner's public mute list. Why says which public entry type
+  matched and offers no reader Settings link. Reader mutes keep their own reasons and take precedence. Matching
+  public words/tags are not echoed into the row. Muted quotes use the same scoped sentence. EN and JA are paired.
 - Opening Why asks nothing of the engine. It reads what the row already carries.
 
 ## H3 Show and hide again

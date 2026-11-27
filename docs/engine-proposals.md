@@ -6,6 +6,9 @@ See [history](engine-proposals-history.md), [emoji](engine-proposals-emoji.md), 
 - Protocol 17 (S4): `NoteRow.copyLink?` carries the canonical path `/n/nevent` (kind/author) or `/a/naddr` (exact address); `bech32` and Copy ID are unchanged.
 - `NoteRow.shareEvent?` carries an exact public nevent with the author, kind and up to three observed relay hints for sharing.
 - Protocol 17 (S4): `Query.show` adds profile `articles`, `lists`, `all`; signed-in and signed-out public snapshot boundaries and source filters remain.
+- `NoteRow.hidden.reason` and `revealed.reason` add `their-muted-person`, `their-muted-thread`, `their-muted-word`, `their-muted-hashtag`.
+  These name the viewed Home owner's public policy and remain distinct from viewer reasons.
+- `Quote.reason?` carries the same scoped hidden reason when `state:'muted'`; no body is included.
 ## Protocol 6 engine additions (2026-11-16, owner authorized)
 - `ToEngine.dm.open {sub,query:DmQuery}` adds an explicit private subscription.
 - `ToEngine.dm.close {sub}` releases a private subscription and its wants.
@@ -113,15 +116,12 @@ Bounds, atomic removal, conflicts and the Worker-scoped unlock limit are in [dm-
 - `StorageReport.origin.approximate` is always true for a ready origin estimate; it is not physical event-cache size.
 - `StorageReport.origin.at` records the estimate callback in the same Worker clock, only when ready.
 - `Engine.storage?` offers `inspect({signal?})` with bounded cancellation and no replay across Worker lifetimes.
-
 See [inspection bounds](storage-inspection.md) and [merged gate and production evidence](engine-device-verification.md).
 ## Protocol 13 account availability (2026-11-17, owner authorized)
-
 - `FromEngine.ready.accountError? {code:"internal"}` marks failed account loading without inventing an Accounts snapshot or exposing storage details.
 - `Engine.accountState?` separates account availability from the capability handshake and retains the last account collection.
 - `AccountState.phase` is loading on initial/reconnected clients, ready only after Accounts, or failed after the fixed Ready marker.
 - `AccountState.error` is the fixed internal code on failure; an ordinary Ready alone does not clear that failure.
-
 Feeds reuse `error.internal`. Accounts availability and recovery need an [interface specification](interface-needs.md).
 ## Protocol 13 public cache additions (2026-11-17, owner authorized)
 

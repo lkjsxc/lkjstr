@@ -77,6 +77,12 @@ fn action(
 mod sources;
 #[path = "engine_visibility_cases/terminal.rs"]
 mod terminal;
+#[path = "engine_visibility_cases/their_home.rs"]
+mod their_home;
+#[path = "engine_visibility_cases/their_home_live.rs"]
+mod their_home_live;
+#[path = "engine_visibility_cases/their_home_reposts.rs"]
+mod their_home_reposts;
 
 #[test]
 fn restoring_a_keyed_window_emits_only_the_requested_rows() {

@@ -4,6 +4,7 @@ import { h } from '../shared/h.ts';
 import { getLang, t } from '../shared/i18n.ts';
 import { readNoteState, writeNoteState } from '../shared/note-state.ts';
 import { linkCards } from './link-cards.ts';
+import { hiddenText } from './note-hidden.ts';
 import { mediaGrid } from './note-media.ts';
 import { faceButton, how, nameButton, plainName, segments } from './parts.ts';
 import type { ViewEnv } from './registry.ts';
@@ -15,7 +16,7 @@ export function quoteCard(q: Quote, env: ViewEnv, noteId: string): HTMLElement {
     return h(
       'div',
       { class: q.state === 'loading' ? 'quote muted qloading' : 'quote muted' },
-      t(`quote.${q.state}`),
+      q.state === 'muted' && q.reason ? hiddenText(q.reason) : t(`quote.${q.state}`),
     );
   const settings = env.settings.get();
   const title = plainName(q.author);

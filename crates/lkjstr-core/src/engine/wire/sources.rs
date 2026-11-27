@@ -70,7 +70,7 @@ impl Session {
                             Some(positions) => Some(*positions.get(&event.id)?),
                             None => None,
                         };
-                        let shown = if event.kind == 6 && q.source != "thread" && !(q.source == "profile" && q.show.as_deref() == Some("all")) {
+                        let shown = if event.kind == 6 && !query::their_repost(store, converted, &event) && q.source != "thread" && !(q.source == "profile" && q.show.as_deref() == Some("all")) {
                             crate::engine::acts::target(&event).and_then(|id| store.get(&id))?
                         } else { event };
                         if !crate::kinds::policy(shown.kind).openable { return None; }

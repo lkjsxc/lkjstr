@@ -95,7 +95,9 @@ fn parts(row: &Row, embedded: bool) -> (Vec<Value>, Vec<Value>, Vec<Value>) {
                     Some(row) if !crate::kinds::policy(row.kind).openable => {
                         json!({"state":"missing","id":id})
                     }
-                    Some(row) if row.hidden_reason.is_some() => json!({"state":"muted","id":id}),
+                    Some(row) if row.hidden_reason.is_some() => {
+                        json!({"state":"muted","id":id,"reason":row.hidden_reason})
+                    }
                     Some(row) => {
                         let (segments, media, _) = parts(row, true);
                         let mut quote = json!({"state":"ok","id":id,"author":author(&row.author),

@@ -44,19 +44,18 @@ impl Session {
         let model = if let Some(reason) = reason {
             visibility::covered_row(&engine.store, event, reason)
         } else {
-            rows::row_with_lists(
-                &engine.store,
-                event,
-                query.account.as_deref(),
-                0,
-                &engine.private_lists,
-            )
+            rows::row_with_query(&engine.store, event, query, 0, &engine.private_lists)
         };
         self.project_note(sub, engine, &model)
     }
 
     pub(super) fn project_note(&self, sub: &str, engine: &Engine, row: &rows::Row) -> Value {
-        let account = self.queries.get(sub).and_then(|q| q.account.as_deref());
+        let query = self
+            .queries
+            .get(sub)
+            .and_then(|q| q.convert())
+            .unwrap_or_default();
+        let account = query.account.as_deref();
         let mut value = note::note(row, &engine.store, account);
         if let Some(reading_at) = row.window_reading_at {
             value["readingAt"] = json!(reading_at.saturating_mul(1000));
@@ -72,7 +71,7 @@ impl Session {
                     .and_then(|set| set.reasons.get(&row.id))
                     == Some(&reason)
             {
-                value = self.revealed_note(engine, account, &event, reason, &value);
+                value = self.revealed_note(engine, &query, &event, reason, &value);
             } else if let Some(detail) = crate::engine::query_hidden::detail(
                 &engine.store,
                 account,
@@ -89,12 +88,13 @@ impl Session {
     fn revealed_note(
         &self,
         engine: &Engine,
-        account: Option<&str>,
+        query: &Query,
         event: &NostrEvent,
         reason: Reason,
         identity: &Value,
     ) -> Value {
-        let model = rows::row_with_lists(&engine.store, event, account, 0, &engine.private_lists);
+        let account = query.account.as_deref();
+        let model = rows::row_with_query(&engine.store, event, query, 0, &engine.private_lists);
         let mut value = note::note(&model, &engine.store, account);
         for field in ["key", "at", "thread", "readingAt"] {
             if let Some(old) = identity.get(field) {
@@ -201,12 +201,14 @@ impl Session {
             let previous = self.delivered.insert(sub.into(), next).unwrap_or_default();
             return Ok(super::output_diff::diff(&previous, &self.delivered[sub]));
         }
-        let account = self
+        let query = self
             .queries
             .get(sub)
-            .and_then(|query| query.account.as_deref());
+            .and_then(|q| q.convert())
+            .unwrap_or_default();
+        let account = query.account.as_deref();
         let next = if reveal {
-            self.revealed_note(engine, account, &event, reason, current)
+            self.revealed_note(engine, &query, &event, reason, current)
         } else {
             let mut value = note::covered(current.clone(), reason);
             if let Some(detail) = crate::engine::query_hidden::detail(

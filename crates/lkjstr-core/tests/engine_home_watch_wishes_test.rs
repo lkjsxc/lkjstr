@@ -47,6 +47,7 @@ fn an_owners_home_keeps_its_follow_watch_after_eose_and_releases_it_on_close() {
     assert!(frames(&mut n).iter().any(|v| v[0] == "CLOSE"));
     let home = Query {
         source: Source::TheirHome,
+        target: Some("aa".repeat(32)),
         ..Default::default()
     };
     n.plan(
@@ -77,6 +78,7 @@ fn live_follow_watch_and_timeline_share_one_slot_in_either_arrival_order() {
                 n.relay_information(relay, r#"{"limitation":{"max_subscriptions":1}}"#);
                 let home = Query {
                     source: Source::TheirHome,
+                    target: Some("aa".repeat(32)),
                     ..Default::default()
                 };
                 let watch = (

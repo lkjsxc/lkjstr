@@ -118,7 +118,12 @@ impl Session {
         }
         items
             .iter()
-            .filter(|r| !matches!(r.kind, 6 | 16))
+            .filter(|r| {
+                !matches!(r.kind, 6 | 16)
+                    || (r.kind == 6
+                        && r.hidden_reason.is_some()
+                        && q.is_some_and(|q| q.source == "their-home"))
+            })
             .map(|r| {
                 let mut row = self.project_note(sub, engine, r);
                 super::quote_state::settle(&mut row, engine, q.and_then(|q| q.account.as_deref()));

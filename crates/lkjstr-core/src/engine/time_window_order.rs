@@ -25,6 +25,7 @@ impl<'a> Order<'a> {
     fn reposts<'b>(&'b self, id: &'b str) -> impl Iterator<Item = Event> + 'b {
         acts::reposts(self.store, id).filter(|event| {
             query::accepts(self.store, self.query, event, &self.filter, &self.authors)
+                && !query::their_repost(self.store, self.query, event)
         })
     }
 
@@ -34,6 +35,9 @@ impl<'a> Order<'a> {
         {
             return event.created_at;
         }
+        if query::their_repost(self.store, self.query, event) {
+            return event.created_at;
+        }
         self.reposts(&event.id)
             .map(|repost| repost.created_at)
             .max()
@@ -41,8 +45,12 @@ impl<'a> Order<'a> {
     }
 
     pub(in crate::engine) fn project(&self, row: &mut rows::Row) {
-        if self.query.source == crate::engine::protocol::Source::Profile
-            && self.query.filters.show.as_deref() == Some("all")
+        if (self.query.source == crate::engine::protocol::Source::Profile
+            && self.query.filters.show.as_deref() == Some("all"))
+            || self
+                .store
+                .get(&row.id)
+                .is_some_and(|event| query::their_repost(self.store, self.query, &event))
         {
             row.reposted_at = None;
             row.reposts.clear();

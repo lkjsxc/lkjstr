@@ -168,5 +168,8 @@ pub(super) fn collapse_repost(store: &Store, q: &Query, event: Event) -> Option<
     {
         return None;
     }
+    if super::query_hidden::their_repost(store, q, &event) {
+        return Some(event);
+    }
     target.or(Some(event))
 }

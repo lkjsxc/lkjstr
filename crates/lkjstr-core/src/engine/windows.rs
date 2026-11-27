@@ -68,13 +68,7 @@ impl Engine {
                 let mut r = if let Some(reason) = hidden {
                     super::visibility::covered_row(&self.store, e, reason)
                 } else {
-                    rows::row_with_lists(
-                        &self.store,
-                        e,
-                        v.query.account.as_deref(),
-                        0,
-                        &self.private_lists,
-                    )
+                    rows::row_with_query(&self.store, e, &v.query, 0, &self.private_lists)
                 };
                 if let Some(order) = &order {
                     order.project(&mut r);

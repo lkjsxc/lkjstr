@@ -110,6 +110,7 @@ Seams worth knowing inside `src/views/`:
   `ChannelRow`, `NoteRow.channel`, `Draft.channel` and the actions
   `channel.join`, `channel.save`, `channel.seen`. Nothing about channels is
   drawn for an engine that reports less.
+- Their Home receives scoped `their-muted-*` hidden reasons and optional muted `Quote.reason` from the Worker.
 - Protocol 5 adds `their-home`, the bounded local `people` directory, selected
   mention ranges and kind-0 picture revisions; see [wishes.md](wishes.md).
 - Protocol 5 adds exact cached month counts and per-window ordinals (`timeline`),

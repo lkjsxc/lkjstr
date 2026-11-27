@@ -8,12 +8,12 @@ Shared weighted retention keeps visible public data useful across Home views and
 
 Home uses the selected account's verified follows and includes that account. Their Home
 uses its target's verified public follows and includes that target. Reader mutes and other
-visibility rules still belong to the reading account. Being a Their Home target never
+visibility rules still belong to the reading account; Their Home additionally uses its target's public mute list. Being a Their Home target never
 makes someone a saved account or imports their private policy.
 
 Visible row authors, repost actors, reply authors, mentions and quote authors contribute
 reuse weight. Their cached profiles receive access stamps before a pressure pass. A
-visible Their Home's kind-3 is a held read dependency; other target lists gain no owner pin.
+visible Their Home's kind-3 and kind-10000 are held read dependencies; other target lists gain no owner pin.
 
 ## Metadata checkpoint
 

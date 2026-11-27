@@ -87,12 +87,14 @@ fn both_home_sources_keep_painted_names_and_follow_dependencies_under_pressure()
 }
 
 #[test]
-fn their_home_affinity_never_pins_the_targets_other_account_lists() {
+fn their_home_holds_public_mutes_without_pinning_other_account_lists() {
     let mut engine = Engine::new();
-    engine.store = Store::with_caps(8, 2).weight_retention();
+    engine.store = Store::with_caps(8, 3).weight_retention();
     let mut follows = event(10, 8, 3);
     follows.tags = vec![vec!["p".into(), format!("{:064x}", 7)]];
     let policy = event(1, 8, 10000);
+    let bookmarks = event(2, 8, 10003);
+    engine.store.insert_deferred(bookmarks.clone(), None);
     engine.store.insert_deferred(follows.clone(), None);
     engine.store.insert_deferred(policy.clone(), None);
     engine.input(
@@ -109,12 +111,17 @@ fn their_home_affinity_never_pins_the_targets_other_account_lists() {
     let input = engine.retention_inputs();
     assert_eq!(input.affinity.get(&format!("{:064x}", 7)), Some(&32));
     assert!(!input.own.contains(&follows.pubkey));
+    assert!(input.held.contains(&policy.id));
     engine.store.insert_deferred(event(20, 11, 0), None);
     engine.trim_store();
     assert!(engine.store.get(&follows.id).is_some());
     assert!(
-        engine.store.get(&policy.id).is_none(),
-        "target mutes acquire no account pin"
+        engine.store.get(&policy.id).is_some(),
+        "target public mutes are a visible read dependency"
+    );
+    assert!(
+        engine.store.get(&bookmarks.id).is_none(),
+        "no account-wide target pin"
     );
 }
 

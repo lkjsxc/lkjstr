@@ -222,6 +222,8 @@ export type Quote =
   | {
       readonly state: 'missing' | 'loading' | 'muted' | 'deleted' | 'expired' | 'error';
       readonly id: string;
+      /** Scoped visibility reason for a muted quote, including the viewed Home owner's public mutes. */
+      readonly reason?: string;
     };
 
 export type Reaction = {
@@ -365,6 +367,7 @@ export type NoteRow = {
   /** Hidden for a reason (interface-hidden.md): the row keeps its slot with no body, counts or controls. `detail` is
    * the reader's own matching mute entry; `revealable` says whether `note.reveal` may show it. */
   readonly hidden?: {
+    /** muted-* is the viewer; their-muted-* is the viewed Home owner's public list. */
     readonly reason: string;
     readonly revealable?: boolean;
     readonly detail?: string;

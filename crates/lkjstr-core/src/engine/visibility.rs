@@ -11,6 +11,10 @@ pub enum Reason {
     MutedThread,
     MutedWord,
     MutedHashtag,
+    TheirMutedPerson,
+    TheirMutedThread,
+    TheirMutedWord,
+    TheirMutedHashtag,
     MachinePayload,
     AuthorLimit,
     RepeatedContent,
@@ -30,7 +34,7 @@ pub(super) fn reason(
     event: &NostrEvent,
     private: &PrivateLists,
 ) -> Option<Reason> {
-    query_hidden::reason(store, query.account.as_deref(), event, private).or_else(|| {
+    query_hidden::reason(store, query, event, private).or_else(|| {
         (event.kind == 1 && crate::content::looks_like_noise(&event.content))
             .then_some(Reason::MachinePayload)
     })

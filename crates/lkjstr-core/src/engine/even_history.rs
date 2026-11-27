@@ -10,6 +10,7 @@ const FOLLOW_CONTRIBUTORS: usize = 3;
 pub(super) struct ProofScope {
     follow: Option<String>,
     mute: Option<(String, bool)>,
+    their_mute: Option<String>,
     removals: u64,
 }
 
@@ -110,6 +111,9 @@ fn horizon(
         .account
         .as_deref()
         .and_then(|key| store.replaceable_lease(key, 10000));
+    let their_mute = (q.source == Source::TheirHome)
+        .then(|| owner.and_then(|key| store.replaceable_lease(key, 10000)))
+        .flatten();
     let proof_scope = ProofScope {
         follow: follow.map(|event| event.id_hex()),
         mute: mute.map(|event| {
@@ -117,6 +121,7 @@ fn horizon(
             let unlocked = private.contains_key(&id);
             (id, unlocked)
         }),
+        their_mute: their_mute.map(|event| event.id_hex()),
         removals: store.history_removals(),
     };
     let mut edge = if v.history_scope.as_ref() == Some(&proof_scope) {
@@ -143,7 +148,10 @@ fn horizon(
     }
     let filter = query::filter(store, q);
     let authors = super::rich::authors(store, q);
-    let mutes = mute.map_or_else(Vec::new, |e| settings::list_tags(&e.materialize(), private));
+    let mut mutes = mute.map_or_else(Vec::new, |e| settings::list_tags(&e.materialize(), private));
+    if let Some(list) = their_mute {
+        mutes.extend(list.materialize().tags.clone());
+    }
     let muted: std::collections::BTreeSet<_> = mutes
         .iter()
         .filter(|tag| tag.first().is_some_and(|key| key == "p"))

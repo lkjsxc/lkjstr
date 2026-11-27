@@ -60,3 +60,54 @@ fn metadata_observations_exclude_absent_follow_graph_authors() {
     assert!(rows.iter().any(|row| row.id == profile.id));
     assert!(rows.iter().any(|row| row.id == follows.id));
 }
+
+#[test]
+fn target_public_mute_dependencies_release_when_hidden_or_closed() {
+    let mut engine = Engine::new();
+    let follows = event(1, 8, 3);
+    let mute = event(2, 8, 10000);
+    let bookmarks = event(3, 8, 10003);
+    for event in [&follows, &mute, &bookmarks] {
+        engine.store.insert(event.clone(), None);
+    }
+    engine.input(
+        Input::Open {
+            sub: "their".into(),
+            query: Query {
+                source: Source::TheirHome,
+                target: Some(follows.pubkey.clone()),
+                ..Default::default()
+            },
+        },
+        1_800_000_000_000,
+    );
+    let (access, rows) = engine.cache_metadata_observation(1_800_000_000_000);
+    assert!(access.pinned.contains(&mute.id));
+    assert!(rows.iter().any(|row| row.id == mute.id));
+    assert!(!access.pinned.contains(&bookmarks.id));
+    assert!(!engine.retention_inputs().own.contains(&follows.pubkey));
+    engine.input(
+        Input::Hint {
+            visible_subs: vec![],
+            focused_sub: None,
+            page_hidden: true,
+            idle: false,
+            save_data: false,
+        },
+        1_800_000_000_100,
+    );
+    assert!(
+        !engine
+            .cache_metadata_observation(1_800_000_000_100)
+            .0
+            .pinned
+            .contains(&mute.id)
+    );
+    engine.input(
+        Input::Close {
+            sub: "their".into(),
+        },
+        1_800_000_000_200,
+    );
+    assert!(!engine.retention_inputs().held.contains(&mute.id));
+}

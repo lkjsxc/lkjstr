@@ -65,6 +65,25 @@ pub fn row_with_lists(
     depth: usize,
     private: &super::settings::PrivateLists,
 ) -> Row {
+    row_with_query(
+        store,
+        event,
+        &super::protocol::Query {
+            account: account.map(str::to_owned),
+            ..Default::default()
+        },
+        depth,
+        private,
+    )
+}
+pub(super) fn row_with_query(
+    store: &Store,
+    event: &NostrEvent,
+    query: &super::protocol::Query,
+    depth: usize,
+    private: &super::settings::PrivateLists,
+) -> Row {
+    let account = query.account.as_deref();
     let repost = crate::kinds::policy(event.kind).act == Some(crate::kinds::ActKind::Repost);
     let mut parts = if repost {
         Vec::new()
@@ -108,18 +127,10 @@ pub fn row_with_lists(
                         .get(&id)
                         .filter(|e| crate::kinds::policy(e.kind).openable)
                         .map(|e| {
-                            let reason = super::visibility::reason(
-                                store,
-                                &super::protocol::Query {
-                                    account: account.map(str::to_owned),
-                                    ..Default::default()
-                                },
-                                &e,
-                                private,
-                            );
+                            let reason = super::visibility::reason(store, query, &e, private);
                             Box::new(match reason {
                                 Some(reason) => super::visibility::covered_row(store, &e, reason),
-                                None => row_with_lists(store, &e, account, depth + 1, private),
+                                None => row_with_query(store, &e, query, depth + 1, private),
                             })
                         })
                 } else {
@@ -133,37 +144,39 @@ pub fn row_with_lists(
         })
         .collect();
     let (_, repost_count, reaction_count) = store.counts(&event.id);
+    // Count evidence is account-scoped; target read policy cannot change its totals.
+    let count_query = super::protocol::Query {
+        source: super::protocol::Source::Thread,
+        account: account.map(str::to_owned),
+        target: Some(event.id.clone()),
+        ..Default::default()
+    };
     let replies = super::thread::positions(store, &event.id)
         .into_iter()
         .filter(|(_, (role, _))| *role == "reply")
         .filter_map(|(id, _)| store.get(&id))
         .filter(|reply| {
-            super::query::hidden_with_lists(
-                store,
-                &super::protocol::Query {
-                    source: super::protocol::Source::Thread,
-                    account: account.map(str::to_owned),
-                    target: Some(event.id.clone()),
-                    ..Default::default()
-                },
-                reply,
-                private,
-            )
-            .is_none()
+            super::query::hidden_with_lists(store, &count_query, reply, private).is_none()
         })
         .count();
     let reactions = super::emoji::reactions(store, &event.id, account);
+    let mut own_repost = false;
     let mut reposted_at = None;
     let mut reposts = super::acts::reposts(store, &event.id)
-        .map(|repost| {
+        .filter_map(|repost| {
+            // A muted actor still owns their already-published repost action.
+            own_repost |= Some(repost.pubkey.as_str()) == account;
+            if super::query::their_repost(store, query, &repost) {
+                return None;
+            }
             reposted_at = reposted_at.max(Some(repost.created_at));
-            author(store, &repost.pubkey)
+            Some(author(store, &repost.pubkey))
         })
         .collect::<Vec<_>>();
     reposts.sort_by(|a, b| a.pubkey.cmp(&b.pubkey));
     reposts.dedup_by(|a, b| a.pubkey == b.pubkey);
     let own = Own {
-        reposted: reposts.iter().any(|a| Some(a.pubkey.as_str()) == account),
+        reposted: own_repost,
         bookmarked: super::settings::list_has(store, private, account, 10003, "e", &event.id),
         muted: super::settings::list_has(store, private, account, 10000, "p", &event.pubkey),
     };
@@ -178,9 +191,10 @@ pub fn row_with_lists(
             .then(|| reply_parent(event))
             .flatten()
             .filter(|id| {
-                store
-                    .get(id)
-                    .is_none_or(|e| crate::kinds::policy(e.kind).openable)
+                store.get(id).is_none_or(|e| {
+                    crate::kinds::policy(e.kind).openable
+                        && super::visibility::reason(store, query, &e, private).is_none()
+                })
             })
             .map(|id| Context {
                 author: store.get(&id).map(|e| author(store, &e.pubkey)),

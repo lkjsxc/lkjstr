@@ -8,6 +8,9 @@ use crate::store::{Event, Store};
 use std::collections::BTreeSet;
 
 pub(in crate::engine) fn unavailable(store: &Store, query: &Query, event: &Event) -> bool {
+    if crate::engine::query::their_repost(store, query, event) {
+        return false;
+    }
     if crate::engine::acts::activity(query) {
         return crate::engine::acts::resolve(store, event).note.is_none();
     }

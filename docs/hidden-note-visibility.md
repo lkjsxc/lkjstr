@@ -18,7 +18,7 @@ The published app home is <https://lkjstr.lkjsxc.com>.
 | Repeated content or many notes from one author | Visitor Global only, default on. Three ordinary notes per author per window. Exact nonempty whitespace-normalized copies, or sufficiently long near-copies, within 600 seconds. Signed-in Global, Home, profile and thread bypass these limits. | [Bounded visitor classifier](../crates/lkjstr-core/src/engine/global.rs), up to 6000 candidates. Signed copies with different IDs may each occupy a slot. Repeated delivery of one ID never adds a slot. | Show per note, or change `signedOutGlobalFilter` (Settings visitor filter). |
 | Machine payload | Verified kind-1 JSON documents or long unbroken encoded-looking text, previously covered with body already on the wire. Now receives a covered slot after mutes and before visitor burst checks. | [Heuristic](../crates/lkjstr-core/src/content.rs) and [reason policy](../crates/lkjstr-core/src/engine/visibility.rs). | Show per note. |
 | Reply, kind, author, search, language and dates | Query selection: Home/Global default kinds 1/6, Channel kind 42, Thread its branch, Profile selected posts/replies/media or kind 6/16 or 7 activity, Hashtag tag match, saved bookmarks member IDs. Explicit replies/reposts/media/language/from/date and text predicates narrow results. Notifications are a separately selected and grouped activity query with account, actor, and zap checks. | [Membership predicate](../crates/lkjstr-core/src/engine/query.rs), [extra predicates](../crates/lkjstr-core/src/engine/query_predicates.rs), [thread graph](../crates/lkjstr-core/src/engine/thread.rs), [notification subject](../crates/lkjstr-core/src/engine/wire/notification_subject.rs). | Change the query. Membership, grouped act deduplication, and unsupported kinds create no hidden-note slot. |
-| Unavailable repost target | Ordinary and profile activity windows cannot show a terminal note absent from the verified store. An observed wrapper does not prove the target's body, author or time. | [Window projection](../crates/lkjstr-core/src/engine/window_projection.rs), [act resolution](../crates/lkjstr-core/src/engine/acts.rs). Evidence reports an affected raw window without claiming a count of distinct notes. | Waiting or later verified retrieval can produce the ordinary row. No Show yet. |
+| Unavailable repost target | Ordinary and profile activity windows cannot show a terminal note absent from the verified store. An observed wrapper does not prove the target's body, author or time. Their Home keeps a publicly muted signed wrapper as its own covered slot, without inventing the target. | [Window projection](../crates/lkjstr-core/src/engine/window_projection.rs), [act resolution](../crates/lkjstr-core/src/engine/acts.rs). Evidence reports an affected raw window without claiming a count of distinct notes. | Waiting or later verified retrieval can produce the ordinary row. No Show yet. |
 | Deletion (NIP-09) | A verified kind-5 event's `e` reference applies when the target author matches the deletion author. A late copy can supply proof against an existing author-specific fence. A wrong author or invalid signature does not establish deletion. `a` coordinate deletion is not implemented here. | [Ownership and retention](../crates/lkjstr-core/src/store/retention.rs), [verified fences](../crates/lkjstr-core/src/store/context_pins.rs). The candidate watches at most 120 retained targets per visible view for kind 5. A delivered row can become a body-free tombstone at the same key. An unknown target never acquires an identity from a deletion request. | Never reveal. |
 | Expiry (NIP-40) | Base had a codec with no note admission or display policy. Candidate applies one valid decimal expiry to verified public note/activity kinds 1, 6, 7, 16, 42, 30023. At or after it, new copies are rejected and retained rows leave memory. Ambiguous or malformed tags fail admission separately. | [Codec](../crates/lkjstr-nips/src/metadata.rs) and [clock/retention](../crates/lkjstr-core/src/store/expiration.rs). A previously delivered slot may become `expired`. Expired events outside the previously delivered window supply no slot. Physical rows committed before expiry can remain until bounded IndexedDB pruning. Restore applies the clock. | Never reveal. |
 | Signature or event validation | Envelope parsing, wire subscription/filter checks, signature and event ID verification precede the event store. Invalid payloads and forged envelopes never supply UI identity, time, controls or a timeline row. | [Frame intake](../crates/lkjstr-core/src/engine/network_messages.rs), [verification](../crates/lkjstr-core/src/engine/tick.rs). `invalid` counts only observed failed relay deliveries assigned to a still-owned wire request. Unattributable malformed frames are device observations. | No Show. |
@@ -44,3 +44,26 @@ total. No invalid payload, alleged author, event ID or timestamp is emitted
 as part of that evidence. EOSE describes a queried page and cannot certify
 global completeness. Full pages, retry, and quiet live tails retain their
 separate request semantics.
+
+## Their Home public mute scope
+
+The viewed owner's latest verified kind-10000 list contributes public `p`, `e`, `t` and `word` tags only.
+Viewer public and eligible private mutes run first and stay account-owned. Another user's encrypted private mutes
+cannot be read, and even a private list already decrypted for another saved account is excluded from this view.
+Public entries use the same person, event/parent/root, case-insensitive word and hashtag matching as viewer mutes.
+A matching note keeps a covered slot with a `their-muted-*` reason. Quotes and reply excerpts also respect this
+scope. Why offers no viewer Settings link; Show/Hide changes only that subscription and never edits either list.
+
+Each visible Their Home watches kinds 3 and 10000 separately, retaining the newest observed signed list for each
+kind. Newer timestamps replace older lists; equal timestamps use the lower event ID. An empty newer public list
+clears the public policy even when its content is encrypted. Missing lists supply no invented mute entries.
+History and ordinary/Moment projections use the current observed list; this does not reconstruct historical mutes.
+Both list watches and read-dependency pins release when the view hides or closes. There is no target account pin.
+Snapshots created before this scoped policy use an obsolete identity and cannot replay. Revealed bodies and
+private matching-entry details remain excluded from public snapshots; a fresh cover replaces old visible content.
+
+A publicly muted repost keeps its own signed ID and time as a covered slot. An independently admitted original
+remains visible unless it is itself muted. Muted repost actors do not reappear in original-note attribution;
+ordinary windows, time-rail ordinals and Moment placement use the same rule. The viewer's own repost action state is unchanged.
+
+Interaction totals retain the viewer's existing policy and count evidence. The target's public mutes govern displayed content, not count authority.

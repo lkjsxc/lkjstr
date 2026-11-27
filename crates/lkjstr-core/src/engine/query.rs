@@ -238,6 +238,6 @@ fn select_projected<T>(
         .collect()
 }
 
-pub(super) use super::query_hidden::matches_note;
 pub use super::query_hidden::{hidden, hidden_with_lists};
+pub(super) use super::query_hidden::{matches_note, their_repost};
 pub(super) use super::query_predicates::accepts;

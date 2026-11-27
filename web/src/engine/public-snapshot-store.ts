@@ -51,8 +51,8 @@ export const snapshotIdentity = (
     previews,
     visitorFilter,
     canonical(query),
-    // Earlier Their Home entries can hold Moment order without any row marker.
-    ...(query.source === 'their-home' ? ['ordinary'] : []),
+    // Earlier Their Home entries can hold Moment order or predate its public mute policy.
+    ...(query.source === 'their-home' ? ['ordinary', 'public-mutes'] : []),
     // Older Profile Posts snapshots can contain unrelated repost attribution and authored order.
     ...(query.source === 'profile' && (query.show === undefined || query.show === 'posts')
       ? ['profile-posts']

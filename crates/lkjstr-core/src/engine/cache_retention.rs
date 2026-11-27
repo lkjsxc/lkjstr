@@ -66,7 +66,7 @@ impl Engine {
             if view.query.source == Source::TheirHome
                 && let Some(target) = &view.query.target
             {
-                // This public graph is reuse context, never account or mute authority.
+                // Public follows and mutes are read dependencies, never account authority.
                 if metadata.is_none_or(|authors| authors.contains(target)) {
                     affinity.insert(target.clone(), 64);
                 }
@@ -81,8 +81,10 @@ impl Engine {
                         affinity.entry(person).or_insert(32);
                     }
                 }
-                if let Some(list) = self.store.replaceable(target, 3) {
-                    held.insert(list.id.clone());
+                for kind in [3, 10000] {
+                    if let Some(list) = self.store.replaceable(target, kind) {
+                        held.insert(list.id.clone());
+                    }
                 }
             }
         }
@@ -142,7 +144,7 @@ impl Engine {
         }
         for id in input.held {
             if let Some(event) = self.store.get(&id)
-                && event.kind == 3
+                && matches!(event.kind, 3 | 10000)
             {
                 access.pinned.insert(id.clone());
                 if let Ok(row) = Record::verified(&event) {

@@ -63,6 +63,7 @@ Engine work:
   unsupported states say what is actually happening.
 - Never log, print or export local secret keys except through the explicit
   "Back up key" action.
+- View policy owner: engine maintainer. Keep viewed public lists separate from account authority, including nested rows and saved snapshots.
 - Long-lived collections document their bound; relay and timer work has an
   explicit release path (wants are dropped when a view hides or unmounts).
 - Source files at most 250 lines, docs at most 200; docs are ASCII English.
