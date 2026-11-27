@@ -26,7 +26,7 @@ the supported scope in [time-rail.md](time-rail.md).
 - The reading place is the first note or notification row whose bottom is below the tile's top (the existing
   `first()`). A repost reads as the repost's time (`rowTime`).
 - No motion: things appear and disappear in one frame. Nothing new is coloured: `--accent` for the grip,
-  `--faint` and `--fg` for marks, the existing `.scrub` box (raised, hairline, 6px corners, float shadow).
+  `--fg` mixed into `--paper` for marks, the existing `.scrub` box (raised, hairline, 6px corners, float shadow).
 - The rail stays `aria-hidden`. The list stays the keyboard scroller; the keys in C3 are the keyboard's way to the
   same jumps.
 - Mark planning, the label text and the day lookup are pure functions with unit tests, so they can move to Rust in
@@ -65,7 +65,10 @@ with the oldest year first when labels compete for space. Each labelled span can
 month, day, hour, quarter hour, then five minutes, as long as the rank map leaves 14px between label centres.
 A boundary marks the period's newest note. A child starting at the same boundary can use the next available line
 inside its span. Empty spans use no room. The year is an 11px major label and the current year uses `--fg`.
-Finer labels are 9px and quieter. A smaller tick can show the next unit when the label cannot fit.
+Finer labels are 9px. Each label and tick takes its tone from how round its boundary is, one rank ladder
+across units: :05, :10, :15/:45, :30, then plain hours (where :00 sits), 06/18, 12, midnight (a plain day), the
+11th/21st, the 1st (a plain month), April/July/October, January and the year, 50% to 92% `--fg` over `--paper`.
+A smaller tick can show the next unit when the label cannot fit.
 
 - **Dates.** Year labels say `yyyy`, months say `mm/dd` of their newest day, days say `dd`, and clock labels
   say `HH:mm` of the newest occupied five-minute part in that span. Where only UTC month totals are known,

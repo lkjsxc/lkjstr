@@ -1,7 +1,15 @@
 import { afterEach, expect, it } from 'vitest';
 import { lensMarks, planMarks, snap } from '../src/views/time-marks.ts';
 import { timePreview } from '../src/views/time-preview.ts';
-import { rulerSpans, type Span } from '../src/views/time-ruler.ts';
+import {
+  dayTone,
+  hourTone,
+  minuteTone,
+  monthTone,
+  rulerSpans,
+  type Span,
+  YEAR_TONE,
+} from '../src/views/time-ruler.ts';
 import { timeScale } from '../src/views/time-scale.ts';
 
 const zone = process.env.TZ;
@@ -125,4 +133,31 @@ it('uses a label centre for snap, and bounds the planning time for a long retain
   const label = planMarks(rulerSpans(bands, days, clock), 900, true).labels[3]!;
   expect(snap([label], label.centre + 6)?.place).toEqual(label.place);
   expect(snap([label], label.centre + 7)).toBeUndefined();
+});
+
+it('darkens rounder boundaries in one ladder from five minutes to years', () => {
+  const ladder = [
+    minuteTone(5),
+    minuteTone(10),
+    minuteTone(45),
+    minuteTone(30),
+    hourTone(9),
+    hourTone(18),
+    hourTone(12),
+    hourTone(0),
+    dayTone(21),
+    dayTone(1),
+    monthTone(5),
+    monthTone(10),
+    monthTone(1),
+    YEAR_TONE,
+  ];
+  for (let i = 1; i < ladder.length; i++) expect(ladder[i]).toBeGreaterThanOrEqual(ladder[i - 1]!);
+  expect(ladder[0]).toBe(50);
+  expect(minuteTone(0)).toBe(hourTone(9));
+  expect(hourTone(0)).toBe(dayTone(14));
+  expect(dayTone(1)).toBe(monthTone(5));
+  expect(new Set(ladder).size).toBe(13);
+  expect(dayTone(31)).toBe(dayTone(2));
+  expect(dayTone(11)).toBeGreaterThan(dayTone(12));
 });

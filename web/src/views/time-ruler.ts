@@ -12,7 +12,28 @@ export type Span = {
   readonly place: TimePlace;
   readonly children: Span[];
   readonly coarse?: boolean;
+  /** Share of `--fg` over `--paper`, in percent: rounder boundaries are darker (owner, 2026-11-27). */
+  readonly tone: number;
 };
+
+// One ladder of ranks from the faintest five minutes to the year (docs/interface-time.md C2). A boundary that
+// is also the next unit's boundary shares its rank: :00 is a plain hour, midnight a plain day, the 1st a plain month.
+const tone = (rank: number): number => 50 + 3.5 * rank;
+/** Minutes, ranks 0 to 4: :05, :10, :15 and :45, :30, then :00. */
+export const minuteTone = (min: number): number => {
+  const round = [60, 30, 15, 10].findIndex((m) => min % m === 0);
+  return tone(round < 0 ? 0 : 4 - round);
+};
+/** Hours, ranks 4 to 7: plain, 06 and 18, 12, then midnight. */
+export const hourTone = (hour: number): number =>
+  tone(hour === 0 ? 7 : hour === 12 ? 6 : hour % 6 === 0 ? 5 : 4);
+/** Days, ranks 7 to 9: plain, the 11th and 21st, then the 1st. */
+export const dayTone = (day: number): number =>
+  tone(day === 1 ? 9 : day === 11 || day === 21 ? 8 : 7);
+/** Months, ranks 9 to 11: plain, April, July and October, then January. */
+export const monthTone = (month: number): number =>
+  tone(month === 1 ? 11 : month % 3 === 1 ? 10 : 9);
+export const YEAR_TONE = tone(12);
 
 const pad = (n: number): string => String(n).padStart(2, '0');
 const minute = 60_000;
@@ -34,6 +55,7 @@ export function rulerSpans(
     level: Level,
     key: number,
     text: string,
+    tone: number,
     band: TimeBand,
     offset: number,
     count: number,
@@ -55,6 +77,7 @@ export function rulerSpans(
       place: { month: band.at, offset },
       children: [],
       coarse,
+      tone,
     };
     list.push(span);
     return span;
@@ -69,17 +92,27 @@ export function rulerSpans(
     const year = date.getFullYear();
     const month = date.getMonth() + 1;
     const day = date.getDate();
-    const annual = append(years, 'year', year, String(year), band, offset, count);
+    const annual = append(years, 'year', year, String(year), YEAR_TONE, band, offset, count);
     const monthly = append(
       annual.children,
       'month',
       month,
       `${pad(month)}/${pad(day)}`,
+      monthTone(month),
       band,
       offset,
       count,
     );
-    const daily = append(monthly.children, 'day', part.at, pad(day), band, offset, count);
+    const daily = append(
+      monthly.children,
+      'day',
+      part.at,
+      pad(day),
+      dayTone(day),
+      band,
+      offset,
+      count,
+    );
     for (let bucket = clock[iClock]; bucket; bucket = clock[iClock]) {
       const [at, utcMonth, start, notes] = bucket;
       if (utcMonth !== band.at || start >= offset + count) break;
@@ -90,17 +123,27 @@ export function rulerSpans(
       const quarter = min - (min % 15);
       const text = clockText(hour, min);
       // Use the absolute instant as the key, preserving both occurrences of a repeated hour.
-      const hours = append(daily.children, 'hour', at - min * minute, text, band, start, notes);
+      const hours = append(
+        daily.children,
+        'hour',
+        at - min * minute,
+        text,
+        hourTone(hour),
+        band,
+        start,
+        notes,
+      );
       const quarters = append(
         hours.children,
         'quarter',
         at - (min - quarter) * minute,
         text,
+        minuteTone(quarter),
         band,
         start,
         notes,
       );
-      append(quarters.children, 'five', at, text, band, start, notes);
+      append(quarters.children, 'five', at, text, minuteTone(min), band, start, notes);
     }
   }
   for (const band of bands) {
@@ -110,8 +153,18 @@ export function rulerSpans(
     const date = new Date(band.at);
     const year = date.getUTCFullYear();
     const month = date.getUTCMonth() + 1;
-    const annual = append(years, 'year', year, String(year), band, offset, count);
-    append(annual.children, 'month', month, pad(month), band, offset, count, true);
+    const annual = append(years, 'year', year, String(year), YEAR_TONE, band, offset, count);
+    append(
+      annual.children,
+      'month',
+      month,
+      pad(month),
+      monthTone(month),
+      band,
+      offset,
+      count,
+      true,
+    );
   }
   return years;
 }

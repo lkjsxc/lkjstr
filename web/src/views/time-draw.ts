@@ -46,13 +46,14 @@ export function drawCurrentYear(marks: HTMLElement, at: number, local: boolean):
     number.classList.toggle('current', number.textContent === year);
 }
 
-const top = (y: number): string => `top: ${y}px`;
+// `--tone` is the span's share of `--fg` over `--paper` (docs/interface-time.md C2).
+const top = (y: number, tone: number): string => `top: ${y}px; --tone: ${tone}%`;
 const labelNode = (l: Label): HTMLElement =>
   h(
     'span',
     {
       class: `time-label time-${l.level} ${l.major ? 'time-major' : 'time-minor'}`,
-      style: top(l.centre),
+      style: top(l.centre, l.tone),
     },
     l.text,
   );
@@ -85,7 +86,10 @@ export function createMarkPainter(marks: HTMLElement, lens: HTMLElement) {
         );
         marks.replaceChildren(
           ...plan.dots.map((d) =>
-            h('span', { class: d.size === 2 ? 'time-dot fine' : 'time-dot', style: top(d.y) }),
+            h('span', {
+              class: d.size === 2 ? 'time-dot fine' : 'time-dot',
+              style: top(d.y, d.tone),
+            }),
           ),
           ...plan.labels.map(labelNode),
         );

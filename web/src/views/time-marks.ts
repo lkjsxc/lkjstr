@@ -2,7 +2,7 @@
 import type { Span } from './time-ruler.ts';
 
 export type Label = Span & { readonly centre: number; readonly major: boolean };
-export type Dot = { readonly y: number; readonly size: 2 | 3 };
+export type Dot = { readonly y: number; readonly size: 2 | 3; readonly tone: number };
 export type MarkPlan = { labels: Label[]; dots: Dot[]; frontier: Span[] };
 
 const HALF = 6;
@@ -19,7 +19,7 @@ export function planMarks(years: readonly Span[], height: number, wide: boolean)
   const bottom = height - HALF;
   const dot = (s: Span, size: Dot['size']): void => {
     if (dots.every((d) => Math.abs(d.y - s.y) >= (d.size + size) / 2 + DOT_GAP))
-      dots.push({ y: s.y, size });
+      dots.push({ y: s.y, size, tone: s.tone });
   };
   const place = (s: Span, major: boolean): boolean => {
     let centre = Math.min(bottom, s.y + HALF);
