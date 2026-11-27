@@ -176,9 +176,9 @@ impl Host {
                     if self.discovery.len() >= 32 {
                         self.scope.direct(id, &Session::failure(req, "too-large"));
                     } else {
-                        self.discovery
-                            .insert((id, req.clone()), self.time() + 60000);
-                        self.scope.direct(id, &O::GetPublicKey { req });
+                        let expires_at = self.time() + 60000;
+                        self.discovery.insert((id, req.clone()), expires_at);
+                        self.scope.direct(id, &O::GetPublicKey { req, expires_at });
                     }
                 } else if self.account_tasks.len() < 32 {
                     self.account_tasks

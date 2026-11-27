@@ -84,7 +84,7 @@ pub fn start_shared() -> Result<SharedWorkerHandle, JsValue> {
         upload_tasks: vec![],
         upload_control: Default::default(),
         upload_inflight: 0,
-        relay_auth_inflight: 0,
+        relay_auth_jobs: Default::default(),
         dm: Default::default(),
         zaps: Default::default(),
         private_lists: Default::default(),

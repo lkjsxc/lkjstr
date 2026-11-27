@@ -55,7 +55,7 @@ Bounds, scorecards and deferred work are in
 Merged chronological queries share a recent preview and an admitted history
 boundary for windows, refill and rail ordinals. Verified route pages can extend
 history. The follow graph and distinct non-owner signers govern Home of either
-owner. A silent relay leaves its range owed. See [fetch orchestration](fetch-orchestrator.md).
+owner. A silent relay leaves its range owed. See [fetch orchestration](fetch-orchestrator.md) and the separate [signer lane](signer-orchestrator.md).
 
 ## Bounds and storage
 

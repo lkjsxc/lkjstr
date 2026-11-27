@@ -120,7 +120,6 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
     if (rail.busy() || !sub || !env.visible.get()) return;
     sub.reading?.(keeper.get()?.key ?? rows[0]?.key ?? null);
     if (moment) return moment.follow(rows);
-    if (kind === 'bookmarks' && sstate?.privateLists?.phase === 'loading') return;
     const head = atTop || mode === 'held-head' || (mode === 'top' && outside.count > 0);
     const overflow = fresh.overflow() && !waiting;
     const followHead = el.scrollTop < 8 && head && !keys.held() && !overflow;

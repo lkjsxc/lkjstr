@@ -55,6 +55,12 @@ const wishes = [1440, 390].flatMap((width) =>
 );
 
 const signers = [
+  'NIP-07 Post overtakes queued background relay authentication',
+  'NIP-07 pending Post leaves public bookmark paging, paint and navigation usable',
+  'NIP-07 pending Post runs before lazy private-list work',
+  'NIP-07 signer Stats answers with live load while Post waits',
+  'NIP-07 delayed Post still reaches the loopback relay',
+  'NIP-07 signer Stats clears Waiting after the reply',
   'NIP-07 reject-discover leaves navigation and input usable',
   'NIP-07 reject-discover returns the expected failure code',
   'NIP-07 reject-discover publishes nothing',

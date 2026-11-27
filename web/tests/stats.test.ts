@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { EngineStats } from '../src/engine/protocol.ts';
-import { setLang } from '../src/shared/i18n.ts';
+import { setLang, t } from '../src/shared/i18n.ts';
 import { createSignal } from '../src/shared/signal.ts';
 import type { ViewEnv } from '../src/views/registry.ts';
 import { bytesText, mountStats, relayMark, sortRelays } from '../src/views/stats.ts';
@@ -117,6 +117,56 @@ describe('stats', () => {
     } finally {
       a.off();
       b.off();
+      vi.useRealTimers();
+    }
+  });
+
+  it('replaces a missing response with current figures on the next poll', async () => {
+    vi.useFakeTimers();
+    setLang('ja');
+    let snapshot: EngineStats | undefined;
+    const el = document.createElement('div');
+    const off = mountStats(el, {
+      instance: 'stats-recovery',
+      visible: createSignal(true),
+      menu() {},
+      engine: { stats: async () => snapshot },
+    } as unknown as ViewEnv);
+    try {
+      await Promise.resolve();
+      expect(el.querySelector<HTMLElement>('.sfigs')?.hidden).toBe(true);
+      expect(el.querySelector('.fstate')?.textContent).toBe(t('stats.none'));
+      snapshot = {
+        relays: [
+          relay('wss://down.example', { state: 'failed' }),
+          relay('wss://slow.example', { latencyMs: 2000 }),
+        ],
+        totals: {
+          eventsStored: 39,
+          cacheBytes: 40,
+          subscriptions: 4,
+          servedFromCache: 3,
+          servedFromNetwork: 1,
+        },
+        orchestration: { relaysCoveringFollowSet: 1, requestsCoalesced: 0 },
+      };
+      await vi.advanceTimersByTimeAsync(1000);
+      const summary = el.querySelector<HTMLElement>('.sfigs');
+      expect(summary?.hidden).toBe(false);
+      expect([...el.querySelectorAll('.sval')].map((value) => value.textContent)).toEqual([
+        '1/2',
+        '75%',
+        '0',
+        '39',
+      ]);
+      expect(summary?.textContent).not.toMatch(/フォローを届けるリレー|失敗 1|遅い 1/);
+      expect(el.querySelector<HTMLElement>('.fstate')?.hidden).toBe(true);
+      snapshot = undefined;
+      await vi.advanceTimersByTimeAsync(1000);
+      expect(summary?.hidden).toBe(false);
+      expect(el.querySelector<HTMLElement>('.fstate')?.hidden).toBe(true);
+    } finally {
+      off();
       vi.useRealTimers();
     }
   });

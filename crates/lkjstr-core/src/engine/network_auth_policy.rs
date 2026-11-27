@@ -1,5 +1,7 @@
 //! Authorization follows current device identity and current work, never a challenge alone.
 use super::*;
+use crate::engine::signer_orchestration::SignerWork;
+use std::cmp::Reverse;
 pub(super) fn request_needs(filter: &NostrFilter, account: &str, active: Option<&str>) -> bool {
     if filter
         .kinds
@@ -46,26 +48,62 @@ impl Network {
         }
     }
     pub(super) fn auth_needed(&self, relay: &str, account: &str, now: u64) -> bool {
+        self.auth_work(relay, account, now).is_some()
+    }
+    fn auth_work(&self, relay: &str, account: &str, now: u64) -> Option<SignerWork> {
         if !self.auth_signers.contains(account) {
-            return false;
+            return None;
         }
-        let Some(r) = self.relays.get(relay).filter(|r| r.online) else {
-            return false;
-        };
-        r.auth.blocked.iter().any(|id| {
-            self.requests.get(id).is_some_and(|q| {
+        let r = self.relays.get(relay).filter(|r| r.online)?;
+        if r.auth.writes.iter().any(|id| {
+            self.publications
+                .get(id)
+                .is_some_and(|p| p.auth_account == account && p.pending_on(relay, now))
+        }) {
+            return Some(SignerWork::UserAction);
+        }
+        r.auth
+            .blocked
+            .iter()
+            .filter_map(|id| self.requests.get(id))
+            .filter(|q| {
                 !q.complete
                     && now < q.deadline
                     && request_needs(&q.filter, account, self.auth_active.as_deref())
             })
-        }) || r.auth.writes.iter().any(|id| {
-            self.publications
-                .get(id)
-                .is_some_and(|p| p.auth_account == account && p.pending_on(relay, now))
-        })
+            .map(|q| match q.purpose {
+                "focused" | "visible" => SignerWork::Visible,
+                _ => SignerWork::Background,
+            })
+            .max_by_key(|work| work.weight())
+    }
+    pub(super) fn ready_auth(
+        &self,
+        accounts: &[String],
+        now: u64,
+    ) -> Option<(String, String, String, SignerWork)> {
+        self.relays
+            .iter()
+            .filter(|(_, r)| r.online && r.auth.pending.is_none())
+            .filter_map(|(url, r)| {
+                let challenge = r.auth.challenge.as_ref()?;
+                accounts
+                    .iter()
+                    .take(32)
+                    .filter(|account| !r.auth.tried.contains(*account))
+                    .filter_map(|account| {
+                        self.auth_work(url, account, now)
+                            .map(|work| (url, challenge, account, work))
+                    })
+                    .min_by_key(|(_, _, _, work)| Reverse(work.weight()))
+            })
+            .min_by_key(|(_, _, _, work)| Reverse(work.weight()))
+            .map(|(url, challenge, account, work)| {
+                (url.clone(), challenge.clone(), account.clone(), work)
+            })
     }
     /// A revoked identity or removed demand is cancellation, not failure of other work.
-    pub(super) fn auth_cancel(&mut self, job: &AuthRequest) {
+    pub fn auth_cancel(&mut self, job: &AuthRequest) {
         if let Some(r) = self.relays.get_mut(&job.relay)
             && r.auth
                 .pending

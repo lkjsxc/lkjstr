@@ -52,26 +52,14 @@ impl Session {
         Some(engine.private_reads.status(account, &events))
     }
     pub(super) fn private_output(&mut self, out: &mut Output, engine: &Engine) {
-        match out {
-            Output::State { sub, state } => {
-                let Some(status) = self.private_status(sub, engine) else {
-                    return;
-                };
-                let cached = self.private_states.entry(sub.clone()).or_default();
-                cached.base = Some(Self::relay_state(state));
-                state["privateLists"] = json!(status);
-                cached.status = Some(status);
-            }
-            Output::Rows { sub, at_bottom, .. }
-                if self.queries.get(sub).is_some_and(|q| {
-                    matches!(q.source.as_str(), "mutes" | "bookmarks" | "list")
-                }) && self
-                    .private_status(sub, engine)
-                    .is_some_and(|s| s.pending > 0) =>
-            {
-                *at_bottom = false;
-            }
-            _ => {}
+        if let Output::State { sub, state } = out {
+            let Some(status) = self.private_status(sub, engine) else {
+                return;
+            };
+            let cached = self.private_states.entry(sub.clone()).or_default();
+            cached.base = Some(Self::relay_state(state));
+            state["privateLists"] = json!(status);
+            cached.status = Some(status);
         }
     }
     /// Emits only changed metadata, including completion without a Store revision.

@@ -33,7 +33,7 @@ See [history](engine-proposals-history.md), [emoji](engine-proposals-emoji.md), 
 - `ToEngine.dm.open.visible?` supplies initial private visibility atomically; omission keeps the existing visible default.
 - `ToEngine.upload.cancel {req}` cancels only that client's pending upload request and its authorization, HTTP and processing waits.
 - `FromEngine.result.cancelled?` confirms cancellation by its owning queue or Worker, with `ok:false` and no pending effect.
-- `FromEngine.sign.actionReq?` identifies the originating upload so cancelled authorization cannot start or consume a later signer request.
+- `FromEngine.sign.actionReq?` identifies the action owning an auxiliary signing request so cancellation discards its queued work.
 - `Engine.dm.open(query,receive,{visible?})` supplies the optional initial private visibility through the existing client API.
 - `ActWatch.uploadSignal?` connects the existing attachment removal/clear/dispose controls to upload cancellation.
 ## Protocol 8 interface additions (2026-11-16, owner authorized)
@@ -61,11 +61,9 @@ See [history](engine-proposals-history.md), [emoji](engine-proposals-emoji.md), 
 - `Action.dm.editor {as,editor,open,dirty?}` acknowledges bounded private editor admission and tracks pending encrypted writes across page expiry.
 - `FromEngine.dm.flush {req,account,phase}` holds participating editors during lock preparation and releases them after commit or failure.
 - `ToEngine.dm.flushed {req,ok}` acknowledges only that port's exact lock preparation after its latest encrypted state commits.
-
 The draft archive is local and encrypted for every signer kind, not account setup sync or a public list.
 Bounds, atomic removal, conflicts and the Worker-scoped unlock limit are in [dm-drafts.md](dm-drafts.md).
 ## Protocol 9 zap additions (2026-11-16, owner authorized)
-
 - `ToEngine.zap.quote {req,query:{target,amountMsat?}}` requests finite read-only provider/split evidence.
 - `FromEngine.zap.quote {req,quote}` carries loading/ready/failed/unsupported evidence and recipient ranges.
 - `ToEngine.zap.receipts {req,query:{target,before?,limit}}` requests a bounded trusted receipt page.
@@ -84,23 +82,20 @@ Bounds, atomic removal, conflicts and the Worker-scoped unlock limit are in [dm-
 - `ActWatch.zapSignal?` connects caller cancellation to invoice lifetime without an added control.
 - Protocol 9: `reading {sub,key}` carries one delivered reading anchor independently of retained-window bounds; null restores window-anchor fallback.
 ## Protocol 10 private list additions (2026-11-16, owner authorized)
-
 - Add `Query.privateLists?` for visible, account-scoped external list-read opt-in.
 - Add `open.visible?` to make initial ordinary subscription visibility atomic.
 - Add `crypt.context?` with `{kind:'private-list',sub,event}` for purpose and view ownership.
-- Add `crypt.cancel {req}` to invalidate a queued or in-flight private-list signer request.
+- Add `crypt.cancel {req}` to invalidate a queued or in-flight private crypto request.
 - Add `SubState.privateLists?` with phase, pending/failed container counts and optional error.
 - Add `lists.retry {as}` to reset only this account's private-list refusal/capability failures.
 - Add `Account.privateLists?` to qualify unread policy, including unknown without admitted work.
 ## Protocol 11 signer authorization additions (2026-11-16, integration candidate)
-
 - `signer.auth {id,peer,method,url,expiresAt,account?,actionReq?}` exposes one verified, ephemeral challenge only to its initiating client.
 - `signer.auth.clear {id}` withdraws that challenge on completion, cancellation, expiry or revoked authority.
 - `signer.auth.cancel {id,reason?:'unsupported'}` cancels only the originating client's exact opaque handle.
 - `Engine.signerAuth?` exposes an in-memory pending signal and explicit cancellation; it never opens, fetches or persists URLs.
 - Current method names, deadlines, recipient ownership and unsupported fallback paths are specified in [bunker-auth.md](bunker-auth.md).
 ## Protocol 12 storage inspection additions (2026-11-16, verified)
-
 - `storage.inspect {req}` requests one owner-scoped, finite observation; it does not mutate storage.
 - `storage.close {req}` cancels only that client's pending observation and suppresses late effects.
 - `storage {req,report:StorageReport}` returns independently settled memory, row-count and origin components.
@@ -177,13 +172,11 @@ Mock-only `EngineConfig.mock`: `slow` signs a note late and delays its answers, 
 - Optional `stats.signing` reports bounded `recent` and `slow` timings. See [signing-latency.md](signing-latency.md) for stages and retention.
 - Optional `window.headThrough` on a top window retains its delivered tail key while following new rows, up to 6800 rows.
 - Optional `NoteRow.unconfirmed` marks the signed-in author's settled note while a retained receipt still has zero accepted deliveries.
-
 ## Client attribution
 - `NoteRow.clientAddress?` carries a valid kind-31990 coordinate next to the existing tag name in `client`.
 - `Action.client.info {address}` resolves one handler on explicit request, or returns `not-found`.
 - `FromEngine.result.clientInfo?` carries the verified handler name and optional HTTP(S) website.
 - `EngineConfig.clientTagAccount?` scopes `clientTag` to one device account. Omit it for the device fallback.
-
 ## Note visibility
 - Existing `NoteRow.hidden` gains `revealable?` and a bounded optional matching mute entry `detail?`; the same row key carries a body-free slot.
 - `NoteRow.revealed?: {reason}` preserves the reason while displaying an explicitly revealed verified note.
@@ -198,3 +191,10 @@ Mock-only `EngineConfig.mock`: `slow` signs a note late and delays its answers, 
 - Diagnostics add cacheManagedBytes and pendingPersistenceOverheadBytes (managed vs eventPayloadBytes); debug adds pressureScratchBytes (GDSF epochs).
 - `relay` rows: a `RelayRow` head (`relay:<url>`), then notes that relay served; its NIP-11 fields are listed in interface-relay.md.
 - `open.window?` carries a keyed initial window and its usual row bounds for atomic reopening.
+- Optional `EngineStats.extensionSigner` adds availability, pending requests, median method latency, calls per minute and timeouts.
+- Optional `sign.expiresAt` gives extension signing its Worker deadline in epoch milliseconds.
+- Optional `getPublicKey.expiresAt` gives extension discovery its Worker deadline in epoch milliseconds.
+- Optional `crypt.expiresAt` gives extension crypto its Worker deadline in epoch milliseconds.
+- Optional `sign.weight` selects the engine-assigned class for extension signing.
+- Optional `crypt.weight` selects the engine-assigned class for extension crypto.
+- `sign.cancel {req}` releases an auxiliary signer request when its Worker demand or deadline ends.

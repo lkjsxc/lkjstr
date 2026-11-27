@@ -73,6 +73,10 @@ Follow or mute changes and event removals can invalidate covered rows.
 Snapshot replay uses the same policy identity and the preview age supplied by
 the engine, so it cannot reintroduce unknown history on reload.
 
+The [extension signer orchestrator](signer-orchestrator.md) has its own slot
+and rate budget. It uses the same demand, weight and cancellation model
+without requiring a signature to read or paint public rows.
+
 ## Spending connection and bandwidth budgets
 
 Schedule demanded work before speculative work. Start with class weights 8, 4,

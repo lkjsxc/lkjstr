@@ -1,5 +1,6 @@
 //! NIP-42 challenges belong to one socket. AUTH never enters the public store.
 use super::*;
+use crate::engine::signer_orchestration::SignerWork;
 use lkjstr_protocol::UnsignedNostrEvent;
 #[path = "network_auth_finish.rs"]
 mod finish;
@@ -12,12 +13,18 @@ pub struct AuthRequest {
     pub relay: String,
     pub event: UnsignedNostrEvent,
     pub deadline: u64,
+    pub work: SignerWork,
     generation: u64,
+}
+impl AuthRequest {
+    pub fn token(&self) -> u64 {
+        self.generation
+    }
 }
 #[derive(Default)]
 pub(in crate::engine) struct Authentication {
     challenge: Option<String>, // <= 4096 bytes; discarded on disconnect.
-    changes: usize,            // <= 8 distinct challenges per connection.
+    seen: BTreeSet<String>,    // <= 8 distinct challenges per connection.
     tried: BTreeSet<String>,   // <= 32 saved accounts per challenge.
     pending: Option<(AuthRequest, Option<String>)>,
     blocked: BTreeSet<String>, // Logical request IDs, pruned against requests.
@@ -34,12 +41,11 @@ impl Network {
             return;
         };
         if challenge.len() > 4096
-            || r.auth.challenge.as_ref() == Some(&challenge)
-            || r.auth.changes >= 8
+            || r.auth.seen.len() >= 8
+            || !r.auth.seen.insert(challenge.clone())
         {
             return;
         }
-        r.auth.changes += 1;
         r.auth.challenge = Some(challenge);
         r.auth.pending = None;
         r.auth.tried.clear();
@@ -94,44 +100,37 @@ impl Network {
         now: u64,
     ) -> Option<AuthRequest> {
         self.set_auth_accounts(accounts, active, now);
-        for url in self.relays.keys().cloned().collect::<Vec<_>>() {
-            let r = &self.relays[&url];
-            if !r.online || r.auth.pending.is_some() {
-                continue;
-            }
-            let Some(challenge) = r.auth.challenge.clone() else {
-                continue;
-            };
-            let account = accounts
-                .iter()
-                .take(32)
-                .find(|account| {
-                    !r.auth.tried.contains(*account) && self.auth_needed(&url, account, now)
-                })
-                .cloned();
-            let Some(account) = account else { continue };
-            self.auth_next_job = self.auth_next_job.checked_add(1)?;
-            let r = self.relays.get_mut(&url)?;
-            r.auth.tried.insert(account.clone());
-            let job = AuthRequest {
-                relay: url.clone(),
-                event: UnsignedNostrEvent {
-                    pubkey: account,
-                    created_at: now / 1000,
-                    kind: 22242,
-                    tags: vec![
-                        vec!["relay".into(), url],
-                        vec!["challenge".into(), challenge],
-                    ],
-                    content: String::new(),
-                },
-                deadline: now.saturating_add(60_000),
-                generation: self.auth_next_job,
-            };
-            r.auth.pending = Some((job.clone(), None));
-            return Some(job);
-        }
-        None
+        let (url, challenge, account, work) = self.ready_auth(accounts, now)?;
+        self.auth_next_job = self.auth_next_job.checked_add(1)?;
+        let r = self.relays.get_mut(&url)?;
+        r.auth.tried.insert(account.clone());
+        let job = AuthRequest {
+            relay: url.clone(),
+            event: UnsignedNostrEvent {
+                pubkey: account,
+                created_at: now / 1000,
+                kind: 22242,
+                tags: vec![
+                    vec!["relay".into(), url],
+                    vec!["challenge".into(), challenge],
+                ],
+                content: String::new(),
+            },
+            deadline: now.saturating_add(60_000),
+            work,
+            generation: self.auth_next_job,
+        };
+        r.auth.pending = Some((job.clone(), None));
+        Some(job)
+    }
+    pub fn auth_current(&self, job: &AuthRequest, now: u64) -> bool {
+        now < job.deadline
+            && self.auth_needed(&job.relay, &job.event.pubkey, now)
+            && self
+                .relays
+                .get(&job.relay)
+                .and_then(|relay| relay.auth.pending.as_ref())
+                .is_some_and(|(pending, _)| pending.generation == job.generation)
     }
     /// Reject stale identity/demand, changed challenges and disconnected signer replies.
     pub fn auth_signed(&mut self, job: &AuthRequest, result: Result<NostrEvent, &str>, now: u64) {
@@ -195,5 +194,34 @@ impl Network {
             self.auth_finished(relay, accepted, message, now);
         }
         true
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn repeated_challenges_share_the_connection_history() {
+        let url = "wss://auth.test/";
+        let mut network = Network::default();
+        network.relays.insert(
+            url.into(),
+            Relay {
+                online: true,
+                ..Default::default()
+            },
+        );
+        network.auth_challenge(url, "first".into());
+        network.auth_challenge(url, "first".into());
+        network.auth_challenge(url, "new".into());
+        network.auth_challenge(url, "first".into());
+        assert_eq!(network.relays[url].auth.challenge.as_deref(), Some("new"));
+        assert_eq!(network.relays[url].auth.seen.len(), 2);
+        if let Some(relay) = network.relays.get_mut(url) {
+            relay.auth.reset();
+        }
+        network.auth_challenge(url, "first".into());
+        assert_eq!(network.relays[url].auth.challenge.as_deref(), Some("first"));
     }
 }

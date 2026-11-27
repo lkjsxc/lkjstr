@@ -52,3 +52,21 @@ test('nullable relay observations still reject invalid counter types',async()=>{
     for(const value of ['0',{},[],NaN,Infinity])
       assert.throws(()=>validateReplies([relayStats({[key]:value})]),/protocol shape mismatch/);
 });
+
+test('timeline clock buckets require exactly four numeric entries', async () => {
+  const { validateReplies } = await import('./engine-contract.mjs');
+  const timeline = (clock) => ({ t: 'timeline', sub: 'fixture', timeline: {
+    newest: 4000, oldest: 1000, months: [], positions: [], supported: true, older: false, clock,
+  } });
+  assert.doesNotThrow(() => validateReplies([timeline([[4000, 1000, 0, 2]])]));
+  for (const clock of [[[4000, 1000, 0]], [[4000, 1000, 0, '2']], [[4000, 1000, 0, 2, 1]]])
+    assert.throws(() => validateReplies([timeline(clock)]), /protocol shape mismatch/);
+});
+
+test('extension signing validates numeric work weights and owned cancellations', async () => {
+  const { validateReplies } = await import('./engine-contract.mjs');
+  const sign = { t: 'sign', req: 'sample', pubkey: 'fixture', event: '{}', expiresAt: 1000 };
+  assert.doesNotThrow(() => validateReplies([{ ...sign, weight: 16 }, { t: 'sign.cancel', req: 'sample' }]));
+  for (const weight of [3, '16'])
+    assert.throws(() => validateReplies([{ ...sign, weight }]), /protocol shape mismatch/);
+});

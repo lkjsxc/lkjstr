@@ -44,14 +44,62 @@ async function setup({
         );
       window.signerResults = [];
       window.signerCalls = { getPublicKey: 0, signEvent: 0, decrypt: 0 };
+      const slow = mode === 'slow-sign';
+      window.signerTrace = [];
+      const trace = (phase, value) => {
+        if (slow && window.signerTrace.length < 200)
+          window.signerTrace.push({ phase, at: Math.round(performance.now()), value });
+      };
+      let bookmarkSub, publishReq, releaseAuth;
+      const fakeAuthIds = Array.from({ length: 8 }, (_, n) => `fixture-auth-${n}`);
+      const authGate = new Promise((done) => {
+        releaseAuth = done;
+      });
+      if (slow) {
+        const fromWorker = (data) =>
+          window.uploadPort.onmessage(new MessageEvent('message', { data }));
+        window.queueSignerBurst = () => {
+          for (const req of fakeAuthIds) {
+            const event = {
+              pubkey,
+              created_at: Math.floor(Date.now() / 1000),
+              kind: 22242,
+              content: '',
+              tags: [
+                ['relay', relayUrl],
+                ['challenge', req],
+              ],
+            };
+            fromWorker({ t: 'sign', req, pubkey, event: JSON.stringify(event) });
+          }
+        };
+        window.releaseSignerBurst = releaseAuth;
+        window.cancelSignerBurst = () => {
+          for (const req of fakeAuthIds) fromWorker({ t: 'sign.cancel', req });
+        };
+      }
       const observe = (port) => {
         const post = port.postMessage.bind(port);
         port.postMessage = (m, ...args) => {
+          if (slow && m.t === 'signed' && fakeAuthIds.includes(m.req)) return;
           if (m.t === 'act' && m.action.a === 'upload' && window.uploadTarget && !m.action.server)
             m.action.server = window.uploadTarget;
+          if (slow && m.t === 'open' && m.query.source === 'bookmarks') bookmarkSub = m.sub;
+          if (slow && m.t === 'act' && m.action.a === 'publish') publishReq = m.req;
+          if (slow && m.t === 'window' && m.sub === bookmarkSub)
+            trace('window', m.anchor === 'top' ? 'top' : 'anchor');
           return post(m, ...args);
         };
         port.addEventListener('message', ({ data: m }) => {
+          if (slow && m.sub === bookmarkSub) {
+            if (m.t === 'rows') trace('rows', m.rows.length);
+            if (m.t === 'state' && m.state.privateLists)
+              trace('private-state', m.state.privateLists.phase);
+          }
+          if (m.t === 'crypt' && m.context?.kind === 'private-list') trace('private-request');
+          if (m.t === 'publish.signed') trace('publish-signed');
+          if (slow && m.t === 'sign' && m.req === publishReq) trace('publish-request');
+          if (slow && m.t === 'result' && m.req === publishReq) trace('publish-result', m.ok);
           if (m.t === 'accounts') {
             window.uploadAccount = m.active;
             if (m.active)
@@ -84,7 +132,27 @@ async function setup({
       const answer = (phase, value) => {
         if (mode === `reject-${phase}`) return Promise.reject(new Error('fixture refusal'));
         if (mode === `hang-${phase}`) return new Promise(() => {});
+        if (slow) {
+          trace(`${phase}-start`);
+          const delay = new Promise((done) => setTimeout(done, phase === 'discover' ? 1500 : 5000));
+          const held =
+            phase === 'sign'
+              ? new Promise((done) => {
+                  window.releaseSigner = done;
+                })
+              : undefined;
+          return Promise.all([delay, held]).then(async () => {
+            const result = await value();
+            trace(`${phase}-finish`);
+            return result;
+          });
+        }
         return Promise.resolve(value());
+      };
+      const heldDecrypt = () => {
+        window.signerCalls.decrypt++;
+        trace('decrypt-start');
+        return new Promise(() => {});
       };
       const unsupported = () => {
         window.signerCalls.decrypt++;
@@ -97,6 +165,14 @@ async function setup({
         },
         signEvent(event) {
           window.signerCalls.signEvent++;
+          if (slow && event.kind === 22242) {
+            trace('auth-start');
+            const delay = new Promise((done) => setTimeout(done, 1500));
+            return Promise.all([delay, authGate]).then(() => {
+              trace('auth-finish');
+              return window.fixtureSign(event);
+            });
+          }
           if (window.uploadSignMode === 'refuse')
             return Promise.reject(new Error('fixture refusal'));
           if (window.uploadSignMode === 'hang') return new Promise(() => {});
@@ -107,7 +183,7 @@ async function setup({
           );
         },
         nip04: { encrypt: unsupported, decrypt: unsupported },
-        nip44: { encrypt: unsupported, decrypt: unsupported },
+        nip44: { encrypt: unsupported, decrypt: slow ? heldDecrypt : unsupported },
       };
     },
     { relayUrl, pubkey, mode, bunkerKey: bunker.pubkey },

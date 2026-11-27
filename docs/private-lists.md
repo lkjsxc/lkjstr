@@ -26,9 +26,10 @@ algorithm. There is no production NIP-04 encryption operation.
 `SubState.privateLists` has a phase, pending/failed list counts and an
 optional stable error code. These counts describe list containers, not tags.
 Relay EOSE does not complete private decryption. Existing loading/failure
-nodes show private dependency state; available public rows stay available.
-The extension bridge gives already delivered public rows a paint opportunity
-before calling the signer. Both identity checks still bound the decrypt.
+nodes show private dependency state. Public rows paint and page while the
+private state is loading. The extension bridge gives delivered rows a paint
+opportunity before it queues list work. The extension account is checked on
+both sides of the decrypt.
 When private mutes land, the Worker replaces affected notes with their covered
 rows, and the feed keeps the reader's surviving row at its previous offset.
 Dependency-only updates retain the last relay phase and counters actually
@@ -41,8 +42,7 @@ current relay completion can seed the new query's dependency updates.
 
 `lists.retry {as}` explicitly resets this account's private-list failures.
 The Messages consent preference and refusal state are separate. List reads
-share the bounded private signer executor with Messages, so they cannot open
-concurrent calls for the same account.
+use the lowest weight in the page's [extension orchestrator](signer-orchestrator.md).
 
 ## Local notification policy
 
@@ -86,15 +86,14 @@ truncated. Payload limits also apply before parsing.
 There are at most two asynchronous list effects, one per account. Local mute
 policy has a bounded synchronous pass over at most 32 accounts. All external
 private crypto shares the existing eight-call Worker gate and the bounded
-main-thread executor. Each signer call has a 60-second bound; the whole list
-job has a 90-second lifetime. Job expiry is distinct from an actual signer
-timeout and cannot invent successful completion.
+main-thread executor. An extension request has a 60-second queue and
+execution budget. The whole list job has a 90-second lifetime.
 
 Closing or hiding a view cancels queued work and invalidates responses.
 An already open extension dialog cannot be programmatically dismissed.
-The frontend rechecks the request lifetime after each awaited signer call,
-so revocation or expiry cannot start a later decrypt or identity-check call.
-This cancellation does not set the Messages refusal state.
+A cancelled request drops queued methods and ignores its running method's
+result. An open extension call keeps its slot until it settles or its deadline
+passes. Private-list cancellation leaves Messages consent and refusal intact.
 Successful cached data can remain available across a hidden visit while the
 account remains authorized. Cache saturation reports `too-large`; explicit
 Retry does not evict successful data. Account revocation or a new Worker

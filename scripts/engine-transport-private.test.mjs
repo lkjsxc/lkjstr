@@ -74,18 +74,18 @@ test('retired SharedWorker callbacks cannot deliver releases or reconnect a newe
   });
 });
 
-test('an asynchronous public-key answer stays with the connection that requested it', () =>
-  fixture(async (transport, first, state, set) => {
-    let answer;
-    set('nostr', { getPublicKey: () => new Promise((done) => { answer = done; }) });
+test('public-key requests are forwarded with other Worker traffic and drop on retirement', () =>
+  fixture((transport, first, state) => {
+    const received = [];
+    transport.listen((message) => received.push(message));
     deliver(first, { t: 'ready', version: 8, engine: 'first' });
-    deliver(first, { t: 'getPublicKey', req: 'old-discovery' });
+    const retired = first.onmessage;
+    const request = { t: 'getPublicKey', req: 'discover' };
+    deliver(first, request);
+    assert.equal(received.at(-1), request);
     state.workers[0].onerror();
-    deliver(state.ports[1], { t: 'ready', version: 8, engine: 'second' });
-    answer(query.account);
-    await Promise.resolve();
-    await Promise.resolve();
-    assert.equal(state.ports[1].sent.some((m) => m.t === 'publicKey'), false);
+    retired({ data: request });
+    assert.equal(received.filter((m) => m === request).length, 1);
   }));
 
 test('a follower rejects old-leader output after the current leader prepares a lock', () => {

@@ -37,6 +37,8 @@ pub enum Output {
     Sign {
         req: String,
         event: UnsignedNostrEvent,
+        publish: bool,
+        deadline: u64,
     },
     PublishSigned {
         req: String,

@@ -60,10 +60,14 @@ export function watchList(
           ended = bottom;
           // Bound: membership of the finite source on this device. Swap complete snapshots
           // so refreshing a later page never removes the row holding the keyboard.
-          if (bottom || !rows.length) draw((rows = [...collected.values()]), bottom, state);
+          if (bottom || !rows.length)
+            draw(
+              (rows = [...collected.values()]),
+              bottom && state?.privateLists?.phase !== 'loading',
+              state,
+            );
           const last = r.at(-1);
-          if (!bottom && last && (top || added) && state?.privateLists?.phase !== 'loading')
-            request({ key: last.key });
+          if (!bottom && last && (top || added)) request({ key: last.key });
         },
         patch: () => request('top'),
         state(next) {

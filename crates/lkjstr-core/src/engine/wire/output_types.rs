@@ -72,8 +72,11 @@ pub enum Output {
         data: String,
         #[serde(skip_serializing_if = "std::ops::Not::not")]
         background: bool,
+        weight: u8,
         #[serde(skip_serializing_if = "Option::is_none")]
         context: Option<CryptContext>,
+        #[serde(rename = "expiresAt", skip_serializing_if = "Option::is_none")]
+        expires_at: Option<u64>,
     },
     Timeline {
         sub: String,
@@ -105,6 +108,8 @@ pub enum Output {
     Heartbeat,
     GetPublicKey {
         req: String,
+        #[serde(rename = "expiresAt")]
+        expires_at: u64,
     },
     Reconnect,
     Progress {
@@ -155,6 +160,13 @@ pub enum Output {
         event: String,
         #[serde(rename = "actionReq", skip_serializing_if = "Option::is_none")]
         action_req: Option<String>,
+        #[serde(rename = "expiresAt", skip_serializing_if = "Option::is_none")]
+        expires_at: Option<u64>,
+        weight: u8,
+    },
+    #[serde(rename = "sign.cancel")]
+    SignCancel {
+        req: String,
     },
     #[serde(rename = "publish.signed")]
     PublishSigned {

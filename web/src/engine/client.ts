@@ -3,9 +3,9 @@ import { learnPerson, learnRows, onPerson } from '../shared/people.ts';
 import { createSignal } from '../shared/signal.ts';
 import { createActionRequests } from './client-actions.ts';
 import type { AccountState, Accounts, Engine, SubHandlers } from './client-api.ts';
-import { answerPublicKey, answerSign } from './client-crypto.ts';
 import { createDeliveryWatches } from './client-delivery.ts';
 import { createDmClient } from './client-dm.ts';
+import { createExtensionClient } from './client-extension.ts';
 import { createPrivateListClient } from './client-private-lists.ts';
 import { createSignerAuthClient } from './client-signer-auth.ts';
 import { createStorageClient } from './client-storage.ts';
@@ -14,22 +14,15 @@ import { createZapClient } from './client-zaps.ts';
 import { writingHasPriority } from './dm-watch.ts';
 import type { EngineStats, Hint } from './protocol.ts';
 
-export type {
-  AccountState,
-  Accounts,
-  ActResult,
-  ActWatch,
-  Engine,
-  SubHandlers,
-  Subscription,
-} from './client-api.ts';
+export type * from './client-api.ts';
 export { type Transport, workerTransport } from './client-transport.ts';
 
 const IDLE_MS = 180_000;
 const STATS_MS = 4000;
 
 export function createEngine(transport: Transport): Engine {
-  const dm = createDmClient(transport);
+  const extension = createExtensionClient((message) => transport.post(message));
+  const dm = createDmClient(transport, extension.orchestrator);
   const signerAuth = createSignerAuthClient(transport);
   const zaps = createZapClient(transport);
   const storage = createStorageClient(transport);
@@ -77,6 +70,7 @@ export function createEngine(transport: Transport): Engine {
     transport,
     () => `r${++serial}`,
     (req, watch) => deliveries.add(req, watch),
+    extension.cancel,
   );
   const active = (): void => {
     idle = false;
@@ -114,7 +108,12 @@ export function createEngine(transport: Transport): Engine {
     });
   });
   transport.listen((msg) => {
-    if (storage.receive(msg) || signerAuth.receive(msg)) return;
+    if (
+      storage.receive(msg) ||
+      signerAuth.receive(msg) ||
+      extension.receive(msg, actions.wantsSign)
+    )
+      return;
     if (msg.t === 'cache.policy') {
       if (subs.has(msg.sub)) {
         if (msg.allow) privateRows.delete(msg.sub);
@@ -157,16 +156,16 @@ export function createEngine(transport: Transport): Engine {
       if (msg.accountError) accountState.set({ phase: 'failed', error: { code: 'internal' } });
       dm.flushers.ready(msg.version);
       info.set({ engine: msg.engine, version: msg.version });
-    } else if (msg.t === 'stats') asked.get(msg.req)?.(msg.stats);
+    } else if (msg.t === 'stats')
+      asked.get(msg.req)?.({ ...msg.stats, extensionSigner: extension.stats() });
     else if (msg.t === 'dm') dm.receive(msg);
     else if (msg.t === 'zap.quote' || msg.t === 'zap.receipts') zaps.receive(msg);
     else if (msg.t === 'dm.flush') dm.flushers.receive(msg);
-    else if (msg.t === 'crypt.cancel') lists.cancel(msg.req);
+    else if (msg.t === 'crypt.cancel') lists.cancel(msg.req), dm.access.cancel(msg.req);
     else if (msg.t === 'crypt') {
       if (msg.context) void lists.crypt(msg);
       else void dm.access.crypt(msg, () => writingHasPriority(actions.posting));
-    } else if (msg.t === 'sign') void answerSign(msg, (m) => transport.post(m), actions.wantsSign);
-    else if (msg.t === 'getPublicKey') void answerPublicKey(msg.req, (m) => transport.post(m));
+    }
   });
   return {
     posting: actions.posting,
@@ -287,6 +286,7 @@ export function createEngine(transport: Transport): Engine {
       storage.dispose();
       signerAuth.dispose();
       lists.dispose();
+      extension.orchestrator.reset();
       dm.dispose();
       zaps.dispose();
       actions.dispose();

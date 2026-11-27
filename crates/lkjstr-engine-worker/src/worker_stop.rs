@@ -12,6 +12,7 @@ pub(super) fn stop(h: &mut Host) {
     direct_messages::sync(h);
     private_lists::sync(h);
     uploads::control::stop(h);
+    relay_auth::stop(h);
     h.accounts = Default::default();
     h.account_tasks.clear();
     h.startup.clear();

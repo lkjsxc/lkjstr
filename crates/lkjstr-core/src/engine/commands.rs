@@ -40,15 +40,21 @@ impl Engine {
                     self.error(Some(req), code);
                     return;
                 }
+                let deadline = now + 60000;
                 self.signing.insert(
                     req.clone(),
                     Signing {
                         event: event.clone(),
-                        deadline: now + 60000,
+                        deadline,
                         profile_base_id,
                     },
                 );
-                self.outgoing.push(Output::Sign { req, event });
+                self.outgoing.push(Output::Sign {
+                    req,
+                    event,
+                    deadline,
+                    publish: matches!(action, Action::Publish { .. }),
+                });
             }
             Err("list-not-loaded")
                 if matches!(

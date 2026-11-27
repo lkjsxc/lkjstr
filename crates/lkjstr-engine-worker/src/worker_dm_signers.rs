@@ -75,8 +75,8 @@ fn reconcile(h: &mut Host, before: Vec<Read>) {
             .map(|(key, _)| key.clone())
             .collect();
     for key in stale {
-        if let Some((lease, resolve)) = h.dm.crypto.remove(&key) {
-            if lease.is_list() && !h.stopped {
+        if let Some((_, resolve)) = h.dm.crypto.remove(&key) {
+            if !h.stopped {
                 h.scope
                     .direct(key.0, &W::CryptCancel { req: key.1.clone() });
             }

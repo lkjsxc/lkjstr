@@ -102,7 +102,7 @@ const main = [
   'Channels list opens the published channel feed',
   'Thread reply inherits the channel through the real engine',
   'client-tag switch reaches the real channel signer',
-  'Stats shows five real figures and loopback relay measurements',
+  'Stats shows four real figures and loopback relay measurements',
   'combined fixture retains the owner audit mute list',
   'settings persist after reload',
   'browser tabs follow tab changes in the same workspace',

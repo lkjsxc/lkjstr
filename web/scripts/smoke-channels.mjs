@@ -88,8 +88,8 @@ export async function channelScenarios({ page, launch, check, fake, shots, shot 
   await launch('Stats', 'stats');
   await page.locator('.statsv .stab:visible tbody tr').first().waitFor();
   check(
-    'Stats shows five real figures and loopback relay measurements',
-    (await page.locator('.statsv .sval').count()) === 5 &&
+    'Stats shows four real figures and loopback relay measurements',
+    (await page.locator('.statsv .sval').count()) === 4 &&
       (await page.locator('.statsv .sval').last().innerText()) !== '—' &&
       (await page.locator('.statsv .c-events span').first().innerText()) !== '0',
   );

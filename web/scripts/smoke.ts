@@ -2345,10 +2345,10 @@ async function rooms(browser: Browser, still: Record<string, unknown>): Promise<
   const hosts = (): Promise<string[]> =>
     page.locator(`${sv} .relay-stats .rhost`).allTextContents();
   fact(
-    'stats: five figures, and the relays in trouble first, each with its mark',
-    figures.length === 5 &&
+    'stats: four figures, and the relays in trouble first, each with its mark',
+    figures.length === 4 &&
       /^\d+\/\d+$/.test(figures[0] ?? '') &&
-      /^\d+%$/.test(figures[2] ?? '') &&
+      /^\d+%$/.test(figures[1] ?? '') &&
       (await hosts())[0] === 'down.example.net' &&
       (await page.locator(`${sv} tr.m-failing .smark`).first().innerText()) === 'failing' &&
       (await page.locator(`${sv} tr.m-slow .rhost`).textContent()) === 'slow.example.org',

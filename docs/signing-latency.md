@@ -10,6 +10,22 @@ pending entries and 256 recent activity spans, all held in memory. A stopped or
 restarted Worker drops both rings. Completed rows carry no request tokens,
 credentials, account or event identifiers, relay addresses, or event bodies.
 
+## Extension load
+
+The page dispatches extension calls through the [signer orchestrator](signer-orchestrator.md).
+
+Bookmark paging and Settings lists use independent public window edges and
+private status. The delayed signer browser check observes private loading,
+a scroll-triggered window, new public rows, a paint frame and navigation
+before releasing a real post signature to a loopback relay.
+
+Stats reads page-local extension telemetry alongside Worker stats. Pending
+includes queued and running requests. Response time is the median duration
+of the last 20 settled extension methods, excluding queue time. Calls per minute counts actual
+extension method starts in the last 60 one-second buckets. Timeouts counts
+request deadlines during the current page visit. These counters contain
+only numbers and a missing latency before the first settled method.
+
 ## Timing stages
 
 - Page intent starts at the Post or reaction click. A like has an intentional

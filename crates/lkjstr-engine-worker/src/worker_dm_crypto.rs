@@ -196,7 +196,7 @@ async fn crypt_for(
         )
         .await
     } else {
-        let request = extension::begin(&mut host.borrow_mut(), &call, &data, &pending.lease);
+        let request = extension::begin(&mut host.borrow_mut(), &call, &data, &pending.lease, ms);
         drop(data);
         match request {
             Ok(request) => extension::finish(host, request, &pending.signal, ms).await,

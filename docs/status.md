@@ -75,8 +75,8 @@ Protocol 6 introduced DM, encrypted-key and relay authentication operations. Pro
   completion. AUTH never enters public history. Optional NIP-67 hints remain   unsupported; see [relay-auth.md](relay-auth.md).
 - Current signed mute, bookmark and people lists decrypt locally or through
   extensions/bunkers using NIP-44 or read-only NIP-04. Visible external reads have owner-scoped leases;
-  local mutes qualify background unread counts. Extension calls yield to public row paint; mute results update the feed in place.
-  Private editing and list-specific Retry controls remain absent. See [private-lists.md](private-lists.md).
+  local mutes qualify background unread counts. Public rows paint and page during private reads. Stats show page-local extension load. Post has first priority.
+  See [private-lists.md](private-lists.md) and [signing-latency.md](signing-latency.md).
 - NIP-57 providers authorize receipt actors/totals and finite zapper queries.
   Explicit local/extension/bunker invoice requests are HTTPS-only and return
   unpaid intents; no payment control exists. Bounds/evidence: [zaps.md](zaps.md).

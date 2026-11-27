@@ -161,11 +161,15 @@ fn authoritative_actions_and_signer_json_are_correlated() {
         pubkey,
         event,
         action_req,
+        expires_at,
+        weight,
     } = &output[0]
     else {
         panic!("sign")
     };
     assert!(action_req.is_none());
+    assert!(expires_at.is_some());
+    assert_eq!(*weight, 16);
     assert_eq!(req, "p");
     assert_eq!(pubkey, &"a".repeat(64));
     let event: Value = serde_json::from_str(event).expect("sign event JSON");

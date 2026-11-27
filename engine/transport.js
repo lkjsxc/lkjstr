@@ -52,7 +52,7 @@ export function workerTransport(options = {}) {
     if(started)pending.clear();
     receive({ t: 'reconnect' });
   };
-  const message = async (msg, generation = connection) => {
+  const message = (msg, generation = connection) => {
     const live = () => !closed && generation === connection;
     if (!live()) return;
     heartbeatDeadline = performance.now() + HEARTBEAT_TIMEOUT_MS;
@@ -63,16 +63,6 @@ export function workerTransport(options = {}) {
       else if (worker) { peers.get(client)?.close(); peers.delete(client); attachLocal(); }
       else { ++connection; epoch = undefined; greet(); }
       reconnect(); return;
-    }
-    if (msg.t === 'getPublicKey') {
-      try {
-        if (!globalThis.nostr?.getPublicKey) throw new Error('signer-missing');
-        const pubkey = await globalThis.nostr.getPublicKey();
-        if (live()) send({ t: 'publicKey', req: msg.req, pubkey });
-      } catch (e) {
-        if (live()) send({ t: 'publicKey', req: msg.req, error: e.message === 'signer-missing' ? 'signer-missing' : 'signer-refused' });
-      }
-      return;
     }
     if (msg.t === 'ready') {
       replay();

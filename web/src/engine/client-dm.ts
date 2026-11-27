@@ -3,10 +3,11 @@ import type { Transport } from './client.ts';
 import { createDmAccess } from './client-dm-access.ts';
 import { createDmFlushers } from './client-dm-flush.ts';
 import type { DmQuery, DmSnapshot, FromEngine } from './protocol.ts';
-export function createDmClient(transport: Transport) {
+import { createSignerOrchestrator } from './signer-orchestrator.ts';
+export function createDmClient(transport: Transport, orchestrator = createSignerOrchestrator()) {
   let serial = 0;
   const flushers = createDmFlushers((message) => transport.post(message));
-  const access = createDmAccess((message) => transport.post(message));
+  const access = createDmAccess((message) => transport.post(message), orchestrator);
   const visibility = new Map<string, { account: string; visible: boolean }>();
   const pause = (account: string): void => {
     if (![...visibility.values()].some((value) => value.account === account && value.visible))

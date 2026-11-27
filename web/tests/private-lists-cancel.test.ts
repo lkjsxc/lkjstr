@@ -121,7 +121,7 @@ it('cancelling a pending decrypt also prevents its later public-key recheck', as
   try {
     const pending = lists.crypt(request('old'));
     await paint();
-    expect(decrypt).toHaveBeenCalledTimes(1);
+    await vi.waitFor(() => expect(decrypt).toHaveBeenCalledTimes(1));
     lists.cancel('old');
     await pending;
     plaintext.resolve('revoked plaintext');

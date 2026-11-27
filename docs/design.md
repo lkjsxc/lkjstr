@@ -320,11 +320,14 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
   from the reader's relays, headed by what it says about itself (NIP-11), then the notes it served as a dated feed
   with the time rail. It changes nothing either. Media servers offer a few choices with one press, Blossom first.
   A media server is marked as not answering only by a request an upload needs; a server not yet checked is not drawn as down.
-- Stats is numbers and quiet marks, no prose: five figures, then a sortable
+- Stats has four figures and the Signer card, then a sortable
   row per relay, trouble first; three publication columns group accepted/planned,
   pending/failed and exclusions by own/inbox/capacity limits; absent is a dash.
   Route words, followed-author coverage and weights are sortable columns. Never-connected traffic and all-zero compound cells show one dash; nonzero publication counts show even before a connection. Heads and cells name every compound part in localized tooltips.
   Narrow tiles show Relay, Received and Answer; tapping a row unfolds the other labelled values, one row at a time, retained per tab. Relay names elide inside the host and keep the tail. No horizontal scrolling.
+  Stats shows a plain empty state until the first measurement and keeps the last measured figures through missed polls.
+  The Signer card reuses the figures' style and places labels left and values right. It updates at most once per second and
+  shows a muted line while waiting or when the extension is absent.
   A second table shows request purposes, weights, counts and completion marks; narrow tiles show Purpose and Relay, with the request id and other values in retained unfolded lines.
 - Documentation is one tab and one page (owner, 2026-11-22): its contents come first, groups side by side where
   there is room, then every part in order: what lkjstr is, release and licence, keys and safety, messages, relays,

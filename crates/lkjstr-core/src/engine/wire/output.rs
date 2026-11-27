@@ -1,4 +1,5 @@
 use super::*;
+use crate::engine::signer_orchestration::SignerWork;
 use crate::engine::{Engine, protocol as p};
 use serde_json::json;
 impl Session {
@@ -101,8 +102,20 @@ impl Session {
                 older,
                 follow_list,
             }],
-            p::Output::Sign { req, event } => vec![Output::Sign {
+            p::Output::Sign {
+                req,
+                event,
+                publish,
+                deadline,
+            } => vec![Output::Sign {
                 action_req: None,
+                expires_at: Some(deadline),
+                weight: if publish {
+                    SignerWork::Publish
+                } else {
+                    SignerWork::UserAction
+                }
+                .weight(),
                 req,
                 pubkey: event.pubkey.clone(),
                 event: serde_json::to_string(&event).unwrap_or_default(),

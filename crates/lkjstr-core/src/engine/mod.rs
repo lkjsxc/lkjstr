@@ -53,6 +53,7 @@ mod row_media;
 mod row_model;
 pub mod rows;
 pub mod settings;
+pub mod signer_orchestration;
 pub mod storage_inspection;
 mod thread;
 mod tick;

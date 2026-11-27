@@ -45,6 +45,7 @@ export async function createRealFixture() {
   // The archive/audit can fill one 1000-event store; reader arrivals get their own bounded fixture.
   const readerFake = fakeRelay();
   const railFake = fakeRelay({ maxEvents: 20 });
+  const slowSignerFake = fakeRelay({ maxEvents: 130 });
   const livedInFake = fakeRelay();
   const deepLinkFake = fakeRelay();
   const bunker = await fakeBunker();
@@ -62,6 +63,7 @@ export async function createRealFixture() {
     readerFake,
     deepLinkFake,
     railFake,
+    slowSignerFake,
     livedInFake,
     bunker,
   });
@@ -98,6 +100,7 @@ export async function createRealFixture() {
     readerFake,
     deepLinkFake,
     railFake,
+    slowSignerFake,
     bunker,
     media,
     socketSharing,
@@ -109,12 +112,13 @@ export async function createRealFixture() {
 
 export function attachSmokeRelay(
   ws,
-  { fake, readerFake, deepLinkFake, railFake, livedInFake, bunker },
+  { fake, readerFake, deepLinkFake, railFake, slowSignerFake, livedInFake, bunker },
 ) {
   const trace = createSocketTrace();
   const fixtureByPath = new Map([
     ['/deep-links', deepLinkFake],
     ['/reader', readerFake],
+    ['/slow-signer', slowSignerFake],
     ['/rail-visibility', railFake],
     ['/lived-in', livedInFake],
   ]);

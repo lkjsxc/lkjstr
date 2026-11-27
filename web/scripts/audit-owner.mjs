@@ -263,7 +263,7 @@ export async function auditOwner({
       );
       await find('Stats', 'stats');
       await view('stats').locator('tbody tr').first().waitFor();
-      await fact(11, 'stats-figures', (await view('stats').locator('.sval').count()) === 5);
+      await fact(11, 'stats-figures', (await view('stats').locator('.sval').count()) === 4);
       // The default's own Documentation tab may be in view too: read the one just opened, in the current tile.
       const docs = () => page.locator('.pane.cur .view[data-kind="docs"]:visible');
       await find('Privacy policy', 'docs');

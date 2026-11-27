@@ -169,7 +169,7 @@ it('drops an extension answer if its upload was cancelled during the open dialog
     const action = sent.find((m) => m.t === 'act');
     if (action?.t !== 'act') throw new Error('missing upload');
     receive({ t: 'sign', req: 'old-sign', actionReq: action.req, pubkey: 'account', event: '{}' });
-    expect(signEvent).toHaveBeenCalledTimes(1);
+    await vi.waitFor(() => expect(signEvent).toHaveBeenCalledTimes(1));
     abort.abort();
     receive({ t: 'result', req: action.req, ok: false, cancelled: true });
     answer({ old: true });

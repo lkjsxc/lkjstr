@@ -47,6 +47,7 @@ Engine (`crates/`):
 - [orchestration.md](orchestration.md): publication routing, freshness, weights and limits.
 - [orchestration-optimizer.md](orchestration-optimizer.md) covers Stage 1 scheduling and retention.
 - [fetch-orchestrator.md](fetch-orchestrator.md) covers timeline coverage, weighted scheduling and release steps.
+- [signer-orchestrator.md](signer-orchestrator.md) covers extension weights, admission and ownership.
 - [thin-link.md](thin-link.md): slow-link scheduling, startup and measured bounds.
 - [relay-orchestration-20261119.md](relay-orchestration-20261119.md): progressive reads, cache gaps, NIP-65 and bounded prefetch.
 - [architecture.md](architecture.md): crates, runtime, orchestration, storage.

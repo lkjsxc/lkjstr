@@ -1,14 +1,25 @@
 //! Upload authorization uses the same exact-event checks for every signer.
 use super::*;
-use lkjstr_core::engine::wire::Output as W;
+use lkjstr_core::engine::{signer_orchestration::SignerWork, wire::Output as W};
 use lkjstr_protocol::UnsignedNostrEvent;
-pub(in crate::worker) async fn sign(
+pub(in crate::worker) async fn relay_auth(
     host: &Rc<RefCell<Host>>,
     id: u64,
     deadline: Deadline,
     event: UnsignedNostrEvent,
+    work: SignerWork,
+    signal: &web_sys::AbortSignal,
 ) -> Result<lkjstr_protocol::NostrEvent, &'static str> {
-    sign_mode(host, id, deadline, event, None, None, Mode::Background).await
+    sign_mode(
+        host,
+        id,
+        deadline,
+        event,
+        Some(signal),
+        None,
+        Mode::RelayAuth(work),
+    )
+    .await
 }
 pub(in crate::worker) async fn sign_for(
     host: &Rc<RefCell<Host>>,
@@ -39,7 +50,7 @@ pub(in crate::worker) async fn private_sign(
     sign_mode(host, id, deadline, event, None, None, Mode::Private).await
 }
 enum Mode {
-    Background,
+    RelayAuth(SignerWork),
     Public,
     Private,
 }
@@ -58,7 +69,7 @@ async fn sign_mode(
     if let Some(remote) = remote {
         let params = vec![serde_json::to_string(&event).map_err(|_| "internal")?];
         let ms = deadline.wait(clock(), 60_000)?;
-        let raw = if matches!(mode, Mode::Background) {
+        let raw = if matches!(mode, Mode::RelayAuth(_)) {
             // Relay AUTH has no proven initiating page. Preauthorized signing still works;
             // an interactive auth URL is refused rather than disclosed to an arbitrary tab.
             crate::browser::remote::rpc_for_signal(&remote, "sign_event", params, ms, signal).await
@@ -106,6 +117,12 @@ async fn sign_mode(
             id,
             &W::Sign {
                 action_req: action_req.map(str::to_owned),
+                weight: match mode {
+                    Mode::RelayAuth(work) => work,
+                    _ => SignerWork::UserAction,
+                }
+                .weight(),
+                expires_at: Some(crate::measure::epoch_now() + u64::from(ms)),
                 req: req.clone(),
                 pubkey: event.pubkey.clone(),
                 event: serde_json::to_string(&event).unwrap_or_default(),
@@ -124,7 +141,12 @@ async fn sign_mode(
         signal,
     )
     .await;
-    host.borrow_mut().upload_auth.remove(&(id, req));
+    {
+        let mut h = host.borrow_mut();
+        if h.upload_auth.remove(&(id, req.clone())).is_some() && !h.stopped {
+            h.scope.direct(id, &W::SignCancel { req });
+        }
+    }
     let raw = result
         .map_err(|error| {
             if error.as_string().as_deref() == Some(crate::browser::abort::CANCELLED) {

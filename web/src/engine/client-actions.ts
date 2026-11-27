@@ -16,6 +16,7 @@ export function createActionRequests(
   transport: Transport,
   next: () => string,
   addDelivery: (req: string, watch?: ActWatch) => void,
+  cancelSign: (req: string) => void = () => {},
 ) {
   const pending = new Map<string, Pending>(); // <=64 requests allowed by transport
   const posting = createSignal(false);
@@ -28,11 +29,9 @@ export function createActionRequests(
   };
   return {
     posting,
-    wantsSign(actionReq?: string): boolean {
-      return (
-        actionReq === undefined ||
-        Boolean(pending.get(actionReq) && !pending.get(actionReq)?.cancelled)
-      );
+    wantsSign(req: string): boolean {
+      const entry = pending.get(req);
+      return entry !== undefined && !entry.cancelled;
     },
     progress(msg: Extract<FromEngine, { t: 'progress' }>): void {
       const entry = pending.get(msg.req);
@@ -60,6 +59,7 @@ export function createActionRequests(
           const entry = pending.get(req);
           if (!entry || entry.cancelled) return;
           entry.cancelled = true;
+          cancelSign(req);
           if (upload) transport.post({ t: 'upload.cancel', req });
           else if (zap) transport.post({ t: 'zap.close', req });
         };

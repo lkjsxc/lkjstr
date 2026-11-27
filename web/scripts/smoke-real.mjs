@@ -20,6 +20,7 @@ import { runRealWishes } from './smoke-real-wishes.mjs';
 import { openKeyField, seedLayouts } from './smoke-seed.mjs';
 import { signerFace } from './smoke-signer-support.mjs';
 import { signerScenarios } from './smoke-signers.mjs';
+import { slowSignerPaging } from './smoke-slow-signer.mjs';
 import { railSmoke } from './smoke-time-rail.ts';
 import { uploadScenarios } from './smoke-uploads.mjs';
 import { accounts, installExtension, npub, visitorChecks } from './smoke-visitors.mjs';
@@ -36,6 +37,7 @@ const {
   readerFake,
   deepLinkFake,
   railFake,
+  slowSignerFake,
   bunker,
   media,
   socketSharing,
@@ -86,6 +88,11 @@ try {
     bunker,
   };
   await signerScenarios(scenario);
+  await slowSignerPaging({
+    ...scenario,
+    fake: slowSignerFake,
+    relayUrl: `${relayUrl}/slow-signer`,
+  });
   await uploadScenarios({ ...scenario, media });
   const publicationsBeforeApp = fake.published.length;
   await seedRailArchive({ fake, sign: fixtureSign, pubkey: fixture.note.pubkey });

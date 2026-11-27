@@ -8,6 +8,7 @@ import { COLUMNS, PUBLISH, PUBLISH_KEYS, type SortKey } from './stats-columns.ts
 import { compoundTitle, createStatsDetails, relayName } from './stats-details.ts';
 import { watchStats } from './stats-poll.ts';
 import { requestTable, routingCells, routingValue } from './stats-routing.ts';
+import { createSignerStats } from './stats-signer.ts';
 
 type Relay = EngineStats['relays'][number];
 export type Mark = 'failing' | 'silent' | 'slow';
@@ -86,12 +87,18 @@ export function mountStats(el: HTMLElement, env: ViewEnv): () => void {
   const share = h('span');
   const figs = {
     up: figure('stats.connected'),
-    cover: figure('stats.covering'),
     cache: figure('stats.cache', h('div', { class: 'sbar', 'aria-hidden': 'true' }, share)),
     saved: figure('stats.dropped'),
     stored: figure('stats.stored'),
   };
-  const state = h('div', { class: 'fstate muted' }, t('feed.loading'));
+  const signer = createSignerStats(num);
+  const summary = h(
+    'div',
+    { class: 'sfigs', hidden: true },
+    ...Object.values(figs).map((f) => f.node),
+    signer.node,
+  );
+  const state = h('div', { class: 'fstate muted' }, t('stats.none'));
   const heads = COLUMNS.map(([key, label]) => {
     const th = h(
       'th',
@@ -212,22 +219,11 @@ export function mountStats(el: HTMLElement, env: ViewEnv): () => void {
   function draw(s: EngineStats): void {
     last = s;
     requests.update(s);
+    signer.update(s.extensionSigner);
     state.hidden = true;
-    table.hidden = false;
-    const marks = s.relays.map(relayMark);
-    const count = (m: Mark): number => marks.filter((x) => x === m).length;
+    summary.hidden = table.hidden = false;
     const online = s.relays.filter((r) => r.state === 'connected').length;
     put(figs.up.val, `${num(online)}/${num(s.relays.length)}`);
-    put(
-      figs.up.sub,
-      (['failing', 'silent', 'slow'] as const)
-        .filter((m) => count(m))
-        .map((m) => `${t(`stats.${m}`)} ${count(m)}`)
-        .join(' · '),
-    );
-    figs.up.node.classList.toggle('bad', count('failing') > 0);
-    put(figs.cover.val, num(s.orchestration.relaysCoveringFollowSet));
-    put(figs.cover.sub, t('stats.subsOpen', { n: num(s.totals.subscriptions) }));
     const { servedFromCache: cached, servedFromNetwork: net } = s.totals;
     const part = cached + net ? Math.round((cached / (cached + net)) * 100) : undefined;
     put(figs.cache.val, part === undefined ? NONE : `${part}%`);
@@ -255,21 +251,11 @@ export function mountStats(el: HTMLElement, env: ViewEnv): () => void {
   }
 
   const watch = watchStats(env.engine, (s) => {
-    if (s) return draw(s);
-    // No answer: what is on screen is no longer current, and is not left standing as if it were.
-    table.hidden = true;
-    state.hidden = false;
-    put(state, t('stats.none'));
-    el.classList.add('off');
+    if (s) draw(s);
   });
   el.classList.add('pad', 'statsv');
   el.tabIndex = -1;
-  el.replaceChildren(
-    h('div', { class: 'sfigs' }, ...Object.values(figs).map((f) => f.node)),
-    state,
-    h('div', { class: 'stats-table' }, table),
-    requests.node,
-  );
+  el.replaceChildren(summary, state, h('div', { class: 'stats-table' }, table), requests.node);
   env.menu(() => [{ label: t('view.relays'), run: () => env.open('relays') }]);
   const off = env.visible.subscribe((on) => watch.show(on));
   watch.show(env.visible.get());

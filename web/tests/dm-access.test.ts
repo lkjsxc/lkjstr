@@ -31,8 +31,7 @@ it('asks once per external account, never persists decrypted text, and serialize
   expect(localStorage.getItem(`lkjstr:dm-ok:${PUBKEY}`)).toBe('true');
   const a = access.crypt(crypt('a')),
     b = access.crypt(crypt('b'));
-  await tick();
-  expect(decrypt).toHaveBeenCalledTimes(1);
+  await vi.waitFor(() => expect(decrypt).toHaveBeenCalledTimes(1));
   first.resolve(Promise.reject(new Error('refused')) as unknown as string);
   await Promise.all([a, b]);
   expect(decrypt).toHaveBeenCalledTimes(1);
@@ -56,7 +55,7 @@ it('a pause or lock revokes a queued prompt and a late plaintext without latchin
   (window as { nostr?: unknown }).nostr = { getPublicKey: async () => PUBKEY, nip44: { decrypt } };
   const a = access.crypt(crypt('a')),
     b = access.crypt(crypt('b'));
-  await tick();
+  await vi.waitFor(() => expect(decrypt).toHaveBeenCalledTimes(1));
   access.pause(PUBKEY);
   first.resolve('late private plaintext');
   await Promise.all([a, b]);

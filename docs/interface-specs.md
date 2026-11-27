@@ -120,6 +120,19 @@ In Home, the existing new-notes pill uses `feed.freshOwn` when the newest row
 above the reading place is the reader's note. It keeps the same count, colour,
 and press-to-top behavior. Other arrivals keep the usual count label.
 
+## Stats signer load
+
+The owner requested signer load on 2026-11-27. Claude's card uses the same
+heading level and styling as the existing Stats figures. The four rows have
+labels left and values right. Waiting counts pending calls, Response time is
+the median of the last 20 completed extension calls in seconds to one decimal,
+Calls per minute counts starts over the last 60 seconds, and Timed out counts
+deadlines since page load. Response time shows a dash before any reply. Stats
+refreshes at most once per second. When Waiting is positive, one muted line
+says that the extension is still answering and reading and scrolling work.
+If no extension is connected, the card shows one muted line in place of the
+rows.
+
 ## Not specified yet
 
 Do not build these; they are the next batches, in this order: a

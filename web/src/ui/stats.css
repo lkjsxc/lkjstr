@@ -1,11 +1,12 @@
-/* Stats: five figures, then a row per relay. Numbers are tabular and right-aligned; marks are words; bars are grey. */
+/* Stats: figures and signer load, then a row per relay. Numbers are tabular and right-aligned; marks are words; bars are grey. */
 .statsv:focus { outline: none; }
 .sfigs { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); margin-bottom: 14px; border-bottom: 1px solid var(--line); }
 .sfig { min-width: 0; padding: 2px 14px 10px 0; }
 .slabel { color: var(--faint); font-size: 12.5px; }
 .sval { font-size: 24px; font-weight: 600; line-height: 1.35; font-variant-numeric: tabular-nums; }
 .ssub { min-height: 1.45em; font-size: 12.5px; font-variant-numeric: tabular-nums; }
-.sfig.bad > .ssub { color: var(--danger); }
+.signer-stats dl { margin: 0; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0 8px; }
+.signer-stats dd { margin: 0; text-align: right; white-space: nowrap; }
 .sbar { height: 3px; max-width: 120px; margin: 1px 0 5px; border-radius: 2px; background: var(--line); overflow: hidden; }
 .sbar > span { display: block; height: 100%; background: var(--faint); transition: width 0.3s; }
 .statsv > .fstate { padding: 6px 0; text-align: left; }
@@ -30,7 +31,6 @@
 .m-failing .smark { border-color: var(--danger); color: var(--danger); }
 .stab .rsub { margin-left: 16px; white-space: normal; }
 .stab td > .sbar { width: 56px; margin: 3px 0 0 auto; }
-.statsv.off > .sfigs { opacity: 0.5; }
 @container (max-width: 440px) {
   .sfigs { grid-template-columns: 1fr 1fr; }
 }

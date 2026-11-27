@@ -1,8 +1,9 @@
 // Reading consent is a device preference. Refusal and private crypto queues last only this page session.
 import { createSignal } from '../shared/signal.ts';
 import { kv } from '../shared/storage.ts';
-import { answerCrypt } from './client-crypto.ts';
+import { createExtensionDecrypts } from './client-dm-decrypt.ts';
 import type { Account, FromEngine, ToEngine } from './protocol.ts';
+import { createSignerOrchestrator } from './signer-orchestrator.ts';
 
 type Crypt = Extract<FromEngine, { t: 'crypt' }>;
 type CryptError = NonNullable<Extract<ToEngine, { t: 'crypted' }>['error']>;
@@ -15,26 +16,20 @@ type Gate =
   | 'refused'
   | 'unsupported'
   | 'timeout';
-export function createDmAccess(post: (message: ToEngine) => void) {
+export function createDmAccess(
+  post: (message: ToEngine) => void,
+  orchestrator = createSignerOrchestrator(),
+) {
   const changed = createSignal(0);
   const failures = new Map<string, 'refused' | 'unsupported' | 'timeout'>(); // bounded by the accounts owned by this client
   const epochs = new Map<string, number>();
   const listEpochs = new Map<string, number>();
-  const requests = new Map<
-    string,
-    { account: string; list: boolean; cancelled: boolean; stop: () => void }
-  >();
-  const cancelRequest = (req: string): void => {
-    const request = requests.get(req);
-    if (!request) return;
-    request.cancelled = true;
-    request.stop();
-  };
+  // At most 16 queued or active requests, with a shared byte budget.
+  const requests = new Map<string, { account: string; abort: AbortController }>();
+  const cancel = (req: string): void => requests.get(req)?.abort.abort();
   const accounts = new Map<string, Account>();
-  const waits = new Set<() => void>(); // <=16 bounded crypto calls; released on dispose or deadline
-  const chains = new Map<string, { tail: Promise<void>; count: number }>(); // <=16 queued requests overall
+  const decrypt = createExtensionDecrypts(orchestrator);
   let sequence = 0,
-    pending = 0,
     bytes = 0,
     stopped = false;
   const notify = (): void => changed.set(changed.get() + 1);
@@ -82,8 +77,7 @@ export function createDmAccess(post: (message: ToEngine) => void) {
         if (!current || current.locked !== old.locked || current.signer !== old.signer) {
           revoke(pubkey);
           listEpochs.set(pubkey, ++sequence);
-          for (const [req, request] of requests)
-            if (request.list && request.account === pubkey) cancelRequest(req);
+          for (const [req, request] of requests) if (request.account === pubkey) cancel(req);
         }
         if (!keys.has(pubkey)) {
           accounts.delete(pubkey);
@@ -92,119 +86,83 @@ export function createDmAccess(post: (message: ToEngine) => void) {
       }
       for (const account of next) accounts.set(account.author.pubkey, account);
       for (const pubkey of epochs.keys())
-        if (!keys.has(pubkey) && !chains.has(pubkey)) {
+        if (!keys.has(pubkey) && ![...requests.values()].some((r) => r.account === pubkey)) {
           epochs.delete(pubkey);
           listEpochs.delete(pubkey);
         }
     },
-    cancel: cancelRequest,
+    cancel,
     async crypt(message: Crypt, writing = () => false): Promise<void> {
-      if (stopped || requests.has(message.req)) return;
-      const list = message.context?.kind === 'private-list';
-      const currentEpoch = (): number =>
-        list ? (listEpochs.get(message.pubkey) ?? 0) : epoch(message.pubkey);
-      const control = { account: message.pubkey, list, cancelled: false, stop: () => {} };
-      const failure = (error: CryptError): void => {
-        if (!stopped && !control.cancelled) post({ t: 'crypted', req: message.req, error });
-      };
-      const defer = (): boolean => message.background === true && writing();
-      if (defer()) return failure('rate-limited');
-      if (pending >= 16 || bytes + message.data.length > 2_800_000) return failure('too-large');
+      const { pubkey, req, data, context, background } = message;
+      if (stopped || requests.has(req)) return;
+      const list = context?.kind === 'private-list';
+      const currentEpoch = (): number => (list ? (listEpochs.get(pubkey) ?? 0) : epoch(pubkey));
       const lease = currentEpoch();
-      requests.set(message.req, control);
-      const chain = chains.get(message.pubkey) ?? { tail: Promise.resolve(), count: 0 };
-      chains.set(message.pubkey, chain);
-      chain.count++;
-      pending++;
-      bytes += message.data.length;
-      const run = chain.tail.then(async () => {
-        if (stopped || control.cancelled) return;
-        if (defer()) return failure('rate-limited');
-        if (currentEpoch() !== lease) return failure('signer-refused');
-        const denied = list ? undefined : failures.get(message.pubkey);
+      const abort = new AbortController();
+      const failure = (error: CryptError): void => {
+        if (!stopped && !abort.signal.aborted) post({ t: 'crypted', req, error });
+      };
+      if (background && writing()) return failure('rate-limited');
+      if (requests.size >= 16 || bytes + data.length > 2_800_000) return failure('too-large');
+      const current = (): void => {
+        if (background && writing()) throw new Error('rate-limited');
+        if (currentEpoch() !== lease) throw new Error('signer-refused');
+        const account = accounts.get(pubkey);
+        if (!account || account.locked || account.signer === 'none')
+          throw new Error('signer-missing');
+        if (list) return;
+        const denied = failures.get(pubkey);
         if (denied)
-          return failure(
-            denied === 'unsupported'
-              ? 'unsupported'
-              : denied === 'timeout'
-                ? 'signer-timeout'
+          throw new Error(
+            denied === 'timeout'
+              ? 'signer-timeout'
+              : denied === 'unsupported'
+                ? denied
                 : 'signer-refused',
           );
-        const account = accounts.get(message.pubkey);
-        if (!account || account.locked || account.signer === 'none')
-          return failure('signer-missing');
-        if (!list && status(account) === 'ask') return failure('signer-refused');
-        await new Promise<void>((resolve) => {
-          let accepting = true;
-          const finish = (reply?: Extract<ToEngine, { t: 'crypted' }>, latch = true): void => {
-            if (!accepting) return;
-            accepting = false;
-            clearTimeout(timer);
-            waits.delete(cancel);
-            if (reply && !stopped && !control.cancelled) {
-              post(reply);
-              if (!list && latch && reply.error && currentEpoch() === lease)
-                block(message.pubkey, reply.error);
-            }
-            resolve();
-          };
-          const cancel = (): void => finish();
-          control.stop = cancel;
-          const timer = setTimeout(
-            () =>
-              finish({
-                t: 'crypted',
-                req: message.req,
-                error: currentEpoch() === lease ? 'signer-timeout' : 'signer-refused',
-              }),
-            60_000,
-          );
-          waits.add(cancel);
-          const current = (): boolean => {
-            if (!accepting || stopped || control.cancelled) return false;
-            if (defer()) {
-              finish({ t: 'crypted', req: message.req, error: 'rate-limited' }, false);
-              return false;
-            }
-            if (currentEpoch() === lease) return true;
-            finish({ t: 'crypted', req: message.req, error: 'signer-refused' }, false);
-            return false;
-          };
-          void answerCrypt(
-            message,
-            (reply) => {
-              if (currentEpoch() !== lease)
-                finish({ t: 'crypted', req: message.req, error: 'signer-refused' }, false);
-              else if (reply.t === 'crypted') finish(reply);
-            },
-            current,
-          );
-        });
-      });
-      chain.tail = run.catch(() => {
-        failure('signer-refused');
-        if (!list && !stopped && !control.cancelled && currentEpoch() === lease)
-          block(message.pubkey, 'signer-refused');
-      });
+        if (status(account) === 'ask') throw new Error('signer-refused');
+      };
+      requests.set(req, { account: pubkey, abort });
+      bytes += data.length;
       try {
-        await chain.tail;
+        current();
+        const value = await decrypt(
+          message,
+          message.weight ?? (list ? 1 : background ? 2 : 8),
+          lease,
+          current,
+          abort.signal,
+        );
+        if (!stopped && !abort.signal.aborted) {
+          current();
+          post({ t: 'crypted', req, value });
+        }
+      } catch (cause) {
+        const code = cause instanceof Error ? cause.message : '';
+        if (stopped || abort.signal.aborted || code === 'cancelled') return;
+        const error: CryptError =
+          code === 'unsupported' ||
+          code === 'signer-missing' ||
+          code === 'signer-timeout' ||
+          code === 'too-large' ||
+          code === 'rate-limited'
+            ? code
+            : 'signer-refused';
+        failure(error);
+        if (!list && currentEpoch() === lease && status(accounts.get(pubkey)) === 'ready')
+          block(pubkey, error);
       } finally {
-        if (requests.get(message.req) === control) requests.delete(message.req);
-        chain.count--;
-        pending--;
-        bytes -= message.data.length;
-        if (!chain.count && chains.get(message.pubkey) === chain) {
-          chains.delete(message.pubkey);
-          if (!accounts.has(message.pubkey)) {
-            epochs.delete(message.pubkey);
-            listEpochs.delete(message.pubkey);
-          }
+        requests.delete(req);
+        bytes -= data.length;
+        if (!accounts.has(pubkey) && ![...requests.values()].some((r) => r.account === pubkey)) {
+          epochs.delete(pubkey);
+          listEpochs.delete(pubkey);
         }
       }
     },
     dispose(): void {
       stopped = true;
-      for (const cancel of waits) cancel();
+      for (const req of requests.keys()) cancel(req);
       failures.clear();
       accounts.clear();
       epochs.clear();

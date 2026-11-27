@@ -1,5 +1,6 @@
 //! Hand off private input synchronously, then await only correlation and cancellation state.
 use super::*;
+use lkjstr_core::engine::signer_orchestration::SignerWork;
 pub(super) struct Pending {
     client: u64,
     req: String,
@@ -10,12 +11,20 @@ pub(super) fn begin(
     call: &Call<'_>,
     data: &str,
     lease: &dm::signers::Lease,
+    ms: u32,
 ) -> Result<Pending, &'static str> {
     signers::check(h, lease)?;
     let req = format!(
         "dm-crypto-{}",
         lkjstr_nips::hex(&crate::browser::random_bytes::<16>()?)
     );
+    let background = call.read.is_some() && h.dm.passive_read(call.account);
+    let work = match (call.list.is_some(), call.read.is_some(), background) {
+        (true, _, _) => SignerWork::LazyList,
+        (_, true, true) => SignerWork::Background,
+        (_, true, false) => SignerWork::Visible,
+        _ => SignerWork::UserAction,
+    };
     let promise = js_sys::Promise::new(&mut |resolve, _| {
         h.dm.crypto
             .insert((call.client, req.clone()), (lease.clone(), resolve));
@@ -23,11 +32,13 @@ pub(super) fn begin(
             call.client,
             &W::Crypt {
                 req: req.clone(),
+                expires_at: Some(crate::measure::epoch_now() + u64::from(ms)),
                 pubkey: call.account.into(),
                 peer: call.peer.into(),
                 operation: call.operation.into(),
                 data: data.into(),
-                background: call.read.is_some() && h.dm.passive_read(call.account),
+                background,
+                weight: work.weight(),
                 context: call.list.map(|job| {
                     lkjstr_core::engine::wire::CryptContext::PrivateList {
                         sub: job.sub.clone(),

@@ -2,11 +2,20 @@ import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { createDmAccess } from '../src/engine/client-dm-access.ts';
 import { createPrivateListClient } from '../src/engine/client-private-lists.ts';
 import type { FromEngine, ToEngine } from '../src/engine/protocol.ts';
+import { BACKGROUND_INTERVAL_MS } from '../src/engine/signer-orchestrator.ts';
 import { account, deferred, PUBKEY, tick } from './vault-ui-fixture.ts';
 
 beforeEach(() => {
   localStorage.clear();
-  vi.useFakeTimers();
+  vi.useFakeTimers({
+    toFake: [
+      'setTimeout',
+      'clearTimeout',
+      'requestAnimationFrame',
+      'cancelAnimationFrame',
+      'performance',
+    ],
+  });
 });
 afterEach(() => {
   delete (window as { nostr?: unknown }).nostr;
@@ -69,8 +78,7 @@ it('Messages refusal and list refusal are separate while sharing one signer queu
   (window as { nostr?: unknown }).nostr = { getPublicKey: async () => PUBKEY, nip44: { decrypt } };
   const dm = access.crypt(request('dm', false)),
     list = access.crypt(request('list'));
-  await tick();
-  expect(decrypt).toHaveBeenCalledTimes(1);
+  await vi.waitFor(() => expect(decrypt).toHaveBeenCalledTimes(1));
   first.resolve(Promise.reject(Error('refused')) as unknown as string);
   await Promise.all([dm, list]);
   expect(decrypt).toHaveBeenCalledTimes(2);
@@ -92,17 +100,18 @@ it('hide cancels active and queued list prompts and ignores late plaintext after
   const old = lists.crypt(request('old')),
     queued = lists.crypt(request('queued'));
   await paint();
-  expect(decrypt).toHaveBeenCalledTimes(1);
+  await vi.waitFor(() => expect(decrypt).toHaveBeenCalledTimes(1));
   lists.visible('list', false);
   await Promise.all([old, queued]);
   lists.visible('list', true);
   decrypt.mockResolvedValue('current');
   const current = lists.crypt(request('new'));
   await paint();
+  expect(decrypt).toHaveBeenCalledTimes(1);
+  late.resolve('stale private text');
+  await vi.advanceTimersByTimeAsync(BACKGROUND_INTERVAL_MS);
   await current;
   expect(decrypt).toHaveBeenCalledTimes(2);
-  late.resolve('stale private text');
-  await tick();
   expect(out.filter((m) => m.t === 'crypted' && ['old', 'queued'].includes(m.req))).toEqual([]);
   expect(out).toContainEqual({ t: 'crypted', req: 'new', value: 'current' });
   lists.dispose();
@@ -157,6 +166,7 @@ it('duplicate requests cannot remove ownership of the original hidden-view cance
   lists.visible('list', true);
   const original = lists.crypt(request('same'));
   await paint();
+  await vi.waitFor(() => expect(decrypt).toHaveBeenCalledTimes(1));
   await lists.crypt(request('same'));
   lists.visible('list', false);
   await original;

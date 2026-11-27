@@ -1,8 +1,12 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { Transport } from '../src/engine/client.ts';
-import { answerCrypt } from '../src/engine/client-crypto.ts';
+import { cryptWithExtension } from '../src/engine/client-crypto.ts';
 import { createDmClient } from '../src/engine/client-dm.ts';
-import type { DmSnapshot, ToEngine } from '../src/engine/protocol.ts';
+import type { DmSnapshot, FromEngine, ToEngine } from '../src/engine/protocol.ts';
+import { createSignerOrchestrator } from '../src/engine/signer-orchestrator.ts';
+
+const crypt = (message: Extract<FromEngine, { t: 'crypt' }>) =>
+  createSignerOrchestrator().run(8, (call) => cryptWithExtension(message, call));
 
 describe('private transport', () => {
   afterEach(() => {
@@ -14,20 +18,17 @@ describe('private transport', () => {
       getPublicKey: async () => 'other',
       nip44: { encrypt },
     };
-    const sent: ToEngine[] = [];
-    await answerCrypt(
-      {
+    await expect(
+      crypt({
         t: 'crypt',
         req: 'r',
         pubkey: 'owner',
         peer: 'peer',
         operation: 'nip44.encrypt',
         data: 'private',
-      },
-      (m) => sent.push(m),
-    );
+      }),
+    ).rejects.toThrow('signer-refused');
     expect(encrypt).not.toHaveBeenCalled();
-    expect(sent).toEqual([{ t: 'crypted', req: 'r', error: 'signer-refused' }]);
   });
   it('rejects an account switch while an encryption permission is pending', async () => {
     let account = 'owner';
@@ -40,35 +41,29 @@ describe('private transport', () => {
         },
       },
     };
-    const sent: ToEngine[] = [];
-    await answerCrypt(
-      {
+    await expect(
+      crypt({
         t: 'crypt',
         req: 'changed',
         pubkey: 'owner',
         peer: 'peer',
         operation: 'nip44.encrypt',
         data: 'private',
-      },
-      (m) => sent.push(m),
-    );
-    expect(sent).toEqual([{ t: 'crypted', req: 'changed', error: 'signer-refused' }]);
+      }),
+    ).rejects.toThrow('signer-refused');
   });
   it('reports absent crypto capability without returning a fake plaintext', async () => {
     (window as { nostr?: unknown }).nostr = { getPublicKey: async () => 'owner' };
-    const sent: ToEngine[] = [];
-    await answerCrypt(
-      {
+    await expect(
+      crypt({
         t: 'crypt',
         req: 'r',
         pubkey: 'owner',
         peer: 'peer',
         operation: 'nip04.decrypt',
         data: 'cipher',
-      },
-      (m) => sent.push(m),
-    );
-    expect(sent).toEqual([{ t: 'crypted', req: 'r', error: 'unsupported' }]);
+      }),
+    ).rejects.toThrow('unsupported');
   });
   it('keeps private callbacks scoped and closes their subscriptions', () => {
     const sent: ToEngine[] = [];

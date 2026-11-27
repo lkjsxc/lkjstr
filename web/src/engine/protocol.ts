@@ -1109,6 +1109,14 @@ export type SigningSample = {
   }[];
 };
 export type EngineStats = {
+  /** Browser extension calls in this page. The client adds this when it receives Worker stats. */
+  readonly extensionSigner?: {
+    readonly available: boolean;
+    readonly pending: number;
+    readonly latencyMs: number | null;
+    readonly callsPerMinute: number;
+    readonly timeouts: number;
+  };
   /** Public-event timings in the current Worker only. All timestamps use its monotonic clock. */
   readonly signing?: {
     readonly recent: readonly SigningSample[];
@@ -1222,6 +1230,7 @@ export type Timeline = {
   /** The IANA zone for days and clock; the interface uses them only in the page's own zone. */
   readonly zone?: string;
 };
+export type SignerWeight = 1 | 2 | 4 | 8 | 16;
 export type FromEngine =
   | PublicCacheReconcile
   | {
@@ -1236,6 +1245,7 @@ export type FromEngine =
   | { readonly t: 'zap.quote'; readonly req: ReqId; readonly quote: ZapQuote }
   | { readonly t: 'zap.receipts'; readonly req: ReqId; readonly page: ZapReceiptView }
   | { readonly t: 'crypt.cancel'; readonly req: ReqId }
+  | { readonly t: 'sign.cancel'; readonly req: ReqId }
   /** Hold edits until release; acknowledge prepare only after encrypted writes have committed. */
   | {
       readonly t: 'dm.flush';
@@ -1252,6 +1262,8 @@ export type FromEngine =
       readonly operation: 'nip44.encrypt' | 'nip44.decrypt' | 'nip04.decrypt';
       readonly data: string;
       readonly background?: boolean;
+      readonly weight?: SignerWeight;
+      readonly expiresAt?: Millis;
       readonly context?: {
         readonly kind: 'private-list';
         readonly sub: SubId;
@@ -1274,7 +1286,7 @@ export type FromEngine =
     }
   // end engine-added
   | { readonly t: 'heartbeat' } // acknowledgement; transport detects worker loss
-  | { readonly t: 'getPublicKey'; readonly req: ReqId }
+  | { readonly t: 'getPublicKey'; readonly req: ReqId; readonly expiresAt?: Millis }
   /** Transport reconnects and reopens visible queries/windows; actions are not replayed. */
   | { readonly t: 'reconnect' }
   | {
@@ -1359,8 +1371,10 @@ export type FromEngine =
       readonly req: ReqId;
       readonly pubkey: Pubkey;
       readonly event: string;
-      /** Upload action owning this authorization, so a removed draft cannot open a queued prompt. */
+      /** Action owning the request, when the signer effect is user-initiated. */
       readonly actionReq?: ReqId;
+      readonly expiresAt?: Millis;
+      readonly weight?: SignerWeight;
     }
   /** Connection summary for the optional count in the top bar: of the relays in use or on the reader's list
    * (`wanted`), how many are connected. Sent after `ready` and whenever either number changes. */

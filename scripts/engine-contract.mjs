@@ -24,11 +24,13 @@ function shape(node) {
   if (ts.isUnionTypeNode(node)) return { union: node.types.map(shape) };
   if (ts.isIntersectionTypeNode(node)) return { intersection: node.types.map(shape) };
   if (ts.isArrayTypeNode(node)) return { array: shape(node.elementType) };
+  if (ts.isTupleTypeNode(node)) return { tuple: node.elements.map(shape) };
   if (ts.isTypeLiteralNode(node)) return { object: Object.fromEntries(node.members.map((m) => [m.name.text, { optional: !!m.questionToken, shape: shape(m.type) }])) };
   if (ts.isLiteralTypeNode(node)) {
     if (node.literal.kind === ts.SyntaxKind.TrueKeyword) return { literal: true };
     if (node.literal.kind === ts.SyntaxKind.FalseKeyword) return { literal: false };
     if (node.literal.kind === ts.SyntaxKind.NullKeyword) return { literal: null };
+    if (ts.isNumericLiteral(node.literal)) return { literal: Number(node.literal.text) };
     return { literal: node.literal.text };
   }
   const primitive = new Map([[ts.SyntaxKind.StringKeyword, 'string'], [ts.SyntaxKind.NumberKeyword, 'number'], [ts.SyntaxKind.BooleanKeyword, 'boolean']]).get(node.kind);
@@ -41,6 +43,8 @@ function valid(s, v) {
   if ('literal' in s) return v === s.literal;
   if (s.primitive) return typeof v === s.primitive && (s.primitive !== 'number' || Number.isFinite(v));
   if (s.array) return Array.isArray(v) && v.every((x) => valid(s.array, x));
+  if (s.tuple) return Array.isArray(v) && v.length === s.tuple.length
+    && s.tuple.every((part, index) => valid(part, v[index]));
   if (s.buffer) return v instanceof ArrayBuffer;
   if (s.object) return v !== null && typeof v === 'object' && Object.entries(s.object).every(([k, t]) => (t.optional && v[k] === undefined) || valid(t.shape, v[k]));
   return false;

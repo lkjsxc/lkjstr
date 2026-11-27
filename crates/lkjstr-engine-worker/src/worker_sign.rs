@@ -1,6 +1,6 @@
 use super::*;
 pub(super) fn process(host: &Rc<RefCell<Host>>, o: &Output) -> bool {
-    if let Output::Sign { req, event } = &o {
+    if let Output::Sign { req, event, .. } = &o {
         let signer = {
             let h = host.borrow();
             match h
