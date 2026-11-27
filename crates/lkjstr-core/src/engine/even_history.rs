@@ -1,5 +1,5 @@
 //! Shared admission boundary for merged chronological windows and the time rail.
-use super::{Engine, View, network::Network, protocol::Source, query, settings};
+use super::{Engine, Query, View, network::Network, protocol::Source, query, settings};
 use crate::store::Store;
 use lkjstr_protocol::NostrFilter;
 
@@ -67,6 +67,30 @@ impl Scope<'_> {
     }
 }
 
+/// Newest time at which a matching visitor Global row fits inside the preview.
+/// Reposts must fit both by placement and by the projected note's time.
+fn visitor_preview_head(store: &Store, q: &Query) -> Option<u64> {
+    let filter = query::filter(store, q);
+    let authors = super::rich::authors(store, q);
+    let mut newest = None;
+    for event in store.feed_iter_since(&query::store_query(&filter, store.len()), filter.since) {
+        if newest.is_some_and(|at| event.created_at <= at) {
+            break;
+        }
+        if !query::accepts(store, q, &event, &filter, &authors) {
+            continue;
+        }
+        let placed_at = event.created_at;
+        if let Some(note) = query::collapse_repost(store, q, event)
+            && crate::kinds::policy(note.kind).openable
+            && !super::windows::projection::unavailable(store, q, &note)
+        {
+            newest = newest.max(Some(placed_at.min(note.created_at)));
+        }
+    }
+    newest.filter(|at| *at >= filter.since.unwrap_or_default())
+}
+
 fn horizon(
     network: &Network,
     store: &Store,
@@ -95,12 +119,25 @@ fn horizon(
         }),
         removals: store.history_removals(),
     };
-    let edge = if v.history_scope.as_ref() == Some(&proof_scope) {
+    let mut edge = if v.history_scope.as_ref() == Some(&proof_scope) {
         v.history_horizon.unwrap_or(preview)
     } else {
         v.history_scope = Some(proof_scope);
         preview
     };
+    // Quiet visitor feeds can start at the latest retained note. Keep that
+    // preview admitted for this view if newer notes arrive while it is read.
+    let since = q.filters.since.unwrap_or_default();
+    if v.dirty
+        && edge == preview
+        && preview > since
+        && q.source == Source::Global
+        && q.account.is_none()
+        && let Some(at) = visitor_preview_head(store, q)
+        && at < preview
+    {
+        edge = at.saturating_sub(PREVIEW_SECONDS).max(since);
+    }
     if edge == 0 || (owner.is_some() && follow.is_none()) || !network.has_history_answer(sub) {
         return Some(edge);
     }

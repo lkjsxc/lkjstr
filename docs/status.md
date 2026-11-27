@@ -50,7 +50,7 @@ old policy survived until the next status pass. Revoked private anchors are reje
 The subsequent private-list read support is described below.
 
 Full historical predecessors now retain their ordinary route slot at an inclusive cursor, preventing false exhaustion after quality reranking.
-Native and production Worker before/after, merged required gates and loopback conformance passed. See [engine-history-route.md](engine-history-route.md).
+Native and Worker route checks passed ([history route](engine-history-route.md)). Visitor Global falls back to older matching notes.
 
 Recovering relays retain their missing span without displacing healthy live fallbacks. History waits for verification; queue loss revokes completion
 and retries the unchanged span with bounded backoff. See [engine-verification-pressure.md](engine-verification-pressure.md). Indexed retained-row

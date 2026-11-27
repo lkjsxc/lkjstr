@@ -115,6 +115,24 @@ pub fn filter(store: &Store, q: &Query) -> NostrFilter {
     }
     f
 }
+pub(super) fn store_query(filter: &NostrFilter, limit: usize) -> StoreQuery {
+    StoreQuery {
+        kinds: filter.kinds.clone().unwrap_or_default(),
+        authors: filter
+            .authors
+            .clone()
+            .map(|authors| authors.into_iter().collect()),
+        mention: filter
+            .tags
+            .get("p")
+            .and_then(|values| values.first())
+            .cloned(),
+        until: filter.until,
+        limit,
+        ..Default::default()
+    }
+}
+
 pub fn events(store: &Store, q: &Query) -> Vec<Event> {
     select(store, q, true)
 }
@@ -168,17 +186,7 @@ fn select_projected<T>(
     let mut events = if q.source == Source::Channel {
         store.referencing(q.target.as_deref().unwrap_or(""))
     } else {
-        store.feed_since(
-            &StoreQuery {
-                kinds: f.kinds.clone().unwrap_or_default(),
-                authors: f.authors.clone().map(|a| a.into_iter().collect()),
-                mention: f.tags.get("p").and_then(|v| v.first()).cloned(),
-                until: f.until,
-                limit: store.len(),
-                ..Default::default()
-            },
-            f.since,
-        )
+        store.feed_since(&store_query(&f, store.len()), f.since)
     };
     if q.source == Source::Bookmarks {
         events = q

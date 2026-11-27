@@ -38,10 +38,18 @@ impl Store {
     }
 
     pub(crate) fn feed_since(&self, query: &Query, since: Option<u64>) -> Vec<Event> {
+        self.feed_iter_since(query, since).collect()
+    }
+
+    pub(crate) fn feed_iter_since<'a>(
+        &'a self,
+        query: &'a Query,
+        since: Option<u64>,
+    ) -> impl Iterator<Item = Event> + 'a {
         let source: Box<dyn Iterator<Item = &OrderedEvent>> = match &query.mention {
             Some(pubkey) => match decode_id(pubkey).and_then(|key| self.by_tag_p.get(&key)) {
                 Some(set) => Box::new(set.iter().rev()),
-                None => return Vec::new(),
+                None => Box::new(std::iter::empty()),
             },
             None => match &query.authors {
                 Some(authors) => Box::new(self.author_feed(authors)),
@@ -57,18 +65,17 @@ impl Store {
         let excluded = query.exclude_author.as_deref().and_then(decode_id);
         source
             .map(|key| &key.0)
-            .take_while(|event| since.is_none_or(|since| event.order.0 >= since))
+            .take_while(move |event| since.is_none_or(|since| event.order.0 >= since))
             .filter(|event| query.until.is_none_or(|until| event.order.0 <= until))
             .filter(|event| query.kinds.is_empty() || query.kinds.contains(&event.kind))
-            .filter(|event| {
+            .filter(move |event| {
                 authors
                     .as_ref()
                     .is_none_or(|authors| authors.contains(event.pubkey()))
             })
-            .filter(|event| excluded.as_ref() != Some(event.pubkey()))
+            .filter(move |event| excluded.as_ref() != Some(event.pubkey()))
             .take(query.limit)
             .map(|event| event.materialize())
-            .collect()
     }
 
     /// Ids of events that reference `id` with an `e` or `q` tag.

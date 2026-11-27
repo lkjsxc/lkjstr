@@ -65,8 +65,10 @@ is in progress, retain the existing drag-map behavior. A published map cannot
 offer anchors beyond its admitted span.
 
 Keep the 24-hour preview open while answers arrive and apply the existing
-bounded request waits. Render the first verified Home preview immediately and
-batch later arrivals. Four seconds of unanswered work no longer exposes a
+bounded request waits. When visitor Global has no matching recent note, its
+preview extends to a day before the newest matching older note, within any
+explicit time filter. Keep that range admitted while the view is open.
+Render the first verified Home preview immediately and batch later arrivals. Four seconds of unanswered work no longer exposes a
 cached tail. A timeout leaves the old range owed, and later successful work can
 extend the span. Hold already shown, still-valid rows across route rotations.
 Follow or mute changes and event removals can invalidate covered rows.
