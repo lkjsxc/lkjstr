@@ -17,12 +17,15 @@ export async function fakeMedia() {
   if (cert.status !== 0) throw new Error('loopback TLS certificate failed');
   const tls = { key: await readFile(`${dir}/key.pem`), cert: await readFile(`${dir}/cert.pem`) };
   const requests = [], modes = { blossom: 'ok', nip96: 'ok' }, origins = {}, blobs = new Map();
+  const holds = new Map();
   for (const protocol of ['blossom', 'nip96']) {
     const server = createServer(tls, async (req, res) => {
-      const mode = modes[protocol], path = req.url;
+      const hold = holds.get(protocol);
+      let mode = modes[protocol];
+      const path = req.url;
       const headers = { 'access-control-allow-origin': '*', 'access-control-allow-methods': 'GET, PUT, POST, OPTIONS', 'access-control-allow-headers': 'Authorization, Content-Type', 'access-control-max-age': '0', 'content-type': 'application/json' };
       if (requests.length >= 1000) requests.shift();
-      const record = { protocol, method: req.method, path, mode, closed: false, complete: false, aborted: false };
+      const record = { protocol, method: req.method, path, mode: hold ? 'held' : mode, closed: false, complete: false, aborted: false };
       req.on('aborted', () => { record.aborted = true; });
       req.on('error', () => { record.aborted = true; });
       res.on('close', () => { record.closed = true; record.complete = res.writableEnded; });
@@ -68,6 +71,10 @@ export async function fakeMedia() {
           req.method === 'POST' && path === '/api' && auth.kind === 27235 && tag('method') === 'POST' && tag('u') === `${origins.nip96}/api`);
       record.valid = valid;
       if (!valid) return reply(401, {});
+      if (hold) {
+        mode = await Promise.race([hold, new Promise(done => res.once('close', done))]);
+        if (res.destroyed) return;
+      }
       if (mode === 'refuse') return reply(403, { message: 'fixture refusal' });
       if (mode === 'paid') return reply(402, {});
       if (mode === 'malformed') return reply(201, { url: 'https://wrong.invalid/file' });
@@ -84,7 +91,14 @@ export async function fakeMedia() {
     });
     origins[protocol] = `https://127.0.0.1:${server.address().port}`;
   }
-  return { origins, requests, set(protocol, mode) { modes[protocol] = mode; }, close };
+  return {
+    origins, requests, set(protocol, mode) { modes[protocol] = mode; }, close,
+    hold(protocol) {
+      let release;
+      holds.set(protocol, new Promise(done => { release = done; }));
+      return (mode = 'ok') => { holds.delete(protocol); release(mode); };
+    },
+  };
   } catch (error) { await close(); throw error; }
 }
 

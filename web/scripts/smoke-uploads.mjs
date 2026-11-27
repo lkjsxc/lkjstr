@@ -3,6 +3,47 @@ import { smokePath } from './smoke-output.ts';
 import { openKeyField } from './smoke-seed.mjs';
 import { serverMarkScenarios } from './smoke-server-marks.mjs';
 import { accounts, compose, launch, setup } from './smoke-signer-support.mjs';
+import { queuedUploadScenarios } from './smoke-upload-submit.mjs';
+
+// Settings saves this same list action. Observe the result through the test transport.
+async function configureServers(page, servers) {
+  await page.evaluate((servers) => {
+    const req = `media-list-${Date.now()}`;
+    window.uploadListDone = false;
+    window.uploadListResult = undefined;
+    window.uploadListReq = req;
+    window.uploadPort.postMessage({
+      t: 'act',
+      req,
+      action: { a: 'servers.save', as: window.uploadAccount, servers },
+    });
+  }, servers);
+  await page.waitForFunction(() => window.uploadListResult);
+  const saved = await page.evaluate(() => window.uploadListResult);
+  if (!saved.ok) throw new Error(`media list save failed: ${JSON.stringify(saved)}`);
+  await page.waitForTimeout(150);
+}
+
+// Only the new note and reply scenarios use a relay separate from the reader and Settings fixtures.
+async function queuedPosts(options, media, file) {
+  const page = await setup({
+    ...options,
+    relayUrl: `${options.relayUrl}/upload-post`,
+    mode: 'upload',
+    mediaOrigins: Object.values(media.origins),
+  });
+  try {
+    await page.locator('.acct.out').click();
+    await page.locator(`${accounts} [data-f="extension"]`).click();
+    await page.locator('.acct:not(.out)').waitFor();
+    await launch(page, 'Post', 'compose');
+    await configureServers(page, Object.values(media.origins));
+    await queuedUploadScenarios({ ...options, page, media, file, fake: options.uploadPostFake });
+  } finally {
+    await page.context().close();
+  }
+}
+
 export async function uploadScenarios(options) {
   const { check, bunker } = options;
   const results = await Promise.allSettled(
@@ -62,29 +103,7 @@ export async function uploadScenarios(options) {
           await page.evaluate((origin) => {
             window.uploadTarget = origin;
           }, origin);
-          // Settings saves this same list action. The transport is observed only in test setup.
-          await page.evaluate(
-            ({ origin, alternate }) => {
-              const req = `media-list-${Date.now()}`;
-              window.uploadListDone = false;
-              window.uploadListResult = undefined;
-              window.uploadListReq = req;
-              window.uploadPort.postMessage({
-                t: 'act',
-                req,
-                action: {
-                  a: 'servers.save',
-                  as: window.uploadAccount,
-                  servers: [origin, alternate],
-                },
-              });
-            },
-            { origin, alternate },
-          );
-          await page.waitForFunction(() => window.uploadListResult);
-          const saved = await page.evaluate(() => window.uploadListResult);
-          if (!saved.ok) throw new Error(`media list save failed: ${JSON.stringify(saved)}`);
-          await page.waitForTimeout(150);
+          await configureServers(page, [origin, alternate]);
           for (const mode of [
             'slow',
             'refuse',
@@ -198,6 +217,8 @@ export async function uploadScenarios(options) {
           }
         }
         if (signer === 'extension') {
+          phase = 'post while uploading';
+          await queuedPosts(options, media, file);
           await page.evaluate(() => localStorage.setItem('lkjstr:settings', '{"language":"ja"}'));
           await page.reload();
           await page.evaluate((origin) => {

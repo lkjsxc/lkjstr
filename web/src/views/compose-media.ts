@@ -11,6 +11,7 @@ import { draftPicture } from './compose-picture.ts';
 import { watchList } from './lists.ts';
 import type { ViewEnv } from './registry.ts';
 
+export type AttachmentState = 'ready' | 'uploading' | 'failed';
 type Item = {
   file: File;
   el: HTMLElement;
@@ -24,7 +25,7 @@ type Item = {
 const READ_MS = 10_000;
 export function createAttachments(
   env: ViewEnv,
-  changed: () => void,
+  changed: (removed?: boolean) => void,
   el: HTMLElement = h('div', { class: 'thumbs' }),
 ) {
   const limit = h('div', { class: 'error', role: 'status' });
@@ -101,7 +102,7 @@ export function createAttachments(
           const picker = item.el.querySelector('select');
           if (picker) pickers.delete(picker);
           item.el.remove();
-          changed();
+          changed(true);
         },
       },
       '×',
@@ -256,7 +257,7 @@ export function createAttachments(
                 item.removed = true;
                 items = items.filter((i) => i !== item);
                 item.el.remove();
-                changed();
+                changed(true);
               },
             },
             '×',
@@ -268,7 +269,10 @@ export function createAttachments(
       changed();
     },
     count: (): number => items.length,
-    blocked: (): boolean => items.some((i) => !i.done),
+    status: (): AttachmentState => {
+      if (items.some((i) => !i.done && !i.busy)) return 'failed';
+      return items.some((i) => i.busy) ? 'uploading' : 'ready';
+    },
     media: (): Uploaded[] => items.flatMap((i) => (i.done ? [i.done] : [])),
     clear(): void {
       for (const i of items) {

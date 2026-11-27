@@ -44,6 +44,7 @@ async function setup({
         );
       window.signerResults = [];
       window.signerCalls = { getPublicKey: 0, signEvent: 0, decrypt: 0 };
+      window.uploadPostCalls = { publish: 0, sign: 0 };
       const slow = mode === 'slow-sign';
       window.signerTrace = [];
       const trace = (phase, value) => {
@@ -84,6 +85,8 @@ async function setup({
           if (slow && m.t === 'signed' && fakeAuthIds.includes(m.req)) return;
           if (m.t === 'act' && m.action.a === 'upload' && window.uploadTarget && !m.action.server)
             m.action.server = window.uploadTarget;
+          if (mode === 'upload' && m.t === 'act' && m.action.a === 'publish')
+            window.uploadPostCalls.publish++;
           if (slow && m.t === 'open' && m.query.source === 'bookmarks') bookmarkSub = m.sub;
           if (slow && m.t === 'act' && m.action.a === 'publish') publishReq = m.req;
           if (slow && m.t === 'window' && m.sub === bookmarkSub)
@@ -165,6 +168,13 @@ async function setup({
         },
         signEvent(event) {
           window.signerCalls.signEvent++;
+          if (mode === 'upload' && event.kind === 1) {
+            window.uploadPostCalls.sign++;
+            if (window.holdUploadPost)
+              return new Promise((done) => {
+                window.releaseUploadPost = () => done(window.fixtureSign(event));
+              });
+          }
           if (slow && event.kind === 22242) {
             trace('auth-start');
             const delay = new Promise((done) => setTimeout(done, 1500));

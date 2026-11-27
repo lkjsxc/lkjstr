@@ -42,6 +42,7 @@ const {
   retry,
   bunker,
   media,
+  uploadPostFake,
   socketSharing,
   relayUrl,
   server,
@@ -96,7 +97,7 @@ try {
     fake: slowSignerFake,
     relayUrl: `${relayUrl}/slow-signer`,
   });
-  await uploadScenarios({ ...scenario, media });
+  await uploadScenarios({ ...scenario, media, uploadPostFake });
   const publicationsBeforeApp = fake.published.length;
   await seedRailArchive({ fake, sign: fixtureSign, pubkey: fixture.note.pubkey });
   page = await ctx.newPage();

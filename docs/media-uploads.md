@@ -6,9 +6,13 @@ Upload destinations, failure recovery, protocol bounds and verification.
 
 ## Browser behavior
 
-The Post composer keeps a failed File and its text in the mounted draft. A
-failure names the destination and a translated reason, with Retry and a server
-selector. Failed attachments block posting until retried or removed. Successful
+Post and thread Reply can queue a draft while files upload, including an
+attachment-only draft. The mounted composer owns the wait until every
+attachment succeeds. Cancel or an edit drops that intent and keeps the files.
+Only a complete draft enters the outbox for signing. Failure or removal while
+waiting stops the post, shows a failure and retains the remaining draft. A
+failed File stays in the mounted composer with Retry and a server selector.
+Retry the upload or remove the failed file, then submit again. Successful
 attachments become URLs and imeta tags when the post is sent.
 Retries preserve the chosen destination when an error message is plain text;
 only a reported server URL replaces it.
@@ -101,6 +105,11 @@ checks stalled headers/bodies and the upload signing deadline. All three account
 signers are exercised. The ordinary smoke additionally checks the mock UI;
 smoke:real checks the complete real product. Fixture ports and TLS paths are
 unique per run. Public HTTP is blocked in these gates.
+
+Queued-submit checks hold authenticated responses until Post or Reply is
+pressed. They inspect the signed relay event for URLs, imeta and the reply
+reference. An early refusal stops before the note signature or publish action
+while a second attachment is still uploading.
 
 Protocol references checked for this repair:
 

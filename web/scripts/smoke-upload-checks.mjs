@@ -1,4 +1,15 @@
 // Expected passing checks from smoke-uploads and smoke-server-marks.
+export const queuedUploadChecks = [
+  'queued image-only Post waits without requesting a note signature',
+  'queued image-only Post proceeds through Posting',
+  'queued image-only Post publishes once with an image URL and imeta',
+  'queued failed upload stops before signing or publishing and keeps its draft',
+  'queued failed upload can retry the file and post explicitly',
+  'removing a pending attachment stops the queued Post',
+  'editing or canceling a queued Post keeps the attachment without publishing',
+  'queued thread Reply publishes with its image and the parent reference',
+];
+
 const serverMarks = [
   'media root without CORS and working PUT is answering',
   'media root actually refuses browser CORS',
@@ -56,6 +67,7 @@ export function uploadSmokeChecks({ quick, shots }) {
       ...protocolChecks(signer, 'nip96', quick),
     ]),
     ...extensionChecks(quick, shots),
+    ...queuedUploadChecks,
     'upload remote refuse is visible',
     'upload remote refuse retries the retained file',
     'upload remote signing round trip starts',

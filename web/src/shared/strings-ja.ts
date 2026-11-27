@@ -3,6 +3,9 @@ import type { en } from './strings-en.ts';
 
 export const ja: Record<keyof typeof en, string> = {
   'compose.uploadWait': '添付ファイルのアップロードが終わるまでお待ちください。',
+  'compose.uploadQueued': '添付ファイルのアップロード完了後に投稿します…',
+  'compose.uploadPostFailed':
+    '添付ファイルのアップロードに失敗したか、添付ファイルが削除されたため、投稿を取り消しました。',
   'mute.person': 'ユーザー',
   'mute.thread': 'スレッド',
   'compose.saveFailed':

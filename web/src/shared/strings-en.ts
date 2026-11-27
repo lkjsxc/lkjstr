@@ -1,6 +1,8 @@
 // English. The keys of this table are the keys of every language.
 export const en = {
   'compose.uploadWait': 'Wait for the attachments to finish uploading.',
+  'compose.uploadQueued': 'Posting once attachments finish uploading…',
+  'compose.uploadPostFailed': 'Post canceled because an attachment failed or was removed.',
   'mute.person': 'Person',
   'mute.thread': 'Thread',
   'compose.saveFailed':

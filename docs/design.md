@@ -293,9 +293,10 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
 - Sent appears on the first accepting relay answer. Each post keeps its own count as later answers arrive. The composer lists at most five
   refused or unanswered relays and points to the remaining count. A signed note keeps retrying quietly with its attempt count and a Remove
   control. The same event resumes on reconnect, network return, tab return and reload. A hard refusal leaves Edit and Remove.
-- Pressing Post empties the field and leaves the caret in it at once, whatever the signer; what is being sent is shown below, and a failure keeps its text.
-  On a touch screen a tap on Post puts the on-screen keyboard away instead (owner, 2026-11-25); the send key keeps the caret.
-- At Post, Home shows the retained draft at once with the Posting mark and the room of an action row, as a signed note: a slow
+- Pressing Post leaves the caret in the field. On a touch screen a tap puts the keyboard away; the send key keeps the caret (owner, 2026-11-25).
+  With uploads underway, the draft stays in the composer with a wait line and Cancel until every attachment is ready (owner, 2026-11-27).
+  Editing cancels the wait. An upload failure or removal stops the post and keeps the draft. Otherwise posting empties the field and shows the draft below.
+- When posting begins, Home shows the retained draft with the Posting mark and the room of an action row, as a signed note: a slow
   signer looks like any send. Posting (投稿中) holds until the note is signed, since nothing has left the browser yet; Sending
   (送信中) starts with the signature. An extension or remote signer still waiting after ten seconds gets its own waiting mark. Refused or failed
   signing keeps the draft with Retry, Edit and discard. The verified event takes the draft's place, by its exact id, without moving it.

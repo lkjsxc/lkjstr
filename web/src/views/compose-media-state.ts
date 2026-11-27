@@ -8,16 +8,16 @@ export function createComposeMedia(
   env: ViewEnv,
   state: { media?: Uploaded[] },
   save: () => void,
-  ready: () => void,
+  changed: (removed?: boolean) => void,
 ) {
   let restoring = true;
   const media = createAttachments(
     env,
-    () => {
+    (removed) => {
       if (restoring) return;
       state.media = media.media();
       save();
-      ready();
+      changed(removed);
     },
     thumbs,
   );
@@ -25,7 +25,7 @@ export function createComposeMedia(
   restoring = false;
   return {
     add: (files: FileList | undefined | null) => media.add(files ?? []),
-    busy: media.blocked,
+    status: media.status,
     count: media.count,
     uploaded: media.media,
     clear() {

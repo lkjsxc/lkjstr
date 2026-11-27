@@ -48,14 +48,17 @@ const sign = (event) => {
 };
 fixture.note = await recentFixtureNote(fixture.note, sign);
 const fake = fakeRelay(),
+  uploadPostFake = fakeRelay(),
   bunker = await fakeBunker(),
   media = await fakeMediaSet();
 for (const e of [fixture.note, ...fixture.events]) fake.add(e);
+uploadPostFake.add(fixture.note);
 const relay = createServer(),
   ws = new bundle.wsServer({ server: relay });
 ws.on('connection', (socket, req) => {
   if (req.url === '/bunker') return bunker.route(socket);
-  fake.route({
+  const target = req.url === '/upload-post' ? uploadPostFake : fake;
+  target.route({
     send: (text) => socket.send(text),
     onMessage: (fn) => socket.on('message', fn),
     onClose: (fn) => socket.on('close', fn),
@@ -101,6 +104,7 @@ try {
     errors,
     check,
     fake,
+    uploadPostFake,
     bunker,
     media,
   });

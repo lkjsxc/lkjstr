@@ -61,7 +61,7 @@ it.each([
       await x.failed();
       expect(x.act.mock.lastCall?.[0]).toMatchObject({ a: 'upload', server: chosen });
       expect(x.read).toHaveBeenCalledTimes(3);
-      expect(x.attachments.blocked()).toBe(true);
+      expect(x.attachments.status()).toBe('failed');
     } finally {
       x.attachments.dispose();
     }

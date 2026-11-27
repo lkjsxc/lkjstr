@@ -49,6 +49,8 @@ export async function createRealFixture() {
   const slowSignerFake = fakeRelay({ maxEvents: 130 });
   const livedInFake = fakeRelay();
   const deepLinkFake = fakeRelay();
+  const uploadPostFake = fakeRelay();
+  uploadPostFake.add(fixture.note);
   const retry = retryRelay(fixture.note);
   const bunker = await fakeBunker();
   const media = await fakeMediaSet();
@@ -67,6 +69,7 @@ export async function createRealFixture() {
     railFake,
     slowSignerFake,
     livedInFake,
+    uploadPostFake,
     retryFake: retry.relay,
     bunker,
   });
@@ -107,6 +110,7 @@ export async function createRealFixture() {
     retry,
     bunker,
     media,
+    uploadPostFake,
     socketSharing,
     relayUrl,
     server,
@@ -116,7 +120,17 @@ export async function createRealFixture() {
 
 export function attachSmokeRelay(
   ws,
-  { fake, readerFake, deepLinkFake, railFake, slowSignerFake, livedInFake, retryFake, bunker },
+  {
+    fake,
+    readerFake,
+    deepLinkFake,
+    railFake,
+    slowSignerFake,
+    livedInFake,
+    retryFake,
+    uploadPostFake,
+    bunker,
+  },
 ) {
   const trace = createSocketTrace();
   const fixtureByPath = new Map([
@@ -126,6 +140,7 @@ export function attachSmokeRelay(
     ['/rail-visibility', railFake],
     ['/lived-in', livedInFake],
     ['/post-retry', retryFake],
+    ['/upload-post', uploadPostFake],
   ]);
   const activePaths = new Map(); // all isolated test contexts share the loopback server
   const mainSockets = new Set(); // tagged context, excluding readers and signer routes

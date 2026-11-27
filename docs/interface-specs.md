@@ -114,6 +114,12 @@ shows unconfirmed and keeps Retry, Edit and Remove. All refusals show the relay
 messages. Details list up to five refused or unanswered relays followed by the
 number of remaining ones. See [Writing and acting](design.md#writing-and-acting).
 
+For the 2026-11-27 attachment request, Post and Reply accept the normal button
+and shortcut while attachments upload, including drafts with only attachments.
+The composer says it will post after the uploads and offers Cancel. Editing the draft
+also cancels the wait. Completion moves into Posting. An attachment failure or
+removal ends the wait with an error and keeps the draft in the composer.
+
 ## Home new-notes pill
 
 In Home, the existing new-notes pill uses `feed.freshOwn` when the newest row
