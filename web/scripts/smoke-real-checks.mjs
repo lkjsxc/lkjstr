@@ -63,6 +63,7 @@ const main = [
   ...livedInCheckNames,
   'Home shows a resting grip within a wide tile',
   'hover highlights the visible grip',
+  'hover time fades while the rail and grip stay visible',
   'drag keeps the grip under the pointer without horizontal overflow',
   'month marks have height for the honest-end fade',
   'held rail says the pointer time',

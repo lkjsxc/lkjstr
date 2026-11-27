@@ -112,6 +112,12 @@ it('draws a hover line and label for a fine pointer, and keeps marks still while
   x.pointer(x.track, 'pointermove', 20);
   expect(line.hidden).toBe(false);
   expect(label.textContent).toMatch(/^\d{4}\/\d{2}\/\d{2} \d{2}:\d{2}$/);
+  vi.advanceTimersByTime(1000);
+  expect(label.hidden).toBe(true);
+  expect(line.hidden).toBe(false);
+  expect(x.track.hidden).toBe(false);
+  x.pointer(x.track, 'pointermove', 21);
+  expect(label.hidden).toBe(false);
   x.track.dispatchEvent(new PointerEvent('pointerleave'));
   vi.advanceTimersByTime(16);
   expect(line.hidden).toBe(true);

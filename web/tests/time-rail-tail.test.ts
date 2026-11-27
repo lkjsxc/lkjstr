@@ -15,8 +15,30 @@ it('paints the grip with the first rows before a timeline or local overflow', ()
   expect(x.track.classList.contains('plain')).toBe(true);
   expect(x.track.querySelector<HTMLElement>('.time-grip')?.style.top).toBe('20px');
   expect(x.track.querySelector('.time-marks .time-year')).not.toBeNull();
-  expect(x.track.querySelector<HTMLElement>('.scrub')?.hidden).toBe(false);
-  expect(x.track.querySelector('.scrub')?.textContent).toBe(timeText(month + 1));
+  expect(x.track.querySelector<HTMLElement>('.scrub')?.hidden).toBe(true);
+});
+
+it('keeps provisional marks and grip visible after scroll and touch labels time out', () => {
+  const x = setup(null);
+  const label = x.track.querySelector<HTMLElement>('.scrub')!;
+  const grip = x.track.querySelector<HTMLElement>('.time-grip')!;
+  x.el.dispatchEvent(new Event('scroll'));
+  vi.advanceTimersByTime(16);
+  expect(label.hidden).toBe(true);
+  x.el.dispatchEvent(new WheelEvent('wheel'));
+  x.el.dispatchEvent(new Event('scroll'));
+  vi.advanceTimersByTime(990);
+  expect(label.hidden).toBe(false);
+  expect(label.textContent).toBe(timeText(month + 1));
+  vi.advanceTimersByTime(30);
+  expect(label.hidden).toBe(true);
+  x.el.dispatchEvent(new Event('touchstart'));
+  vi.advanceTimersByTime(16);
+  expect(label.hidden).toBe(false);
+  vi.advanceTimersByTime(1020);
+  expect(label.hidden).toBe(true);
+  expect(x.track.hidden || grip.hidden).toBe(false);
+  expect(x.track.querySelector('.time-year')).not.toBeNull();
 });
 
 it('keeps the plain grip when a header overflows before dated rows arrive', () => {

@@ -172,6 +172,7 @@
 .time-return { position: absolute; right: 2px; width: 12px; height: 2px; border-radius: 1px; background: var(--accent); transform: translateY(-50%); }
 .time-return::before { content: ""; position: absolute; inset: -8px -2px -8px -5px; }
 .time-rail .scrub { right: calc(100% + 4px); transform: translateY(-50%); }
+.time-rail .scrub[hidden] { opacity: 0; transition: opacity 120ms ease-out, display 120ms allow-discrete; }
 .time-rail.touch .scrub { right: calc(100% + 24px); } /* a thumb on the rail does not cover it */
 .vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .time-rail.open-end .time-marks { mask-image: linear-gradient(#000 0%, #000 94%, transparent 100%); }

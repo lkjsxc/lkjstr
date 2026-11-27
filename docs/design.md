@@ -220,8 +220,7 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
   would, so busy weeks keep their room over a few short old posts; a quiet month stays reachable and empty time
   takes none. An isolated stretch of sparse old notes shares a short end band, with every note still reachable.
   A 6x32px accent grip in the rightmost 16px marks the reading place, with 4px beyond it at both ends.
-  It appears with the first dated row at the share scrolled, beside the reading time and provisional marks
-  from the loaded rows. The counted rank map and its marks take over as counts arrive.
+  It appears with the first dated row at the share scrolled, beside provisional marks from the loaded rows. The counted rank map and its marks take over as counts arrive.
   Hover and hold highlight it. On a tile of 520px or more, the right-aligned ruler starts at local years.
   A gutter separates the labels from ticks on the grip axis. Each labelled span shows its next unit when
   the rank map gives it room, from months and days through hours, quarter hours and five minutes. Labels grow quieter with the unit, by colour and weight alone: years are
@@ -241,7 +240,8 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
   A source at its end or without a page answer after four seconds releases its hold.
 - While the reader scrolls a list in time order (wheel, touch, keys, a dragged thumb or rail), a small label beside
   the rail grip or native thumb says `yyyy/mm/dd HH:mm` of the row at the top, kept 4px
-  inside the tile, and goes a second after the last scroll; a scroll the list makes itself shows nothing
+  inside the tile. On the rail, touching the list or moving a pointer over the rail also shows it. It fades after a
+  second of idle, leaving the rail available. A scroll the list makes itself shows nothing
   ([interface-time.md](interface-time.md) C1).
 - Filters are saved with the tab. The filter row (like the notification
   toggles and the settings search) is the first row of the content: it

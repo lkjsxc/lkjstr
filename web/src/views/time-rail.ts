@@ -3,7 +3,7 @@ import type { Anchor, Timeline } from '../engine/protocol.ts';
 import { localZone } from '../shared/format.ts';
 import type { Keeper, Place } from './feed-place.ts';
 import { type RailRow, rowTime, timeText, topRow } from './feed-scrub.ts';
-import { scrollIntent } from './scroll-intent.ts';
+import { scrollIntent, TIME_LABEL_IDLE_MS } from './scroll-intent.ts';
 import { dayText, railDays } from './time-days.ts';
 import {
   createMarkPainter,
@@ -23,7 +23,6 @@ import { noteToPlace, placeToNote, type TimePlace, timeScale } from './time-scal
 import { createSeeker } from './time-seek.ts';
 
 const LATE_MS = 500;
-const LANDED_MS = 1000;
 export function mountTimeRail(o: {
   candidate(): boolean;
   version(): number;
@@ -40,8 +39,7 @@ export function mountTimeRail(o: {
   const { el, list, keeper } = o;
   const { rail, marks, lens, grip, hoverLine, tick, label, live, pin } = createTimeRailNodes(el);
   const painter = createMarkPainter(marks, lens);
-  let telling = false; // the reader is scrolling (C1)
-  const intent = scrollIntent(el, () => ((telling = false), sync()));
+  const intent = scrollIntent(el, () => sync(), { showOnTouch: true });
   const available = (): boolean => o.candidate() && o.version() >= 5;
   el.classList.toggle('has-time-rail', available());
   let data: Timeline | undefined;
@@ -118,7 +116,7 @@ export function mountTimeRail(o: {
     if (held) return;
     landed = true;
     clearTimeout(landTimer);
-    landTimer = setTimeout(() => ((landed = false), sync()), LANDED_MS);
+    landTimer = setTimeout(() => ((landed = false), sync()), TIME_LABEL_IDLE_MS);
   };
   const textFor = (p: TimePlace): string => {
     const key = keyAt(p);
@@ -138,9 +136,14 @@ export function mountTimeRail(o: {
     } else if (target) {
       text = loadingText(textFor(target), late || Boolean(s.waiting));
       y = axis.inset + noteToPlace(bands, target);
-    } else if (telling || landed || (plain && row)) text = timeText(readingAt(row));
-    else if (hoverY !== undefined) (text = textFor(at(hoverY))), (y = hoverY + axis.inset);
+    } else if (intent.showing() || landed || (plain && input.hovered())) {
+      const at = readingAt(row);
+      if (at) text = timeText(at);
+    } else if (hoverY !== undefined && input.hovered()) {
+      (text = textFor(at(hoverY))), (y = hoverY + axis.inset);
+    }
     if (landed && speak && text) (speak = false), (live.textContent = text);
+    // Fade the floating time so notes stay clear while the rail remains ready at rest.
     drawLabel(label, text, y, el.clientHeight);
   };
   const paint = (): void => {
@@ -240,10 +243,7 @@ export function mountTimeRail(o: {
   });
   const zoned = (): void => void ((zone = localZone()), sync());
   document.addEventListener('visibilitychange', zoned);
-  const scrolled = (): void => {
-    if (intent.telling()) telling = true;
-    sync();
-  };
+  const scrolled = (): void => (intent.telling(), sync());
   el.addEventListener('scroll', scrolled, { passive: true });
   const watch = new ResizeObserver(sync);
   watch.observe(el);

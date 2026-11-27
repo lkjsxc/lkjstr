@@ -37,11 +37,14 @@ the supported scope in [time-rail.md](time-rail.md).
 One label per list, the existing `.scrub` element. It reads `yyyy/mm/dd hh:mm` for the reading place.
 
 - **When.** It appears on a scroll that the reader caused: a wheel, trackpad, touch or momentum scroll, a dragged
-  native thumb, a scrolling key (arrows, J/K, Page, Space, Home/End), or a rail press. A scroll counts as the
+  native thumb, a scrolling key (arrows, J/K, Page, Space, Home/End), or a rail press. A touch in a rail list
+  also shows the reading time before any scroll. A scroll counts as the
   reader's when an input event came within the last 300ms or the label is already showing. It never appears for a
   scroll made by the list: restoring a tab, the keeper holding the anchor while notes arrive or media grows, a new
   note at the head, a tab opening or moving tiles.
-- **Gone.** 1000ms after the last scroll, unless a rail press is held or a jump is still loading (C3). Provisional labels stay until the counted map arrives.
+- **Gone.** The rail label fades 1000ms after the last scroll, touch or pointer movement over the rail, unless
+  a rail press is held or a jump is still loading (C3). The track, grip and marks stay available while the label fades.
+  A native scrollbar label goes after the last scroll.
 - **Where.** Its vertical centre sits on the thumb's centre, clamped 4px inside the tile. In a rail list the thumb is
   the grip, and the label's right edge is 4px left of the rail (narrow and wide alike). In a list with a
   native scrollbar the label's right edge is 4px left of the scrollbar, and its centre is at
@@ -69,7 +72,7 @@ Finer labels are 9px and quieter. A smaller tick can show the next unit when the
   the ruler shows the year and month dots.
 - **Hover (fine pointer, any rail width).** A 1px `--sep` line crosses the rail at the pointer. Its label shows
   the full time if the note a press there would reach is loaded, or `yyyy/mm/dd` from the day counts when known.
-  Leaving the rail removes both. The line stays with a held mouse.
+  The time fades after one second of idle hover. Leaving the rail removes both. The line stays with a held mouse.
 - **Held.** Within 48px of the pointer a short second column shows the next finer available unit. It follows
   the pointer and leaves the held time label in place. Snapping uses the resting labels.
 - **Narrow rail (under 520px).** Years show over the content on hover or hold, with dots at month starts

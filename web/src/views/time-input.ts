@@ -3,6 +3,7 @@
 // pointer over the rail hovers. The keys belong to the tile in front, never to a field or an open popover.
 import { pressed, typing } from '../shared/keys.ts';
 import { popoverOpen } from '../wm/menus.ts';
+import { TIME_LABEL_IDLE_MS } from './scroll-intent.ts';
 import { stepDay, stepMonth } from './time-days.ts';
 import type { Day } from './time-parts.ts';
 import type { TimeBand, TimePlace } from './time-scale.ts';
@@ -45,6 +46,18 @@ export function railInput(o: {
 }) {
   const { el, rail } = o;
   let pointer: number | undefined;
+  let hoverTimer: ReturnType<typeof setTimeout> | undefined;
+  const hover = (y: number | undefined): void => {
+    clearTimeout(hoverTimer);
+    hoverTimer =
+      y === undefined
+        ? undefined
+        : setTimeout(() => {
+            hoverTimer = undefined;
+            o.hover(y);
+          }, TIME_LABEL_IDLE_MS);
+    o.hover(y);
+  };
   const clearPointerFocus = (): void => el.classList.remove('time-pointer-focus');
   const down = (e: PointerEvent): void => {
     if (e.button !== 0 || pointer !== undefined) return;
@@ -54,24 +67,25 @@ export function railInput(o: {
     if (e.target === o.tick) return void o.back(false);
     pointer = e.pointerId;
     rail.setPointerCapture(e.pointerId);
-    o.hover(undefined);
+    hover(undefined);
     o.press(o.y(e), e.pointerType === 'touch');
   };
   const move = (e: PointerEvent): void => {
     if (e.pointerId === pointer) o.drag(o.y(e));
-    else if (pointer === undefined && e.pointerType !== 'touch') o.hover(o.y(e));
+    else if (pointer === undefined && e.pointerType !== 'touch') hover(o.y(e));
   };
   const up = (e: PointerEvent): void => {
     if (e.pointerId !== pointer) return;
     pointer = undefined;
     o.release();
   };
-  const leave = (): void => o.hover(undefined);
+  const leave = (): void => hover(undefined);
   const cancel = (): void => {
     const captured = pointer;
     pointer = undefined;
     if (captured !== undefined && rail.hasPointerCapture(captured))
       rail.releasePointerCapture(captured);
+    leave();
     o.release();
   };
   const key = (e: KeyboardEvent): void => {
@@ -89,6 +103,7 @@ export function railInput(o: {
     if (done) e.preventDefault();
   };
   rail.addEventListener('pointerdown', down);
+  rail.addEventListener('pointerenter', move);
   rail.addEventListener('pointermove', move);
   rail.addEventListener('pointerup', up);
   rail.addEventListener('pointercancel', up);
@@ -103,8 +118,10 @@ export function railInput(o: {
     window.removeEventListener('keydown', key, true);
     el.removeEventListener('blur', clearPointerFocus);
     clearPointerFocus();
+    clearTimeout(hoverTimer);
     for (const [type, fn] of [
       ['pointerdown', down],
+      ['pointerenter', move],
       ['pointermove', move],
       ['pointerup', up],
       ['pointercancel', up],
@@ -113,5 +130,5 @@ export function railInput(o: {
     ] as const)
       rail.removeEventListener(type, fn as EventListener);
   };
-  return { cancel, dispose };
+  return { cancel, dispose, hovered: () => hoverTimer !== undefined };
 }

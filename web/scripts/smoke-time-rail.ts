@@ -61,6 +61,13 @@ export async function railSmoke(
     'hover highlights the visible grip',
     hovered.cursor === 'grab' && hovered.opacity > rest.opacity,
   );
+  const timeLabel = rail.locator('.scrub');
+  await timeLabel.waitFor({ state: 'visible' });
+  await timeLabel.waitFor({ state: 'hidden' });
+  check(
+    'hover time fades while the rail and grip stay visible',
+    (await rail.isVisible()) && (await grip.isVisible()),
+  );
   await page.mouse.move(x, box.y + 9);
   await page.mouse.down();
   await page.mouse.move(x, box.y + box.height - 9, { steps: 8 });
