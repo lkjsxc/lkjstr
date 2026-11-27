@@ -238,7 +238,7 @@ try {
             .locator('.view[data-kind="compose"]:visible .icon:has(.i-smile)')
             .first()
             .click();
-          await page.waitForSelector('.epick .ecell');
+          await page.waitForSelector('.epick .egroup[data-section="cat:0"] .ecell');
         });
         await quoteShots(scene, lang);
         if ((width === 1440 && theme === 'dark') || (width === 390 && theme === 'light'))

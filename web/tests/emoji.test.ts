@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { emojiTable } from '../scripts/emoji-table.ts';
 import {
   fold,
@@ -10,11 +10,14 @@ import {
   typedWords,
   wordFit,
 } from '../src/shared/emoji-find.ts';
+import * as emojiSource from '../src/shared/emoji-table.ts';
 import { ordered, withPick } from '../src/shared/emoji-used.ts';
 import { catOf } from '../src/views/emoji-grid.ts';
+import { openEmojiPicker } from '../src/views/emoji-picker.ts';
 import { emojiSections, patched } from '../src/views/emoji-sections.ts';
 import { withHeld } from '../src/views/held.ts';
 import { withEmoji } from '../src/views/parts.ts';
+import { setup } from './wishes-support.ts';
 
 const table = glyphsOf(JSON.parse(JSON.stringify({ v: 1, rows: emojiTable() })));
 const find = (typed: string): string[] => {
@@ -218,4 +221,43 @@ describe('what the picker holds', () => {
     ]);
     expect(next.map((r) => `${r.code}/${r.set}`)).toEqual(['neko/Cats', 'ok/', 'kusa/']);
   });
+});
+
+it('fills the category toolbar when the Unicode table arrives during a search', async () => {
+  let arrive!: (glyphs: typeof table) => void;
+  const pending = new Promise<typeof table>((resolve) => (arrive = resolve));
+  vi.spyOn(emojiSource, 'emojiTableNow').mockReturnValue(undefined);
+  vi.spyOn(emojiSource, 'emojiTable').mockReturnValue(pending);
+  const { env, el } = setup();
+  const anchor = document.createElement('button');
+  el.append(anchor);
+  const categories = () =>
+    [...env.layer.querySelectorAll<HTMLElement>('.ecats button[data-section^="cat:"]')].map(
+      (b) => b.dataset.section,
+    );
+  const all = Array.from({ length: 9 }, (_, i) => `cat:${i}`);
+  try {
+    openEmojiPicker(env, anchor, vi.fn());
+    const input = env.layer.querySelector<HTMLInputElement>('.epick input')!;
+    expect(categories()).toEqual([]);
+    input.value = 'shaking face';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    expect(categories()).toEqual([]);
+    arrive(table);
+    await pending;
+    expect(input.value).toBe('shaking face');
+    expect(env.layer.querySelector('.epick .ecell')?.textContent).toBe('🫨');
+    const duringSearch = categories();
+    input.value = '';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    expect({ duringSearch, afterClear: categories() }).toEqual({
+      duringSearch: all,
+      afterClear: all,
+    });
+  } finally {
+    window.dispatchEvent(new Event('blur'));
+    el.remove();
+    env.layer.remove();
+    vi.restoreAllMocks();
+  }
 });

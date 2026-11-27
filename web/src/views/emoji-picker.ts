@@ -204,6 +204,8 @@ export function openEmojiPicker(
     void emojiTable().then((list) => {
       if (list === COMMON || !panel.isConnected) return;
       table = list;
+      // Search results omit the category sections; refresh the toolbar from the unfiltered list.
+      if (drawnFor) drawCats(emojiSections(custom, table, usedEmoji(), ''));
       draw(true);
     });
   const close = openPopover(env.layer, anchor, panel, {
