@@ -64,14 +64,21 @@ export async function continuity({page,send,wait,check,note,signer,lines,origin,
   });
   await send({t:'open',sub:'continuity',query:{source:'relay',relay,account:note.pubkey,since:1700100000000,until:1700101249000}});
   await send({t:'hint',hint:{visibleSubs:['continuity'],pageHidden:false,idle:false,saveData:false}});
+  const headerKey=`relay:${relay}`;
+  // The pinned relay summary is a display row, not a chronological event.
+  const noteRows=async(label)=>{
+    const rows=await page.evaluate(()=>window.continuityRows.map(r=>({kind:r.kind,key:r.key,at:r.at})));
+    check(`${label} has exactly one pinned relay header`,rows[0]?.kind==='relay'&&rows[0].key===headerKey&&rows[0].at===undefined&&rows.slice(1).every(r=>r.kind==='note'&&Number.isFinite(r.at)));
+    return rows.slice(1);
+  };
   let prior=[];
   for(let n=0;n<30;n++){
     await send({t:'window',sub:'continuity',anchor:prior.length?{key:prior.at(-1)}:'top',before:0,after:200,retainAbove:true});
-    const target=Math.min(5000,prior.length?prior.length+190:200);
+    const target=Math.min(5000,prior.length?prior.length+190:199);
     await page.evaluate(info=>{window.continuityProgress=info;},{page:n+1,prior:prior.length,target,waitStartedAt:Date.now()});
-    await wait(n=>window.continuityRows.length>=n,target);
-    await page.evaluate(()=>{window.continuityProgress={...window.continuityProgress,completedAt:Date.now(),completedRows:window.continuityRows.length};window.continuityPageTimes.push(window.continuityProgress);});
-    const rows=await page.evaluate(()=>window.continuityRows.map(r=>({key:r.key,at:r.at})));
+    await wait(n=>window.continuityRows.filter(r=>r.kind==='note').length>=n,target);
+    await page.evaluate(()=>{window.continuityProgress={...window.continuityProgress,completedAt:Date.now(),completedRows:window.continuityRows.length,completedNotes:window.continuityRows.filter(r=>r.kind==='note').length};window.continuityPageTimes.push(window.continuityProgress);});
+    const rows=await noteRows(`continuity page ${n+1}`);
     const keys=rows.map(r=>r.key);
     check(`continuity page ${n+1} retains everything above`,prior.every((id,i)=>keys[i]===id));
     check(`continuity page ${n+1} is unique and stable`,new Set(keys).size===keys.length&&rows.every((r,i)=>!i||rows[i-1].at>r.at||(rows[i-1].at===r.at&&rows[i-1].key>r.key)));
@@ -80,14 +87,16 @@ export async function continuity({page,send,wait,check,note,signer,lines,origin,
     await page.evaluate(()=>{window.messages=window.messages.filter(m=>m.sub!=='continuity');});
     if(keys.length===5000)break;
   }
-  check('5000 relay-paged rows have no gaps or duplicates',prior.length===5000&&history.every(e=>prior.includes(e.id)));
+  check('5000 relay-paged rows have no gaps or duplicates',prior.length===5000&&new Set(prior).size===5000&&history.every(e=>prior.includes(e.id)));
   await send({t:'window',sub:'continuity',anchor:'top',before:0,after:800});
   await wait(()=>window.continuityRows.length===800);
-  const first=await page.evaluate(()=>window.continuityRows[0].key);
-  const anchor=await page.evaluate(()=>window.continuityRows[499].key);
+  const head=await noteRows('continuity 800-row head window');
+  check('800-row head window includes 799 notes plus the header',head.length===799&&head.every((r,i)=>r.key===prior[i]));
+  const first=head[0].key,anchor=head[499].key;
   await send({t:'window',sub:'continuity',anchor:{key:anchor},before:800,after:200});
-  await wait(()=>window.continuityRows.length===699);
-  check('protocol 3 retains the first row across 500 read notes with 800-row windows',await page.evaluate(first=>window.continuityRows[0].key===first,first));
+  await wait(()=>window.continuityRows.length===700);
+  const retained=await noteRows('continuity anchored window');
+  check('protocol 3 retains the first note across 500 read notes with 800-row windows',retained.length===699&&retained[0].key===first&&retained[499].key===anchor&&retained.every((r,i)=>r.key===prior[i]));
   const at=history[2345].created_at*1000;
   await send({t:'rowAtTime',req:'continuity-time',sub:'continuity',at});
   await wait(()=>window.messages.some(m=>m.t==='rowAtTime'&&m.req==='continuity-time'));
