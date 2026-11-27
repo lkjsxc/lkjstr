@@ -61,7 +61,7 @@ function geometry(f: ReturnType<typeof pinsFeed>) {
   const height = (el: HTMLElement) => heights.get(el.dataset.key ?? '') ?? 100;
   const pinHeight = () => children().reduce((sum, el) => sum + height(el), 0);
   const headerHeight = () => prefix + pinHeight() + 40;
-  const shift = () => Number.parseFloat(list.style.translate.split(' ')[1] ?? '0');
+  const shift = () => Number.parseFloat(root.style.getPropertyValue('--feed-shift')) || 0;
   Object.defineProperties(root, {
     clientHeight: { configurable: true, value: 600 },
     clientWidth: { configurable: true, value: 390 },
