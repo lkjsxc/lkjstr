@@ -2,6 +2,7 @@
 // (ytenrich mounts the same three parts in a shadow root over YouTube; lkjstr owns the page, so they sit in <body>.)
 import { h } from '../shared/h.ts';
 import type { Settings } from '../shared/settings.ts';
+import { keepPageInPlace } from './page-viewport.ts';
 
 const TAB_MIN_PX = 88; // the narrowest a fixed-width tab gets: a few characters and its close button
 
@@ -13,30 +14,6 @@ export type Host = {
   look(s: Settings): void;
   dispose(): void;
 };
-
-const FIELD = 'input, textarea, select, [contenteditable]:not([contenteditable="false"])';
-
-/** iOS lifts a field above its keyboard by scrolling the page, which nothing else scrolls (only lists do), and does
- * not always put the page back when the keyboard goes. Once no field has the keyboard, the page goes back to the
- * top. A page the reader has pinched closer is theirs and is left as it is. */
-function keepPageInPlace(): () => void {
-  let timer: ReturnType<typeof setTimeout> | undefined;
-  const settle = (): void => {
-    clearTimeout(timer);
-    timer = setTimeout(() => {
-      const port = globalThis.visualViewport;
-      if (document.activeElement?.matches(FIELD) || (port && port.scale > 1.01)) return;
-      if (scrollX || scrollY) scrollTo(0, 0);
-    }, 100);
-  };
-  document.addEventListener('focusout', settle);
-  globalThis.visualViewport?.addEventListener('resize', settle);
-  return () => {
-    clearTimeout(timer);
-    document.removeEventListener('focusout', settle);
-    globalThis.visualViewport?.removeEventListener('resize', settle);
-  };
-}
 
 export function createHost(): Host {
   const bar = h('header', { class: 'bar' });

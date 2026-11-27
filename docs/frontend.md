@@ -164,6 +164,9 @@ rejected in every HTML file. Errors name the file.
 
 `pnpm shots` takes `--only=<width>-<theme>-<lang>` and `--scenes=home,thread`.
 `LKJSTR_CHROME=<path>` picks the browser for `smoke` and `shots`.
+The frontend maintainer should verify native focus, keyboard dismissal and pinch on an iPhone for changes
+to the mobile viewport. Playwright's iPhone WebKit checks field sizes and focus scale, and supplies keyboard
+viewport readings to exercise recovery. Its Linux runner has no native iOS keyboard.
 Finish a change with `pnpm check`, `pnpm build` and `pnpm smoke`.
 Real smoke and quick upload smoke require each check in the selected inventory exactly once.
 `LKJSTR_SHOTS=1` selects the inventory with screenshot checks.

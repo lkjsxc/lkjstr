@@ -44,9 +44,10 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
 - One system sans stack with the Japanese families named. No web fonts.
 - Interface 13.5px / 1.45. Note text 15px / 1.6 (a setting); the focused note of a thread is 1.5px larger. Headers and context lines 12.5 to 13.5px.
 - Editable controls use at least 16px text in every pointer mode. Keep them outside scaled bars so iOS can reveal a
-  focused field at normal page zoom (owner, 2026-11-22). The viewport allows manual zoom. The page
-  itself never scrolls; when iOS scrolls it to lift a field above the keyboard, an open panel (the emoji picker) stays,
-  and the page goes back once no field has the keyboard (owner, 2026-11-26).
+  focused field at normal page zoom (owner, 2026-11-22). If editing starts at normal scale and Safari leaves the page
+  enlarged after blur or keyboard dismissal, restore the initial scale. Keep manual pinch zoom available.
+  When iOS scrolls the page to lift a field above the keyboard, an open panel (the emoji picker) stays, and the page
+  returns to the top after editing (owner, 2026-11-26).
 - Names are 600; everything else regular. Numbers that change are tabular.
 - Note text uses `line-break: strict`. Interface sentences break by phrase in Japanese (`word-break: auto-phrase`), never inside a word.
 
