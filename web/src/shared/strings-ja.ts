@@ -302,6 +302,7 @@ export const ja: Record<keyof typeof en, string> = {
   'compose.replyHint': '返信を書く',
   'compose.attach': '画像や動画を追加',
   'compose.retry': '再送信',
+  'compose.cancel': 'キャンセル',
   'compose.pending': '送信中…',
   'compose.posting': '投稿中…',
   'compose.retained': 'メッセージを保存しました。再送信できます。',
@@ -604,7 +605,12 @@ export const ja: Record<keyof typeof en, string> = {
   'account.add.submit': 'ログイン',
   'account.add.other': '鍵や bunker アドレスでログイン',
   'account.add.create': '新しいアカウントを作る',
-  'account.busy.extension': '拡張機能の応答を待っています…',
+  'signer.finding': '署名用の拡張機能を探しています…',
+  'signer.approve': '拡張機能の承認を待っています。承認すると送信します。',
+  'signer.approveSignIn': '拡張機能の承認を待っています。承認するとログインします。',
+  'signer.cancelled': '送信していません。拡張機能に確認が残っていれば、そちらで閉じてください。',
+  'signer.cancelledSignIn':
+    'ログインを中止しました。拡張機能に確認が残っていれば、そちらで閉じてください。',
   'account.busy.key': 'ログインしています…',
   'account.busy.remote': 'リモート署名の応答を待っています…',
   'account.fail.missing':

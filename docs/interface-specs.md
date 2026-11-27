@@ -60,6 +60,7 @@ what the engine offers and no surface reaches yet.
 | W2 | Client names are relay text: drawn as text, bounded | [interface-client.md](interface-client.md#w2-text-from-relays) | built |
 | W3 | App information on a press | [interface-client.md](interface-client.md#w3-app-information) | built on the mock; engine in progress |
 | W4 | Include lkjstr in my posts (opt-out) | [interface-client.md](interface-client.md#w4-leaving-lkjstr-out-of-ones-posts) | built |
+| P2 | Waiting on a browser extension: looking, approval with Cancel, nothing blocks | [interface-signer.md](interface-signer.md#spec-p2-waiting-on-a-browser-extension) | ready |
 | Q1 | Tabs state wants; the engine makes one plan | [read-plan.md](read-plan.md#q1-tabs-state-wants-the-engine-makes-one-plan) | ready |
 | Q2 | Ask where the answer is | [read-plan.md](read-plan.md#q2-ask-where-the-answer-is) | ready |
 | Q3 | Weights made from the past | [read-plan.md](read-plan.md#q3-weights-made-from-the-past) | ready |
@@ -81,6 +82,7 @@ what the engine offers and no surface reaches yet.
 | P1 | Edit profile: fields, picture and banner upload, preview, save | [interface-profile.md](interface-profile.md#p1-edit-profile) | built |
 | R1 | Relay tab: one relay, its NIP-11 head and the notes it served | [interface-relay.md](interface-relay.md#r1-a-relay-tab) | built |
 
+P2 is the owner's #3118: the browser extension signer in the performance work; it extends P1 below.
 C1 to C3 are the owner's item 5 of 2026-11-21, built: C2 and C3 draw local day marks from the engine's `days` and
 fall back to UTC months without inventing a day. They reach only lists the engine gives the rail (interface-time.md,
 Reach); a Home with resolved reposts still scrolls natively, and that engine slice is the next step.

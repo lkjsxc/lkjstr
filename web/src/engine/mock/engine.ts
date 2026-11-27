@@ -141,6 +141,7 @@ export function createMockEngine(
       } else if (msg.t === 'reading' || msg.t === 'preview')
         /* fixtures already contain the answer */ return;
       else if (msg.t === 'publicKey') act.publicKey(msg);
+      else if (msg.t === 'signed') act.signed(msg);
       else if (msg.t === 'configure') {
         config = msg.config;
         world.linkPreviews = config.linkPreviews !== false;

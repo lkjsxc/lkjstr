@@ -157,7 +157,14 @@ export async function queuedUploadScenarios({ page, check, media, fake, file }) 
   });
   replyUpload();
   await page.waitForFunction(() => typeof window.releaseUploadPost === 'function');
-  const posting = await reply.locator('.csend[data-phase=signing]').isVisible();
+  // P2 puts the one visible wait line in the extension's retained draft, not the generic status.
+  const draft = reply.locator('.cdraft[data-phase=signing]');
+  const posting =
+    (await draft.isVisible()) && !(await reply.locator('.csend[data-phase=signing]').isVisible());
+  await draft.locator('button.signer-cancel').waitFor();
+  const approval =
+    (await draft.getAttribute('data-signer-wait')) === 'approval' &&
+    (await draft.getByRole('button', { name: 'Cancel', exact: true }).isEnabled());
   await page.evaluate(() => {
     window.holdUploadPost = false;
     window.releaseUploadPost();
@@ -169,6 +176,7 @@ export async function queuedUploadScenarios({ page, check, media, fake, file }) 
     queuedUploadChecks[7],
     waited &&
       posting &&
+      approval &&
       (await signatures(3)) &&
       event?.tags.some((tag) => tag[0] === 'e' && tag[1] === parentId) &&
       event.tags.some((tag) => tag[0] === 'imeta' && tag[1]?.startsWith(`url ${origin}/`)),

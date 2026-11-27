@@ -1,4 +1,5 @@
 // At most 20 pending or failed drafts per composer, persisted independently of the input.
+import type { SignerWait } from '../engine/extension-wait.ts';
 import type { Delivery, Draft, Failure } from '../engine/protocol.ts';
 import { h } from '../shared/h.ts';
 import { kv } from '../shared/storage.ts';
@@ -7,14 +8,15 @@ import {
   announceDefaults,
   boxes,
   type ChannelDraft,
+  draftAccount,
+  draftHomeEntry,
   followSignedNote,
   outboxRow,
   type Watch,
 } from './compose-outbox-state.ts';
-import { type HomeDraft, hasHomeDraft, removeHomeDraft, showHomeDraft } from './home-drafts.ts';
+import { hasHomeDraft, removeHomeDraft, showHomeDraft } from './home-drafts.ts';
 import { ownPublished } from './own-published.ts';
 import type { ViewEnv } from './registry.ts';
-import { asking, waitKey } from './send-state.ts';
 
 export type { ChannelDraft } from './compose-outbox-state.ts';
 
@@ -34,6 +36,7 @@ export function createChannelOutbox(
       drafts: saved.drafts ?? legacy,
       busy: new Set(),
       waiting: new Set(),
+      signers: new Map(),
       listeners: new Set(),
       watches: new Map(),
       noteWatches: new Map(),
@@ -42,7 +45,7 @@ export function createChannelOutbox(
     kv.set(`view:${key}`, { id: box.id, drafts: box.drafts });
   }
   const currentBox = box;
-  const { id, drafts, busy, waiting, listeners } = currentBox;
+  const { id, drafts, busy, waiting, listeners, signers } = currentBox;
   const release = (): void => {
     if (busy.size || listeners.size || drafts.some((item) => hasHomeDraft(item.homeKey))) return;
     for (const watch of currentBox.noteWatches.values()) watch();
@@ -62,6 +65,8 @@ export function createChannelOutbox(
     for (const listener of listeners) listener.delivery(...args);
   };
   const remove = (item: ChannelDraft): void => {
+    signers.get(item)?.abort.abort();
+    signers.delete(item);
     const index = drafts.indexOf(item);
     if (index >= 0) drafts.splice(index, 1);
     currentBox.noteWatches.get(item)?.();
@@ -78,9 +83,7 @@ export function createChannelOutbox(
   const draw = (): void => {
     el.replaceChildren(
       ...drafts.map((item) => {
-        const pending = busy.has(item);
-        const who = waiting.has(item) ? waitKey(asking(signerOf(item))) : undefined;
-        return outboxRow(item, env, pending, who, {
+        return outboxRow(item, env, currentBox, {
           retry: () => void send(item),
           edit: () => {
             if (edit(item.draft)) remove(item);
@@ -91,23 +94,15 @@ export function createChannelOutbox(
     );
     changed();
   };
-  const accountOf = (item: ChannelDraft) =>
-    env.engine.accounts.get().accounts.find((a) => a.author.pubkey === item.as);
-  const signerOf = (item: ChannelDraft) => accountOf(item)?.signer;
-  const homeEntry = (item: ChannelDraft): HomeDraft | undefined => {
-    const account = accountOf(item);
-    if (item.draft.channel || !account) return;
-    return {
-      key: (item.homeKey ??= crypto.randomUUID()),
-      at: (item.homeAt ??= Date.now()),
-      draft: item.draft,
-      author: account.author,
-      asks: asking(account.signer),
-      retry: () => void send(item),
-      discard: () => remove(item),
+  const signerOf = (item: ChannelDraft) => draftAccount(env, item)?.signer;
+  const homeEntry = (item: ChannelDraft) =>
+    draftHomeEntry(
+      env,
+      item,
+      () => void send(item),
+      () => remove(item),
       release,
-    };
-  };
+    );
   async function send(item: ChannelDraft): Promise<void> {
     if (busy.has(item) || item.noteKey) return;
     if (!item.draft.channel && !item.draft.longForm && env.engine.noteOutbox) {
@@ -131,10 +126,18 @@ export function createChannelOutbox(
     item.signed = item.error = item.delivery = undefined;
     const pressed = performance.now();
     let sentMs: number | undefined;
+    const signer =
+      signerOf(item) === 'extension'
+        ? {
+            abort: new AbortController(),
+            stage: undefined as SignerWait,
+          }
+        : undefined;
+    if (signer) signers.set(item, signer);
     let entry = homeEntry(item);
     if (entry) showHomeDraft(entry);
     const asks =
-      entry && asking(signerOf(item))
+      signerOf(item) === 'remote'
         ? setTimeout(() => {
             if (item.signed) return;
             waiting.add(item);
@@ -154,11 +157,29 @@ export function createChannelOutbox(
     const r = await env.engine.act(
       { a: 'publish', as: item.as, what: { k: 'note', draft: item.draft, noteKey: item.noteKey } },
       {
+        signerSignal: signer?.abort.signal,
+        signerWait(stage) {
+          if (!signer || !drafts.includes(item)) return;
+          signer.stage = stage;
+          if (entry)
+            showHomeDraft(
+              (entry = {
+                ...entry,
+                signerWait: stage,
+                cancel: stage === 'approval' ? () => signer.abort.abort() : undefined,
+              }),
+            );
+          notify();
+        },
         signed(id) {
           clearTimeout(asks);
           item.signed = id;
           waiting.delete(item);
-          if (entry) showHomeDraft((entry = { ...entry, signed: id }));
+          signers.delete(item);
+          if (entry)
+            showHomeDraft(
+              (entry = { ...entry, signed: id, signerWait: undefined, cancel: undefined }),
+            );
           notify();
         },
         fallback() {
@@ -180,6 +201,7 @@ export function createChannelOutbox(
     clearTimeout(asks);
     busy.delete(item);
     waiting.delete(item);
+    signers.delete(item);
     const durable = item.noteKey && item.signed;
     item.signed ??= r.id;
     if (!drafts.includes(item)) return;
@@ -206,7 +228,7 @@ export function createChannelOutbox(
         r.error.code === 'relay-unreachable' ||
         r.error.code === 'no-relays')
     ) {
-      showHomeDraft({ ...entry, failure: r.error });
+      showHomeDraft({ ...entry, failure: r.error, signerWait: undefined, cancel: undefined });
     } else removeHomeDraft(item.homeKey);
     final = true;
     if (!item.draft.channel && (r.ok || r.delivery?.some((route) => route.state === 'ok')))

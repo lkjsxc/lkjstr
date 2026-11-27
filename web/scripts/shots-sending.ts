@@ -5,12 +5,18 @@ export async function sendingShots(scene: Scene): Promise<void> {
   const composer = '.view[data-kind="compose"]:visible';
   const fixture = '{"live":false,"slow":{"when":"Fixture","sign":13500,"relays":1800}}';
   const exercise =
-    (text: string, phase: string, extension = false) =>
+    (text: string, phase: string, extension = false, cancel = false) =>
     async (page: Page): Promise<void> => {
       await page.keyboard.press('n');
       const view = page.locator(composer);
       const field = view.locator('textarea');
       if (extension) {
+        await page.evaluate(() => {
+          (window as { nostr?: unknown }).nostr = {
+            signEvent: (event: unknown) =>
+              new Promise((resolve) => setTimeout(() => resolve(event), 13500)),
+          };
+        });
         await view.locator('.cwho').click();
         const option = page.locator('.menu button').nth(1);
         const name = await option.innerText();
@@ -20,14 +26,12 @@ export async function sendingShots(scene: Scene): Promise<void> {
       await field.fill(text);
       await view.locator('.btn.primary:visible').click();
       if (extension) {
-        await page.waitForFunction(
-          () =>
-            [...document.querySelectorAll('.cdraft[data-phase=signing]')].some((el) =>
-              /Waiting for the extension|拡張機能/.test(el.textContent ?? ''),
-            ),
-          undefined,
-          { timeout: 12500 },
-        );
+        const draft = view.locator('.cdraft[data-signer-wait="approval"]');
+        await draft.waitFor();
+        if (cancel) {
+          await draft.locator('.signer-cancel').click();
+          await view.locator('.cdraft[data-phase="failed"]').waitFor();
+        }
       } else {
         await view.locator(`.csend[data-phase=${phase}]`).waitFor();
         if (phase === 'sent') {
@@ -44,10 +48,27 @@ export async function sendingShots(scene: Scene): Promise<void> {
   await scene('send-sent', '/', exercise('A short note about today.', 'sent'));
   await scene('send-retrying', '/', exercise('An unanswered note.', 'retrying'));
   await scene('send-refused', '/', exercise('Today all relays refuse this note.', 'refused'));
+  await scene('send-waiting', '/', exercise('Fixture note about today.', 'signing', true), fixture);
   await scene(
-    'send-extension',
+    'send-cancelled',
     '/',
-    exercise('Fixture note about today.', 'signing', true),
+    exercise('Fixture note about today.', 'signing', true, true),
     fixture,
   );
+  await scene('signin-waiting', '/', async (page) => {
+    await page.evaluate(() => {
+      (window as { nostr?: unknown }).nostr = {
+        getPublicKey: () =>
+          new Promise((resolve) => setTimeout(() => resolve('a'.repeat(64)), 20000)),
+      };
+    });
+    await page.locator('.acct').click();
+    await page
+      .locator('.menu button')
+      .filter({ hasText: /Accounts|アカウント/ })
+      .click();
+    const accounts = page.locator('.view[data-kind="account"]:visible');
+    await accounts.locator('[data-f="extension"]').click();
+    await accounts.locator('.signer-cancel').waitFor();
+  });
 }

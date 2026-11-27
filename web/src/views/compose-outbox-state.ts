@@ -1,11 +1,21 @@
+import type { SignerWait } from '../engine/extension-wait.ts';
 import type { Delivery, Draft, Failure, NoteOutboxStatus } from '../engine/protocol.ts';
 import { h } from '../shared/h.ts';
-import { type Key, t } from '../shared/i18n.ts';
+import { t } from '../shared/i18n.ts';
 import { draftButtons, draftMedia, draftText } from './draft-row.ts';
+import type { HomeDraft } from './home-drafts.ts';
 import { ownPublished } from './own-published.ts';
 import { toast } from './parts.ts';
 import type { ViewEnv } from './registry.ts';
-import { sendClass, sendPhase, sendWords } from './send-state.ts';
+import {
+  asking,
+  extensionWaitKey,
+  sendClass,
+  sendPhase,
+  sendWords,
+  signerCancel,
+  waitKey,
+} from './send-state.ts';
 
 export type ChannelDraft = {
   as: string;
@@ -35,8 +45,9 @@ export type Box = {
   id: string;
   drafts: ChannelDraft[];
   busy: Set<ChannelDraft>;
-  /** Sends whose extension or remote signer has kept the reader waiting ten seconds (bound: `busy`). */
+  /** Remote signers waiting ten seconds (bound: busy). */
   waiting: Set<ChannelDraft>;
+  signers: Map<ChannelDraft, { abort: AbortController; stage: SignerWait }>;
   listeners: Set<Watch>;
   /** Each send follows its own late answers (bound: the drafts here, plus the latest once settled). */
   watches: Map<ChannelDraft, AbortController>;
@@ -63,10 +74,16 @@ export function announceDefaults(env: ViewEnv): void {
 export function outboxRow(
   item: ChannelDraft,
   env: ViewEnv,
-  pending: boolean,
-  who: Key | undefined,
+  box: Box,
   actions: { retry(): void; edit(): void; discard(): void },
 ): HTMLElement {
+  const pending = box.busy.has(item);
+  const signer = !item.signed ? box.signers.get(item) : undefined;
+  const who = signer
+    ? extensionWaitKey(signer.stage)
+    : box.waiting.has(item)
+      ? waitKey(asking(draftAccount(env, item)?.signer))
+      : undefined;
   const durable = item.noteKey && item.signed;
   const phase =
     item.notePhase === 'retrying' || item.notePhase === 'refused'
@@ -79,20 +96,41 @@ export function outboxRow(
   const canEdit = !durable || item.notePhase === 'refused' || item.notePhase === undefined;
   return h(
     'div',
-    { class: 'cresult cdraft', 'data-phase': phase, 'data-event': item.signed ?? null },
+    {
+      class: 'cresult cdraft',
+      'data-phase': phase,
+      'data-event': item.signed ?? null,
+      'data-signer-wait':
+        who === 'signer.approve'
+          ? 'approval'
+          : who === 'signer.finding'
+            ? 'finding'
+            : signer
+              ? 'pending'
+              : null,
+    },
     draftText(item.draft, env),
     ...draftMedia(item.draft),
     h(
       'div',
       { class: sendClass(phase) },
-      sendWords(phase, item.delivery, item.error, who, item.attempts),
+      h(
+        'span',
+        { 'aria-live': 'polite' },
+        sendWords(phase, item.delivery, item.error, who, item.attempts),
+      ),
+      signer?.stage === 'approval'
+        ? signerCancel('compose.cancel', () => signer.abort.abort())
+        : null,
     ),
-    draftButtons(
-      pending && !durable,
-      item.noteKey ? undefined : actions.retry,
-      canEdit && (item.signed || !item.noteKey) ? actions.edit : undefined,
-      actions.discard,
-    ),
+    signer
+      ? null
+      : draftButtons(
+          pending && !durable,
+          item.noteKey ? undefined : actions.retry,
+          canEdit && (item.signed || !item.noteKey) ? actions.edit : undefined,
+          actions.discard,
+        ),
   );
 }
 
@@ -151,4 +189,28 @@ export function followSignedNote(
     notify();
   });
   if (off) box.noteWatches.set(item, off);
+}
+
+export const draftAccount = (env: ViewEnv, item: ChannelDraft) =>
+  env.engine.accounts.get().accounts.find((a) => a.author.pubkey === item.as);
+
+export function draftHomeEntry(
+  env: ViewEnv,
+  item: ChannelDraft,
+  retry: () => void,
+  discard: () => void,
+  release: () => void,
+): HomeDraft | undefined {
+  const account = draftAccount(env, item);
+  if (item.draft.channel || !account) return;
+  return {
+    key: (item.homeKey ??= crypto.randomUUID()),
+    at: (item.homeAt ??= Date.now()),
+    draft: item.draft,
+    author: account.author,
+    asks: asking(account.signer),
+    retry,
+    discard,
+    release,
+  };
 }

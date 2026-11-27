@@ -192,3 +192,5 @@ Mock-only `EngineConfig.mock`: `slow` signs a note late and delays its answers, 
 - `note.outbox {keys,statuses}` reports each retained note ID, phase, attempt count and relay deliveries.
 - `note.discard {key}` cancels retries for a queued signed note.
 - `note.wake` wakes queued notes when the page returns or the browser comes online.
+
+- P2: `signed` and `publicKey` accept `error: 'cancelled'`; the action returns the same failure code without publication.

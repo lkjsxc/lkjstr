@@ -34,7 +34,9 @@
 /* Until first used the field stands alone; its bar then stays, so leaving the field never moves what is below. */
 .tsay:not(.used):has(.ctext:placeholder-shown):not(:has(.thumbs > *)):not(:has(.ccw:not([hidden]))) .cbar { display: none; }
 /* An attachment wait is part of the draft. After signing, the reply shows progress on its own row. */
-.tsay > .cresult:not(.cupload) > :not(.error, [data-phase="signing"]), .tsay .cdraft:not(:has(> .error)) { display: none; }
+.tsay > .cresult:not(.cupload) > :not(.error, [data-phase="signing"]), .tsay .cdraft:not(:has(> .error)):not([data-signer-wait]) { display: none; }
+/* The extension draft owns the waiting line, including a reply queued behind an attachment. */
+.tsay:has(.cdraft[data-signer-wait]) > .cresult > .csend[data-phase="signing"] { display: none; }
 
 /* Full dates are long: the NIP-05 gives way before the name does, and in a narrow tile the clock before the date
    (the tooltip keeps both); the name always keeps some room. */

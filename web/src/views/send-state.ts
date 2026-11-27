@@ -1,6 +1,7 @@
 // One send as the reader sees it, the same in the composer's draft, its status line and Home. Sent needs one relay's
 // accepting OK for this exact note, and is said at once; the other relays go on answering quietly. A deadline with no
-// acceptance is never Sent. Only a signer that waits on the reader (extension, remote) is named, after ten seconds.
+// acceptance is never Sent. Remote signers retain their ten-second mark; extension stages are transport-owned.
+import type { SignerWait } from '../engine/extension-wait.ts';
 import type { Account, Delivery, Failure } from '../engine/protocol.ts';
 import { h } from '../shared/h.ts';
 import { type Key, t } from '../shared/i18n.ts';
@@ -33,11 +34,22 @@ export function sendPhase(
 }
 
 export const waitKey = (who: Asking | undefined): Key | undefined =>
-  who === 'remote'
-    ? 'account.busy.remote'
-    : who === 'extension'
-      ? 'account.busy.extension'
-      : undefined;
+  who === 'remote' ? 'account.busy.remote' : undefined;
+
+export const extensionWaitKey = (stage: SignerWait): Key =>
+  stage === 'finding'
+    ? 'signer.finding'
+    : stage === 'approval'
+      ? 'signer.approve'
+      : 'compose.pending';
+
+/** A real text button next to the wait words, not a separate announcement. */
+export function signerCancel(
+  key: 'compose.cancel' | 'account.cancel',
+  cancel: () => void,
+): HTMLElement {
+  return h('button', { type: 'button', class: 'signer-cancel muted', onclick: cancel }, t(key));
+}
 
 /** The one line a send says, in the draft and in the composer's status. */
 export function sendWords(

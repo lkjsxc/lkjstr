@@ -1,5 +1,6 @@
 // Page-local presentation of the composer's durable outbox. Staged drafts never
 // enter the verified event store, row cache, or subscription/reading anchors.
+import type { SignerWait } from '../engine/extension-wait.ts';
 import type { Author, Draft, Failure, Row } from '../engine/protocol.ts';
 import { fullTime } from '../shared/format.ts';
 import { h } from '../shared/h.ts';
@@ -8,7 +9,7 @@ import { ability, failureText } from './can.ts';
 import { draftBody, draftButtons } from './draft-row.ts';
 import { faceButton, nameButton, nipMark } from './parts.ts';
 import type { ViewEnv } from './registry.ts';
-import { type Asking, waitKey } from './send-state.ts';
+import { type Asking, extensionWaitKey, signerCancel, waitKey } from './send-state.ts';
 
 export type HomeDraft = {
   readonly key: string;
@@ -23,6 +24,8 @@ export type HomeDraft = {
   signed?: string;
   failure?: Failure;
   waiting?: boolean;
+  signerWait?: SignerWait;
+  cancel?: () => void;
 };
 
 // At most 64 draft presentations per page. Eviction only affects the Home
@@ -59,8 +62,7 @@ export function homeDraftForEdit(key: string | undefined, account: string): Home
 }
 
 // From Post until the verified note takes its place, the draft carries the Sending mark a signed note carries, however
-// long signing takes: the reader sees one steady state. Only an extension or remote signer still waiting after ten
-// seconds says so, since the reader can act on it there. `data-phase` and `data-event` stay for the checks.
+// long signing takes: extension stages name what is happening after one second, remote signers after ten. `data-phase` and `data-event` stay for the checks.
 function renderDraft(entry: HomeDraft, env: ViewEnv): HTMLElement {
   const { asks, author, draft, failure, signed, waiting } = entry;
   const phase = failure ? 'failed' : signed ? 'sending' : 'signing';
@@ -71,6 +73,7 @@ function renderDraft(entry: HomeDraft, env: ViewEnv): HTMLElement {
       'data-draft': entry.key,
       'data-phase': phase,
       'data-event': signed ?? null,
+      'data-signer-wait': entry.signerWait ?? null,
     },
     h(
       'div',
@@ -86,14 +89,16 @@ function renderDraft(entry: HomeDraft, env: ViewEnv): HTMLElement {
           nipMark(author),
           h(
             'time',
-            { title: fullTime(entry.at) },
+            { title: fullTime(entry.at), 'aria-live': 'polite' },
             failure
               ? ''
               : t(
-                  (!signed && waiting && waitKey(asks)) ||
+                  (!signed && asks === 'extension' && extensionWaitKey(entry.signerWait)) ||
+                    (!signed && waiting && waitKey(asks)) ||
                     (signed ? 'note.sending' : 'note.posting'),
                 ),
           ),
+          !failure && !signed && entry.cancel ? signerCancel('compose.cancel', entry.cancel) : null,
         ),
         h('div', { class: 'content' }, draftBody(draft, env)),
         // The room of the action row the signed note will have, so that nothing below moves when it arrives.

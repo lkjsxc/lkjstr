@@ -1,14 +1,33 @@
-import { extensionAvailable, extensionPublicKey, extensionSign } from './client-crypto.ts';
+import {
+  extensionAvailable,
+  extensionPublicKey,
+  extensionSign,
+  findExtension,
+} from './client-crypto.ts';
+import { createSignerWait, type SignerWait } from './extension-wait.ts';
 import type { EngineStats, FromEngine, ToEngine } from './protocol.ts';
-import { createSignerOrchestrator } from './signer-orchestrator.ts';
+import { createSignerOrchestrator, type ExtensionCall } from './signer-orchestrator.ts';
+
+export type SignerContext = {
+  pressedAt: number;
+  cancelled: boolean;
+  wait?(stage: SignerWait): void;
+};
 
 export function createExtensionClient(post: (message: ToEngine) => void) {
   const orchestrator = createSignerOrchestrator();
-  // Owned by the queue (at most 128) and cancelled when the action or connection ends.
-  const requests = new Map<string, { action: string; abort: AbortController }>();
-  const cancel = (action: string, reason?: string): void => {
+  // Bound: 128 outstanding requests, including requests waiting for injection.
+  const requests = new Map<
+    string,
+    { action: string; stop(reason?: string, reply?: boolean): void }
+  >();
+  const cancel = (action: string, reason?: string, reply = false): void => {
     for (const request of requests.values())
-      if (request.action === action) request.abort.abort(reason);
+      if (request.action === action) request.stop(reason, reply);
+  };
+  const reset = (): void => {
+    for (const request of requests.values()) request.stop();
+    orchestrator.reset();
   };
   let sampled: EngineStats['extensionSigner'];
   let sampledAt = -Infinity;
@@ -23,13 +42,15 @@ export function createExtensionClient(post: (message: ToEngine) => void) {
       return sampled;
     },
     cancel,
-    receive(message: FromEngine, wantsSign: (req: string) => boolean): boolean {
-      if (message.t === 'reconnect') {
-        for (const request of requests.values()) request.abort.abort();
-        orchestrator.reset();
-      }
+    reset,
+    receive(
+      message: FromEngine,
+      wantsSign: (req: string) => boolean,
+      context: (req: string) => SignerContext | undefined = () => undefined,
+    ): boolean {
+      if (message.t === 'reconnect') reset();
       if (message.t === 'sign.cancel') {
-        requests.get(message.req)?.abort.abort();
+        requests.get(message.req)?.stop();
         return true;
       }
       if (message.t === 'result') cancel(message.req, message.error?.code);
@@ -39,26 +60,65 @@ export function createExtensionClient(post: (message: ToEngine) => void) {
       const action = message.t === 'sign' ? (message.actionReq ?? req) : req;
       const owned = wantsSign(action);
       const t = message.t === 'sign' ? 'signed' : 'publicKey';
-      if (message.t === 'sign' && message.actionReq && !owned) {
+      const owner = context(action);
+      if (owner?.cancelled) {
+        post({ t, req, error: 'cancelled' });
+        return true;
+      }
+      if ((message.t === 'sign' && message.actionReq && !owned) || requests.size >= 128) {
         post({ t, req, error: 'signer-refused' });
         return true;
       }
       const abort = new AbortController();
-      requests.set(req, { action, abort });
-      const task =
-        message.t === 'sign'
-          ? orchestrator.run(
-              message.weight ?? (owned ? 8 : 2),
-              (call) => extensionSign(message, call),
-              abort.signal,
-              message.expiresAt,
-            )
-          : orchestrator.run(8, extensionPublicKey, abort.signal, message.expiresAt);
+      const wait = owner?.wait ? createSignerWait(owner.wait) : () => {};
+      let answered = false;
+      const answer = (message: ToEngine): void => {
+        if (answered) return;
+        answered = true;
+        wait(undefined);
+        post(message);
+      };
+      requests.set(req, {
+        action,
+        stop(reason, reply) {
+          if (answered || abort.signal.aborted) return;
+          abort.abort(reason);
+          wait(undefined);
+          if (reply) answer({ t, req, error: 'cancelled' });
+        },
+      });
+      const pressedAt = owner?.pressedAt ?? performance.now();
+      const task = findExtension({
+        signal: abort.signal,
+        pressedAt,
+        expiresAt: message.expiresAt,
+        finding: (on) => wait(on ? 'finding' : undefined, pressedAt),
+      }).then((ext) =>
+        orchestrator.run(
+          message.t === 'sign' ? (message.weight ?? (owned ? 8 : 2)) : 8,
+          (call) => {
+            const observed: ExtensionCall = (method, before) =>
+              call(async () => {
+                wait('approval');
+                try {
+                  return await method();
+                } finally {
+                  if (!abort.signal.aborted) wait(undefined);
+                }
+              }, before);
+            return message.t === 'sign'
+              ? extensionSign(message, observed, ext)
+              : extensionPublicKey(observed, ext);
+          },
+          abort.signal,
+          message.expiresAt,
+        ),
+      );
       void task
         .then(
           (value) => {
             if (!abort.signal.aborted)
-              post(t === 'signed' ? { t, req, event: value } : { t, req, pubkey: value });
+              answer(t === 'signed' ? { t, req, event: value } : { t, req, pubkey: value });
           },
           (error: Error) => {
             if (abort.signal.aborted || error.message === 'cancelled') return;
@@ -68,10 +128,13 @@ export function createExtensionClient(post: (message: ToEngine) => void) {
               error.message === 'signer-missing' || error.message === 'signer-timeout'
                 ? 'signer-missing'
                 : 'signer-refused';
-            post({ t, req, error: code });
+            answer({ t, req, error: code });
           },
         )
-        .finally(() => requests.delete(req));
+        .finally(() => {
+          wait(undefined);
+          requests.delete(req);
+        });
       return true;
     },
   };

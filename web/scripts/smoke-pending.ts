@@ -197,14 +197,23 @@ export async function pendingChecks(open: Open, check: Check): Promise<void> {
   const name = await option.innerText();
   await option.click();
   await extension.locator(`${COMPOSE} .cwho`).filter({ hasText: name.trim() }).waitFor();
+  await extension.evaluate(() => {
+    (window as { nostr?: unknown }).nostr = {
+      signEvent: (event: unknown) =>
+        new Promise((resolve) => setTimeout(() => resolve(event), 13000)),
+    };
+  });
   const entry = extension.locator(`${COMPOSE} textarea`);
   await entry.fill('A slow extension fixture');
   await entry.press('Control+Enter');
   const draft = extension.locator(`${COMPOSE} .cdraft[data-phase=signing]`);
-  await draft.getByText('Waiting for the extension…', { exact: true }).waitFor({ timeout: 12500 });
+  await draft
+    .getByText('Waiting for your extension. Approve there to send.', { exact: true })
+    .waitFor({ timeout: 3000 });
   check(
-    'pending: an extension still waiting after ten seconds names the extension',
-    await draft.isVisible(),
+    'pending: an unanswered extension request names approval after one second',
+    (await draft.isVisible()) &&
+      (await draft.getByRole('button', { name: 'Cancel', exact: true }).isEnabled()),
   );
   await extension.context().close();
 }

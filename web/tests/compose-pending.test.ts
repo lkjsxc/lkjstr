@@ -106,3 +106,38 @@ it('Home shows the draft as posting until it is signed, then sending, never a wo
   expect(home.el.querySelector('.home-draft time')?.textContent).toBe('sending…');
   off();
 });
+
+it('extension approval appears in both draft surfaces and Home Cancel preserves the draft', async () => {
+  const c = composer();
+  const state = c.engine.accounts.get();
+  c.engine.accounts.set({
+    ...state,
+    accounts: state.accounts.map((a) => ({ ...a, signer: 'extension' })),
+  });
+  const home = mountHomeDrafts(c.env);
+  const off = home.watch(() => home.draw([]));
+  c.post('extension draft');
+  await vi.waitFor(() => expect(c.sends).toHaveLength(1));
+  const watch = c.sends[0]!.watch;
+  expect(c.rows().join()).toContain('Sending…');
+  watch.signerWait?.('finding');
+  expect(c.rows().join()).toContain('Looking for your signer extension');
+  expect(c.el.querySelector('.signer-cancel')).toBeNull();
+  watch.signerWait?.('approval');
+  home.draw([]);
+  expect(c.rows().join()).toContain('Approve there to send.');
+  const cancel = home.el.querySelector<HTMLButtonElement>('.signer-cancel');
+  expect(cancel?.textContent).toBe('Cancel');
+  cancel?.click();
+  expect(watch.signerSignal?.aborted).toBe(true);
+  c.sends[0]?.done({ ok: false, error: { code: 'cancelled' } });
+  await vi.waitFor(() => expect(c.rows().join()).toContain('Not sent.'));
+  expect(c.rows().join()).toContain('extension draft');
+  expect([...c.el.querySelectorAll('.cdraft button')].map((b) => b.textContent)).toEqual([
+    'Retry',
+    'Edit',
+    'Remove',
+  ]);
+  off();
+  c.off();
+});

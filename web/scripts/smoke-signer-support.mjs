@@ -46,9 +46,10 @@ async function setup({
       window.signerCalls = { getPublicKey: 0, signEvent: 0, decrypt: 0 };
       window.uploadPostCalls = { publish: 0, sign: 0 };
       const slow = mode === 'slow-sign';
+      const p2 = mode?.startsWith('p2-');
       window.signerTrace = [];
       const trace = (phase, value) => {
-        if (slow && window.signerTrace.length < 200)
+        if ((slow || p2) && window.signerTrace.length < 200)
           window.signerTrace.push({ phase, at: Math.round(performance.now()), value });
       };
       let bookmarkSub, publishReq, releaseAuth;
@@ -88,7 +89,12 @@ async function setup({
           if (mode === 'upload' && m.t === 'act' && m.action.a === 'publish')
             window.uploadPostCalls.publish++;
           if (slow && m.t === 'open' && m.query.source === 'bookmarks') bookmarkSub = m.sub;
-          if (slow && m.t === 'act' && m.action.a === 'publish') publishReq = m.req;
+          if ((slow || p2) && m.t === 'act' && m.action.a === 'publish') {
+            publishReq = m.req;
+            trace('publish-press');
+          }
+          if (p2 && m.t === 'signed') trace('signed-answer', m.error ?? 'signature');
+          if (p2 && m.t === 'publicKey') trace('discovery-answer', m.error ?? 'pubkey');
           if (slow && m.t === 'window' && m.sub === bookmarkSub)
             trace('window', m.anchor === 'top' ? 'top' : 'anchor');
           return post(m, ...args);
@@ -101,8 +107,9 @@ async function setup({
           }
           if (m.t === 'crypt' && m.context?.kind === 'private-list') trace('private-request');
           if (m.t === 'publish.signed') trace('publish-signed');
-          if (slow && m.t === 'sign' && m.req === publishReq) trace('publish-request');
-          if (slow && m.t === 'result' && m.req === publishReq) trace('publish-result', m.ok);
+          if ((slow || p2) && m.t === 'sign' && m.req === publishReq) trace('publish-request');
+          if ((slow || p2) && m.t === 'result' && m.req === publishReq)
+            trace('publish-result', m.ok);
           if (m.t === 'accounts') {
             window.uploadAccount = m.active;
             if (m.active)
@@ -133,6 +140,21 @@ async function setup({
         }
       };
       const answer = (phase, value) => {
+        if (p2) {
+          trace(`${phase}-start`);
+          const ms =
+            (mode === 'p2-slow-discover' && phase === 'discover') ||
+            (mode === 'p2-slow-sign' && phase === 'sign')
+              ? 20000
+              : 50;
+          return new Promise((done) => setTimeout(done, ms)).then(async () => {
+            trace(`${phase}-finish`);
+            if (mode === 'p2-refuse' && phase === 'sign') throw new Error('fixture refusal');
+            const result = await value();
+            trace(`${phase}-resolved`);
+            return result;
+          });
+        }
         if (mode === `reject-${phase}`) return Promise.reject(new Error('fixture refusal'));
         if (mode === `hang-${phase}`) return new Promise(() => {});
         if (slow) {
@@ -161,7 +183,7 @@ async function setup({
         window.signerCalls.decrypt++;
         throw new Error('unused decrypt capability');
       };
-      window.nostr = {
+      const extension = {
         getPublicKey() {
           window.signerCalls.getPublicKey++;
           return answer('discover', () => pubkey);
@@ -195,13 +217,46 @@ async function setup({
         nip04: { encrypt: unsupported, decrypt: unsupported },
         nip44: { encrypt: unsupported, decrypt: slow ? heldDecrypt : unsupported },
       };
+      if (mode === 'p2-late')
+        window.addEventListener(
+          'load',
+          () => {
+            trace('load');
+            setTimeout(() => {
+              window.nostr = extension;
+              trace('injected');
+            }, 1500);
+          },
+          { once: true },
+        );
+      else window.nostr = extension;
+      if (p2) {
+        const observed = new Set();
+        const watch = () => {
+          for (const key of [
+            'Looking for your signer extension',
+            'Waiting for your extension. Approve there',
+          ]) {
+            if (document.body?.textContent.includes(key) && !observed.has(key)) {
+              observed.add(key);
+              trace('wait-words', key);
+            }
+          }
+        };
+        new MutationObserver(watch).observe(document, {
+          childList: true,
+          subtree: true,
+          characterData: true,
+        });
+      }
     },
     { relayUrl, pubkey, mode, bunkerKey: bunker.pubkey },
   );
   const page = await ctx.newPage();
   page.on('pageerror', (error) => errors.push(String(error)));
   await page.goto(base);
-  await page.locator('.view[data-kind="global"] .note').first().waitFor();
+  if (mode === 'p2-late') await page.locator('.acct.out').waitFor();
+  else await page.locator('.view[data-kind="global"] .note').first().waitFor();
   return page;
 }
 const code = (page, expected) =>

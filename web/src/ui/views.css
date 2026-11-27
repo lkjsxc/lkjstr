@@ -177,3 +177,18 @@
 .time-rail.touch .scrub { right: calc(100% + 24px); } /* a thumb on the rail does not cover it */
 .vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .time-rail.open-end .time-marks { mask-image: linear-gradient(#000 0%, #000 94%, transparent 100%); }
+
+/* P2: one muted text control beside the waiting words. */
+.signer-cancel { margin-inline-start: 8px; padding: 0; color: inherit; text-decoration: underline; font-size: inherit; }
+.signer-cancel:hover { color: var(--fg); }
+
+/* Long extension status text may wrap in a narrow Home column. */
+.home-draft[data-signer-wait] .nhead > time {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+.home-draft .nhead > .signer-cancel {
+  flex: none;
+  margin-inline-start: 0;
+  font-size: 12.5px;
+}

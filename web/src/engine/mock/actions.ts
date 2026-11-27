@@ -1,7 +1,6 @@
 // What the mock does with the reader's actions, and what happens in its world on its own.
-
 import { serverAddress } from '../../shared/address.ts';
-import type { Action, Draft, Failure, FromEngine, ToEngine } from '../protocol.ts';
+import type { Action, Failure, FromEngine, ToEngine } from '../protocol.ts';
 import { channelAct, channelTouched, chatter } from './channels.ts';
 import { HANDLERS } from './client-handlers.ts';
 import type { Core } from './engine.ts';
@@ -22,6 +21,7 @@ import { retryLists } from './private-lists.ts';
 import { createDelivery } from './publication.ts';
 import { addReaction, removeReaction } from './reactions.ts';
 import { answers, isKnown, relayUrl } from './relays.ts';
+import { createMockExtensionNotes, expandMentions } from './signer-note.ts';
 import { createUploads } from './uploads.ts';
 import { vaultAct } from './vault.ts';
 
@@ -34,6 +34,7 @@ export function createActions(core: Core) {
   const deliver = createDelivery(core);
   const notes = createMockNoteOutbox(core);
   const uploads = createUploads(core);
+  const extensionNotes = createMockExtensionNotes(core, fail);
   /** Signs a note (it arrives, pending, in the reader's lists) and sends it. */
   function sign(
     req: string,
@@ -116,6 +117,8 @@ export function createActions(core: Core) {
           if (/\bairdrop\b/i.test(text))
             return later(600, () => fail(req, 'rejected', 'blocked: spam filter'));
           const slow = core.slow && text.includes(core.slow.when) ? core.slow : undefined;
+          if (slow?.sign && signer === 'extension')
+            return extensionNotes.ask(req, me, text, () => sign(req, w, text, self, slow.relays));
           if (slow?.sign) return later(slow.sign, () => sign(req, w, text, self, slow.relays));
           return sign(req, w, text, self, slow?.relays);
         }
@@ -264,7 +267,6 @@ export function createActions(core: Core) {
     if (!m.pubkey) return fail(m.req, m.error ?? 'signer-missing');
     signedIn(m.req, core.who.extension(m.pubkey));
   };
-
   let beat = 0;
   /** One beat of the mock world's own life: a note arrives and a count grows. */
   function tick(): void {
@@ -284,15 +286,13 @@ export function createActions(core: Core) {
     core.resync((q) => q.source === 'notifications', true);
   }
 
-  return { run, tick, publicKey, cancelUpload: uploads.cancel, dispose: uploads.dispose, notes };
-}
-
-function expandMentions(draft: Draft): string {
-  let text = draft.text;
-  for (const mention of [...(draft.mentions ?? [])].sort((a, b) => b.start - a.start)) {
-    const author = byPubkey(mention.pubkey)?.author;
-    if (author && text.slice(mention.start, mention.end) === mention.label)
-      text = `${text.slice(0, mention.start)}nostr:${author.npub}${text.slice(mention.end)}`;
-  }
-  return text;
+  return {
+    run,
+    tick,
+    publicKey,
+    signed: extensionNotes.signed,
+    cancelUpload: uploads.cancel,
+    dispose: () => extensionNotes.dispose(uploads.dispose),
+    notes,
+  };
 }

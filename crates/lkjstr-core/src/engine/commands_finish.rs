@@ -53,9 +53,11 @@ impl Engine {
         now: u64,
         verified: impl FnOnce(),
     ) {
-        if event.is_none() && error.as_deref() == Some("signer-missing") {
-            self.refuse_sign(req, "signer-missing");
-            return;
+        if event.is_none() {
+            if let Some(code @ ("signer-missing" | "cancelled")) = error.as_deref() {
+                self.refuse_sign(req, code);
+                return;
+            }
         }
         let Some(pending) = self.signing.remove(&req) else {
             self.error(Some(req), "unknown-sign-request");

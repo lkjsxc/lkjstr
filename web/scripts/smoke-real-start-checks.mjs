@@ -1,4 +1,6 @@
 // Expected passing checks from smoke-wish-*, smoke-signers and smoke-bunker.
+import { nip07WaitNames } from './smoke-nip07-wait.mjs';
+
 const commonWishes = [
   '1 aliases never draw a raw plus or minus',
   '1 heart chip toggles own like',
@@ -114,4 +116,4 @@ const signers = [
   'NIP-46 credentials absent from interface storage true',
 ];
 
-export const realStartChecks = [...wishes, ...signers];
+export const realStartChecks = [...wishes, ...signers, ...nip07WaitNames];

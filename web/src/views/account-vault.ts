@@ -29,6 +29,7 @@ export const vaultFailure = (
   code: Failure['code'] | undefined,
   kind: 'unlock' | 'import' | 'choose',
 ): Key => {
+  if (code === 'cancelled') return 'signer.cancelledSignIn';
   if (code === 'too-large') return 'account.fail.heavy';
   if (code === 'signer-timeout') return 'dm.fail.timeout';
   if (code === 'rejected' && kind !== 'choose')

@@ -157,10 +157,10 @@ impl Host {
                             id,
                             &Session::failure(
                                 req,
-                                if error.as_deref() == Some("signer-missing") {
-                                    "signer-missing"
-                                } else {
-                                    "signer-refused"
+                                match error.as_deref() {
+                                    Some("signer-missing") => "signer-missing",
+                                    Some("cancelled") => "cancelled",
+                                    _ => "signer-refused",
                                 },
                             ),
                         );

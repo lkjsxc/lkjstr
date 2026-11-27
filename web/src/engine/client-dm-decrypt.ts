@@ -1,5 +1,5 @@
 // Coalesce identical decrypts only while an authorized consumer still owns the result.
-import { cryptWithExtension } from './client-crypto.ts';
+import { cryptWithExtension, findExtension } from './client-crypto.ts';
 import type { FromEngine, SignerWeight } from './protocol.ts';
 import type { ExtensionCall, SignerOrchestrator } from './signer-orchestrator.ts';
 
@@ -49,14 +49,20 @@ export function createExtensionDecrypts(orchestrator: SignerOrchestrator) {
     }
     if (!flight) {
       const abort = new AbortController();
-      const result = orchestrator.run(
-        weight,
-        (call) => {
-          const guarded: ExtensionCall = (method) => call(method, check);
-          return cryptWithExtension(message, guarded);
-        },
-        abort.signal,
-        message.expiresAt,
+      const result = findExtension({
+        signal: abort.signal,
+        pressedAt: performance.now(),
+        expiresAt: message.expiresAt,
+      }).then((ext) =>
+        orchestrator.run(
+          weight,
+          (call) => {
+            const guarded: ExtensionCall = (method) => call(method, check);
+            return cryptWithExtension(message, guarded, ext);
+          },
+          abort.signal,
+          message.expiresAt,
+        ),
       );
       flights.add((flight = { message, epoch, weight, abort, result, consumers: 0 }));
     }

@@ -9,6 +9,7 @@ import { createCheckInventory } from './smoke-check-inventory.mjs';
 import { deepLinkChecks } from './smoke-deep-links.mjs';
 import { emojiRealChecks, seedEmoji } from './smoke-emoji-real.mjs';
 import { livedInChecks } from './smoke-lived-in.mjs';
+import { nip07WaitChecks } from './smoke-nip07-wait.mjs';
 import { noteRetryChecks } from './smoke-note-retry.mjs';
 import { smokePath } from './smoke-output.ts';
 import { personReferenceChecks } from './smoke-person-references.mjs';
@@ -92,6 +93,7 @@ try {
   };
   await noteRetryChecks({ ...scenario, relayUrl: `${relayUrl}/post-retry`, retry, shots, shot });
   await signerScenarios(scenario);
+  await nip07WaitChecks(scenario);
   await slowSignerPaging({
     ...scenario,
     fake: slowSignerFake,

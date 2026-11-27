@@ -38,7 +38,7 @@ impl Session {
             | "profile-edit-pending"
             | "stale-profile" => "rejected",
             "signed-out" | "read-only" | "signer-refused" | "signer-missing" | "rejected"
-            | "signer-timeout" | "too-large" | "offline" | "not-found" => code,
+            | "signer-timeout" | "too-large" | "offline" | "not-found" | "cancelled" => code,
             "unsupported" | "upload-not-implemented" | "private-list-edit-unsupported" => {
                 "unsupported"
             }

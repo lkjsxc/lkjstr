@@ -1,12 +1,15 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { Transport } from '../src/engine/client.ts';
-import { cryptWithExtension } from '../src/engine/client-crypto.ts';
+import { cryptWithExtension, findExtension } from '../src/engine/client-crypto.ts';
 import { createDmClient } from '../src/engine/client-dm.ts';
 import type { DmSnapshot, FromEngine, ToEngine } from '../src/engine/protocol.ts';
 import { createSignerOrchestrator } from '../src/engine/signer-orchestrator.ts';
 
-const crypt = (message: Extract<FromEngine, { t: 'crypt' }>) =>
-  createSignerOrchestrator().run(8, (call) => cryptWithExtension(message, call));
+const crypt = async (message: Extract<FromEngine, { t: 'crypt' }>) => {
+  const signal = new AbortController().signal;
+  const extension = await findExtension({ signal, pressedAt: performance.now() });
+  return createSignerOrchestrator().run(8, (call) => cryptWithExtension(message, call, extension));
+};
 
 describe('private transport', () => {
   afterEach(() => {

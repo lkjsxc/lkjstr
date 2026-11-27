@@ -128,6 +128,7 @@ Engine (`crates/`):
 - [interface-thread.md](interface-thread.md): the thread tab: focus, compact notes above, replies, reply field.
 - [interface-time.md](interface-time.md): travelling by time: the scroll label, the wide scrubber, jumps.
 - [interface-moment.md](interface-moment.md): a note's time opens the author's Home at that moment.
+- [interface-signer.md](interface-signer.md): waiting on a browser extension signer: looking, approval, Cancel.
 - [interface-client.md](interface-client.md): "via <client>" by a note's time, app information, the opt-out.
 - [interface-hidden.md](interface-hidden.md): which notes are not shown, why, and how to show them.
 - [engine-acts.md](engine-acts.md): bounded act chains, ownership, profile selection and verification.

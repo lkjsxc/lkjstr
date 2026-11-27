@@ -853,6 +853,7 @@ export type Failure = {
     | 'signed-out'
     | 'read-only'
     | 'signer-refused'
+    | 'cancelled'
     | 'signer-timeout'
     | 'signer-missing'
     | 'no-relays'
@@ -1050,7 +1051,7 @@ export type ToEngine =
       readonly t: 'publicKey';
       readonly req: ReqId;
       readonly pubkey?: Pubkey;
-      readonly error?: 'signer-missing' | 'signer-refused';
+      readonly error?: 'signer-missing' | 'signer-refused' | 'cancelled';
     }
   | { readonly t: 'hint'; readonly hint: Hint }
   | {

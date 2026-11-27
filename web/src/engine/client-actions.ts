@@ -11,12 +11,14 @@ type Pending = {
   zap: boolean;
   cancelled: boolean;
   note: boolean;
+  signer: boolean;
+  pressedAt: number;
 };
 export function createActionRequests(
   transport: Transport,
   next: () => string,
   addDelivery: (req: string, watch?: ActWatch) => void,
-  cancelSign: (req: string) => void = () => {},
+  cancelSign: (req: string, reply?: boolean) => void = () => {},
 ) {
   const pending = new Map<string, Pending>(); // <=64 requests allowed by transport
   const posting = createSignal(false);
@@ -32,6 +34,16 @@ export function createActionRequests(
     wantsSign(req: string): boolean {
       const entry = pending.get(req);
       return entry !== undefined && !entry.cancelled;
+    },
+    signerContext(req: string) {
+      const entry = pending.get(req);
+      return (
+        entry && {
+          pressedAt: entry.pressedAt,
+          cancelled: entry.signer && entry.cancelled,
+          wait: entry.watch?.signerWait,
+        }
+      );
     },
     progress(msg: Extract<FromEngine, { t: 'progress' }>): void {
       const entry = pending.get(msg.req);
@@ -49,8 +61,14 @@ export function createActionRequests(
       const upload = action.a === 'upload';
       const zap = action.a === 'zap.invoice';
       const note = action.a === 'publish' && action.what.k === 'note';
-      const signal = upload ? watch?.uploadSignal : zap ? watch?.zapSignal : undefined;
-      if (signal?.aborted) return Promise.resolve({ t: 'result', req, ok: false, cancelled: true });
+      const signal = upload ? watch?.uploadSignal : zap ? watch?.zapSignal : watch?.signerSignal;
+      const signer = !upload && !zap && signal !== undefined;
+      if (signal?.aborted)
+        return Promise.resolve(
+          signer
+            ? { t: 'result', req, ok: false, error: { code: 'cancelled' } }
+            : { t: 'result', req, ok: false, cancelled: true },
+        );
       if (pending.size >= 64)
         return Promise.resolve({ t: 'result', req, ok: false, error: { code: 'internal' } });
       addDelivery(req, watch);
@@ -59,7 +77,7 @@ export function createActionRequests(
           const entry = pending.get(req);
           if (!entry || entry.cancelled) return;
           entry.cancelled = true;
-          cancelSign(req);
+          cancelSign(req, signer);
           if (upload) transport.post({ t: 'upload.cancel', req });
           else if (zap) transport.post({ t: 'zap.close', req });
         };
@@ -93,6 +111,8 @@ export function createActionRequests(
           upload,
           zap,
           note,
+          signer,
+          pressedAt: performance.now(),
           watch,
           cancelled: false,
           done(result) {

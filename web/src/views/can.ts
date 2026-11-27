@@ -31,7 +31,9 @@ export const rich = (engine: Engine): boolean => (engine.info.get()?.version ?? 
 
 /** Why an action failed, in words, with what came from outside (a relay, a server, the signer). */
 export const failureText = (e: Failure | undefined): string =>
-  `${t(e?.code === 'signer-timeout' ? 'dm.fail.timeout' : (`error.${e?.code ?? 'internal'}` as Key))}${e?.message ? `: ${e.message}` : ''}`;
+  e?.code === 'cancelled'
+    ? t('signer.cancelled')
+    : `${t(e?.code === 'signer-timeout' ? 'dm.fail.timeout' : (`error.${e?.code ?? 'internal'}` as Key))}${e?.message ? `: ${e.message}` : ''}`;
 
 /** The reason in words, with the way to the accounts. */
 export function denied(env: ViewEnv, why: Exclude<Ability, 'ok'>): void {

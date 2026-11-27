@@ -19,8 +19,6 @@ export type * from './client-api.ts';
 export { type Transport, workerTransport } from './client-transport.ts';
 
 const IDLE_MS = 180_000;
-const STATS_MS = 4000;
-
 export function createEngine(transport: Transport): Engine {
   const extension = createExtensionClient((message) => transport.post(message));
   const dm = createDmClient(transport, extension.orchestrator);
@@ -71,7 +69,7 @@ export function createEngine(transport: Transport): Engine {
     transport,
     () => `r${++serial}`,
     (req, watch) => deliveries.add(req, watch),
-    extension.cancel,
+    (req, reply) => extension.cancel(req, undefined, reply),
   );
   const active = (): void => {
     idle = false;
@@ -87,6 +85,7 @@ export function createEngine(transport: Transport): Engine {
   };
   document.addEventListener('visibilitychange', resumed);
   window.addEventListener('pageshow', resumed);
+  window.addEventListener('pagehide', extension.reset);
   document.addEventListener('focusin', hint);
   window.addEventListener('pointerdown', active, { passive: true, capture: true });
   window.addEventListener('keydown', active, { passive: true, capture: true });
@@ -112,7 +111,7 @@ export function createEngine(transport: Transport): Engine {
       noteOutbox.receive(msg) ||
       storage.receive(msg) ||
       signerAuth.receive(msg) ||
-      extension.receive(msg, actions.wantsSign)
+      extension.receive(msg, actions.wantsSign, actions.signerContext)
     )
       return;
     if (msg.t === 'cache.policy') {
@@ -270,7 +269,7 @@ export function createEngine(transport: Transport): Engine {
           clearTimeout(timer);
           if (asked.delete(req)) done(s);
         };
-        const timer = setTimeout(end, STATS_MS, undefined);
+        const timer = setTimeout(end, 4000, undefined);
         asked.set(req, end);
         transport.post({ t: 'stats', req });
       });
@@ -279,6 +278,7 @@ export function createEngine(transport: Transport): Engine {
     dispose() {
       document.removeEventListener('visibilitychange', resumed);
       window.removeEventListener('pageshow', resumed);
+      window.removeEventListener('pagehide', extension.reset);
       document.removeEventListener('focusin', hint);
       window.removeEventListener('pointerdown', active, true);
       window.removeEventListener('keydown', active, true);
@@ -288,7 +288,7 @@ export function createEngine(transport: Transport): Engine {
       for (const client of [storage, noteOutbox]) client.dispose();
       signerAuth.dispose();
       lists.dispose();
-      extension.orchestrator.reset();
+      extension.reset();
       dm.dispose();
       zaps.dispose();
       actions.dispose();

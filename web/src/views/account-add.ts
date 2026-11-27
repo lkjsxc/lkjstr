@@ -11,12 +11,14 @@ import { encryptedImport } from './account-import.ts';
 import { canKey, creatingAccount, markCreated } from './account-key.ts';
 import { canVault } from './account-vault.ts';
 import type { ViewEnv } from './registry.ts';
+import { signerCancel } from './send-state.ts';
 
 type Way = 'extension' | 'key' | 'create';
 
 /** What a failure of one way is called. A remote signer's refusal is not an extension's. */
 const failure = (way: Way, remote: boolean, code: Failure['code'] | undefined): Key => {
   if (code === 'signer-refused') return remote ? 'account.fail.remote' : 'account.fail.refused';
+  if (code === 'cancelled') return 'signer.cancelledSignIn';
   if (code === 'signer-missing') return 'account.fail.missing';
   if (code === 'rejected' && way === 'key') return 'account.fail.rejected';
   if (code === 'too-large') return 'account.fail.full';
@@ -32,18 +34,66 @@ export function mountAdd(env: ViewEnv): { el: HTMLElement; sync(): void; dispose
     create: pair,
   };
   let busy = false;
+  let extensionRun: AbortController | undefined;
   const say = (way: Way, text: string, failed = false): void => {
     for (const el of Object.values(said)) {
       el.textContent = '';
       el.className = 'asaid';
       el.removeAttribute('role');
     }
-    said[way].textContent = text;
+    said[way].replaceChildren(h('span', { 'aria-live': 'polite' }, text));
+    if (!text) said[way].replaceChildren();
     said[way].className = failed ? 'asaid error' : 'asaid muted';
     if (failed) said[way].setAttribute('role', 'alert');
   };
+  const cancelExtension = (show = true): void => {
+    const current = extensionRun;
+    if (!current) return;
+    extensionRun = undefined;
+    current.abort();
+    if (disposed) return;
+    sync();
+    if (show) say('extension', t('signer.cancelledSignIn'));
+  };
+  const runExtension = async (): Promise<void> => {
+    if (busy || extensionRun) return;
+    const current = new AbortController();
+    extensionRun = current;
+    sync();
+    say('extension', '');
+    const r = await env.engine.act(
+      { a: 'account.add', how: 'extension' },
+      {
+        signerSignal: current.signal,
+        signerWait(stage) {
+          if (disposed || extensionRun !== current) return;
+          say(
+            'extension',
+            stage === 'finding'
+              ? t('signer.finding')
+              : stage === 'approval'
+                ? t('signer.approveSignIn')
+                : '',
+          );
+          if (stage === 'approval')
+            pair.append(signerCancel('account.cancel', () => cancelExtension()));
+        },
+      },
+    );
+    if (disposed || extensionRun !== current) return;
+    extensionRun = undefined;
+    sync();
+    if (r.ok) say('extension', '');
+    else
+      say(
+        'extension',
+        t(failure('extension', false, r.error?.code)),
+        r.error?.code !== 'cancelled',
+      );
+  };
   const run = async (way: Way, action: Action, waiting: Key, remote = false): Promise<void> => {
     if (busy) return;
+    cancelExtension(false);
     const from = document.activeElement as HTMLElement | null;
     busy = true;
     sync();
@@ -68,8 +118,7 @@ export function mountAdd(env: ViewEnv): { el: HTMLElement; sync(): void; dispose
     {
       class: 'btn primary wide',
       'data-f': 'extension',
-      onclick: () =>
-        void run('extension', { a: 'account.add', how: 'extension' }, 'account.busy.extension'),
+      onclick: () => void runExtension(),
     },
     t('account.add.extension'),
   );
@@ -104,6 +153,8 @@ export function mountAdd(env: ViewEnv): { el: HTMLElement; sync(): void; dispose
         field.value = ''; // sent once, kept nowhere
         if (!key) return;
         if (canVault(env.engine) && /^ncryptsec1/i.test(key)) {
+          cancelExtension(false);
+          say('extension', '');
           form.hidden = true;
           said.key.textContent = '';
           imported.start(key);
@@ -153,7 +204,8 @@ export function mountAdd(env: ViewEnv): { el: HTMLElement; sync(): void; dispose
     t('account.add.other'),
   );
   function sync(): void {
-    extension.disabled = create.disabled = field.disabled = busy;
+    extension.disabled = busy || extensionRun !== undefined;
+    create.disabled = field.disabled = busy;
     submit.disabled = busy || !field.value.trim();
     // An engine that cannot show a key afterwards is not asked to make one.
     create.hidden = !canKey(env);
@@ -172,6 +224,7 @@ export function mountAdd(env: ViewEnv): { el: HTMLElement; sync(): void; dispose
     sync,
     dispose() {
       disposed = true;
+      cancelExtension(false);
       field.value = '';
       imported.dispose();
     },

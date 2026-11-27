@@ -1,9 +1,11 @@
 // Public client contracts; existing importers may continue importing them from client.ts.
+
 import type { Signal } from '../shared/signal.ts';
 import type { createDmClient } from './client-dm.ts';
 import type { createSignerAuthClient } from './client-signer-auth.ts';
 import type { createStorageClient } from './client-storage.ts';
 import type { createZapClient } from './client-zaps.ts';
+import type { SignerWait } from './extension-wait.ts';
 import type {
   Account,
   Action,
@@ -47,6 +49,8 @@ export type ActWatch = {
   uploadSignal?: AbortSignal;
   zapSignal?: AbortSignal;
   deliverySignal?: AbortSignal;
+  signerSignal?: AbortSignal;
+  signerWait?(stage: SignerWait): void;
   progress?(sent: number, total: number, detail?: Extract<FromEngine, { t: 'progress' }>): void;
   delivery?(relays: readonly Delivery[]): void;
   signed?(id: string): void;
