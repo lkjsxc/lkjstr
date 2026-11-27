@@ -52,6 +52,7 @@ use serde::{Deserialize, Serialize};
 mod input_types;
 mod output_types;
 pub use input_types::Input;
+pub use output_helpers::ExtensionCrypt;
 pub use output_types::{AccountError, CryptContext, Failure, Output};
 pub use window::Request as WindowRequest;
 impl Session {

@@ -138,3 +138,57 @@ impl Session {
             .collect()
     }
 }
+
+// Pure wire constructors used by the Worker and the native ownership fixture.
+// No client ID or browser handle is encoded in a transport message.
+impl Output {
+    pub fn extension_sign(
+        req: String,
+        event: &lkjstr_protocol::UnsignedNostrEvent,
+        action_req: Option<&str>,
+        work: crate::engine::signer_orchestration::SignerWork,
+        expires_at: u64,
+    ) -> Self {
+        Self::Sign {
+            req,
+            pubkey: event.pubkey.clone(),
+            event: serde_json::to_string(event).unwrap_or_default(),
+            action_req: action_req.map(str::to_owned),
+            expires_at: Some(expires_at),
+            weight: work.weight(),
+        }
+    }
+}
+
+pub struct ExtensionCrypt<'a> {
+    pub account: &'a str,
+    pub peer: &'a str,
+    pub operation: &'a str,
+    pub data: &'a str,
+    pub read: bool,
+    pub passive: bool,
+    pub context: Option<CryptContext>,
+}
+impl ExtensionCrypt<'_> {
+    pub fn output(self, req: String, expires_at: u64) -> Output {
+        use crate::engine::signer_orchestration::SignerWork;
+        let background = self.read && self.passive;
+        let work = match (self.context.is_some(), self.read, background) {
+            (true, _, _) => SignerWork::LazyList,
+            (_, true, true) => SignerWork::Background,
+            (_, true, false) => SignerWork::Visible,
+            _ => SignerWork::UserAction,
+        };
+        Output::Crypt {
+            req,
+            expires_at: Some(expires_at),
+            pubkey: self.account.into(),
+            peer: self.peer.into(),
+            operation: self.operation.into(),
+            data: self.data.into(),
+            background,
+            weight: work.weight(),
+            context: self.context,
+        }
+    }
+}

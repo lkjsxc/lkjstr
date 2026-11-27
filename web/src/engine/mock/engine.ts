@@ -16,6 +16,7 @@ import { privateListState } from './private-lists.ts';
 import { select } from './query.ts';
 import { searchWindow } from './search-window.ts';
 import { createSignerAuthMock } from './signer-auth.ts';
+import { createMockSignerFixtures } from './signer-fixtures.ts';
 import { mockStats } from './stats.ts';
 import { createStorageMock } from './storage.ts';
 import type { MockEngineSub } from './subscription.ts';
@@ -27,13 +28,14 @@ export type MockEngine = {
   handle(msg: ToEngine): void;
   dispose(): void;
   readonly authorization: ReturnType<typeof createSignerAuthMock>;
+  readonly signerFixtures: ReturnType<typeof createMockSignerFixtures>;
 };
 export type Core = ReturnType<typeof createCore>;
 
 export function createMockEngine(
   emit: (msg: FromEngine) => void,
   now = Date.now,
-  boot: { accountError?: 'internal' } = {},
+  boot: { accountError?: 'internal'; signerOwnership?: boolean } = {},
 ): MockEngine {
   let zapObserve: ((msg: FromEngine) => void) | undefined;
   let authObserve: ((msg: FromEngine) => void) | undefined;
@@ -48,8 +50,9 @@ export function createMockEngine(
   const stats = () => mockStats(core);
   const act = createActions(core);
   const authorization = createSignerAuthMock(post, now);
+  const signerFixtures = createMockSignerFixtures(core);
   authObserve = authorization.observe;
-  const dm = createPrivateMock(core);
+  const dm = createPrivateMock(core, boot.signerOwnership ? signerFixtures : undefined);
   const storage = createStorageMock(post);
   const zaps = createZapMock(core);
   zapObserve = zaps.observe;
@@ -81,6 +84,7 @@ export function createMockEngine(
     stopped = true;
     storage.dispose();
     authorization.dispose();
+    signerFixtures.dispose();
     act.dispose();
     dm.dispose();
     zaps.dispose();
@@ -89,6 +93,7 @@ export function createMockEngine(
   };
   return {
     authorization,
+    signerFixtures,
     handle(msg) {
       if (stopped || storage.handle(msg)) return;
       if (boot.accountError) {
@@ -130,6 +135,7 @@ export function createMockEngine(
       } else if (msg.t === 'heartbeat') post({ t: 'heartbeat' });
       else if (msg.t === 'detach') {
         authorization.dispose();
+        signerFixtures.dispose();
         act.dispose();
         clearInterval(liveTimer);
         core.dispose();
@@ -141,8 +147,9 @@ export function createMockEngine(
       } else if (msg.t === 'reading' || msg.t === 'preview')
         /* fixtures already contain the answer */ return;
       else if (msg.t === 'publicKey') act.publicKey(msg);
-      else if (msg.t === 'signed') act.signed(msg);
-      else if (msg.t === 'configure') {
+      else if (msg.t === 'signed') {
+        if (!signerFixtures.signed(msg)) act.signed(msg);
+      } else if (msg.t === 'configure') {
         config = msg.config;
         world.linkPreviews = config.linkPreviews !== false;
         world.customEmoji = config.mock?.emoji !== 'none';

@@ -73,6 +73,8 @@ Protocol 6 introduced DM, encrypted-key and relay authentication operations. Pro
   extensions/bunkers using NIP-44 or read-only NIP-04. Visible external reads have owner-scoped leases;
   local mutes qualify background unread counts. Public rows paint and page during private reads. Stats show page-local extension load. Post has first priority.
   NIP-07 note and sign-in waits distinguish injection from approval; Cancel drops the unsigned request.
+  Discovery requires its pending page action. Native signer fixtures check exact ownership,
+  cancellation and absent fields against the mock, page and real Worker loopback.
   See [private-lists.md](private-lists.md) and [signing-latency.md](signing-latency.md).
 - NIP-57 providers authorize receipt actors/totals and finite zapper queries.
   Explicit local/extension/bunker invoice requests are HTTPS-only and return

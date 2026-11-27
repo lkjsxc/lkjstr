@@ -1,3 +1,4 @@
+import { assertOwnership } from '../web/tests/signer-ownership-fixture.ts';
 // Concrete private projection and lifetime assertions against the compiled Worker.
 const privateWord='private-list-fixture';
 const contains=(rows,text)=>JSON.stringify(rows).includes(text);
@@ -10,11 +11,15 @@ export async function extensionListCases(c,fixture,check){
   // Keep the signer unanswered while waiting for the independent relay completion.
   let all=await c.until(ms=>c.crypts(ms).length===1&&c.status(ms,'m')!==undefined);
   const old=c.crypts(all)[0];c.handled.add(old.req);
+  assertOwnership('private-list',old,{req:old.req,contextEvent:fixture.first.events.find(e=>e.kind===10000).id,runtime:true});
+  check('native private-list ownership fixture matches Worker',true);
   check('private-list crypto carries exact owned view/event context',
     old.context.sub==='m'&&old.peer===c.pubkey&&old.context.event===fixture.first.events.find(e=>e.kind===10000).id);
   check('relay/cache completion does not claim private work finished',c.status(all,'m')?.phase==='loading');
   await c.hint([]);
-  await c.until(ms=>ms.some(m=>m.t==='crypt.cancel'&&m.req===old.req));
+  const retired=await c.until(ms=>ms.some(m=>m.t==='crypt.cancel'&&m.req===old.req));
+  assertOwnership('private-list-cancel',retired.find(m=>m.t==='crypt.cancel'&&m.req===old.req),{req:old.req});
+  check('native private-list retirement fixture matches Worker',true);
   await c.send({t:'crypted',req:old.req,value:'[["word","stale-private-marker"]]'});
   await c.hint(['m']);
   all=await c.until(ms=>c.crypts(ms).length===2);

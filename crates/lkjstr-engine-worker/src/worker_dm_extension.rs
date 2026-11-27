@@ -1,6 +1,6 @@
 //! Hand off private input synchronously, then await only correlation and cancellation state.
 use super::*;
-use lkjstr_core::engine::signer_orchestration::SignerWork;
+use lkjstr_core::engine::wire::ExtensionCrypt;
 pub(super) struct Pending {
     client: u64,
     req: String,
@@ -18,34 +18,26 @@ pub(super) fn begin(
         "dm-crypto-{}",
         lkjstr_nips::hex(&crate::browser::random_bytes::<16>()?)
     );
-    let background = call.read.is_some() && h.dm.passive_read(call.account);
-    let work = match (call.list.is_some(), call.read.is_some(), background) {
-        (true, _, _) => SignerWork::LazyList,
-        (_, true, true) => SignerWork::Background,
-        (_, true, false) => SignerWork::Visible,
-        _ => SignerWork::UserAction,
-    };
     let promise = js_sys::Promise::new(&mut |resolve, _| {
         h.dm.crypto
             .insert((call.client, req.clone()), (lease.clone(), resolve));
         h.scope.direct(
             call.client,
-            &W::Crypt {
-                req: req.clone(),
-                expires_at: Some(crate::measure::epoch_now() + u64::from(ms)),
-                pubkey: call.account.into(),
-                peer: call.peer.into(),
-                operation: call.operation.into(),
-                data: data.into(),
-                background,
-                weight: work.weight(),
+            &ExtensionCrypt {
+                account: call.account,
+                peer: call.peer,
+                operation: call.operation,
+                data,
+                read: call.read.is_some(),
+                passive: call.read.is_some() && h.dm.passive_read(call.account),
                 context: call.list.map(|job| {
                     lkjstr_core::engine::wire::CryptContext::PrivateList {
                         sub: job.sub.clone(),
                         event: job.event.clone(),
                     }
                 }),
-            },
+            }
+            .output(req.clone(), crate::measure::epoch_now() + u64::from(ms)),
         );
     });
     Ok(Pending {

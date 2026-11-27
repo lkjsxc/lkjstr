@@ -242,7 +242,7 @@ export function createActions(core: Core) {
         return signedIn(req, core.who.remove(a.pubkey));
       case 'account.add':
         // The extension lives on the main thread: the interface is asked for its key, as the real engine asks.
-        if (a.how === 'extension') return void (asked.add(req), post({ t: 'getPublicKey', req }));
+        if (a.how === 'extension') return void (asked.add(req), extensionNotes.discover(req));
         return later(a.how === 'key' && a.key.startsWith('bunker') ? 700 : 120, () =>
           signedIn(req, core.who.add(a)),
         );

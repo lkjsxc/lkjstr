@@ -5,7 +5,11 @@ import { createMockPrivateDrafts } from './dm-drafts.ts';
 import { createMockDmEditors } from './dm-editors.ts';
 import { privateSnapshot } from './dm-view.ts';
 import type { Core } from './engine.ts';
-export function createPrivateMock(core: Core) {
+import type { createMockSignerFixtures } from './signer-fixtures.ts';
+export function createPrivateMock(
+  core: Core,
+  signer?: ReturnType<typeof createMockSignerFixtures>,
+) {
   let serial = 0;
   const drafts = createMockPrivateDrafts(core);
   const editors = createMockDmEditors(core, () => refresh());
@@ -136,6 +140,17 @@ export function createPrivateMock(core: Core) {
         core.post({ t: 'result', req: msg.req, ok: false, error: { code: error } });
         return true;
       }
+      // In the opt-in harness, execute the real mock action only after its independent
+      // Worker-owned signature returns. Never attach the action ID as page ownership.
+      const signThen = (scenario: 'dm-seal' | 'dm-advertisement', finish: () => void): void => {
+        if (!signer || account?.signer !== 'extension') return finish();
+        signer.sign(scenario, a.as, msg.req, (reply) => {
+          const current = core.who.list().find((v) => v.author.pubkey === a.as);
+          if (!reply.event || reply.error || current?.signer !== 'extension' || current.locked) {
+            core.post({ t: 'result', req: msg.req, ok: false, error: { code: 'signer-refused' } });
+          } else finish();
+        });
+      };
       if (a.a === 'dm.send') {
         if (
           !a.draft.text ||
@@ -153,32 +168,35 @@ export function createPrivateMock(core: Core) {
           core.post({ t: 'result', req: msg.req, ok: false, error: { code: 'not-found' } });
           return true;
         }
-        const conversation = room(peers);
-        const id = (++serial).toString(16).padStart(64, '0');
-        messages.push({
-          id,
-          conversation,
-          author: a.as,
-          participants: peers,
-          text: a.draft.text,
-          at: core.now(),
-          replyTo: a.draft.replyTo ?? null,
-          subject: a.draft.subject ?? null,
-          unread: false,
-          legacy: false,
-        });
-        if (messages.length > 2000) {
-          const removed = messages.shift();
-          for (const key of seen) if (key.endsWith(`:${removed?.id}`)) seen.delete(key);
-          const retained = new Set(messages.map((m) => m.conversation));
-          for (const [peers, key] of rooms) if (!retained.has(key)) rooms.delete(peers);
-        }
-        core.post({
-          t: 'result',
-          req: msg.req,
-          ok: true,
-          id,
-          dmDelivery: { accepted: peers.length, total: peers.length },
+        signThen('dm-seal', () => {
+          const conversation = room(peers);
+          const id = (++serial).toString(16).padStart(64, '0');
+          messages.push({
+            id,
+            conversation,
+            author: a.as,
+            participants: peers,
+            text: a.draft.text,
+            at: core.now(),
+            replyTo: a.draft.replyTo ?? null,
+            subject: a.draft.subject ?? null,
+            unread: false,
+            legacy: false,
+          });
+          if (messages.length > 2000) {
+            const removed = messages.shift();
+            for (const key of seen) if (key.endsWith(`:${removed?.id}`)) seen.delete(key);
+            const retained = new Set(messages.map((m) => m.conversation));
+            for (const [peers, key] of rooms) if (!retained.has(key)) rooms.delete(peers);
+          }
+          core.post({
+            t: 'result',
+            req: msg.req,
+            ok: true,
+            id,
+            dmDelivery: { accepted: peers.length, total: peers.length },
+          });
+          refresh();
         });
       } else if (a.a === 'dm.seen') {
         if (
@@ -193,20 +211,25 @@ export function createPrivateMock(core: Core) {
         core.post({ t: 'result', req: msg.req, ok: true });
       } else {
         const valid = a.relays.length <= 8 && a.relays.every((url) => /^wss?:\/\/[^/]+/.test(url));
-        if (valid) {
-          inboxes.set(a.as, [...a.relays]);
-          const owner = core.who.list().find((account) => account.author.pubkey === a.as);
-          if (owner) owner.inbox = [...a.relays];
-          core.accounts();
-        }
-        core.post({
-          t: 'result',
-          req: msg.req,
-          ok: valid,
-          ...(valid ? {} : { error: { code: 'rejected' as const } }),
-        });
+        const finish = () => {
+          if (valid) {
+            inboxes.set(a.as, [...a.relays]);
+            const owner = core.who.list().find((account) => account.author.pubkey === a.as);
+            if (owner) owner.inbox = [...a.relays];
+            core.accounts();
+          }
+          core.post({
+            t: 'result',
+            req: msg.req,
+            ok: valid,
+            ...(valid ? {} : { error: { code: 'rejected' as const } }),
+          });
+          refresh();
+        };
+        if (valid) signThen('dm-advertisement', finish);
+        else finish();
       }
-      refresh();
+      if (a.a === 'dm.seen') refresh();
       return true;
     },
     dispose() {

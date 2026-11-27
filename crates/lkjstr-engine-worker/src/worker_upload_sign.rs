@@ -115,18 +115,16 @@ async fn sign_mode(
             .insert((id, req.clone()), (event.clone(), resolve));
         h.scope.direct(
             id,
-            &W::Sign {
-                action_req: action_req.map(str::to_owned),
-                weight: match mode {
+            &W::extension_sign(
+                req.clone(),
+                &event,
+                action_req,
+                match mode {
                     Mode::RelayAuth(work) => work,
                     _ => SignerWork::UserAction,
-                }
-                .weight(),
-                expires_at: Some(crate::measure::epoch_now() + u64::from(ms)),
-                req: req.clone(),
-                pubkey: event.pubkey.clone(),
-                event: serde_json::to_string(&event).unwrap_or_default(),
-            },
+                },
+                crate::measure::epoch_now() + u64::from(ms),
+            ),
         );
     });
     let result = crate::browser::promise::bounded_ms_for(

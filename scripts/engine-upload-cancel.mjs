@@ -1,3 +1,4 @@
+import { assertOwnership } from '../web/tests/signer-ownership-fixture.ts';
 // Cancellation against real loopback TLS sockets, plus all three signer kinds.
 // Caller supplies a context created with ignoreHTTPSErrors:true. Only exact fixture origins are allowed.
 import { fakeMediaSet } from './browser-media.mjs';
@@ -107,7 +108,11 @@ export async function uploadCancel({ page, send, wait, check, note, signer, line
     const old = await begin(note.pubkey, extension.origins.blossom);
     const messages = await drive(old, messages => messages.some(m => m.t === 'sign' && m.actionReq === old), false);
     const oldSign = messages.find(m => m.t === 'sign' && m.actionReq === old);
+    assertOwnership('upload',oldSign,{req:oldSign.req,actionReq:old,runtime:true});
     await cancelled(old);
+    const retired = await drive(old, ms => ms.some(m => m.t === 'sign.cancel' && m.req === oldSign.req), false);
+    assertOwnership('upload-cancel',retired.find(m=>m.t==='sign.cancel'&&m.req===oldSign.req),{req:oldSign.req});
+    check('native upload cancellation fixture matches Worker',true);
     const next = await begin(note.pubkey, extension.origins.blossom);
     await drive(next, messages => messages.some(m => m.t === 'sign' && m.actionReq === next), false);
     await answer(oldSign);

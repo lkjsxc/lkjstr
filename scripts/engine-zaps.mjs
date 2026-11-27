@@ -1,3 +1,4 @@
+import { assertOwnership } from '../web/tests/signer-ownership-fixture.ts';
 // All zap HTTP is intercepted; no wallet or public-relay publication occurs.
 import { zapSignerFailures } from './engine-zap-signers.mjs';
 import {spawn} from 'node:child_process';
@@ -71,6 +72,8 @@ export async function zaps({page,send,check,note,signer,lines,origin,bunker,fake
       const m=await all(),done=m.slice(start).find(x=>x.t==='result'&&x.req===req);
       if(done)return done;
       for(const request of m.slice(start).filter(x=>x.t==='sign'&&x.actionReq===req&&!handled.has(x.req))){
+        assertOwnership('zap',request,{req:request.req,actionReq:req,runtime:true});
+        check('native zap ownership fixture matches Worker',true);
         handled.add(request.req);await answer(request);
       }
       await page.waitForTimeout(25);

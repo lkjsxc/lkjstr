@@ -1,3 +1,4 @@
+import { assertOwnership } from '../web/tests/signer-ownership-fixture.ts';
 // Runs only on the harness loopback relay. NIP-42 signatures never publish as EVENT.
 export async function relayAuth({page,send,wait,check,origin,account,signer,lines,authFake,mode,act}) {
   const url=origin.replace('http:','ws:')+'/auth-'+mode;
@@ -10,6 +11,8 @@ export async function relayAuth({page,send,wait,check,origin,account,signer,line
       &&JSON.parse(m.event).tags.some(t=>t[0]==='relay'&&t[1]===url)),url);
     const request=await page.evaluate(url=>window.messages.find(m=>m.t==='sign'&&JSON.parse(m.event).kind===22242
       &&JSON.parse(m.event).tags.some(t=>t[0]==='relay'&&t[1]===url)),url);
+    assertOwnership('auth-visible',request,{req:request.req,runtime:true});
+    check('native relay AUTH ownership fixture matches Worker',true);
     signer.stdin.write(request.event+'\n');
     const signed=JSON.parse((await lines.next()).value);
     await send({t:'signed',req:request.req,event:JSON.stringify(signed)});

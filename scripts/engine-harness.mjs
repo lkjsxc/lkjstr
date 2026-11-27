@@ -1,3 +1,4 @@
+import { checkExtensionBridge } from './engine-signer-ownership.mjs';
 import { createHash } from 'node:crypto';
 import { loadavg } from 'node:os';
 import { fixtureProcess } from './engine-fixture-process.mjs';
@@ -153,20 +154,7 @@ try {
   await wait(()=>window.messages.some((m)=>(m.t==='patch'||m.t==='rows')&&m.sub==='cached'&&(m.rows?.length||m.ops?.length)));
   check('cache restarts without relay replay',true);
   await send({t:'test.relays',relays:[origin.replace('http:','ws:')]});
-  await send({t:'act',req:'discover',action:{a:'account.add',how:'extension'}});
-  await wait(()=>window.messages.some(m=>m.t==='getPublicKey'&&m.req==='discover'));
-  await send({t:'publicKey',req:'discover',pubkey:note.pubkey});
-  await wait(()=>window.messages.some(m=>m.t==='result'&&m.req==='discover'&&m.ok));
-  await send({t:'act',req:'publish',action:{a:'publish',as:note.pubkey,what:{k:'note',draft:{text:'published through sign bridge #Nostr'}}}});
-  await wait(()=>window.messages.some((m)=>m.t==='sign'&&m.req==='publish'));
-  const unsigned=await page.evaluate(()=>window.messages.find((m)=>m.t==='sign').event);
-  check('finished publication derives hashtag tags before signing',JSON.parse(unsigned).tags.some(t=>t[0]==='t'&&t[1]==='nostr'));
-  signer.stdin.write(`${unsigned}\n`);
-  const signed=JSON.parse((await lines.next()).value);
-  await send({t:'signed',req:'publish',event:JSON.stringify(signed)});
-  await wait(()=>window.messages.some((m)=>m.t==='result'&&m.req==='publish'));
-  const result=await page.evaluate(()=>window.messages.find((m)=>m.t==='result'&&m.req==='publish'));
-  check('NIP-07 bridge verifies and publishes with per-relay delivery',result.ok&&result.delivery[0]?.state==='ok'&&fake.published.some((e)=>e.id===signed.id));
+  await checkExtensionBridge({send,wait,page,check,note,signer,lines,fake});
   fake.setReading(true);
   await ownerRelays({page,send,wait,check,note,signer,lines,fake,origin});
   await conformance({page,send,wait,check,note,signer,lines,origin,bunkerKey,bunker,fake,channelFake,authFake});

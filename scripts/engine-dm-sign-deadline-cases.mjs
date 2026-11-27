@@ -1,3 +1,4 @@
+import { assertOwnership } from '../web/tests/signer-ownership-fixture.ts';
 // Virtual deadlines exercise the production timer callback; elapsed wall time is not claimed as 60 seconds.
 export async function privateSignCases({ make, fixtures, fake, check }) {
   const extension = await make('extension');
@@ -8,6 +9,10 @@ export async function privateSignCases({ make, fixtures, fake, check }) {
       const messages = await client.messages();
       for (const request of messages.filter((m) => m.t === 'crypt' && !automated.has(m.req))) {
         automated.add(request.req);
+        if(request.operation==='nip44.encrypt'){
+          assertOwnership('dm-encrypt',request,{req:request.req,runtime:true});
+          check('native DM encryption ownership fixture matches Worker',true);
+        }
         await client.answer(request);
       }
       const next = messages.find((m) => m.t === 'sign' && !before.has(m.req));
@@ -45,12 +50,19 @@ export async function privateSignCases({ make, fixtures, fake, check }) {
       );
       const req = await extension.begin(action(extension, kind));
       const request = await nextSignature(extension, seen);
+      assertOwnership(kind==='seal'?'dm-seal':'dm-advertisement',request,{req:request.req,runtime:true});
+      check('native DM '+kind+' ownership fixture matches Worker',true);
       check(
         `extension ${kind} exact-event request has its intended kind`,
         JSON.parse(request.event).kind === (kind === 'seal' ? 13 : 10050),
       );
       await expire(extension);
       const result = await extension.finish(req);
+      if(kind==='seal'){
+        const retired=await extension.until(ms=>ms.some(m=>m.t==='sign.cancel'&&m.req===request.req));
+        assertOwnership('dm-seal-cancel',retired.find(m=>m.t==='sign.cancel'&&m.req===request.req),{req:request.req});
+        check('native DM signing retirement fixture matches Worker',true);
+      }
       check(
         `extension ${kind} actual deadline is not a missing signer`,
         result.error?.code === 'signer-timeout',
@@ -78,6 +90,24 @@ export async function privateSignCases({ make, fixtures, fake, check }) {
     );
   } finally {
     await extension.close();
+  }
+  // Use fresh private views: an unread badge is passive, a normal inbox is visible.
+  for(const background of [false,true]){
+    const reader=await make('extension');
+    try{
+      await reader.send({t:'dm.open',sub:'private',query:{account:reader.account,unreadOnly:background}});
+      await reader.until(ms=>ms.some(m=>m.t==='crypt'));
+      const request=(await reader.crypts())[0];
+      const scenario=background?'dm-background':'dm-visible';
+      assertOwnership(scenario,request,{req:request.req,runtime:true});
+      check('native '+scenario+' ownership fixture matches Worker',true);
+      await reader.send({t:'dm.visible',sub:'private',visible:false});
+      const retired=await reader.until(ms=>ms.some(m=>m.t==='crypt.cancel'&&m.req===request.req));
+      assertOwnership('dm-read-cancel',retired.find(m=>m.t==='crypt.cancel'&&m.req===request.req),{req:request.req});
+      check('native '+scenario+' cancellation fixture matches Worker',true);
+      await reader.answer(request);
+      await reader.barrier();
+    }finally{await reader.close();}
   }
   fixtures.mode({});
   const remote = await make('remote');

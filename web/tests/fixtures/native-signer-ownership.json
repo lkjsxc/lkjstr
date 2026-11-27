@@ -1,0 +1,223 @@
+{
+  "now": 1700000000000,
+  "rows": {
+    "auth-background": {
+      "lifecycle": "worker-page",
+      "message": {
+        "event": "{\"pubkey\":\"1111111111111111111111111111111111111111111111111111111111111111\",\"created_at\":1700000000,\"kind\":22242,\"tags\":[],\"content\":\"synthetic signer fixture\"}",
+        "expiresAt": 1700000060000,
+        "pubkey": "1111111111111111111111111111111111111111111111111111111111111111",
+        "req": "upload-auth-4-00000000000000000000000000000000",
+        "t": "sign",
+        "weight": 2
+      }
+    },
+    "auth-visible": {
+      "lifecycle": "worker-page",
+      "message": {
+        "event": "{\"pubkey\":\"1111111111111111111111111111111111111111111111111111111111111111\",\"created_at\":1700000000,\"kind\":22242,\"tags\":[],\"content\":\"synthetic signer fixture\"}",
+        "expiresAt": 1700000060000,
+        "pubkey": "1111111111111111111111111111111111111111111111111111111111111111",
+        "req": "upload-auth-3-00000000000000000000000000000000",
+        "t": "sign",
+        "weight": 4
+      }
+    },
+    "auth-write": {
+      "lifecycle": "worker-page",
+      "message": {
+        "event": "{\"pubkey\":\"1111111111111111111111111111111111111111111111111111111111111111\",\"created_at\":1700000000,\"kind\":22242,\"tags\":[],\"content\":\"synthetic signer fixture\"}",
+        "expiresAt": 1700000060000,
+        "pubkey": "1111111111111111111111111111111111111111111111111111111111111111",
+        "req": "upload-auth-5-00000000000000000000000000000000",
+        "t": "sign",
+        "weight": 8
+      }
+    },
+    "core-action": {
+      "action": "profile",
+      "lifecycle": "action-by-req",
+      "message": {
+        "event": "{\"pubkey\":\"1111111111111111111111111111111111111111111111111111111111111111\",\"created_at\":1700000000,\"kind\":0,\"tags\":[],\"content\":\"synthetic signer fixture\"}",
+        "expiresAt": 1700000060000,
+        "pubkey": "1111111111111111111111111111111111111111111111111111111111111111",
+        "req": "profile",
+        "t": "sign",
+        "weight": 8
+      }
+    },
+    "core-publish": {
+      "action": "publish",
+      "lifecycle": "action-by-req",
+      "message": {
+        "event": "{\"pubkey\":\"1111111111111111111111111111111111111111111111111111111111111111\",\"created_at\":1700000000,\"kind\":1,\"tags\":[],\"content\":\"synthetic signer fixture\"}",
+        "expiresAt": 1700000060000,
+        "pubkey": "1111111111111111111111111111111111111111111111111111111111111111",
+        "req": "publish",
+        "t": "sign",
+        "weight": 16
+      }
+    },
+    "discovery": {
+      "action": "discover",
+      "lifecycle": "action-by-req",
+      "message": {
+        "expiresAt": 1700000060000,
+        "req": "discover",
+        "t": "getPublicKey"
+      }
+    },
+    "dm-advertisement": {
+      "action": "dm-advertisement",
+      "lifecycle": "worker-page",
+      "message": {
+        "event": "{\"pubkey\":\"1111111111111111111111111111111111111111111111111111111111111111\",\"created_at\":1700000000,\"kind\":10050,\"tags\":[],\"content\":\"synthetic signer fixture\"}",
+        "expiresAt": 1700000060000,
+        "pubkey": "1111111111111111111111111111111111111111111111111111111111111111",
+        "req": "upload-auth-6-00000000000000000000000000000000",
+        "t": "sign",
+        "weight": 8
+      }
+    },
+    "dm-background": {
+      "lifecycle": "private-read-background",
+      "message": {
+        "background": true,
+        "data": "synthetic ciphertext",
+        "expiresAt": 1700000060000,
+        "operation": "nip44.decrypt",
+        "peer": "2222222222222222222222222222222222222222222222222222222222222222",
+        "pubkey": "1111111111111111111111111111111111111111111111111111111111111111",
+        "req": "dm-crypto-00000000000000000000000000000003",
+        "t": "crypt",
+        "weight": 2
+      }
+    },
+    "dm-encrypt": {
+      "action": "dm-send",
+      "lifecycle": "private-write",
+      "message": {
+        "data": "synthetic ciphertext",
+        "expiresAt": 1700000060000,
+        "operation": "nip44.encrypt",
+        "peer": "2222222222222222222222222222222222222222222222222222222222222222",
+        "pubkey": "1111111111111111111111111111111111111111111111111111111111111111",
+        "req": "dm-crypto-00000000000000000000000000000001",
+        "t": "crypt",
+        "weight": 8
+      }
+    },
+    "dm-read-cancel": {
+      "lifecycle": "retire-by-req",
+      "message": {
+        "req": "dm-crypto-00000000000000000000000000000002",
+        "t": "crypt.cancel"
+      }
+    },
+    "dm-seal": {
+      "action": "dm-send",
+      "lifecycle": "worker-page",
+      "message": {
+        "event": "{\"pubkey\":\"1111111111111111111111111111111111111111111111111111111111111111\",\"created_at\":1700000000,\"kind\":13,\"tags\":[],\"content\":\"synthetic signer fixture\"}",
+        "expiresAt": 1700000060000,
+        "pubkey": "1111111111111111111111111111111111111111111111111111111111111111",
+        "req": "upload-auth-7-00000000000000000000000000000000",
+        "t": "sign",
+        "weight": 8
+      }
+    },
+    "dm-seal-cancel": {
+      "action": "dm-send",
+      "lifecycle": "retire-by-req",
+      "message": {
+        "req": "upload-auth-7-00000000000000000000000000000000",
+        "t": "sign.cancel"
+      }
+    },
+    "dm-visible": {
+      "lifecycle": "private-read",
+      "message": {
+        "data": "synthetic ciphertext",
+        "expiresAt": 1700000060000,
+        "operation": "nip44.decrypt",
+        "peer": "2222222222222222222222222222222222222222222222222222222222222222",
+        "pubkey": "1111111111111111111111111111111111111111111111111111111111111111",
+        "req": "dm-crypto-00000000000000000000000000000002",
+        "t": "crypt",
+        "weight": 4
+      }
+    },
+    "private-list": {
+      "lifecycle": "view-event",
+      "message": {
+        "context": {
+          "event": "3333333333333333333333333333333333333333333333333333333333333333",
+          "kind": "private-list",
+          "sub": "m"
+        },
+        "data": "synthetic ciphertext",
+        "expiresAt": 1700000060000,
+        "operation": "nip44.decrypt",
+        "peer": "1111111111111111111111111111111111111111111111111111111111111111",
+        "pubkey": "1111111111111111111111111111111111111111111111111111111111111111",
+        "req": "dm-crypto-00000000000000000000000000000004",
+        "t": "crypt",
+        "weight": 1
+      }
+    },
+    "private-list-cancel": {
+      "lifecycle": "retire-by-req",
+      "message": {
+        "req": "dm-crypto-00000000000000000000000000000004",
+        "t": "crypt.cancel"
+      }
+    },
+    "upload": {
+      "action": "upload",
+      "lifecycle": "action-by-actionReq",
+      "message": {
+        "actionReq": "upload",
+        "event": "{\"pubkey\":\"1111111111111111111111111111111111111111111111111111111111111111\",\"created_at\":1700000000,\"kind\":24242,\"tags\":[],\"content\":\"synthetic signer fixture\"}",
+        "expiresAt": 1700000060000,
+        "pubkey": "1111111111111111111111111111111111111111111111111111111111111111",
+        "req": "upload-auth-1-00000000000000000000000000000000",
+        "t": "sign",
+        "weight": 8
+      }
+    },
+    "upload-cancel": {
+      "action": "upload",
+      "lifecycle": "retire-by-req",
+      "message": {
+        "req": "upload-auth-1-00000000000000000000000000000000",
+        "t": "sign.cancel"
+      }
+    },
+    "upload-nip98": {
+      "action": "upload-nip98",
+      "lifecycle": "action-by-actionReq",
+      "message": {
+        "actionReq": "upload-nip98",
+        "event": "{\"pubkey\":\"1111111111111111111111111111111111111111111111111111111111111111\",\"created_at\":1700000000,\"kind\":27235,\"tags\":[],\"content\":\"synthetic signer fixture\"}",
+        "expiresAt": 1700000060000,
+        "pubkey": "1111111111111111111111111111111111111111111111111111111111111111",
+        "req": "upload-auth-8-00000000000000000000000000000000",
+        "t": "sign",
+        "weight": 8
+      }
+    },
+    "zap": {
+      "action": "zap",
+      "lifecycle": "action-by-actionReq",
+      "message": {
+        "actionReq": "zap",
+        "event": "{\"pubkey\":\"1111111111111111111111111111111111111111111111111111111111111111\",\"created_at\":1700000000,\"kind\":9734,\"tags\":[],\"content\":\"synthetic signer fixture\"}",
+        "expiresAt": 1700000060000,
+        "pubkey": "1111111111111111111111111111111111111111111111111111111111111111",
+        "req": "upload-auth-2-00000000000000000000000000000000",
+        "t": "sign",
+        "weight": 8
+      }
+    }
+  }
+}

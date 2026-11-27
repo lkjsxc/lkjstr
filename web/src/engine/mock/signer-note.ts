@@ -9,6 +9,9 @@ export function createMockExtensionNotes(
 ) {
   const pending = new Map<string, () => void>(); // bound: at most 64 client actions
   return {
+    discover(req: string): void {
+      core.post({ t: 'getPublicKey', req, expiresAt: core.now() + 60_000 });
+    },
     ask(req: string, pubkey: string, text: string, complete: () => void): void {
       if (pending.size >= 64) return fail(req, 'too-large');
       pending.set(req, complete);
@@ -17,6 +20,8 @@ export function createMockExtensionNotes(
         req,
         pubkey,
         event: JSON.stringify({ pubkey, content: text, kind: 1, tags: [], created_at: 1 }),
+        expiresAt: core.now() + 60_000,
+        weight: 16,
       });
     },
     signed(message: Extract<ToEngine, { t: 'signed' }>): void {

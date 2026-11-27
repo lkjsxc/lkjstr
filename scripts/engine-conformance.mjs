@@ -1,3 +1,4 @@
+import { assertOwnership } from '../web/tests/signer-ownership-fixture.ts';
 import { bech32 } from '../web/scripts/smoke-visitors.mjs';
 import { relayAuth } from './engine-relay-auth.mjs';
 import { directMessages } from './engine-dm.mjs';
@@ -27,6 +28,10 @@ export async function conformance({page,send,wait,check,note,signer,lines,origin
         const all=await messages();
         if(all.some(m=>m.t==='result'&&m.req===req))break;
         const request=all.find(m=>m.t==='sign'&&m.req.startsWith(req)&&!handled.has(m.req));
+        if(action.a==='profile.save'){
+          assertOwnership('core-action',request,{req,runtime:true});
+          check('native non-publish core ownership fixture matches Worker',true);
+        }
         handled.add(request.req);signer.stdin.write(`${request.event}\n`);
         const signed=JSON.parse((await lines.next()).value);
         await send({t:'signed',req:request.req,event:JSON.stringify(signed)});
@@ -93,6 +98,7 @@ export async function conformance({page,send,wait,check,note,signer,lines,origin
   const tag = ['emoji',custom.code,custom.url,custom.address];
   const tagged = await act({a:'publish',as:note.pubkey,what:{k:'note',draft:{text:token,emoji:[custom]}}},true);
   check('custom emoji note is accepted by the fixture relay',tagged.ok);
+  check('pin own note signs a kind 10001 membership',(await act({a:'pin',as:note.pubkey,id:tagged.id,on:true},true)).ok);
   check('signed note preserves the set coordinate',JSON.parse((await messages()).filter(m=>m.t==='sign').at(-1).event)
     .tags.some(t=>JSON.stringify(t)===JSON.stringify(tag)));
   const reacted = await act({a:'publish',as:note.pubkey,what:{k:'reaction',id:tagged.id,emoji:token,url:custom.url,address:custom.address}},true);
@@ -108,6 +114,8 @@ export async function conformance({page,send,wait,check,note,signer,lines,origin
   await page.evaluate(({req,key})=>window.worker.postMessage({t:'act',req,action:{a:'upload',as:key,name:'fixture.png',mime:'image/png',bytes:new Uint8Array([1,2,3,4]).buffer}}),{req,key:note.pubkey});
   await wait(used=>window.messages.some(m=>m.t==='sign'&&m.req.startsWith('upload-auth-')&&!used.includes(m.req)),uploadHandled);
   const uploadSign=(await messages()).find(m=>m.t==='sign'&&m.req.startsWith('upload-auth-')&&!uploadHandled.includes(m.req));
+  assertOwnership('upload',uploadSign,{req:uploadSign.req,actionReq:req,runtime:true});
+  check('native upload ownership fixture matches Worker',true);
   check('Blossom auth is kind 24242 with upload hash and expiration',JSON.parse(uploadSign.event).kind===24242&&['t','x','expiration'].every(k=>JSON.parse(uploadSign.event).tags.some(t=>t[0]===k)));
   signer.stdin.write(`${uploadSign.event}\n`);const signed=JSON.parse((await lines.next()).value);
   await send({t:'signed',req:uploadSign.req,event:JSON.stringify(signed)});
@@ -118,6 +126,8 @@ export async function conformance({page,send,wait,check,note,signer,lines,origin
   for(let n=0;n<2;n++) {
     await wait(used=>window.messages.some(m=>m.t==='sign'&&m.req.startsWith('upload-auth-')&&!used.includes(m.req)),[...handled]);
     const request=(await messages()).find(m=>m.t==='sign'&&m.req.startsWith('upload-auth-')&&!handled.has(m.req));
+    assertOwnership(n===0?'upload':'upload-nip98',request,{req:request.req,actionReq:'nip96-upload',runtime:true});
+    check('native upload fallback ownership '+n+' matches Worker',true);
     handled.add(request.req);signer.stdin.write(`${request.event}\n`);
     const event=JSON.parse((await lines.next()).value);
     await send({t:'signed',req:request.req,event:JSON.stringify(event)});

@@ -65,7 +65,10 @@ export function createExtensionClient(post: (message: ToEngine) => void) {
         post({ t, req, error: 'cancelled' });
         return true;
       }
-      if ((message.t === 'sign' && message.actionReq && !owned) || requests.size >= 128) {
+      if (
+        (!owned && (message.t === 'getPublicKey' || message.actionReq !== undefined)) ||
+        requests.size >= 128
+      ) {
         post({ t, req, error: 'signer-refused' });
         return true;
       }
