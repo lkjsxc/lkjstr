@@ -148,14 +148,13 @@ fn horizon(
     }
     let filter = query::filter(store, q);
     let authors = super::rich::authors(store, q);
-    let mut mutes = mute.map_or_else(Vec::new, |e| settings::list_tags(&e.materialize(), private));
-    if let Some(list) = their_mute {
-        mutes.extend(list.materialize().tags.clone());
-    }
+    let mutes = mute.map_or_else(Vec::new, |e| settings::list_tags(&e.materialize(), private));
     let muted: std::collections::BTreeSet<_> = mutes
         .iter()
         .filter(|tag| tag.first().is_some_and(|key| key == "p"))
         .filter_map(|tag| tag.get(1))
+        .map(|value| std::borrow::Cow::Borrowed(value.as_str()))
+        .chain(their_mute.into_iter().flat_map(|list| list.tag_values("p")))
         .collect();
     let exact_view = matches!(q.source, Source::Channel | Source::Notifications);
     let required = if exact_view {
@@ -170,7 +169,7 @@ fn horizon(
                     .filter(|author| {
                         owner.or(q.account.as_deref()) != Some(author.as_str())
                             && authors.as_ref().is_none_or(|a| a.contains(author))
-                            && !muted.contains(author)
+                            && !muted.contains(author.as_str())
                     })
                     .take(FOLLOW_CONTRIBUTORS)
                     .count()

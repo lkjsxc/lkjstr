@@ -42,7 +42,10 @@ pub(super) fn reason(
         .account
         .as_deref()
         .and_then(|account| store.replaceable(account, 10000))
-        .and_then(|list| tag_reason(&list_tags(&list, private), event))
+        .and_then(|list| {
+            let tags = list_tags(&list, private);
+            tag_reason(event, |key| values(&tags, key))
+        })
         .or_else(|| their_reason(store, query, event))
 }
 
@@ -56,10 +59,10 @@ pub(super) fn their_reason(store: &Store, query: &Query, event: &NostrEvent) -> 
     if query.source != Source::TheirHome {
         return None;
     }
-    // A viewed owner's public mute list is read policy for this query only.
-    // Never consult PrivateLists: it can also contain another saved account's entries.
-    let list = store.replaceable(query.target.as_deref()?, 10000)?;
-    tag_reason(&list.tags, event).map(|reason| match reason {
+    // Read public tags directly from the signed list's compact storage. Private
+    // list entries belong to the account that decrypted them.
+    let list = store.replaceable_lease(query.target.as_deref()?, 10000)?;
+    tag_reason(event, |key| list.tag_values(key)).map(|reason| match reason {
         Reason::MutedPerson => Reason::TheirMutedPerson,
         Reason::MutedThread => Reason::TheirMutedThread,
         Reason::MutedWord => Reason::TheirMutedWord,
@@ -68,13 +71,18 @@ pub(super) fn their_reason(store: &Store, query: &Query, event: &NostrEvent) -> 
     })
 }
 
-fn tag_reason(tags: &[Vec<String>], event: &NostrEvent) -> Option<Reason> {
-    let has = |key: &str, value: &str| {
-        tags.iter().any(|tag| {
-            tag.first().is_some_and(|name| name == key)
-                && tag.get(1).is_some_and(|entry| entry == value)
-        })
-    };
+fn values<'a>(tags: &'a [Vec<String>], key: &'a str) -> impl Iterator<Item = &'a str> {
+    tags.iter().filter_map(move |tag| {
+        (tag.first()?.as_str() == key).then_some(())?;
+        tag.get(1).map(String::as_str)
+    })
+}
+
+fn tag_reason<I: Iterator<Item: AsRef<str>>>(
+    event: &NostrEvent,
+    values: impl Fn(&'static str) -> I,
+) -> Option<Reason> {
+    let has = |key, value: &str| values(key).any(|entry| entry.as_ref() == value);
     if has("p", &event.pubkey) {
         return Some(Reason::MutedPerson);
     }
@@ -87,9 +95,10 @@ fn tag_reason(tags: &[Vec<String>], event: &NostrEvent) -> Option<Reason> {
     {
         return Some(Reason::MutedThread);
     }
-    [Reason::MutedWord, Reason::MutedHashtag]
-        .into_iter()
-        .find(|reason| matching_entry(tags, event, *reason).is_some())
+    if matching_entry(values("word"), event, Reason::MutedWord).is_some() {
+        return Some(Reason::MutedWord);
+    }
+    matching_entry(values("t"), event, Reason::MutedHashtag).map(|_| Reason::MutedHashtag)
 }
 
 pub(in crate::engine) fn matches_note(store: &Store, q: &Query, e: &NostrEvent) -> bool {
@@ -99,30 +108,28 @@ pub(in crate::engine) fn matches_note(store: &Store, q: &Query, e: &NostrEvent) 
         && matches_extra(e, q)
 }
 
-fn matching_entry<'a>(
-    tags: &'a [Vec<String>],
+fn matching_entry<T: AsRef<str>>(
+    values: impl Iterator<Item = T>,
     event: &NostrEvent,
     reason: Reason,
-) -> Option<&'a str> {
-    let (key, content, hashtags) = match reason {
-        Reason::MutedWord => ("word", event.content.to_lowercase(), Vec::new()),
-        Reason::MutedHashtag => ("t", String::new(), tag_values(event, "t")),
-        _ => return None,
-    };
-    tags.iter()
-        .filter_map(|tag| {
-            (tag.first()?.as_str() == key)
-                .then(|| tag.get(1).map(String::as_str))
-                .flatten()
-        })
-        .find(|value| {
-            !value.is_empty()
-                && if reason == Reason::MutedWord {
-                    content.contains(&value.to_lowercase())
-                } else {
-                    hashtags.iter().any(|tag| tag.eq_ignore_ascii_case(value))
-                }
-        })
+) -> Option<T> {
+    let mut values = values.filter(|value| !value.as_ref().is_empty()).peekable();
+    values.peek()?;
+    match reason {
+        Reason::MutedWord => {
+            let content = event.content.to_lowercase();
+            values.find(|value| content.contains(&value.as_ref().to_lowercase()))
+        }
+        Reason::MutedHashtag => {
+            let hashtags = tag_values(event, "t");
+            values.find(|value| {
+                hashtags
+                    .iter()
+                    .any(|tag| tag.eq_ignore_ascii_case(value.as_ref()))
+            })
+        }
+        _ => None,
+    }
 }
 
 pub(super) fn detail(
@@ -132,10 +139,12 @@ pub(super) fn detail(
     reason: Reason,
     private: &PrivateLists,
 ) -> Option<String> {
-    if !matches!(reason, Reason::MutedWord | Reason::MutedHashtag) {
-        return None;
-    }
+    let key = match reason {
+        Reason::MutedWord => "word",
+        Reason::MutedHashtag => "t",
+        _ => return None,
+    };
     let list = store.replaceable(account?, 10000)?;
-    matching_entry(&list_tags(&list, private), event, reason)
-        .map(|value| value.chars().take(160).collect())
+    let tags = list_tags(&list, private);
+    matching_entry(values(&tags, key), event, reason).map(|value| value.chars().take(160).collect())
 }

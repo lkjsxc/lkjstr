@@ -51,6 +51,7 @@ The viewed owner's latest verified kind-10000 list contributes public `p`, `e`, 
 Viewer public and eligible private mutes run first and stay account-owned. Another user's encrypted private mutes
 cannot be read, and even a private list already decrypted for another saved account is excluded from this view.
 Public entries use the same person, event/parent/root, case-insensitive word and hashtag matching as viewer mutes.
+Projection and history read the relevant public tags directly from the owner's compact list.
 A matching note keeps a covered slot with a `their-muted-*` reason. Quotes and reply excerpts also respect this
 scope. Why offers no viewer Settings link; Show/Hide changes only that subscription and never edits either list.
 
