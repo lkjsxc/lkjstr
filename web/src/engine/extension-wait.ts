@@ -31,8 +31,15 @@ export function waitForInjection<T>(lookup: () => T | undefined, wait: Extension
   const { signal, pressedAt, expiresAt, finding } = wait;
   const maximum = Math.min(
     pressedAt + 60_000,
-    expiresAt === undefined ? Infinity : expiresAt - performance.timeOrigin,
+    expiresAt === undefined ? Infinity : performance.now() + (expiresAt - Date.now()),
   );
+  const deadline = (): number => {
+    const load = pageLoad();
+    return Math.min(
+      maximum,
+      load === undefined ? Infinity : Math.max(load + 3000, pressedAt + 1000),
+    );
+  };
   if (signal.aborted) return Promise.reject(new Error('cancelled'));
   const first = lookup();
   if (first !== undefined) return Promise.resolve(first);
@@ -51,21 +58,17 @@ export function waitForInjection<T>(lookup: () => T | undefined, wait: Extension
     const poll = (): void => {
       if (signal.aborted) return cancel();
       const now = performance.now();
-      const load = pageLoad();
-      const deadline = Math.min(
-        maximum,
-        load === undefined ? Infinity : Math.max(load + 3000, pressedAt + 1000),
-      );
+      const until = deadline();
       // A late timer must not extend the injection window.
-      if (now > deadline) return finish(undefined, 'signer-missing');
+      if (now > until) return finish(undefined, 'signer-missing');
       const found = lookup();
       if (found !== undefined) return finish(found);
-      if (now >= deadline) return finish(undefined, 'signer-missing');
-      timer = setTimeout(poll, Math.min(100, deadline - now));
+      if (now >= until) return finish(undefined, 'signer-missing');
+      timer = setTimeout(poll, Math.min(100, until - now));
     };
     signal.addEventListener('abort', cancel, { once: true });
     window.addEventListener('pagehide', cancel, { once: true });
-    timer = setTimeout(poll, 100);
+    timer = setTimeout(poll, Math.min(100, Math.max(0, deadline() - performance.now())));
   });
 }
 

@@ -64,29 +64,37 @@ export function createAvatarDraw(el: HTMLElement, client: AvatarClient, reduced:
         );
         const still = h('canvas', { width: edge, height: edge, 'aria-hidden': 'true' });
         const context = still.getContext('2d');
-        if (!context || !img.naturalWidth || !img.naturalHeight) return clearImage();
         const side = Math.min(img.naturalWidth, img.naturalHeight);
         try {
-          // One display-sized blit; a tainted canvas is never read, encoded or retained.
-          context.drawImage(
-            img,
-            (img.naturalWidth - side) / 2,
-            (img.naturalHeight - side) / 2,
-            side,
-            side,
-            0,
-            0,
-            edge,
-            edge,
-          );
-          canvas = still;
-          el.append(still);
+          if (context && side) {
+            // One display-sized blit; a tainted canvas is never read, encoded or retained.
+            context.drawImage(
+              img,
+              (img.naturalWidth - side) / 2,
+              (img.naturalHeight - side) / 2,
+              side,
+              side,
+              0,
+              0,
+              edge,
+              edge,
+            );
+            canvas = still;
+            el.append(still);
+          } else still.width = still.height = 0;
         } catch {
           still.width = still.height = 0;
         }
         img.onload = img.onerror = null;
-        img.removeAttribute('src');
+        const release = releaseImage;
+        releaseImage = undefined;
         image = undefined;
+        // Native load listeners still own the source during this event. A task,
+        // not a microtask, runs after all of them (including shared waiters).
+        setTimeout(() => {
+          if (release) release();
+          else img.removeAttribute('src');
+        }, 0);
       };
     } else el.append(img);
     if (derived) img.src = url;
@@ -113,7 +121,7 @@ export function createAvatarDraw(el: HTMLElement, client: AvatarClient, reduced:
     // Preserve live media safety and HTTPS upgrading; keep exact HTTPS identity for leases.
     const source = mediaSource(picture);
     if (!source) return;
-    const url = picture.startsWith('https://') ? picture : source;
+    const url = picture.startsWith('https://') && !/[\s\p{Cc}]/u.test(picture) ? picture : source;
     const token = generation;
     if (preview) {
       show(url, motion, token);

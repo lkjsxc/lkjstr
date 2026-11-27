@@ -16,8 +16,8 @@ self.onmessage = event => {
     if (!Number.isSafeInteger(data.ms) || data.ms < 0) throw new Error('invalid deadline advance');
     deadlineOffset += data.ms;
     const [reply] = event.ports;
-    reply.postMessage(true);
-    reply.close();
+    reply?.postMessage(true);
+    reply?.close();
   }
   else if (data.t === 'test.advance') self.engineHandle.advance_time(data.ms);
   else if (data.t === 'test.relays') self.engineHandle.set_test_relays(data.relays);

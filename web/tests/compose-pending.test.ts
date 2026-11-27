@@ -120,6 +120,9 @@ it('extension approval appears in both draft surfaces and Home Cancel preserves 
   await vi.waitFor(() => expect(c.sends).toHaveLength(1));
   const watch = c.sends[0]!.watch;
   expect(c.rows().join()).toContain('Sending…');
+  home.draw([]);
+  // P2 explicitly uses compose.pending on both surfaces before a named stage.
+  expect(home.el.querySelector('.home-draft time')?.textContent).toBe('Sending…');
   watch.signerWait?.('finding');
   expect(c.rows().join()).toContain('Looking for your signer extension');
   expect(c.el.querySelector('.signer-cancel')).toBeNull();

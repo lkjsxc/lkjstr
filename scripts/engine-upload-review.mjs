@@ -1,5 +1,8 @@
 // Review regressions: isolated HTTP, a real Worker and the native fixture signer.
 import { createHash } from 'node:crypto';
+export function signerEpochInBudget(expiresAt, now = Date.now()) {
+  return Number.isSafeInteger(expiresAt) && expiresAt <= now + 10_000 && expiresAt >= now - 5_000;
+}
 export async function uploadReview({ page, send, wait, check, note, signer, lines }) {
   const servers = ['https://upload-review-one.test', 'https://upload-review-two.test'];
   const bytes = [1, 2, 3, 4];
@@ -131,7 +134,7 @@ export async function uploadReview({ page, send, wait, check, note, signer, line
       if (stage === 'signer') {
         late = await nextSign(); // Fallback signing gets only the remaining budget.
         check('review deadline advance leaves signer epoch on the real clock',
-          Number.isSafeInteger(late.expiresAt) && late.expiresAt <= Date.now() + 10_000);
+          signerEpochInBudget(late.expiresAt));
       }
       const timeout = await result(req);
       const attempted = requests.slice(firstRequest);

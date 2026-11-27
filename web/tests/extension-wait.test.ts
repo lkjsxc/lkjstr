@@ -10,7 +10,7 @@ const discover = { t: 'getPublicKey', req: 'sign-in' } as const;
 const delayed = <T>(value: T, ms: number) =>
   new Promise<T>((resolve) => setTimeout(() => resolve(value), ms));
 beforeEach(() => {
-  vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'performance'] });
+  vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'performance', 'Date'] });
 });
 afterEach(() => {
   delete injected.nostr;
@@ -159,3 +159,73 @@ it('releases an injection search on pagehide even without an owner cancellation'
   await vi.advanceTimersByTimeAsync(4000);
   expect(lookup).toHaveBeenCalledTimes(2);
 });
+
+it('uses the remaining epoch budget after a wall clock step and polls inside 100ms', async () => {
+  await vi.advanceTimersByTimeAsync(120_000);
+  const wall = performance.timeOrigin + performance.now() - 60_000;
+  const clock = vi.spyOn(Date, 'now').mockReturnValue(wall);
+  try {
+    const lookup = vi.fn<() => string | undefined>().mockReturnValueOnce(undefined);
+    lookup.mockReturnValue('injected');
+    const result = expect(
+      waitForInjection(lookup, {
+        signal: new AbortController().signal,
+        pressedAt: performance.now(),
+        expiresAt: wall + 40,
+      }),
+    ).resolves.toBe('injected');
+    await vi.advanceTimersByTimeAsync(39);
+    expect(lookup).toHaveBeenCalledTimes(1);
+    await vi.advanceTimersByTimeAsync(1);
+    expect(lookup).toHaveBeenCalledTimes(2);
+    await result;
+  } finally {
+    clock.mockRestore();
+  }
+});
+
+it('rejects a missing extension at a sub-100ms deadline', async () => {
+  const lookup = vi.fn(() => undefined);
+  const result = expect(
+    waitForInjection(lookup, {
+      signal: new AbortController().signal,
+      pressedAt: performance.now(),
+      expiresAt: Date.now() + 30,
+    }),
+  ).rejects.toThrow('signer-missing');
+  await vi.advanceTimersByTimeAsync(29);
+  expect(lookup).toHaveBeenCalledTimes(1);
+  await vi.advanceTimersByTimeAsync(1);
+  expect(lookup).toHaveBeenCalledTimes(2);
+  await result;
+});
+
+it.each(['cancel', 'sign.cancel', 'reset'] as const)(
+  '%s frees a full request map synchronously without a hung signer replying',
+  async (method) => {
+    const signEvent = vi.fn(() => new Promise<never>(() => {}));
+    injected.nostr = { signEvent };
+    const sent: ToEngine[] = [];
+    const client = createExtensionClient((message) => sent.push(message));
+    const receive = (req: string, owned = true) =>
+      client.receive({ ...sign, req, actionReq: req }, () => owned);
+    for (let i = 0; i < 128; i++) receive(String(i));
+    await vi.advanceTimersByTimeAsync(1);
+    expect(signEvent).toHaveBeenCalledTimes(1);
+    receive('overflow');
+    expect(sent).toEqual([{ t: 'signed', req: 'overflow', error: 'signer-refused' }]);
+    if (method === 'reset') client.reset();
+    else if (method === 'cancel') client.cancel('0');
+    else client.receive({ t: 'sign.cancel', req: '0' }, () => true);
+    receive('0'); // reuse immediately, before the old task's finally runs
+    expect(sent).toHaveLength(1);
+    await vi.advanceTimersByTimeAsync(1);
+    // An old finalizer must not remove the replacement: an unowned duplicate
+    // is ignored, whereas a fresh unowned request would be refused.
+    receive('0', false);
+    expect(sent).toHaveLength(1);
+    client.reset();
+    await vi.advanceTimersByTimeAsync(60_000);
+    expect(sent).toHaveLength(1);
+  },
+);

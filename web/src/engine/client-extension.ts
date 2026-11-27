@@ -81,15 +81,17 @@ export function createExtensionClient(post: (message: ToEngine) => void) {
         wait(undefined);
         post(message);
       };
-      requests.set(req, {
+      const request = {
         action,
-        stop(reason, reply) {
+        stop(reason?: string, reply?: boolean) {
+          if (requests.get(req) === request) requests.delete(req);
           if (answered || abort.signal.aborted) return;
           abort.abort(reason);
           wait(undefined);
           if (reply) answer({ t, req, error: 'cancelled' });
         },
-      });
+      };
+      requests.set(req, request);
       const pressedAt = owner?.pressedAt ?? performance.now();
       const task = findExtension({
         signal: abort.signal,
@@ -136,7 +138,7 @@ export function createExtensionClient(post: (message: ToEngine) => void) {
         )
         .finally(() => {
           wait(undefined);
-          requests.delete(req);
+          if (requests.get(req) === request) requests.delete(req);
         });
       return true;
     },

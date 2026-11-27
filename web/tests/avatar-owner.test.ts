@@ -206,3 +206,55 @@ it('excludes the border and scrollbar area of an overflowing ancestor from visib
   x.intersections[0]!([avatarIntersection(face, false)], {} as IntersectionObserver);
   expect(x.sent).toContainEqual({ t: 'avatar.close', req: x.wants()[0]!.req });
 });
+
+it.each([
+  ['https://a.test/trailing \t', 'https://a.test/trailing'],
+  [' \thttps://a.test/leading ', 'https://a.test/leading'],
+  ['https://a.test/in ternal', 'https://a.test/in%20ternal'],
+  ['https://a.test/con\ttrol', 'https://a.test/control'],
+  ['https://A.test:443/%7e?q=%2f#tag', 'https://A.test:443/%7e?q=%2f#tag'],
+])('uses a safe lease URL for %j without normalizing clean identity', async (picture, expected) => {
+  const x = avatarFixture();
+  x.face(x.author(picture));
+  await settleAvatars();
+  expect(x.wants().map((m) => m.url)).toEqual([expected]);
+});
+
+it.each([true, false])(
+  'releases a frozen source after shared load listeners, drawable=%s',
+  async (drawable) => {
+    const x = avatarFixture();
+    x.motion(true);
+    const images = vi.spyOn(document, 'createElement');
+    const drawImage = vi.fn();
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(
+      drawable ? ({ drawImage } as unknown as CanvasRenderingContext2D) : null,
+    );
+    const url = 'https://a.test/shared-freeze';
+    const first = x.face(x.author(url));
+    const second = x.face(x.author(url));
+    await settleAvatars();
+    x.reply(x.wants()[0]!.req, { status: 'fallback', uniform: false });
+    const made = images.mock.results
+      .map((r) => r.value)
+      .filter((node): node is HTMLImageElement => node instanceof HTMLImageElement);
+    expect(made).toHaveLength(2);
+    const [owner, waiter] = made as [HTMLImageElement, HTMLImageElement];
+    expect(owner.getAttribute('src')).toBe(url);
+    expect(waiter.hasAttribute('src')).toBe(false);
+    const removeSource = vi.spyOn(owner, 'removeAttribute');
+    Object.defineProperties(owner, { naturalWidth: { value: 800 }, naturalHeight: { value: 600 } });
+    owner.dispatchEvent(new Event('load'));
+    expect(owner.getAttribute('src')).toBe(url);
+    expect(waiter.getAttribute('src')).toBe(url);
+    expect(drawImage).toHaveBeenCalledTimes(drawable ? 1 : 0);
+    expect(!!first.querySelector('canvas')).toBe(drawable);
+    expect(second.querySelector('canvas')).toBeNull();
+    await settleAvatars();
+    expect(owner.hasAttribute('src')).toBe(false);
+    expect(removeSource.mock.calls.filter(([name]) => name === 'src')).toHaveLength(1);
+    x.owner.dispose();
+    // Disposal no longer holds or invokes the completed native image release.
+    expect(removeSource.mock.calls.filter(([name]) => name === 'src')).toHaveLength(1);
+  },
+);
