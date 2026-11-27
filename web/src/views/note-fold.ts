@@ -24,8 +24,8 @@ export function createNoteBody(
 }
 
 const bodyOf = (el: HTMLElement): HTMLElement | null =>
-  el.querySelector<HTMLElement>('.content[data-fold]:not([data-unfolded])');
-const moreOf = (body: HTMLElement): HTMLButtonElement | null =>
+  el.querySelector<HTMLElement>('.content[data-fold]');
+const toggleOf = (body: HTMLElement): HTMLButtonElement | null =>
   body.parentElement?.querySelector<HTMLButtonElement>(':scope > .fold') ?? null;
 
 /** The body keeps its natural scroll height when clipped, including the reserved media boxes. */
@@ -39,8 +39,9 @@ function measure(body: HTMLElement): Fold | undefined {
   const bounds = body.getBoundingClientRect();
   const naturalHeight = body.classList.contains('folded') ? body.scrollHeight : bounds.height;
   if (!(bounds.width > 0 && Math.round(naturalHeight) > Math.round(height))) return;
-  const bottom = bounds.top + height;
   const hiddenControls = new Set<HTMLElement>();
+  if (body.hasAttribute('data-unfolded')) return { height, hiddenControls };
+  const bottom = bounds.top + height;
   for (const control of body.querySelectorAll<HTMLElement>(
     'a, button, [tabindex], audio[controls], video[controls]',
   )) {
@@ -50,33 +51,44 @@ function measure(body: HTMLElement): Fold | undefined {
 }
 
 function apply(body: HTMLElement, fit: Fold | undefined): void {
-  const more = moreOf(body);
+  const button = toggleOf(body);
+  const expanded = body.hasAttribute('data-unfolded');
+  const folded = fit && !expanded;
   for (const control of body.querySelectorAll<HTMLElement>('[inert]'))
     if (!fit?.hiddenControls.has(control)) control.inert = false;
   for (const control of fit?.hiddenControls ?? []) if (!control.inert) control.inert = true;
-  body.classList.toggle('folded', fit !== undefined);
+  body.classList.toggle('folded', Boolean(folded));
+  if (folded) body.style.setProperty('--fold-height', `${fit.height}px`);
+  else body.style.removeProperty('--fold-height');
   if (!fit) {
-    body.style.removeProperty('--fold-height');
-    if (more && document.activeElement === more) {
-      body.tabIndex = -1;
-      body.focus({ preventScroll: true });
-    }
-    more?.remove();
+    if (button && document.activeElement === button) focusBody(body);
+    button?.remove();
     return;
   }
-  body.style.setProperty('--fold-height', `${fit.height}px`);
-  if (more) return;
-  const button = h('button', { class: 'fold', type: 'button' }, t('note.more'));
-  button.addEventListener('click', (e) => {
+  const toggle = button ?? h('button', { class: 'fold', type: 'button' });
+  if (toggle.getAttribute('aria-expanded') !== String(expanded)) {
+    toggle.setAttribute('aria-expanded', String(expanded));
+    toggle.textContent = t(expanded ? 'note.less' : 'note.more');
+  }
+  if (button) return;
+  toggle.addEventListener('click', (e) => {
     e.stopPropagation();
+    const unfolded = !body.hasAttribute('data-unfolded');
     const { instance, note } = body.closest<HTMLElement>('[data-note]')?.dataset ?? {};
-    if (instance && note) writeNoteState(instance, note, { unfolded: true });
-    body.dataset.unfolded = '';
-    body.querySelector(':scope > .text')?.classList.add('open');
-    apply(body, undefined);
+    if (instance && note) writeNoteState(instance, note, { unfolded });
+    body.toggleAttribute('data-unfolded', unfolded);
+    body.querySelector(':scope > .text')?.classList.toggle('open', unfolded);
+    apply(body, measure(body));
+    if (unfolded && document.activeElement === toggle) focusBody(body);
+    if (!unfolded && toggle.isConnected) toggle.scrollIntoView({ block: 'nearest' });
     body.dispatchEvent(new Event('note-content-changed', { bubbles: true }));
   });
-  body.after(button);
+  body.after(toggle);
+}
+
+function focusBody(body: HTMLElement): void {
+  body.tabIndex = -1;
+  body.focus({ preventScroll: true });
 }
 
 /** Read each batch before changing its height, where a scrollbar cannot change the line width. */

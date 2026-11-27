@@ -26,7 +26,7 @@ async function sample(page) {
       const body = row.querySelector('.content');
       const { height, top } = body.getBoundingClientRect();
       return {
-        fold: !!row.querySelector('.fold'),
+        fold: row.querySelector('.fold')?.getAttribute('aria-expanded') ?? null,
         height,
         top,
         natural: body.scrollHeight,
@@ -52,7 +52,7 @@ export async function checkNoteBodies(page) {
       const pending = await sample(page);
       assert.deepEqual(
         pending.map((item) => item.fold),
-        [true, false, true],
+        ['false', null, 'false'],
       );
       assert.equal(pending[0].images.length, 4);
       assert(
@@ -71,21 +71,28 @@ export async function checkNoteBodies(page) {
       assert.equal(loaded[1].top, pending[1].top);
 
       const note = page.locator('.list > .note').first();
-      const more = note.locator('.fold');
+      const toggle = note.locator('.fold');
       await page.locator('.view').evaluate((view) => {
         view.style.height = '450px';
         view.scrollTop = 100;
       });
       const [before] = await sample(page);
-      await more.click();
+      await toggle.click();
       await page.evaluate(() => globalThis.noteLayout.repeat());
       const [after] = await sample(page);
       assert.equal(after.top, before.top);
-      assert.equal(after.fold, false);
+      assert.equal(after.fold, 'true');
+      assert.equal(await toggle.textContent(), 'Show less');
       assert.equal(after.height, after.natural);
       assert(after.height > before.height);
       assert.equal(await note.locator('.mbox[inert]').count(), 0);
-      result.push({ width, pending, loaded, before, after });
+      await toggle.click();
+      await page.evaluate(() => globalThis.noteLayout.remountNotes());
+      const [collapsed] = await sample(page);
+      assert.equal(collapsed.fold, 'false');
+      assert.equal(collapsed.height, pending[0].height);
+      assert.equal(await toggle.textContent(), 'Show more');
+      result.push({ width, pending, loaded, before, after, collapsed });
     } finally {
       release();
       await page.unroute(foldImagePattern, respond);

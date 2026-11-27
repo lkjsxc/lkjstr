@@ -102,6 +102,7 @@ export const en = {
   'note.cw': 'Content warning: {reason}',
   'note.show': 'Show',
   'note.more': 'Show more',
+  'note.less': 'Show less',
   'note.bot': 'bot',
   'note.via': 'via {name}',
   'note.viaLabel': 'Written with {name}',

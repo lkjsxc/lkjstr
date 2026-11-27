@@ -104,6 +104,7 @@ export const ja: Record<keyof typeof en, string> = {
   'note.cw': '閲覧注意：{reason}',
   'note.show': '表示する',
   'note.more': '続きを読む',
+  'note.less': '折りたたむ',
   'note.bot': 'ボット',
   'note.via': '{name}から',
   'note.viaLabel': '{name}で書かれました',

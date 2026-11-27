@@ -51,7 +51,7 @@
 .text { white-space: pre-wrap; }
 .content[data-fold] { display: flow-root; }
 /* A folded body fades out over its last lines (a mask, so it works on any row, quote or selection tint) and a quiet
-   centred pill opens it below. Both exist only while note-fold.ts finds the body taller than its limit. */
+   centred pill expands or collapses it when note-fold.ts finds the body taller than its limit. */
 .content.folded { max-height: var(--fold-height); overflow: clip; -webkit-mask-image: linear-gradient(#000 max(50%, calc(100% - 3em)), transparent); mask-image: linear-gradient(#000 max(50%, calc(100% - 3em)), transparent); }
 .lnk { display: inline; padding: 0; color: var(--accent); text-align: left; }
 .lnk:hover { text-decoration: underline; }
@@ -83,7 +83,10 @@
 .quote.muted { cursor: default; font-size: 12.5px; }
 .quote.qloading { min-height: 4lh; }
 .qhead { display: flex; align-items: center; gap: 6px; min-width: 0; font-size: 13px; }
-.qtext { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 6; overflow: hidden; white-space: pre-wrap; }
+.qtext { max-height: 6lh; overflow: clip; white-space: pre-wrap; }
+/* The gradient is sized to the full text. At six lines or less its first stop is below the text;
+    each overflowing line moves it up, with up to three lines of fade inside the clipped box. */
+.qtext > div { --quote-fade: linear-gradient(#000 max(3lh, calc(24lh - 300%)), transparent 6lh); -webkit-mask-image: var(--quote-fade); mask-image: var(--quote-fade); }
 .qmedia { display: flex; align-items: center; gap: 4px; font-size: 12px; }
 .chips { display: flex; flex-wrap: wrap; gap: 4px; margin: 2px 0 5px; }
 .rchip { display: inline-flex; align-items: center; gap: 4px; height: 24px; padding: 0 8px; border: 1px solid var(--line); border-radius: 12px; color: var(--muted); font-size: 12.5px; font-variant-numeric: tabular-nums; }

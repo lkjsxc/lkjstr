@@ -87,6 +87,10 @@ const snapshot = async () => {
   };
 };
 const repeat = (): void => drawn?.draw(rows);
+const remountNotes = (): void => {
+  drawn?.clear();
+  draw();
+};
 const unfold = (): void => list.querySelector<HTMLButtonElement>('.fold')?.click();
 const counts = (): void => {
   rows = rows.map((row) => ({ ...row, counts: { ...row.counts, replies: 8 } }));
@@ -187,6 +191,7 @@ Object.assign(globalThis, {
     draw,
     snapshot,
     repeat,
+    remountNotes,
     unfold,
     counts,
     boundary,

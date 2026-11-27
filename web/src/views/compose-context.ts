@@ -68,7 +68,7 @@ export function quotedCard(q: Quoted | undefined, env: ViewEnv, clear: () => voi
     q.cw !== undefined
       ? h('div', { class: 'muted' }, t('note.cw', { reason: q.cw }))
       : q.text
-        ? h('div', { class: 'qtext' }, q.text)
+        ? h('div', { class: 'qtext' }, h('div', null, q.text))
         : null,
     q.cw === undefined && q.media
       ? h('div', { class: 'muted qmedia' }, icon('image'), String(q.media))

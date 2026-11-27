@@ -21,7 +21,8 @@ export async function notesChecks(
   if (await row.locator(':scope > .lnk').count()) await row.locator(':scope > .lnk').click();
   await row.locator('.cw').first().click();
   // The real fixture is long; the mock warning fixture may have a short body.
-  if (await row.locator('.fold').count()) await row.locator('.fold').click();
+  const showMore = row.locator('.fold[aria-expanded="false"]');
+  if (await showMore.count()) await showMore.click();
   if (id) {
     await row.locator('.link-card:not(.loading)').waitFor();
     check(
@@ -81,7 +82,8 @@ export async function notesChecks(
   await row.locator('.content').waitFor();
   check(
     'reader: reload preserves the reveal and unfolded text',
-    (await row.locator('.fold').count()) === 0,
+    (await row.locator('.content.folded').count()) === 0 &&
+      (!id || (await row.locator('.fold[aria-expanded="true"]').count()) === 1),
   );
   // Closing/reopening saves the entire tab state, including reader state.
   await page.locator(view).evaluate((el) => (el as HTMLElement).focus());

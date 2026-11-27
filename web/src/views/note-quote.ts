@@ -25,7 +25,9 @@ export function quoteCard(q: Quote, env: ViewEnv, noteId: string): HTMLElement {
     return h(
       'div',
       { 'data-previews': settings.linkPreviews && q.previews?.length ? q.id : null },
-      q.segments.length ? h('div', { class: 'qtext' }, segments(q.segments, env, true)) : null,
+      q.segments.length
+        ? h('div', { class: 'qtext' }, h('div', null, segments(q.segments, env, true)))
+        : null,
       mediaGrid(q.media, env, title, q.id),
       settings.linkPreviews ? linkCards(q.previews) : null,
       next === noteId || next === q.id
