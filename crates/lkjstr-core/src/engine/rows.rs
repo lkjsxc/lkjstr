@@ -193,7 +193,7 @@ pub(super) fn row_with_query(
             .filter(|id| {
                 store.get(id).is_none_or(|e| {
                     crate::kinds::policy(e.kind).openable
-                        && super::visibility::reason(store, query, &e, private).is_none()
+                        && super::query_hidden::their_reason(store, query, &e).is_none()
                 })
             })
             .map(|id| Context {

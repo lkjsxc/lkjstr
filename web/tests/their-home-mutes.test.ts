@@ -76,7 +76,8 @@ describe.each(['en', 'ja'] as const)('Their Home mute disclosure in %s', (lang) 
         env,
         false,
       );
-      expect(el.textContent).toContain(lang === 'en' ? 'this account' : 'このユーザー');
+      const ownerCopy = lang === 'en' ? 'this Home’s owner' : 'このホームの持ち主';
+      expect(el.textContent).toContain(ownerCopy);
       expect(el.textContent).not.toContain('must not be painted');
       expect(el.querySelector('.av, img, .text')).toBeNull();
       el.querySelector<HTMLButtonElement>('.hline button')?.click();
@@ -92,9 +93,7 @@ describe.each(['en', 'ja'] as const)('Their Home mute disclosure in %s', (lang) 
         env,
         false,
       );
-      expect(shown.querySelector('.hshown')?.textContent).toContain(
-        lang === 'en' ? 'this account' : 'このユーザー',
-      );
+      expect(shown.querySelector('.hshown')?.textContent).toContain(ownerCopy);
       shown.querySelector<HTMLButtonElement>('.hshown button')?.click();
       expect(reveal).toHaveBeenLastCalledWith(shown, row.key, false);
       const quoted = quoteCard(
@@ -102,7 +101,7 @@ describe.each(['en', 'ja'] as const)('Their Home mute disclosure in %s', (lang) 
         env,
         'outer',
       );
-      expect(quoted.textContent).toContain(lang === 'en' ? 'this account' : 'このユーザー');
+      expect(quoted.textContent).toContain(ownerCopy);
     },
   );
 });

@@ -20,10 +20,10 @@ and plain facts when it cannot. Content warnings stay ordinary rows. Index and r
 | `muted-thread` | In a thread you muted. | yes |
 | `muted-word` | Has a word you muted. | yes |
 | `muted-hashtag` | Has a hashtag you muted. | yes |
-| `their-muted-person` | From someone this account muted. | yes |
-| `their-muted-thread` | In a thread this account muted. | yes |
-| `their-muted-word` | Has a word this account muted. | yes |
-| `their-muted-hashtag` | Has a hashtag this account muted. | yes |
+| `their-muted-person` | From someone this Home's owner muted. | yes |
+| `their-muted-thread` | In a thread this Home's owner muted. | yes |
+| `their-muted-word` | Has a word this Home's owner muted. | yes |
+| `their-muted-hashtag` | Has a hashtag this Home's owner muted. | yes |
 | `repeated-content` | Repeats a note already shown. | yes |
 | `author-limit` | One of many notes from this person in this list. | yes |
 | `machine-payload` | Looks like machine data, not a post. | yes |
