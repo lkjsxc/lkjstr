@@ -43,8 +43,8 @@ The sticky holder moves with its view when the WM reparents tiles. Width
 is reserved before marks arrive: 56px at 520px tile width, otherwise 16px.
 Chronological rail views reserve this width from the first frame, including
 an empty view waiting for its first notes. The empty track stays visible and
-gains marks and a grip as the rows arrive. Narrow year labels appear over content on hover or hold. Touch has a
-28px hit area. The grip pill appears with the first dated row, even while the
+gains marks and a grip as the rows arrive. Narrow year labels appear over content on hover or hold. The grip has a
+44px-wide touch target. The grip pill appears with the first dated row, even while the
 list fits in the tile. The same vertical inset seats marks, the grip and pointer
 targets, with 4px of room beyond the grip at both ends. Hover and hold highlight it,
 and it follows the held pointer (interface-time.md C3). A jump leaves a thin return tick. The rail is

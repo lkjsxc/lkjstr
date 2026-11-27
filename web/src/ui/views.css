@@ -142,13 +142,10 @@
 .time-rail.held { cursor: grabbing; }
 .time-rail[hidden], .time-return[hidden] { display: none; }
 /* A tile of 520px or more has the wide rail with its labels, decided by CSS so the first frame already has it. */
-.time-rail::before { content: ""; position: absolute; inset: 0; }
-@media (pointer: coarse) { .time-rail::before { left: -12px; } }
 @container pane (min-width: 520px) {
   .feed.has-time-rail { --rail-size: 56px; }
   .time-rail { width: 56px; }
   .time-rail .time-label { opacity: 1; }
-  .time-rail::before { left: 0; } /* the whole 56px is the target */
 }
 .time-marks, .time-lens { position: absolute; top: var(--time-inset); bottom: var(--time-inset); right: 0; left: -40px; pointer-events: none; }
 .time-dot { position: absolute; right: 6.5px; width: 3px; height: 3px; border-radius: 50%; background: var(--faint); transform: translateY(-50%); pointer-events: none; }
@@ -168,6 +165,11 @@
 .time-hover[hidden] { display: none; }
 /* The grip stays in the rightmost 16px on both rail widths. */
 .time-grip { position: absolute; right: 5px; width: 6px; height: 32px; border-radius: 3px; background: var(--accent); opacity: 0.8; transform: translateY(-50%); pointer-events: none; }
+.time-grip-target { display: none; }
+/* Only the grip extends into the list so swipes next to the rest of the rail still scroll the feed. */
+@media (pointer: coarse) {
+  .time-grip-target { display: block; position: absolute; top: -6px; right: -5px; width: 44px; height: 44px; pointer-events: auto; touch-action: none; }
+}
 .time-rail:hover .time-grip, .time-rail.held .time-grip { opacity: 1; }
 .time-return { position: absolute; right: 2px; width: 12px; height: 2px; border-radius: 1px; background: var(--accent); transform: translateY(-50%); }
 .time-return::before { content: ""; position: absolute; inset: -8px -2px -8px -5px; }

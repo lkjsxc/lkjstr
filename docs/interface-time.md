@@ -75,8 +75,8 @@ Finer labels are 9px and quieter. A smaller tick can show the next unit when the
   The time fades after one second of idle hover. Leaving the rail removes both. The line stays with a held mouse.
 - **Held.** Within 48px of the pointer a short second column shows the next finer available unit. It follows
   the pointer and leaves the held time label in place. Snapping uses the resting labels.
-- **Narrow rail (under 520px).** Years show over the content on hover or hold, with dots at month starts
-  and a 28px touch area. Holding opens the same finer column.
+- **Narrow rail (under 520px).** Years show over the content on hover or hold, with dots at month starts.
+  Holding opens the same finer column.
 
 ## C3 Jumps and loading
 
@@ -104,8 +104,9 @@ Mouse, pen and touch share one path: pointer events on the rail, with capture.
   meantime), the keeper lands on the nearest row and the label tells that row's time. If exact counts become
   unavailable mid-drag, the ordinal hold ends at the current row and the rail continues with loaded rows.
   Without `days` and with the target not loaded, the label waits for the row.
-- **Touch.** The whole 56px rail is the target on wide tiles. On narrow ones the 16px rail plus 12px to its left is
-  the target (today's 28px). A touch grabs at once, because the rail sets `touch-action: none`. While a coarse
+- **Touch.** The whole rail accepts touch. The grip has a 44px-wide target that extends into the feed on narrow
+  tiles, so a swipe beside the rest of the rail scrolls the feed. The rail and grip accept a touch drag at once
+  with `touch-action: none` and pointer capture. While a coarse
   pointer holds the rail, the label's right edge moves 24px left of the rail, so the thumb does not cover it. A tap
   is a press. An accidental jump is undone with the return tick, as every wrong press can be.
 - **Keyboard** (the tile has the keys, no field is being typed in, no popover is open, no Alt or Meta). These are new

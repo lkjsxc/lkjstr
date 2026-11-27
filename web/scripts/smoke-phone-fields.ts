@@ -6,6 +6,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { devices, type Page, webkit } from 'playwright-core';
 import { checkKeyboardRecovery } from './smoke-phone-keyboard.ts';
+import { checkPhoneRail } from './smoke-phone-rail.ts';
 
 const phone = devices['iPhone 13'];
 const shots = process.env.LKJSTR_PHONE_SHOTS;
@@ -113,6 +114,7 @@ async function checkPhone(page: Page, base: string, press: 'click' | 'tap') {
   const check = (scene: string, scope: string) =>
     checkFields(page, `${scope} :is(${FIELD})`, press, scene);
 
+  if (press === 'tap') await checkPhoneRail(page);
   await home.locator('.rtoggle')[press]();
   await page.locator('.pdays input').first().waitFor();
   await check('home-filter', '.view[data-kind="home"]');
@@ -197,7 +199,7 @@ try {
         await context.close();
       }
     }
-    console.log('ok smoke phone fields (WebKit iPhone 13)');
+    console.log('ok smoke phone fields and rail (WebKit iPhone 13)');
   } finally {
     await browser.close();
   }

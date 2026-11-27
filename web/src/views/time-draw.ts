@@ -10,7 +10,7 @@ export function createTimeRailNodes(el: HTMLElement) {
   const rail = h('div', { class: 'time-rail', hidden: true, 'aria-hidden': 'true' });
   const marks = h('div', { class: 'time-marks' });
   const lens = h('div', { class: 'time-lens' });
-  const grip = h('div', { class: 'time-grip' });
+  const grip = h('div', { class: 'time-grip' }, h('div', { class: 'time-grip-target' }));
   const hoverLine = h('div', { class: 'time-hover', hidden: true });
   const tick = h('div', { class: 'time-return', hidden: true });
   const label = h('div', { class: 'scrub', hidden: true });
