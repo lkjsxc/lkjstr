@@ -8,6 +8,13 @@ pub enum TickPhase {
     Render,
 }
 impl Engine {
+    /// Whether another ordinary verification slice can make immediate progress.
+    pub fn verification_ready(&self) -> bool {
+        self.queue.front().is_some_and(|entry| {
+            !self.store.pressure_admission_paused() && self.pending.can_admit(&entry.event)
+        })
+    }
+
     fn pressure_control(&mut self) -> Option<usize> {
         let count = self.queue.len();
         if count == 0 {

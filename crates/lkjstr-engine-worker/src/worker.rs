@@ -182,11 +182,20 @@ fn post(host: &Host, out: &Output) {
     host.scope.post(out, &host.engine, &host.sessions);
 }
 fn schedule(host: &Rc<RefCell<Host>>) {
-    if host.borrow().stopped {
-        return;
-    }
+    let delay_ms = {
+        let host = host.borrow();
+        if host.stopped {
+            return;
+        }
+        // Yield between 32-event slices so commands and socket callbacks can run.
+        if host.engine.verification_ready() {
+            4
+        } else {
+            25
+        }
+    };
     let weak = Rc::downgrade(host);
-    let timer = Timer::after(25, move || {
+    let timer = Timer::after(delay_ms, move || {
         if let Some(h) = weak.upgrade() {
             {
                 let mut h = h.borrow_mut();

@@ -44,3 +44,7 @@ codegen-units = 1
 # SHA-256 receipt validation is a measured Worker startup hot path.
 [profile.release.package.sha2]
 opt-level = 3
+
+# Optimize the Worker's BIP-340 hot path while keeping the rest size-optimized.
+[profile.release.package.k256]
+opt-level = 3

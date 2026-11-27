@@ -23,6 +23,7 @@ fn verified_compact_control_crosses_a_resident_proof_floor_behind_ordinary_ingre
         .expect("signed control")
     };
     let mut engine = Engine::new();
+    assert!(!engine.verification_ready());
     engine.store = Store::with_caps(4, 4).weight_retention();
     for (i, target) in targets.iter().enumerate() {
         engine.store.insert_deferred(
@@ -45,6 +46,7 @@ fn verified_compact_control_crosses_a_resident_proof_floor_behind_ordinary_ingre
     }
     let replacement = sign(10, targets, String::new());
     engine.enqueue("test".into(), replacement.clone());
+    assert!(!engine.verification_ready());
     engine.tick(20_000);
     assert_eq!(engine.verified, 0);
     engine.tick(20_100);
@@ -56,5 +58,6 @@ fn verified_compact_control_crosses_a_resident_proof_floor_behind_ordinary_ingre
     );
     assert!(engine.store.lease(&replacement.id).is_some());
     assert!(!engine.store.pressure_admission_paused());
+    assert!(engine.verification_ready());
     assert_eq!(engine.pending.len(), 1);
 }

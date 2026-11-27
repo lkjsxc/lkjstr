@@ -24,8 +24,25 @@ substantial run-ahead, but does not retroactively prove the earlier loss cause.
 Native tests establish the independent defect: raw EOSE allowed both automatic
 refill and an explicit Window to advance while the current page was still in
 the verification queue. A separately forced queue rejection could nevertheless
-make that page appear exhausted. The queue holds at most 4096 events or 8 MiB;
-verification consumes at most 32 per engine tick. Additional pages must wait.
+make that page appear exhausted. The queue holds at most 4096 events or 32 MiB.
+Verification consumes at most 32 per engine tick. The Worker requests a 4 ms
+timer between slices when the head can enter persistence and resident pressure
+permits admission. Empty and blocked queues use the 25 ms timer. Additional
+pages wait for pending verification.
+
+The engine runtime maintainer measures signature throughput and relay-to-store
+drain time separately. A replay with exact copies exercises deduplication, while
+distinct signed events exercise the verifier. For compiler and backend changes,
+compare the production WASM's compressed size under the same build profile.
+
+A 5,000-note kind-1 replay from `9fe85aa4` on Ryzen 9 9955HX measured
+warm BIP-340 throughput of 6,075 to 9,306 checks/s in Chromium 153 and
+4,708 to 6,075 in Linux WebKit 27.2 with its iPhone 15 preset. The production
+WASM gzip grew by 14,516 bytes with the k256 release profile change.
+With the faster backlog timer too, the median time to verify a loopback
+5,000-note burst went from 13.62 to 11.89 s in Chromium and from 11.24 to
+7.75 s in WebKit. Each comparison used two paired runs. IndexedDB held all
+5,000 valid notes with zero queue drops.
 
 ## State and release rules
 

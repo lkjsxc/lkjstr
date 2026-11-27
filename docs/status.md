@@ -53,9 +53,9 @@ Full historical predecessors now retain their ordinary route slot at an inclusiv
 Native and Worker route checks passed ([history route](engine-history-route.md)). Visitor Global falls back to older matching notes.
 
 Recovering relays retain their missing span without displacing healthy live fallbacks. History waits for verification; queue loss revokes completion
-and retries the unchanged span with bounded backoff. See [engine-verification-pressure.md](engine-verification-pressure.md). Indexed retained-row
-diffs acquire and store all 5,000 loopback notes. Thread ancestors precede the focus despite timestamp ties or clock skew. The preceding landing
-passed required gates and 338 real Worker checks; [engine-lifetime-verification.md](engine-lifetime-verification.md) records limits.
+and retries the unchanged span with bounded backoff. [Verification](engine-verification-pressure.md) uses speed-optimized k256 and drains ready backlog
+in 4 ms timer intervals. Indexed retained-row diffs acquire and store all 5,000 loopback notes. Thread ancestors precede the focus despite timestamp
+ties or clock skew. The preceding landing passed 338 real Worker checks and the [required gates](engine-lifetime-verification.md).
 
 ## Engine stream (2026-11-16)
 
