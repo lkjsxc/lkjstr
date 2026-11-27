@@ -38,7 +38,20 @@ export async function uploadReview({ page, send, wait, check, note, signer, line
     }), { req, account: note.pubkey, server, bytes });
     return req;
   };
-  const clock = (ms) => send({ t: 'test.uploadClock', ms });
+  // Advance only the deadline lane; await application before releasing HTTP.
+  const clock = (ms) => page.evaluate(ms => new Promise((resolve, reject) => {
+    const { port1, port2 } = new MessageChannel();
+    const timer = setTimeout(() => {
+      port1.close();
+      reject(new Error('upload deadline clock did not answer'));
+    }, 5000);
+    port1.onmessage = () => {
+      clearTimeout(timer);
+      port1.close();
+      resolve();
+    };
+    window.worker.postMessage({ t: 'test.uploadClock', ms }, [port2]);
+  }), ms);
   const handler = async (route) => {
     const url = new URL(route.request().url());
     const method = route.request().method();
@@ -115,7 +128,11 @@ export async function uploadReview({ page, send, wait, check, note, signer, line
       await answer(signing);
       if (stage === 'processing') await answer(await nextSign());
       let late;
-      if (stage === 'signer') late = await nextSign(); // Fallback signing gets only the remaining budget.
+      if (stage === 'signer') {
+        late = await nextSign(); // Fallback signing gets only the remaining budget.
+        check('review deadline advance leaves signer epoch on the real clock',
+          Number.isSafeInteger(late.expiresAt) && late.expiresAt <= Date.now() + 10_000);
+      }
       const timeout = await result(req);
       const attempted = requests.slice(firstRequest);
       const reached = stage === 'discovery' ? attempted.some(r => r.url.endsWith('nip96.json'))
@@ -129,11 +146,9 @@ export async function uploadReview({ page, send, wait, check, note, signer, line
         await page.waitForTimeout(100);
         check('review late signer reply cannot upload after deadline', requests.length === count);
       }
-      await clock(0);
       for (const route of held.splice(0)) await route.abort().catch(() => {});
     }
   } finally {
-    await clock(0);
     for (const route of held) await route.abort().catch(() => {});
     await page.context().unroute('https://upload-review-*.test/**', handler);
     await save(['https://media.engine.test']);

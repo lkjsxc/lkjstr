@@ -3,9 +3,8 @@ import { setTimeout as delay } from 'node:timers/promises';
 // Serve Worker code directly: fulfilled Worker scripts reject sockets in this test runtime.
 const boot = `
 import init, { start } from './lkjstr_engine.js';
-let uploadClock = 0;
-const realNow = performance.now.bind(performance);
-Object.defineProperty(performance, 'now', { value: () => realNow() + uploadClock });
+let deadlineOffset = 0;
+Object.defineProperty(self, '__lkjstrTestDeadlineOffsetMs', { get: () => deadlineOffset });
 const queued = [];
 self.onmessage = event => queued.push(event);
 await init();
@@ -13,7 +12,13 @@ self.engineHandle = start();
 const input = self.onmessage;
 self.onmessage = event => {
   const { data } = event;
-  if (data.t === 'test.uploadClock') uploadClock = data.ms;
+  if (data.t === 'test.uploadClock') {
+    if (!Number.isSafeInteger(data.ms) || data.ms < 0) throw new Error('invalid deadline advance');
+    deadlineOffset += data.ms;
+    const [reply] = event.ports;
+    reply.postMessage(true);
+    reply.close();
+  }
   else if (data.t === 'test.advance') self.engineHandle.advance_time(data.ms);
   else if (data.t === 'test.relays') self.engineHandle.set_test_relays(data.relays);
   else if (data.t === 'test.ticks') {

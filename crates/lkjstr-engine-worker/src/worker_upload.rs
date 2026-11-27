@@ -14,8 +14,19 @@ mod http;
 pub(super) mod input;
 #[path = "worker_upload_sign.rs"]
 pub(in crate::worker) mod signing;
+// The harness supplies an offset for deadline arithmetic only. The ordinary
+// monotonic and epoch clocks must stay real for the Worker scheduler and relays.
 pub(super) fn clock() -> u64 {
-    crate::measure::now() as u64
+    let now = crate::measure::now() as u64;
+    #[cfg(feature = "harness")]
+    let now = now.saturating_add(
+        js_sys::Reflect::get(&js_sys::global(), &"__lkjstrTestDeadlineOffsetMs".into())
+            .ok()
+            .and_then(|offset| offset.as_f64())
+            .filter(|offset| offset.is_finite() && *offset >= 0.0)
+            .unwrap_or(0.0) as u64,
+    );
+    now
 }
 pub(super) struct Task {
     pub id: u64,

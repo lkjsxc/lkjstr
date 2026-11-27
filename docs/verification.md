@@ -26,9 +26,9 @@ Each run uses fresh loopback ports, new local data and loopback TLS or intercept
 exact reload, one signature, hard refusal and discard. The engine gate covers [mentions](mention-verification.md) and [storage](storage-inspection.md).
 Ship builds and packages once. It sets `LKJSTR_SMOKE_DIST` to the extracted archive for `LKJSTR_SHOTS=1 pnpm smoke:served` ([receipts](engine-shipping.md)).
 
-The Worker harness validates replies against this worktree's protocol.ts and drives every mock message kind, action name and query source. It includes
-cache restart, signer validation, uploads, visibility release, shared clients, leader loss, hidden Worker turns and an idle clock. The cold-start benchmark
-is separate. Reports live under tmp/engine-harness/ and tmp/smoke-real/.
+The Worker harness checks protocol.ts and drives all mock message kinds, actions and query sources, including restart, signing, uploads,
+visibility, shared clients, leader loss and idle/hidden turns. Upload deadline probes use a separate monotonic harness clock, excluded from production.
+The cold-start benchmark is separate. Reports live under tmp/engine-harness/ and tmp/smoke-real/.
 
 ## Manual public sample
 
