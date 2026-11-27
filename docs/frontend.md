@@ -162,8 +162,8 @@ local index references and external scripts under the edge CSP. Network-path
 references are rejected for index links and all scripts, and base elements are
 rejected in every HTML file. Errors name the file.
 
-`pnpm shots` takes `--only=<width>-<theme>-<lang>` and `--scenes=home,thread`.
-`LKJSTR_CHROME=<path>` picks the browser for `smoke` and `shots`.
+`pnpm shots` takes `--only=<width>-<theme>-<lang>` and `--scenes=home,thread`; `LKJSTR_CHROME=<path>` picks the browser for `smoke` and `shots`.
+Each shots artifact (PNG, sheet HTML/JPEG) writes `<filename>.json` with the run's full git commit and dirty flag; keep it with the artifact.
 The frontend maintainer should verify native focus, keyboard dismissal and pinch on an iPhone for changes to the mobile viewport. Playwright's iPhone WebKit
 checks field sizes and focus scale, and supplies keyboard viewport readings to exercise recovery. Its Linux runner has no native iOS keyboard.
 Finish a change with `pnpm check`, `pnpm build` and `pnpm smoke`.

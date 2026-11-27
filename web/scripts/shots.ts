@@ -1,6 +1,4 @@
-// Screenshots of the mock build for judging the look: ../tmp/screens/<name>-<width>-<theme>-<lang>.png.
-// Scenes: home, tiles (maximized, collapsed), quote (with a warning), profile, profile editing, thread, notifications, compose (with the emoji picker), media, settings, relays, relay, accounts,
-// and a visitor's first run and sign-in (nobody signed in).
+// Mock captures: ../tmp/screens/<name>-<width>-<theme>-<lang>.png.
 // node scripts/shots.ts [--only=<width>-<theme>-<lang>] [--scenes=home,thread]
 import { spawn } from 'node:child_process';
 import { mkdirSync } from 'node:fs';
@@ -16,6 +14,7 @@ import { genericShots } from './shots-generic.ts';
 import { keysShots } from './shots-keys.ts';
 import { looksShots } from './shots-looks.ts';
 import { profileEditShots } from './shots-profile-edit.ts';
+import { createShotWriter } from './shots-provenance.ts';
 import { quoteShots } from './shots-quote.ts';
 import { openRelay } from './shots-relay.ts';
 import { sendingShots } from './shots-sending.ts';
@@ -38,7 +37,8 @@ const scenes = process.argv
   ?.slice(9)
   .split(',');
 const failed: string[] = [];
-const accountFailureShots = createAccountFailureShots();
+const shot = createShotWriter(here);
+const accountFailureShots = createAccountFailureShots(shot);
 const SIZES = [
   [1440, 900],
   [1024, 768],
@@ -113,13 +113,13 @@ try {
             await page.waitForSelector(name.startsWith('site-') ? 'article h1' : '.note');
             await act(page);
             await page.waitForTimeout(350); // pictures and fonts
-            await page.screenshot({
+            await shot.screenshot(page, {
               path: name.startsWith('site-')
                 ? `${here}../tmp/shots/${name}-${width}-${lang}.png`
                 : `${out}/${name}-${tag}.png`,
             });
             if ((name === 'tabsearch' || name.startsWith('looks-')) && lang === 'en')
-              await page.screenshot({ path: `${out}/${name}-${width}-${theme}.png` });
+              await shot.screenshot(page, { path: `${out}/${name}-${width}-${theme}.png` });
           } catch (e) {
             if (process.env.LKJSTR_SHOTS_DEBUG) console.error(e);
             failed.push(`${name}-${tag}: ${String(e).split('\n')[0]}`);

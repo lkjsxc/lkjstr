@@ -3,6 +3,7 @@ import type { Browser, Page } from 'playwright-core';
 import { en } from '../src/shared/strings-en.ts';
 import { ja } from '../src/shared/strings-ja.ts';
 import { accountFailureSheet } from './shots-account-failure-sheet.ts';
+import type { ShotWriter } from './shots-provenance.ts';
 
 type Scene = (
   name: string,
@@ -62,7 +63,7 @@ async function showStatus(page: Page): Promise<void> {
   }
   throw new Error('existing Home failure status did not remain in its viewport');
 }
-export function createAccountFailureShots() {
+export function createAccountFailureShots(shot: ShotWriter) {
   const captures = new Map<string, string[]>();
   const remember = (tag: string, name: string): void => {
     captures.set(tag, [...(captures.get(tag) ?? []), name]);
@@ -122,7 +123,8 @@ export function createAccountFailureShots() {
       );
     },
     async sheet(browser: Browser, out: string): Promise<void> {
-      for (const [tag, names] of captures) await accountFailureSheet(browser, out, tag, names);
+      for (const [tag, names] of captures)
+        await accountFailureSheet(browser, out, tag, names, shot);
     },
   };
 }

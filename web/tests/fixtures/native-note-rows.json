@@ -1,0 +1,223 @@
+{
+  "covered": {
+    "at": 13000,
+    "author": {
+      "name": "1b84c5567b126440995d3ed5aaba0565d71e1834604819ff9c17f5e9d5dd078f",
+      "npub": "npub1rwzv24nmzfjypx2a8m264ws9vht3uxp5vpypnluuzl67n4waq78suk0wul",
+      "pubkey": "1b84c5567b126440995d3ed5aaba0565d71e1834604819ff9c17f5e9d5dd078f",
+      "verified": false
+    },
+    "bech32": "",
+    "counts": {
+      "partial": false,
+      "reactions": 0,
+      "replies": 0,
+      "reposts": 0,
+      "zaps": 0
+    },
+    "hidden": {
+      "reason": "machine-payload",
+      "revealable": true
+    },
+    "id": "08934148d304fd01daba16982d3899d7607f05861b64a5337ccd65d386541c1c",
+    "key": "08934148d304fd01daba16982d3899d7607f05861b64a5337ccd65d386541c1c",
+    "kind": "note",
+    "media": [],
+    "mine": {
+      "bookmarked": false,
+      "own": false,
+      "reposted": false
+    },
+    "quotes": [],
+    "reactions": [],
+    "segments": []
+  },
+  "generic": {
+    "at": 11000,
+    "author": {
+      "emoji": [],
+      "name": "1b84c5567b126440995d3ed5aaba0565d71e1834604819ff9c17f5e9d5dd078f",
+      "npub": "npub1rwzv24nmzfjypx2a8m264ws9vht3uxp5vpypnluuzl67n4waq78suk0wul",
+      "pubkey": "1b84c5567b126440995d3ed5aaba0565d71e1834604819ff9c17f5e9d5dd078f",
+      "verified": false
+    },
+    "bech32": "note1mwgqsdeny6nu3atcypqs07q0638jldkta3ffysl8mhdjcycyjv7qxhsuhu",
+    "copyLink": "/a/naddr1qqqqygqmsnz4v7cjv3qfjhf76k4t5pt96u0psdrqfqvll8qh7h5athg83upsgqqqwensrushp6",
+    "counts": {
+      "partial": false,
+      "reactions": 0,
+      "replies": 0,
+      "reposts": 0,
+      "zapAmountMsat": "0",
+      "zapLimited": false,
+      "zapState": "ready",
+      "zapUnverified": 0,
+      "zaps": 0
+    },
+    "eventKind": 30311,
+    "face": {
+      "alt": "Afternoon Nostr Meetup",
+      "form": "text",
+      "moreTags": 0,
+      "tags": [
+        {
+          "name": "alt",
+          "text": "Afternoon Nostr Meetup"
+        },
+        {
+          "meaning": "title",
+          "name": "title",
+          "text": "Afternoon Nostr Meetup"
+        },
+        {
+          "meaning": "topic",
+          "name": "t",
+          "ref": {
+            "tag": "nostr",
+            "type": "topic"
+          },
+          "text": "nostr"
+        },
+        {
+          "meaning": "person",
+          "name": "p",
+          "ref": {
+            "pubkey": "e029b24bd46df18a13ac35ce079029b24bdf68f18a13ace57e079029bd46df68",
+            "type": "person"
+          },
+          "text": "e029b24bd46df18a13ac35ce079029b24bdf68f18a13ace57e079029bd46df68"
+        },
+        {
+          "meaning": "link",
+          "name": "url",
+          "ref": {
+            "type": "link",
+            "url": "https://example.org/meetup"
+          },
+          "text": "https://example.org/meetup"
+        },
+        {
+          "name": "custom",
+          "text": "A long unknown raw item that is deliberately hidden behind a short ellipsis on narrow screens"
+        }
+      ],
+      "type": "generic"
+    },
+    "id": "db9008373326a7c8f578204107f80fd44f2fb6cbec529243e7dddb2c1304933c",
+    "key": "db9008373326a7c8f578204107f80fd44f2fb6cbec529243e7dddb2c1304933c",
+    "kind": "note",
+    "media": [],
+    "mine": {
+      "bookmarked": false,
+      "own": false,
+      "pinned": false,
+      "reposted": false
+    },
+    "quotes": [],
+    "reactions": [],
+    "segments": [
+      {
+        "k": "text",
+        "text": "Meet at the river after the talk. A public session with a short description."
+      }
+    ],
+    "shareEvent": "nevent1qqsdhyqgxuejdf7g74uzqsg8lq8agne0km97c55jg0namkevzvzfx0qzyqdcf32k0vfxgsyet5ldt246q4jaw8scx3sysx0lnstlt6w4m5rc7qcyqqq8vec9fq302"
+  },
+  "list": {
+    "at": 12000,
+    "author": {
+      "emoji": [],
+      "name": "1b84c5567b126440995d3ed5aaba0565d71e1834604819ff9c17f5e9d5dd078f",
+      "npub": "npub1rwzv24nmzfjypx2a8m264ws9vht3uxp5vpypnluuzl67n4waq78suk0wul",
+      "pubkey": "1b84c5567b126440995d3ed5aaba0565d71e1834604819ff9c17f5e9d5dd078f",
+      "verified": false
+    },
+    "bech32": "note19tjaqpmc7h5kq92utauz3yy42rj68myn3k07lh95p3j2l8sfmyrq2n02vs",
+    "copyLink": "/a/naddr1qq8kgetkv4kx7ur9wgkhgmm0d3esygqmsnz4v7cjv3qfjhf76k4t5pt96u0psdrqfqvll8qh7h5athg83upsgqqqw48q2cxuqd",
+    "counts": {
+      "partial": false,
+      "reactions": 0,
+      "replies": 0,
+      "reposts": 0,
+      "zapAmountMsat": "0",
+      "zapLimited": false,
+      "zapState": "ready",
+      "zapUnverified": 0,
+      "zaps": 0
+    },
+    "eventKind": 30030,
+    "face": {
+      "form": "text",
+      "moreTags": 0,
+      "tags": [
+        {
+          "meaning": "id",
+          "name": "d",
+          "text": "developer-tools"
+        }
+      ],
+      "type": "generic"
+    },
+    "id": "2ae5d00778f5e960155c5f7828909550e5a3ec938d9fefdcb40c64af9e09d906",
+    "key": "2ae5d00778f5e960155c5f7828909550e5a3ec938d9fefdcb40c64af9e09d906",
+    "kind": "note",
+    "media": [],
+    "mine": {
+      "bookmarked": false,
+      "own": false,
+      "pinned": false,
+      "reposted": false
+    },
+    "quotes": [],
+    "reactions": [],
+    "segments": [
+      {
+        "k": "text",
+        "text": "Public collection of developer tools"
+      }
+    ],
+    "shareEvent": "nevent1qqsz4ewsqau0t6tqz4w977pgjz24pedrajfcm8l0mj6qce90ncyajpszyqdcf32k0vfxgsyet5ldt246q4jaw8scx3sysx0lnstlt6w4m5rc7qcyqqq82nslfj8sr"
+  },
+  "standard": {
+    "at": 10000,
+    "author": {
+      "emoji": [],
+      "name": "1b84c5567b126440995d3ed5aaba0565d71e1834604819ff9c17f5e9d5dd078f",
+      "npub": "npub1rwzv24nmzfjypx2a8m264ws9vht3uxp5vpypnluuzl67n4waq78suk0wul",
+      "pubkey": "1b84c5567b126440995d3ed5aaba0565d71e1834604819ff9c17f5e9d5dd078f",
+      "verified": false
+    },
+    "bech32": "note13zytqnr2gyhzw60mhqlx65zsuk9ujp8hwd3du6dsvjkxd6c8kcusffrg56",
+    "copyLink": "/n/nevent1qqsg3z9sf34yzt38d8ams0nd2pgwtz7fqnmhxck7dxcxftrxavrmvwgzyqdcf32k0vfxgsyet5ldt246q4jaw8scx3sysx0lnstlt6w4m5rc7qcyqqqqqqgm79af3",
+    "counts": {
+      "partial": false,
+      "reactions": 0,
+      "replies": 0,
+      "reposts": 0,
+      "zapAmountMsat": "0",
+      "zapLimited": false,
+      "zapState": "ready",
+      "zapUnverified": 0,
+      "zaps": 0
+    },
+    "id": "8888b04c6a412e2769fbb83e6d5050e58bc904f77362de69b064ac66eb07b639",
+    "key": "8888b04c6a412e2769fbb83e6d5050e58bc904f77362de69b064ac66eb07b639",
+    "kind": "note",
+    "media": [],
+    "mine": {
+      "bookmarked": false,
+      "own": false,
+      "pinned": false,
+      "reposted": false
+    },
+    "quotes": [],
+    "reactions": [],
+    "segments": [
+      {
+        "k": "text",
+        "text": "Historical name fixture"
+      }
+    ],
+    "shareEvent": "nevent1qqsg3z9sf34yzt38d8ams0nd2pgwtz7fqnmhxck7dxcxftrxavrmvwgzyqdcf32k0vfxgsyet5ldt246q4jaw8scx3sysx0lnstlt6w4m5rc7qcyqqqqqqgm79af3"
+  }
+}
