@@ -178,7 +178,7 @@ pub(super) fn row_with_query(
     let own = Own {
         reposted: own_repost,
         bookmarked: super::settings::list_has(store, private, account, 10003, "e", &event.id),
-        pinned: list_has(store, account, 10001, "e", &event.id),
+        pinned: super::pins::contains(store, account, &event.id),
         muted: super::settings::list_has(store, private, account, 10000, "p", &event.pubkey),
     };
     Row {

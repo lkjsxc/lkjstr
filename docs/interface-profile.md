@@ -80,8 +80,8 @@ The choice is saved with the profile tab. The existing Reposts tab still lists t
 
 ## P3 Pinned notes
 
-State: local gates and real build pass; lead-owned browser/Claude review pending. The 2026-11-27
-pinned-notes assignment authorizes this restrained surface. Protocol details are in [pinned-notes.md](pinned-notes.md).
+The 2026-11-27 pinned-notes assignment authorizes this surface. Opus approved the copy and spacing.
+Protocol details are in [pinned-notes.md](pinned-notes.md).
 
 ### Placement and controls
 
@@ -91,6 +91,8 @@ pinned-notes assignment authorizes this restrained surface. Protocol details are
 - The section reads the profile owner's public list, including on another person's profile or while signed
   out. It starts with 20 notes in list order; `pins.previous` and `pins.next` page through bounded windows with
   one boundary note. The chronological feed and its reading position keep their existing ordering.
+- Align the status line left and keep Next on the right when Previous is hidden. When both links are hidden,
+  the pagination row takes no space.
 - In an active writable account's own kind-1 note More menu, `act.pin` becomes `act.unpin` when
   `mine.pinned` is true. Other events and other people's notes do not offer Pin. Engines below protocol 18
   receive neither the action nor the paired pins query.
@@ -112,6 +114,5 @@ pinned-notes assignment authorizes this restrained surface. Protocol details are
 
 ### Review scenes
 
-Own profile with two pins out of chronological order, another person's pins, Pin and Unpin menus, success
-with Undo, delayed references, partial unavailable references, failed list read and settled empty list. The
-lead's later browser and Claude review covers 1440 dark and 390 light; no captures are claimed here.
+Check list order beside unchanged chronology, an unavailable reference, paging links, and another person's
+pins while signed out. Review Pin, Unpin and Undo in English and Japanese. Capture 1440 dark and 390 light.

@@ -64,8 +64,10 @@ impl Engine {
             ) && let Some(target) = &view.query.target
             {
                 visible.insert(target.clone());
-                if let Some(list) = self.store.replaceable(target, 10001) {
-                    held.insert(list.id.clone());
+                if matches!(view.query.source, Source::Profile | Source::Pins)
+                    && let Some(list) = self.store.replaceable_lease(target, 10001)
+                {
+                    held.insert(list.id_hex());
                 }
             }
             if view.query.source == Source::TheirHome
@@ -134,8 +136,8 @@ impl Engine {
                 }
             }
             for kind in [0, 3, 10000, 10001, 10002, 10030, 10063] {
-                if let Some(event) = self.store.replaceable(owner, kind) {
-                    access.pinned.insert(event.id.clone());
+                if let Some(event) = self.store.replaceable_lease(owner, kind) {
+                    access.pinned.insert(event.id_hex());
                 }
             }
         }

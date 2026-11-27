@@ -49,7 +49,7 @@ it.each([false, true])(
       on: !pinned,
     });
     expect(f.env.layer.querySelector('.toast.undo')?.textContent).toContain(
-      pinned ? 'Note unpinned' : 'Note pinned',
+      pinned ? 'Unpinned' : 'Pinned',
     );
     f.env.layer.querySelector<HTMLButtonElement>('.toast.undo button')!.click();
     await tick();
@@ -79,7 +79,7 @@ it('shows stale-list failure without offering a successful Undo', async () => {
   f.item('Pin')!.click();
   await tick();
   expect(f.env.layer.querySelector('.toast:not(.undo)')?.textContent).toBe(
-    'The pinned list changed. Try again.',
+    'Your pinned notes changed elsewhere. Try again.',
   );
   expect(f.env.layer.querySelector('.toast.undo')).toBeNull();
 });

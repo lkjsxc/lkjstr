@@ -1,6 +1,9 @@
 //! NIP-51 public pin membership. Temporary collections are bounded by the stored list payload.
 use super::{Engine, protocol::Query};
-use crate::store::{Event, Store};
+use crate::store::{
+    Event, Store,
+    compact::{decode_id, encode_id},
+};
 use lkjstr_protocol::{NostrFilter, UnsignedNostrEvent, is_event_id};
 use std::collections::BTreeSet;
 
@@ -15,17 +18,21 @@ pub(super) fn filter(owner: &str) -> NostrFilter {
 
 /// Public e tags only; the list owner's private content never grants read authority.
 pub(super) fn ids(store: &Store, owner: Option<&str>) -> Vec<String> {
-    let Some(list) = owner.and_then(|owner| store.replaceable(owner, 10001)) else {
+    let Some(list) = owner.and_then(|owner| store.replaceable_lease(owner, 10001)) else {
         return vec![];
     };
     let mut seen = BTreeSet::new();
-    list.tags
-        .iter()
-        .filter(|tag| tag.first().is_some_and(|key| key == "e"))
-        .filter_map(|tag| tag.get(1))
-        .filter(|id| is_event_id(id) && seen.insert((*id).clone()))
-        .cloned()
+    list.tag_ids("e")
+        .filter(|id| seen.insert(*id))
+        .map(encode_id)
         .collect()
+}
+
+pub(super) fn contains(store: &Store, owner: Option<&str>, id: &str) -> bool {
+    owner
+        .and_then(|owner| store.replaceable_lease(owner, 10001))
+        .zip(decode_id(id))
+        .is_some_and(|(list, id)| list.tag_ids("e").any(|member| *member == id))
 }
 
 pub(super) fn events(store: &Store, query: &Query) -> Vec<Event> {
@@ -41,17 +48,17 @@ pub(super) fn events(store: &Store, query: &Query) -> Vec<Event> {
 
 /// Existing relay-hint bounds apply to missing pin targets, too.
 pub(super) fn relays(store: &Store, owner: Option<&str>) -> Vec<String> {
-    let Some(list) = owner.and_then(|owner| store.replaceable(owner, 10001)) else {
+    let Some(list) = owner.and_then(|owner| store.replaceable_lease(owner, 10001)) else {
         return vec![];
     };
     list.tags
         .iter()
         .filter(|tag| {
-            tag.first().is_some_and(|key| key == "e")
-                && tag.get(1).is_some_and(|id| is_event_id(id))
+            tag.first().is_some_and(|key| key.matches("e"))
+                && tag.get(1).is_some_and(|id| id.key().is_some())
         })
         .filter_map(|tag| tag.get(2))
-        .filter_map(|url| super::settings::strict_relay(url))
+        .filter_map(|url| super::settings::strict_relay(&url.text()))
         .collect::<BTreeSet<_>>()
         .into_iter()
         .take(8)

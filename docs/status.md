@@ -10,7 +10,7 @@ Protocol 18 adds [public pins](pinned-notes.md), live profile/account list reads
 serialized one-member edits preserving unknown tags and opaque content. Pin/Unpin offers inverse Undo; a stale
 signing base is rejected. Profile keeps a separate finite section and preserves its chronological anchors/rail.
 The restrained [P3 surface](interface-profile.md#p3-pinned-notes) has paired English/Japanese strings and explicit
-pending/unavailable states. Local repository, native/Worker and frontend gates plus the real build pass; browser/Claude review remains.
+pending/unavailable states. Opus approved the paired copy and Profile spacing.
 
 ## Cache reload and Home parity (2026-11-26)
 

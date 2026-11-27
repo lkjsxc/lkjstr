@@ -3,8 +3,7 @@
 ## Purpose
 
 Protocol 18 reads public NIP-51 kind-10001 lists and lets a writable account pin or unpin its own kind-1 notes.
-Profile renders those notes in a separate section above its chronological feed. Local native/Worker and frontend
-gates plus the real build pass; lead-owned browser verification and Claude copy/visual review remain before release.
+Profile renders those notes in a separate section above its chronological feed.
 The interface contract is [P3](interface-profile.md#p3-pinned-notes).
 
 ## Public list selection
@@ -14,7 +13,8 @@ its lowest lexicographic event ID, independently of relay arrival order. These a
 in [NIP-01](https://github.com/nostr-protocol/nips/blob/master/01.md).
 
 Only valid public `e` tags contribute members. Their first occurrence supplies display order, with duplicate
-IDs shown once. Invalid references and other tags do not become rows. An owner's opaque content is never
+IDs shown once. Membership reads use compact event IDs without decoding the list payload.
+Invalid references and other tags do not become rows. An owner's opaque content is never
 opened as part of this public read; signed-in, signed-out and other-person profiles use the same public list.
 See [NIP-51](https://github.com/nostr-protocol/nips/blob/master/51.md).
 
@@ -98,7 +98,6 @@ Both English and Japanese tables contain `act.pin`, `act.unpin`, `note.pinned`, 
 
 ## Validation boundaries
 
-Twenty-five new native pin tests plus discovery/freshness regressions pass. Forty-six focused frontend tests
-cover menus, Undo, list order, ownership, positions and snapshots. Full `pnpm check:repo`, `pnpm test:quiet`,
-`pnpm --dir web check` and `pnpm build` (real Worker plus distribution validation) pass. No browser, public-relay
-publication or shipping result is claimed; those review boundaries remain in the handoff report.
+Native pin tests cover list order, mutations, ownership, relay reads and stale signatures. Frontend tests
+cover menus, Undo, reading positions and snapshots. The release review uses the real Worker with signed
+loopback fixtures for localization, paging, signed-out profiles and Pin/Unpin delivery.

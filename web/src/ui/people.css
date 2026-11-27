@@ -53,4 +53,7 @@ button.stat:hover { text-decoration: underline; }
 
 /* Public pins scroll with the profile header and reuse the normal note face. */
 .ppins { margin: 12px -14px 0; border-top: 1px solid var(--line); }
-.pinpages { display: flex; justify-content: space-between; gap: 12px; padding: 0 14px; font-size: 12.5px; }
+.pinpages { display: flex; justify-content: space-between; gap: 12px; padding: 6px 14px 10px; font-size: 12.5px; }
+.ppins > .fstate { padding: 10px 14px; text-align: left; }
+.pinpages > :last-child { margin-left: auto; }
+.pinpages:not(:has(> :not([hidden]))) { display: none; }
