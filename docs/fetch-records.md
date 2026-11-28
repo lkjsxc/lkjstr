@@ -44,7 +44,8 @@ choices each and explicit omitted counts; 1,024 active relay attempts;
 survive ring eviction, with saturating counters and explicit dropped-record
 and dropped-decision counters. Hosts are stripped to origins and capped at
 320 bytes. IDs, views, slots, envelope identities and URL paths are salted
-local hashes; the per-observer random salt is never serialized. A failed
+local hashes; the per-observer random salt is never serialized. Every key hash in JSON
+is a fixed 16-character lowercase hexadecimal string, preserving all 64 bits. A failed
 random source disables hashed observations rather than using a public seed.
 No raw event content, tags, filter values, error text or account secrets are
 retained. DM request members/kinds and AUTH-required relay effects are
@@ -58,7 +59,12 @@ only an origin. There is no new server communication.
 
 The log samples the actual relay route candidate/choice list, the physical
 request batch, resident retention victim selection, avatar stage admission,
-and avatar LRU eviction plans. The `Keep` choice is the victim, not a retained
+and avatar LRU eviction plans. Avatar LRU observations include only rows
+with an explicit public-provenance bit, set on insertion by a verified public
+job. Legacy and private rows default to false; touches and concurrent Blob
+reuse preserve the original bit. The bit is cache metadata, not persisted
+telemetry. The same unfiltered LRU plan drives writes and deletions, and only
+marked victims become ghosts after commit. The `Keep` choice is the victim, not a retained
 item; LRU scores are recency counters and resident scores are existing policy
 scores. Mixed or incomplete observations must not be used as causal labels.
 

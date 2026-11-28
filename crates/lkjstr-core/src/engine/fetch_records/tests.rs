@@ -180,3 +180,31 @@ fn avatar_ghost_is_consumed_once_and_history_is_bounded() {
         1
     );
 }
+
+#[test]
+fn fetch_records_json_preserves_all_key_bits_and_joins() {
+    let observer = Observer::default();
+    observer.set_decisions(true);
+    let mut record = observer
+        .draft(ResourceClass::Avatars, Scope::Resource, "face", None, 1)
+        .expect("record");
+    record.key = KeyHash(0xfedc_ba98_7654_3210);
+    record.view = Some(KeyHash(0xffff_ffff_ffff_ffff));
+    record.slot = Some(KeyHash(0xa));
+    observer.record(record);
+    let join = observer
+        .draft(ResourceClass::Avatars, Scope::Resource, "chosen", None, 2)
+        .expect("record");
+    let join_hex = format!("{:016x}", join.key.0);
+    observer.record(join);
+    observer.decision(Action::Keep, 2, [("chosen", Some(1))], ["chosen"]);
+
+    let json: serde_json::Value =
+        serde_json::from_str(&observer.fetch_records_json().expect("snapshot")).expect("JSON");
+    assert_eq!(json["records"][0][1]["key"], "fedcba9876543210");
+    assert_eq!(json["records"][0][1]["view"], "ffffffffffffffff");
+    assert_eq!(json["records"][0][1]["slot"], "000000000000000a");
+    assert_eq!(json["records"][1][1]["key"], join_hex);
+    assert_eq!(json["decisions"][0]["candidates"][0]["key"], join_hex);
+    assert_eq!(json["decisions"][0]["chosen"][0], join_hex);
+}

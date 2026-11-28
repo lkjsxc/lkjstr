@@ -23,7 +23,7 @@ pub(super) fn start(host: &Rc<RefCell<Host>>, work: Work) {
         });
         return;
     };
-    let (database, raw, picture, observer) = {
+    let (database, raw, picture, public, observer) = {
         let mut h = host.borrow_mut();
         if h.stopped || !h.avatars.book.current(ticket) {
             return;
@@ -31,6 +31,7 @@ pub(super) fn start(host: &Rc<RefCell<Host>>, work: Work) {
         h.avatars
             .effects
             .insert(ticket.job, (ticket.stage, controller.clone()));
+        let public = h.avatars.book.observable(ticket);
         (
             h.avatars.database.clone(),
             if ticket.stage == Stage::Derive {
@@ -39,7 +40,8 @@ pub(super) fn start(host: &Rc<RefCell<Host>>, work: Work) {
                 None
             },
             h.avatars.pictures.get(&ticket.job).cloned(),
-            if h.avatars.book.observable(ticket) {
+            public,
+            if public {
                 h.engine.network.fetches.clone()
             } else {
                 lkjstr_core::engine::fetch_records::Observer::disabled()
@@ -73,8 +75,14 @@ pub(super) fn start(host: &Rc<RefCell<Host>>, work: Work) {
                 Ok(None) => (Completion::Miss, Payload::None),
                 Err(_) => (Completion::StorageUnavailable, Payload::None),
             },
-            Stage::Fetch => {
-                match browser::get(&work.key, &controller, http.as_mut().unwrap()).await {
+            Stage::Fetch => 'fetch: {
+                let Some(http) = http.as_mut() else {
+                    break 'fetch (
+                        Completion::Failed(policy::Failure::Transient),
+                        Payload::None,
+                    );
+                };
+                match browser::get(&work.key, &controller, http).await {
                     Ok(blob) => (
                         Completion::Fetched {
                             bytes: blob.size() as u64,
@@ -101,7 +109,9 @@ pub(super) fn start(host: &Rc<RefCell<Host>>, work: Work) {
             },
             Stage::Store => match picture {
                 Some(picture) => {
-                    match browser::put(&database, &work.key, picture, &signal, &observer).await {
+                    match browser::put(&database, &work.key, picture, &signal, public, &observer)
+                        .await
+                    {
                         Ok(picture) => (Completion::Stored, Payload::Picture(picture)),
                         Err(_) => (Completion::StoreUnavailable, Payload::None),
                     }

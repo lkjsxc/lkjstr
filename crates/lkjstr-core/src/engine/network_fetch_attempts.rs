@@ -54,7 +54,9 @@ impl Network {
             return;
         };
         first.annotate(&self.fetches, &mut record);
-        let peer = &mut self.relays.get_mut(relay).unwrap();
+        let Some(peer) = self.relays.get_mut(relay) else {
+            return;
+        };
         record.connection = if peer.observed_request {
             Connection::Reused
         } else {

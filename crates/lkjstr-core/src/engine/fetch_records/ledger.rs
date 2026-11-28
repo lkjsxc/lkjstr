@@ -99,6 +99,10 @@ impl Observer {
     pub fn inspect<T>(&self, f: impl FnOnce(&Ledger) -> T) -> T {
         f(&self.ledger.lock().unwrap_or_else(|err| err.into_inner()))
     }
+    /// Local snapshot used by both harness handles; no production page command.
+    pub fn fetch_records_json(&self) -> serde_json::Result<String> {
+        self.inspect(serde_json::to_string)
+    }
     pub(super) fn edit<T>(&self, f: impl FnOnce(&mut Ledger) -> T) -> T {
         f(&mut self.ledger.lock().unwrap_or_else(|err| err.into_inner()))
     }

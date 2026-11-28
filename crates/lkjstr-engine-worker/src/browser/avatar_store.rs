@@ -12,7 +12,7 @@ mod change;
 mod records;
 enum Change {
     Lookup,
-    Put(Picture),
+    Put(Picture, bool),
 }
 struct Reads {
     entries: IdbRequest,
@@ -45,14 +45,21 @@ pub async fn put(
     key: &str,
     picture: Picture,
     signal: &AbortSignal,
+    public: bool,
     observer: &Observer,
 ) -> Result<Picture, JsValue> {
     if !valid(&picture) {
         return Err("avatar-cache-image".into());
     }
-    run(database, key, Change::Put(picture), signal, Some(observer))
-        .await?
-        .ok_or_else(|| "avatar-cache-image".into())
+    run(
+        database,
+        key,
+        Change::Put(picture, public),
+        signal,
+        public.then_some(observer),
+    )
+    .await?
+    .ok_or_else(|| "avatar-cache-image".into())
 }
 async fn run(
     database: &Database,
@@ -69,7 +76,7 @@ async fn run(
         .transaction_with_str_sequence_and_mode(&stores, IdbTransactionMode::Readwrite)?;
     let entries = tx.object_store("entries")?;
     let reads = Reads {
-        entries: if matches!(change, Change::Put(_)) {
+        entries: if matches!(change, Change::Put(..)) {
             entries.get_all_with_key_and_limit(&JsValue::UNDEFINED, MAX_ENTRIES as u32 + 1)?
         } else {
             entries.get(&key.into())?

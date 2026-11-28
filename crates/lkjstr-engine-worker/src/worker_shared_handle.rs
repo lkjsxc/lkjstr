@@ -47,7 +47,7 @@ impl SharedWorkerHandle {
             .engine
             .network
             .fetches
-            .inspect(serde_json::to_string)
+            .fetch_records_json()
             .map_err(|_| JsValue::from_str("fetch-record-serialize"))
     }
 }

@@ -98,8 +98,14 @@ pub enum Scope {
     Derive,
 }
 /// Hashes are keyed for this observer lifetime, not persistent resource identifiers.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize)]
+/// Encode all 64 bits as text so a JavaScript JSON parser cannot round the key.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct KeyHash(pub(super) u64);
+impl Serialize for KeyHash {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(&format!("{:016x}", self.0))
+    }
+}
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 pub struct FetchRecord {
     pub class: ResourceClass,

@@ -7,15 +7,19 @@ use web_sys::{Blob, IdbObjectStore, IdbTransaction};
 #[derive(Clone, Deserialize, Serialize)]
 pub(super) struct Record {
     pub entry: Entry,
+    // Missing on historical entries; touching one never establishes provenance.
+    #[serde(default)]
+    pub public_provenance: bool,
     edge: u32,
     source_width: u32,
     source_height: u32,
     mime: String,
 }
 impl Record {
-    pub fn new(entry: Entry, picture: &Picture) -> Self {
+    pub fn new(entry: Entry, picture: &Picture, public_provenance: bool) -> Self {
         Self {
             entry,
+            public_provenance,
             edge: picture.edge,
             source_width: picture.source_width,
             source_height: picture.source_height,
