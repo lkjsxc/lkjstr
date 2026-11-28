@@ -4,6 +4,7 @@ impl Network {
         if let Some(r) = self.relays.get_mut(relay) {
             r.online = true;
             r.connected_since = Some(now);
+            r.observed_request = false;
             r.connecting = false;
             r.last_rx = now;
         }
@@ -11,6 +12,7 @@ impl Network {
         self.tick(now);
     }
     pub fn disconnected(&mut self, relay: &str, now: u64) {
+        self.observe_disconnect(relay, now);
         self.profiles_changed = true;
         self.quality_revision = self.quality_revision.wrapping_add(1);
         self.effects.push(Effect::Disconnect(relay.into()));

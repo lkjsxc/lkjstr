@@ -46,11 +46,20 @@ pub(super) fn pump_previews(host: &Rc<RefCell<Host>>) {
         return;
     }
     h.preview_busy = true;
+    let observer = h.engine.network.fetches.clone();
     drop(h);
     let weak = Rc::downgrade(host);
     wasm_bindgen_futures::spawn_local(async move {
         let address = format!("/preview?url={}", js_sys::encode_uri_component(&url));
-        let answer = http::get(&address, "application/json", 32768)
+        use lkjstr_core::engine::fetch_records::{Lane, ResourceClass};
+        let observation = crate::browser::fetch_observation::HttpObservation::new(
+            observer,
+            ResourceClass::Previews,
+            &url,
+            &url,
+            Lane::L3,
+        );
+        let answer = http::get_observed(&address, "application/json", 32768, observation)
             .await
             .ok()
             .filter(|r| r.status == 200)

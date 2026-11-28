@@ -1,4 +1,5 @@
 // One page's subscriptions, actions and private writer leases behind the real or mock Worker.
+import { observeImages } from '../shared/media-observation.ts';
 import { learnPerson, learnRows } from '../shared/people.ts';
 import { createSignal } from '../shared/signal.ts';
 import { watchAccountPeople } from './client-account-people.ts';
@@ -29,6 +30,9 @@ export function createEngine(transport: Transport): Engine {
   const storage = createStorageClient(transport);
   const noteOutbox = createNoteOutbox(transport);
   const avatars = createAvatarClient(transport);
+  const offImages = observeImages((observation) =>
+    transport.post({ t: 'media.observed', observation }),
+  );
   for (const resource of [storage, avatars])
     resource.visible(document.visibilityState !== 'hidden');
   const lists = createPrivateListClient(dm.access, (message) => transport.post(message));
@@ -269,6 +273,7 @@ export function createEngine(transport: Transport): Engine {
     },
     configure: (config) => transport.post({ t: 'configure', config }),
     dispose() {
+      offImages();
       document.removeEventListener('visibilitychange', resumed);
       window.removeEventListener('pageshow', resumed);
       window.removeEventListener('pagehide', extension.reset);

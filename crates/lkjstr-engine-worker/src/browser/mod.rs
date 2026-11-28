@@ -25,3 +25,5 @@ pub mod timer;
 mod random;
 pub mod remote;
 pub use random::random_bytes;
+
+pub mod fetch_observation;

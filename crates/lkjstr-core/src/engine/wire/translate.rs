@@ -19,7 +19,8 @@ impl Session {
                 self.preview_near(sub, ids);
                 selected
             }
-            Input::AvatarWant { .. }
+            Input::MediaObserved { .. }
+            | Input::AvatarWant { .. }
             | Input::AvatarClose { .. }
             | Input::StorageInspect { .. }
             | Input::StorageClose { .. }

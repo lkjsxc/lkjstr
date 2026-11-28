@@ -35,6 +35,7 @@ type AvatarJob = {
   visible: boolean;
   loading: boolean;
   owned: boolean;
+  observePublic: boolean;
   cancel?: () => void;
 };
 
@@ -111,7 +112,20 @@ function startImage(job: AvatarJob): void {
   img.addEventListener('load', loaded);
   // The visibility observer starts lazy faces, so the deadline measures an actual attempt.
   img.loading = 'eager';
-  const release = loadImage(img, job.src, failed, IMAGE_TIMEOUT);
+  const release = loadImage(
+    img,
+    job.src,
+    failed,
+    IMAGE_TIMEOUT,
+    job.observePublic
+      ? {
+          class: 'avatars',
+          slot: 'avatar',
+          lane: 'L1',
+          firstVisibleMs: job.visible ? Date.now() : undefined,
+        }
+      : undefined,
+  );
   if (job.loading)
     job.cancel = () => {
       stop();
@@ -177,6 +191,7 @@ export function loadAvatar(
     visible: false,
     loading: false,
     owned,
+    observePublic: cachePublic,
   };
   img.style.visibility = 'hidden';
   img.setAttribute(PENDING, '');

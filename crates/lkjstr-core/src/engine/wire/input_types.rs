@@ -17,10 +17,16 @@ pub enum Input {
     },
     #[serde(rename = "note.wake")]
     NoteWake,
+    #[serde(rename = "media.observed")]
+    MediaObserved {
+        observation: crate::engine::fetch_records::PlainImage,
+    },
     #[serde(rename = "avatar.want")]
     AvatarWant {
         req: String,
         url: String,
+        #[serde(default, rename = "observePublic")]
+        observe_public: bool,
     },
     #[serde(rename = "avatar.close")]
     AvatarClose {

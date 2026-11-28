@@ -1,4 +1,5 @@
 //! Abortable, streaming, size-bounded HTTP for identity and relay information.
+use super::fetch_observation::HttpObservation;
 use super::{promise, timer::Timer};
 use wasm_bindgen::{JsCast, JsValue};
 use web_sys::{
@@ -10,6 +11,28 @@ pub async fn get(
     max: usize,
 ) -> Result<lkjstr_nips::identity::HttpResponse, JsValue> {
     request_for(url, accept, max, "GET", (None, None, None), 10_000).await
+}
+/// Only public caller-selected effects pass an observation; authenticated requests never do.
+pub async fn get_observed(
+    url: &str,
+    accept: &str,
+    max: usize,
+    mut observation: HttpObservation,
+) -> Result<lkjstr_nips::identity::HttpResponse, JsValue> {
+    let result = request_observed(
+        url,
+        accept,
+        max,
+        "GET",
+        (None, None, None),
+        10_000,
+        None,
+        Some(&mut observation),
+    )
+    .await;
+    let outcome = result.as_ref().err().map(HttpObservation::error);
+    observation.complete(outcome);
+    result
 }
 pub async fn request(
     url: &str,
@@ -40,6 +63,29 @@ pub async fn request_for_signal(
     (body, mime, auth): (Option<&JsValue>, Option<&str>, Option<&str>),
     ms: u32,
     signal: Option<&web_sys::AbortSignal>,
+) -> Result<lkjstr_nips::identity::HttpResponse, JsValue> {
+    request_observed(
+        url,
+        accept,
+        max,
+        method,
+        (body, mime, auth),
+        ms,
+        signal,
+        None,
+    )
+    .await
+}
+#[allow(clippy::too_many_arguments)]
+async fn request_observed(
+    url: &str,
+    accept: &str,
+    max: usize,
+    method: &str,
+    (body, mime, auth): (Option<&JsValue>, Option<&str>, Option<&str>),
+    ms: u32,
+    signal: Option<&web_sys::AbortSignal>,
+    mut observation: Option<&mut HttpObservation>,
 ) -> Result<lkjstr_nips::identity::HttpResponse, JsValue> {
     super::abort::check(signal)?;
     let abort = AbortController::new()?;
@@ -74,6 +120,9 @@ pub async fn request_for_signal(
         promise::bounded_ms_for(pending, ms, "http-timeout", move || cancel.abort(), signal)
             .await?
             .dyn_into()?;
+    if let Some(o) = observation.as_deref_mut() {
+        o.response(response.status());
+    }
     if method == "HEAD" {
         return Ok(lkjstr_nips::identity::HttpResponse {
             status: response.status(),
@@ -93,6 +142,9 @@ pub async fn request_for_signal(
             break;
         }
         let chunk = js_sys::Uint8Array::new(&js_sys::Reflect::get(&chunk, &"value".into())?);
+        if let Some(o) = observation.as_deref_mut() {
+            o.bytes(u64::from(chunk.length()));
+        }
         if bytes.len().saturating_add(chunk.length() as usize) > max {
             abort.abort();
             return Err("body-limit".into());

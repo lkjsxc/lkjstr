@@ -1011,7 +1011,16 @@ export type ToEngine =
   | { readonly t: 'note.outbox'; readonly keys: readonly string[] }
   | { readonly t: 'note.discard'; readonly key: string }
   | { readonly t: 'note.wake' }
-  | { readonly t: 'avatar.want'; readonly req: string; readonly url: string }
+  | {
+      readonly t: 'media.observed';
+      readonly observation: import('../shared/media-observation.ts').ImageObservation;
+    }
+  | {
+      readonly t: 'avatar.want';
+      readonly req: string;
+      readonly url: string;
+      readonly observePublic?: boolean;
+    }
   | { readonly t: 'avatar.close'; readonly req: string }
   | { readonly t: 'cache.hold'; readonly sub: SubId; readonly rows: readonly PublicCacheHoldRow[] }
   | { readonly t: 'storage.inspect'; readonly req: ReqId }

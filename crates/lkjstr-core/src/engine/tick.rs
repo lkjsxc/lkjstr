@@ -71,6 +71,7 @@ impl Engine {
                 sequence,
                 copies,
                 bytes,
+                observation,
             }) = self.queue.remove(index)
             else {
                 break;
@@ -92,6 +93,12 @@ impl Engine {
                 confirm(&mut self.network);
                 self.network.observe_verified(&relay, &e, now);
                 self.relay_served(&relay, &e.id);
+                self.network.observed_receipt(
+                    observation,
+                    fetch_records::Outcome::Duplicate,
+                    Some(0),
+                    false,
+                );
                 continue;
             }
             if matches!(verify_event(&e), VerificationResult::Ok(_)) {
@@ -104,6 +111,22 @@ impl Engine {
                 self.read_contexts.changed(&e);
                 let timeline_note = matches!(e.kind, 1 | 6 | 42);
                 let (outcome, lease) = self.store.insert_leased(e, Some(&relay));
+                use crate::store::Inserted;
+                let admitted = matches!(outcome, Inserted::New | Inserted::Replaced);
+                let stored = admitted
+                    .then(|| lease.as_ref().map(|l| l.wire_bytes as u64))
+                    .flatten()
+                    .or(Some(0));
+                self.network.observed_receipt(
+                    observation,
+                    match outcome {
+                        Inserted::New | Inserted::Replaced => fetch_records::Outcome::Ok,
+                        Inserted::Duplicate | Inserted::Stale => fetch_records::Outcome::Duplicate,
+                        _ => fetch_records::Outcome::Rejected,
+                    },
+                    stored,
+                    admitted,
+                );
                 new_preview_note |= timeline_note && lease.is_some();
                 if matches!(
                     outcome,
@@ -127,6 +150,12 @@ impl Engine {
                     v.dirty = true;
                 }
             } else {
+                self.network.observed_receipt(
+                    observation,
+                    fetch_records::Outcome::Rejected,
+                    Some(0),
+                    false,
+                );
                 self.rejected += 1;
                 self.record_invalid_delivery(&relay, wire.as_deref(), sequence);
             }

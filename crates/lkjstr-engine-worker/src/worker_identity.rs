@@ -28,13 +28,25 @@ pub(super) fn identities(host: &Rc<RefCell<Host>>) {
                 .insert(key.clone(), (name.clone(), now()));
             h.identity_inflight += 1;
         }
+        let observer = host.borrow().engine.network.fetches.clone();
         let weak = Rc::downgrade(host);
         wasm_bindgen_futures::spawn_local(async move {
             let identifier = lkjstr_nips::identity::Identifier::parse(&name);
             let response = match identifier {
-                Ok(id) => crate::browser::http::get(&id.url(), "application/json", 65536)
-                    .await
-                    .ok(),
+                Ok(id) => {
+                    use lkjstr_core::engine::fetch_records::{Lane, ResourceClass};
+                    let url = id.url();
+                    let observation = crate::browser::fetch_observation::HttpObservation::new(
+                        observer,
+                        ResourceClass::Nip05,
+                        &url,
+                        &url,
+                        Lane::L2,
+                    );
+                    crate::browser::http::get_observed(&url, "application/json", 65536, observation)
+                        .await
+                        .ok()
+                }
                 Err(_) => None,
             };
             if let Some(h) = weak.upgrade() {

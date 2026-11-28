@@ -58,10 +58,15 @@ async fn legacy_original(url: &str, signal: &AbortSignal) -> Option<Blob> {
     .ok()?;
     (blob.type_() == mime && (1.0..=131_072.0).contains(&blob.size())).then_some(blob)
 }
-pub async fn get(url: &str, controller: &AbortController) -> Result<Blob, Failure> {
+pub async fn get(
+    url: &str,
+    controller: &AbortController,
+    observation: &mut crate::browser::fetch_observation::HttpObservation,
+) -> Result<Blob, Failure> {
     let fail = |_| Failure::Transient;
     crate::browser::abort::check(Some(&controller.signal())).map_err(fail)?;
     if let Some(blob) = legacy_original(url, &controller.signal()).await {
+        observation.cache_hit();
         return Ok(blob);
     }
     crate::browser::abort::check(Some(&controller.signal())).map_err(fail)?;
@@ -89,6 +94,7 @@ pub async fn get(url: &str, controller: &AbortController) -> Result<Blob, Failur
         .map_err(fail)?
         .dyn_into()
         .map_err(fail)?;
+    observation.response(response.status());
     if !response.ok()
         || !matches!(response.type_(), ResponseType::Basic | ResponseType::Cors)
         || !response.url().starts_with("https://")
@@ -127,6 +133,7 @@ pub async fn get(url: &str, controller: &AbortController) -> Result<Blob, Failur
         }
         let chunk =
             js_sys::Uint8Array::new(&js_sys::Reflect::get(&chunk, &"value".into()).map_err(fail)?);
+        observation.bytes(u64::from(chunk.length()));
         if bytes.len().saturating_add(chunk.length() as usize) > MAX_ORIGINAL_BYTES as usize {
             controller.abort();
             return Err(Failure::Unsupported { uniform: false });

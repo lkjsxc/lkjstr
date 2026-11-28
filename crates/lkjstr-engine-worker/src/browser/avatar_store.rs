@@ -1,6 +1,7 @@
 //! Every hit/touch and eviction/insert commits atomically before claiming retention.
 use super::{Database, Picture, valid};
 use lkjstr_core::engine::avatars::cache::MAX_ENTRIES;
+use lkjstr_core::engine::fetch_records::{KeyHash, Observer, ResourceClass};
 use std::{cell::RefCell, rc::Rc};
 use wasm_bindgen::{JsCast, JsValue, closure::Closure};
 use wasm_bindgen_futures::JsFuture;
@@ -37,18 +38,19 @@ pub async fn lookup(
     key: &str,
     signal: &AbortSignal,
 ) -> Result<Option<Picture>, JsValue> {
-    run(database, key, Change::Lookup, signal).await
+    run(database, key, Change::Lookup, signal, None).await
 }
 pub async fn put(
     database: &Database,
     key: &str,
     picture: Picture,
     signal: &AbortSignal,
+    observer: &Observer,
 ) -> Result<Picture, JsValue> {
     if !valid(&picture) {
         return Err("avatar-cache-image".into());
     }
-    run(database, key, Change::Put(picture), signal)
+    run(database, key, Change::Put(picture), signal, Some(observer))
         .await?
         .ok_or_else(|| "avatar-cache-image".into())
 }
@@ -57,6 +59,7 @@ async fn run(
     key: &str,
     change: Change,
     signal: &AbortSignal,
+    observer: Option<&Observer>,
 ) -> Result<Option<Picture>, JsValue> {
     let connection = database.connection(signal).await?;
     crate::browser::abort::check(Some(signal))?;
@@ -92,10 +95,21 @@ async fn run(
     let current_tx = tx.clone();
     let current_signal = signal.clone();
     let current_outcome = outcome.clone();
+    let evicted = Rc::new(RefCell::new(Vec::<KeyHash>::new()));
+    let current_evicted = evicted.clone();
+    let current_observer = observer.cloned();
     let key = key.to_owned();
     let step = Handler::new(move |_| {
-        let result = crate::browser::abort::check(Some(&current_signal))
-            .and_then(|()| change::apply(&current_tx, &reads, &key, &change));
+        let result = crate::browser::abort::check(Some(&current_signal)).and_then(|()| {
+            change::apply(
+                &current_tx,
+                &reads,
+                &key,
+                &change,
+                current_observer.as_ref(),
+                &mut current_evicted.borrow_mut(),
+            )
+        });
         let failed = result.is_err();
         *current_outcome.borrow_mut() = Some(result);
         if failed {
@@ -118,6 +132,11 @@ async fn run(
     drop(abort);
     drop(cleanup);
     committed?;
+    if let Some(observer) = observer {
+        for key in evicted.borrow().iter().copied() {
+            observer.evicted(ResourceClass::Avatars, key);
+        }
+    }
     outcome
         .borrow_mut()
         .take()

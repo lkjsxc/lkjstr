@@ -46,10 +46,11 @@ impl Network {
         });
         ids.extend(
             candidates
-                .into_iter()
+                .iter()
                 .take(cap - 1)
-                .map(|(key, _)| key.clone()),
+                .map(|(key, _)| (*key).clone()),
         );
+        self.observe_batch_decision(id, &candidates, &ids, now);
         self.next = self.next.saturating_add(1);
         let wire = format!("w{}", self.next);
         let mut frame = vec![json!("REQ"), json!(wire)];
@@ -99,6 +100,13 @@ impl Network {
         }
     }
     pub(in crate::engine) fn close_group(&mut self, relay: &str, wire: &str) {
+        self.observe_end(
+            relay,
+            wire,
+            self.now,
+            super::super::fetch_records::Outcome::Cancelled,
+            0,
+        );
         for r in self
             .requests
             .values_mut()

@@ -162,6 +162,13 @@ impl Network {
                 self.quality_revision = self.quality_revision.wrapping_add(1);
             }
             if was_sent {
+                self.observe_end(
+                    &relay,
+                    &wire,
+                    now,
+                    super::super::fetch_records::Outcome::Timeout,
+                    0,
+                );
                 self.close_group(&relay, &wire);
             }
         }

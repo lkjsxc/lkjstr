@@ -35,7 +35,25 @@ impl Engine {
                         if let Some(nested) = lkjstr_protocol::verified_nested_repost(&event) {
                             self.insert_verified(nested, Some("cache"));
                         }
-                        self.insert_verified(event, Some("cache"));
+                        let observation = self
+                            .network
+                            .observe_cache_resource(&event, self.network.now);
+                        let bytes = crate::store::event_payload_bytes(&event) as u64;
+                        let outcome = self.insert_verified(event, Some("cache"));
+                        let admitted = matches!(
+                            outcome,
+                            crate::store::Inserted::New | crate::store::Inserted::Replaced
+                        );
+                        self.network.observed_receipt(
+                            observation,
+                            if admitted {
+                                fetch_records::Outcome::Ok
+                            } else {
+                                fetch_records::Outcome::Rejected
+                            },
+                            Some(if admitted { bytes } else { 0 }),
+                            admitted,
+                        );
                     }
                     if let Some((author, id)) = policy {
                         self.read_contexts

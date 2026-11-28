@@ -51,6 +51,22 @@ impl Book {
             if !permitted {
                 continue;
             }
+            if job.observe_public && self.fetches.decisions_enabled() {
+                self.fetches.decision(
+                    crate::engine::fetch_records::Action::Fetch,
+                    now,
+                    self.jobs
+                        .values()
+                        .filter(|other| {
+                            other.observe_public
+                                && !other.active
+                                && !other.owners.is_empty()
+                                && other.stage == job.stage
+                        })
+                        .map(|other| (other.key.as_str(), None)),
+                    std::iter::once(job.key.as_str()),
+                );
+            }
             let Some(job) = self.jobs.get_mut(&id) else {
                 continue;
             };

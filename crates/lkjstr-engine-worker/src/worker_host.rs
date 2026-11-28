@@ -2,8 +2,11 @@
 use super::*;
 impl Host {
     pub(super) fn new(scope: Sink) -> Self {
+        let engine = initial_engine();
+        let mut avatars = super::avatars::State::default();
+        avatars.book.fetches = engine.network.fetches.clone();
         Self {
-            engine: initial_engine(),
+            engine,
             account_revision: 0,
             bootstrap_relays: vec![],
             relay_owner: None,
@@ -16,7 +19,7 @@ impl Host {
             private_lists: Default::default(),
             public_cache: Default::default(),
             storage: Default::default(),
-            avatars: Default::default(),
+            avatars,
             bunker: Default::default(),
             server_checks: vec![],
             auth_next: 0,

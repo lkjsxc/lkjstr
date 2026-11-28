@@ -85,3 +85,26 @@ impl WorkerHandle {
         bunker::probe::renew(&mut self.host.borrow_mut(), account)
     }
 }
+
+// Only fixture builds can read local diagnostics or enable the baseline trace.
+#[cfg(feature = "harness")]
+#[wasm_bindgen]
+impl WorkerHandle {
+    pub fn observe_fetch_decisions(&self, enabled: bool) {
+        self.host
+            .borrow()
+            .engine
+            .network
+            .fetches
+            .set_decisions(enabled);
+    }
+    pub fn fetch_records_json(&self) -> Result<String, JsValue> {
+        self.host
+            .borrow()
+            .engine
+            .network
+            .fetches
+            .inspect(serde_json::to_string)
+            .map_err(|_| JsValue::from_str("fetch-record-serialize"))
+    }
+}

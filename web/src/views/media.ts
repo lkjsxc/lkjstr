@@ -129,9 +129,15 @@ export function mountMedia(el: HTMLElement, env: ViewEnv): () => void {
         },
         state.zoom?.[at],
       );
-      loadImage(img, m.url, () => {
-        if (img.parentElement === stage) failed();
-      });
+      loadImage(
+        img,
+        m.url,
+        () => {
+          if (img.parentElement === stage) failed();
+        },
+        undefined,
+        { class: 'media', slot: 'media-view', view: env.instance, lane: 'L0' },
+      );
     } else {
       player = createPlayer(m, {
         at: state.at,

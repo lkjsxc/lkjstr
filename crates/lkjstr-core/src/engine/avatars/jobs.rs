@@ -31,6 +31,7 @@ struct Job {
     deadline: u64,
     spent: u64,
     persist: bool,
+    observe_public: bool,
 }
 impl Job {
     fn ticket(&self, id: u64) -> Ticket {
@@ -54,6 +55,7 @@ struct Negative {
 /// All collections are bounded by the constants above; retiring active effects remain in jobs.
 #[derive(Default)]
 pub struct Book {
+    pub fetches: crate::engine::fetch_records::Observer,
     next: u64,
     owners: BTreeMap<Owner, u64>,
     urls: BTreeMap<String, u64>,
@@ -63,6 +65,11 @@ pub struct Book {
     storage_backoff: u64,
 }
 impl Book {
+    pub fn observable(&self, ticket: Ticket) -> bool {
+        self.jobs
+            .get(&ticket.job)
+            .is_some_and(|job| job.observe_public)
+    }
     pub fn counts(&self) -> Counts {
         let mut counts = Counts {
             owners: self.owners.len(),

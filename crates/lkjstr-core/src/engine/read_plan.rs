@@ -230,6 +230,7 @@ impl super::Network {
                 routes.push(candidate.url.clone());
             }
         }
+        self.observe_route_decision(f, &candidates, &routes, now);
         ReadRoutes {
             routes,
             primary,

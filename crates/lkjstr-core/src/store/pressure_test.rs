@@ -162,3 +162,43 @@ fn unknown_deletion_witnesses_remain_pinned_after_the_tombstone_index_fills() {
         super::super::Inserted::Deleted
     );
 }
+
+#[test]
+fn decision_trace_preserves_resident_victims() {
+    use crate::engine::fetch_records::Action;
+    let run = |enabled| {
+        let mut store = Store::with_caps(3, 3).weight_retention();
+        store.fetches.set_decisions(enabled);
+        let rows: Vec<_> = [(1, 7), (2, 1), (3, 6), (4, 1)]
+            .into_iter()
+            .map(|(id, kind)| event(id, kind))
+            .collect();
+        for row in &rows {
+            store.insert_deferred(row.clone(), None);
+        }
+        store.trim_weighted(
+            &BTreeSet::new(),
+            &BTreeSet::new(),
+            &BTreeMap::new(),
+            &BTreeMap::new(),
+            LinkState::default(),
+        );
+        let victims: Vec<_> = rows
+            .iter()
+            .filter(|r| store.lease(&r.id).is_none())
+            .map(|r| r.id.clone())
+            .collect();
+        store.fetches.inspect(|l| {
+            if enabled {
+                assert!(
+                    l.decisions()
+                        .any(|d| d.action == Action::Keep && !d.chosen.is_empty())
+                );
+            } else {
+                assert_eq!(l.decisions().count(), 0);
+            }
+        });
+        victims
+    };
+    assert_eq!(run(false), run(true));
+}

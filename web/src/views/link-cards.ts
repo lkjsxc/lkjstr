@@ -42,10 +42,16 @@ export function linkCards(cards: readonly LinkPreview[] | undefined): HTMLElemen
           : null;
       if (picture && card.imageUrl) {
         const img = picture;
-        loadImage(img, card.imageUrl, () => {
-          picture = null;
-          img.remove();
-        });
+        loadImage(
+          img,
+          card.imageUrl,
+          () => {
+            picture = null;
+            img.remove();
+          },
+          undefined,
+          { class: 'media', slot: 'link-picture', lane: 'Unknown' },
+        );
       }
       const link = h(
         'a',

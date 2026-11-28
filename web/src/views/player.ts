@@ -40,7 +40,11 @@ export function createPlayer(m: Media, o: PlayerOpts): Player {
           if (!gone && el.readyState === 0) el.poster = poster.src;
         },
       });
-      loadImage(poster, m.thumb, () => {});
+      loadImage(poster, m.thumb, () => {}, undefined, {
+        class: 'media',
+        slot: 'poster',
+        lane: 'L0',
+      });
     }
   }
   if (m.alt) el.setAttribute('aria-label', m.alt);
@@ -63,7 +67,11 @@ export function createPlayer(m: Media, o: PlayerOpts): Player {
   on('pause', report);
   on('seeked', report);
   on('ended', report);
-  loadPlayable(el, m.url, () => void (gone || o.failed()));
+  loadPlayable(el, m.url, () => void (gone || o.failed()), {
+    class: 'media',
+    slot: 'media-playback',
+    lane: 'L0',
+  });
   if (o.start) void el.play().catch(() => undefined); // refused by the browser: the controls are there
 
   const seek = (by: number): void => {

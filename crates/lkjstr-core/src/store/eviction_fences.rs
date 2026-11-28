@@ -65,6 +65,12 @@ impl Store {
             self.evicted_order.remove(&(fence.sequence, id.to_owned()));
             self.evicted_times.remove(&(fence.at, id.to_owned()));
             self.ghost_hits += u64::from(network_refetch);
+            if network_refetch
+                && let Some(class) = crate::engine::fetch_records::ResourceClass::event(fence.kind)
+            {
+                self.fetches
+                    .count(class, |t| t.ghost_hits = t.ghost_hits.saturating_add(1));
+            }
         }
     }
 

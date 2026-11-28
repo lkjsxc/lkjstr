@@ -14,9 +14,16 @@ pub(super) struct QueuedEvent {
     pub(super) sequence: u64,
     pub(super) copies: Vec<(String, String)>,
     pub(super) bytes: usize,
+    pub(super) observation: Option<network::fetch_records::Receipt>,
 }
 impl Engine {
     pub fn enqueue(&mut self, relay: String, event: NostrEvent) {
+        let mut observation = self.network.last_fetch.take();
+        if relay == crate::cache::VERIFY_SOURCE || relay == "cache" {
+            observation = self
+                .network
+                .observe_cache_resource(&event, self.network.now);
+        }
         let delivery = self
             .network
             .delivery_wire
@@ -40,6 +47,12 @@ impl Engine {
             self.queue.iter_mut().find(|queued| queued.event == event)
         };
         if known || duplicate.is_some() {
+            self.network.observed_receipt(
+                observation,
+                fetch_records::Outcome::Duplicate,
+                Some(0),
+                false,
+            );
             if let (Some(queued), Some(delivery)) = (duplicate, delivery) {
                 let bytes = std::mem::size_of::<(String, String)>()
                     + delivery.0.capacity()
@@ -71,6 +84,12 @@ impl Engine {
             || self.queue.len() >= MAX_VERIFY_QUEUE
             || self.queue_bytes.saturating_add(bytes) > MAX_VERIFY_QUEUE_BYTES
         {
+            self.network.observed_receipt(
+                observation,
+                fetch_records::Outcome::Dropped,
+                Some(0),
+                false,
+            );
             self.dropped += 1;
             self.network.verification_dropped(&relay, &event);
             return;
@@ -84,6 +103,7 @@ impl Engine {
             sequence: self.delivery_sequence,
             copies: Vec::new(),
             bytes,
+            observation,
         };
         // Profiles requested for visible authors precede bulk note verification.
         if entry.event.kind == 0 {

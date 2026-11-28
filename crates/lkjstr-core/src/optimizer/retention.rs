@@ -97,6 +97,9 @@ impl Candidates {
     pub fn pop(&mut self) -> Option<Candidate> {
         self.heap.pop().map(|item| item.0)
     }
+    pub(crate) fn iter(&self) -> impl Iterator<Item = &Candidate> {
+        self.heap.iter().map(|item| &item.0)
+    }
     pub fn is_empty(&self) -> bool {
         self.heap.is_empty()
     }

@@ -1,5 +1,7 @@
 //! Only weak Host references cross awaits; late results may release resources, never a reused face.
 use super::*;
+use crate::browser::fetch_observation::{HttpObservation, clock as observation_clock};
+use lkjstr_core::engine::fetch_records::{Lane, Outcome, ResourceClass, Scope, Source, WireBytes};
 enum Payload {
     None,
     Raw(web_sys::Blob),
@@ -21,7 +23,7 @@ pub(super) fn start(host: &Rc<RefCell<Host>>, work: Work) {
         });
         return;
     };
-    let (database, raw, picture) = {
+    let (database, raw, picture, observer) = {
         let mut h = host.borrow_mut();
         if h.stopped || !h.avatars.book.current(ticket) {
             return;
@@ -37,11 +39,29 @@ pub(super) fn start(host: &Rc<RefCell<Host>>, work: Work) {
                 None
             },
             h.avatars.pictures.get(&ticket.job).cloned(),
+            if h.avatars.book.observable(ticket) {
+                h.engine.network.fetches.clone()
+            } else {
+                lkjstr_core::engine::fetch_records::Observer::disabled()
+            },
         )
     };
     let weak = Rc::downgrade(host);
     wasm_bindgen_futures::spawn_local(async move {
         let signal = controller.signal();
+        let start = observation_clock();
+        let mut http = (ticket.stage == Stage::Fetch).then(|| {
+            HttpObservation::new(
+                observer.clone(),
+                ResourceClass::Avatars,
+                &work.key,
+                &work.key,
+                Lane::L1,
+            )
+        });
+        if let Some(r) = http.as_mut().and_then(HttpObservation::record_mut) {
+            r.slot = observer.key("avatar");
+        }
         let (completion, payload) = match ticket.stage {
             Stage::Lookup => match browser::lookup(&database, &work.key, &signal).await {
                 Ok(Some(picture)) => (
@@ -53,15 +73,17 @@ pub(super) fn start(host: &Rc<RefCell<Host>>, work: Work) {
                 Ok(None) => (Completion::Miss, Payload::None),
                 Err(_) => (Completion::StorageUnavailable, Payload::None),
             },
-            Stage::Fetch => match browser::get(&work.key, &controller).await {
-                Ok(blob) => (
-                    Completion::Fetched {
-                        bytes: blob.size() as u64,
-                    },
-                    Payload::Raw(blob),
-                ),
-                Err(error) => (Completion::Failed(error), Payload::None),
-            },
+            Stage::Fetch => {
+                match browser::get(&work.key, &controller, http.as_mut().unwrap()).await {
+                    Ok(blob) => (
+                        Completion::Fetched {
+                            bytes: blob.size() as u64,
+                        },
+                        Payload::Raw(blob),
+                    ),
+                    Err(error) => (Completion::Failed(error), Payload::None),
+                }
+            }
             Stage::Derive => match raw {
                 Some(raw) => match browser::derive(raw, &signal).await {
                     Ok(picture) => (
@@ -78,16 +100,76 @@ pub(super) fn start(host: &Rc<RefCell<Host>>, work: Work) {
                 ),
             },
             Stage::Store => match picture {
-                Some(picture) => match browser::put(&database, &work.key, picture, &signal).await {
-                    Ok(picture) => (Completion::Stored, Payload::Picture(picture)),
-                    Err(_) => (Completion::StoreUnavailable, Payload::None),
-                },
+                Some(picture) => {
+                    match browser::put(&database, &work.key, picture, &signal, &observer).await {
+                        Ok(picture) => (Completion::Stored, Payload::Picture(picture)),
+                        Err(_) => (Completion::StoreUnavailable, Payload::None),
+                    }
+                }
                 None => (
                     Completion::Failed(policy::Failure::Transient),
                     Payload::None,
                 ),
             },
         };
+        let status = match completion {
+            Completion::Hit { .. }
+            | Completion::Fetched { .. }
+            | Completion::Derived { .. }
+            | Completion::Stored => Outcome::Ok,
+            Completion::Miss => Outcome::Miss,
+            Completion::StorageUnavailable | Completion::StoreUnavailable => {
+                Outcome::StorageUnavailable
+            }
+            Completion::Cancelled => Outcome::Cancelled,
+            Completion::Failed(
+                policy::Failure::Unsupported { .. } | policy::Failure::Capability,
+            ) => Outcome::Unsupported,
+            Completion::Failed(policy::Failure::Transient) if signal.aborted() => {
+                Outcome::Cancelled
+            }
+            Completion::Failed(policy::Failure::Transient) => Outcome::NetworkError,
+        };
+        if let Some(mut http) = http {
+            observer.refetched(ResourceClass::Avatars, &work.key);
+            let outcome = if status == Outcome::Ok {
+                Some(status)
+            } else if http
+                .record_mut()
+                .is_some_and(|r| matches!(r.outcome, Outcome::HttpStatus(_)))
+            {
+                None
+            } else {
+                Some(status)
+            };
+            http.complete(outcome);
+        } else if let Some(mut r) = observer.draft(
+            ResourceClass::Avatars,
+            match ticket.stage {
+                Stage::Lookup => Scope::Lookup,
+                Stage::Derive => Scope::Derive,
+                _ => Scope::Store,
+            },
+            &work.key,
+            Some(&work.key),
+            observation_clock(),
+        ) {
+            r.start_ms = Some(start);
+            r.lane = Lane::L1;
+            r.source = if ticket.stage == Stage::Derive {
+                Source::Memory
+            } else {
+                Source::Indexeddb
+            };
+            r.wire_bytes = WireBytes::Measured(0);
+            r.link_ms = Some(0);
+            r.outcome = status;
+            r.slot = observer.key("avatar");
+            if let Payload::Picture(picture) = &payload {
+                r.stored_bytes = Some(picture.blob.size() as u64);
+            }
+            observer.record(r);
+        }
         if let Some(host) = weak.upgrade() {
             settle(&host, ticket, completion, payload);
         }

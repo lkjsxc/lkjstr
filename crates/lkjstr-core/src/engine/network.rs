@@ -19,6 +19,8 @@ mod coverage;
 mod delivery;
 #[path = "network_eviction.rs"]
 mod eviction;
+#[path = "network_fetch_records.rs"]
+pub(super) mod fetch_records;
 #[path = "network_frontier.rs"]
 mod frontier;
 #[path = "network_horizon.rs"]
@@ -92,44 +94,9 @@ pub enum Effect {
     Disconnect(String),
     Send(String, String),
 }
-#[derive(Default)]
-pub struct Relay {
-    pub(super) publish_only: bool,
-    pub(super) publish_slot: bool,
-    pub(super) auth: auth::Authentication,
-    pub(super) auth_required: bool,
-    pub cooldown_until: u64,
-    pub quality_at: u64,
-    pub prior_useful: u64,
-    pub prior_received: u64,
-    pub online: bool,
-    pub connecting: bool,
-    pub last_rx: u64,
-    pub retry_at: u64,
-    pub failures: u32,
-    pub received: u64,
-    pub duplicates: u64,
-    pub bytes_in: u64,
-    pub bytes_out: u64,
-    pub connected_since: Option<u64>,
-    pub last_error: Option<String>,
-    pub useful: u64,
-    pub sent: u64,
-    pub max_reqs: usize,
-    pub max_filters: usize,
-    pub single_filters: bool, // A rejected envelope disables capability inference.
-    pub max_limit: u64,
-    pub nip11: bool,
-    pub info: super::relay_browse::InfoState,
-    pub next_req_at: u64,
-    pub latency_ms: Option<u64>,
-    pub first_event_ms: Option<u64>,
-    pub(super) read_timing: crate::optimizer::features::Timing,
-    pub(super) event_bytes: Option<u64>,
-    pub(super) last_closed: Option<u64>,
-    pub request_uses: u64,
-    pub timeouts: u32,
-}
+#[path = "network_relay.rs"]
+mod relay_state;
+pub use relay_state::Relay;
 pub(super) struct Request {
     pub relay: String,
     pub wire_id: String,
@@ -194,6 +161,9 @@ pub(super) struct Publication {
 }
 #[derive(Default)]
 pub struct Network {
+    pub fetches: super::fetch_records::Observer,
+    fetch_attempts: fetch_records::FetchAttempts,
+    pub(super) last_fetch: Option<fetch_records::Receipt>,
     pub(super) optimizer: crate::optimizer::Optimizer,
     pub(super) ingress: optimizer::Ingress,
     // Last 256 distinct auth-gated origins, including retired connections.

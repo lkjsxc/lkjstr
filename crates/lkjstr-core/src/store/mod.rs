@@ -53,6 +53,7 @@ pub enum Inserted {
 }
 
 pub struct Store {
+    pub(crate) fetches: crate::engine::fetch_records::Observer,
     events: HashMap<Id, Lease>,
     compact: Pool,
     seen_on: HashMap<Id, Vec<AtomRef>>,
@@ -113,6 +114,7 @@ impl Store {
 
     pub fn with_caps(cap: usize, replaceable_cap: usize) -> Store {
         Store {
+            fetches: Default::default(),
             events: HashMap::new(),
             compact: Pool::default(),
             seen_on: HashMap::new(),

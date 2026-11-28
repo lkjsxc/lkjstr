@@ -104,10 +104,15 @@ export function mediaGrid(
       });
       const wrap = h('div', { class: 'mbox audio' }, audio);
       if (noteId) keepNoteAudio(audio, env, noteId, String(index));
-      loadPlayable(audio, m.url, () => {
-        gone();
-        wrap.replaceWith(box);
-      });
+      loadPlayable(
+        audio,
+        m.url,
+        () => {
+          gone();
+          wrap.replaceWith(box);
+        },
+        { class: 'media', slot: 'media-playback', lane: 'Unknown', view: env.instance },
+      );
       return wrap;
     }
     if (m.type === 'image' || m.thumb) {
@@ -136,6 +141,12 @@ export function mediaGrid(
             done?.();
           },
           done ? 20_000 : undefined,
+          {
+            class: 'media',
+            slot: m.type === 'image' ? 'note-image' : 'poster',
+            view: env.instance,
+            lane: 'Unknown',
+          },
         );
         return (handoff) => {
           cancel(handoff);
@@ -152,7 +163,12 @@ export function mediaGrid(
         playsinline: true,
       });
       box.append(video, h('span', { class: 'mplay' }, icon('play')));
-      loadPlayable(video, m.url, gone);
+      loadPlayable(video, m.url, gone, {
+        class: 'media',
+        slot: 'media-playback',
+        lane: 'Unknown',
+        view: env.instance,
+      });
     }
     return box;
   };

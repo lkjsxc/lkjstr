@@ -191,7 +191,7 @@ pub(super) fn filter_live(f: &NostrFilter) -> bool {
         })
 }
 
-fn counts_filter(f: &NostrFilter) -> bool {
+pub(super) fn counts_filter(f: &NostrFilter) -> bool {
     f.tags.contains_key("e")
         && matches!(
             f.kinds.as_deref(),

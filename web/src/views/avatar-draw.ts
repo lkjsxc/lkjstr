@@ -137,7 +137,11 @@ export function createAvatarDraw(el: HTMLElement, client: AvatarClient, reduced:
         else show(url, motion, token);
       } else clearImage();
     };
-    lease = client.acquire(url, receive);
+    lease = client.acquire(
+      url,
+      receive,
+      !!(avatarOptions(el).cachePublic && avatarModel(el)?.profileId),
+    );
     // Capacity deferral is a letter until the shared client announces room, never an original-image bypass.
     if (!lease) key = undefined;
   };

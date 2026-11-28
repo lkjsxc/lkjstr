@@ -9,7 +9,7 @@ mod drawing;
 mod jobs;
 #[derive(Default)]
 pub(super) struct State {
-    book: policy::Book,
+    pub(super) book: policy::Book,
     database: browser::Database,
     // At most four raw credits; lookup/store/codec permit bounds cover temporary derived payloads.
     raw: BTreeMap<u64, web_sys::Blob>,
@@ -42,14 +42,19 @@ pub(super) fn input(h: &mut Host, client: u64, input: &W) -> bool {
         return false;
     }
     let commands = match input {
-        W::AvatarWant { req, url } => match clock() {
-            Some(at) => h.avatars.book.want(
+        W::AvatarWant {
+            req,
+            url,
+            observe_public,
+        } => match clock() {
+            Some(at) => h.avatars.book.want_observed(
                 policy::Owner {
                     client,
                     request: req.clone(),
                 },
                 url,
                 at,
+                *observe_public,
             ),
             None => vec![Command::Reply {
                 owner: policy::Owner {

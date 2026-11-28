@@ -25,6 +25,7 @@ impl Network {
             .cloned()
             .collect();
         for r in removed {
+            self.observe_disconnect(&r, now);
             self.effects.push(Effect::Disconnect(r.clone()));
             self.relays.remove(&r);
         }

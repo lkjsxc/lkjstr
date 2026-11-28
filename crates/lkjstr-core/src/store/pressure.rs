@@ -179,6 +179,24 @@ impl Store {
             {
                 continue;
             }
+            if self.fetches.decisions_enabled()
+                && crate::engine::fetch_records::ResourceClass::event(event.kind).is_some()
+            {
+                self.fetches.decision(
+                    crate::engine::fetch_records::Action::Keep,
+                    self.now_seconds.saturating_mul(1000),
+                    std::iter::once(&candidate)
+                        .chain(epoch.candidates.iter())
+                        .filter(|c| {
+                            self.lease(&c.id).is_some_and(|event| {
+                                crate::engine::fetch_records::ResourceClass::event(event.kind)
+                                    .is_some()
+                            })
+                        })
+                        .map(|c| (c.id.as_str(), Some(c.score))),
+                    std::iter::once(candidate.id.as_str()),
+                );
+            }
             drop(event);
             self.evict_one(&candidate.id);
             self.keep.advance(candidate.score);

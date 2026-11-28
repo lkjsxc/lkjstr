@@ -20,6 +20,7 @@ mod dm_network;
 mod emoji;
 mod even_history;
 pub mod feedback;
+pub mod fetch_records;
 mod filter_identity;
 pub mod global;
 mod history;
@@ -165,6 +166,9 @@ impl Default for Engine {
 }
 impl Engine {
     pub fn new() -> Self {
+        let network = Network::default();
+        let mut store = Store::with_caps(16000, 4000).weight_retention();
+        store.fetches = network.fetches.clone();
         Self {
             local_reads: Default::default(),
             previews: Default::default(),
@@ -191,12 +195,12 @@ impl Engine {
             notification_ties: BTreeMap::new(),
             notification_zaps: BTreeMap::new(),
             metrics: Default::default(),
-            store: Store::with_caps(16000, 4000).weight_retention(),
+            store,
             read_contexts: Default::default(),
             cached_history_complete: true,
             signed_out_global_filter: true,
             pending: Default::default(),
-            network: Network::default(),
+            network,
             views: BTreeMap::new(),
             signing: BTreeMap::new(),
             outgoing: vec![],

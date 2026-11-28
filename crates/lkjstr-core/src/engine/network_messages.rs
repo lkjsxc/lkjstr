@@ -24,6 +24,14 @@ impl Network {
     ) -> Option<NostrEvent> {
         self.now = now;
         self.delivery_wire = None;
+        if let Some(receipt) = self.last_fetch.take() {
+            self.observed_receipt(
+                Some(receipt),
+                super::super::fetch_records::Outcome::Unknown,
+                None,
+                false,
+            );
+        }
         self.ingress
             .record(now, |bucket| bucket.bytes_in += text.len() as u64);
         if text.len() > 1024 * 1024 {
@@ -68,12 +76,20 @@ impl Network {
                     }
                 }
                 if accepted {
+                    self.observe_event_frame(relay, &subscription_id, &event, text.len(), now);
                     self.delivery_wire = Some((relay.into(), subscription_id));
                     return Some(event);
                 }
                 self.unmatched_frames = self.unmatched_frames.saturating_add(1);
             }
             lkjstr_protocol::RelayMessage::Eose(subscription_id) => {
+                self.observe_end(
+                    relay,
+                    &subscription_id,
+                    now,
+                    super::super::fetch_records::Outcome::Ok,
+                    text.len(),
+                );
                 self.close_delivery_check(relay, &subscription_id);
                 let mut close = false;
                 let mut first_latency = None;
@@ -114,6 +130,13 @@ impl Network {
                 subscription_id,
                 message,
             } => {
+                self.observe_end(
+                    relay,
+                    &subscription_id,
+                    now,
+                    super::super::fetch_records::Outcome::RelayClosed,
+                    text.len(),
+                );
                 self.close_delivery_check(relay, &subscription_id);
                 if self.auth_closed(relay, &subscription_id, &message, now) {
                     return None;

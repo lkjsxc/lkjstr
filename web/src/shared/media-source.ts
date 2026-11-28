@@ -1,3 +1,9 @@
+import {
+  beginImageObservation,
+  type ImageContext,
+  type ImageOutcome,
+} from './media-observation.ts';
+
 // Normalize rendered media only. Links keep the address that was published.
 function publicHost(hostname: string): boolean {
   const host = hostname.replace(/\.$/, '');
@@ -82,9 +88,10 @@ export function loadImage(
   value: string,
   onError: () => void,
   timeout?: number,
+  observation?: ImageContext,
 ): ImageRelease {
   const src = mediaSource(value);
-  if (src) return assignImage(img, src, onError, timeout);
+  if (src) return assignImage(img, src, onError, timeout, observation);
   onError();
   return () => {};
 }
@@ -94,6 +101,7 @@ function assignImage(
   src: string,
   onError: () => void,
   timeout?: number,
+  observation?: ImageContext,
 ): ImageRelease {
   const key = requestKey(src);
   const shared = src.startsWith('http');
@@ -101,7 +109,7 @@ function assignImage(
   if (pending) {
     let release: ImageRelease | undefined;
     const next: ImageWait = (ok) => {
-      if (ok) release = assignImage(img, src, onError, timeout);
+      if (ok) release = assignImage(img, src, onError, timeout, observation);
       else onError();
     };
     pending.wait.add(next);
@@ -129,7 +137,9 @@ function assignImage(
       }, REDRAW_HANDOFF_MS);
     },
   };
+  const observe = beginImageObservation(img, src, observation);
   const detach = (): void => {
+    observe('cancelled');
     clearTimeout(timer);
     clearTimeout(unowned);
     img.removeEventListener('load', loaded);
@@ -140,7 +150,8 @@ function assignImage(
     }
     if (!attempt.wait.has(owner)) img.removeAttribute('src');
   };
-  const finish = (ok: boolean): void => {
+  const finish = (ok: boolean, outcome: ImageOutcome): void => {
+    observe(outcome);
     detach();
     if (!ok) {
       img.removeAttribute('src');
@@ -149,15 +160,15 @@ function assignImage(
     for (const next of attempt.wait) next(ok);
     attempt.wait.clear();
   };
-  const loaded = () => finish(true);
-  const rejected = () => finish(false);
+  const loaded = () => finish(true, 'ok');
+  const rejected = () => finish(false, 'network_error');
   if (shared) {
     images.set(key, new WeakRef(attempt));
     collected.register(attempt, key, attempt);
   }
   img.addEventListener('load', loaded);
   img.addEventListener('error', rejected);
-  if (timeout !== undefined) timer = setTimeout(rejected, timeout);
+  if (timeout !== undefined) timer = setTimeout(() => finish(false, 'timeout'), timeout);
   img.src = src;
   return (handoff) => {
     const removed = attempt.wait.delete(owner);
@@ -167,9 +178,20 @@ function assignImage(
 }
 
 /** Native audio and video retain range requests and their existing preload policies. */
-export function loadPlayable(el: HTMLMediaElement, value: string, onError: () => void): boolean {
+export function loadPlayable(
+  el: HTMLMediaElement,
+  value: string,
+  onError: () => void,
+  observation?: ImageContext,
+): boolean {
   const src = mediaSource(value);
   if (!src) return false;
+  // Metadata is a native browser completion boundary, not the end of all range requests.
+  if (observation) {
+    const finish = beginImageObservation(el, src, observation);
+    el.addEventListener('loadedmetadata', () => finish('ok'), { once: true });
+    el.addEventListener('error', () => finish('network_error'), { once: true });
+  }
   el.addEventListener(
     'error',
     () => {

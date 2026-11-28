@@ -2,6 +2,15 @@ use super::*;
 impl Book {
     /// Request IDs are unique within a client connection; transport replay is idempotent while pending.
     pub fn want(&mut self, owner: Owner, key: &str, now: u64) -> Vec<Command> {
+        self.want_observed(owner, key, now, false)
+    }
+    pub fn want_observed(
+        &mut self,
+        owner: Owner,
+        key: &str,
+        now: u64,
+        observe_public: bool,
+    ) -> Vec<Command> {
         let respond = |result| {
             vec![Command::Reply {
                 owner: owner.clone(),
@@ -67,6 +76,7 @@ impl Book {
                     deadline: 0,
                     spent: 0,
                     persist: true,
+                    observe_public,
                 },
             );
             self.urls.insert(key.to_owned(), id);

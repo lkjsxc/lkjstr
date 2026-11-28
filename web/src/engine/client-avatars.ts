@@ -9,6 +9,7 @@ export type AvatarValue =
 type Receive = (value: AvatarValue) => void;
 type Entry = {
   url: string;
+  observePublic: boolean;
   owners: Map<number, Receive>;
   value: AvatarValue;
   req?: string;
@@ -80,7 +81,12 @@ export function createAvatarClient(transport: Transport) {
     const req = `av${++serial}`;
     entry.req = req;
     pending.set(req, entry); // Install before post: the mock may answer synchronously.
-    transport.post({ t: 'avatar.want', req, url: entry.url });
+    transport.post({
+      t: 'avatar.want',
+      req,
+      url: entry.url,
+      ...(entry.observePublic ? { observePublic: true } : {}),
+    });
   };
   const schedule = (): void => {
     clearTimeout(timer);
@@ -102,7 +108,7 @@ export function createAvatarClient(transport: Transport) {
     );
   };
   return {
-    acquire(url: string, receive: Receive): (() => void) | undefined {
+    acquire(url: string, receive: Receive, observePublic = false): (() => void) | undefined {
       if (disposed) return;
       if (!url || new TextEncoder().encode(url).length > 2048) {
         receive({ kind: 'rejected' });
@@ -111,7 +117,7 @@ export function createAvatarClient(transport: Transport) {
       let entry = entries.get(url);
       if (owners >= 512 || (!entry && entries.size >= 256)) return;
       if (!entry) {
-        entry = { url, owners: new Map(), value: { kind: 'pending' } };
+        entry = { url, observePublic, owners: new Map(), value: { kind: 'pending' } };
         entries.set(url, entry);
       }
       const owned = entry,

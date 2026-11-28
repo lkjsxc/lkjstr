@@ -6,6 +6,8 @@ pub(super) fn apply(
     reads: &Reads,
     key: &str,
     change: &Change,
+    observer: Option<&Observer>,
+    evicted: &mut Vec<KeyHash>,
 ) -> Result<Option<Picture>, JsValue> {
     let record_value = reads.entries.result()?;
     let blob_value = reads.blob.result()?;
@@ -58,6 +60,20 @@ pub(super) fn apply(
                 let index: Vec<_> = rows.iter().map(|record| record.entry.clone()).collect();
                 let plan = cache::insert(totals, &index, key, candidate.blob.size() as u64)
                     .map_err(|_| JsValue::from_str("avatar-cache-accounting"))?;
+                if let Some(observer) = observer {
+                    if observer.decisions_enabled() {
+                        observer.decision(
+                            lkjstr_core::engine::fetch_records::Action::Keep,
+                            crate::browser::fetch_observation::clock(),
+                            index
+                                .iter()
+                                .filter(|row| row.key != key)
+                                .map(|row| (row.key.as_str(), Some(row.used))),
+                            plan.remove.iter().map(String::as_str),
+                        );
+                    }
+                    evicted.extend(plan.remove.iter().filter_map(|key| observer.key(key)));
+                }
                 let picture = prior_blob.unwrap_or_else(|| candidate.clone());
                 Ok((plan, picture))
             })();

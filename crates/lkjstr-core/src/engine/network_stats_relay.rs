@@ -62,6 +62,7 @@ pub(in crate::engine) fn relay_error(value: &str) -> &'static str {
 impl Network {
     pub(super) fn send(&mut self, relay: &str, value: Value) {
         let text = value.to_string();
+        self.observe_req(relay, &value, text.len());
         if let Some(r) = self.relays.get_mut(relay) {
             r.sent += 1;
             r.bytes_out += text.len() as u64;

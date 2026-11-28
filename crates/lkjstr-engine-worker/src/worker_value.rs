@@ -7,6 +7,13 @@ impl Host {
             return;
         }
         if let Ok(mut input) = serde_wasm_bindgen::from_value::<W>(value.clone()) {
+            // Local observations must not wake the baseline scheduler or enter startup queues.
+            if let W::MediaObserved { observation } = input {
+                if self.sessions.contains_key(&id) {
+                    self.engine.network.fetches.plain_image(observation);
+                }
+                return;
+            }
             if let W::Act {
                 req,
                 action: A::Upload { bytes, .. },
