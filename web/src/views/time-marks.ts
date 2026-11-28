@@ -9,6 +9,8 @@ const HALF = 6;
 const GAP = 14;
 const DOT_GAP = 2;
 const SNAP = 6;
+// Leave room for the held scrub box (about 24px tall) and the 12px label.
+const SCRUB_GAP = 20;
 export const LENS_RADIUS = 48;
 
 /** Place coarser periods first. A labelled period opens its next unit where the rail has room. */
@@ -46,6 +48,8 @@ export function planMarks(years: readonly Span[], height: number, wide: boolean)
     for (const parent of layer) {
       for (const span of parent.children) {
         dot(span, 2);
+        // A month head shares its day text and boundary; a clock head can repeat too.
+        // Keep the parent's tone and snap target, but still open the child's finer units.
         const repeatsParent = span.y === parent.y && span.text === parent.text;
         if (wide && !span.coarse && (repeatsParent || place(span, false))) next.push(span);
         else if (!span.coarse) frontier.push(span);
@@ -65,9 +69,9 @@ export function lensMarks(plan: MarkPlan, y: number, height: number): Label[] {
   for (const span of plan.frontier) {
     const natural = Math.max(start, span.y + HALF);
     if (natural > end) break;
-    const centre = Math.abs(natural - y) < 14 ? y + 14 : natural;
+    const centre = Math.abs(natural - y) < SCRUB_GAP ? y + SCRUB_GAP : natural;
     if (span.end < start || centre > end) continue;
-    if (labels.some((l) => Math.abs(l.centre - centre) < 10)) continue;
+    if (labels.some((l) => Math.abs(l.centre - centre) < GAP)) continue;
     labels.push({ ...span, centre, major: false });
   }
   return labels;

@@ -41,7 +41,7 @@ it('puts the local new year above its older UTC month and merges a local day acr
   const years = rulerSpans(bands, days, clock);
   const firstDay = children(children(years))[0]!;
   expect(years.map((s) => s.text)).toEqual(['2027', '2026']);
-  expect(firstDay).toMatchObject({ text: '01', y: 0 });
+  expect(firstDay).toMatchObject({ text: '01/01', y: 0 });
   expect(firstDay.children.map((h) => h.text)).toEqual(['14:00', '01:00']);
   expect(firstDay.children[1]?.place).toEqual({ month: Date.UTC(2026, 11, 1), offset: 0 });
   expect(firstDay.end).toBeGreaterThan(bands[1]!.y);

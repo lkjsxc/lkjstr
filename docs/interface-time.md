@@ -70,16 +70,18 @@ across units: :05, :10, :15/:45, :30, then plain hours (where :00 sits), 06/18, 
 11th/21st, the 1st (a plain month), April/July/October, January and the year, 50% to 92% `--fg` over `--paper`.
 A smaller tick can show the next unit when the label cannot fit.
 
-- **Dates.** Year labels say `yyyy`, months say `mm/dd` of their newest day, days say `dd`, and clock labels
-  say `HH:mm` of the newest occupied five-minute part in that span. Where only UTC month totals are known,
-  the ruler shows the year and month dots.
+- **Dates.** Year labels say `yyyy`, months say `mm/dd` of their newest day, days say `mm/dd`, and clock labels
+  say `HH:mm` of the newest occupied five-minute part in that span. A day repeating its month label at the
+  same boundary keeps the month's tone and opens the day's clock units without a duplicate date. Where only UTC
+  month totals are known, the ruler shows the year and month dots.
 - **Hover (fine pointer, any rail width).** A 1px `--sep` line crosses the rail at the pointer. Its label shows
   the full time if the note a press there would reach is loaded, or `yyyy/mm/dd` from the day counts when known.
   The time fades after one second of idle hover. Leaving the rail removes both. The line stays with a held mouse.
 - **Held.** Within 48px of the pointer a short second column shows the next finer available unit. It follows
-  the pointer and leaves the held time label in place. Snapping uses the resting labels.
+  the pointer, keeps 14px between its label centres and leaves 20px around the held time label centre.
+  Snapping uses the resting labels.
 - **Narrow rail (under 520px).** Years show over the content on hover or hold, with dots at month starts.
-  Holding opens the same finer column.
+  Holding opens the same finer column to the left of the years.
 
 ## C3 Jumps and loading
 

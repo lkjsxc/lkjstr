@@ -92,12 +92,13 @@ export function rulerSpans(
     const year = date.getFullYear();
     const month = date.getMonth() + 1;
     const day = date.getDate();
+    const dateText = `${pad(month)}/${pad(day)}`;
     const annual = append(years, 'year', year, String(year), YEAR_TONE, band, offset, count);
     const monthly = append(
       annual.children,
       'month',
       month,
-      `${pad(month)}/${pad(day)}`,
+      dateText,
       monthTone(month),
       band,
       offset,
@@ -107,7 +108,7 @@ export function rulerSpans(
       monthly.children,
       'day',
       part.at,
-      pad(day),
+      dateText,
       dayTone(day),
       band,
       offset,

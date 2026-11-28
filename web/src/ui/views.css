@@ -156,7 +156,8 @@
 .time-label { position: absolute; right: 20px; color: color-mix(in srgb, var(--fg) var(--tone, 60%), var(--paper)); font-size: 11px; line-height: 12px; font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; transform: translateY(-50%); pointer-events: none; opacity: 0; }
 .time-rail:hover .time-label, .time-rail.held .time-label { opacity: 1; }
 .time-minor { font-size: 9px; }
-.time-lens .time-label { right: calc(var(--rail-size) + 4px); }
+/* Keep the second column left of the resting labels even when the years float over a narrow feed. */
+.time-lens .time-label { right: 60px; }
 /* Rounder boundaries are darker: `--tone` steps 3.5% a rank from :05 (50%) to years (92%), by colour alone (owner, 2026-11-27). */
 .time-rail .time-year { font-weight: 600; }
 .time-rail .time-year.current { color: var(--fg); }
