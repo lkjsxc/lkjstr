@@ -3,7 +3,7 @@ import { h } from '../shared/h.ts';
 import { centred } from './feed-scrub.ts';
 import { type Label, lensMarks, type MarkPlan, planMarks } from './time-marks.ts';
 import type { ClockPart, Day } from './time-parts.ts';
-import { rulerSpans } from './time-ruler.ts';
+import { markSize, markTone, rulerSpans } from './time-ruler.ts';
 import type { TimeBand } from './time-scale.ts';
 
 export function createTimeRailNodes(el: HTMLElement) {
@@ -46,14 +46,15 @@ export function drawCurrentYear(marks: HTMLElement, at: number, local: boolean):
     number.classList.toggle('current', number.textContent === year);
 }
 
-// `--tone` is the span's share of `--fg` over `--paper` (docs/interface-time.md C2).
-const top = (y: number, tone: number): string => `top: ${y}px; --tone: ${tone}%`;
+// `--tone` is the mark's share of `--fg` over `--paper` and `--size` its text size, both from its rank
+// (docs/interface-time.md C2).
+const top = (y: number, rank: number): string => `top: ${y}px; --tone: ${markTone(rank)}%`;
 const labelNode = (l: Label): HTMLElement =>
   h(
     'span',
     {
-      class: `time-label time-${l.level} ${l.major ? 'time-major' : 'time-minor'}`,
-      style: top(l.centre, l.tone),
+      class: `time-label time-${l.level}`,
+      style: `${top(l.centre, l.rank)}; --size: ${markSize(l.rank)}px`,
     },
     l.text,
   );
@@ -88,7 +89,7 @@ export function createMarkPainter(marks: HTMLElement, lens: HTMLElement) {
           ...plan.dots.map((d) =>
             h('span', {
               class: d.size === 2 ? 'time-dot fine' : 'time-dot',
-              style: top(d.y, d.tone),
+              style: top(d.y, d.rank),
             }),
           ),
           ...plan.labels.map(labelNode),

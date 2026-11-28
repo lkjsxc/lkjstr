@@ -5,7 +5,7 @@ import { dmTimeline } from '../src/views/dm-rail.ts';
 import { createMarkPainter, createTimeRailNodes } from '../src/views/time-draw.ts';
 import { snap } from '../src/views/time-marks.ts';
 import { timePreview } from '../src/views/time-preview.ts';
-import { monthTone } from '../src/views/time-ruler.ts';
+import { markSize, markTone, monthRank, YEAR_RANK } from '../src/views/time-ruler.ts';
 import { timeScale } from '../src/views/time-scale.ts';
 
 // Local dates, far from midnight so the fixture does not depend on the runner's UTC offset.
@@ -58,7 +58,17 @@ it.each([
   expect(texts(marks, '.time-label').filter((text) => text === '11/29')).toHaveLength(1);
   const month = labels.find((l) => l.text === '11/29')!;
   expect(month.level).toBe('month');
-  expect(month.tone).toBe(monthTone(11));
+  expect(month.rank).toBe(monthRank(11));
+  // The drawn label carries both looks of its rank; a year is the largest and a clock label the smallest.
+  const drawn = (text: string) =>
+    [...marks.querySelectorAll<HTMLElement>('.time-label')].find((el) => el.textContent === text)!;
+  const size = (text: string) => Number.parseFloat(drawn(text).style.getPropertyValue('--size'));
+  expect(drawn('11/29').style.getPropertyValue('--tone')).toBe(`${markTone(month.rank)}%`);
+  expect(size('11/29')).toBe(markSize(month.rank));
+  expect(size('2026')).toBe(markSize(YEAR_RANK));
+  expect(size('2026')).toBeGreaterThan(size('11/29'));
+  expect(size('11/29')).toBeGreaterThan(size('11/28'));
+  expect(size('11/28')).toBeGreaterThan(size('16:00'));
   expect(snap(labels, month.centre)?.place).toEqual(month.place);
   // The suppressed month-head day is not a leaf: its first hour is still reachable.
   expect(labels.find((l) => l.text === '16:00')).toMatchObject({
@@ -78,6 +88,9 @@ it('draws the same MM/DD text in a wide rail lens when a day cannot fit at rest'
   ] as const) {
     painter.lens(y, 70);
     expect(texts(lens, '.time-day')).toContain(text);
+    // The held lens draws the same rank-sized labels as the resting column.
+    for (const el of lens.querySelectorAll<HTMLElement>('.time-label'))
+      expect(Number.parseFloat(el.style.getPropertyValue('--size'))).toBeGreaterThanOrEqual(9);
     expect(texts(lens, '.time-label')).not.toContain('11/29');
     spaced(lens, 70);
     expect(centres(lens).every((centre) => Math.abs(centre - y) >= 20)).toBe(true);

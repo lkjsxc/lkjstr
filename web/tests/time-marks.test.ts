@@ -1,14 +1,16 @@
 import { afterEach, expect, it } from 'vitest';
-import { lensMarks, planMarks, snap } from '../src/views/time-marks.ts';
+import { GAP, LABEL_LINE, lensMarks, planMarks, snap } from '../src/views/time-marks.ts';
 import { timePreview } from '../src/views/time-preview.ts';
 import {
-  dayTone,
-  hourTone,
-  minuteTone,
-  monthTone,
+  dayRank,
+  hourRank,
+  markSize,
+  markTone,
+  minuteRank,
+  monthRank,
   rulerSpans,
   type Span,
-  YEAR_TONE,
+  YEAR_RANK,
 } from '../src/views/time-ruler.ts';
 import { timeScale } from '../src/views/time-scale.ts';
 
@@ -135,29 +137,65 @@ it('uses a label centre for snap, and bounds the planning time for a long retain
   expect(snap([label], label.centre + 7)).toBeUndefined();
 });
 
-it('darkens rounder boundaries in one ladder from five minutes to years', () => {
-  const ladder = [
-    minuteTone(5),
-    minuteTone(10),
-    minuteTone(45),
-    minuteTone(30),
-    hourTone(9),
-    hourTone(18),
-    hourTone(12),
-    hourTone(0),
-    dayTone(21),
-    dayTone(1),
-    monthTone(5),
-    monthTone(10),
-    monthTone(1),
-    YEAR_TONE,
-  ];
-  for (let i = 1; i < ladder.length; i++) expect(ladder[i]).toBeGreaterThanOrEqual(ladder[i - 1]!);
-  expect(ladder[0]).toBe(50);
-  expect(minuteTone(0)).toBe(hourTone(9));
-  expect(hourTone(0)).toBe(dayTone(14));
-  expect(dayTone(1)).toBe(monthTone(5));
-  expect(new Set(ladder).size).toBe(13);
-  expect(dayTone(31)).toBe(dayTone(2));
-  expect(dayTone(11)).toBeGreaterThan(dayTone(12));
+const ladder = [
+  minuteRank(5),
+  minuteRank(10),
+  minuteRank(45),
+  minuteRank(30),
+  hourRank(9),
+  hourRank(18),
+  hourRank(12),
+  hourRank(0),
+  dayRank(21),
+  monthRank(5),
+  monthRank(10),
+  monthRank(1),
+  YEAR_RANK,
+];
+
+it('ranks rounder boundaries in one ladder from five minutes to years', () => {
+  expect(ladder).toEqual(Array.from({ length: 13 }, (_, rank) => rank));
+  expect(minuteRank(0)).toBe(hourRank(9));
+  expect(hourRank(0)).toBe(dayRank(14));
+  expect(dayRank(1)).toBe(monthRank(5));
+  expect(minuteRank(15)).toBe(minuteRank(45));
+  expect(dayRank(31)).toBe(dayRank(2));
+  expect(dayRank(11)).toBeGreaterThan(dayRank(12));
+});
+
+it('darkens and enlarges every rank, inside the label line and the label column', () => {
+  for (const rank of ladder.slice(1)) {
+    expect(markTone(rank)).toBeGreaterThan(markTone(rank - 1));
+    expect(markSize(rank)).toBeGreaterThan(markSize(rank - 1));
+  }
+  expect([markTone(0), markTone(YEAR_RANK)]).toEqual([50, 92]);
+  expect([markSize(0), markSize(YEAR_RANK)]).toEqual([9, 12]);
+  // Steps of a quarter pixel are exact in CSS and keep each unit's plain label apart from the last.
+  expect([hourRank(9), dayRank(14), monthRank(5)].map(markSize)).toEqual([10, 10.75, 11.25]);
+  // Every size fits the one line box that the 14px between centres was planned for.
+  expect(markSize(YEAR_RANK)).toBeLessThanOrEqual(LABEL_LINE);
+  expect(GAP).toBeGreaterThan(LABEL_LINE);
+  // The rail's paper is 36px wide left of the ticks (56px rail, labels 20px from its right edge). Tabular
+  // digits advance at most 0.62em and a slash or colon 0.4em in the interface fonts; a 600 year digit 0.66em.
+  const column = 36;
+  expect((4 * 0.62 + 0.4) * markSize(monthRank(1))).toBeLessThanOrEqual(column);
+  expect(4 * 0.66 * markSize(YEAR_RANK)).toBeLessThanOrEqual(column);
+});
+
+it('gives each placed label and tick the rank of its own boundary', () => {
+  const plan = from(
+    [new Date(2026, 0, 1, 0, 30).getTime(), new Date(2025, 5, 14, 9, 5).getTime()],
+    900,
+  );
+  const rank = (text: string, level: string) =>
+    plan.labels.find((l) => l.text === text && l.level === level)?.rank;
+  expect(rank('2026', 'year')).toBe(YEAR_RANK);
+  expect(rank('01/01', 'month')).toBe(monthRank(1));
+  expect(rank('06/14', 'month')).toBe(monthRank(6));
+  expect(rank('00:30', 'hour')).toBe(hourRank(0));
+  expect(rank('09:05', 'hour')).toBe(hourRank(9));
+  const sizes = plan.labels.map((l) => markSize(l.rank));
+  expect(Math.min(...sizes)).toBeGreaterThanOrEqual(9);
+  expect(Math.max(...sizes)).toBe(12);
+  expect(plan.dots.every((d) => d.rank >= 0 && d.rank <= YEAR_RANK)).toBe(true);
 });

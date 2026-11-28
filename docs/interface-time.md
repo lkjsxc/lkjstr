@@ -64,15 +64,18 @@ It starts at the occupied years,
 with the oldest year first when labels compete for space. Each labelled span can show its next calendar unit:
 month, day, hour, quarter hour, then five minutes, as long as the rank map leaves 14px between label centres.
 A boundary marks the period's newest note. A child starting at the same boundary can use the next available line
-inside its span. Empty spans use no room. The year is an 11px major label and the current year uses `--fg`.
-Finer labels are 9px. Each label and tick takes its tone from how round its boundary is, one rank ladder
-across units: :05, :10, :15/:45, :30, then plain hours (where :00 sits), 06/18, 12, midnight (a plain day), the
-11th/21st, the 1st (a plain month), April/July/October, January and the year, 50% to 92% `--fg` over `--paper`.
+inside its span. Empty spans use no room. Each label and tick takes its tone from how round its boundary is, one
+rank ladder across units: :05, :10, :15/:45, :30, then plain hours (where :00 sits), 06/18, 12, midnight (a plain
+day), the 11th/21st, the 1st (a plain month), April/July/October, January and the year, 50% to 92% `--fg` over
+`--paper`. Label text grows along the same ladder, 0.25px a rank (owner, 2026-11-28): 9px at :05, 10px at plain
+hours, 10.75px at plain days, 11.25px at plain months, 11.75px at January and 12px at the year, which is also 600
+and uses `--fg` when current. Every size shares one 12px line, so the 14px between centres holds for all of
+them, and the widest label (a January `mm/dd`) stays inside the 36px column left of the ticks.
 A smaller tick can show the next unit when the label cannot fit.
 
 - **Dates.** Year labels say `yyyy`, months say `mm/dd` of their newest day, days say `mm/dd`, and clock labels
   say `HH:mm` of the newest occupied five-minute part in that span. A day repeating its month label at the
-  same boundary keeps the month's tone and opens the day's clock units without a duplicate date. Where only UTC
+  same boundary keeps the month's tone and size and opens the day's clock units without a duplicate date. Where only UTC
   month totals are known, the ruler shows the year and month dots.
 - **Hover (fine pointer, any rail width).** A 1px `--sep` line crosses the rail at the pointer. Its label shows
   the full time if the note a press there would reach is loaded, or `yyyy/mm/dd` from the day counts when known.

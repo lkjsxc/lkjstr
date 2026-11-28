@@ -12,28 +12,32 @@ export type Span = {
   readonly place: TimePlace;
   readonly children: Span[];
   readonly coarse?: boolean;
-  /** Share of `--fg` over `--paper`, in percent: rounder boundaries are darker (owner, 2026-11-27). */
-  readonly tone: number;
+  /** How round the boundary is, 0 (:05) to 12 (year); it sets the mark's tone and text size. */
+  readonly rank: number;
 };
 
 // One ladder of ranks from the faintest five minutes to the year (docs/interface-time.md C2). A boundary that
 // is also the next unit's boundary shares its rank: :00 is a plain hour, midnight a plain day, the 1st a plain month.
-const tone = (rank: number): number => 50 + 3.5 * rank;
 /** Minutes, ranks 0 to 4: :05, :10, :15 and :45, :30, then :00. */
-export const minuteTone = (min: number): number => {
+export const minuteRank = (min: number): number => {
   const round = [60, 30, 15, 10].findIndex((m) => min % m === 0);
-  return tone(round < 0 ? 0 : 4 - round);
+  return round < 0 ? 0 : 4 - round;
 };
 /** Hours, ranks 4 to 7: plain, 06 and 18, 12, then midnight. */
-export const hourTone = (hour: number): number =>
-  tone(hour === 0 ? 7 : hour === 12 ? 6 : hour % 6 === 0 ? 5 : 4);
+export const hourRank = (hour: number): number =>
+  hour === 0 ? 7 : hour === 12 ? 6 : hour % 6 === 0 ? 5 : 4;
 /** Days, ranks 7 to 9: plain, the 11th and 21st, then the 1st. */
-export const dayTone = (day: number): number =>
-  tone(day === 1 ? 9 : day === 11 || day === 21 ? 8 : 7);
+export const dayRank = (day: number): number => (day === 1 ? 9 : day === 11 || day === 21 ? 8 : 7);
 /** Months, ranks 9 to 11: plain, April, July and October, then January. */
-export const monthTone = (month: number): number =>
-  tone(month === 1 ? 11 : month % 3 === 1 ? 10 : 9);
-export const YEAR_TONE = tone(12);
+export const monthRank = (month: number): number => (month === 1 ? 11 : month % 3 === 1 ? 10 : 9);
+export const YEAR_RANK = 12;
+/** Share of `--fg` over `--paper`, in percent: rounder boundaries are darker (owner, 2026-11-27). */
+export const markTone = (rank: number): number => 50 + 3.5 * rank;
+/**
+ * Label text size in px: rounder boundaries are also larger, 9px to 12px (owner, 2026-11-28). The largest stays
+ * inside the 12px label line, and a January `mm/dd` inside the 36px column left of the ticks.
+ */
+export const markSize = (rank: number): number => 9 + 0.25 * rank;
 
 const pad = (n: number): string => String(n).padStart(2, '0');
 const minute = 60_000;
@@ -55,7 +59,7 @@ export function rulerSpans(
     level: Level,
     key: number,
     text: string,
-    tone: number,
+    rank: number,
     band: TimeBand,
     offset: number,
     count: number,
@@ -77,7 +81,7 @@ export function rulerSpans(
       place: { month: band.at, offset },
       children: [],
       coarse,
-      tone,
+      rank,
     };
     list.push(span);
     return span;
@@ -93,13 +97,13 @@ export function rulerSpans(
     const month = date.getMonth() + 1;
     const day = date.getDate();
     const dateText = `${pad(month)}/${pad(day)}`;
-    const annual = append(years, 'year', year, String(year), YEAR_TONE, band, offset, count);
+    const annual = append(years, 'year', year, String(year), YEAR_RANK, band, offset, count);
     const monthly = append(
       annual.children,
       'month',
       month,
       dateText,
-      monthTone(month),
+      monthRank(month),
       band,
       offset,
       count,
@@ -109,7 +113,7 @@ export function rulerSpans(
       'day',
       part.at,
       dateText,
-      dayTone(day),
+      dayRank(day),
       band,
       offset,
       count,
@@ -129,7 +133,7 @@ export function rulerSpans(
         'hour',
         at - min * minute,
         text,
-        hourTone(hour),
+        hourRank(hour),
         band,
         start,
         notes,
@@ -139,12 +143,12 @@ export function rulerSpans(
         'quarter',
         at - (min - quarter) * minute,
         text,
-        minuteTone(quarter),
+        minuteRank(quarter),
         band,
         start,
         notes,
       );
-      append(quarters.children, 'five', at, text, minuteTone(min), band, start, notes);
+      append(quarters.children, 'five', at, text, minuteRank(min), band, start, notes);
     }
   }
   for (const band of bands) {
@@ -154,13 +158,13 @@ export function rulerSpans(
     const date = new Date(band.at);
     const year = date.getUTCFullYear();
     const month = date.getUTCMonth() + 1;
-    const annual = append(years, 'year', year, String(year), YEAR_TONE, band, offset, count);
+    const annual = append(years, 'year', year, String(year), YEAR_RANK, band, offset, count);
     append(
       annual.children,
       'month',
       month,
       pad(month),
-      monthTone(month),
+      monthRank(month),
       band,
       offset,
       count,

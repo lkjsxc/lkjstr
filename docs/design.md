@@ -235,10 +235,11 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
   It appears with the first dated row at the share scrolled, beside provisional marks from the loaded rows. The counted rank map and its marks take over as counts arrive.
   Hover and hold highlight it. On a tile of 520px or more, the right-aligned ruler starts at local years.
   A gutter separates the labels from ticks on the grip axis. Each labelled span shows its next unit when
-  the rank map gives it room, from months and days through hours, quarter hours and five minutes. Rounder boundaries are darker, by colour and weight alone (owner, 2026-11-27):
+  the rank map gives it room, from months and days through hours, quarter hours and five minutes. Rounder boundaries are darker (owner, 2026-11-27) and larger (owner, 2026-11-28):
   labels and their ticks mix `--fg` into `--paper` on one ladder, 50% for :05 up 3.5% a rank to 92% for years,
   through :10, :15/:45, :30, hours, 06/18, 12, midnight, days, the 11th/21st, the 1st, quarter months and January.
-  Years are also larger and 600, the current year in text colour. Finer ticks can stand without a label. While held, a short column around the pointer shows one finer
+  Label text grows on the same ladder, 9px for :05 up 0.25px a rank to 12px for years, on one 12px line.
+  Years are also 600, the current year in text colour. Finer ticks can stand without a label. While held, a short column around the pointer shows one finer
   unit with the reading time still beside the grip. A fine pointer draws a `--sep` line and the time under it.
   Pressed or dragged it goes to that time (near a label, to that period's newest note), says the day while it loads,
   and leaves a thin tick to come back by; `[` and `]` step a day, Backspace returns

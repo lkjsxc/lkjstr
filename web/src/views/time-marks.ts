@@ -2,11 +2,14 @@
 import type { Span } from './time-ruler.ts';
 
 export type Label = Span & { readonly centre: number; readonly major: boolean };
-export type Dot = { readonly y: number; readonly size: 2 | 3; readonly tone: number };
+export type Dot = { readonly y: number; readonly size: 2 | 3; readonly rank: number };
 export type MarkPlan = { labels: Label[]; dots: Dot[]; frontier: Span[] };
 
-const HALF = 6;
-const GAP = 14;
+/** Height of a label's line box; `markSize` never exceeds it. */
+export const LABEL_LINE = 12;
+const HALF = LABEL_LINE / 2;
+/** Least distance between label centres: one line and 2px of air. */
+export const GAP = 14;
 const DOT_GAP = 2;
 const SNAP = 6;
 // Leave room for the held scrub box (about 24px tall) and the 12px label.
@@ -21,7 +24,7 @@ export function planMarks(years: readonly Span[], height: number, wide: boolean)
   const bottom = height - HALF;
   const dot = (s: Span, size: Dot['size']): void => {
     if (dots.every((d) => Math.abs(d.y - s.y) >= (d.size + size) / 2 + DOT_GAP))
-      dots.push({ y: s.y, size, tone: s.tone });
+      dots.push({ y: s.y, size, rank: s.rank });
   };
   const place = (s: Span, major: boolean): boolean => {
     let centre = Math.min(bottom, s.y + HALF);
@@ -49,7 +52,7 @@ export function planMarks(years: readonly Span[], height: number, wide: boolean)
       for (const span of parent.children) {
         dot(span, 2);
         // A month head shares its day text and boundary; a clock head can repeat too.
-        // Keep the parent's tone and snap target, but still open the child's finer units.
+        // Keep the parent's rank and snap target, but still open the child's finer units.
         const repeatsParent = span.y === parent.y && span.text === parent.text;
         if (wide && !span.coarse && (repeatsParent || place(span, false))) next.push(span);
         else if (!span.coarse) frontier.push(span);
