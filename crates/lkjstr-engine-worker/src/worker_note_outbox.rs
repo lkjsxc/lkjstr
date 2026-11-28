@@ -145,6 +145,8 @@ pub(super) fn persist(host: &Rc<RefCell<Host>>) {
             return;
         }
         h.note_outbox.busy = false;
+        // The first frame waits for this commit: run the next turn now, not at the quiet deadline.
+        h.wake();
         if let Ok(idb_accounts::Reply::NoteOutbox(settled)) = result {
             h.engine.network.note_outbox.committed(checkpoint.revision);
             for status in settled {

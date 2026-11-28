@@ -100,7 +100,7 @@ impl Network {
                 }
                 let unavailable = p.event.kind == 1
                     && self.relays.get(relay).is_some_and(|r| {
-                        r.cooldown_until >= until
+                        r.write_cooldown_until >= until
                             || (!r.online && !r.connecting && r.retry_at >= until)
                     });
                 if now < until && !unavailable {

@@ -161,6 +161,13 @@ impl Network {
         (blocked, std::cmp::Reverse(weight))
     }
 
+    /// A relay that rate-limits an EVENT also rests from posts; a read cooldown alone never does.
+    pub(super) fn cool_down_writes(&mut self, url: &str, now: u64) {
+        self.cool_down(url, now);
+        if let Some(r) = self.relays.get_mut(url) {
+            r.write_cooldown_until = r.cooldown_until;
+        }
+    }
     pub(super) fn cool_down(&mut self, url: &str, now: u64) {
         if let Some(r) = self.relays.get_mut(url) {
             r.failures = r.failures.saturating_add(1).min(8);

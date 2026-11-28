@@ -43,6 +43,17 @@ impl Publication {
     }
 }
 
+/// A post is a person waiting: each admitted route gets one connection attempt now, whatever
+/// reconnect backoff earlier read failures left behind. A failed attempt backs off as before.
+pub(super) fn reconnect_now(relays: &mut BTreeMap<String, Relay>, url: &str, now: u64) {
+    if let Some(relay) = relays.get_mut(url)
+        && !relay.online
+        && !relay.connecting
+    {
+        relay.retry_at = relay.retry_at.min(now);
+    }
+}
+
 impl Network {
     fn read_wanted(&self, url: &str) -> bool {
         self.requests
@@ -72,6 +83,7 @@ impl Network {
                         .is_some_and(|s| s == "pending")
                 {
                     publication.admit(url.clone(), now);
+                    reconnect_now(&mut self.relays, url, now);
                 }
             }
         }
@@ -127,6 +139,7 @@ impl Network {
                     self.publish_cursor = Some(id.clone());
                 }
                 publication.admit(url.clone(), now);
+                reconnect_now(&mut self.relays, &url, now);
                 let more = publication.has_waiting();
                 if created {
                     self.apply_quality(&url, now);
@@ -205,3 +218,7 @@ impl Network {
         }
     }
 }
+
+#[cfg(test)]
+#[path = "network_publish_slots_test.rs"]
+mod tests;

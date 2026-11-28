@@ -229,7 +229,7 @@ impl Network {
             self.profiles_changed = true;
             self.quality_revision = self.quality_revision.wrapping_add(1);
             if limited && self.publications.contains_key(id) {
-                self.cool_down(relay, now);
+                self.cool_down_writes(relay, now);
             }
         }
     }

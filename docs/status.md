@@ -147,6 +147,8 @@ subscription counts. SharedWorker and Web Locks/BroadcastChannel share visible w
 Stats shows relay data; [Relay tabs](interface-relay.md) follow one relay live. [Public writes](orchestration.md) resolve on the first matching positive OK.
 Signed notes appear in Home, Profile and Thread before any relay reply. Cached write lists and connected write relays send while discovery runs.
 The note outbox commits before sending and retries with jittered 2-60 second backoff until relay OK, hard refusal or discard.
+A post leaves at once: a relay's read rate-limit cooldown and reconnect backoff never hold it. Each route connects when admitted
+and again 1.5 seconds after a failure while the post waits. Only a rate limit answered to an EVENT rests that relay's posts.
 Routes get ten seconds to connect and eight after the first frame. Inbox checks yield to writes. Receipts route deletes. Lists retain opaque fields.
 Lists wait for lookup and reject unsupported private removals. Row patches retain moved rows. Signed reactions share the next planning pass.
 [Signing measurements](signing-latency.md).

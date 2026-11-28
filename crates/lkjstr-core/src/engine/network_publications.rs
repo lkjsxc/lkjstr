@@ -48,6 +48,7 @@ impl Network {
         for route in routes.iter_mut().filter(|d| d.state == "pending") {
             let url = &route.url;
             if event.kind != 1 && self.admit_non_note_route(url, now) {
+                publish_slots::reconnect_now(&mut self.relays, url, now);
                 route_deadlines.insert(url.clone(), (deadline, None));
             } else if matches!(event.kind, 1 | 5) {
                 // Expanded deletion plans can have more destinations than the common pool.
@@ -121,7 +122,9 @@ impl Network {
                         .get(relay)
                         .is_none_or(|at| now.saturating_sub(*at) >= 5000)
                     && self.relays.get(relay).is_some_and(|r| {
-                        r.online && now >= r.cooldown_until && !r.auth.writes.contains(&p.event.id)
+                        r.online
+                            && now >= r.write_cooldown_until
+                            && !r.auth.writes.contains(&p.event.id)
                     })
                 {
                     p.sent.insert(relay.clone(), now);

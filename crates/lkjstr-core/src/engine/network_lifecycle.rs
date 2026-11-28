@@ -16,6 +16,8 @@ impl Network {
         self.profiles_changed = true;
         self.quality_revision = self.quality_revision.wrapping_add(1);
         self.effects.push(Effect::Disconnect(relay.into()));
+        // While a post waits on this relay, try again soon; its route's own deadline bounds this.
+        let posting = self.publications.values().any(|p| p.pending_on(relay, now));
         if let Some(r) = self.relays.get_mut(relay) {
             r.auth.reset();
             r.online = false;
@@ -24,6 +26,9 @@ impl Network {
             r.last_error = Some("connection-lost".into());
             r.failures = r.failures.saturating_add(1);
             r.retry_at = now + 1000 * (1u64 << r.failures.min(6)) + (r.received % 997);
+            if posting {
+                r.retry_at = r.retry_at.min(now + 1_500);
+            }
         }
         for p in self.publications.values_mut() {
             p.sent.remove(relay);

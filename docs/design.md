@@ -303,7 +303,8 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
   a name, NIP-05 address or npub narrows or finds one. Arrows with Enter or Tab, or a tap, choose; Escape closes. No match
   is one quiet line and Enter stays a new line. Chosen people are chips under the field, and a waiting or failed draft
   already shows them as the links the published note will have.
-- Sent appears on the first accepting relay answer. Each post keeps its own count as later answers arrive. The composer lists at most five
+- Sent appears on the first accepting relay answer, about a second after the signature whenever one write relay is healthy: a post
+  never waits for a relay's read rate limit or reconnect backoff (owner, 2026-11-28). Each post keeps its own count as later answers arrive. The composer lists at most five
   refused or unanswered relays and points to the remaining count. A signed note keeps retrying quietly with its attempt count and a Remove
   control. The same event resumes on reconnect, network return, tab return and reload. A hard refusal leaves Edit and Remove.
 - Pressing Post leaves the caret in the field. On a touch screen a tap puts the keyboard away; the send key keeps the caret (owner, 2026-11-25).

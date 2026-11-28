@@ -7,6 +7,8 @@ pub struct Relay {
     pub(in crate::engine) auth: auth::Authentication,
     pub(in crate::engine) auth_required: bool,
     pub cooldown_until: u64,
+    /// Set only when a relay rate-limits an EVENT; a read cooldown never holds a post.
+    pub(in crate::engine) write_cooldown_until: u64,
     pub quality_at: u64,
     pub prior_useful: u64,
     pub prior_received: u64,
