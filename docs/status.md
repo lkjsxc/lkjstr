@@ -32,7 +32,8 @@ Profile and Their Home stop initial loading after ten seconds without a relay re
 
 N1 centralizes kind policy and public ID/address access. Quotes carry their kind, optional previews and a one-line reference to their first quote.
 Shipped S4 [N2/N7](interface-view.md) adds generic/list faces and profile Articles/Lists/All; private/ephemeral events stay out. Act actions await S6.
-Lists use finite kinds. Profile Posts includes kind 6 and 16 reposts by default and saves its Show/Hide choice. All uses authored time without repost context.
+Lists use finite kinds. Profile Posts always shows kind 6 and 16 reposts in the interface; older wire queries may still exclude them.
+All uses authored time without repost context.
 
 The detailed [2026-11-16 keys/messages implementation and verification](status-messages.md) is retained separately.
 

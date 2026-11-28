@@ -102,7 +102,7 @@ export async function personReferenceChecks({
               if (message?.t === 'open') {
                 opened.set(message.sub, message.query.source);
                 if (message.query.source === 'profile')
-                  globalThis.firstProfileWasPostsOnly ??= message.query.reposts === false;
+                  globalThis.firstProfileIncludesReposts ??= message.query.reposts !== false;
               }
               if (message?.t === 'close') opened.delete(message.sub);
               if (message?.t === 'hint') focused.add(opened.get(message.hint.focusedSub));
@@ -179,8 +179,6 @@ export async function personReferenceChecks({
         assert.equal(await page.locator('.toast').count(), 0);
         if (!signed && source === 'profile') {
           const toggle = view.getByRole('group', { name: 'Reposts', exact: true });
-          const show = toggle.getByRole('button', { name: 'Show', exact: true });
-          const hide = toggle.getByRole('button', { name: 'Hide', exact: true });
           const reposts = [fixture.note, article].map(({ id }) =>
             view.locator(`[data-note="${id}"]`),
           );
@@ -192,19 +190,27 @@ export async function personReferenceChecks({
           };
           await visibleReposts();
           await committedEvents(page, [note.id, ...wrappers]);
-          assert.equal(await show.getAttribute('aria-pressed'), 'true');
-          await hide.click();
-          for (const repost of reposts) await repost.waitFor({ state: 'detached' });
-          await row.waitFor();
+          assert.equal(await toggle.count(), 0);
+          // Seed an old Hide choice at the next boot, after the current page flushes its reading position.
+          const instance = await view.evaluate((el) =>
+            el.closest('.body')?.getAttribute('data-view'),
+          );
+          assert.ok(instance, 'missing saved profile tab instance');
+          await page.addInitScript((instance) => {
+            const key = `lkjstr:view:${instance}`;
+            const state = JSON.parse(localStorage.getItem(key) ?? '{}');
+            localStorage.setItem(
+              key,
+              JSON.stringify({ ...state, show: 'posts', profileReposts: false }),
+            );
+          }, instance);
           await page.reload();
           await row.waitFor();
-          await page.waitForFunction(() => globalThis.firstProfileWasPostsOnly !== undefined);
-          assert.equal(await page.evaluate(() => globalThis.firstProfileWasPostsOnly), true);
-          assert.equal(await hide.getAttribute('aria-pressed'), 'true');
-          for (const repost of reposts) assert.equal(await repost.count(), 0);
-          await show.click();
+          await page.waitForFunction(() => globalThis.firstProfileIncludesReposts !== undefined);
+          assert.equal(await page.evaluate(() => globalThis.firstProfileIncludesReposts), true);
           await visibleReposts();
-          check('Profile Posts shows both repost kinds and remembers the posts-only setting');
+          assert.equal(await toggle.count(), 0);
+          check('Profile Posts shows both repost kinds despite a legacy Hide choice');
         }
         check(
           `${signed ? 'read-only' : 'signed-out'} ${source} reference loads notes with a quiet npub fallback`,

@@ -20,7 +20,7 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-function feed(show = 'all') {
+function feed(show = 'all', saved: object = {}) {
   const fixture = vaultEnv();
   let receive!: (message: FromEngine) => void;
   const sent: ToEngine[] = [];
@@ -33,7 +33,7 @@ function feed(show = 'all') {
   });
   receive({ t: 'ready', version: 13, engine: 'fixture' });
   receive({ t: 'accounts', accounts: [account()], active: PUBKEY });
-  saveViewState(fixture.env.instance, { pubkey: PUBKEY, show });
+  saveViewState(fixture.env.instance, { pubkey: PUBKEY, show, ...saved });
   const dispose = mountFeed(fixture.el, { ...fixture.env, engine }, 'profile');
   cleanup.push(fixture.dispose, () => engine.dispose(), dispose);
   const opened = sent.find((message) => message.t === 'open');
@@ -81,6 +81,7 @@ function feed(show = 'all') {
   return {
     bar,
     el: fixture.el,
+    queries: () => sent.flatMap((entry) => (entry.t === 'open' ? [entry.query] : [])),
     buttons,
     rows: (followers: number) =>
       receive({
@@ -137,4 +138,21 @@ it('reveals an explicit All selection when its new header and count patch arrive
   expect(f.bar.scrollLeft).toBe(190);
   await vi.advanceTimersByTimeAsync(20);
   expect(f.bar.scrollLeft).toBe(190);
+});
+
+it.each([
+  { profileReposts: false },
+  { profileReposts: false, show: undefined, filter: { reposts: false } },
+])('always opens Profile Posts including reposts with legacy saved state %j', (saved) => {
+  const f = feed('posts', saved);
+  expect(f.queries()[0]).toMatchObject({ source: 'profile', show: 'posts' });
+  expect(f.queries()[0]).not.toHaveProperty('reposts');
+  expect(f.bar.querySelector('.on')?.textContent).toBe('Posts');
+  expect(f.el.querySelector('[role="group"][aria-label="Reposts"]')).toBeNull();
+  f.bar.querySelector<HTMLButtonElement>('.pkind:nth-child(3)')!.click();
+  expect(f.queries().at(-1)).toMatchObject({ source: 'profile', show: 'reposts' });
+  f.bar.querySelector<HTMLButtonElement>('.pkind:first-child')!.click();
+  expect(f.queries().at(-1)).toMatchObject({ source: 'profile', show: 'posts' });
+  expect(f.queries().at(-1)).not.toHaveProperty('reposts');
+  expect(f.el.querySelector('[role="group"][aria-label="Reposts"]')).toBeNull();
 });

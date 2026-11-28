@@ -109,6 +109,7 @@ export type Query = {
   readonly media?: 'only' | 'none';
   /** Replies among the notes (default true for `profile`, `home`; the engine decides elsewhere). */
   readonly replies?: boolean;
+  /** Legacy Profile Posts queries may exclude reposts; the profile UI always includes them. */
   readonly reposts?: boolean;
   /** BCP 47 primary tags; only notes the engine judges to be in one of them. */
   readonly language?: readonly string[];
@@ -130,9 +131,9 @@ export type Query = {
   /** `home`, `global`: the account's notifications flow into the list at their own time, as `NotificationRow`s
    * (the same rows the `notifications` source gives; one whose note is already in the list is left out). */
   readonly notifications?: boolean;
-  /** `profile`: which of the person's events follow the header. `posts`: their notes that answer nobody;
-   * `replies`: their replies; `reposts`: the notes they reposted (as repost rows); `reactions`: the notes they
-   * reacted to, newest reaction first; `media`: their notes with a picture or a video. Absent: notes and replies. */
+  /** `profile`: which of the person's events follow the header. `posts` (also the default): their notes that
+   * answer nobody and their reposts; `replies`: their replies; `reposts`: the notes they reposted (as repost
+   * rows); `reactions`: the notes they reacted to, newest reaction first; `media`: notes with a picture or video. */
   readonly show?:
     | 'posts'
     | 'replies'

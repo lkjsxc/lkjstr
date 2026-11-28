@@ -116,13 +116,22 @@ it('captures and replays authored All rows after live attribution is removed', a
   }
 });
 
-it('replays ordinary Profile Posts with scoped attribution and a separate posts-only snapshot', async () => {
+it('replays ordinary Profile Posts with scoped attribution separate from legacy wire queries', async () => {
   const posts: Query = { ...all, show: 'posts' };
   const postsOnly: Query = { ...posts, reposts: false };
   const original = note('1'.repeat(64));
   const repost = { ...generic, repostedBy: { actors: [original.author], others: 0, at: 3000 } };
+  const older = client();
+  older.open(postsOnly);
+  cache(older);
+  older.rows([original]);
+  await vi.advanceTimersByTimeAsync(201);
+  older.transport.close();
+
   const first = client();
   first.open(posts);
+  await vi.advanceTimersByTimeAsync(0);
+  expect(seen(first)).toEqual([]);
   cache(first);
   first.rows([repost, original]);
   await vi.advanceTimersByTimeAsync(201);
@@ -142,6 +151,6 @@ it('replays ordinary Profile Posts with scoped attribution and a separate posts-
   hidden.open(postsOnly);
   await vi.advanceTimersByTimeAsync(0);
   expect(seen(cold).map((frame) => frame.rows)).toEqual([[repost, original]]);
-  expect(seen(hidden)).toEqual([]);
+  expect(seen(hidden).map((frame) => frame.rows)).toEqual([[original]]);
   expect(readPublicSnapshot(at(posts), 'top')?.rows.map(rowTime)).toEqual([3000, 1000]);
 });

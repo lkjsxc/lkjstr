@@ -25,8 +25,8 @@ opened by the main-thread cache.
 Merged chronological lists use a new snapshot identity and replay rows inside
 the preview age supplied by the engine. Live historical coverage is rebuilt
 from relay evidence. Profile Posts uses a new identity for its owner-scoped
-repost order, separate from the saved posts-only query. Moment windows remain
-transient.
+repost order, separate from older wire queries with `reposts: false`. Saved profile tabs
+now open the repost-inclusive query regardless of their old choice. Moment windows remain transient.
 
 ## Bounds and reconciliation
 

@@ -721,6 +721,10 @@ async function filtering(browser: Browser, still: Record<string, unknown>): Prom
     'posts first, and none of them answers anybody',
     (await count(page, `${prof} .list > .note .ctx .i-reply`)) === 0,
   );
+  fact(
+    'Profile Posts has no repost visibility control',
+    (await page.locator(prof).getByRole('group', { name: 'Reposts', exact: true }).count()) === 0,
+  );
   await page.locator(`${prof} .pkind`).nth(4).click();
   await page.waitForTimeout(300);
   const media = await page

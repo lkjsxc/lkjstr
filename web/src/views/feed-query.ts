@@ -27,7 +27,14 @@ export function feedQuery(
     ...(kind === 'notifications' ? { types: typesQuery(state.only) } : {}),
     ...(FILTERED.has(kind)
       ? filterQuery(
-          { ...state.filter, ...(kind === 'search' ? { text: state.text } : {}) },
+          {
+            ...state.filter,
+            // Profile Posts always includes reposts, even with old saved feed filters.
+            ...(kind === 'profile' && (extra.show ?? 'posts') === 'posts'
+              ? { reposts: undefined }
+              : {}),
+            ...(kind === 'search' ? { text: state.text } : {}),
+          },
           rich(engine),
         )
       : {}),

@@ -25,7 +25,7 @@ const kindOf = (show: string | undefined): ProfileKind =>
 export function mountProfileKinds(o: {
   env: ViewEnv;
   keeper: Keeper;
-  state: { show?: string; profileReposts?: boolean };
+  state: { show?: string };
   save(): void;
   reopen(): void;
 }): {
@@ -36,41 +36,6 @@ export function mountProfileKinds(o: {
 } {
   const pins = mountProfilePins(o.env, o.keeper);
   const bar = h('div', { class: 'pkinds', role: 'tablist' });
-  const includesReposts = (): boolean => o.state.profileReposts !== false;
-  const repostButtons = [true, false].map((value) =>
-    h(
-      'button',
-      {
-        class: 'chip',
-        onclick: () => {
-          if (includesReposts() === value) return;
-          o.state.profileReposts = value ? undefined : false;
-          o.save();
-          paintReposts();
-          o.reopen();
-        },
-      },
-      t(value ? 'filter.show' : 'filter.hide'),
-    ),
-  );
-  const paintReposts = (): void => {
-    repostButtons.forEach((button, index) => {
-      const selected = (index === 0) === includesReposts();
-      button.classList.toggle('on', selected);
-      button.setAttribute('aria-pressed', String(selected));
-    });
-  };
-  paintReposts();
-  const reposts = h(
-    'div',
-    { class: 'prow', role: 'group', 'aria-label': t('filter.reposts') },
-    h('span', { class: 'muted', 'aria-hidden': true }, t('filter.reposts')),
-    h('div', { class: 'seg-ctl' }, repostButtons),
-  );
-  const seatReposts = (): void => {
-    if (kindOf(o.state.show) !== 'posts') reposts.remove();
-    else if (reposts.parentElement !== bar.parentElement) bar.before(reposts);
-  };
   let on = rich(o.env.engine);
   let left = 0;
   let reveal = true;
@@ -122,7 +87,6 @@ export function mountProfileKinds(o: {
               reveal = true;
               o.save();
               draw();
-              seatReposts();
               o.reopen();
               schedule();
             },
@@ -144,24 +108,17 @@ export function mountProfileKinds(o: {
       pins.detach();
     },
     seat(header, row) {
-      if (!on || !header || row?.kind !== 'profile') {
-        reposts.remove();
-        return void bar.remove();
-      }
+      if (!on || !header || row?.kind !== 'profile') return void bar.remove();
       if (bar.parentElement !== header) {
         header.append(bar);
         // Profile counts replace their header. Restore its scroll without reselecting the current kind.
         restore = true;
         position();
       }
-      seatReposts();
       pins.seat(header, row);
       if (reveal || restore) schedule();
     },
-    query: () => {
-      const show = kindOf(o.state.show);
-      return { show, ...(show === 'posts' && !includesReposts() ? { reposts: false } : {}) };
-    },
+    query: () => ({ show: kindOf(o.state.show) }),
     dispose() {
       off();
       pins.dispose();

@@ -53,7 +53,7 @@ const main = [
   'unavailable address opens a thread with the existing empty state',
   'unavailable generic event ID opens a thread with the existing empty state',
   'signed-out profile reference loads notes with a quiet npub fallback',
-  'Profile Posts shows both repost kinds and remembers the posts-only setting',
+  'Profile Posts shows both repost kinds despite a legacy Hide choice',
   'signed-out their-home reference loads notes with a quiet npub fallback',
   'read-only profile reference loads notes with a quiet npub fallback',
   'read-only their-home reference loads notes with a quiet npub fallback',
