@@ -42,7 +42,10 @@ export function createKeeper(o: {
   /** Rows that are not content (day dividers) are never the anchor. */
   readonly anchors: (key: string) => boolean;
   readonly save: (place: Place | undefined) => void;
-}): Keeper {
+}): Keeper & {
+  /** Accept the native top as the feed head, without a scroll write that would stop a fling. */
+  head(): void;
+} {
   const { el, list } = o;
   let place = o.saved;
   let timer: ReturnType<typeof setTimeout> | undefined;
@@ -226,6 +229,12 @@ export function createKeeper(o: {
         if (kept) read();
         else put();
       };
+    },
+    head() {
+      clearTimeout(resting);
+      resting = undefined;
+      shift(0);
+      take();
     },
     forget() {
       set(undefined);

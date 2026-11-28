@@ -128,7 +128,7 @@ export function mountFeed(el: HTMLElement, env: ViewEnv, kind: string): () => vo
     const followHead = el.scrollTop < 8 && head && !keys.held() && !overflow;
     if (waiting && !(followHead && mode === 'held-head')) return;
     const window = feedWindow(kind, rows);
-    if (followHead && (mode !== 'top' || outside.count > 0)) return showHead(window);
+    if (followHead && (mode !== 'top' || outside.count)) return (keeper.head(), showHead(window));
     if (!followHead && mode === 'top' && window.first) {
       if (window.count >= LIMIT) mode = 'page';
       else {
