@@ -109,6 +109,13 @@ impl Engine {
     }
 }
 
+pub(super) fn implicit_people(query: &Query) -> bool {
+    query.source == Source::People
+        && query.filters.text.as_deref() == Some("")
+        && query.filters.authors.is_none()
+        && query.filters.from.as_ref().is_none_or(Vec::is_empty)
+}
+
 pub(super) fn people(
     store: &Store,
     query: &Query,

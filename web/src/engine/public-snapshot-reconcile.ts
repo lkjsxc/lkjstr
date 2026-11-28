@@ -169,6 +169,16 @@ export function reconcilePublicView(
       : undefined;
   };
   rewritePublicSnapshots(view.identity, rewrite);
+  // Verified deletion of a replaceable profile applies in every sibling kind.
+  // Window-specific row removals are never copied to another kind.
+  if (bad.profiles.size) {
+    const shared = { keys: new Set<string>(), profiles: bad.profiles, quotes: new Set<string>() };
+    for (const identity of view.profileSiblings ?? [])
+      rewritePublicSnapshots(identity, (snapshot) => ({
+        ...snapshot,
+        rows: snapshot.rows.map((row) => invalidatePublicRow(row, shared)),
+      }));
+  }
   view.rows = view.rows.filter((r) => !bad.keys.has(r.key)).map((r) => invalidatePublicRow(r, bad));
   if (view.held) view.held = rewrite(view.held);
   const after = new Map((view.held?.rows ?? view.rows).map((row) => [row.key, row]));

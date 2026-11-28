@@ -51,7 +51,23 @@ impl Network {
     /// but never earn first-arrival credit in Stats or quality ranking.
     pub fn observe_verified(&mut self, relay: &str, e: &NostrEvent, now: u64) {
         self.confirm_delivery(relay, &e.id, now);
-        if relay.starts_with("ws") && self.metadata.observed(e, now) {
+        // Follow lists from broad follower-count reads must not evict author
+        // hydration stamps. Only a directed owner read establishes list freshness.
+        let owner_list = e.kind != 3
+            || self.requests.values().any(|r| {
+                r.relay == relay
+                    && r.asked
+                    && r.filter.tags.is_empty()
+                    && r.filter
+                        .kinds
+                        .as_ref()
+                        .is_some_and(|kinds| kinds.contains(&3))
+                    && r.filter
+                        .authors
+                        .as_ref()
+                        .is_some_and(|authors| authors.contains(&e.pubkey))
+            });
+        if relay.starts_with("ws") && owner_list && self.metadata.observed(e, now) {
             self.quality_revision = self.quality_revision.wrapping_add(1);
         }
         let mut first = None;

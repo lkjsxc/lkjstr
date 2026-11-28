@@ -6,13 +6,24 @@ pub(super) fn requests(
     v: &engine::View,
     enabled: bool,
     private: &engine::settings::PrivateLists,
+    now: u64,
 ) -> Vec<NostrFilter> {
     let q = &v.query;
     if query::signed_out(q) {
         return vec![];
     }
     if q.source == Source::People {
-        return engine::hydration::people(store, q, private);
+        let mut filters = engine::hydration::people(store, q, private);
+        if engine::hydration::implicit_people(q) {
+            for f in &mut filters {
+                if let Some(authors) = &mut f.authors {
+                    authors.retain(|a| !network.metadata_fresh(store, a, 0, now));
+                    f.limit = Some(authors.len() as u64);
+                }
+            }
+            filters.retain(|f| f.authors.as_ref().is_some_and(|a| !a.is_empty()));
+        }
+        return filters;
     }
     let mut result = engine::time_window::head(store, v);
     if q.source == Source::TheirHome
@@ -101,7 +112,7 @@ pub(super) fn requests(
     if q.source == Source::Profile
         && let Some(p) = &q.target
     {
-        if !q.filters.relay_hints.is_empty() {
+        if !q.filters.relay_hints.is_empty() && !network.metadata_fresh(store, p, 0, now) {
             result.push(NostrFilter {
                 kinds: Some(vec![0]),
                 authors: Some(vec![p.clone()]),
@@ -123,7 +134,7 @@ pub(super) fn requests(
             limit: Some(200),
             ..Default::default()
         });
-        if store.replaceable(p, 3).is_none() {
+        if !network.metadata_fresh(store, p, 3, now) {
             result.push(NostrFilter {
                 authors: Some(vec![p.clone()]),
                 kinds: Some(vec![3]),
@@ -182,3 +193,7 @@ pub(super) fn requests(
     }
     result
 }
+
+#[cfg(test)]
+#[path = "profile_cache_wants_test.rs"]
+mod profile_cache_tests;

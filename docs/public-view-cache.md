@@ -26,7 +26,15 @@ Merged chronological lists use a new snapshot identity and replay rows inside
 the preview age supplied by the engine. Live historical coverage is rebuilt
 from relay evidence. Profile Posts uses a new identity for its owner-scoped
 repost order, separate from older wire queries with `reposts: false`. Saved profile tabs
-now open the repost-inclusive query regardless of their old choice. Moment windows remain transient.
+now open the repost-inclusive query regardless of their old choice. Omitted and explicit
+Posts share their identity, but explicit repost filters stay separate.
+A Profile kind with no top snapshot may replay only the header of a permitted
+sibling kind in the same account, remaining query fields and render scope.
+It uses the top anchor until the Worker supplies that kind's own notes.
+Deep reading windows reserve one of their 64 rows for the profile header.
+Denial forgets the sibling snapshots, and verified profile deletion clears the
+invalid metadata from them without deleting unrelated notes.
+Moment windows remain transient.
 
 ## Bounds and reconciliation
 

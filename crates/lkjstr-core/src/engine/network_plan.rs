@@ -17,7 +17,11 @@ impl Network {
         let live_lists = lists::views(&wants);
         let refresh_profiles: BTreeSet<_> = wants
             .iter()
-            .filter(|(_, f, q)| q.source == Source::People && f.kinds.as_deref() == Some(&[0]))
+            .filter(|(_, f, q)| {
+                q.source == Source::People
+                    && f.kinds.as_deref() == Some(&[0])
+                    && !crate::engine::hydration::implicit_people(q)
+            })
             .map(|(sub, _, _)| sub.clone())
             .collect();
         let queries = wants.iter().map(|(sub, _, q)| (sub.clone(), q)).collect();

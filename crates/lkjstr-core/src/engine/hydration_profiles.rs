@@ -99,11 +99,16 @@ pub(super) fn wants(engine: &Engine, now: u64) -> Vec<(String, NostrFilter, Quer
                     .or_default()
                     .entry(author.clone())
                     .or_default()
-                    .insert(if engine.store.profile(&author).is_some() {
-                        format!("~prefetch:{sub}")
-                    } else {
-                        sub.clone()
-                    });
+                    .insert(
+                        if engine.store.profile(&author).is_some()
+                            && !(view.query.source == Source::Profile
+                                && view.query.target.as_ref() == Some(&author))
+                        {
+                            format!("~prefetch:{sub}")
+                        } else {
+                            sub.clone()
+                        },
+                    );
             }
         }
         for chunk in advertised.chunks(120) {

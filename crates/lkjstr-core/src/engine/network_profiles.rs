@@ -19,6 +19,7 @@ pub(super) fn family(f: &NostrFilter, members: &BTreeSet<String>) -> Option<u8> 
         return match f.kinds.as_deref() {
             Some([0]) => Some(0),
             Some([3]) => Some(3),
+            Some([10002]) => Some(6),
             _ => None,
         };
     }
@@ -55,7 +56,7 @@ impl Request {
 }
 fn keys(f: &NostrFilter, kind: u8) -> Vec<String> {
     match kind {
-        0 | 3 => f.authors.clone(),
+        0 | 3 | 6 => f.authors.clone(),
         1 => f.ids.clone(),
         _ => f.tags.get("e").cloned(),
     }
@@ -95,7 +96,7 @@ impl Network {
                     && !r.list_watch
                     && r.asked
                     && family(&r.page_filter, &r.members) == Some(kind)
-                    && (matches!(kind, 0 | 1 | 3)
+                    && (matches!(kind, 0 | 1 | 3 | 6)
                         || keys(&r.page_filter, kind)
                             .iter()
                             .all(|key| wanted_keys.contains(key)))
@@ -117,7 +118,7 @@ impl Network {
                         .extend(members);
                 }
             }
-            let cap = if matches!(kind, 0 | 1 | 3) {
+            let cap = if matches!(kind, 0 | 1 | 3 | 6) {
                 let chunk = self
                     .optimizer
                     .decide_plan(
@@ -137,7 +138,7 @@ impl Network {
             for chunk in items.chunks(cap) {
                 let values: Vec<_> = chunk.iter().map(|(k, _)| k.clone()).collect();
                 let mut filter = NostrFilter {
-                    limit: Some(if matches!(kind, 0 | 1 | 3) {
+                    limit: Some(if matches!(kind, 0 | 1 | 3 | 6) {
                         values.len() as u64
                     } else {
                         200
@@ -145,9 +146,13 @@ impl Network {
                     ..Default::default()
                 };
                 match kind {
-                    0 | 3 => {
+                    0 | 3 | 6 => {
                         filter.authors = Some(values);
-                        filter.kinds = Some(vec![if kind == 0 { 0 } else { 3 }]);
+                        filter.kinds = Some(vec![match kind {
+                            0 => 0,
+                            3 => 3,
+                            _ => 10002,
+                        }]);
                     }
                     1 => filter.ids = Some(values),
                     _ => {

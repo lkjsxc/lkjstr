@@ -80,20 +80,20 @@ fn pending_newer_metadata_keeps_its_request_until_eose_and_clock_wakes_for_refre
         &store,
         100_000,
     );
-    network.connected("wss://a.test/", 100_010);
-    network.observe_verified("wss://a.test/", &event, 100_020);
-    assert!(!network.metadata_fresh(&store, &event.pubkey, 10002, 100_021));
+    network.connected("wss://a.test/", 100_050);
+    network.observe_verified("wss://a.test/", &event, 100_060);
+    assert!(!network.metadata_fresh(&store, &event.pubkey, 10002, 100_061));
     let wire = network
         .requests
         .values()
         .next()
         .map(|r| r.wire_id.clone())
         .unwrap_or_default();
-    network.message("wss://a.test/", &json!(["EOSE", wire]).to_string(), 100_030);
-    assert!(network.metadata_fresh(&store, &event.pubkey, 10002, 100_031));
-    network.plan(vec![], &store, 100_040);
+    network.message("wss://a.test/", &json!(["EOSE", wire]).to_string(), 100_070);
+    assert!(network.metadata_fresh(&store, &event.pubkey, 10002, 100_071));
+    network.plan(vec![], &store, 100_080);
     network.profiles_changed = false;
-    network.tick(400_020);
+    network.tick(400_060);
     assert!(network.profiles_changed);
 }
 
@@ -197,4 +197,42 @@ fn queued_finite_answer_records_verified_latency_after_eose() {
     assert_eq!(network.relays["wss://a.test/"].first_event_ms, None);
     network.observe_verified("wss://a.test/", &event, 100_010);
     assert_eq!(network.relays["wss://a.test/"].first_event_ms, Some(9));
+}
+
+#[test]
+fn focused_profile_header_and_route_discovery_outrank_background_hydration() {
+    let event = record(0, 1);
+    let mut store = Store::new(20);
+    store.insert(event.clone(), None);
+    let mut network = Network::default();
+    network.configure(vec!["wss://a.test/".into()], 100_000);
+    network.focused_sub = Some("profile".into());
+    let q = Query {
+        source: Source::Profile,
+        target: Some(event.pubkey.clone()),
+        ..Default::default()
+    };
+    let wants = [0, 10002]
+        .into_iter()
+        .map(|kind| {
+            (
+                "profile".into(),
+                NostrFilter {
+                    authors: Some(vec![event.pubkey.clone()]),
+                    kinds: Some(vec![kind]),
+                    limit: Some(1),
+                    ..Default::default()
+                },
+                q.clone(),
+            )
+        })
+        .collect();
+    network.plan(wants, &store, 100_000);
+    let priorities: Vec<_> = network
+        .requests
+        .values()
+        .map(|r| (r.filter.kinds.clone(), r.priority))
+        .collect();
+    assert_eq!(priorities.len(), 2);
+    assert!(priorities.iter().all(|(_, p)| *p == 0), "{priorities:?}");
 }

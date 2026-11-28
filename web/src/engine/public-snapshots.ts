@@ -3,6 +3,7 @@ import { rememberPublicMedia } from '../shared/public-media.ts';
 import type { Transport } from './client-transport.ts';
 import { applyOps } from './ops.ts';
 import type { Anchor, FromEngine } from './protocol.ts';
+import { profileSiblings, readProfileHeader } from './public-profile-cache.ts';
 import { rememberPublicCounts } from './public-snapshot-counts.ts';
 import {
   heldPublicReferences,
@@ -25,6 +26,7 @@ import {
   holdPublicRows as heldRows,
   markPublicReplay,
   preparePublicWindow,
+  replayAnchor,
   tracksPublicWindow,
   type PublicView as View,
 } from './public-snapshot-view.ts';
@@ -49,7 +51,9 @@ export function publicSnapshots(inner: Transport): Transport {
   };
   const replay = (sub: string, view: View, anchor: Anchor): PublicSnapshot | undefined => {
     if (view.windowScope) return;
-    const snapshot = readPublicSnapshot(view.identity, anchor);
+    const snapshot =
+      readPublicSnapshot(view.identity, anchor) ??
+      (anchor === 'top' ? readProfileHeader(view.profileSiblings ?? []) : undefined);
     if (!snapshot) return;
     rememberPublicMedia(snapshot.rows);
     view.held = snapshot;
@@ -96,6 +100,7 @@ export function publicSnapshots(inner: Transport): Transport {
       if (!view) return;
       if (!message.allow) {
         forgetPublicSnapshot(view.identity);
+        for (const identity of view.profileSiblings ?? []) forgetPublicSnapshot(identity);
         view.rows = [];
         view.counts.clear();
         view.held = undefined;
@@ -215,6 +220,7 @@ export function publicSnapshots(inner: Transport): Transport {
           source: message.query.source,
           counts: new Map(),
           identity: snapshotIdentity(message.query, language, previews, visitorFilter),
+          profileSiblings: profileSiblings(message.query, language, previews, visitorFilter),
           rows: [],
           atTop: true,
           atBottom: false,
@@ -232,7 +238,7 @@ export function publicSnapshots(inner: Transport): Transport {
             inner.post({
               t: 'window',
               sub: message.sub,
-              anchor: { key: snapshot.anchor },
+              anchor: replayAnchor(snapshot),
               before: 0,
               after: Math.max(60, snapshot.rows.length),
             });

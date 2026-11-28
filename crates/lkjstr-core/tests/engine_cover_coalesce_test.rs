@@ -31,9 +31,9 @@ fn filter(kind: u8, i: usize) -> NostrFilter {
     };
     let key = format!("{i:064x}");
     match kind {
-        0 | 3 => {
+        0 | 3 | 6 => {
             f.authors = Some(vec![key]);
-            f.kinds = Some(vec![u64::from(kind)]);
+            f.kinds = Some(vec![if kind == 6 { 10002 } else { u64::from(kind) }]);
             f.limit = Some(1);
         }
         1 => f.ids = Some(vec![key]),
@@ -46,7 +46,7 @@ fn filter(kind: u8, i: usize) -> NostrFilter {
 }
 #[test]
 fn arrival_window_coalesces_each_family_without_replaying_owned_items() {
-    for kind in [0, 1, 2, 3] {
+    for kind in [0, 1, 2, 3, 6] {
         let mut n = Network::default();
         n.configure(vec![R.into()], 0);
         let data: Vec<_> = (0..3)
@@ -57,6 +57,8 @@ fn arrival_window_coalesces_each_family_without_replaying_owned_items() {
                         7
                     } else if kind == 1 {
                         1
+                    } else if kind == 6 {
+                        10002
                     } else {
                         u64::from(kind)
                     },
@@ -71,7 +73,7 @@ fn arrival_window_coalesces_each_family_without_replaying_owned_items() {
             .collect();
         let wanted = |j: usize| {
             let mut f = filter(kind, j);
-            if kind == 0 || kind == 3 {
+            if matches!(kind, 0 | 3 | 6) {
                 f.authors = Some(vec![data[j].pubkey.clone()]);
             }
             if kind == 1 {

@@ -29,8 +29,16 @@ const backend = (): Storage | undefined => {
     return undefined;
   }
 };
-const canonical = (query: Query): string =>
-  JSON.stringify(Object.fromEntries(Object.entries(query).sort(([a], [b]) => a.localeCompare(b))));
+const canonical = (query: Query): string => {
+  // The engine treats omitted Profile show as Posts. Keep explicit repost filters distinct.
+  const normalized =
+    query.source === 'profile' && (query.show === undefined || query.show === 'posts')
+      ? { ...query, show: 'posts' }
+      : query;
+  return JSON.stringify(
+    Object.fromEntries(Object.entries(normalized).sort(([a], [b]) => a.localeCompare(b))),
+  );
+};
 const mergedHistory = new Set([
   'home',
   'their-home',

@@ -106,7 +106,11 @@ export function capturePublicWindow(
   if (!rows.length || rows.some((row) => row.kind === 'note' && row.pending)) return;
   const index = reading ? rows.findIndex((row) => row.key === reading) : 0;
   const start = Math.max(0, index - 8);
-  const slice = rows.slice(start, start + SNAPSHOT_ROWS);
+  // Profile chrome is not part of the chronological offset. Keep it when
+  // capturing a reading window far below the header, inside the same row cap.
+  const header = start > 0 && rows[0]?.kind === 'profile' ? rows[0] : undefined;
+  const end = start + SNAPSHOT_ROWS - Number(!!header);
+  const slice = header ? [header, ...rows.slice(start, end)] : rows.slice(start, end);
   const anchor =
     slice.find((row) => row.kind === 'note' || row.kind === 'notification') ?? slice[0];
   if (!anchor || !slice.every(snapshotSafe)) return;
@@ -114,6 +118,6 @@ export function capturePublicWindow(
     rows: slice,
     anchor: anchor.key,
     atTop: atTop && start === 0,
-    atBottom: atBottom && start + slice.length === rows.length,
+    atBottom: atBottom && end >= rows.length,
   };
 }

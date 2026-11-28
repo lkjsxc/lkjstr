@@ -41,7 +41,7 @@ impl Engine {
                 .into_keys()
                 .take(120),
             );
-            let authors: Vec<_> = authors
+            let mut authors: Vec<_> = authors
                 .into_iter()
                 .filter(|author| {
                     lkjstr_protocol::is_pubkey(author)
@@ -59,7 +59,32 @@ impl Engine {
                     &[],
                 )
                 .author_chunk;
-            for chunk in authors.chunks(chunk_size).take(6000 / chunk_size) {
+            // The profile target controls the displayed header and its note routes.
+            // Keep it separate from speculative nearby authors, within the same batch budget.
+            let target =
+                view.query.target.as_ref().filter(|target| {
+                    view.query.source == Source::Profile && authors.contains(target)
+                });
+            if let Some(target) = target {
+                authors.retain(|author| author != target);
+                wants.push((
+                    sub.clone(),
+                    NostrFilter {
+                        authors: Some(vec![target.clone()]),
+                        kinds: Some(vec![10002]),
+                        limit: Some(1),
+                        ..Default::default()
+                    },
+                    Query {
+                        source: Source::Profile,
+                        account: view.query.account.clone(),
+                        target: Some(target.clone()),
+                        ..Default::default()
+                    },
+                ));
+            }
+            let budget = (6000 / chunk_size).saturating_sub(usize::from(target.is_some()));
+            for chunk in authors.chunks(chunk_size).take(budget) {
                 wants.push((
                     format!("~prefetch:outbox:{sub}"),
                     NostrFilter {

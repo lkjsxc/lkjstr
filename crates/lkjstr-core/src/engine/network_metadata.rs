@@ -3,7 +3,11 @@ use super::*;
 use crate::store::Store;
 use serde::{Deserialize, Serialize};
 pub(super) fn ttl(kind: u64) -> u64 {
-    if kind == 10002 { 300_000 } else { 900_000 }
+    if matches!(kind, 3 | 10002) {
+        300_000
+    } else {
+        900_000
+    }
 }
 #[derive(Clone, Serialize, Deserialize)]
 pub(super) struct Stamp {
@@ -22,7 +26,7 @@ pub(super) struct Freshness {
 }
 impl Freshness {
     pub fn observed(&mut self, event: &NostrEvent, now: u64) -> bool {
-        if !matches!(event.kind, 0 | 10002) {
+        if !matches!(event.kind, 0 | 3 | 10002) {
             return false;
         }
         if self
@@ -74,7 +78,7 @@ impl Freshness {
     }
     pub fn restore<'a>(&mut self, entries: impl Iterator<Item = &'a Stamp>, now: u64) {
         for stamp in entries.take(512).filter(|stamp| {
-            matches!(stamp.kind, 0 | 10002)
+            matches!(stamp.kind, 0 | 3 | 10002)
                 && lkjstr_protocol::is_pubkey(&stamp.author)
                 && lkjstr_protocol::is_event_id(&stamp.id)
                 && now >= stamp.at
@@ -120,6 +124,7 @@ impl Network {
             .filter(|r| {
                 !r.members.contains("~account-discovery")
                     && r.filter.kinds.as_deref() == Some(&[kind])
+                    && (kind != 3 || r.filter.tags.is_empty())
                     && r.filter
                         .authors
                         .as_ref()
@@ -129,9 +134,9 @@ impl Network {
         if requests.iter().any(|r| !r.complete && !r.eose) {
             return false;
         }
-        // Missing profiles keep their completed per-relay evidence so fallback
+        // Missing profiles and follow lists keep completed per-relay evidence so fallback
         // lookup and conservative filtering can distinguish absence from failure.
-        if kind == 0 && cached.is_none() {
+        if matches!(kind, 0 | 3) && cached.is_none() {
             return false;
         }
         positive
@@ -153,9 +158,12 @@ impl Network {
             .values()
             .filter(|r| r.asked && (r.complete || r.eose))
         {
-            let Some([kind @ (0 | 10002)]) = request.filter.kinds.as_deref() else {
+            let Some([kind @ (0 | 3 | 10002)]) = request.filter.kinds.as_deref() else {
                 continue;
             };
+            if *kind == 3 && !request.filter.tags.is_empty() {
+                continue;
+            }
             for author in request.filter.authors.iter().flatten().take(120) {
                 self.metadata.retry.insert(
                     (author.clone(), *kind),
@@ -183,10 +191,14 @@ mod tests;
 
 impl Request {
     pub(super) fn metadata_expiry(&self) -> Option<u64> {
-        let [kind @ (0 | 10002)] = self.filter.kinds.as_deref()? else {
+        let [kind @ (0 | 3 | 10002)] = self.filter.kinds.as_deref()? else {
             return None;
         };
-        (self.asked && self.complete && !self.live).then(|| {
+        (self.asked
+            && self.complete
+            && !self.live
+            && (*kind != 3 || (self.filter.authors.is_some() && self.filter.tags.is_empty())))
+        .then(|| {
             self.last_rx.saturating_add(if self.last_event.is_some() {
                 ttl(*kind)
             } else {

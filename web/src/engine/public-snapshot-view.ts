@@ -21,6 +21,7 @@ export type PublicView = {
   source: string;
   counts: DurableCounts;
   identity: string;
+  profileSiblings?: readonly string[];
   rows: readonly Row[];
   allow?: boolean;
   snapshotWindow?: SnapshotWindow;
@@ -42,6 +43,10 @@ export type PublicView = {
 };
 
 type WindowMessage = Extract<ToEngine, { t: 'window' }>;
+const profileHeaderOnly = (snapshot: PublicSnapshot): boolean =>
+  snapshot.rows.length === 1 && snapshot.rows[0]?.kind === 'profile';
+export const replayAnchor = (snapshot: PublicSnapshot): Anchor =>
+  profileHeaderOnly(snapshot) ? 'top' : { key: snapshot.anchor };
 export function preparePublicWindow(
   view: PublicView,
   message: WindowMessage,
@@ -67,7 +72,7 @@ export function preparePublicWindow(
     if (snapshot)
       return {
         ...message,
-        anchor: message.liveAbove ? anchor : { key: snapshot.anchor },
+        anchor: message.liveAbove ? anchor : replayAnchor(snapshot),
         before: message.liveAbove ? message.before : 0,
         after: Math.max(message.after, snapshot.rows.length),
       };
@@ -152,7 +157,7 @@ export function holdPublicRows(
   const head =
     view.rows.find((row) => row.kind === 'note' || row.kind === 'notification') ?? view.rows[0];
   if (
-    (view.liveAbove || head?.key === held.anchor) &&
+    (view.liveAbove || profileHeaderOnly(held) || head?.key === held.anchor) &&
     held.rows.every((row) => byKey.has(row.key))
   ) {
     view.held = undefined;

@@ -6,6 +6,13 @@ Claude owns the interface. Account-safe and A1/A2 (972ef776) are live. [Emoji se
 [Avatars](avatars.md) use bounded Worker derivation and persistence; verified-writer routing has native tests.
 Earlier private-branch measurements leave the one-second cold-name target and public-host CORS coverage open.
 
+## Profile cache orchestration (2026-11-28)
+Profile header-only replay can reuse a permitted sibling-kind snapshot without mixing note windows.
+Deep reading keeps the header within the 64-row cap. Focused profile metadata and outbox discovery
+share bounded hydration, and fresh implicit people lookups skip network work. Directed follow-list
+reads use a five-minute observation TTL; cached lists without evidence refresh in the background of
+the retained display. See [public view cache](public-view-cache.md).
+
 ## Pinned notes (2026-11-27)
 Protocol 18 adds [public pins](pinned-notes.md), live profile/account list reads, missing-note hydration and
 serialized one-member edits preserving unknown tags and opaque content. Pin/Unpin offers inverse Undo; a stale

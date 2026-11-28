@@ -36,6 +36,7 @@ impl Engine {
                 v,
                 self.signed_out_global_filter,
                 &self.private_lists,
+                now,
             ) {
                 let mut q = v.query.clone();
                 if matches!(q.source, Source::Channels | Source::Channel) {

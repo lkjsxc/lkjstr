@@ -42,6 +42,16 @@ impl Network {
                             crate::engine::filter_identity::canonical(head) == r.page_filter
                         })
                 });
+                let profile_header = q.is_some_and(|q| {
+                    q.source == Source::Profile
+                        && q.target.as_ref().is_some_and(|target| {
+                            r.filter
+                                .authors
+                                .as_ref()
+                                .is_some_and(|a| a.contains(target))
+                        })
+                        && matches!(r.filter.kinds.as_deref(), Some([0] | [3] | [10002]))
+                });
                 let background = (r.filter.kinds.as_deref() == Some(&[0])
                     && r.filter
                         .authors
@@ -53,6 +63,8 @@ impl Network {
                     || member.starts_with("~prefetch:")
                 {
                     (4, "prefetch")
+                } else if profile_header && self.focused_sub.as_ref() == Some(member) {
+                    (0, "focused")
                 } else if own {
                     (2, "own")
                 } else if member.starts_with("@client-info:") {
@@ -74,7 +86,7 @@ impl Network {
                     }
                 } else if primary && self.focused_sub.as_ref() == Some(member) {
                     (0, "focused")
-                } else if primary {
+                } else if primary || profile_header {
                     (
                         1,
                         if r.page_filter.until.is_some() {

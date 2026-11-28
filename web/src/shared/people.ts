@@ -43,7 +43,13 @@ export function learnRows(rows: readonly Row[]): void {
       row.actors.forEach(learnPerson);
       if (row.note) learnRows([row.note]);
     }
+    if (row.kind === 'profile') row.knownFollowers?.actors.forEach(learnPerson);
+    if (row.kind === 'channel') {
+      if (row.creator) learnPerson(row.creator);
+      if (row.last) learnPerson(row.last.author);
+    }
     if (row.kind === 'note') {
+      if (row.replyTo) learnPerson(row.replyTo.author);
       row.repostedBy?.actors.forEach(learnPerson);
       for (const quote of row.quotes) if (quote.state === 'ok') learnPerson(quote.author);
     }
