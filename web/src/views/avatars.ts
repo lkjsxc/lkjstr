@@ -74,6 +74,7 @@ export function reuseAvatars(previous: HTMLElement, fresh: HTMLElement): void {
         (old) =>
           old.dataset.face === face.dataset.face &&
           !avatarOptions(old).preview &&
+          !!avatarOptions(old).onImage === !!options.onImage &&
           !!avatarOptions(old).cachePublic === !!options.cachePublic &&
           (!exact || old.className === face.className),
       );
@@ -81,7 +82,8 @@ export function reuseAvatars(previous: HTMLElement, fresh: HTMLElement): void {
       const old = available.splice(index, 1)[0]!;
       unmatched.delete(face);
       reuseAvatar(old, face);
-      face.replaceWith(old);
+      const wrap = old.parentElement;
+      face.replaceWith(options.onImage && wrap?.classList.contains('header-media') ? wrap : old);
     }
   }
 }

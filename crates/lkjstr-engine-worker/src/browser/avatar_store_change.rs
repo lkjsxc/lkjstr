@@ -154,13 +154,12 @@ fn observe_evictions(
 
 #[cfg(test)]
 mod tests {
-    #![allow(clippy::expect_used)]
     use super::*;
     use lkjstr_core::engine::avatars::MAX_DERIVED_BYTES;
     use lkjstr_core::engine::fetch_records::Action;
 
     // Decode the same serde shape as IDB, including the pre-provenance schema.
-    fn row(name: &str, bytes: u64, used: u64, public: Option<bool>) -> Record {
+    fn row(name: &str, bytes: u64, used: u64, public: Option<bool>) -> serde_json::Result<Record> {
         let mut value = serde_json::json!({
             "entry": {"key": format!("https://image.test/{name}"), "bytes": bytes, "used": used},
             "edge": 160, "source_width": 160, "source_height": 160, "mime": "image/webp",
@@ -168,22 +167,23 @@ mod tests {
         if let Some(public) = public {
             value["public_provenance"] = public.into();
         }
-        serde_json::from_value(value).expect("IDB record")
+        serde_json::from_value(value)
     }
 
     #[test]
-    fn fetch_records_avatar_evictions_exclude_unprovenanced_idb_rows() {
+    fn fetch_records_avatar_evictions_exclude_unprovenanced_idb_rows()
+    -> Result<(), Box<dyn std::error::Error>> {
         let mut rows = vec![
-            row("historical", 1, 1, None),
-            row("public-victim", 1, 2, Some(true)),
-            row("private", 1, 3, Some(false)),
-            row("public-retained", 1, 4, Some(true)),
+            row("historical", 1, 1, None)?,
+            row("public-victim", 1, 2, Some(true))?,
+            row("private", 1, 3, Some(false))?,
+            row("public-retained", 1, 4, Some(true))?,
         ];
         let mut remaining = cache::MAX_BYTES - 4;
         while remaining > 0 {
             let bytes = remaining.min(MAX_DERIVED_BYTES);
             let used = rows.len() as u64 + 1;
-            rows.push(row(&format!("older-schema-{used}"), bytes, used, None));
+            rows.push(row(&format!("older-schema-{used}"), bytes, used, None)?);
             remaining -= bytes;
         }
         let index: Vec<_> = rows.iter().map(|r| r.entry.clone()).collect();
@@ -192,7 +192,8 @@ mod tests {
             entries: index.len(),
             sequence: index.len() as u64,
         };
-        let plan = cache::insert(totals, &index, "https://image.test/new", 3).expect("LRU");
+        let plan = cache::insert(totals, &index, "https://image.test/new", 3)
+            .map_err(|error| format!("LRU plan: {error:?}"))?;
         assert_eq!(
             plan.remove,
             index[..3].iter().map(|r| r.key.clone()).collect::<Vec<_>>()
@@ -202,8 +203,8 @@ mod tests {
         for decisions in [false, true] {
             let observer = Observer::default();
             observer.set_decisions(decisions);
-            let victim = observer.key(&index[1].key).expect("hash");
-            let retained = observer.key(&index[3].key).expect("hash");
+            let victim = observer.key(&index[1].key).ok_or("hash")?;
+            let retained = observer.key(&index[3].key).ok_or("hash")?;
             let mut evicted = Vec::new();
             observe_evictions(&observer, &rows, &plan, &mut evicted, || 10);
             assert_eq!(evicted, [victim]);
@@ -244,5 +245,6 @@ mod tests {
                 1
             );
         }
+        Ok(())
     }
 }

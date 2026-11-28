@@ -178,6 +178,14 @@ it.each(['queued', 'in-flight'] as const)(
       expect(face.querySelector('canvas')).toBe(canvas);
       expect(drawImage).toHaveBeenCalledTimes(1);
       expect(x.wants()).toHaveLength(1);
+      // Returning to full motion must not be blocked by stale shown state.
+      x.motion(false);
+      const resumed = face.querySelector('img')!;
+      expect(resumed).not.toBeNull();
+      expect(resumed).not.toBe(superseded);
+      expect(resumed.hasAttribute('src')).toBe(true);
+      resumed.dispatchEvent(new Event('load'));
+      expect(face.querySelector('canvas')).toBeNull();
     } finally {
       x.owner.dispose();
       for (const release of releases) release();

@@ -95,21 +95,11 @@ Protocol 6 introduced DM, encrypted-key and relay authentication operations. Pro
   Previous hashed assets remain during handoff,   and interrupted cleanup recovers on fetch. Events, keys and media are excluded.
   Loopback cases cover corruption, rollback, offline links and two-tab races ([offline-shell.md](offline-shell.md)).
 
-The separate `pnpm real:hour` uses fresh read-only public-account data and fail-closed publication guards. Its dated baseline hour and fault phases
-are recorded independently; mock/loopback checks do not replace network measurements. Host evidence now copies capture-time targets, query endings
-and receipt metadata; the frozen sixth record retains its earlier mutable-counter limitation.
-See [engine-performance-evidence.md](engine-performance-evidence.md).
-
-Signed-out notifications retain the core done state; later zap receipt-evidence changes preserve the last observed relay phase and counters. The
-initial rows no longer synthesize a cache phase before the network supplies its real state.
-
-A repeated Open starts a new status observation while retaining shared relay requests and cursors. Old queued status cannot seed the new query;
-private completion reuses only its current observed relay state. Native before/after cases and the rebuilt private-list Worker proof cover the
-reproduced Retry/reopen hang; see [engine-private-verification.md](engine-private-verification.md).
-
-The protocol-9 candidate reproduced aborted WASM response bodies during parallel startup. Removing its document-level WASM preload preserves the
-Worker assets and verified offline shell; [engine-startup.md](engine-startup.md) records the controlled before/after proof. The earlier 541e4a1e
-comparison passed.
+The separate `pnpm real:hour` uses fresh read-only public-account data and fail-closed guards
+([engine-performance-evidence.md](engine-performance-evidence.md)).
+Signed-out notifications retain core done state; zap evidence preserves relay phase/counters; initial rows no longer synthesize a cache phase.
+Repeated Open starts fresh status observation while retaining shared requests/cursors ([engine-private-verification.md](engine-private-verification.md)).
+Removing document-level WASM preload preserves Worker assets and the verified offline shell ([engine-startup.md](engine-startup.md)).
 
 ## Corrections to the handoff and older status
 Code wins over the handoff: pins have generic stored list data, but no dedicated engine discovery/projection/edit operation yet. Unavailable bookmark

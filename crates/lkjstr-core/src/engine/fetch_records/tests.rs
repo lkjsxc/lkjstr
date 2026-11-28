@@ -1,9 +1,10 @@
-#![allow(clippy::expect_used)]
 use super::*;
 use std::time::Instant;
 
+type TestResult = Result<(), Box<dyn std::error::Error>>;
+
 #[test]
-fn ring_totals_survive_eviction_and_keys_are_local() {
+fn ring_totals_survive_eviction_and_keys_are_local() -> TestResult {
     let observer = Observer::default();
     let other = Observer::default();
     let raw = "secret-key-and-tag";
@@ -17,29 +18,31 @@ fn ring_totals_survive_eviction_and_keys_are_local() {
                 Some("wss://relay.test/private?tag=secret#x"),
                 i as u64,
             )
-            .expect("record");
+            .ok_or("record")?;
         r.wire_bytes = WireBytes::Measured(13);
         r.link_ms = Some(7);
         observer.record(r);
     }
-    observer.inspect(|l| {
+    observer.inspect(|l| -> TestResult {
         assert_eq!(l.records().count(), MAX_RECORDS);
-        assert_eq!(l.records().next().expect("oldest").end_ms, 19);
+        assert_eq!(l.records().next().ok_or("oldest")?.end_ms, 19);
         assert_eq!(l.dropped_records, 19);
         let total = &l.totals[&ResourceClass::Notes];
         assert_eq!(total.measured_bytes, (MAX_RECORDS as u64 + 19) * 13);
         assert_eq!(total.link_ms, (MAX_RECORDS as u64 + 19) * 7);
-        let json = serde_json::to_string(l).expect("serialize");
+        let json = serde_json::to_string(l)?;
         assert!(!json.contains(raw) && !json.contains("private?") && !json.contains("secret"));
         assert_eq!(
-            l.records().next().expect("record").origin(),
+            l.records().next().ok_or("record")?.origin(),
             Some("wss://relay.test")
         );
-    });
+        Ok(())
+    })?;
+    Ok(())
 }
 
 #[test]
-fn decision_is_opt_in_and_bounded() {
+fn decision_is_opt_in_and_bounded() -> TestResult {
     let observer = Observer::default();
     let candidates = ["first", "second"];
     let log = || {
@@ -56,32 +59,35 @@ fn decision_is_opt_in_and_bounded() {
     for _ in 0..MAX_DECISIONS + 2 {
         log();
     }
-    observer.inspect(|l| {
+    observer.inspect(|l| -> TestResult {
         assert_eq!(l.dropped_decisions, 2);
         assert_eq!(l.decisions().count(), MAX_DECISIONS);
-        let d = l.decisions().next().expect("decision");
+        let d = l.decisions().next().ok_or("decision")?;
         assert_eq!(d.candidates[1].key, d.chosen[0]);
-    });
+        Ok(())
+    })?;
     observer.decision(
         Action::Keep,
         11,
         std::iter::repeat_n(("x", None), MAX_CANDIDATES + 3),
         ["x"],
     );
-    observer.inspect(|l| {
-        let d = l.decisions().last().expect("decision");
+    observer.inspect(|l| -> TestResult {
+        let d = l.decisions().last().ok_or("decision")?;
         assert_eq!(d.candidates.len(), MAX_CANDIDATES);
         assert_eq!(d.omitted, 3);
-    });
+        Ok(())
+    })?;
+    Ok(())
 }
 
 #[test]
-fn native_image_is_not_a_measured_network_transfer() {
+fn native_image_is_not_a_measured_network_transfer() -> TestResult {
     let observer = Observer::default();
     let input = serde_json::json!({"class":"media","slot":"note-image","lane":"L1","url":"https://image.test/secret?token=abc","view":"private-view-id","startMs":12,"endMs":20,"displaySize":[100,200],"outcome":"ok"});
-    observer.plain_image(serde_json::from_value(input).expect("image"));
-    observer.inspect(|l| {
-        let r = l.records().next().expect("image");
+    observer.plain_image(serde_json::from_value(input)?);
+    observer.inspect(|l| -> TestResult {
+        let r = l.records().next().ok_or("image")?;
         assert_eq!(r.class, ResourceClass::Media);
         assert_eq!(r.scope, Scope::Resource);
         assert_eq!(r.lane, Lane::L1);
@@ -97,17 +103,19 @@ fn native_image_is_not_a_measured_network_transfer() {
         assert_eq!(r.stored_bytes, None);
         assert_eq!(r.link_ms, None);
         assert_eq!(r.outcome, Outcome::Ok);
-        let json = serde_json::to_string(l).expect("serialize");
+        let json = serde_json::to_string(l)?;
         assert!(
             !json.contains("token")
                 && !json.contains("private-view-id")
                 && !json.contains("secret")
         );
-    });
+        Ok(())
+    })?;
+    Ok(())
 }
 
 #[test]
-fn record_cost_native() {
+fn record_cost_native() -> TestResult {
     let observer = Observer::default();
     let n = 50_000;
     let start = Instant::now();
@@ -120,7 +128,7 @@ fn record_cost_native() {
                 Some("wss://relay.example.com/"),
                 i,
             )
-            .expect("record");
+            .ok_or("record")?;
         record.wire_bytes = WireBytes::Measured(512);
         observer.record(record);
     }
@@ -132,6 +140,7 @@ fn record_cost_native() {
         observer.inspect(|l| l.dropped_records),
         n - MAX_RECORDS as u64
     );
+    Ok(())
 }
 
 #[test]
@@ -163,12 +172,12 @@ fn avatar_schedule_observation_does_not_change_commands() {
 }
 
 #[test]
-fn avatar_ghost_is_consumed_once_and_history_is_bounded() {
+fn avatar_ghost_is_consumed_once_and_history_is_bounded() -> TestResult {
     let o = Observer::default();
     for i in 0..=MAX_RECORDS {
         o.evicted(
             ResourceClass::Avatars,
-            o.key(&format!("url-{i}")).expect("hash"),
+            o.key(&format!("url-{i}")).ok_or("hash")?,
         );
     }
     o.refetched(ResourceClass::Avatars, "url-0");
@@ -179,32 +188,33 @@ fn avatar_ghost_is_consumed_once_and_history_is_bounded() {
         o.inspect(|l| l.totals[&ResourceClass::Avatars].ghost_hits),
         1
     );
+    Ok(())
 }
 
 #[test]
-fn fetch_records_json_preserves_all_key_bits_and_joins() {
+fn fetch_records_json_preserves_all_key_bits_and_joins() -> TestResult {
     let observer = Observer::default();
     observer.set_decisions(true);
     let mut record = observer
         .draft(ResourceClass::Avatars, Scope::Resource, "face", None, 1)
-        .expect("record");
+        .ok_or("record")?;
     record.key = KeyHash(0xfedc_ba98_7654_3210);
     record.view = Some(KeyHash(0xffff_ffff_ffff_ffff));
     record.slot = Some(KeyHash(0xa));
     observer.record(record);
     let join = observer
         .draft(ResourceClass::Avatars, Scope::Resource, "chosen", None, 2)
-        .expect("record");
+        .ok_or("record")?;
     let join_hex = format!("{:016x}", join.key.0);
     observer.record(join);
     observer.decision(Action::Keep, 2, [("chosen", Some(1))], ["chosen"]);
 
-    let json: serde_json::Value =
-        serde_json::from_str(&observer.fetch_records_json().expect("snapshot")).expect("JSON");
+    let json: serde_json::Value = serde_json::from_str(&observer.fetch_records_json()?)?;
     assert_eq!(json["records"][0][1]["key"], "fedcba9876543210");
     assert_eq!(json["records"][0][1]["view"], "ffffffffffffffff");
     assert_eq!(json["records"][0][1]["slot"], "000000000000000a");
     assert_eq!(json["records"][1][1]["key"], join_hex);
     assert_eq!(json["decisions"][0]["candidates"][0]["key"], join_hex);
     assert_eq!(json["decisions"][0]["chosen"][0], join_hex);
+    Ok(())
 }

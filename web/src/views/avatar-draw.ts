@@ -99,7 +99,11 @@ export function createAvatarDraw(el: HTMLElement, client: AvatarClient, reduced:
   const show = (url: string, freeze: boolean, token: number, derived = false): void => {
     const next = JSON.stringify([url, freeze, derived]);
     if (shown === next) return; // A ready derivative is already a still, including after a motion change.
-    if (freeze && !derived && canvas && canvasSource === url) return clearImage(true);
+    if (freeze && !derived && canvas && canvasSource === url) {
+      clearImage(true);
+      report(avatarModel(el)?.picture);
+      return;
+    }
     if (freeze && !derived && image && shown === JSON.stringify([url, false, false])) {
       // Freeze the current decoded/in-flight source; never refetch an animation to stop it.
       shown = next;
@@ -165,7 +169,11 @@ export function createAvatarDraw(el: HTMLElement, client: AvatarClient, reduced:
     const next = JSON.stringify([model?.pubkey, picture, original, preview]);
     // A confirmed link survives the visibility pause so Escape can focus it again.
     // A different motion path must earn a new link, as must changed metadata.
-    if (mediaMotion !== undefined && mediaMotion !== nextMotion && (key !== next || !shown?.endsWith(',true]')))
+    if (
+      mediaMotion !== undefined &&
+      mediaMotion !== nextMotion &&
+      (key !== next || !shown?.endsWith(',true]'))
+    )
       report();
     mediaMotion = nextMotion;
     if (!active) return;
