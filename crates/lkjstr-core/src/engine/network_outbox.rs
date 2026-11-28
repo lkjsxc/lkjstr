@@ -40,6 +40,12 @@ fn advertised(f: &NostrFilter, q: &Query, store: &Store) -> BTreeMap<String, BTr
 }
 
 impl Network {
+    fn advertised_read_allowed(&self, url: &str) -> bool {
+        // Explicit denials survive eviction/reinsertion of remembered transport data.
+        self.configured_reads
+            .get(url)
+            .is_none_or(|read| *read && self.known.get(url).is_none_or(|usage| usage.read))
+    }
     pub(super) fn admit_outboxes(
         &mut self,
         wants: &[(String, NostrFilter, Query)],
@@ -47,8 +53,10 @@ impl Network {
         now: u64,
     ) {
         let mut needed: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
-        for (_, filter, query) in wants.iter().filter(|(sub, _, _)| {
-            !sub.starts_with('~') || crate::engine::time_window_relay::is_owner(sub)
+        for (_, filter, query) in wants.iter().filter(|(sub, _, query)| {
+            !sub.starts_with('~')
+                || crate::engine::time_window_relay::is_owner(sub)
+                || crate::engine::discovery::notification_watch(sub, query)
         }) {
             for (url, authors) in advertised(filter, query, store) {
                 if needed.len() < 256 || needed.contains_key(&url) {
@@ -58,9 +66,7 @@ impl Network {
         }
         let candidates: Vec<_> = needed
             .into_iter()
-            .filter(|(url, _)| {
-                !self.relay_order.contains(url) || self.known.get(url).is_none_or(|r| r.read)
-            })
+            .filter(|(url, _)| self.advertised_read_allowed(url))
             .map(|(url, authors)| read_plan::Candidate {
                 weight: self.relays.get(&url).map_or(600, |r| r.quality_weight(now)),
                 url,
@@ -101,7 +107,7 @@ impl Network {
                 }) && self.relay_order.contains(&url);
                 let permitted = advertised.contains_key(&url)
                     && self.read_outboxes.contains(&url)
-                    && (!self.relay_order.contains(&url) || usage.is_none_or(|r| r.read));
+                    && self.advertised_read_allowed(&url);
                 if !configured && !permitted {
                     return None;
                 }

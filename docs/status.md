@@ -26,7 +26,7 @@ Real Worker warm-IDB testing passes 120/120 cases and all four paired timing gat
 for Home/Their Home; eight named rows improve 16.6/14.6 ms, with lower p95 in the same 30 pairs/source. See [Home catch-up](engine-performance.md).
 
 [Durable GDSF](durable-cache.md) bounds disk pressure and proof recovery; its fault, reader and warm-reload controls pass.
-[Thin-link support](thin-link.md) adds startup bounds, HTTP asset reuse and read budgets. Focused feeds get relay priority.
+[Thin links](thin-link.md) bound startup and reads; [notification delivery](notification-delivery.md) shares account heads and verification work.
 Profile and Their Home stop initial loading after ten seconds without a relay result. Settled Worker maintenance checks deadlines every 500 ms.
 ## Kind capabilities (2026-11-22)
 

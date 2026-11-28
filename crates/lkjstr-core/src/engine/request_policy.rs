@@ -34,9 +34,13 @@ impl Network {
                             })
                     });
                 let primary = q.is_some_and(|q| {
-                    let mut head = crate::engine::query::filter(store, q);
-                    head.until = r.page_filter.until;
-                    crate::engine::filter_identity::canonical(head) == r.page_filter
+                    // Mixed feeds own both heads; their notification half is visible work.
+                    std::iter::once(crate::engine::query::filter(store, q))
+                        .chain(crate::engine::history::notification_filter(store, q))
+                        .any(|mut head| {
+                            head.until = r.page_filter.until;
+                            crate::engine::filter_identity::canonical(head) == r.page_filter
+                        })
                 });
                 let background = (r.filter.kinds.as_deref() == Some(&[0])
                     && r.filter
@@ -70,8 +74,6 @@ impl Network {
                     }
                 } else if primary && self.focused_sub.as_ref() == Some(member) {
                     (0, "focused")
-                } else if primary && q.is_some_and(|q| q.source == Source::Notifications) {
-                    (2, "notifications")
                 } else if primary {
                     (
                         1,
@@ -114,3 +116,7 @@ impl Network {
         }
     }
 }
+
+#[cfg(test)]
+#[path = "request_notification_test.rs"]
+mod notification_tests;

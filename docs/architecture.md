@@ -31,8 +31,8 @@ the existing transport contract does not need to change with the crate name.
    verified author write routes without bypassing ordinary coalescing or cancelling configured requests.
 4. Network emits owned connect/send/disconnect effects. Worker socket callbacks
    parse frames through the protocol layer and enqueue events for verification.
-5. Engine::tick verifies at most 32 events per slice, updates the bounded store,
-   replans and emits row patches. Cached profiles are part of the first rows.
+5. Engine::tick verifies at most 32 events per slice, with at most eight expedited
+   account notification candidates, updates the bounded store, replans and emits row patches. Cached profiles are part of the first rows.
    Inputs can advance the next Worker turn to 25 ms. Runnable verification
    yields for 4 ms between slices, while proof recovery and timeline work use
    25 ms turns. A settled host checks relay, expiry and persistence deadlines

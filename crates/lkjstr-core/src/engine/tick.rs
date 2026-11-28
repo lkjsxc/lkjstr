@@ -47,6 +47,11 @@ impl Engine {
         let was_verifying = self.network.verifying;
         let pressured = self.store.pressure_admission_paused();
         let mut new_preview_note = false;
+        let notifications = if self.verification_ready() {
+            self.notification_indices()
+        } else {
+            vec![]
+        };
         for attempt in 0..VERIFY_SLICE_LIMIT {
             let blocked = pressured
                 || self
@@ -62,7 +67,17 @@ impl Engine {
                 };
                 index
             } else {
-                0
+                // Earlier removals always precede this ordered selection. A candidate
+                // cannot bypass persistence admission or the pressure-control lane.
+                notifications
+                    .get(attempt)
+                    .map(|index| index - attempt)
+                    .filter(|index| {
+                        self.queue
+                            .get(*index)
+                            .is_some_and(|entry| self.pending.can_admit(&entry.event))
+                    })
+                    .unwrap_or(0)
             };
             let Some(ingest::QueuedEvent {
                 relay,

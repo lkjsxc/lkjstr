@@ -75,6 +75,10 @@ impl Engine {
                 .collect(),
             now,
         );
+        self.network.configured_reads = entries
+            .iter()
+            .map(|entry| (entry.url.clone(), entry.read))
+            .collect();
         for r in self.network.known.values_mut() {
             r.read = false;
             r.write = false;

@@ -11,6 +11,16 @@ impl Network {
             .take(24)
             .collect();
         let urls: BTreeSet<_> = self.relay_order.iter().cloned().collect();
+        self.configured_reads = urls
+            .iter()
+            .map(|url| {
+                let read = self.known.get(url).map_or_else(
+                    || self.configured_reads.get(url).copied().unwrap_or(true),
+                    |usage| usage.read,
+                );
+                (url.clone(), read)
+            })
+            .collect();
         self.deferred_relays.clear();
         let removed: Vec<_> = self
             .relays
@@ -47,6 +57,12 @@ impl Network {
                 });
         }
         self.admit_configured(now);
+    }
+    /// Discovery/view hints add transports without becoming explicit usage policy.
+    pub(in crate::engine) fn configure_hints(&mut self, urls: Vec<String>, now: u64) {
+        let configured = std::mem::take(&mut self.configured_reads);
+        self.configure(urls, now);
+        self.configured_reads = configured;
     }
     pub(super) fn admit_configured(&mut self, now: u64) {
         for url in self.relay_order.clone() {

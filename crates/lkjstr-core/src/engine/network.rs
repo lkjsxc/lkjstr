@@ -166,8 +166,7 @@ pub struct Network {
     pub(super) last_fetch: Option<fetch_records::Receipt>,
     pub(super) optimizer: crate::optimizer::Optimizer,
     pub(super) ingress: optimizer::Ingress,
-    // Last 256 distinct auth-gated origins, including retired connections.
-    auth_origins: std::collections::VecDeque<String>,
+    auth_origins: std::collections::VecDeque<String>, // Last 256 auth-gated origins, including retired connections.
     auth_signers: BTreeSet<String>, // At most 32 usable device signer public keys, never persisted.
     auth_active: Option<String>,
     // Job identities survive relay removal/re-admission; exhaustion refuses new AUTH.
@@ -184,6 +183,7 @@ pub struct Network {
     // At most 24 configured routes awaiting a free slot; retried each tick.
     pub deferred_relays: BTreeSet<String>,
     pub known: BTreeMap<String, super::wire::RelayConfig>,
+    pub(super) configured_reads: BTreeMap<String, bool>, // At most 64 explicit read policies; excludes hints.
     pub(super) requests: BTreeMap<String, Request>,
     pub(super) effects: Vec<Effect>,
     pub(super) output: Vec<Output>,

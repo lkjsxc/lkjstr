@@ -49,7 +49,7 @@ impl Engine {
             .keys()
             .cloned()
             .collect::<std::collections::BTreeSet<_>>();
-        self.network.configure(urls, now);
+        self.network.configure_hints(urls, now);
         for (url, r) in &mut self.network.known {
             if !known.contains(url) {
                 r.read = false;
@@ -83,6 +83,28 @@ impl Engine {
         }
         self.replan(now);
     }
+    /// One public head per saved account (at most 32), shared with visible views.
+    /// Hidden pages release the heads; account removal drops their ownership.
+    pub(super) fn notification_wants(&self) -> Vec<(String, NostrFilter, Query)> {
+        if self.network.optimizer.hidden {
+            return vec![];
+        }
+        self.discovery_accounts
+            .iter()
+            .map(|account| {
+                let query = Query {
+                    source: Source::Notifications,
+                    account: Some(account.clone()),
+                    ..Default::default()
+                };
+                (
+                    format!("~notifications:{account}"),
+                    super::query::filter(&self.store, &query),
+                    query,
+                )
+            })
+            .collect()
+    }
     pub(super) fn discovery_wants(&self) -> Vec<(String, NostrFilter, Query)> {
         if self.network.optimizer.hidden {
             return vec![];
@@ -111,6 +133,14 @@ impl Engine {
             })
             .collect()
     }
+}
+/// Only this exact saved-account owner may use public view routing and batching.
+pub(super) fn notification_watch(sub: &str, query: &Query) -> bool {
+    query.source == Source::Notifications
+        && query
+            .account
+            .as_deref()
+            .is_some_and(|account| sub.strip_prefix("~notifications:") == Some(account))
 }
 pub(super) fn legacy_relays(store: &Store, account: &str) -> Option<(String, Vec<RelayConfig>)> {
     let event = store.replaceable(account, 3)?;

@@ -1,5 +1,11 @@
 import { createEngine } from '../src/engine/client.ts';
-import type { FromEngine, NotificationRow, ToEngine } from '../src/engine/protocol.ts';
+import type {
+  FromEngine,
+  NotificationRow,
+  PatchOp,
+  SubState,
+  ToEngine,
+} from '../src/engine/protocol.ts';
 import { setLang } from '../src/shared/i18n.ts';
 import { createSettings } from '../src/shared/settings.ts';
 import { createSignal } from '../src/shared/signal.ts';
@@ -61,6 +67,8 @@ export function notificationFeed() {
     el,
     list,
     last: () => sent.findLast((message) => message.t === 'window'),
+    state: (state: SubState) => receive({ t: 'state', sub, state }),
+    patch: (ops: readonly PatchOp[]) => receive({ t: 'patch', sub, ops }),
     rows: (n: number, unread = true) =>
       receive({
         t: 'rows',

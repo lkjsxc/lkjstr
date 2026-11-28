@@ -19,9 +19,10 @@ pub(super) fn allowed(
                     .all(|k| matches!(k, 1 | 6 | 7 | 16 | 41 | 42 | 9735))
         })
         && members.iter().all(|member| {
-            !member.starts_with('~')
-                && queries.get(member).is_some_and(|q| {
-                    matches!(
+            queries.get(member).is_some_and(|q| {
+                (!member.starts_with('~')
+                    || crate::engine::discovery::notification_watch(member, q))
+                    && matches!(
                         q.source,
                         Source::Home
                             | Source::TheirHome
@@ -32,8 +33,9 @@ pub(super) fn allowed(
                             | Source::Hashtag
                             | Source::Relay
                             | Source::Channel
-                    ) && crate::engine::public_reads::allowed(store, private, q)
-                })
+                    )
+                    && crate::engine::public_reads::allowed(store, private, q)
+            })
         })
 }
 

@@ -52,6 +52,7 @@ Engine (`crates/`):
 - [fetch-orchestrator.md](fetch-orchestrator.md) covers timeline coverage, weighted scheduling and release steps.
 - [signer-orchestrator.md](signer-orchestrator.md) covers extension weights, admission and ownership.
 - [thin-link.md](thin-link.md): slow-link scheduling, startup and measured bounds.
+- [notification-delivery.md](notification-delivery.md): account watches, inbox policy and bounded verification latency.
 - [relay-orchestration-20261119.md](relay-orchestration-20261119.md): progressive reads, cache gaps, NIP-65 and bounded prefetch.
 - [architecture.md](architecture.md): crates, runtime, orchestration, storage.
 - [cache-retention.md](cache-retention.md): Home parity and weighted metadata checkpoints.

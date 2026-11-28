@@ -5,6 +5,8 @@
 pub(super) const MAX_VERIFY_QUEUE: usize = 4096;
 pub(super) const MAX_VERIFY_QUEUE_BYTES: usize = 32 * 1024 * 1024;
 const MAX_PAGE_COPIES: usize = 4;
+// At least 24 of each 32-event slice retain FIFO progress under notification spam.
+const NOTIFICATION_SLICE_LIMIT: usize = 8;
 use super::*;
 
 pub(super) struct QueuedEvent {
@@ -17,6 +19,52 @@ pub(super) struct QueuedEvent {
     pub(super) observation: Option<network::fetch_records::Receipt>,
 }
 impl Engine {
+    /// Unverified tags are scheduling hints only; every selected event is still verified.
+    /// A single bounded queue scan selects at most eight current-account candidates.
+    pub(super) fn notification_indices(&self) -> Vec<usize> {
+        if self.queue.is_empty() || self.network.optimizer.hidden {
+            return vec![];
+        }
+        let accounts: std::collections::BTreeSet<_> = self
+            .discovery_accounts
+            .iter()
+            .map(String::as_str)
+            .chain(
+                self.views
+                    .values()
+                    .filter(|v| {
+                        v.visible
+                            && (v.query.source == protocol::Source::Notifications
+                                || (matches!(
+                                    v.query.source,
+                                    protocol::Source::Home
+                                        | protocol::Source::Global
+                                        | protocol::Source::TheirHome
+                                ) && v.query.filters.notifications == Some(true)))
+                    })
+                    .filter_map(|v| v.query.account.as_deref()),
+            )
+            .collect();
+        if accounts.is_empty() {
+            return vec![];
+        }
+        self.queue
+            .iter()
+            .enumerate()
+            .filter(|(_, entry)| {
+                matches!(entry.event.kind, 1 | 6 | 7 | 16 | 42 | 9735)
+                    && entry.event.tags.iter().any(|tag| {
+                        tag.first().is_some_and(|name| name == "p")
+                            && tag.get(1).is_some_and(|account| {
+                                account != &entry.event.pubkey
+                                    && accounts.contains(account.as_str())
+                            })
+                    })
+            })
+            .take(NOTIFICATION_SLICE_LIMIT)
+            .map(|(index, _)| index)
+            .collect()
+    }
     pub fn enqueue(&mut self, relay: String, event: NostrEvent) {
         let mut observation = self.network.last_fetch.take();
         if relay == crate::cache::VERIFY_SOURCE || relay == "cache" {

@@ -13,6 +13,7 @@ impl Engine {
         wants.extend(self.outbox_wants(now));
         wants.extend(self.nearby_wants());
         wants.extend(self.discovery_wants());
+        wants.extend(self.notification_wants());
         wants.extend(self.channel_action_wants());
         wants.extend(self.client_info_wants());
         for (sub, v) in self.views.iter_mut().filter(|(_, v)| v.visible) {
@@ -89,7 +90,7 @@ impl Engine {
                 .keys()
                 .cloned()
                 .collect::<std::collections::BTreeSet<_>>();
-            self.network.configure(urls, now);
+            self.network.configure_hints(urls, now);
             for (url, r) in &mut self.network.known {
                 if !known.contains(url) {
                     r.read = false;

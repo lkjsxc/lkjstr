@@ -46,7 +46,7 @@ impl Network {
             let r = &self.requests[id];
             (
                 r.priority
-                    + if r.purpose == "own" && r.page_eose {
+                    + if r.page_eose && (r.purpose == "own" || notification_watch(r)) {
                         3
                     } else {
                         0
@@ -170,6 +170,19 @@ impl Network {
         }
         self.settle(now);
     }
+}
+
+// Completed passive heads yield to initial account records. A visible member
+// retains the view's priority, even when sharing the same notification request.
+fn notification_watch(r: &Request) -> bool {
+    let Some([account]) = r.page_filter.tags.get("p").map(Vec::as_slice) else {
+        return false;
+    };
+    lkjstr_protocol::is_pubkey(account)
+        && !r.members.is_empty()
+        && r.members
+            .iter()
+            .all(|member| member.strip_prefix("~notifications:") == Some(account.as_str()))
 }
 
 fn visible_profile(r: &Request) -> bool {
