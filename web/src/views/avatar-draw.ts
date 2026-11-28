@@ -99,6 +99,7 @@ export function createAvatarDraw(el: HTMLElement, client: AvatarClient, reduced:
   const show = (url: string, freeze: boolean, token: number, derived = false): void => {
     const next = JSON.stringify([url, freeze, derived]);
     if (shown === next) return; // A ready derivative is already a still, including after a motion change.
+    if (freeze && !derived && canvas && canvasSource === url) return clearImage(true);
     if (freeze && !derived && image && shown === JSON.stringify([url, false, false])) {
       // Freeze the current decoded/in-flight source; never refetch an animation to stop it.
       shown = next;

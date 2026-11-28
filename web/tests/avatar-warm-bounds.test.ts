@@ -1,4 +1,4 @@
-import { afterEach, expect, it, vi } from 'vitest';
+import { afterEach, expect, it } from 'vitest';
 import { avatar } from '../src/views/avatars.ts';
 import {
   avatarFixture,
@@ -117,7 +117,8 @@ it('never warms a zero-height scroller or a face masked inside its scrollport', 
   expect(x.wants()).toHaveLength(0);
   height = 300;
   window.dispatchEvent(new Event('resize'));
-  await vi.waitFor(() => expect(x.wants()).toHaveLength(0));
+  await new Promise(requestAnimationFrame);
+  expect(x.wants()).toHaveLength(0);
   x.owner.refresh();
   await settleAvatars();
   expect(x.wants()).toHaveLength(0);

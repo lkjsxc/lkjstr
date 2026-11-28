@@ -83,3 +83,21 @@ it('flushes both idle and live readiness on hide and rejects old replies', () =>
   x.client.acquire('https://a.test/hide-idle', next);
   expect(next.mock.lastCall![0].kind).toBe('pending');
 });
+
+it.each([
+  { status: 'deferred', retryMs: 60_000 },
+  { status: 'fallback', uniform: false },
+] as const)('discards $status entries immediately on last-owner release', (result) => {
+  const x = avatarFixture(),
+    url = `https://a.test/non-ready-${result.status}`;
+  const release = x.client.acquire(url, () => undefined)!;
+  const first = x.wants()[0]!;
+  x.reply(first.req, result);
+  release();
+  const next = vi.fn();
+  x.client.acquire(url, next);
+  expect(next).toHaveBeenCalledExactlyOnceWith({ kind: 'pending' });
+  expect(x.wants()).toHaveLength(2);
+  expect(x.wants()[1]!.req).not.toBe(first.req);
+  expect(x.created).not.toHaveBeenCalled();
+});

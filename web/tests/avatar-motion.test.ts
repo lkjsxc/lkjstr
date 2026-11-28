@@ -127,3 +127,60 @@ it('keeps the canvas and cancels superseded unfreezes across motion changes in t
   await settleAvatars();
   expect(superseded.hasAttribute('src')).toBe(false);
 });
+
+it.each(['queued', 'in-flight'] as const)(
+  'releases a %s unfreeze when reduced motion returns to the existing canvas',
+  async (state) => {
+    const x = avatarFixture(),
+      made = vi.spyOn(document, 'createElement'),
+      drawImage = vi.fn();
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue({
+      drawImage,
+    } as unknown as CanvasRenderingContext2D);
+    x.motion(true);
+    const face = x.face(x.author(`https://a.test/superseded-${state}`));
+    await settleAvatars();
+    x.reply(x.wants()[0]!.req, { status: 'fallback', uniform: false });
+    const source = made.mock.results
+      .map((r) => r.value)
+      .find((node): node is HTMLImageElement => node instanceof HTMLImageElement)!;
+    Object.defineProperties(source, { naturalWidth: { value: 80 }, naturalHeight: { value: 60 } });
+    source.dispatchEvent(new Event('load'));
+    const canvas = face.querySelector('canvas');
+    expect(canvas).not.toBeNull();
+    await settleAvatars();
+    const occupied = Array.from({ length: state === 'queued' ? 6 : 5 }, () =>
+      document.createElement('img'),
+    );
+    const releases = occupied.map((img, index) =>
+      loadAvatar(img, `https://a.test/superseded-${state}-occupied-${index}`, false, true),
+    );
+    try {
+      expect(occupied.every((img) => img.hasAttribute('src'))).toBe(true);
+      x.motion(false);
+      const superseded = face.querySelector('img')!;
+      expect(superseded.hasAttribute('src')).toBe(state === 'in-flight');
+      expect(face.querySelector('canvas')).toBe(canvas);
+      x.motion(true);
+      expect(face.querySelector('img')).toBeNull();
+      expect(face.querySelector('canvas')).toBe(canvas);
+      expect(superseded.hasAttribute('src')).toBe(false);
+      for (const release of releases.splice(0)) release();
+      await settleAvatars();
+      // Stay mounted and reduced: another toggle or disposal would hide a leaked candidate.
+      expect(superseded.hasAttribute('src')).toBe(false);
+      expect(face.querySelector('canvas')).toBe(canvas);
+      Object.defineProperties(superseded, {
+        naturalWidth: { value: 80 },
+        naturalHeight: { value: 60 },
+      });
+      superseded.dispatchEvent(new Event('load'));
+      expect(face.querySelector('canvas')).toBe(canvas);
+      expect(drawImage).toHaveBeenCalledTimes(1);
+      expect(x.wants()).toHaveLength(1);
+    } finally {
+      x.owner.dispose();
+      for (const release of releases) release();
+    }
+  },
+);

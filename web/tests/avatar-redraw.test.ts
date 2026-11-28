@@ -168,3 +168,34 @@ it('preserves a loaded native fallback across person-row replacement', async () 
     f.dispose();
   }
 });
+
+it.each(['scarce', 'spare'] as const)(
+  'reserves exact-class faces before loose list reuse with %s old faces',
+  async (supply) => {
+    const x = avatarFixture(),
+      author = x.author(),
+      cache = new Map();
+    x.motion(true);
+    const render = (row: { key: string; classes: string[] }) => {
+      const el = document.createElement('div');
+      for (const cls of row.classes) el.append(avatar(author, cls));
+      return el;
+    };
+    const classes = supply === 'scarce' ? ['av sm'] : ['av sm', 'av xl'];
+    reconcile(x.root, cache, [{ key: 'sizes', classes }], render);
+    await settleAvatars();
+    x.reply(x.wants()[0]!.req, { status: 'ready', retained: true });
+    const previous = [...x.root.querySelectorAll('[data-face]')];
+    const image = previous[0]!.querySelector('img');
+    expect(image).not.toBeNull();
+    reconcile(x.root, cache, [{ key: 'sizes', classes: ['av', 'av sm'] }], render);
+    const [loose, exact] = x.root.querySelectorAll('[data-face]');
+    expect(exact).toBe(previous[0]);
+    expect(exact!.querySelector('img')).toBe(image);
+    expect(exact!.className).toBe('av sm');
+    expect(loose).not.toBe(exact);
+    expect(loose!.className).toBe('av');
+    if (supply === 'spare') expect(loose).toBe(previous[1]);
+    expect(x.wants()).toHaveLength(1);
+  },
+);

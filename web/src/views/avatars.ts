@@ -64,19 +64,25 @@ export function reuseAvatar(el: HTMLElement, fresh: HTMLElement): void {
 /** Keep decoded faces across row replacement; each old face can serve only one new position. */
 export function reuseAvatars(previous: HTMLElement, fresh: HTMLElement): void {
   const available = [...previous.querySelectorAll<HTMLElement>('[data-face]')];
-  for (const face of fresh.querySelectorAll<HTMLElement>('[data-face]')) {
-    const options = avatarOptions(face);
-    if (options.preview) continue; // Editor drafts deliberately do not follow hydrated author updates.
-    const matches = (old: HTMLElement): boolean =>
-      old.dataset.face === face.dataset.face &&
-      !avatarOptions(old).preview &&
-      !!avatarOptions(old).cachePublic === !!options.cachePublic;
-    let index = available.findIndex((old) => matches(old) && old.className === face.className);
-    if (index < 0) index = available.findIndex(matches);
-    if (index < 0) continue;
-    const old = available.splice(index, 1)[0]!;
-    reuseAvatar(old, face);
-    face.replaceWith(old);
+  const unmatched = new Set(fresh.querySelectorAll<HTMLElement>('[data-face]'));
+  // Reserve every exact-class match before an earlier loose match can consume it.
+  for (const exact of [true, false]) {
+    for (const face of unmatched) {
+      const options = avatarOptions(face);
+      if (options.preview) continue; // Editor drafts deliberately do not follow hydrated author updates.
+      const index = available.findIndex(
+        (old) =>
+          old.dataset.face === face.dataset.face &&
+          !avatarOptions(old).preview &&
+          !!avatarOptions(old).cachePublic === !!options.cachePublic &&
+          (!exact || old.className === face.className),
+      );
+      if (index < 0) continue;
+      const old = available.splice(index, 1)[0]!;
+      unmatched.delete(face);
+      reuseAvatar(old, face);
+      face.replaceWith(old);
+    }
   }
 }
 export function avatar(a: Author, cls = 'av', options: FaceOptions = {}): HTMLElement {
