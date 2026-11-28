@@ -8,7 +8,7 @@ import { h, replaceChildren } from '../shared/h.ts';
 import { t } from '../shared/i18n.ts';
 import { loadViewState } from '../shared/view-state.ts';
 import { ability } from './can.ts';
-import { channelFace, channelForm, channelName, joinButton } from './channel-parts.ts';
+import { channelForm, channelHeaderFace, channelName, joinButton } from './channel-parts.ts';
 import { mountCompose } from './compose.ts';
 import { copy, nameButton } from './parts.ts';
 import type { ViewEnv } from './registry.ts';
@@ -45,7 +45,7 @@ export function mountChannelDesk(o: { env: ViewEnv; slot: HTMLElement }): {
     shown = sig;
     replaceChildren(
       head,
-      channelFace(c, 'av lg'),
+      channelHeaderFace(c, env),
       h(
         'div',
         { class: 'pmain' },

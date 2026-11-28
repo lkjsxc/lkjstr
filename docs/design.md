@@ -143,8 +143,8 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
   account's own list, signed out, shows Sign in in place of an empty line.
 ## A note
 - Avatar circle (36px, a setting) in its own column; header line with name,
-  NIP-05 with a tick when verified, and the time right-aligned. A face
-  opens the profile wherever it is drawn, as the name does. Small, list and channel faces use one centred
+  NIP-05 with a tick when verified, and the time right-aligned. A person's face in a note or people list
+  opens the profile, as the name does. Small, list and channel faces use one centred
   square still of at most 160px, without enlarging smaller sources. The letter disc holds while loading or on failure.
   Original-image fallbacks may animate in ordinary motion. Under reduced motion a fallback is drawn once into a
   face-sized canvas without pixel readback or storage; a known uniform still keeps the letter with no original request.
@@ -220,6 +220,9 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
   the notes. The npub copies on click. A count is shown once it is known;
   until then the label stands alone and still opens the list. The 76px profile-header face uses the original
   image in ordinary motion and the still path under reduced motion; a custom 72px list face uses the 160px still.
+  A loaded profile face or banner and a channel header face open their original in a media tab, with Shift
+  splitting and Ctrl/Cmd or middle click opening the browser link. Placeholders and editor previews are inert
+  ([interface-profile.md](interface-profile.md#p4-open-header-pictures)).
 - Profile pins use the ordinary note face and a quiet Pinned context line in a separate section below the kind
   tabs. Its thin separator and bounded Previous/Next links add no colour or floating control. It scrolls with
   the header; chronology and its rail keep their own positions ([P3](interface-profile.md#p3-pinned-notes)).

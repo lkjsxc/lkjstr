@@ -3,8 +3,20 @@ import type { Author } from '../engine/protocol.ts';
 import { h } from '../shared/h.ts';
 import { knownPerson } from '../shared/people.ts';
 
-export type FaceOptions = { cachePublic?: boolean; lazy?: boolean; preview?: boolean };
-type Face = { author: Author; options: FaceOptions; letter: HTMLElement; changed?: () => void };
+export type FaceOptions = {
+  cachePublic?: boolean;
+  lazy?: boolean;
+  preview?: boolean;
+  /** Header-only action: the original address of a successfully drawn picture, or no picture. */
+  onImage?: (url?: string) => void;
+};
+type Face = {
+  author: Author;
+  options: FaceOptions;
+  letter: HTMLElement;
+  changed?: () => void;
+  shownImage?: string;
+};
 const faces = new WeakMap<HTMLElement, Face>(); // Model index only; avatar-owner owns every live lease.
 const letterOf = (a: Author): string =>
   !a.name.trim() || /^(?:[0-9a-f]{64}|npub1[a-z0-9]{40,})$/.test(a.name.trim())
@@ -12,13 +24,23 @@ const letterOf = (a: Author): string =>
     : ([...a.name.replace(/:[a-z0-9_]+:/g, '').trim()][0] ?? '');
 export const avatarOptions = (el: HTMLElement): FaceOptions => faces.get(el)?.options ?? {};
 export const avatarModel = (el: HTMLElement): Author | undefined => faces.get(el)?.author;
+export function reportAvatarImage(el: HTMLElement, url?: string): void {
+  const face = faces.get(el);
+  if (!face?.options.onImage || face.shownImage === url) return;
+  face.shownImage = url;
+  face.options.onImage(url);
+}
 export function updateAvatar(el: HTMLElement, author: Author): void {
   const face = faces.get(el);
   if (!face || face.options.preview || JSON.stringify(face.author) === JSON.stringify(author))
     return;
+  const pictureChanged = face.author.picture !== author.picture;
   face.author = author;
   const letter = letterOf(author);
   if (face.letter.textContent !== letter) face.letter.textContent = letter;
+  if (pictureChanged) face.shownImage = undefined;
+  // Refresh the header action even on a name-only update.
+  face.options.onImage?.(face.shownImage);
   face.changed?.();
 }
 export function observeAvatar(el: HTMLElement, changed: () => void): () => void {

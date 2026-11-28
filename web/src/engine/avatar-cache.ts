@@ -31,6 +31,7 @@ type AvatarJob = {
   img: HTMLImageElement;
   src: string;
   offer?: (visible: boolean) => void;
+  onError?: () => void;
   eager: boolean;
   visible: boolean;
   loading: boolean;
@@ -108,6 +109,7 @@ function startImage(job: AvatarJob): void {
   const failed = () => {
     stop();
     img.removeAttribute('src');
+    job.onError?.();
   };
   img.addEventListener('load', loaded);
   // The visibility observer starts lazy faces, so the deadline measures an actual attempt.
@@ -159,19 +161,30 @@ export function loadAvatar(
   picture: string,
   cachePublic = false,
   owned = false,
+  onError?: () => void,
 ): () => void {
   const source = mediaSource(picture);
   if (!source) {
     img.remove();
+    onError?.();
     return () => {};
   }
   if (!/^https?:/i.test(source)) {
-    return loadImage(img, picture, () => img.remove(), IMAGE_TIMEOUT);
+    return loadImage(
+      img,
+      picture,
+      () => {
+        img.remove();
+        onError?.();
+      },
+      IMAGE_TIMEOUT,
+    );
   }
   const url = cachePublic && navigator.serviceWorker?.controller && publicAvatarUrl(picture);
   const remote = url && url.origin !== location.origin ? url.href : null;
   const job: AvatarJob = {
     img,
+    onError,
     src: remote ? remote + AVATAR_FRAGMENT : picture,
     offer:
       remote && !owned

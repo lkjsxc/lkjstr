@@ -6,9 +6,9 @@ import { getLang, type Key, t } from '../shared/i18n.ts';
 import { icon } from '../shared/icons.ts';
 import { openMenu } from '../wm/menus.ts';
 import { ability, abilityText } from './can.ts';
+import { headerAvatar, headerBanner } from './header-media.ts';
 import { act } from './note-actions.ts';
 import {
-  avatar,
   copy,
   displayName,
   faceButton,
@@ -16,7 +16,6 @@ import {
   nameButton,
   plainName,
   segments,
-  showBanner,
   unnamed,
 } from './parts.ts';
 import { editable } from './profile-edit.ts';
@@ -68,8 +67,7 @@ export function renderProfile(row: ProfileRow, env: ViewEnv): HTMLElement {
       : h('span', { class: 'stat' }, inner);
   };
   const known = row.knownFollowers;
-  const banner = h('div', { class: 'banner' });
-  showBanner(banner, row.banner);
+  const banner = headerBanner(row.banner, env, t('media.profileBanner', { name: plainName(a) }));
   return h(
     'section',
     { class: unnamed(a) ? 'profile pending' : 'profile' },
@@ -77,7 +75,9 @@ export function renderProfile(row: ProfileRow, env: ViewEnv): HTMLElement {
     h(
       'div',
       { class: 'phead' },
-      avatar(a, 'av xl'),
+      headerAvatar(a, 'av xl', env, (author) =>
+        t('media.profilePicture', { name: plainName(author) }),
+      ),
       h(
         'div',
         { class: 'pbtns' },

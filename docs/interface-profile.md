@@ -116,3 +116,13 @@ Protocol details are in [pinned-notes.md](pinned-notes.md).
 
 Check list order beside unchanged chronology, an unavailable reference, paging links, and another person's
 pins while signed out. Review Pin, Unpin and Undo in English and Japanese. Capture 1440 dark and 390 light.
+
+## P4 Open header pictures
+
+Owner request, 2026-11-28: press a profile picture or banner, or a channel's own header picture, to open
+the original as a one-image media tab after the current tab. Shift opens it in a split; Ctrl/Cmd and
+middle click use the original browser link. Escape returns to the opening control when it remains
+mounted. Only a successfully displayed picture with a safe HTTP(S) original is a link. Missing, blocked
+or failed pictures and letter-only stills keep their quiet non-interactive space. Late metadata replaces
+the link with the current picture. The editor preview stays inert, and note, notification, person and
+channel-list faces still open their profile or channel.

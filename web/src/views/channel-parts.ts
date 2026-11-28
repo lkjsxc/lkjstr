@@ -5,6 +5,7 @@ import { h } from '../shared/h.ts';
 import { type Key, t } from '../shared/i18n.ts';
 import { loadViewState, saveViewSlice } from '../shared/view-state.ts';
 import { ability, abilityText, failureText } from './can.ts';
+import { headerAvatar } from './header-media.ts';
 import { act } from './note-actions.ts';
 import { avatar } from './parts.ts';
 import type { ViewEnv } from './registry.ts';
@@ -19,6 +20,12 @@ export const channelName = (c: Pick<ChannelRow, 'name' | 'bech32'>): string =>
 /** A circle like a person's: the picture, or a flat colour from the id with the first letter of the name. */
 export const channelFace = (c: ChannelRow, cls = 'av'): HTMLElement =>
   avatar({ pubkey: c.id, npub: '', name: c.name, picture: c.picture }, cls);
+
+/** Only the channel's own header opens the original picture, not its list row. */
+export const channelHeaderFace = (c: ChannelRow, env: ViewEnv): HTMLElement =>
+  headerAvatar({ pubkey: c.id, npub: '', name: c.name, picture: c.picture }, 'av lg', env, () =>
+    t('media.channelPicture', { name: channelName(c) }),
+  );
 
 export function joinButton(env: ViewEnv, c: ChannelRow): HTMLElement {
   const can = ability(env.engine);

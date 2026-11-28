@@ -3,7 +3,7 @@ import { loadAvatar } from '../engine/avatar-cache.ts';
 import type { AvatarClient, AvatarValue } from '../engine/client-avatars.ts';
 import { h } from '../shared/h.ts';
 import { mediaSource } from '../shared/media-source.ts';
-import { avatarModel, avatarOptions, observeAvatar } from './avatars.ts';
+import { avatarModel, avatarOptions, observeAvatar, reportAvatarImage } from './avatars.ts';
 
 export function createAvatarDraw(el: HTMLElement, client: AvatarClient, reduced: () => boolean) {
   let active = false,
@@ -11,6 +11,9 @@ export function createAvatarDraw(el: HTMLElement, client: AvatarClient, reduced:
     key: string | undefined;
   let lease: (() => void) | undefined, image: HTMLImageElement | undefined;
   let canvas: HTMLCanvasElement | undefined;
+  let mediaMotion: boolean | undefined;
+  const onImage = avatarOptions(el).onImage;
+  const report = (url?: string): void => reportAvatarImage(el, url);
   let releaseImage: (() => void) | undefined;
   const clearImage = (): void => {
     const native = releaseImage;
@@ -51,9 +54,19 @@ export function createAvatarDraw(el: HTMLElement, client: AvatarClient, reduced:
     });
     image = img;
     const live = (): boolean => active && generation === token && image === img;
-    img.onerror = () => {
-      if (live() && derived) clearImage();
+    const ready = (): void => {
+      if (live()) report(avatarModel(el)?.picture);
     };
+    const failed = (): void => {
+      if (live()) report();
+    };
+    img.onerror = () => {
+      if (live() && derived) {
+        failed();
+        clearImage();
+      }
+    };
+    if (!freeze && onImage) img.onload = ready;
     if (freeze) {
       img.onload = () => {
         if (!live()) return;
@@ -81,9 +94,14 @@ export function createAvatarDraw(el: HTMLElement, client: AvatarClient, reduced:
             );
             canvas = still;
             el.append(still);
-          } else still.width = still.height = 0;
+            ready();
+          } else {
+            still.width = still.height = 0;
+            failed();
+          }
         } catch {
           still.width = still.height = 0;
+          failed();
         }
         img.onload = img.onerror = null;
         const release = releaseImage;
@@ -105,6 +123,7 @@ export function createAvatarDraw(el: HTMLElement, client: AvatarClient, reduced:
         url,
         !!(avatarOptions(el).cachePublic && model?.profileId),
         true,
+        onImage ? failed : undefined,
       );
     }
   };
@@ -113,6 +132,10 @@ export function createAvatarDraw(el: HTMLElement, client: AvatarClient, reduced:
     const motion = reduced(),
       preview = avatarOptions(el).preview,
       original = el.classList.contains('xl') && !motion;
+    // A confirmed link survives the visibility pause so Escape can focus it again.
+    // A different motion path must earn a new link, as must changed metadata.
+    if (mediaMotion !== undefined && mediaMotion !== motion) report();
+    mediaMotion = motion;
     const next = JSON.stringify([picture, motion, original]);
     if (!active || key === next) return;
     stop();
@@ -120,7 +143,7 @@ export function createAvatarDraw(el: HTMLElement, client: AvatarClient, reduced:
     if (!picture) return;
     // Preserve live media safety and HTTPS upgrading; keep exact HTTPS identity for leases.
     const source = mediaSource(picture);
-    if (!source) return;
+    if (!source) return report();
     const url = picture.startsWith('https://') && !/[\s\p{Cc}]/u.test(picture) ? picture : source;
     const token = generation;
     if (preview) {
@@ -133,9 +156,14 @@ export function createAvatarDraw(el: HTMLElement, client: AvatarClient, reduced:
       if (!active || generation !== token) return;
       if (value.kind === 'ready') show(value.url, false, token, true);
       else if (value.kind === 'fallback') {
-        if (motion && value.uniform) clearImage();
-        else show(url, motion, token);
-      } else clearImage();
+        if (motion && value.uniform) {
+          clearImage();
+          report();
+        } else show(url, motion, token);
+      } else {
+        clearImage();
+        if (value.kind === 'rejected') report();
+      }
     };
     lease = client.acquire(
       url,
