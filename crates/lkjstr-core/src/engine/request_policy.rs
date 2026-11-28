@@ -50,6 +50,7 @@ impl Network {
                                 .as_ref()
                                 .is_some_and(|a| a.contains(target))
                         })
+                        && r.filter.tags.is_empty()
                         && matches!(r.filter.kinds.as_deref(), Some([0] | [3] | [10002]))
                 });
                 let background = (r.filter.kinds.as_deref() == Some(&[0])
@@ -132,3 +133,71 @@ impl Network {
 #[cfg(test)]
 #[path = "request_notification_test.rs"]
 mod notification_tests;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::store::Store;
+    use lkjstr_protocol::{EventTemplate, finalize_event, generate_secret_key};
+
+    #[test]
+    fn tagged_kind3_follower_read_is_hydration_and_does_not_stamp_owner_list() {
+        let relay = "wss://a.test/";
+        let target = "a".repeat(64);
+        let event = finalize_event(
+            &EventTemplate {
+                pubkey: None,
+                created_at: 1,
+                kind: 3,
+                content: String::new(),
+                tags: vec![vec!["p".into(), target.clone()]],
+            },
+            &generate_secret_key(),
+        )
+        .unwrap_or_else(|_| unreachable!());
+        let mut store = Store::new(20);
+        let mut network = Network::default();
+        network.configure(vec![relay.into()], 100_000);
+        network.focused_sub = Some("profile".into());
+        let mut filter = NostrFilter {
+            kinds: Some(vec![3]),
+            authors: Some(vec![target.clone(), event.pubkey.clone()]),
+            limit: Some(200),
+            ..Default::default()
+        };
+        filter.tags.insert("p".into(), vec![target.clone()]);
+        network.plan(
+            vec![(
+                "profile".into(),
+                filter,
+                Query {
+                    source: Source::Profile,
+                    target: Some(target),
+                    ..Default::default()
+                },
+            )],
+            &store,
+            100_000,
+        );
+        network.connected(relay, 100_050);
+        let request = network
+            .requests
+            .values()
+            .find(|r| r.filter.tags.contains_key("p"))
+            .unwrap_or_else(|| unreachable!());
+        assert!(request.sent && request.asked);
+        assert_eq!((request.priority, request.purpose), (3, "hydration"));
+        let wire = request.wire_id.clone();
+        let received = network
+            .message(relay, &json!(["EVENT", wire, event]).to_string(), 100_060)
+            .unwrap_or_else(|| unreachable!());
+        assert_eq!(received.id, event.id);
+        store.insert(received.clone(), None);
+        network.observe_verified(relay, &received, 100_061);
+        assert!(!network.metadata_fresh(&store, &received.pubkey, 3, 100_062));
+        network.message(relay, &json!(["EOSE", wire]).to_string(), 100_070);
+        assert!(!network.metadata_fresh(&store, &received.pubkey, 3, 100_071));
+        network.plan(vec![], &store, 100_072);
+        assert!(!network.metadata_fresh(&store, &received.pubkey, 3, 100_073));
+    }
+}

@@ -26,7 +26,7 @@ export function profileSiblings(
   ] as const;
   const identity = (q: Query) => snapshotIdentity(q, language, previews, visitorFilter);
   const current = identity(query);
-  const siblings = kinds.map((show) => identity({ ...query, show }));
+  const siblings = kinds.map((show) => identity({ ...query, show, reposts: undefined }));
   for (const reposts of [undefined, false, true])
     siblings.push(identity({ ...query, show: 'posts', reposts }));
   return [...new Set(siblings)].filter((key) => key !== current);

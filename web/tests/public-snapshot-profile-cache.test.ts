@@ -50,6 +50,16 @@ it('retains the profile header in a bounded deep reading snapshot', () => {
   expect(snapshot?.atBottom).toBe(false);
 });
 
+it('keeps atTop when the reading slice starts immediately after the prepended header', () => {
+  const notes = Array.from({ length: 100 }, (_, i) => note(String(i).padStart(64, '0')));
+  const rows = [header, ...notes];
+  const contiguous = capturePublicWindow(rows, notes[8]?.key, true, false);
+  expect(contiguous?.rows).toEqual(rows.slice(0, 64));
+  expect(contiguous?.atTop).toBe(true);
+  expect(capturePublicWindow(rows, notes[9]?.key, true, false)?.atTop).toBe(false);
+  expect(capturePublicWindow(rows, notes[8]?.key, false, false)?.atTop).toBe(false);
+});
+
 it('replays a header-only cached profile at top and releases it when notes arrive', async () => {
   writePublicSnapshot(snapshotIdentity(profile, 'en', true), true, {
     rows: [header],
@@ -101,44 +111,91 @@ it('reuses only the public header for an uncached kind, not the other kind notes
   other.transport.close();
 });
 
-it('invalidates sibling headers on positive metadata deletion without deleting their notes', async () => {
-  const saved = snapshotIdentity(profile, 'en', true);
-  writePublicSnapshot(saved, true, {
-    rows: [header, note()],
-    anchor: note().key,
-    atTop: true,
-    atBottom: false,
-  });
-  const h = harness();
-  h.open({ ...profile, show: 'replies' });
-  await vi.advanceTimersByTimeAsync(0);
-  h.emit({ t: 'cache.policy', sub: 'one', allow: true });
-  h.emit({
-    t: 'cache.reconcile',
-    sub: 'one',
-    removedKeys: [],
-    invalidProfileIds: [header.author.profileId!],
-    removedQuoteIds: [],
-  });
-  const rows = readPublicSnapshot(saved, 'top')?.rows;
-  expect(rows?.length).toBe(2);
-  expect(rows?.[0]).toMatchObject({ kind: 'profile', author: { name: '' }, about: [] });
-  expect(rows?.[1]).toMatchObject({ kind: 'note', key: note().key, author: { name: '' } });
-  h.transport.close();
-});
+it.each([false, true])(
+  'reuses a cached Replies header for explicit Posts reposts=%s',
+  async (reposts) => {
+    writePublicSnapshot(snapshotIdentity({ ...profile, show: 'replies' }, 'en', true), true, {
+      rows: [header, note()],
+      anchor: note().key,
+      atTop: true,
+      atBottom: false,
+    });
+    const h = harness();
+    h.open({ ...profile, show: 'posts', reposts });
+    await vi.advanceTimersByTimeAsync(0);
+    expect(h.messages.at(-1)).toMatchObject({ t: 'rows', rows: [header] });
+    expect(h.post.mock.calls.find(([m]) => m.t === 'window')?.[0]).toMatchObject({ anchor: 'top' });
+    h.transport.close();
+  },
+);
 
-it('denied cache policy removes sibling snapshots before the next replay', async () => {
-  const saved = snapshotIdentity(profile, 'en', true);
-  writePublicSnapshot(saved, true, {
-    rows: [header, note()],
-    anchor: note().key,
-    atTop: true,
-    atBottom: false,
-  });
-  const h = harness();
-  h.open({ ...profile, show: 'replies' });
-  await vi.advanceTimersByTimeAsync(0);
-  h.emit({ t: 'cache.policy', sub: 'one', allow: false });
-  expect(readPublicSnapshot(saved, 'top')).toBeUndefined();
-  h.transport.close();
-});
+const siblingCases: { label: string; saved: Query; active: Query }[] = [
+  { label: 'default Posts to Replies', saved: profile, active: { ...profile, show: 'replies' } },
+  {
+    label: 'Replies to Posts without reposts',
+    saved: { ...profile, show: 'replies' },
+    active: { ...profile, show: 'posts', reposts: false },
+  },
+  {
+    label: 'Replies to Posts with explicit reposts',
+    saved: { ...profile, show: 'replies' },
+    active: { ...profile, show: 'posts', reposts: true },
+  },
+];
+
+it.each(siblingCases)(
+  'invalidates sibling headers without deleting notes: $label',
+  async (test) => {
+    const saved = snapshotIdentity(test.saved, 'en', true);
+    writePublicSnapshot(saved, true, {
+      rows: [header, note()],
+      anchor: note().key,
+      atTop: true,
+      atBottom: false,
+    });
+    const h = harness();
+    h.open(test.active);
+    await vi.advanceTimersByTimeAsync(0);
+    h.emit({ t: 'cache.policy', sub: 'one', allow: true });
+    h.emit({
+      t: 'cache.reconcile',
+      sub: 'one',
+      removedKeys: [],
+      invalidProfileIds: [header.author.profileId!],
+      removedQuoteIds: [],
+    });
+    const rows = readPublicSnapshot(saved, 'top')?.rows;
+    expect(rows?.length).toBe(2);
+    expect(rows?.[0]).toMatchObject({ kind: 'profile', author: { name: '' }, about: [] });
+    expect(rows?.[1]).toMatchObject({ kind: 'note', key: note().key, author: { name: '' } });
+    const savedHeader = rows?.[0];
+    expect(savedHeader?.kind === 'profile' && savedHeader.author.profileId).toBeUndefined();
+    h.transport.close();
+
+    const third = harness();
+    third.open({ ...profile, show: 'media' });
+    await vi.advanceTimersByTimeAsync(0);
+    expect(third.messages).toHaveLength(0);
+    third.transport.close();
+  },
+);
+
+it.each(siblingCases)(
+  'denied policy removes sibling snapshots before replay: $label',
+  async (test) => {
+    const saved = snapshotIdentity(test.saved, 'en', true);
+    writePublicSnapshot(saved, true, {
+      rows: [header, note()],
+      anchor: note().key,
+      atTop: true,
+      atBottom: false,
+    });
+    const h = harness();
+    h.open(test.active);
+    await vi.advanceTimersByTimeAsync(0);
+    expect(h.messages.at(-1)).toMatchObject({ t: 'rows', rows: [header] });
+    h.emit({ t: 'cache.policy', sub: 'one', allow: false });
+    expect(readPublicSnapshot(saved, 'top')).toBeUndefined();
+    h.transport.close();
+  },
+);

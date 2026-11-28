@@ -16,12 +16,17 @@ pub(super) fn requests(
         let mut filters = engine::hydration::people(store, q, private);
         if engine::hydration::implicit_people(q) {
             for f in &mut filters {
-                if let Some(authors) = &mut f.authors {
+                if f.kinds.as_deref() == Some(&[0])
+                    && let Some(authors) = &mut f.authors
+                {
                     authors.retain(|a| !network.metadata_fresh(store, a, 0, now));
                     f.limit = Some(authors.len() as u64);
                 }
             }
-            filters.retain(|f| f.authors.as_ref().is_some_and(|a| !a.is_empty()));
+            filters.retain(|f| {
+                f.kinds.as_deref() != Some(&[0])
+                    || f.authors.as_ref().is_some_and(|a| !a.is_empty())
+            });
         }
         return filters;
     }

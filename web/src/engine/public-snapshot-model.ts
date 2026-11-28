@@ -117,7 +117,7 @@ export function capturePublicWindow(
   return {
     rows: slice,
     anchor: anchor.key,
-    atTop: atTop && start === 0,
+    atTop: atTop && (start === 0 || (start === 1 && !!header)),
     atBottom: atBottom && end >= rows.length,
   };
 }

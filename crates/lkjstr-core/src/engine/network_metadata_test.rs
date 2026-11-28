@@ -206,13 +206,12 @@ fn focused_profile_header_and_route_discovery_outrank_background_hydration() {
     store.insert(event.clone(), None);
     let mut network = Network::default();
     network.configure(vec!["wss://a.test/".into()], 100_000);
-    network.focused_sub = Some("profile".into());
     let q = Query {
         source: Source::Profile,
         target: Some(event.pubkey.clone()),
         ..Default::default()
     };
-    let wants = [0, 10002]
+    let wants: Vec<_> = [0, 3, 10002]
         .into_iter()
         .map(|kind| {
             (
@@ -227,12 +226,18 @@ fn focused_profile_header_and_route_discovery_outrank_background_hydration() {
             )
         })
         .collect();
-    network.plan(wants, &store, 100_000);
-    let priorities: Vec<_> = network
-        .requests
-        .values()
-        .map(|r| (r.filter.kinds.clone(), r.priority))
-        .collect();
-    assert_eq!(priorities.len(), 2);
-    assert!(priorities.iter().all(|(_, p)| *p == 0), "{priorities:?}");
+    for (focus, expected, now) in [(None, 1, 100_000), (Some("profile"), 0, 100_001)] {
+        network.focused_sub = focus.map(str::to_owned);
+        network.plan(wants.clone(), &store, now);
+        let priorities: Vec<_> = network
+            .requests
+            .values()
+            .map(|r| (r.filter.kinds.clone(), r.priority))
+            .collect();
+        assert_eq!(priorities.len(), 3);
+        assert!(
+            priorities.iter().all(|(_, p)| *p == expected),
+            "{priorities:?}"
+        );
+    }
 }
