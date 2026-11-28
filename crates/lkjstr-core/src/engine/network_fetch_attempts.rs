@@ -77,17 +77,16 @@ impl Network {
             }
             self.fetch_attempts.order.push_back(record.key);
         }
-        if self.fetch_attempts.active.len() == MAX_ATTEMPTS {
-            if let Some(key) = self
+        if self.fetch_attempts.active.len() == MAX_ATTEMPTS
+            && let Some(key) = self
                 .fetch_attempts
                 .active
                 .iter()
                 .min_by_key(|(_, a)| a.record.start_ms)
                 .map(|(&k, _)| k)
-            {
-                self.finish_attempt(key, self.now, Outcome::Dropped, 0);
-                self.flush_attempt(key, true);
-            }
+        {
+            self.finish_attempt(key, self.now, Outcome::Dropped, 0);
+            self.flush_attempt(key, true);
         }
         self.fetch_attempts.active.insert(
             wire_key,

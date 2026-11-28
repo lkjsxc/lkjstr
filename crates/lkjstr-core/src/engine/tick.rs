@@ -14,7 +14,6 @@ impl Engine {
             !self.store.pressure_admission_paused() && self.pending.can_admit(&entry.event)
         })
     }
-
     fn pressure_control(&mut self) -> Option<usize> {
         let count = self.queue.len();
         if count == 0 {
@@ -79,24 +78,16 @@ impl Engine {
                     })
                     .unwrap_or(0)
             };
-            let Some(ingest::QueuedEvent {
-                relay,
-                event: e,
-                wire,
-                sequence,
-                copies,
-                bytes,
-                observation,
-            }) = self.queue.remove(index)
-            else {
+            let Some(q) = self.queue.remove(index) else {
                 break;
             };
-            self.queue_bytes = self.queue_bytes.saturating_sub(bytes);
+            let e = q.event;
+            self.queue_bytes = self.queue_bytes.saturating_sub(q.bytes);
             let confirm = |network: &mut network::Network| {
-                if let Some(wire) = &wire {
-                    network.confirm_page_event(&relay, wire, &e);
+                if let Some(wire) = &q.wire {
+                    network.confirm_page_event(&q.relay, wire, &e);
                 }
-                for (relay, wire) in &copies {
+                for (relay, wire) in &q.copies {
                     network.confirm_page_event(relay, wire, &e);
                 }
             };
@@ -106,10 +97,10 @@ impl Engine {
                 .is_some_and(|known| known.matches(&e))
             {
                 confirm(&mut self.network);
-                self.network.observe_verified(&relay, &e, now);
-                self.relay_served(&relay, &e.id);
+                self.network.observe_verified(&q.relay, &e, now);
+                self.relay_served(&q.relay, &e.id);
                 self.network.observed_receipt(
-                    observation,
+                    q.observation,
                     fetch_records::Outcome::Duplicate,
                     Some(0),
                     false,
@@ -119,13 +110,13 @@ impl Engine {
             if matches!(verify_event(&e), VerificationResult::Ok(_)) {
                 self.verified += 1;
                 confirm(&mut self.network);
-                self.network.event(&relay, &e, now);
+                self.network.event(&q.relay, &e, now);
                 if let Some(nested) = lkjstr_protocol::verified_nested_repost(&e) {
-                    self.insert_verified(nested, Some(&relay));
+                    self.insert_verified(nested, Some(&q.relay));
                 }
                 self.read_contexts.changed(&e);
                 let timeline_note = matches!(e.kind, 1 | 6 | 42);
-                let (outcome, lease) = self.store.insert_leased(e, Some(&relay));
+                let (outcome, lease) = self.store.insert_leased(e, Some(&q.relay));
                 use crate::store::Inserted;
                 let admitted = matches!(outcome, Inserted::New | Inserted::Replaced);
                 let stored = admitted
@@ -133,7 +124,7 @@ impl Engine {
                     .flatten()
                     .or(Some(0));
                 self.network.observed_receipt(
-                    observation,
+                    q.observation,
                     match outcome {
                         Inserted::New | Inserted::Replaced => fetch_records::Outcome::Ok,
                         Inserted::Duplicate | Inserted::Stale => fetch_records::Outcome::Duplicate,
@@ -148,9 +139,9 @@ impl Engine {
                     crate::store::Inserted::InvalidExpiration
                         | crate::store::Inserted::InvalidEncoding
                 ) {
-                    self.record_invalid_delivery(&relay, wire.as_deref(), sequence);
+                    self.record_invalid_delivery(&q.relay, q.wire.as_deref(), q.sequence);
                 }
-                if relay != "cache"
+                if q.relay != "cache"
                     && !matches!(
                         outcome,
                         crate::store::Inserted::Expired
@@ -166,13 +157,13 @@ impl Engine {
                 }
             } else {
                 self.network.observed_receipt(
-                    observation,
+                    q.observation,
                     fetch_records::Outcome::Rejected,
                     Some(0),
                     false,
                 );
                 self.rejected += 1;
-                self.record_invalid_delivery(&relay, wire.as_deref(), sequence);
+                self.record_invalid_delivery(&q.relay, q.wire.as_deref(), q.sequence);
             }
         }
         if self.queue.iter().any(|entry| entry.relay.starts_with("ws")) {
@@ -252,9 +243,8 @@ impl Engine {
 }
 
 #[cfg(test)]
-#[path = "pressure_recovery_test.rs"]
-mod tests;
-
-#[cfg(test)]
 #[path = "tick_preview_test.rs"]
 mod preview_tests;
+#[cfg(test)]
+#[path = "pressure_recovery_test.rs"]
+mod tests;

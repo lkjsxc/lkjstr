@@ -192,10 +192,8 @@ The archive graph and numeric-token corrections pass 80 package cases and 19 xta
 The seventh ship's stale host validator was corrected through GitOps. Account-safe 07e88178 shipped at 02:07 UTC with schema-2 rollback and HTTPS proof;
 A1/A2 shipped at 972ef776. [Receipts and hashes](engine-shipping.md).
 Q1: 894 -> 567 requests; 100/100 witnesses. Worker 543/549, mock, upload and offline gates pass; ship pending. [Score](q1-public-score-20261117.md).
-
 Protocol-11/12 gate records: [variants](engine-variants-verification.md), [device](engine-device-verification.md).
 The [ninth hour](engine-performance-ninth.md) and [coverage audit](engine-performance-ninth-coverage.md) record hidden quotes and evidence limits.
-
 The owner's 2026-11-16 delegation authorizes rebased pushes and the prescribed ship script. Tests use fresh ports and fixture data, clean their
 processes and never publish to public relays or touch a saved owner account. The public hour uses REQ/CLOSE only. Docker and unrelated host services
 remain untouched.

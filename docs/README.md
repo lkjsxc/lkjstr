@@ -50,6 +50,7 @@ Engine (`crates/`):
 - [orchestration.md](orchestration.md): publication routing, freshness, weights and limits.
 - [orchestration-optimizer.md](orchestration-optimizer.md) covers Stage 1 scheduling and retention.
 - [fetch-orchestrator.md](fetch-orchestrator.md) covers timeline coverage, weighted scheduling and release steps.
+- [fetch-records.md](fetch-records.md): local per-resource fetch observations, bounds and privacy.
 - [signer-orchestrator.md](signer-orchestrator.md) covers extension weights, admission and ownership.
 - [thin-link.md](thin-link.md): slow-link scheduling, startup and measured bounds.
 - [notification-delivery.md](notification-delivery.md): account watches, inbox policy and bounded verification latency.
