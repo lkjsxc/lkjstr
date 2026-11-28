@@ -2,6 +2,12 @@
 import { onPerson } from '../shared/people.ts';
 import type { Signal } from '../shared/signal.ts';
 import type { Accounts } from './client-api.ts';
+import type { Account } from './protocol.ts';
+
+export function removedAccount(previous: Accounts, next: readonly Account[]): boolean {
+  const keys = new Set(next.map((account) => account.author.pubkey));
+  return previous.accounts.some((account) => !keys.has(account.author.pubkey));
+}
 
 export function watchAccountPeople(accounts: Signal<Accounts>): () => void {
   return onPerson((author) => {

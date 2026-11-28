@@ -2,7 +2,7 @@
 import { observeImages } from '../shared/media-observation.ts';
 import { learnPerson, learnRows } from '../shared/people.ts';
 import { createSignal } from '../shared/signal.ts';
-import { watchAccountPeople } from './client-account-people.ts';
+import { removedAccount, watchAccountPeople } from './client-account-people.ts';
 import { createActionRequests } from './client-actions.ts';
 import type { AccountState, Accounts, Engine, SubHandlers } from './client-api.ts';
 import { createAvatarClient } from './client-avatars.ts';
@@ -136,6 +136,7 @@ export function createEngine(transport: Transport): Engine {
       actions.result(msg);
       deliveries.result(msg);
     } else if (msg.t === 'accounts') {
+      if (removedAccount(accounts.get(), msg.accounts)) avatars.reset();
       dm.access.accounts(msg.accounts);
       accounts.set({
         accounts: msg.accounts.map((a) => ({ ...a, author: learnPerson(a.author) })),

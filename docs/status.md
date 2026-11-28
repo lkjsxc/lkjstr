@@ -3,7 +3,7 @@
 [Parity](parity.md), [performance](engine-performance.md) and [public deep links](public-deep-links.md). New tab opens links and notes share exact events.
 Claude owns the interface. Account-safe and A1/A2 (972ef776) are live. [Emoji sets](emoji-sets.md) support shared shortcodes across sources.
 [Q1](engine-q1-progress.md) passed public scoring. Worker, ship and Q2-Q5 remain. [Stage 1 orchestration](orchestration-optimizer.md) adds weighted retention.
-[Avatars](avatars.md) use bounded Worker derivation and persistence; verified-writer routing has native tests.
+[Avatars](avatars.md) use bounded Worker derivation/persistence and preserve loaded faces through scroll/redraw; verified-writer routing has native tests.
 Earlier private-branch measurements leave the one-second cold-name target and public-host CORS coverage open.
 
 ## Profile cache orchestration (2026-11-28)

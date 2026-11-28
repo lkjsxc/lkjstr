@@ -56,7 +56,7 @@ Seams worth knowing inside `src/views/`:
   or loopback IP literals. Public HTTP loads over HTTPS while original links stay available.
   The [inline image lane](fetch-orchestrator.md#inline-feed-images) shares a page budget,
   keeps boxes in place, and releases images as the reader moves on. Failed requests stay
-  unavailable across tiles and remounts until reload. [Avatar owners](avatars.md) use visible leases and one still.
+  unavailable across tiles and remounts until reload. [Avatar owners](avatars.md) use bounded visible/nearby leases and recent ready stills.
 - `account.ts` is the Accounts tab, `account-add.ts` the ways to sign in,
   `account-key.ts` owns protected backup and its folded raw-key part. Password
   forms are disposable; account-vault.ts routes unlock, account-idle.ts locks idle

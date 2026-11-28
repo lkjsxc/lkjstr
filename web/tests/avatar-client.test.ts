@@ -38,7 +38,7 @@ function setup() {
   };
   return { client, sent, wants, reply };
 }
-it('shares one exact-URL request and object URL, revoking only after its last owner', () => {
+it('shares one exact-URL request and retains its last ready release until cleanup', () => {
   const x = setup(),
     a: AvatarValue[] = [],
     b: AvatarValue[] = [];
@@ -53,9 +53,10 @@ it('shares one exact-URL request and object URL, revoking only after its last ow
   expect(URL.revokeObjectURL).not.toHaveBeenCalled();
   second();
   second();
-  expect(URL.revokeObjectURL).toHaveBeenCalledTimes(1);
+  expect(URL.revokeObjectURL).not.toHaveBeenCalled();
   expect(x.sent.filter((m) => m.t === 'avatar.close')).toHaveLength(0);
   x.client.dispose();
+  expect(URL.revokeObjectURL).toHaveBeenCalledTimes(1);
 });
 it('fences a cancelled reply from the replacement request for the same exact URL', () => {
   const x = setup(),

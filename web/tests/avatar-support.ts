@@ -34,7 +34,7 @@ export function avatarFixture() {
   ) {
     return new DOMRect(
       Number(this.dataset.x ?? 20),
-      20,
+      Number(this.dataset.y ?? 20),
       this.matches('[data-face]') ? 36 : 300,
       this.matches('[data-face]') ? 36 : 300,
     );

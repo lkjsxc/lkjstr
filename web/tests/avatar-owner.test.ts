@@ -59,6 +59,9 @@ it('keeps the object URL through complete same-URL node replacement and a tempor
   expect(x.revoked).not.toHaveBeenCalled();
   next.remove();
   await settleAvatars();
+  expect(next.querySelector('img')).toBeNull();
+  expect(x.revoked).not.toHaveBeenCalled();
+  x.owner.dispose();
   expect(x.revoked).toHaveBeenCalledTimes(1);
 });
 it('preserves image identity on profile/name updates and changes work only for a changed URL', async () => {
@@ -75,6 +78,9 @@ it('preserves image identity on profile/name updates and changes work only for a
   expect(x.wants()).toHaveLength(1);
   learnPerson({ ...a, name: 'Bea', picture: 'https://a.test/changed', profileId: 'third' });
   expect(x.wants().at(-1)?.url).toBe('https://a.test/changed');
+  expect(face.querySelector('img')).toBeNull();
+  expect(x.revoked).not.toHaveBeenCalled();
+  x.owner.dispose();
   expect(x.revoked).toHaveBeenCalledTimes(1);
 });
 it('carries a changed channel picture onto a retained face during keyed row reconciliation', async () => {

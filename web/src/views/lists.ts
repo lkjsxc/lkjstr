@@ -3,7 +3,7 @@
 import type { Subscription } from '../engine/client.ts';
 import type { Row, Source, SubState } from '../engine/protocol.ts';
 import type { Disposer } from '../shared/signal.ts';
-import { reuseAvatar } from './avatars.ts';
+import { reuseAvatars } from './avatars.ts';
 import type { ViewEnv } from './registry.ts';
 
 const MOST = 500; // Batch size; collect until the source reports exhaustion.
@@ -119,15 +119,9 @@ export function reconcile<R extends { readonly key: string }>(
       (!c || c.sig !== sig) &&
       !(c && active && c.node.contains(active) && active.matches('input, textarea, select'))
     ) {
-      const faces = c ? [...c.node.querySelectorAll<HTMLElement>('[data-face]')] : [];
+      const previous = c?.node;
       c = { sig, node: render(row) };
-      for (const face of c.node.querySelectorAll<HTMLElement>('[data-face]')) {
-        const old = faces.find((old) => old.dataset.face === face.dataset.face);
-        if (old) {
-          reuseAvatar(old, face);
-          face.replaceWith(old);
-        }
-      }
+      if (previous) reuseAvatars(previous, c.node);
       c.node.dataset.key = row.key;
       cache.set(row.key, c);
     }

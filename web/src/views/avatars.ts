@@ -61,6 +61,24 @@ export function reuseAvatar(el: HTMLElement, fresh: HTMLElement): void {
   if (el.className !== fresh.className) el.className = fresh.className;
   if (author) updateAvatar(el, author);
 }
+/** Keep decoded faces across row replacement; each old face can serve only one new position. */
+export function reuseAvatars(previous: HTMLElement, fresh: HTMLElement): void {
+  const available = [...previous.querySelectorAll<HTMLElement>('[data-face]')];
+  for (const face of fresh.querySelectorAll<HTMLElement>('[data-face]')) {
+    const options = avatarOptions(face);
+    if (options.preview) continue; // Editor drafts deliberately do not follow hydrated author updates.
+    const matches = (old: HTMLElement): boolean =>
+      old.dataset.face === face.dataset.face &&
+      !avatarOptions(old).preview &&
+      !!avatarOptions(old).cachePublic === !!options.cachePublic;
+    let index = available.findIndex((old) => matches(old) && old.className === face.className);
+    if (index < 0) index = available.findIndex(matches);
+    if (index < 0) continue;
+    const old = available.splice(index, 1)[0]!;
+    reuseAvatar(old, face);
+    face.replaceWith(old);
+  }
+}
 export function avatar(a: Author, cls = 'av', options: FaceOptions = {}): HTMLElement {
   const author = options.preview ? a : (knownPerson(a.pubkey) ?? a);
   const hue = Number.parseInt(a.pubkey.slice(0, 4), 16) % 360;

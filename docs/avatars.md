@@ -56,10 +56,28 @@ under reduced motion without requesting the original image or drawing a canvas.
 
 One owner on `host.app` covers views, the topbar and overlays. Detached render candidates acquire nothing.
 Current viewport and ancestor scrollport geometry decide ownership; queued observer entries cannot override
-newer geometry. Replacement nodes acquire before removed nodes release, preserving shared exact-URL work.
-Hidden, offscreen and disposed faces release ownership. The final page owner revokes its object URL.
-Page hide, back/forward-cache transitions and host disposal fence old callbacks and release or resume leases.
-The page holds at most 256 exact URLs and 512 face owners, with no idle Blob pool.
+newer geometry. Visible faces acquire first. Up to 32 nearby faces can retain or warm a still within 192 CSS pixels
+vertically, with existing owners preferred at that limit. The margin applies once to the effective scrollport;
+horizontal clips, local content masks, zero-height scrollports and hidden subtrees remain strict. Nested scrolls
+and resizes coalesce geometry work in one animation frame; mount changes reconcile in a microtask before paint.
+
+Unchanged row faces retain their decoded image or canvas through one-to-one matching by author and public/preview
+role. New nodes acquire before removed owners release, preserving shared exact-URL work. Ready derivatives use
+synchronous decoding hints; static faces keep their lease when reduced motion changes. Native originals start only
+inside the true viewport, and queued originals lose their slot when they leave it. Already-started images and
+frozen canvases can stay in the nearby region. Freezing reuses the existing source, and unfreezing holds the canvas
+until the replacement loads. Native concurrency/deadlines and task-delayed frozen-source release remain unchanged.
+
+Far-away, hidden, detached and disposed faces release their leases and rendered pixels. The page retains at most
+64 recently released ready object URLs inside its 256-total-URL limit, with at most 512 active lease owners.
+Each ready Blob is at most 128 KiB: the idle subset is at most 8 MiB within the existing 32 MiB total Blob bound.
+Admission evicts idle URLs before deferring a new live URL; it never evicts an active lease or starts an original
+as a capacity bypass. Pending, deferred and negative entries are not retained after their last release.
+
+Page hide, document hide, owner/client disposal and authoritative account removal clear retained URLs. Reset epochs
+prevent delayed old-owner releases from repopulating the idle pool; request generations reject old replies.
+Back/forward-cache return resumes with fresh requests. Reuse never promotes the entry's original public-provenance
+bit, and Worker storage, codec limits and R0 provenance rules are unchanged.
 
 ## Worker limits
 
@@ -101,7 +119,9 @@ can cause a later fetch. Structural metadata, MIME and actual Blob-size checks r
 ## Verification scope
 
 Native tests cover routing, stable batching, role/read opt-outs, actual-byte LRU plans, owner limits and cancellation.
-Focused page and transport tests cover shared object URLs, stale replies, visibility, fallback and bounded replay.
+Focused page and transport tests cover shared/idle URL bounds, stale replies, visibility, fallback and bounded replay.
+Deterministic scroll/redraw tests cover nested clipping, decoded node identity, motion transitions, capacity deferral,
+queued native work, account removal and page-hide cleanup. These are lifecycle proofs, not browser paint timings.
 Original-source and mutation controls prove the routing, LRU, queued-body and retiring-permit assertions can fail.
 Earlier private-branch production-Worker controls cover concurrent IDB writers, both cache caps, cancellation, real bitmap closure,
 actual Blob delivery through both transports, page disposal and full-process cache reuse. A separate real quota

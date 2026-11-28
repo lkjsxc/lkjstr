@@ -4,6 +4,7 @@
 import type { Row } from '../engine/protocol.ts';
 import { dayOf } from '../shared/format.ts';
 import { h } from '../shared/h.ts';
+import { reuseAvatars } from './avatars.ts';
 import { type MomentPart, renderMoment } from './feed-moment.ts';
 import { rowTime } from './feed-scrub.ts';
 import { withHeld } from './held.ts';
@@ -67,6 +68,7 @@ export function createRowList(
           const made = make();
           if (!made) return;
           if (n) {
+            reuseAvatars(n.el, made);
             reuseNoteAudio(n.el, made);
             disposeNoteAudio(n.el);
           }

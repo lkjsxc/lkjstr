@@ -1,4 +1,4 @@
-// One page's active face leases. Policy and durable bytes stay in the Worker.
+// One page's bounded face leases and recently ready URLs. Durable bytes stay in the Worker.
 import type { Transport } from './client-transport.ts';
 import type { AvatarOutput, FromEngine } from './protocol.ts';
 
@@ -9,6 +9,7 @@ export type AvatarValue =
 type Receive = (value: AvatarValue) => void;
 type Entry = {
   url: string;
+  epoch: number;
   observePublic: boolean;
   owners: Map<number, Receive>;
   value: AvatarValue;
@@ -39,10 +40,12 @@ const readyBlob = (message: AvatarOutput): Blob | undefined => {
 };
 export type AvatarClient = ReturnType<typeof createAvatarClient>;
 export function createAvatarClient(transport: Transport) {
-  const entries = new Map<string, Entry>(); // <=256 exact URLs with live page owners; no idle Blob pool.
+  const entries = new Map<string, Entry>(); // <=256 total exact URLs, including idle ready values.
+  const idle = new Map<string, Entry>(); // <=64 least-recently released stills; <=8 MiB inside the total cap.
   const pending = new Map<string, Entry>(); // <=256, one per owned URL.
   const listeners = new Set<() => void>(); // one per mounted avatar root.
   let serial = 0,
+    epoch = 0,
     owners = 0,
     visible = true,
     disposed = false,
@@ -75,8 +78,43 @@ export function createAvatarClient(transport: Transport) {
     entry.objectUrl = undefined;
     if (previous) URL.revokeObjectURL(previous);
   };
+  const discard = (entry: Entry): void => {
+    entries.delete(entry.url);
+    idle.delete(entry.url);
+    cancel(entry);
+    revoke(entry);
+  };
+  const trimIdle = (limit: number): void => {
+    while (idle.size > limit) discard(idle.values().next().value!);
+  };
+  const clearIdle = (): void => {
+    trimIdle(0);
+    capacity();
+  };
+  const invalidate = (): Entry[] => {
+    epoch++;
+    clearTimeout(timer);
+    timer = undefined;
+    const current = [...entries.values()];
+    // Invalidate every old URL before any callback can resume or receive a synchronous cache hit.
+    for (const entry of current) {
+      cancel(entry);
+      revoke(entry);
+      entry.value = { kind: 'pending' };
+      if (!entry.owners.size) discard(entry);
+    }
+    return current;
+  };
   const request = (entry: Entry): void => {
-    if (disposed || !visible || !entry.owners.size || entry.req) return;
+    if (
+      disposed ||
+      !visible ||
+      !entry.owners.size ||
+      entry.req ||
+      entry.value.kind !== 'pending' ||
+      entries.get(entry.url) !== entry
+    )
+      return;
     entry.retry = undefined;
     const req = `av${++serial}`;
     entry.req = req;
@@ -107,7 +145,9 @@ export function createAvatarClient(transport: Transport) {
       Math.max(1, at - performance.now()),
     );
   };
-  return {
+  const pagehide = (): void => client.visible(false);
+  const pageshow = (): void => client.visible(document.visibilityState !== 'hidden');
+  const client = {
     acquire(url: string, receive: Receive, observePublic = false): (() => void) | undefined {
       if (disposed) return;
       if (!url || new TextEncoder().encode(url).length > 2048) {
@@ -115,9 +155,12 @@ export function createAvatarClient(transport: Transport) {
         return () => undefined;
       }
       let entry = entries.get(url);
-      if (owners >= 512 || (!entry && entries.size >= 256)) return;
+      if (owners >= 512) return;
+      if (!entry && entries.size >= 256) trimIdle(Math.max(0, idle.size - 1));
+      if (!entry && entries.size >= 256) return;
+      idle.delete(url);
       if (!entry) {
-        entry = { url, observePublic, owners: new Map(), value: { kind: 'pending' } };
+        entry = { url, epoch, observePublic, owners: new Map(), value: { kind: 'pending' } };
         entries.set(url, entry);
       }
       const owned = entry,
@@ -130,9 +173,10 @@ export function createAvatarClient(transport: Transport) {
         if (!owned.owners.delete(id)) return;
         owners--;
         if (!owned.owners.size) {
-          entries.delete(url);
-          cancel(owned);
-          revoke(owned);
+          if (!disposed && visible && owned.epoch === epoch && owned.value.kind === 'ready') {
+            idle.set(url, owned);
+            trimIdle(64);
+          } else discard(owned);
           schedule();
         }
         capacity();
@@ -173,20 +217,26 @@ export function createAvatarClient(transport: Transport) {
         listeners.delete(receive);
       };
     },
+    clearIdle,
+    reset(): void {
+      if (disposed) return;
+      const token = ++visibilityGeneration,
+        current = invalidate();
+      for (const entry of current) {
+        if (disposed || token !== visibilityGeneration) return;
+        if (entries.get(entry.url) === entry) publish(entry, entry.value);
+      }
+      for (const entry of current) {
+        if (disposed || !visible || token !== visibilityGeneration) return;
+        request(entry);
+      }
+    },
     visible(on: boolean): void {
       if (disposed || visible === on) return;
       visible = on;
       const token = ++visibilityGeneration;
-      const current = [...entries.values()];
+      const current = on ? [...entries.values()] : invalidate();
       if (!on) {
-        clearTimeout(timer);
-        timer = undefined;
-        // Revoke every old URL before callbacks can synchronously resume/cache-hit a new generation.
-        for (const entry of current) {
-          cancel(entry);
-          revoke(entry);
-          entry.value = { kind: 'pending' };
-        }
         for (const entry of current) {
           if (disposed || visible || token !== visibilityGeneration) break;
           if (entries.get(entry.url) === entry) publish(entry, entry.value);
@@ -200,6 +250,8 @@ export function createAvatarClient(transport: Transport) {
     dispose(): void {
       if (disposed) return;
       disposed = true;
+      window.removeEventListener('pagehide', pagehide);
+      window.removeEventListener('pageshow', pageshow);
       visibilityGeneration++;
       clearTimeout(timer);
       for (const entry of entries.values()) {
@@ -209,9 +261,13 @@ export function createAvatarClient(transport: Transport) {
         entry.owners.clear();
       }
       entries.clear();
+      idle.clear();
       pending.clear();
       listeners.clear();
       owners = 0;
     },
   };
+  window.addEventListener('pagehide', pagehide);
+  window.addEventListener('pageshow', pageshow);
+  return client;
 }
