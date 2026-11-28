@@ -181,9 +181,11 @@ it('removes a previously successful link if reloading the original fails', async
   const x = profile('https://images.example/reload-failure');
   await settleAvatars();
   loaded(x.el, '.av.xl img');
-  x.el.hidden = true;
+  // A hidden profile keeps its loaded picture; only a remount asks for the original again.
+  const parent = x.el.parentElement!;
+  x.el.remove();
   await settleAvatars();
-  x.el.hidden = false;
+  parent.append(x.el);
   await settleAvatars();
   expect(x.el.querySelector('.phead a')).not.toBeNull();
   x.el.querySelector('.av.xl img')!.dispatchEvent(new Event('error'));

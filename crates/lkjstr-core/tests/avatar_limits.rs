@@ -16,7 +16,7 @@ fn deferred(commands: Vec<Command>) {
     ));
 }
 #[test]
-fn fetched_bodies_waiting_for_decode_keep_all_four_raw_credits() {
+fn fetched_bodies_waiting_for_decode_keep_every_raw_credit() {
     let mut book = Book::default();
     for n in 0..20 {
         book.want(owner(1, n), &format!("https://host{n}.test/face"), 0);
@@ -39,10 +39,10 @@ fn fetched_bodies_waiting_for_decode_keep_all_four_raw_credits() {
             }
         }
         let counts = book.counts();
-        assert!(counts.raw <= 4 && counts.fetches <= 4 && counts.derives <= 1);
+        assert!(counts.raw <= RAW_SLOTS && counts.fetches <= RAW_SLOTS && counts.derives <= 1);
     }
-    assert_eq!(fetched, 4);
-    assert_eq!(book.counts().raw, 4);
+    assert_eq!(fetched, RAW_SLOTS);
+    assert_eq!(book.counts().raw, RAW_SLOTS);
 }
 #[test]
 fn requested_hostname_is_limited_independently_of_ports_and_url_spellings() {
@@ -54,19 +54,19 @@ fn requested_hostname_is_limited_independently_of_ports_and_url_spellings() {
             0,
         );
     }
-    for command in book.pump(0) {
-        if let Command::Run(work) = command {
-            book.complete(work.ticket, Completion::Miss, 0);
+    let mut fetches = 0;
+    for _ in 0..4 {
+        for command in book.pump(0) {
+            if let Command::Run(work) = command {
+                if work.ticket.stage == Stage::Fetch {
+                    fetches += 1;
+                } else {
+                    book.complete(work.ticket, Completion::Miss, 0);
+                }
+            }
         }
     }
-    let fetches = book
-        .pump(0)
-        .into_iter()
-        .filter(
-            |command| matches!(command, Command::Run(work) if work.ticket.stage == Stage::Fetch),
-        )
-        .count();
-    assert_eq!(fetches, 2);
+    assert_eq!(fetches, HOST_FETCHES);
 }
 #[test]
 fn each_client_and_engine_bound_defers_without_an_original_image_bypass() {

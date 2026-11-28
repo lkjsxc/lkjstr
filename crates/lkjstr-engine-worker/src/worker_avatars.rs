@@ -46,8 +46,9 @@ pub(super) fn input(h: &mut Host, client: u64, input: &W) -> bool {
             req,
             url,
             observe_public,
+            rank,
         } => match clock() {
-            Some(at) => h.avatars.book.want_observed(
+            Some(at) => h.avatars.book.want_ranked(
                 policy::Owner {
                     client,
                     request: req.clone(),
@@ -55,6 +56,7 @@ pub(super) fn input(h: &mut Host, client: u64, input: &W) -> bool {
                 url,
                 at,
                 *observe_public,
+                *rank,
             ),
             None => vec![Command::Reply {
                 owner: policy::Owner {

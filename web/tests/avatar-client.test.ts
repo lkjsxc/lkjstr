@@ -95,46 +95,48 @@ it('waits for native capacity with one retry timer and never substitutes a fallb
   expect(vi.getTimerCount()).toBe(0);
   x.client.dispose();
 });
-it('bounds live URL and owner records and announces newly available room', async () => {
+it('stops admitting at 256 unsettled URLs and announces room when one settles', async () => {
   const x = setup(),
     room = vi.fn();
   x.client.onCapacity(room);
-  const close = Array.from(
-    { length: 256 },
-    (_, i) => x.client.acquire(`https://a.test/${i}`, () => undefined)!,
-  );
+  for (let i = 0; i < 256; i++) x.client.acquire(`https://a.test/${i}`, () => undefined);
   expect(x.client.acquire('https://a.test/overflow', () => undefined)).toBeUndefined();
-  close[0]!();
+  expect(x.wants()).toHaveLength(256);
+  x.reply(x.wants()[0]!.req, { status: 'ready', retained: true });
   await Promise.resolve();
   expect(room).toHaveBeenCalledTimes(1);
   expect(x.client.acquire('https://a.test/overflow', () => undefined)).toBeTypeOf('function');
-  const owners = Array.from({ length: 256 }, () =>
+  // Owners of one settled or pending URL are not counted against the bound.
+  const owners = Array.from({ length: 600 }, () =>
     x.client.acquire('https://a.test/1', () => undefined),
   );
   expect(owners.every(Boolean)).toBe(true);
-  expect(x.client.acquire('https://a.test/1', () => undefined)).toBeUndefined();
   expect(x.wants()).toHaveLength(257);
   x.client.dispose();
 });
-it('hides pending and ready faces, rejects late Blobs, and resumes with new request identities', () => {
+it('keeps ready pictures through hide, cancels pending requests and re-asks them with new identities', () => {
   const x = setup(),
     first = vi.fn(),
     second = vi.fn();
-  const a = x.client.acquire('https://a.test/p?a=1', first)!;
-  const b = x.client.acquire('https://a.test/p?a=2', second)!;
+  x.client.acquire('https://a.test/p?a=1', first);
+  x.client.acquire('https://a.test/p?a=2', second);
   const [one, two] = x.wants();
   x.reply(one!.req, { status: 'ready', retained: true });
+  const ready = first.mock.lastCall?.[0];
   x.client.visible(false);
-  expect(first.mock.lastCall?.[0]).toEqual({ kind: 'pending' });
-  expect(x.sent).toContainEqual({ t: 'avatar.close', req: two!.req });
-  expect(URL.revokeObjectURL).toHaveBeenCalledTimes(1);
+  expect(first.mock.lastCall?.[0]).toBe(ready);
+  expect(URL.revokeObjectURL).not.toHaveBeenCalled();
+  expect(x.sent.filter((m) => m.t === 'avatar.close')).toEqual([
+    { t: 'avatar.close', req: two!.req },
+  ]);
   x.reply(two!.req, { status: 'ready', retained: true });
   expect(URL.createObjectURL).toHaveBeenCalledTimes(1);
   x.client.visible(true);
-  expect(x.wants()).toHaveLength(4);
-  expect(new Set(x.wants().map((m) => m.req)).size).toBe(4);
-  a();
-  b();
+  expect(x.wants().map((m) => m.url)).toEqual([one!.url, two!.url, two!.url]);
+  expect(x.wants()[2]!.req).not.toBe(two!.req);
+  x.reply(x.wants()[2]!.req, { status: 'ready', retained: true });
+  expect(second.mock.lastCall?.[0].kind).toBe('ready');
+  expect(URL.revokeObjectURL).not.toHaveBeenCalled();
   x.client.dispose();
 });
 it('validates actual Blob bytes before making a page object URL', () => {
@@ -153,7 +155,7 @@ it('validates actual Blob bytes before making a page object URL', () => {
   x.client.dispose();
 });
 
-it('does not deliver a revoked ready URL after an owner hides the client reentrantly', () => {
+it('still delivers the ready URL to every owner when one hides the client reentrantly', () => {
   const x = setup(),
     second = vi.fn();
   x.client.acquire('https://a.test/p', (value) => {
@@ -161,56 +163,32 @@ it('does not deliver a revoked ready URL after an owner hides the client reentra
   });
   x.client.acquire('https://a.test/p', second);
   x.reply(x.wants()[0]!.req, { status: 'ready', retained: true });
-  expect(second.mock.calls.every(([value]) => value.kind === 'pending')).toBe(true);
-  expect(URL.revokeObjectURL).toHaveBeenCalledTimes(1);
+  expect(second.mock.lastCall?.[0].kind).toBe('ready');
+  expect(URL.revokeObjectURL).not.toHaveBeenCalled();
   x.client.dispose();
 });
-it('keeps two synchronous resumed cache-hit URLs when a pending callback resumes during hide', () => {
-  const sent: ToEngine[] = [],
-    second = vi.fn(),
-    third = vi.fn();
-  let instant = false,
-    resume = false;
-  let client!: ReturnType<typeof createAvatarClient>;
-  const reply = (req: string): void => {
-    const blob = new Blob(['still'], { type: 'image/webp' });
-    client.receive({
-      t: 'avatar',
-      req,
-      result: { status: 'ready', retained: true },
-      blob,
-      image: { edge: 1, sourceWidth: 1, sourceHeight: 1, bytes: blob.size, mime: blob.type },
-    });
-  };
-  client = createAvatarClient({
-    post(message) {
-      sent.push(message);
-      if (instant && message.t === 'avatar.want') reply(message.req);
-    },
-    listen() {},
-    close() {},
-  });
-  client.acquire('https://a.test/p', (value) => {
-    if (resume && value.kind === 'pending') {
-      resume = false;
-      client.visible(true);
-    }
-  });
-  client.acquire('https://a.test/p', second);
-  client.acquire('https://a.test/other', third);
-  for (const message of sent.filter((m) => m.t === 'avatar.want')) reply(message.req);
-  const old = second.mock.lastCall![0].url,
-    oldOther = third.mock.lastCall![0].url;
-  instant = resume = true;
-  client.visible(false);
-  const current = second.mock.lastCall![0];
-  expect(current.kind).toBe('ready');
-  expect(current.url).not.toBe(old);
-  const currentOther = third.mock.lastCall![0];
-  expect(currentOther.kind).toBe('ready');
-  expect(currentOther.url).not.toBe(oldOther);
-  expect(vi.mocked(URL.revokeObjectURL).mock.calls.map(([url]) => url)).toEqual([old, oldOther]);
-  client.dispose();
-  expect(URL.revokeObjectURL).toHaveBeenCalledTimes(4);
-  expect(URL.revokeObjectURL).toHaveBeenLastCalledWith(currentOther.url);
+it('asks by place and lets a face that came on screen overtake before the old request closes', () => {
+  const x = setup(),
+    draw = vi.fn();
+  x.client.acquire('https://a.test/screen', () => undefined);
+  x.client.acquire('https://a.test/next', () => undefined, false, 1);
+  const lease = x.client.acquire('https://a.test/far', draw, false, 2)!;
+  expect(x.wants().map(({ url, rank }) => [url, rank])).toEqual([
+    ['https://a.test/screen', undefined],
+    ['https://a.test/next', 1],
+    ['https://a.test/far', 2],
+  ]);
+  expect('rank' in x.wants()[0]!).toBe(false);
+  const old = x.wants()[2]!.req;
+  lease.rank(0);
+  const tail = x.sent.slice(-2);
+  expect(tail[0]).toEqual({ t: 'avatar.want', req: expect.any(String), url: 'https://a.test/far' });
+  expect(tail[1]).toEqual({ t: 'avatar.close', req: old });
+  lease.rank(2); // Moving away again never downgrades the request already made.
+  expect(x.sent.slice(-2)).toEqual(tail);
+  x.reply(old, { status: 'ready', retained: true });
+  expect(URL.createObjectURL).not.toHaveBeenCalled();
+  x.reply(x.wants()[3]!.req, { status: 'ready', retained: true });
+  expect(draw.mock.lastCall?.[0].kind).toBe('ready');
+  x.client.dispose();
 });

@@ -1,62 +1,46 @@
-// One page's bounded face leases and recently ready URLs. Durable bytes stay in the Worker.
-import type { Transport } from './client-transport.ts';
-import type { AvatarOutput, FromEngine } from './protocol.ts';
+// One page's face leases and its session picture cache. Durable bytes stay in the Worker.
 
-export type AvatarValue =
-  | { readonly kind: 'pending' | 'rejected' }
-  | { readonly kind: 'ready'; readonly url: string }
-  | { readonly kind: 'fallback'; readonly uniform: boolean };
-type Receive = (value: AvatarValue) => void;
-type Entry = {
-  url: string;
-  epoch: number;
-  observePublic: boolean;
-  owners: Map<number, Receive>;
-  value: AvatarValue;
-  req?: string;
-  retry?: number;
-  objectUrl?: string;
-};
-const readyBlob = (message: AvatarOutput): Blob | undefined => {
-  const { blob, image } = message;
-  if (
-    !(blob instanceof Blob) ||
-    !image ||
-    blob.size < 1 ||
-    blob.size > 131072 ||
-    image.bytes !== blob.size ||
-    image.mime !== blob.type ||
-    !['image/webp', 'image/jpeg', 'image/png'].includes(blob.type) ||
-    !Number.isInteger(image.edge) ||
-    image.edge < 1 ||
-    image.edge > 160 ||
-    !Number.isInteger(image.sourceWidth) ||
-    !Number.isInteger(image.sourceHeight) ||
-    image.sourceWidth < image.edge ||
-    image.sourceHeight < image.edge
-  )
-    return;
-  return blob;
-};
+import {
+  type AvatarLease,
+  type AvatarValue,
+  type Entry,
+  MAX_BYTES,
+  MAX_PENDING,
+  MAX_URLS,
+  NEGATIVE_MS,
+  type Receive,
+  rankOf,
+  readyBlob,
+} from './client-avatar-values.ts';
+import type { Transport } from './client-transport.ts';
+import type { FromEngine } from './protocol.ts';
+
+export type { AvatarLease, AvatarValue };
+
 export type AvatarClient = ReturnType<typeof createAvatarClient>;
 export function createAvatarClient(transport: Transport) {
-  const entries = new Map<string, Entry>(); // <=256 total exact URLs, including idle ready values.
-  const idle = new Map<string, Entry>(); // <=64 least-recently released stills; <=8 MiB inside the total cap.
-  const pending = new Map<string, Entry>(); // <=256, one per owned URL.
+  const entries = new Map<string, Entry>(); // <=1024 exact URLs.
+  const idle = new Map<string, Entry>(); // Unowned settled entries, least recently released first.
+  const pending = new Map<string, Entry>(); // <=256, one request per unsettled owned URL.
   const listeners = new Set<() => void>(); // one per mounted avatar root.
   let serial = 0,
     epoch = 0,
-    owners = 0,
+    bytes = 0,
+    unsettled = 0,
     visible = true,
     disposed = false,
-    queued = false,
-    visibilityGeneration = 0;
+    queued = false;
   let timer: ReturnType<typeof setTimeout> | undefined;
-  const publish = (entry: Entry, value: AvatarValue): void => {
+  const settle = (entry: Entry, value: AvatarValue): void => {
+    if ((entry.value.kind === 'pending') !== (value.kind === 'pending'))
+      unsettled += value.kind === 'pending' ? 1 : -1;
     entry.value = value;
-    for (const [id, receive] of [...entry.owners]) {
+  };
+  const publish = (entry: Entry, value: AvatarValue): void => {
+    settle(entry, value);
+    for (const [id, owner] of [...entry.owners]) {
       if (entry.value !== value) break;
-      if (entry.owners.get(id) === receive) receive(value);
+      if (entry.owners.get(id) === owner) owner.receive(value);
     }
   };
   const capacity = (): void => {
@@ -76,20 +60,24 @@ export function createAvatarClient(transport: Transport) {
   const revoke = (entry: Entry): void => {
     const previous = entry.objectUrl;
     entry.objectUrl = undefined;
+    entry.holder?.removeAttribute('src');
+    entry.holder = undefined;
+    bytes -= entry.bytes;
+    entry.bytes = 0;
     if (previous) URL.revokeObjectURL(previous);
   };
   const discard = (entry: Entry): void => {
+    if (entries.get(entry.url) !== entry) return;
     entries.delete(entry.url);
     idle.delete(entry.url);
     cancel(entry);
     revoke(entry);
+    if (entry.value.kind === 'pending') unsettled--;
   };
-  const trimIdle = (limit: number): void => {
-    while (idle.size > limit) discard(idle.values().next().value!);
-  };
-  const clearIdle = (): void => {
-    trimIdle(0);
-    capacity();
+  /** Drop unowned pictures, oldest first, until the session cache has room for one more. */
+  const trim = (): void => {
+    while (idle.size && (entries.size > MAX_URLS || bytes > MAX_BYTES))
+      discard(idle.values().next().value!);
   };
   const invalidate = (): Entry[] => {
     epoch++;
@@ -100,7 +88,7 @@ export function createAvatarClient(transport: Transport) {
     for (const entry of current) {
       cancel(entry);
       revoke(entry);
-      entry.value = { kind: 'pending' };
+      settle(entry, { kind: 'pending' });
       if (!entry.owners.size) discard(entry);
     }
     return current;
@@ -110,21 +98,27 @@ export function createAvatarClient(transport: Transport) {
       disposed ||
       !visible ||
       !entry.owners.size ||
-      entry.req ||
       entry.value.kind !== 'pending' ||
       entries.get(entry.url) !== entry
     )
       return;
+    const rank = rankOf(entry),
+      previous = entry.req;
+    if (previous && (entry.sent ?? 0) <= rank) return;
     entry.retry = undefined;
     const req = `av${++serial}`;
     entry.req = req;
+    entry.sent = rank;
     pending.set(req, entry); // Install before post: the mock may answer synchronously.
     transport.post({
       t: 'avatar.want',
       req,
       url: entry.url,
+      ...(rank ? { rank } : {}),
       ...(entry.observePublic ? { observePublic: true } : {}),
     });
+    // A face that came on screen joins its own job at the better rank before the old request leaves it.
+    if (previous && pending.delete(previous)) transport.post({ t: 'avatar.close', req: previous });
   };
   const schedule = (): void => {
     clearTimeout(timer);
@@ -148,39 +142,64 @@ export function createAvatarClient(transport: Transport) {
   const pagehide = (): void => client.visible(false);
   const pageshow = (): void => client.visible(document.visibilityState !== 'hidden');
   const client = {
-    acquire(url: string, receive: Receive, observePublic = false): (() => void) | undefined {
+    acquire(
+      url: string,
+      receive: Receive,
+      observePublic = false,
+      rank = 0,
+    ): AvatarLease | undefined {
       if (disposed) return;
       if (!url || new TextEncoder().encode(url).length > 2048) {
         receive({ kind: 'rejected' });
-        return () => undefined;
+        return Object.assign(() => undefined, { rank: () => undefined });
       }
       let entry = entries.get(url);
-      if (owners >= 512) return;
-      if (!entry && entries.size >= 256) trimIdle(Math.max(0, idle.size - 1));
-      if (!entry && entries.size >= 256) return;
-      idle.delete(url);
-      if (!entry) {
-        entry = { url, epoch, observePublic, owners: new Map(), value: { kind: 'pending' } };
-        entries.set(url, entry);
+      if (entry && !entry.owners.size && entry.until !== undefined && entry.until <= Date.now()) {
+        discard(entry);
+        entry = undefined;
       }
+      if (!entry) {
+        if (unsettled >= MAX_PENDING) return;
+        if (entries.size >= MAX_URLS && !idle.size) return;
+        entry = {
+          url,
+          epoch,
+          observePublic,
+          owners: new Map(),
+          value: { kind: 'pending' },
+          bytes: 0,
+        };
+        entries.set(url, entry);
+        unsettled++;
+        trim();
+      }
+      idle.delete(url);
       const owned = entry,
-        id = ++serial;
-      owned.owners.set(id, receive);
-      owners++;
+        id = ++serial,
+        owner = { receive, rank };
+      owned.owners.set(id, owner);
       receive(owned.value);
       if (owned.value.kind === 'pending' && owned.retry === undefined) request(owned);
-      return () => {
+      const release = (): void => {
         if (!owned.owners.delete(id)) return;
-        owners--;
         if (!owned.owners.size) {
-          if (!disposed && visible && owned.epoch === epoch && owned.value.kind === 'ready') {
+          if (!disposed && owned.epoch === epoch && owned.value.kind !== 'pending') {
+            // The session keeps what it has shown: a returning row draws it without asking again.
+            if (owned.value.kind !== 'ready') owned.until = Date.now() + NEGATIVE_MS;
             idle.set(url, owned);
-            trimIdle(64);
+            trim();
           } else discard(owned);
           schedule();
         }
         capacity();
       };
+      return Object.assign(release, {
+        rank(next: number): void {
+          if (owner.rank === next || !owned.owners.has(id)) return;
+          owner.rank = next;
+          if (owned.value.kind === 'pending' && owned.retry === undefined) request(owned);
+        },
+      });
     },
     receive(message: FromEngine): boolean {
       if (message.t !== 'avatar') return false;
@@ -199,8 +218,16 @@ export function createAvatarClient(transport: Transport) {
         if (!blob) publish(entry, { kind: 'rejected' });
         else {
           try {
-            entry.objectUrl = URL.createObjectURL(blob);
-            publish(entry, { kind: 'ready', url: entry.objectUrl });
+            const objectUrl = URL.createObjectURL(blob);
+            entry.objectUrl = objectUrl;
+            entry.bytes = blob.size;
+            bytes += blob.size;
+            const holder = new Image();
+            holder.decoding = 'sync';
+            holder.src = objectUrl;
+            entry.holder = holder;
+            publish(entry, { kind: 'ready', url: objectUrl });
+            trim();
           } catch {
             publish(entry, { kind: 'fallback', uniform: false });
           }
@@ -208,6 +235,7 @@ export function createAvatarClient(transport: Transport) {
       } else if (message.result.status === 'fallback')
         publish(entry, { kind: 'fallback', uniform: message.result.uniform });
       else publish(entry, { kind: 'rejected' });
+      if (entry.value.kind !== 'pending') capacity();
       return true;
     },
     onCapacity(receive: () => void): () => void {
@@ -217,42 +245,41 @@ export function createAvatarClient(transport: Transport) {
         listeners.delete(receive);
       };
     },
-    clearIdle,
+    /** Account removal: nothing drawn for the old session may answer a new one. */
     reset(): void {
       if (disposed) return;
-      const token = ++visibilityGeneration,
-        current = invalidate();
+      const current = invalidate();
+      const token = epoch;
       for (const entry of current) {
-        if (disposed || token !== visibilityGeneration) return;
+        if (disposed || token !== epoch) return;
         if (entries.get(entry.url) === entry) publish(entry, entry.value);
       }
       for (const entry of current) {
-        if (disposed || !visible || token !== visibilityGeneration) return;
+        if (disposed || !visible || token !== epoch) return;
         request(entry);
       }
     },
+    /** A hidden page stops asking. It keeps every picture it holds, so the return draws at once. */
     visible(on: boolean): void {
       if (disposed || visible === on) return;
       visible = on;
-      const token = ++visibilityGeneration;
-      const current = on ? [...entries.values()] : invalidate();
       if (!on) {
-        for (const entry of current) {
-          if (disposed || visible || token !== visibilityGeneration) break;
-          if (entries.get(entry.url) === entry) publish(entry, entry.value);
-        }
-      } else
-        for (const entry of current) {
-          if (disposed || !visible || token !== visibilityGeneration) break;
-          request(entry);
-        }
+        clearTimeout(timer);
+        timer = undefined;
+        for (const entry of [...pending.values()]) cancel(entry);
+        return;
+      }
+      for (const entry of [...entries.values()]) {
+        if (disposed || !visible) break;
+        request(entry);
+      }
+      schedule();
     },
     dispose(): void {
       if (disposed) return;
       disposed = true;
       window.removeEventListener('pagehide', pagehide);
       window.removeEventListener('pageshow', pageshow);
-      visibilityGeneration++;
       clearTimeout(timer);
       for (const entry of entries.values()) {
         cancel(entry);
@@ -264,7 +291,6 @@ export function createAvatarClient(transport: Transport) {
       idle.clear();
       pending.clear();
       listeners.clear();
-      owners = 0;
     },
   };
   window.addEventListener('pagehide', pagehide);

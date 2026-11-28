@@ -148,7 +148,8 @@ pill). Tokens live at the top of `web/src/ui/ui.css`. `--faint`, the weakest tex
   square still of at most 160px, without enlarging smaller sources. The letter disc holds while loading or on failure.
   Original-image fallbacks may animate in ordinary motion. Under reduced motion a fallback is drawn once into a
   face-sized canvas without pixel readback or storage; a known uniform still keeps the letter with no original request.
-  [Avatar ownership and limits](avatars.md) bound nearby retention and release far-away or hidden faces.
+  A picture this session has drawn never falls back to the letter: mounted faces keep it through scrolling,
+  redraws and tab switches, and the next rows are asked for ahead of the scroll. [Avatars](avatars.md).
 - A note that names its client says so by its time: "via {name}" in `--faint`, 12px, on the same line, the first
   thing in the header to give way and not drawn under 340px of tile ([interface-client.md](interface-client.md)).
   The name is relay text, drawn as text and bounded. With a handler address it is a button: a press asks once and

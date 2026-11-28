@@ -30,7 +30,8 @@ the original. Neither requests a redundant background SW copy in the new page.
 
 ## Finite channel
 
-- `avatar.want {req,url}` requests one exact picture URL; profile IDs and name changes do not change its identity.
+- `avatar.want {req,url,rank?}` requests one exact picture URL; profile IDs and name changes do not change its identity.
+  `rank` (0 or absent, 1, 2) orders queued work only. A job runs at the best rank any of its owners asked from.
 - `avatar.close {req}` releases that client's pending request. Hiding or detaching releases all its pending owners.
 - `avatar` replies to the originating client with `ready`, `fallback`, `deferred` or `rejected`.
 - Ready carries an actual structured-cloned Blob and edge, source dimensions, actual bytes and MIME metadata.
@@ -55,29 +56,33 @@ encoding, storage or a second fetch. Failed images keep the letter disc. A known
 under reduced motion without requesting the original image or drawing a canvas.
 
 One owner on `host.app` covers views, the topbar and overlays. Detached render candidates acquire nothing.
-Current viewport and ancestor scrollport geometry decide ownership; queued observer entries cannot override
-newer geometry. Visible faces acquire first. Up to 32 nearby faces can retain or warm a still within 192 CSS pixels
-vertically, with existing owners preferred at that limit. The margin applies once to the effective scrollport;
-horizontal clips, local content masks, zero-height scrollports and hidden subtrees remain strict. Nested scrolls
-and resizes coalesce geometry work in one animation frame; mount changes reconcile in a microtask before paint.
+The rule (owner, 2026-11-28): a row never shows the letter for a person whose picture this session already drew.
+Every mounted face therefore holds its lease and its image for as long as it is mounted, wherever it is scrolled.
+Position only orders the asking, and the Worker schedules by it: rank 0 on screen, rank 1 within one screen of it
+(at least 192 CSS pixels), rank 2 the remaining mounted rows of the feed window. Geometry is read once per
+animation frame on scroll and resize, and in a microtask before paint when faces mount; a scroll frame touches
+only faces whose rank changed. A pending face that comes on screen asks again at rank 0 and then closes its
+older request, so the shared job keeps running and moves to the front.
+
+The page keeps a session picture cache: every settled exact URL, owned or not, at most 1024 URLs and 32 MiB of
+ready Blobs (each at most 128 KiB). Each ready entry holds one decoded image, which keeps the picture in the
+document's available images: a new or returning row for that URL gets a complete image synchronously, in the
+microtask after it mounts, without a Worker round trip. Only unowned entries are evicted, least recently released
+first. Unowned fallback and refusal answers are asked again after two minutes. At most 256 URLs wait unsettled,
+the Worker's bound for one client; further faces wait for room and never start an original as a bypass.
+
+Hiding the tab, hiding the document and entering the back/forward cache keep every face, image and cached URL.
+A hidden page only stops asking: its pending requests close and are asked again, with new request ids, on return.
+Authoritative account removal still revokes every URL and asks afresh; request generations reject old replies.
+Data saver asks only for ranks 0 and 1 and keeps whatever it has already drawn.
 
 Unchanged row faces retain their decoded image or canvas through one-to-one matching by author and public/preview
-role. New nodes acquire before removed owners release, preserving shared exact-URL work. Ready derivatives use
-synchronous decoding hints; static faces keep their lease when reduced motion changes. Native originals start only
-inside the true viewport, and queued originals lose their slot when they leave it. Already-started images and
-frozen canvases can stay in the nearby region. Freezing reuses the existing source, and unfreezing holds the canvas
-until the replacement loads. Native concurrency/deadlines and task-delayed frozen-source release remain unchanged.
-
-Far-away, hidden, detached and disposed faces release their leases and rendered pixels. The page retains at most
-64 recently released ready object URLs inside its 256-total-URL limit, with at most 512 active lease owners.
-Each ready Blob is at most 128 KiB: the idle subset is at most 8 MiB within the existing 32 MiB total Blob bound.
-Admission evicts idle URLs before deferring a new live URL; it never evicts an active lease or starts an original
-as a capacity bypass. Pending, deferred and negative entries are not retained after their last release.
-
-Page hide, document hide, owner/client disposal and authoritative account removal clear retained URLs. Reset epochs
-prevent delayed old-owner releases from repopulating the idle pool; request generations reject old replies.
-Back/forward-cache return resumes with fresh requests. Reuse never promotes the entry's original public-provenance
-bit, and Worker storage, codec limits and R0 provenance rules are unchanged.
+role. Ready derivatives use synchronous decoding hints; static faces keep their lease when reduced motion changes.
+Original-image fallbacks start only at ranks 0 and 1, and a queued original loses its slot when it moves further
+away; a loaded one stays in its row. The page holds the last 128 loaded originals the same way as stills, so the
+same picture in another row is complete at once. Freezing reuses the existing source, and unfreezing holds the
+canvas until the replacement loads. Native concurrency/deadlines and task-delayed frozen-source release remain.
+Reuse never promotes the entry's original public-provenance bit; Worker storage and codec limits are unchanged.
 
 ## Worker limits
 
@@ -86,8 +91,10 @@ bit, and Worker storage, codec limits and R0 provenance rules are unchanged.
 | Pending owners | 512 per client, 4096 per Worker host |
 | Wanted URLs | 256 per client |
 | Jobs, including retiring effects | 1024 |
-| Lookup / raw payload / derived payload / store credits | 4 each |
-| Fetches | 4 globally, 2 per normalized requested hostname |
+| Lookup / derived payload / store credits | 4 each |
+| Raw payload credits and fetches | 8 globally, 6 per normalized requested hostname |
+| Fetches open to rank 1 / rank 2 | 6 / 4 globally, 4 / 3 per hostname |
+| Host backoff | 256 hosts; two failed reads in a row answer fallback at once for 60 seconds |
 | Decode and encode | 1 active operation |
 | Original body | 2 MiB, checked while reading actual bytes |
 | Derived image | At most 160 by 160 pixels and 128 KiB |
@@ -119,9 +126,9 @@ can cause a later fetch. Structural metadata, MIME and actual Blob-size checks r
 ## Verification scope
 
 Native tests cover routing, stable batching, role/read opt-outs, actual-byte LRU plans, owner limits and cancellation.
-Focused page and transport tests cover shared/idle URL bounds, stale replies, visibility, fallback and bounded replay.
-Deterministic scroll/redraw tests cover nested clipping, decoded node identity, motion transitions, capacity deferral,
-queued native work, account removal and page-hide cleanup. These are lifecycle proofs, not browser paint timings.
+Focused page and transport tests cover the session cache bounds, stale replies, hide/return, ranks, fallback and
+bounded replay; redraw tests cover decoded node identity, motion transitions, capacity deferral, queued native work
+and account removal. Native tests cover rank order, reserved fetch slots and host backoff.
 Original-source and mutation controls prove the routing, LRU, queued-body and retiring-permit assertions can fail.
 Earlier private-branch production-Worker controls cover concurrent IDB writers, both cache caps, cancellation, real bitmap closure,
 actual Blob delivery through both transports, page disposal and full-process cache reuse. A separate real quota
@@ -130,22 +137,21 @@ The controls do not establish indefinite leak freedom, physical database limits,
 
 ## Measured limits and follow-up
 
-A fixed local 24 Mbps / 80 ms RTT corpus compared shipped be29d25f with candidate 9f9032df at 390px and DPR 3.
-Matching visible cohorts are Home 6, Notifications 8 and Thread 7, with one selected run per view/state.
-Both pins show names with every warm row (42/42 observations). Candidate cold navigation-to-first-name is
-3690 ms, 3111 ms and 2423 ms respectively; the one-second cold target remains unmet.
-Two Home avatars and one Thread avatar are unobserved at the fixed cold endpoint. Later completion does not
-convert those censored measurements into successes.
+2026-11-28, loopback only, 390 by 844 at DPR 3: 140 authors (10% without a picture, 15% on a host without CORS),
+720 notes, relay answers after 60 ms, pictures after 140 ms (CORS) and 260 ms (no CORS). A probe samples every
+frame after layout and counts frames in which an on-screen face whose picture was already drawn shows the letter.
 
-The CORS-readable no-store Thread image needs no original GET after restart, versus one before.
-The non-CORS no-store Home/Notifications image is fetched once on a same-process return and twice after restart
-(failed CORS plus plain image), versus zero and one previously.
-Whole-Home originals fall from 49 to 8 cold-initiated GETs and from 21 to 2 after restart as offscreen work is avoided.
-These counts do not erase the visible fallback repeat cost. Server body sizes are not TLS bytes or client receipt.
-No public-host CORS census was run; the assumed mix cannot establish population coverage or general latency savings.
+| Chromium 1243 | 3b5ae3a4 | this change |
+| --- | ---: | ---: |
+| Scripted flings over 720 mounted rows, frames with a known face missing | 621 of 706 | 0 of 706 |
+| Wheel and touch flings, same | 229 of 569 | 0 of 569 |
+| After a tab hide/show round trip, same | 243 of 405 | 0 of 404 |
+| Picture requests reaching the two hosts in the whole run | 660 | 234 |
 
-The engine resource-instrumentation owner retains the cold-path follow-up: measure navigation-to-row/name separately
-from row-to-name and preserve missing outcomes. This Home engine is ready at 1573 ms; shell install also fetches
-the WASM already loaded by the Worker. Cache hits and byte reductions therefore do not establish earlier visible
-content. Separate startup, hydration, derived-cache lookup, failed CORS, original fallback and reacquisition costs
-in the resource-decision evidence before changing policy.
+Cold median time-to-face and the WebKit runs are in the task report; they are one machine's loopback numbers.
+The probe reads the DOM (a complete image with pixels), not composited frames, and it cannot reproduce iOS
+discarding decoded images or a whole background tab. Owner-device behavior stays the final check.
+
+A host without CORS still costs one failed anonymous read before the plain image starts, until two failures in a
+row mark the host for a minute. The engine does not yet start a face before the page asks for it; the page asks
+for the whole mounted window as soon as rows mount, which is where the Worker's rank scheduling takes over.

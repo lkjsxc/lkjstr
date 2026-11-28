@@ -22,6 +22,28 @@ impl Book {
         job.spent = job.spent.saturating_add(now.saturating_sub(job.started));
         job.active = false;
         let id = ticket.job;
+        if ticket.stage == Stage::Fetch {
+            match result {
+                Completion::Fetched { .. } => {
+                    self.hosts.remove(&job.host);
+                }
+                Completion::Failed(Failure::Transient) => {
+                    let host = job.host.clone();
+                    self.hosts.retain(|_, (_, until)| *until > now);
+                    if self.hosts.len() < MAX_HOSTS || self.hosts.contains_key(&host) {
+                        let entry = self.hosts.entry(host).or_insert((0, 0));
+                        *entry = (
+                            entry.0.saturating_add(1),
+                            now.saturating_add(HOST_BACKOFF_MS),
+                        );
+                    }
+                }
+                _ => {}
+            }
+        }
+        let Some(job) = self.jobs.get_mut(&ticket.job) else {
+            return Vec::new();
+        };
         match (ticket.stage, result) {
             (Stage::Lookup, Completion::Hit { bytes })
                 if (1..=MAX_DERIVED_BYTES).contains(&bytes) =>

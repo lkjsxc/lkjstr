@@ -8,7 +8,7 @@ export function createAvatarReads(send, receive) {
         return true;
       }
       if (message.t !== 'avatar.want') return false;
-      const { req, url } = message, encoder = new TextEncoder();
+      const { req, url, rank } = message, encoder = new TextEncoder();
       if (typeof req !== 'string' || !req || encoder.encode(req).length > 128 ||
           typeof url !== 'string' || !url || encoder.encode(url).length > 2048) {
         receive({ t: 'avatar', req, result: { status: 'rejected' } });
@@ -19,7 +19,7 @@ export function createAvatarReads(send, receive) {
         receive({ t: 'avatar', req, result: { status: 'deferred', retryMs: 100 } });
         return true;
       }
-      const owned = { t: 'avatar.want', req, url };
+      const owned = { t: 'avatar.want', req, url, ...(rank === 1 || rank === 2 ? { rank } : {}) };
       wants.set(req, owned);
       send(owned);
       return true;

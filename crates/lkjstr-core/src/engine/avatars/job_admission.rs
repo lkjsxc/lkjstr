@@ -11,6 +11,18 @@ impl Book {
         now: u64,
         observe_public: bool,
     ) -> Vec<Command> {
+        self.want_ranked(owner, key, now, observe_public, 0)
+    }
+    /// `rank` orders queued work only: 0 on screen, 1 the next rows, 2 further along the feed.
+    pub fn want_ranked(
+        &mut self,
+        owner: Owner,
+        key: &str,
+        now: u64,
+        observe_public: bool,
+        rank: u8,
+    ) -> Vec<Command> {
+        let rank = rank.min(MAX_RANK);
         let respond = |result| {
             vec![Command::Reply {
                 owner: owner.clone(),
@@ -40,6 +52,16 @@ impl Book {
         self.negatives.retain(|_, value| value.until > now);
         if let Some(negative) = self.negatives.get(key) {
             return respond(negative.failure.result());
+        }
+        // Two failed reads in a row mean the host does not serve anonymous CORS just now: the page's
+        // plain image starts at once instead of waiting for a third failure.
+        if !self.urls.contains_key(key)
+            && self
+                .hosts
+                .get(&host)
+                .is_some_and(|(failures, until)| *failures >= 2 && *until > now)
+        {
+            return respond(Failure::Transient.result());
         }
         let client: Vec<_> = self
             .owners
@@ -77,6 +99,7 @@ impl Book {
                     spent: 0,
                     persist: true,
                     observe_public,
+                    rank,
                 },
             );
             self.urls.insert(key.to_owned(), id);
@@ -85,6 +108,7 @@ impl Book {
         let Some(job) = self.jobs.get_mut(&id) else {
             return respond(ResultKind::Rejected);
         };
+        job.rank = job.rank.min(rank);
         job.owners.insert(owner.clone());
         self.owners.insert(owner, id);
         Vec::new()

@@ -16,7 +16,11 @@ pub const MAX_CLIENT_OWNERS: usize = 512;
 pub const MAX_CLIENT_URLS: usize = 256;
 pub const MAX_JOBS: usize = 1024;
 pub const MAX_NEGATIVES: usize = 512;
-pub const RAW_SLOTS: usize = 4;
+pub const RAW_SLOTS: usize = 8;
+pub const HOST_FETCHES: usize = 6;
+pub const MAX_RANK: u8 = 2;
+pub const MAX_HOSTS: usize = 256;
+pub const HOST_BACKOFF_MS: u64 = 60_000;
 pub const DERIVED_SLOTS: usize = 4;
 pub const ACTIVE_MS: u64 = 15_000;
 pub const STORAGE_BACKOFF_MS: u64 = 60_000;
@@ -32,6 +36,8 @@ struct Job {
     spent: u64,
     persist: bool,
     observe_public: bool,
+    /// Best place any owner asked from; a face that came on screen overtakes the rows ahead.
+    rank: u8,
 }
 impl Job {
     fn ticket(&self, id: u64) -> Ticket {
@@ -61,6 +67,8 @@ pub struct Book {
     urls: BTreeMap<String, u64>,
     jobs: BTreeMap<u64, Job>,
     negatives: BTreeMap<String, Negative>,
+    /// Hosts whose last anonymous reads failed in a row: (failures, until). At most MAX_HOSTS.
+    hosts: BTreeMap<String, (u8, u64)>,
     capability_failed: bool,
     storage_backoff: u64,
 }

@@ -27,6 +27,9 @@ pub enum Input {
         url: String,
         #[serde(default, rename = "observePublic")]
         observe_public: bool,
+        /// 0 on screen, 1 the next rows, 2 further along the feed.
+        #[serde(default)]
+        rank: u8,
     },
     #[serde(rename = "avatar.close")]
     AvatarClose {

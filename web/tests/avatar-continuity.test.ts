@@ -9,14 +9,20 @@ import {
 
 afterEach(resetAvatarFixtures);
 
-it('warms a nearby incoming face before it crosses the viewport', async () => {
+it('asks for every mounted face, ordered by place: screen, the next screen, further along', async () => {
   const x = avatarFixture();
+  const far = x.face(x.author('https://a.test/far'));
+  far.dataset.y = String(innerHeight * 2 + 1000);
   const near = x.face(x.author('https://a.test/near'));
   near.dataset.y = String(innerHeight + 10);
-  const far = x.face(x.author('https://a.test/far'));
-  far.dataset.y = String(innerHeight + 1000);
+  x.face(x.author('https://a.test/screen'));
   await settleAvatars();
-  expect(x.wants().map((message) => message.url)).toEqual(['https://a.test/near']);
+  expect(x.wants().map(({ url, rank }) => [url, rank])).toEqual([
+    ['https://a.test/screen', undefined],
+    ['https://a.test/near', 1],
+    ['https://a.test/far', 2],
+  ]);
+  expect('rank' in x.wants()[0]!).toBe(false);
 });
 
 it.each(['ready', 'fallback'] as const)(
@@ -83,7 +89,7 @@ it('requests synchronous presentation for a bounded ready still', async () => {
   expect(face.querySelector('img')?.decoding).toBe('sync');
 });
 
-it('warms within a nested vertical scrollport and updates on scroll without an IO entry', async () => {
+it('ranks within a nested vertical scrollport and re-ranks on scroll without an IO entry', async () => {
   const x = avatarFixture(),
     scroller = document.createElement('div');
   scroller.style.overflowY = 'auto';
@@ -106,15 +112,19 @@ it('warms within a nested vertical scrollport and updates on scroll without an I
   const near = avatar(x.author('https://a.test/nested-near'));
   near.dataset.y = '330';
   const next = avatar(x.author('https://a.test/nested-next'));
-  next.dataset.y = '900';
+  next.dataset.y = String(innerHeight * 2 + 1000);
   scroller.append(near, next);
   await settleAvatars();
-  expect(x.wants().map((message) => message.url)).toEqual(['https://a.test/nested-near']);
-  x.reply(x.wants()[0]!.req, { status: 'ready', retained: true });
+  expect(x.wants().map(({ url, rank }) => [url, rank])).toEqual([
+    ['https://a.test/nested-near', 1],
+    ['https://a.test/nested-next', 2],
+  ]);
+  const old = x.wants()[1]!.req;
   next.dataset.y = '350';
   scroller.dispatchEvent(new Event('scroll'));
-  await vi.waitFor(() => expect(x.wants()).toHaveLength(2));
-  expect(x.wants()[1]!.url).toBe('https://a.test/nested-next');
+  await vi.waitFor(() => expect(x.wants()).toHaveLength(3));
+  expect(x.wants()[2]).toMatchObject({ url: 'https://a.test/nested-next', rank: 1 });
+  expect(x.sent.at(-1)).toEqual({ t: 'avatar.close', req: old });
 });
 
 it('retains a frozen native canvas across a small scroll reversal', async () => {

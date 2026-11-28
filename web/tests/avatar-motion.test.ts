@@ -9,7 +9,7 @@ import {
 
 afterEach(resetAvatarFixtures);
 
-it('freezes an existing native image without a new offscreen original and holds its canvas until unfreeze loads', async () => {
+it('freezes an existing native image without a new far-away original and holds its canvas until unfreeze loads', async () => {
   const x = avatarFixture(),
     made = vi.spyOn(document, 'createElement'),
     drawImage = vi.fn();
@@ -28,7 +28,7 @@ it('freezes an existing native image without a new offscreen original and holds 
   image.dispatchEvent(new Event('load'));
   const images = () =>
     made.mock.results.filter((result) => result.value instanceof HTMLImageElement);
-  face.dataset.y = '-37';
+  face.dataset.y = '-5000';
   x.intersections[0]!([avatarIntersection(face, false)], {} as IntersectionObserver);
   x.motion(true);
   const canvas = face.querySelector('canvas');
@@ -88,7 +88,7 @@ it('keeps a failed derived image terminal across geometry and owner refreshes', 
   expect(x.wants()).toHaveLength(1);
 });
 
-it('keeps the canvas and cancels superseded unfreezes across motion changes in the halo', async () => {
+it('keeps the canvas and cancels superseded unfreezes across motion changes far from the screen', async () => {
   const x = avatarFixture(),
     made = vi.spyOn(document, 'createElement');
   vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue({
@@ -116,7 +116,7 @@ it('keeps the canvas and cancels superseded unfreezes across motion changes in t
     x.motion(false);
     expect(face.querySelector('img')).not.toBe(superseded);
     expect(face.querySelector('img')!.hasAttribute('src')).toBe(false);
-    face.dataset.y = '-37';
+    face.dataset.y = '-5000';
     x.intersections[0]!([avatarIntersection(face, false)], {} as IntersectionObserver);
     expect(face.querySelector('img')).toBeNull();
     expect(face.querySelector('canvas')).toBe(canvas);

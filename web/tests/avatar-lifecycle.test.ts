@@ -6,21 +6,24 @@ import { account } from './vault-ui-fixture.ts';
 
 afterEach(resetAvatarFixtures);
 
-it('flushes idle and active URLs on pagehide and resumes fresh after BFCache return', () => {
+it('keeps idle and active URLs through pagehide and re-asks only pending work after BFCache return', () => {
   const x = avatarFixture(),
     active = vi.fn();
   const close = x.client.acquire('https://a.test/idle-pagehide', () => undefined)!;
   x.client.acquire('https://a.test/live-pagehide', active);
   for (const want of x.wants()) x.reply(want.req, { status: 'ready', retained: true });
   close();
+  x.client.acquire('https://a.test/pending-pagehide', () => undefined);
   const event = new Event('pagehide');
   Object.defineProperty(event, 'persisted', { value: true });
   window.dispatchEvent(event);
-  expect(x.revoked).toHaveBeenCalledTimes(2);
-  expect(active.mock.lastCall![0].kind).toBe('pending');
+  expect(x.revoked).not.toHaveBeenCalled();
+  expect(active.mock.lastCall![0].kind).toBe('ready');
+  expect(x.sent.at(-1)).toEqual({ t: 'avatar.close', req: x.wants()[2]!.req });
   window.dispatchEvent(new Event('pageshow'));
-  expect(x.wants()).toHaveLength(3);
-  expect(x.wants()[2]!.url).toBe('https://a.test/live-pagehide');
+  expect(x.wants()).toHaveLength(4);
+  expect(x.wants()[3]!.url).toBe('https://a.test/pending-pagehide');
+  expect(x.wants()[3]!.req).not.toBe(x.wants()[2]!.req);
 });
 
 it('prevents old owners from repopulating the idle cache after reset', () => {

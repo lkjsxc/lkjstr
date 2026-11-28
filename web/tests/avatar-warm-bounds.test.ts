@@ -9,7 +9,7 @@ import {
 
 afterEach(resetAvatarFixtures);
 
-it('admits visible faces before at most 32 nearby faces and excludes detached candidates', async () => {
+it('admits visible faces before every nearby face and excludes detached candidates', async () => {
   const x = avatarFixture();
   for (let index = 0; index < 40; index++) {
     const face = x.face(x.author(`https://a.test/warm-${index}`));
@@ -18,43 +18,31 @@ it('admits visible faces before at most 32 nearby faces and excludes detached ca
   avatar(x.author('https://a.test/detached-candidate'));
   x.face(x.author('https://a.test/visible-last'));
   await settleAvatars();
-  expect(x.wants()).toHaveLength(33);
+  expect(x.wants()).toHaveLength(41);
   expect(x.wants()[0]!.url).toBe('https://a.test/visible-last');
   expect(x.wants().some((want) => want.url.includes('detached'))).toBe(false);
 });
 
-it('keeps existing nearby owners when another nearby face is inserted at the limit', async () => {
+it('starts originals only within one screen, including headers and Worker fallback results', async () => {
   const x = avatarFixture();
-  for (let index = 0; index < 32; index++) {
-    const face = x.face(x.author(`https://a.test/retained-${index}`));
-    face.dataset.y = String(innerHeight + 10);
-  }
-  await settleAvatars();
-  const next = avatar(x.author('https://a.test/new-near'));
-  next.dataset.y = String(innerHeight + 10);
-  x.root.prepend(next);
-  await settleAvatars();
-  expect(x.wants()).toHaveLength(32);
-  expect(x.sent.filter((m) => m.t === 'avatar.close')).toHaveLength(0);
-});
-
-it('defers originals in the halo, including headers and Worker fallback results', async () => {
-  const x = avatarFixture();
-  const fallback = x.face(x.author('https://a.test/warm-fallback'));
-  const header = x.face(x.author('https://a.test/warm-header'), 'av xl');
-  fallback.dataset.y = header.dataset.y = String(innerHeight + 10);
+  const fallback = x.face(x.author('https://a.test/far-fallback'));
+  const header = x.face(x.author('https://a.test/far-header'), 'av xl');
+  fallback.dataset.y = header.dataset.y = String(innerHeight * 2 + 1000);
   await settleAvatars();
   expect(x.wants()).toHaveLength(1);
   x.reply(x.wants()[0]!.req, { status: 'fallback', uniform: false });
   expect(fallback.querySelector('img')).toBeNull();
   expect(header.querySelector('img')).toBeNull();
-  fallback.dataset.y = '20';
+  fallback.dataset.y = String(innerHeight + 10);
   x.intersections[0]!([avatarIntersection(fallback, true)], {} as IntersectionObserver);
-  expect(fallback.querySelector('img')?.src).toBe('https://a.test/warm-fallback');
+  expect(fallback.querySelector('img')?.src).toBe('https://a.test/far-fallback');
   expect(header.querySelector('img')).toBeNull();
+  header.dataset.y = '20';
+  x.intersections[0]!([avatarIntersection(header, true)], {} as IntersectionObserver);
+  expect(header.querySelector('img')?.src).toBe('https://a.test/far-header');
 });
 
-it('cancels a queued original if it leaves the viewport before obtaining a native slot', async () => {
+it('cancels a queued original if it moves far away before obtaining a native slot', async () => {
   const x = avatarFixture();
   const faces = Array.from({ length: 7 }, (_, index) =>
     x.face(x.author(`https://a.test/queued-original-${index}`)),
@@ -65,7 +53,7 @@ it('cancels a queued original if it leaves the viewport before obtaining a nativ
   const last = faces[6]!,
     queued = last.querySelector('img')!;
   expect(queued.hasAttribute('src')).toBe(false);
-  last.dataset.y = '-37';
+  last.dataset.y = '-5000';
   x.intersections[0]!([avatarIntersection(last, false)], {} as IntersectionObserver);
   first.dispatchEvent(new Event('load'));
   await settleAvatars();
@@ -89,7 +77,7 @@ it('does not bypass a deferred derived request into an original image', async ()
   expect(x.wants()).toHaveLength(1);
 });
 
-it('never warms a zero-height scroller or a face masked inside its scrollport', async () => {
+it('asks for a masked face in a zero-height scroller as a far one and never starts its original', async () => {
   const x = avatarFixture(),
     scroller = document.createElement('div');
   scroller.style.overflowY = 'auto';
@@ -114,12 +102,15 @@ it('never warms a zero-height scroller or a face masked inside its scrollport', 
   scroller.append(mask);
   x.root.append(scroller);
   await settleAvatars();
-  expect(x.wants()).toHaveLength(0);
+  expect(x.wants()).toEqual([
+    { t: 'avatar.want', req: x.wants()[0]!.req, url: 'https://a.test/p', rank: 2 },
+  ]);
+  x.reply(x.wants()[0]!.req, { status: 'fallback', uniform: false });
   height = 300;
   window.dispatchEvent(new Event('resize'));
   await new Promise(requestAnimationFrame);
-  expect(x.wants()).toHaveLength(0);
   x.owner.refresh();
   await settleAvatars();
-  expect(x.wants()).toHaveLength(0);
+  expect(face.querySelector('img')).toBeNull();
+  expect(x.wants()).toHaveLength(1);
 });

@@ -3,7 +3,10 @@ impl Book {
     /// Queue time consumes no active budget. Raw and derived credits cover queued payloads too.
     pub fn pump(&mut self, now: u64) -> Vec<Command> {
         let mut commands = self.expire(now);
-        let ids: Vec<_> = self.jobs.keys().copied().collect();
+        // On-screen faces first, then the next rows, then the rest; oldest first within a place.
+        let mut ids: Vec<_> = self.jobs.iter().map(|(id, job)| (job.rank, *id)).collect();
+        ids.sort_unstable();
+        let ids: Vec<_> = ids.into_iter().map(|(_, id)| id).collect();
         for id in ids {
             let Some(job) = self.jobs.get(&id) else {
                 continue;
@@ -33,7 +36,9 @@ impl Book {
             let permitted = match job.stage {
                 Stage::Lookup => counts.lookups < 4,
                 Stage::Fetch => {
-                    counts.raw < RAW_SLOTS
+                    // Rows ahead never take the last slots from faces on screen.
+                    let reserve = usize::from(job.rank) * 2;
+                    counts.raw + reserve < RAW_SLOTS
                         && self
                             .jobs
                             .values()
@@ -43,7 +48,7 @@ impl Book {
                                     && other.host == job.host
                             })
                             .count()
-                            < 2
+                            < HOST_FETCHES - reserve.min(3)
                 }
                 Stage::Derive => counts.derives == 0 && counts.derived < DERIVED_SLOTS,
                 Stage::Store => counts.stores < 4,

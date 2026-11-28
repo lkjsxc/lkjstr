@@ -10,7 +10,7 @@ import {
 } from './avatar-support.ts';
 
 afterEach(resetAvatarFixtures);
-it('owns only mounted visible faces and cancels a hidden retained subtree', async () => {
+it('owns every mounted face, keeps a hidden one, and ignores stale observer entries', async () => {
   const x = avatarFixture(),
     unused = avatar(x.author('https://a.test/unused'));
   expect(unused.querySelector('img')).toBeNull();
@@ -22,20 +22,25 @@ it('owns only mounted visible faces and cancels a hidden retained subtree', asyn
   const outside = x.face(x.author('https://a.test/offscreen'));
   outside.dataset.x = '5000';
   await settleAvatars();
-  expect(x.wants().map((m) => m.url)).toEqual(['https://a.test/p']);
+  expect(x.wants().map(({ url, rank }) => [url, rank])).toEqual([
+    ['https://a.test/p', undefined],
+    ['https://a.test/hidden', 2],
+    ['https://a.test/offscreen', 2],
+  ]);
+  x.reply(x.wants()[0]!.req, { status: 'ready', retained: true });
+  const image = visible.querySelector('img');
   visible.hidden = true;
   await settleAvatars();
-  expect(x.sent).toContainEqual({ t: 'avatar.close', req: x.wants()[0]!.req });
+  x.intersections[0]!([avatarIntersection(visible, true)], {} as IntersectionObserver);
   visible.hidden = false;
-  hidden.hidden = false;
   await settleAvatars();
-  expect(x.wants().map((m) => m.url)).toEqual([
-    'https://a.test/p',
-    'https://a.test/p',
-    'https://a.test/hidden',
-  ]);
+  x.intersections[0]!([avatarIntersection(visible, false)], {} as IntersectionObserver);
+  expect(visible.querySelector('img')).toBe(image);
+  expect(x.wants()).toHaveLength(3);
+  expect(x.sent.filter((m) => m.t === 'avatar.close')).toHaveLength(0);
   x.owner.dispose();
-  expect(x.sent.filter((m) => m.t === 'avatar.close')).toHaveLength(3);
+  expect(x.sent.filter((m) => m.t === 'avatar.close')).toHaveLength(2);
+  expect(x.revoked).not.toHaveBeenCalled();
 });
 it('keeps the object URL through complete same-URL node replacement and a temporary root move', async () => {
   const x = avatarFixture(),
@@ -62,6 +67,8 @@ it('keeps the object URL through complete same-URL node replacement and a tempor
   expect(next.querySelector('img')).toBeNull();
   expect(x.revoked).not.toHaveBeenCalled();
   x.owner.dispose();
+  expect(x.revoked).not.toHaveBeenCalled(); // The session cache outlives the faces.
+  x.client.dispose();
   expect(x.revoked).toHaveBeenCalledTimes(1);
 });
 it('preserves image identity on profile/name updates and changes work only for a changed URL', async () => {
@@ -81,6 +88,8 @@ it('preserves image identity on profile/name updates and changes work only for a
   expect(face.querySelector('img')).toBeNull();
   expect(x.revoked).not.toHaveBeenCalled();
   x.owner.dispose();
+  expect(x.revoked).not.toHaveBeenCalled(); // The session cache outlives the faces.
+  x.client.dispose();
   expect(x.revoked).toHaveBeenCalledTimes(1);
 });
 it('carries a changed channel picture onto a retained face during keyed row reconciliation', async () => {
@@ -163,22 +172,6 @@ it('keeps the large header original in ordinary motion and uses the still path u
   expect(x.wants()).toHaveLength(1);
 });
 
-it('ignores stale positive and negative IO geometry after newer hidden-state scans', async () => {
-  const x = avatarFixture(),
-    face = x.face();
-  await settleAvatars();
-  const observe = x.intersections[0]!;
-  face.hidden = true;
-  await settleAvatars();
-  observe([avatarIntersection(face, true)], {} as IntersectionObserver);
-  expect(x.wants()).toHaveLength(1);
-  expect(x.sent.filter((m) => m.t === 'avatar.close')).toHaveLength(1);
-  face.hidden = false;
-  await settleAvatars();
-  observe([avatarIntersection(face, false)], {} as IntersectionObserver);
-  expect(x.wants()).toHaveLength(2);
-  expect(x.sent.filter((m) => m.t === 'avatar.close')).toHaveLength(1);
-});
 it('keeps the original-image fallback for a uniform result in ordinary motion', async () => {
   const x = avatarFixture(),
     face = x.face();
@@ -204,13 +197,15 @@ it('excludes the border and scrollbar area of an overflowing ancestor from visib
   const face = avatar(x.author());
   scroller.append(face);
   await settleAvatars();
-  expect(x.wants()).toHaveLength(0);
+  expect(x.wants().map((m) => m.rank)).toEqual([2]);
   face.dataset.x = '70';
   x.intersections[0]!([avatarIntersection(face, true)], {} as IntersectionObserver);
-  expect(x.wants()).toHaveLength(1);
+  expect(x.wants()).toHaveLength(2);
+  expect('rank' in x.wants()[1]!).toBe(false);
+  expect(x.sent.at(-1)).toEqual({ t: 'avatar.close', req: x.wants()[0]!.req });
   face.dataset.x = '20';
   x.intersections[0]!([avatarIntersection(face, false)], {} as IntersectionObserver);
-  expect(x.sent).toContainEqual({ t: 'avatar.close', req: x.wants()[0]!.req });
+  expect(x.sent.filter((m) => m.t === 'avatar.close')).toHaveLength(1);
 });
 
 it.each([

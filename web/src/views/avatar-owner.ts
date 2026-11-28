@@ -6,64 +6,62 @@ import { AVATAR_MARGIN, visibleAvatars } from './avatar-visible.ts';
 import { avatarModel, refreshAvatar, updateAvatar } from './avatars.ts';
 
 export function createAvatarOwner(root: HTMLElement, client: AvatarClient) {
-  const faces = new Map<HTMLElement, ReturnType<typeof createAvatarDraw>>(); // Current mounted subtree only.
+  // Current mounted subtree only. `rank` is -1 until the face first holds a lease.
+  const faces = new Map<HTMLElement, { draw: ReturnType<typeof createAvatarDraw>; rank: number }>();
   const motion = matchMedia('(prefers-reduced-motion: reduce)');
+  // Data saver asks only for faces on or next to the screen; everything already drawn still stays.
+  const sparing = (): boolean =>
+    (navigator as { connection?: { saveData?: boolean } }).connection?.saveData === true;
   let disposed = false,
-    running = false,
-    generation = 0,
-    queued: number | undefined,
+    queued = false,
     frame: number | undefined;
-  let retained = new Set<HTMLElement>(); // At most the selected visible faces plus 32 nearby faces.
-  let intersection: IntersectionObserver | undefined, mutations: MutationObserver | undefined;
+  /** Every mounted face keeps its picture. Position only orders the asking: screen, next rows, the rest. */
   const scan = (mounted = true): void => {
-    if (!running) return;
+    if (disposed || document.visibilityState === 'hidden') return;
     const wanted = new Set(
       mounted ? root.querySelectorAll<HTMLElement>('[data-face]') : faces.keys(),
     );
     if (root.matches('[data-face]')) wanted.add(root);
     const visible = visibleAvatars(root),
-      near = visibleAvatars(root, AVATAR_MARGIN);
-    const onscreen: HTMLElement[] = [],
-      nearby: HTMLElement[] = [];
+      near = visibleAvatars(root, Math.max(AVATAR_MARGIN, innerHeight));
+    const ranked: HTMLElement[][] = [[], [], []];
     for (const face of wanted) {
       if (!avatarModel(face)) continue;
-      let draw = faces.get(face);
-      if (!draw) {
-        draw = createAvatarDraw(face, client, () => motion.matches);
-        faces.set(face, draw);
-        intersection?.observe(face);
+      if (!faces.has(face)) {
+        faces.set(face, { draw: createAvatarDraw(face, client, () => motion.matches), rank: -1 });
+        intersection.observe(face);
       }
       if (mounted) refreshAvatar(face);
-      if (visible(face)) onscreen.push(face);
-      else if (near(face)) nearby.push(face);
+      ranked[visible(face) ? 0 : near(face) ? 1 : 2]!.push(face);
     }
-    // Warm at most 32 faces, reserving URL admission for every actually visible face first.
-    nearby.sort((a, b) => Number(retained.has(b)) - Number(retained.has(a)));
-    const warm = nearby.slice(0, Math.max(0, Math.min(32, 256 - onscreen.length)));
-    const selected = new Set([...onscreen, ...warm]);
-    retained = selected;
-    for (const face of onscreen) faces.get(face)!.active(true, true);
-    for (const face of warm) faces.get(face)!.active(true, false);
-    // Acquire replacements before removed owners release the shared URL. Capacity retries run before paint.
-    for (const [face, draw] of faces) if (!selected.has(face)) draw.active(false);
-    for (const [face, draw] of faces)
+    const spare = sparing();
+    ranked.forEach((list, rank) => {
+      for (const face of list) {
+        const held = faces.get(face)!;
+        if (rank === 2 && spare && held.rank < 0) continue;
+        // Scroll frames touch only faces whose place changed; mount and capacity scans retry every face.
+        if (!mounted && held.rank === rank) continue;
+        held.rank = rank;
+        held.draw.active(true, rank);
+      }
+    });
+    for (const [face, held] of faces)
       if (!wanted.has(face)) {
-        intersection?.unobserve(face);
-        draw.dispose();
+        intersection.unobserve(face);
+        held.draw.dispose();
         faces.delete(face);
       }
   };
   const schedule = (): void => {
-    if (!running || queued === generation) return;
-    const token = generation;
-    queued = token;
+    if (disposed || queued) return;
+    queued = true;
     queueMicrotask(() => {
-      if (queued === token) queued = undefined;
-      if (token === generation) scan();
+      queued = false;
+      scan();
     });
   };
   const scheduleGeometry = (): void => {
-    if (!running || frame !== undefined) return;
+    if (disposed || frame !== undefined) return;
     frame = requestAnimationFrame(() => {
       frame = undefined;
       scan(false);
@@ -71,63 +69,44 @@ export function createAvatarOwner(root: HTMLElement, client: AvatarClient) {
   };
   const hasFace = (node: Node): boolean =>
     node instanceof Element && (node.matches('[data-face]') || !!node.querySelector('[data-face]'));
-  const pause = (): void => {
-    running = false;
-    generation++;
-    queued = undefined;
-    if (frame !== undefined) cancelAnimationFrame(frame);
-    frame = undefined;
-    retained.clear();
-    mutations?.disconnect();
-    intersection?.disconnect();
-    mutations = undefined;
-    intersection = undefined;
-    for (const draw of faces.values()) draw.dispose();
-    faces.clear();
-    client.clearIdle();
-  };
-  const resume = (): void => {
-    if (disposed || document.visibilityState === 'hidden') return pause();
-    if (running) return schedule();
-    running = true;
-    const token = ++generation;
-    intersection = new IntersectionObserver(
-      () => {
-        if (running && token === generation) scan(false);
-      },
-      { rootMargin: `${AVATAR_MARGIN}px 0px`, threshold: [0, Number.EPSILON] },
-    );
-    mutations = new MutationObserver((entries) => {
-      if (token !== generation) return;
-      if (
-        entries.some((entry) =>
-          entry.type === 'attributes'
-            ? hasFace(entry.target)
-            : [...entry.addedNodes, ...entry.removedNodes].some(hasFace),
-        )
+  const intersection = new IntersectionObserver(() => scan(false), {
+    rootMargin: `${AVATAR_MARGIN}px 0px`,
+    threshold: [0, Number.EPSILON],
+  });
+  const mutations = new MutationObserver((entries) => {
+    if (
+      entries.some((entry) =>
+        entry.type === 'attributes'
+          ? hasFace(entry.target)
+          : [...entry.addedNodes, ...entry.removedNodes].some(hasFace),
       )
-        schedule();
-    });
-    mutations.observe(root, {
-      subtree: true,
-      childList: true,
-      attributes: true,
-      attributeFilter: ['hidden', 'class', 'style'],
-    });
-    scan();
-  };
+    )
+      schedule();
+  });
+  mutations.observe(root, {
+    subtree: true,
+    childList: true,
+    attributes: true,
+    attributeFilter: ['hidden', 'class', 'style'],
+  });
   const offPeople = onPerson((author) => {
     for (const face of faces.keys())
       if (face.dataset.face === author.pubkey) updateAvatar(face, author);
   });
   const offCapacity = client.onCapacity(schedule);
   const changedMotion = (): void => {
-    for (const draw of faces.values()) draw.refresh();
+    for (const held of faces.values()) held.draw.refresh();
   };
+  // A hidden tab or a page in the back/forward cache keeps its faces and pictures; the return only rescans.
+  const resume = (): void => scan();
   const dispose = (): void => {
     if (disposed) return;
     disposed = true;
-    pause();
+    if (frame !== undefined) cancelAnimationFrame(frame);
+    mutations.disconnect();
+    intersection.disconnect();
+    for (const held of faces.values()) held.draw.dispose();
+    faces.clear();
     offPeople();
     offCapacity();
     motion.removeEventListener('change', changedMotion);
@@ -138,8 +117,7 @@ export function createAvatarOwner(root: HTMLElement, client: AvatarClient) {
     window.removeEventListener('resize', scheduleGeometry);
   };
   const pagehide = (event: PageTransitionEvent): void => {
-    if (event.persisted) pause();
-    else dispose();
+    if (!event.persisted) dispose();
   };
   motion.addEventListener('change', changedMotion);
   document.addEventListener('visibilitychange', resume);
@@ -148,6 +126,6 @@ export function createAvatarOwner(root: HTMLElement, client: AvatarClient) {
   // IO rootMargin does not expand nested scrollport clips. Their scrolls need fresh geometry too.
   window.addEventListener('scroll', scheduleGeometry, { capture: true, passive: true });
   window.addEventListener('resize', scheduleGeometry);
-  resume();
+  scan();
   return { refresh: schedule, dispose };
 }

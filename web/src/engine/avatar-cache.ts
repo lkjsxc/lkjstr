@@ -47,6 +47,17 @@ let activeImages = 0;
 let visibility: IntersectionObserver | undefined;
 let mounts: MutationObserver | undefined;
 let drainQueued = false;
+// Originals this page finished loading, oldest first, at most 128. A held image stays in the document's
+// available images, so the same picture in a new or returning row is complete in the frame it is drawn.
+const held = new Map<string, HTMLImageElement>();
+function hold(src: string): void {
+  if (held.has(src)) return;
+  const holder = new Image();
+  holder.referrerPolicy = 'no-referrer';
+  holder.src = src;
+  held.set(src, holder);
+  if (held.size > 128) held.delete(held.keys().next().value!);
+}
 
 function pauseImage(job: AvatarJob): void {
   visibility?.unobserve(job.img);
@@ -104,6 +115,7 @@ function startImage(job: AvatarJob): void {
   const loaded = () => {
     stop();
     img.style.visibility = '';
+    if (job.owned) hold(job.src);
     if (img.isConnected) job.offer?.(job.visible);
   };
   const failed = () => {
@@ -206,6 +218,13 @@ export function loadAvatar(
     owned,
     observePublic: cachePublic,
   };
+  const holder = owned ? held.get(job.src) : undefined;
+  if (holder?.complete && holder.naturalWidth) {
+    held.delete(job.src);
+    held.set(job.src, holder);
+    img.src = job.src;
+    return () => img.removeAttribute('src');
+  }
   img.style.visibility = 'hidden';
   img.setAttribute(PENDING, '');
   pendingImages.set(img, job);

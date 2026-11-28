@@ -1021,6 +1021,8 @@ export type ToEngine =
       readonly req: string;
       readonly url: string;
       readonly observePublic?: boolean;
+      /** Where the face is: 0 or absent on screen, 1 the next rows, 2 further along. Orders queued work only. */
+      readonly rank?: number;
     }
   | { readonly t: 'avatar.close'; readonly req: string }
   | { readonly t: 'cache.hold'; readonly sub: SubId; readonly rows: readonly PublicCacheHoldRow[] }

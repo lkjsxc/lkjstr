@@ -1,5 +1,5 @@
 // Geometry is authoritative; queued observer entries can describe an older layout.
-export const AVATAR_MARGIN = 192; // Small vertical scroll reversals retain decoded faces.
+export const AVATAR_MARGIN = 192; // The least "next rows" distance; the owner widens it to one screen.
 type Clip = { rect: DOMRect; x: boolean; y: boolean; scroll: boolean };
 export function visibleAvatars(root: HTMLElement, margin = 0): (el: HTMLElement) => boolean {
   const clips = new Map<HTMLElement, Clip>(); // Scratch, at most the current faces' ancestors.

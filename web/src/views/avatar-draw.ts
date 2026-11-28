@@ -1,6 +1,6 @@
 // Draw-only face ownership: no fetch, readback, encoder or durable cache on the page.
 import { loadAvatar } from '../engine/avatar-cache.ts';
-import type { AvatarClient, AvatarValue } from '../engine/client-avatars.ts';
+import type { AvatarClient, AvatarLease, AvatarValue } from '../engine/client-avatars.ts';
 import { h } from '../shared/h.ts';
 import { mediaSource } from '../shared/media-source.ts';
 import { avatarModel, avatarOptions, observeAvatar, reportAvatarImage } from './avatars.ts';
@@ -8,10 +8,11 @@ import { avatarModel, avatarOptions, observeAvatar, reportAvatarImage } from './
 export function createAvatarDraw(el: HTMLElement, client: AvatarClient, reduced: () => boolean) {
   let active = false,
     visible = false,
+    rank = 0,
     motion = false,
     generation = 0,
     key: string | undefined;
-  let lease: (() => void) | undefined, image: HTMLImageElement | undefined;
+  let lease: AvatarLease | undefined, image: HTMLImageElement | undefined;
   let canvas: HTMLCanvasElement | undefined;
   let mediaMotion: boolean | undefined;
   const onImage = avatarOptions(el).onImage;
@@ -113,7 +114,7 @@ export function createAvatarDraw(el: HTMLElement, client: AvatarClient, reduced:
       if (current.complete && current.naturalWidth) freezeImage(current, token, url);
       return;
     }
-    if (!derived && !visible) return; // The halo never starts a new original-image request.
+    if (!derived && !visible) return; // Rows further along the feed never start an original-image request.
     const holdCanvas = canvas && !freeze && !derived && canvasSource === url;
     clearImage(!!holdCanvas);
     shown = next;
@@ -218,15 +219,19 @@ export function createAvatarDraw(el: HTMLElement, client: AvatarClient, reduced:
       url,
       receive,
       !!(avatarOptions(el).cachePublic && avatarModel(el)?.profileId),
+      rank,
     );
     // Capacity deferral is a letter until the shared client announces room, never an original-image bypass.
     if (!lease) key = undefined;
   };
   const off = observeAvatar(el, update);
   return {
-    active(on: boolean, onScreen = on): void {
-      visible = onScreen;
-      // A queued native original must not start later from the warm region as if it were visible.
+    /** `place`: 0 on screen, 1 the next rows, 2 further along. Only 0 and 1 may start an original image. */
+    active(on: boolean, place = 0): void {
+      rank = place;
+      visible = place < 2;
+      lease?.rank(place);
+      // A queued native original must not start later from far away as if it were near.
       if (!visible && releaseImage && image && !image.hasAttribute('src')) clearImage(true);
       if (on !== active) {
         active = on;

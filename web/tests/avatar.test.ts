@@ -155,7 +155,7 @@ it('keeps each tile’s avatar through metadata changes and a note body redraw',
   }
 });
 
-it('acquires visible head faces in order and defers the offscreen tail until it enters', async () => {
+it('acquires visible head faces first and the offscreen tail behind them, with no second request on entry', async () => {
   const x = avatarFixture();
   const f = vaultEnv();
   const rows = createRowList(f.el, f.env, false);
@@ -175,21 +175,21 @@ it('acquires visible head faces in order and defers the offscreen tail until it 
     for (const face of faces.slice(6)) face.dataset.x = '5000';
     x.root.append(f.el);
     await settleAvatars();
-    expect(x.wants().map((m) => m.url)).toEqual(
-      Array.from({ length: 6 }, (_, i) => `https://images.test/head-${i}.png`),
+    expect(x.wants().map((m) => [m.url, m.rank])).toEqual(
+      Array.from({ length: 8 }, (_, i) => [
+        `https://images.test/head-${i}.png`,
+        i < 6 ? undefined : 2,
+      ]),
     );
     for (const want of x.wants()) x.reply(want.req, { status: 'ready', retained: true });
-    expect(faces.slice(0, 6).every((face) => face.querySelector('img')?.loading === 'eager')).toBe(
-      true,
-    );
-    expect(faces.slice(6).every((face) => !face.querySelector('img'))).toBe(true);
+    expect(faces.every((face) => face.querySelector('img')?.loading === 'eager')).toBe(true);
+    const tail = faces.slice(6).map((face) => face.querySelector('img'));
     for (const face of faces.slice(6)) {
       face.dataset.x = '20';
       x.intersections[0]!([avatarIntersection(face, true)], {} as IntersectionObserver);
     }
-    expect(x.wants().map((m) => m.url)).toEqual(
-      Array.from({ length: 8 }, (_, i) => `https://images.test/head-${i}.png`),
-    );
+    expect(faces.slice(6).map((face) => face.querySelector('img'))).toEqual(tail);
+    expect(x.wants()).toHaveLength(8);
   } finally {
     rows.dispose();
     f.dispose();
